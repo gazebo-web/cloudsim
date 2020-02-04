@@ -1,0 +1,13 @@
+.hg/
+*.md
+bitbucket-pipelines-go.sh
+bitbucket-pipelines.yml
+db.env
+.env
+.env.testing
+.idea/
+.hgtags
+*.Dockerfile
+Dockerfile
+docker-compose.yml
+insomnia/
