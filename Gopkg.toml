@@ -27,14 +27,11 @@
 
 [[constraint]]
   name = "gitlab.com/ignitionrobotics/web/ign-go"
-  # We need to use "default" to match fuel-server's Dep tree which also requests
-  # ign-go default.
-  # TODO: change both projects to use a specific (and the same) revision of ign-go.
-  branch = "default"
+  version = "4.0.0"
 
 [[constraint]]
-  name = "bitbucket.org/ignitionrobotics/ign-fuelserver"
-  revision = "e6b990656e0af1976b762a13224a549f6ca1d69b"
+  name = "gitlab.com/ignitionrobotics/web/fuelserver"
+  branch = "master"
 
 [[constraint]]
   name = "github.com/caarlos0/env"
