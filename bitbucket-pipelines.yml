@@ -1,0 +1,218 @@
+image: ubuntu:bionic
+# we need to use bionic to install ign-transport debians
+
+pipelines:
+  default:
+    - step:
+        script:
+          - export BASEDIR=$(pwd)
+          - apt-get update
+          # create the extra usersdb needed during tests
+          - apt-get -y install mysql-client
+          - mysql -u root -proot -h 127.0.0.1 -e "CREATE DATABASE usersdb_test"
+          - export IGN_USER_DB_USERNAME=root
+          - export IGN_USER_DB_PASSWORD=root
+          - export IGN_USER_DB_NAME=usersdb
+          # Install required dependencies for other steps
+          - apt-get -y install tar lsb-release gnupg pkg-config build-essential curl git mercurial
+          # Download and install Go 1.10.3
+          # More details here: https://github.com/docker-library/golang/blob/master/1.11/stretch/Dockerfile
+          - cd ~ && curl -O https://dl.google.com/go/go1.10.3.linux-amd64.tar.gz && tar -C /usr/local -xzf go1.10.3.linux-amd64.tar.gz
+          - export GOPATH=/go
+          - export PATH=$GOPATH/bin:/usr/local/go/bin:$PATH
+          - mkdir -p "$GOPATH/src" "$GOPATH/bin" && chmod -R 777 "$GOPATH"
+          - cd $BASEDIR
+          - source bitbucket-pipelines-go.sh
+          - cd ${IMPORT_PATH}
+          - export DEP_RELEASE_TAG=v0.4.1
+          - curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
+          - curl -L https://git.io/vp6lP | sh
+          - go version
+          # Get gazebo debians
+          - echo "deb http://packages.osrfoundation.org/gazebo/ubuntu-stable $(lsb_release -cs) main" > /etc/apt/sources.list.d/gazebo-stable.list
+          - echo "deb http://packages.osrfoundation.org/gazebo/ubuntu-nightly $(lsb_release -cs) main" > /etc/apt/sources.list.d/gazebo-nightly.list
+          - apt-key adv --keyserver keyserver.ubuntu.com --recv-keys D2486D2DD83DB69272AFE98867170598AF249743
+          - apt-get update
+          - apt-get install -y libignition-transport7-dev golang-goprotobuf-dev
+          # compile protobufs
+          - cd ${IMPORT_PATH}/ign-transport/proto/
+          - protoc --proto_path=. --go_out=. ignition/msgs/*.proto
+          - cd ${IMPORT_PATH}
+          # Download Go dependencies
+          - dep ensure -vendor-only
+          - dep status
+          - lint=$(./bin/gometalinter ./...) && if [[ ! -z $lint ]]; then echo "Invalid gometalinter at $lint" && exit 1; fi
+          - fmt=$(gofmt -s -l . | grep -v vendor/ | grep -v ".pb.go") && if [[ ! -z $fmt ]]; then echo "Invalid gofmt at $fmt" && exit 1; fi
+          - go build
+          - go test -v -covermode=atomic -coverprofile=coverage.tx
+          - go tool cover -func=coverage.tx
+        services:
+          - database
+  branches:
+    integration:
+      - step:
+          script:
+            - export BASEDIR=$(pwd)
+            - apt-get update
+            # create the extra usersdb needed during tests
+            - apt-get -y install mysql-client
+            - mysql -u root -proot -h 127.0.0.1 -e "CREATE DATABASE usersdb_test"
+            - export IGN_USER_DB_USERNAME=root
+            - export IGN_USER_DB_PASSWORD=root
+            - export IGN_USER_DB_NAME=usersdb
+            # Install required dependencies for other steps
+            - apt-get -y install tar lsb-release gnupg pkg-config build-essential curl git mercurial
+            # Download and install Go 1.10.3
+            # More details here: https://github.com/docker-library/golang/blob/master/1.11/stretch/Dockerfile
+            - cd ~ && curl -O https://dl.google.com/go/go1.10.3.linux-amd64.tar.gz && tar -C /usr/local -xzf go1.10.3.linux-amd64.tar.gz
+            - export GOPATH=/go
+            - export PATH=$GOPATH/bin:/usr/local/go/bin:$PATH
+            - mkdir -p "$GOPATH/src" "$GOPATH/bin" && chmod -R 777 "$GOPATH"
+            - cd $BASEDIR
+            - source bitbucket-pipelines-go.sh
+            - cd ${IMPORT_PATH}
+            - export DEP_RELEASE_TAG=v0.4.1
+            - curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
+            - curl -L https://git.io/vp6lP | sh
+            - go version
+            # Get gazebo debians
+            - echo "deb http://packages.osrfoundation.org/gazebo/ubuntu-stable $(lsb_release -cs) main" > /etc/apt/sources.list.d/gazebo-stable.list
+            - echo "deb http://packages.osrfoundation.org/gazebo/ubuntu-nightly $(lsb_release -cs) main" > /etc/apt/sources.list.d/gazebo-nightly.list
+            - apt-key adv --keyserver keyserver.ubuntu.com --recv-keys D2486D2DD83DB69272AFE98867170598AF249743
+            - apt-get update
+            - apt-get install -y libignition-transport7-dev golang-goprotobuf-dev
+            # compile protobufs
+            - cd ${IMPORT_PATH}/ign-transport/proto/
+            - protoc --proto_path=. --go_out=. ignition/msgs/*.proto
+            - cd ${IMPORT_PATH}
+            # Download Go dependencies
+            - dep ensure -vendor-only
+            - dep status
+            - lint=$(./bin/gometalinter ./...) && if [[ ! -z $lint ]]; then echo "Invalid gometalinter at $lint" && exit 1; fi
+            - fmt=$(gofmt -s -l . | grep -v vendor/ | grep -v ".pb.go") && if [[ ! -z $fmt ]]; then echo "Invalid gofmt at $fmt" && exit 1; fi
+            - go build
+            - go test -v -covermode=atomic -coverprofile=coverage.tx
+            - go tool cover -func=coverage.tx
+            # Deploy to AWS
+            - apt-get install -y zip python3 python-pip
+            - pip install boto3==1.3.0
+            - zip -r /tmp/artifact.zip * .ebextensions -x vendor/\*
+            - export APPLICATION_ENVIRONMENT="web-cloudsim-integration"
+            - python beanstalk_deploy.py
+          services:
+            - database
+    staging:
+      - step:
+          script:
+            - export BASEDIR=$(pwd)
+            - apt-get update
+            # create the extra usersdb needed during tests
+            - apt-get -y install mysql-client
+            - mysql -u root -proot -h 127.0.0.1 -e "CREATE DATABASE usersdb_test"
+            - export IGN_USER_DB_USERNAME=root
+            - export IGN_USER_DB_PASSWORD=root
+            - export IGN_USER_DB_NAME=usersdb
+            # Install required dependencies for other steps
+            - apt-get -y install tar lsb-release gnupg pkg-config build-essential curl git mercurial
+            # Download and install Go 1.10.3
+            # More details here: https://github.com/docker-library/golang/blob/master/1.11/stretch/Dockerfile
+            - cd ~ && curl -O https://dl.google.com/go/go1.10.3.linux-amd64.tar.gz && tar -C /usr/local -xzf go1.10.3.linux-amd64.tar.gz
+            - export GOPATH=/go
+            - export PATH=$GOPATH/bin:/usr/local/go/bin:$PATH
+            - mkdir -p "$GOPATH/src" "$GOPATH/bin" && chmod -R 777 "$GOPATH"
+            - cd $BASEDIR
+            - source bitbucket-pipelines-go.sh
+            - cd ${IMPORT_PATH}
+            - export DEP_RELEASE_TAG=v0.4.1
+            - curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
+            - curl -L https://git.io/vp6lP | sh
+            - go version
+            # Get gazebo debians
+            - echo "deb http://packages.osrfoundation.org/gazebo/ubuntu-stable $(lsb_release -cs) main" > /etc/apt/sources.list.d/gazebo-stable.list
+            - echo "deb http://packages.osrfoundation.org/gazebo/ubuntu-nightly $(lsb_release -cs) main" > /etc/apt/sources.list.d/gazebo-nightly.list
+            - apt-key adv --keyserver keyserver.ubuntu.com --recv-keys D2486D2DD83DB69272AFE98867170598AF249743
+            - apt-get update
+            - apt-get install -y libignition-transport7-dev golang-goprotobuf-dev
+            # compile protobufs
+            - cd ${IMPORT_PATH}/ign-transport/proto/
+            - protoc --proto_path=. --go_out=. ignition/msgs/*.proto
+            - cd ${IMPORT_PATH}
+            # Download Go dependencies
+            - dep ensure -vendor-only
+            - dep status
+            - lint=$(./bin/gometalinter ./...) && if [[ ! -z $lint ]]; then echo "Invalid gometalinter at $lint" && exit 1; fi
+            - fmt=$(gofmt -s -l . | grep -v vendor/ | grep -v ".pb.go") && if [[ ! -z $fmt ]]; then echo "Invalid gofmt at $fmt" && exit 1; fi
+            - go build
+            - go test -v -covermode=atomic -coverprofile=coverage.tx
+            - go tool cover -func=coverage.tx
+            # Deploy to AWS
+            - apt-get install -y zip python3 python-pip
+            - pip install boto3==1.3.0
+            - zip -r /tmp/artifact.zip * .ebextensions -x vendor/\*
+            - export APPLICATION_ENVIRONMENT="web-cloudsim-staging"
+            - python beanstalk_deploy.py
+          services:
+            - database
+    production:
+      - step:
+          script:
+            - export BASEDIR=$(pwd)
+            - apt-get update
+            # create the extra usersdb needed during tests
+            - apt-get -y install mysql-client
+            - mysql -u root -proot -h 127.0.0.1 -e "CREATE DATABASE usersdb_test"
+            - export IGN_USER_DB_USERNAME=root
+            - export IGN_USER_DB_PASSWORD=root
+            - export IGN_USER_DB_NAME=usersdb
+            # Install required dependencies for other steps
+            - apt-get -y install tar lsb-release gnupg pkg-config build-essential curl git mercurial
+            # Download and install Go 1.10.3
+            # More details here: https://github.com/docker-library/golang/blob/master/1.11/stretch/Dockerfile
+            - cd ~ && curl -O https://dl.google.com/go/go1.10.3.linux-amd64.tar.gz && tar -C /usr/local -xzf go1.10.3.linux-amd64.tar.gz
+            - export GOPATH=/go
+            - export PATH=$GOPATH/bin:/usr/local/go/bin:$PATH
+            - mkdir -p "$GOPATH/src" "$GOPATH/bin" && chmod -R 777 "$GOPATH"
+            - cd $BASEDIR
+            - source bitbucket-pipelines-go.sh
+            - cd ${IMPORT_PATH}
+            - export DEP_RELEASE_TAG=v0.4.1
+            - curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
+            - curl -L https://git.io/vp6lP | sh
+            - go version
+            # Get gazebo debians
+            - echo "deb http://packages.osrfoundation.org/gazebo/ubuntu-stable $(lsb_release -cs) main" > /etc/apt/sources.list.d/gazebo-stable.list
+            - echo "deb http://packages.osrfoundation.org/gazebo/ubuntu-nightly $(lsb_release -cs) main" > /etc/apt/sources.list.d/gazebo-nightly.list
+            - apt-key adv --keyserver keyserver.ubuntu.com --recv-keys D2486D2DD83DB69272AFE98867170598AF249743
+            - apt-get update
+            - apt-get install -y libignition-transport7-dev golang-goprotobuf-dev
+            # compile protobufs
+            - cd ${IMPORT_PATH}/ign-transport/proto/
+            - protoc --proto_path=. --go_out=. ignition/msgs/*.proto
+            - cd ${IMPORT_PATH}
+            # Download Go dependencies
+            - dep ensure -vendor-only
+            - dep status
+            - lint=$(./bin/gometalinter ./...) && if [[ ! -z $lint ]]; then echo "Invalid gometalinter at $lint" && exit 1; fi
+            - fmt=$(gofmt -s -l . | grep -v vendor/ | grep -v ".pb.go") && if [[ ! -z $fmt ]]; then echo "Invalid gofmt at $fmt" && exit 1; fi
+            - go build
+            - go test -v -covermode=atomic -coverprofile=coverage.tx
+            - go tool cover -func=coverage.tx
+            # Deploy to AWS
+            - apt-get install -y zip python3 python-pip
+            - pip install boto3==1.3.0
+            - zip -r /tmp/artifact.zip * .ebextensions -x vendor/\*
+            - export APPLICATION_ENVIRONMENT="web-cloudsim-production"
+            - python beanstalk_deploy.py
+          services:
+            - database
+
+definitions:
+  services:
+    database:
+      # MySQL image on docker hub changes "latest" tag from 5.7 to 8 recently (2018/04/20), which has lots of breaking
+      # changes. Using "mysql:5.7" instead of "mysql" should solve your problem.
+      # See: https://stackoverflow.com/questions/49974372/go-mysql-authentication-plugin-not-supported-while-connecting-from-go-app-conta
+      image: mysql:5.7
+      environment:
+        MYSQL_ROOT_PASSWORD: root
+        MYSQL_DATABASE: cloudsim_test
