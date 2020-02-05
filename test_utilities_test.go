@@ -1,8 +1,8 @@
 package main
 
 import (
-	"bitbucket.org/ignitionrobotics/ign-go"
-	"bitbucket.org/ignitionrobotics/ign-go/testhelpers"
+	"gitlab.com/ignitionrobotics/web/ign-go"
+	"gitlab.com/ignitionrobotics/web/ign-go/testhelpers"
 	"bytes"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/stretchr/testify/assert"

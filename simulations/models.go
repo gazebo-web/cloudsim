@@ -1,7 +1,7 @@
 package simulations
 
 import (
-	"bitbucket.org/ignitionrobotics/ign-go"
+	"gitlab.com/ignitionrobotics/web/ign-go"
 	"encoding/json"
 	"github.com/jinzhu/gorm"
 	"strconv"

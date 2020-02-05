@@ -1,8 +1,8 @@
 package main
 
 import (
-	igntest "bitbucket.org/ignitionrobotics/ign-go/testhelpers"
-	sim "bitbucket.org/ignitionrobotics/web-cloudsim/simulations"
+	igntest "gitlab.com/ignitionrobotics/web/ign-go/testhelpers"
+	sim "gitlab.com/ignitionrobotics/web/cloudsim/simulations"
 	"encoding/json"
 	"github.com/stretchr/testify/require"
 	"testing"

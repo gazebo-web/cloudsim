@@ -2,7 +2,7 @@ package main
 
 // Import this file's dependencies
 import (
-	sim "bitbucket.org/ignitionrobotics/web-cloudsim/simulations"
+	sim "gitlab.com/ignitionrobotics/web/cloudsim/simulations"
 	"context"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/jinzhu/gorm"

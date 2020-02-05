@@ -1,7 +1,7 @@
 package main
 
 import (
-	"bitbucket.org/ignitionrobotics/ign-go"
+	"gitlab.com/ignitionrobotics/web/ign-go"
 	"encoding/json"
 	"gopkg.in/go-playground/validator.v9"
 	"io/ioutil"

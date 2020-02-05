@@ -21,8 +21,8 @@ static void _ign_subscribe(IgnTransportNode *n, char *_topic, void *cb_struct) {
 */
 import "C"
 import (
-	"bitbucket.org/ignitionrobotics/ign-go"
-	msgs "bitbucket.org/ignitionrobotics/web-cloudsim/ign-transport/proto/ignition/msgs"
+	"gitlab.com/ignitionrobotics/web/ign-go"
+	msgs "gitlab.com/ignitionrobotics/web/cloudsim/ign-transport/proto/ignition/msgs"
 	proto "github.com/golang/protobuf/proto"
 	"github.com/mattn/go-pointer"
 	"github.com/pkg/errors"

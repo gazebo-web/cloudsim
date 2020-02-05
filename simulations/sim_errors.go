@@ -1,7 +1,7 @@
 package simulations
 
 import (
-	"bitbucket.org/ignitionrobotics/ign-go"
+	"gitlab.com/ignitionrobotics/web/ign-go"
 	"github.com/pkg/errors"
 	"github.com/satori/go.uuid"
 	"net/http"

@@ -1,11 +1,11 @@
 package simulations
 
 import (
-	"bitbucket.org/ignitionrobotics/ign-fuelserver/bundles/users"
-	per "bitbucket.org/ignitionrobotics/ign-fuelserver/permissions"
-	"bitbucket.org/ignitionrobotics/ign-go"
-	"bitbucket.org/ignitionrobotics/web-cloudsim/globals"
-	useracc "bitbucket.org/ignitionrobotics/web-cloudsim/users"
+	"gitlab.com/ignitionrobotics/web/fuelserver/bundles/users"
+	per "gitlab.com/ignitionrobotics/web/fuelserver/permissions"
+	"gitlab.com/ignitionrobotics/web/ign-go"
+	"gitlab.com/ignitionrobotics/web/cloudsim/globals"
+	useracc "gitlab.com/ignitionrobotics/web/cloudsim/users"
 	"bytes"
 	"context"
 	"encoding/gob"

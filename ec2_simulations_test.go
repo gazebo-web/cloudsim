@@ -1,10 +1,10 @@
 package main
 
 import (
-	"bitbucket.org/ignitionrobotics/ign-go"
-	igntest "bitbucket.org/ignitionrobotics/ign-go/testhelpers"
-	"bitbucket.org/ignitionrobotics/web-cloudsim/globals"
-	sim "bitbucket.org/ignitionrobotics/web-cloudsim/simulations"
+	"gitlab.com/ignitionrobotics/web/ign-go"
+	igntest "gitlab.com/ignitionrobotics/web/ign-go/testhelpers"
+	"gitlab.com/ignitionrobotics/web/cloudsim/globals"
+	sim "gitlab.com/ignitionrobotics/web/cloudsim/simulations"
 	"context"
 	"encoding/json"
 	"errors"

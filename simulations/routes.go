@@ -1,7 +1,7 @@
 package simulations
 
 import (
-	"bitbucket.org/ignitionrobotics/ign-go"
+	"gitlab.com/ignitionrobotics/web/ign-go"
 )
 
 // Routes declares the routes related to simulations. See also IGN's router.go

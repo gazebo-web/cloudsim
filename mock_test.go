@@ -1,7 +1,7 @@
 package main
 
 import (
-	"bitbucket.org/ignitionrobotics/ign-go"
+	"gitlab.com/ignitionrobotics/web/ign-go"
 	"errors"
 	"fmt"
 	"reflect"

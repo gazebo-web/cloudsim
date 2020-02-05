@@ -1,7 +1,6 @@
 .hg/
 *.md
-bitbucket-pipelines-go.sh
-bitbucket-pipelines.yml
+.gitlab-ci.yml
 db.env
 .env
 .env.testing

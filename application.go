@@ -15,12 +15,12 @@ package main
 
 // Import this file's dependencies
 import (
-	"bitbucket.org/ignitionrobotics/ign-fuelserver/permissions"
-	"bitbucket.org/ignitionrobotics/ign-go"
-	"bitbucket.org/ignitionrobotics/web-cloudsim/globals"
-	igntran "bitbucket.org/ignitionrobotics/web-cloudsim/ign-transport"
-	sim "bitbucket.org/ignitionrobotics/web-cloudsim/simulations"
-	useracc "bitbucket.org/ignitionrobotics/web-cloudsim/users"
+	"gitlab.com/ignitionrobotics/web/fuelserver/permissions"
+	"gitlab.com/ignitionrobotics/web/ign-go"
+	"gitlab.com/ignitionrobotics/web/cloudsim/globals"
+	igntran "gitlab.com/ignitionrobotics/web/cloudsim/ign-transport"
+	sim "gitlab.com/ignitionrobotics/web/cloudsim/simulations"
+	useracc "gitlab.com/ignitionrobotics/web/cloudsim/users"
 	"context"
 	"flag"
 	"fmt"

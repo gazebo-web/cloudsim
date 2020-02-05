@@ -26,7 +26,7 @@
 
 
 [[constraint]]
-  name = "bitbucket.org/ignitionrobotics/ign-go"
+  name = "gitlab.com/ignitionrobotics/web/ign-go"
   # We need to use "default" to match fuel-server's Dep tree which also requests
   # ign-go default.
   # TODO: change both projects to use a specific (and the same) revision of ign-go.

@@ -1,7 +1,7 @@
 package queues
 
 import (
-	"bitbucket.org/ignitionrobotics/ign-go"
+	"gitlab.com/ignitionrobotics/web/ign-go"
 )
 
 type QueueRepository interface {

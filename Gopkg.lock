@@ -16,7 +16,7 @@
 
 [[projects]]
   branch = "default"
-  name = "bitbucket.org/ignitionrobotics/ign-go"
+  name = "gitlab.com/ignitionrobotics/web/ign-go"
   packages = [
     ".",
     "scheduler",

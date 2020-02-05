@@ -1,9 +1,9 @@
 package users
 
 import (
-	fuelusers "bitbucket.org/ignitionrobotics/ign-fuelserver/bundles/users"
-	per "bitbucket.org/ignitionrobotics/ign-fuelserver/permissions"
-	"bitbucket.org/ignitionrobotics/ign-go"
+	fuelusers "gitlab.com/ignitionrobotics/web/fuelserver/bundles/users"
+	per "gitlab.com/ignitionrobotics/web/fuelserver/permissions"
+	"gitlab.com/ignitionrobotics/web/ign-go"
 	"context"
 	"github.com/jinzhu/gorm"
 	"log"

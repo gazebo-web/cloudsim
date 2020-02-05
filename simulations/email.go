@@ -1,8 +1,8 @@
 package simulations
 
 import (
-	"bitbucket.org/ignitionrobotics/ign-go"
-	"bitbucket.org/ignitionrobotics/web-cloudsim/globals"
+	"gitlab.com/ignitionrobotics/web/ign-go"
+	"gitlab.com/ignitionrobotics/web/cloudsim/globals"
 	"bytes"
 	"encoding/json"
 )
