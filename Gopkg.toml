@@ -31,7 +31,7 @@
 
 [[constraint]]
   name = "gitlab.com/ignitionrobotics/web/fuelserver"
-  branch = "master"
+  branch = "develop"
 
 [[constraint]]
   name = "github.com/caarlos0/env"

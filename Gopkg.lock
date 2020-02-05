@@ -5,7 +5,6 @@
   name = "bitbucket.org/ignitionrobotics/ign-fuelserver"
   packages = [
     "bundles/common_resources",
-    "bundles/subt",
     "bundles/users",
     "globals",
     "permissions",
@@ -16,12 +15,8 @@
 
 [[projects]]
   branch = "default"
-  name = "gitlab.com/ignitionrobotics/web/ign-go"
-  packages = [
-    ".",
-    "scheduler",
-    "testhelpers"
-  ]
+  name = "bitbucket.org/ignitionrobotics/ign-go"
+  packages = ["."]
   revision = "a507ce6b2deb058b8177661586744535bafa6ad4"
 
 [[projects]]
@@ -358,6 +353,12 @@
   version = "v1.0.0"
 
 [[projects]]
+  name = "github.com/prprprus/scheduler"
+  packages = ["."]
+  revision = "76dc9da5882be6e98dbad344b0b55591b903fefb"
+  version = "v0.5.0"
+
+[[projects]]
   name = "github.com/rollbar/rollbar-go"
   packages = ["."]
   revision = "d450a931d7a085523b60f0f7c98487333a8ce5fa"
@@ -407,10 +408,24 @@
   version = "v0.2.1"
 
 [[projects]]
-  name = "gitlab.com/ignitionrobotics/web/scheduler"
-  packages = ["."]
-  revision = "4bd85f4ff2d6efc3365cb53ad7340f85a50ed226"
-  version = "0.6.0"
+  branch = "develop"
+  name = "gitlab.com/ignitionrobotics/web/fuelserver"
+  packages = [
+    "bundles/subt",
+    "bundles/users",
+    "permissions"
+  ]
+  revision = "b65c5dcf6dc592864e1631fc20c0c673e47c6b2e"
+
+[[projects]]
+  name = "gitlab.com/ignitionrobotics/web/ign-go"
+  packages = [
+    ".",
+    "scheduler",
+    "testhelpers"
+  ]
+  revision = "0366041efcb3529850ce1fa2f0d88e94f8525722"
+  version = "4.0.0"
 
 [[projects]]
   branch = "master"
@@ -756,6 +771,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "38c3d6c9855d66ce811acc117737154f82bfec5a9a75164f3a2add929109d494"
+  inputs-digest = "0de093e1d33adbb5de600570dd5edc38f346b4cdf6a3f5eaf1b86836ed55660a"
   solver-name = "gps-cdcl"
   solver-version = 1
