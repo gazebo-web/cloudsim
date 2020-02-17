@@ -14,6 +14,8 @@ before_script:
   - curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
   - $GOPATH/bin/dep ensure
   - $GOPATH/bin/dep status
+  - git config --global user.name "ign-cloudsim"
+  - git config --global user.email "ign-cloudsim@test.org"
 
 cache:
   key: ${CI_COMMIT_REF_SLUG}
