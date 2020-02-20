@@ -51,6 +51,7 @@ proto:
     - apt-get install -y libignition-transport7-dev golang-goprotobuf-dev
   script:
     - cd ./ign-transport/proto/
+    - pwd
     - protoc --proto_path=. --go_out=. ignition/msgs/*.proto
   artifacts:
     paths:
