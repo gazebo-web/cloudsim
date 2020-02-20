@@ -31,7 +31,7 @@
 
 [[constraint]]
   name = "gitlab.com/ignitionrobotics/web/fuelserver"
-  branch = "develop"
+  version = "1.1.0"
 
 [[constraint]]
   name = "github.com/caarlos0/env"
@@ -79,7 +79,7 @@
 
 [[constraint]]
   name = "github.com/panjf2000/ants"
-  version = "3.9.4"
+  revision = "2ba69cd1384d2316956962735418a73007f4b881"
 
 [[constraint]]
   name = "github.com/casbin/casbin"
