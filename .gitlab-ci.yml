@@ -9,6 +9,7 @@ variables:
 # Before Script
 
 before_script:
+  - apt-get -y install tar lsb-release gnupg pkg-config build-essential curl git mercurial
   - go version
   - mkdir -p -v $GOPATH/src/$PKG_NAME/vendor
   - mv -f * $GOPATH/src/$PKG_NAME
@@ -19,6 +20,14 @@ before_script:
   - $GOPATH/bin/dep status
   - git config --global user.name "ign-cloudsim"
   - git config --global user.email "ign-cloudsim@test.org"
+  - echo "deb http://packages.osrfoundation.org/gazebo/ubuntu-stable $(lsb_release -cs) main" > /etc/apt/sources.list.d/gazebo-stable.list
+  - echo "deb http://packages.osrfoundation.org/gazebo/ubuntu-nightly $(lsb_release -cs) main" > /etc/apt/sources.list.d/gazebo-nightly.list
+  - apt-key adv --keyserver keyserver.ubuntu.com --recv-keys D2486D2DD83DB69272AFE98867170598AF249743
+  - apt-get update
+  - apt-get install -y libignition-transport7-dev golang-goprotobuf-dev
+  - cd $GOPATH/src/$PKG_NAME/ign-transport/proto/
+  - protoc --proto_path=. --go_out=. ignition/msgs/*.proto
+  - cd $GOPATH/src/$PKG_NAME
 
 #################################################################
 # Cache configuration
