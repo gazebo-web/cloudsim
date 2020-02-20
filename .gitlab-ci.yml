@@ -9,7 +9,6 @@ variables:
 # Before Script
 
 before_script:
-  - apt-get -y install tar lsb-release gnupg pkg-config build-essential curl git mercurial
   - go version
   - mkdir -p -v $GOPATH/src/$PKG_NAME/vendor
   - mv -f * $GOPATH/src/$PKG_NAME
@@ -45,9 +44,13 @@ stages:
 #################################################################
 # Installing stage
 proto:
-  image: ubuntu
+  image: ubuntu:bionic
   stage: installing
   before_script:
+    - mkdir -p -v $GOPATH/src/$PKG_NAME/vendor
+    - mv -f * $GOPATH/src/$PKG_NAME
+    - cd $GOPATH/src/$PKG_NAME
+    - apt-get -y install tar lsb-release gnupg pkg-config build-essential curl git
     - echo "deb http://packages.osrfoundation.org/gazebo/ubuntu-stable $(lsb_release -cs) main" > /etc/apt/sources.list.d/gazebo-stable.list
     - echo "deb http://packages.osrfoundation.org/gazebo/ubuntu-nightly $(lsb_release -cs) main" > /etc/apt/sources.list.d/gazebo-nightly.list
     - apt-key adv --keyserver keyserver.ubuntu.com --recv-keys D2486D2DD83DB69272AFE98867170598AF249743
@@ -56,7 +59,6 @@ proto:
   script:
     - cd $GOPATH/src/$PKG_NAME/ign-transport/proto/
     - protoc --proto_path=. --go_out=. ignition/msgs/*.proto
-    - cd $GOPATH/src/$PKG_NAME
   artifacts:
     paths:
       - ${GOPATH}/src/${PKG_NAME}/ign-transport/proto/ignition/msgs/*.go
