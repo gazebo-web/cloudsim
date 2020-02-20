@@ -27,7 +27,6 @@ cache:
   key: ${CI_COMMIT_REF_SLUG}
   paths:
     - $GOPATH/src/$PKG_NAME/vendor
-    - $GOPATH/bin
 
 #################################################################
 # Stages
@@ -55,7 +54,7 @@ proto:
     - protoc --proto_path=. --go_out=. ignition/msgs/*.proto
   artifacts:
     paths:
-      - ./ign-transport/proto/*.go
+      - /src/ign-transport/proto/*.go
     expire_in: 1 month
 
 #################################################################
