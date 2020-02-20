@@ -54,7 +54,7 @@ proto:
     - protoc --proto_path=. --go_out=. ignition/msgs/*.proto
   artifacts:
     paths:
-      - /src/ign-transport/proto/ignition/msgs/*.proto
+      - /src/ign-transport/proto/ignition/msgs/*.go
     expire_in: 1 month
 
 #################################################################
