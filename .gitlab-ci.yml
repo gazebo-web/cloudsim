@@ -58,7 +58,7 @@ proto:
     - protoc --proto_path=. --go_out=. ignition/msgs/*.proto
   artifacts:
     paths:
-      - ${GOPATH}/src/${PKG_NAME}/ign-transport/proto/ignition/msgs/*.go
+      - ${GOPATH}/src/${PKG_NAME}/ign-transport/proto/*.go
     expire_in: 1 month
 
 #################################################################
@@ -84,6 +84,8 @@ lint:
 
 vet:
   stage: testing
+    dependencies:
+      - proto
   script:
     - go vet $(go list ./... | grep -v /vendor/)
   services:
@@ -93,6 +95,8 @@ vet:
 
 test:
   stage: testing
+    dependencies:
+      - proto
   script:
     - go test $(go list ./... | grep -v /vendor/)
   services:
@@ -102,6 +106,8 @@ test:
 
 race:
   stage: testing
+    dependencies:
+      - proto
   script:
     - go test -race $(go list ./... | grep -v /vendor/)
   services:
@@ -111,6 +117,8 @@ race:
 
 coverage:
   stage: testing
+    dependencies:
+      - proto
   script:
     - go test -covermode=atomic -coverprofile=coverage.tx
     - go tool cover -func=coverage.tx
@@ -125,6 +133,8 @@ coverage:
 
 build:
   stage: building
+  dependencies:
+    - proto
   script:
     - go build
   artifacts:
