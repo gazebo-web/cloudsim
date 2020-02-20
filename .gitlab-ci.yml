@@ -47,18 +47,15 @@ proto:
   image: gazebo
   stage: installing
   before_script:
-    - mkdir -p -v $GOPATH/src/$PKG_NAME/vendor
-    - mv -f * $GOPATH/src/$PKG_NAME
-    - cd $GOPATH/src/$PKG_NAME
     - apt-get update
     - apt-get -y install tar lsb-release gnupg pkg-config build-essential curl git
     - apt-get install -y libignition-transport7-dev golang-goprotobuf-dev
   script:
-    - cd $GOPATH/src/$PKG_NAME/ign-transport/proto/
+    - cd ./ign-transport/proto/
     - protoc --proto_path=. --go_out=. ignition/msgs/*.proto
   artifacts:
     paths:
-      - ${GOPATH}/src/${PKG_NAME}/ign-transport/proto/*.go
+      - ./ign-transport/proto/*.go
     expire_in: 1 month
 
 #################################################################
