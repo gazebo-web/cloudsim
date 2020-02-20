@@ -44,7 +44,7 @@ stages:
 #################################################################
 # Installing stage
 proto:
-  image: ubuntu:bionic
+  image: gazebo
   stage: installing
   before_script:
     - mkdir -p -v $GOPATH/src/$PKG_NAME/vendor
@@ -52,10 +52,6 @@ proto:
     - cd $GOPATH/src/$PKG_NAME
     - apt-get update
     - apt-get -y install tar lsb-release gnupg pkg-config build-essential curl git
-    - echo "deb http://packages.osrfoundation.org/gazebo/ubuntu-stable $(lsb_release -cs) main" > /etc/apt/sources.list.d/gazebo-stable.list
-    - echo "deb http://packages.osrfoundation.org/gazebo/ubuntu-nightly $(lsb_release -cs) main" > /etc/apt/sources.list.d/gazebo-nightly.list
-    - apt-get update
-    - apt-key adv --keyserver keyserver.ubuntu.com --recv-keys D2486D2DD83DB69272AFE98867170598AF249743
     - apt-get install -y libignition-transport7-dev golang-goprotobuf-dev
   script:
     - cd $GOPATH/src/$PKG_NAME/ign-transport/proto/
