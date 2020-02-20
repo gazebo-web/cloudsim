@@ -20,14 +20,6 @@ before_script:
   - $GOPATH/bin/dep status
   - git config --global user.name "ign-cloudsim"
   - git config --global user.email "ign-cloudsim@test.org"
-  - echo "deb http://packages.osrfoundation.org/gazebo/ubuntu-stable $(lsb_release -cs) main" > /etc/apt/sources.list.d/gazebo-stable.list
-  - echo "deb http://packages.osrfoundation.org/gazebo/ubuntu-nightly $(lsb_release -cs) main" > /etc/apt/sources.list.d/gazebo-nightly.list
-  - apt-key adv --keyserver keyserver.ubuntu.com --recv-keys D2486D2DD83DB69272AFE98867170598AF249743
-  - apt-get update
-  - apt-get install -y libignition-transport7-dev golang-goprotobuf-dev
-  - cd $GOPATH/src/$PKG_NAME/ign-transport/proto/
-  - protoc --proto_path=. --go_out=. ignition/msgs/*.proto
-  - cd $GOPATH/src/$PKG_NAME
 
 #################################################################
 # Cache configuration
@@ -42,12 +34,33 @@ cache:
 # Stages
 
 stages:
+  - installing
   - formatting
   - linting
   - testing
   - building
   - packaging
   - deploying
+
+#################################################################
+# Installing stage
+proto:
+  image: ubuntu
+  stage: installing
+  before_script:
+    - echo "deb http://packages.osrfoundation.org/gazebo/ubuntu-stable $(lsb_release -cs) main" > /etc/apt/sources.list.d/gazebo-stable.list
+    - echo "deb http://packages.osrfoundation.org/gazebo/ubuntu-nightly $(lsb_release -cs) main" > /etc/apt/sources.list.d/gazebo-nightly.list
+    - apt-key adv --keyserver keyserver.ubuntu.com --recv-keys D2486D2DD83DB69272AFE98867170598AF249743
+    - apt-get update
+    - apt-get install -y libignition-transport7-dev golang-goprotobuf-dev
+  script:
+    - cd $GOPATH/src/$PKG_NAME/ign-transport/proto/
+    - protoc --proto_path=. --go_out=. ignition/msgs/*.proto
+    - cd $GOPATH/src/$PKG_NAME
+  artifacts:
+    paths:
+      - ${GOPATH}/src/${PKG_NAME}/ign-transport/proto/ignition/msgs/*.go
+    expire_in: 1 month
 
 #################################################################
 # Formatting stage
