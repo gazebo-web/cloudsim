@@ -18,6 +18,7 @@ before_script:
   - $GOPATH/bin/dep status
   - git config --global user.name "ign-cloudsim"
   - git config --global user.email "ign-cloudsim@test.org"
+  - mysql -u root -proot -h db -e "CREATE DATABASE usersdb_test"
 
 #################################################################
 # Cache configuration
