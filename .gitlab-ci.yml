@@ -67,6 +67,7 @@ lint:
   stage: linting
   script:
     - golint -set_exit_status $(go list ./... | grep -v /vendor/)
+  allow_failure: true
 
 #################################################################
 # Testing stage
