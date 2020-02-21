@@ -6,18 +6,23 @@ variables:
   MYSQL_ROOT_PASSWORD: "root"
 
 #################################################################
-# Before Script
+# Aliases
 
-before_script:
-  - go version
+.setup_project: &setup_project
   - cd /builds/ignitionrobotics/web/cloudsim
   - mkdir -p -v $GOPATH/src/$PKG_NAME/vendor
   - mv -f * $GOPATH/src/$PKG_NAME
   - cd $GOPATH/src/$PKG_NAME
-  - $GOPATH/bin/dep ensure -vendor-only
-  - $GOPATH/bin/dep status
+
+.gitlab_credentials: &setup_git_credentials
   - git config --global user.name "ign-cloudsim"
   - git config --global user.email "ign-cloudsim@test.org"
+
+.dep_ensure: &dep_ensure
+  - $GOPATH/bin/dep ensure -vendor-only
+  - $GOPATH/bin/dep status
+
+.setup_db: &setup_db
   - mysql -u root -proot -h db -e "CREATE DATABASE usersdb_test"
 
 #################################################################
@@ -42,6 +47,7 @@ stages:
 
 #################################################################
 # Installing stage
+
 proto:
   stage: installing
   before_script:
@@ -58,6 +64,10 @@ proto:
 
 format:
   stage: formatting
+  before_script:
+    - *setup_project
+    - *setup_git_credentials
+    - *dep_ensure
   script:
     - go fmt $(go list ./... | grep -v /vendor/)
 
@@ -66,6 +76,10 @@ format:
 
 lint:
   stage: linting
+  before_script:
+    - *setup_project
+    - *setup_git_credentials
+    - *dep_ensure
   script:
     - golint -set_exit_status $(go list ./... | grep -v /vendor/)
   allow_failure: true
@@ -77,6 +91,11 @@ vet:
   stage: testing
   dependencies:
     - proto
+  before_script:
+    - *setup_project
+    - *setup_git_credentials
+    - *dep_ensure
+    - *setup_db
   script:
     - go vet $(go list ./... | grep -v /vendor/)
   services:
@@ -88,6 +107,11 @@ test:
   stage: testing
   dependencies:
     - proto
+  before_script:
+    - *setup_project
+    - *setup_git_credentials
+    - *dep_ensure
+    - *setup_db
   script:
     - go test $(go list ./... | grep -v /vendor/)
   services:
@@ -99,6 +123,11 @@ race:
   stage: testing
   dependencies:
     - proto
+  before_script:
+    - *setup_project
+    - *setup_git_credentials
+    - *dep_ensure
+    - *setup_db
   script:
     - go test -race $(go list ./... | grep -v /vendor/)
   services:
@@ -110,6 +139,11 @@ coverage:
   stage: testing
   dependencies:
     - proto
+  before_script:
+    - *setup_project
+    - *setup_git_credentials
+    - *dep_ensure
+    - *setup_db
   script:
     - go test -covermode=atomic -coverprofile=coverage.tx
     - go tool cover -func=coverage.tx
@@ -126,6 +160,10 @@ build:
   stage: building
   dependencies:
     - proto
+  before_script:
+    - *setup_project
+    - *setup_git_credentials
+    - *dep_ensure
   script:
     - go build
   artifacts:
