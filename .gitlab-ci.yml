@@ -10,11 +10,10 @@ variables:
 
 before_script:
   - go version
+  - cd /builds/ignitionrobotics/web/cloudsim
   - mkdir -p -v $GOPATH/src/$PKG_NAME/vendor
   - mv -f * $GOPATH/src/$PKG_NAME
   - cd $GOPATH/src/$PKG_NAME
-  - export DEP_RELEASE_TAG=v0.4.1
-  - curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
   - $GOPATH/bin/dep ensure -vendor-only
   - $GOPATH/bin/dep status
   - git config --global user.name "ign-cloudsim"
@@ -26,7 +25,7 @@ before_script:
 cache:
   key: ${CI_COMMIT_REF_SLUG}
   paths:
-    - $GOPATH/src/$PKG_NAME/vendor
+    - ${GOPATH}/src/${PKG_NAME}/vendor
 
 #################################################################
 # Stages
@@ -43,14 +42,10 @@ stages:
 #################################################################
 # Installing stage
 proto:
-  image: gazebo
   stage: installing
   before_script:
-    - apt-get update
-    - apt-get -y install tar lsb-release gnupg pkg-config build-essential curl git
-    - apt-get install -y libignition-transport7-dev golang-goprotobuf-dev
-  script:
     - cd ./ign-transport/proto/
+  script:
     - protoc --proto_path=. --go_out=. ignition/msgs/*.proto
   artifacts:
     paths:
@@ -70,8 +65,6 @@ format:
 
 lint:
   stage: linting
-  before_script:
-    - go get -u golang.org/x/lint/golint
   script:
     - golint -set_exit_status $(go list ./... | grep -v /vendor/)
 

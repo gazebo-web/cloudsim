@@ -281,7 +281,7 @@ func (u *UserAccessorImpl) AddResourcePermission(user, resource string, action p
 func (u *UserAccessorImpl) AddScore(groupId *string, competition *string, circuit *string, owner *string,
 	score *float64, sources *string) *ign.ErrMsg {
 	entry := subt.CompetitionScore{
-		GroupId:     groupId,
+		GroupID:     groupId,
 		Competition: competition,
 		Circuit:     circuit,
 		Owner:       owner,
