@@ -1,4 +1,4 @@
-image: golang:1.10.3
+image: registry.gitlab.com/ignitionrobotics/web/images/cloudsim-pipelines
 
 variables:
   PKG_NAME: gitlab.com/ignitionrobotics/web/cloudsim
