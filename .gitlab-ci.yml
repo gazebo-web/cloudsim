@@ -23,7 +23,7 @@ variables:
   - $GOPATH/bin/dep status
 
 .setup_db: &setup_db
-  - mysql -u root -proot -h db -e "CREATE DATABASE usersdb_test"
+  - mysql -u root -proot -h mysql -e "CREATE DATABASE usersdb_test"
 
 #################################################################
 # Cache configuration
