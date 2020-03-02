@@ -29,6 +29,7 @@ variables:
 # Cache configuration
 
 cache:
+  untracked: true
   key: ${CI_COMMIT_REF_SLUG}
   paths:
     - ${GOPATH}/src/${PKG_NAME}/vendor
@@ -59,6 +60,13 @@ proto:
       - /builds/ignitionrobotics/web/cloudsim/ign-transport/proto/ignition/msgs/*.go
     expire_in: 1 month
 
+dep:
+  stage: installing
+  before_script:
+    - *setup_project
+  script:
+    - *dep_ensure
+
 #################################################################
 # Formatting stage
 
@@ -67,7 +75,6 @@ format:
   before_script:
     - *setup_project
     - *setup_git_credentials
-    - *dep_ensure
   script:
     - go fmt $(go list ./... | grep -v /vendor/)
 
@@ -79,7 +86,6 @@ lint:
   before_script:
     - *setup_project
     - *setup_git_credentials
-    - *dep_ensure
   script:
     - golint -set_exit_status $(go list ./... | grep -v /vendor/)
   allow_failure: true
@@ -94,7 +100,6 @@ vet:
   before_script:
     - *setup_project
     - *setup_git_credentials
-    - *dep_ensure
     - *setup_db
   script:
     - go vet $(go list ./... | grep -v /vendor/)
@@ -110,7 +115,6 @@ test:
   before_script:
     - *setup_project
     - *setup_git_credentials
-    - *dep_ensure
     - *setup_db
   script:
     - go test $(go list ./... | grep -v /vendor/)
@@ -126,7 +130,6 @@ race:
   before_script:
     - *setup_project
     - *setup_git_credentials
-    - *dep_ensure
     - *setup_db
   script:
     - go test -race $(go list ./... | grep -v /vendor/)
@@ -142,7 +145,6 @@ coverage:
   before_script:
     - *setup_project
     - *setup_git_credentials
-    - *dep_ensure
     - *setup_db
   script:
     - go test -covermode=atomic -coverprofile=coverage.tx
@@ -163,7 +165,6 @@ build:
   before_script:
     - *setup_project
     - *setup_git_credentials
-    - *dep_ensure
   script:
     - go build
   artifacts:
