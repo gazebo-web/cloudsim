@@ -32,7 +32,7 @@ cache:
   untracked: true
   key: ${CI_COMMIT_REF_SLUG}
   paths:
-    - go/src/${PKG_NAME}/vendor
+    - vendor/
 
 #################################################################
 # Stages
@@ -62,9 +62,8 @@ proto:
 
 dep:
   stage: installing
-  before_script:
-    - *setup_project
   script:
+    - cd /builds/ignitionrobotics/web/cloudsim
     - *dep_ensure
 
 #################################################################
