@@ -2,7 +2,7 @@ package simulations
 
 import (
 	"gitlab.com/ignitionrobotics/web/ign-go"
-	"bitbucket.org/ignitionrobotics/web-cloudsim/globals"
+	"gitlab.com/ignitionrobotics/web/cloudsim/globals"
 	"context"
 	"encoding/json"
 	"fmt"

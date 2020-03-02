@@ -3,7 +3,7 @@ package simulations
 import (
 	"gitlab.com/ignitionrobotics/web/fuelserver/bundles/users"
 	"gitlab.com/ignitionrobotics/web/ign-go"
-	useracc "bitbucket.org/ignitionrobotics/web-cloudsim/users"
+	useracc "gitlab.com/ignitionrobotics/web/cloudsim/users"
 	"context"
 	"fmt"
 	"github.com/gorilla/mux"

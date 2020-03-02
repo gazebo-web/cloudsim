@@ -3,8 +3,8 @@ package globals
 import (
 	"gitlab.com/ignitionrobotics/web/fuelserver/permissions"
 	"gitlab.com/ignitionrobotics/web/ign-go"
-	igntran "bitbucket.org/ignitionrobotics/web-cloudsim/ign-transport"
-	useracc "bitbucket.org/ignitionrobotics/web-cloudsim/users"
+	igntran "gitlab.com/ignitionrobotics/web/cloudsim/ign-transport"
+	useracc "gitlab.com/ignitionrobotics/web/cloudsim/users"
 	"github.com/aws/aws-sdk-go/service/ec2/ec2iface"
 	"github.com/aws/aws-sdk-go/service/s3/s3iface"
 	"github.com/go-playground/form"

@@ -49,7 +49,7 @@ mkdir -p ~/go_ws
 1. Download server code into new directories in the workspace:
 
 ```
-hg clone https://bitbucket.org/ignitionrobotics/web-cloudsim ~/go_ws/src/bitbucket.org/ignitionrobotics/web-cloudsim
+hg clone https://gitlab.com/ignitionrobotics/web/cloudsim ~/go_ws/src/gitlab.com/ignitionrobotics/web/cloudsim
 ```
 
 1. Set necessary environment variable (needs to be set every time the environment is built)
@@ -84,7 +84,7 @@ curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
 Download application dependencies (vendor/)
 
 ```
-cd ~/go_ws/src/bitbucket.org/ignitionrobotics/web-cloudsim
+cd ~/go_ws/src/gitlab.com/ignitionrobotics/web/cloudsim
 ```
 
 Download dependencies into `vendor` folder:
@@ -102,13 +102,13 @@ Alternatively, use `virtualgo` (see "Tips for local development" section below).
 ## Compile the protobuf files and then build the application
 
 ```
-cd ~/go_ws/src/bitbucket.org/ignitionrobotics/web-cloudsim/ign-transport/proto/
+cd ~/go_ws/src/gitlab.com/ignitionrobotics/web/cloudsim/ign-transport/proto/
 protoc --proto_path=. --go_out=. ignition/msgs/*.proto
 ```
 
 Once proto files are generated, run:
 ```
-cd ~/go_ws/src/bitbucket.org/ignitionrobotics/web-cloudsim
+cd ~/go_ws/src/gitlab.com/ignitionrobotics/web/cloudsim
 go install
 ```
 
@@ -395,7 +395,7 @@ For more details and tips about kubernetes, see the `k8-readme.md` file.
 1. Run the linter
 
     ```
-    ./bin/gometalinter $(go list bitbucket.org/ignitionrobotics/web-cloudsim/...)
+    ./bin/gometalinter $(go list gitlab.com/ignitionrobotics/web/cloudsim/...)
     ```
 
 Note you can create this bash script:
@@ -403,7 +403,7 @@ Note you can create this bash script:
 ```
 #!/bin/bash
 curl -L https://git.io/vp6lP | sh -s -- -b $GOPATH/bin
-$GOPATH/bin/gometalinter $(go list bitbucket.org/ignitionrobotics/web-cloudsim/...)
+$GOPATH/bin/gometalinter $(go list gitlab.com/ignitionrobotics/web/cloudsim/...)
 ```
 
 # Troubleshooting tips

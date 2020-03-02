@@ -2,8 +2,8 @@ package simulations
 
 import (
 	"gitlab.com/ignitionrobotics/web/ign-go"
-	igntran "bitbucket.org/ignitionrobotics/web-cloudsim/ign-transport"
-	msgs "bitbucket.org/ignitionrobotics/web-cloudsim/ign-transport/proto/ignition/msgs"
+	igntran "gitlab.com/ignitionrobotics/web/cloudsim/ign-transport"
+	msgs "gitlab.com/ignitionrobotics/web/cloudsim/ign-transport/proto/ignition/msgs"
 	"context"
 	"fmt"
 	proto "github.com/golang/protobuf/proto"

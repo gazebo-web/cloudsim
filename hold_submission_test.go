@@ -3,7 +3,7 @@ package main
 import (
 	"gitlab.com/ignitionrobotics/web/ign-go"
 	igntest "gitlab.com/ignitionrobotics/web/ign-go/testhelpers"
-	sim "bitbucket.org/ignitionrobotics/web-cloudsim/simulations"
+	sim "gitlab.com/ignitionrobotics/web/cloudsim/simulations"
 	"context"
 	"github.com/jinzhu/gorm"
 	"github.com/stretchr/testify/assert"
