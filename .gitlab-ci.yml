@@ -62,8 +62,9 @@ proto:
 
 dep:
   stage: installing
+  before_script:
+    - *setup_project
   script:
-    - cd /builds/ignitionrobotics/web/cloudsim
     - *dep_ensure
 
 #################################################################
