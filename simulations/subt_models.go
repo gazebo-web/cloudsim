@@ -1,7 +1,7 @@
 package simulations
 
 import (
-	"gitlab.com/ignitionrobotics/web/cloudsim/globals"
+	"bitbucket.org/ignitionrobotics/web-cloudsim/globals"
 	"encoding/json"
 	"errors"
 	"fmt"

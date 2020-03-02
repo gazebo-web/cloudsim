@@ -3,8 +3,8 @@ package main
 import (
 	"gitlab.com/ignitionrobotics/web/ign-go"
 	"gitlab.com/ignitionrobotics/web/ign-go/testhelpers"
-	"gitlab.com/ignitionrobotics/web/cloudsim/globals"
-	sim "gitlab.com/ignitionrobotics/web/cloudsim/simulations"
+	"bitbucket.org/ignitionrobotics/web-cloudsim/globals"
+	sim "bitbucket.org/ignitionrobotics/web-cloudsim/simulations"
 	"context"
 	"encoding/json"
 	"fmt"

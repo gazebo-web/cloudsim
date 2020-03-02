@@ -1,7 +1,7 @@
 package main
 
 import (
-	igntran "gitlab.com/ignitionrobotics/web/cloudsim/ign-transport"
+	igntran "bitbucket.org/ignitionrobotics/web-cloudsim/ign-transport"
 	"fmt"
 )
 

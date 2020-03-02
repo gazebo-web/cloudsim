@@ -4,8 +4,8 @@ import (
 	"gitlab.com/ignitionrobotics/web/fuelserver/bundles/users"
 	per "gitlab.com/ignitionrobotics/web/fuelserver/permissions"
 	"gitlab.com/ignitionrobotics/web/ign-go"
-	"gitlab.com/ignitionrobotics/web/cloudsim/globals"
-	useracc "gitlab.com/ignitionrobotics/web/cloudsim/users"
+	"bitbucket.org/ignitionrobotics/web-cloudsim/globals"
+	useracc "bitbucket.org/ignitionrobotics/web-cloudsim/users"
 	"bytes"
 	"context"
 	"encoding/gob"
@@ -73,23 +73,31 @@ const (
 	platformSubT string = "subt"
 	// A predefined const to refer to the SubT Application type
 	// This will be used to know which Pods and services launch.
-	applicationSubT        string = "subt"
-	circuitVirtualStix     string = "Virtual Stix"
-	circuitTunnelCircuit   string = "Tunnel Circuit"
-	circuitTunnelPractice1 string = "Tunnel Practice 1"
-	circuitTunnelPractice2 string = "Tunnel Practice 2"
-	circuitTunnelPractice3 string = "Tunnel Practice 3"
-	circuitSimpleTunnel1   string = "Simple Tunnel 1"
-	circuitSimpleTunnel2   string = "Simple Tunnel 2"
-	circuitSimpleTunnel3   string = "Simple Tunnel 3"
-	circuitUrbanQual       string = "Urban Qualification"
-	circuitUrbanSimple1    string = "Urban Simple 1"
-	circuitUrbanSimple2    string = "Urban Simple 2"
-	circuitUrbanSimple3    string = "Urban Simple 3"
-	circuitUrbanPractice1  string = "Urban Practice 1"
-	circuitUrbanPractice2  string = "Urban Practice 2"
-	circuitUrbanPractice3  string = "Urban Practice 3"
-	circuitUrbanCircuit    string = "Urban Circuit"
+	applicationSubT           string = "subt"
+	CircuitVirtualStix        string = "Virtual Stix"
+	CircuitTunnelCircuit      string = "Tunnel Circuit"
+	CircuitTunnelPractice1    string = "Tunnel Practice 1"
+	CircuitTunnelPractice2    string = "Tunnel Practice 2"
+	CircuitTunnelPractice3    string = "Tunnel Practice 3"
+	CircuitSimpleTunnel1      string = "Simple Tunnel 1"
+	CircuitSimpleTunnel2      string = "Simple Tunnel 2"
+	CircuitSimpleTunnel3      string = "Simple Tunnel 3"
+	CircuitUrbanQual          string = "Urban Qualification"
+	CircuitUrbanSimple1       string = "Urban Simple 1"
+	CircuitUrbanSimple2       string = "Urban Simple 2"
+	CircuitUrbanSimple3       string = "Urban Simple 3"
+	CircuitUrbanPractice1     string = "Urban Practice 1"
+	CircuitUrbanPractice2     string = "Urban Practice 2"
+	CircuitUrbanPractice3     string = "Urban Practice 3"
+	CircuitUrbanCircuit       string = "Urban Circuit"
+	CircuitUrbanCircuitWorld1 string = "Urban Circuit World 1"
+	CircuitUrbanCircuitWorld2 string = "Urban Circuit World 2"
+	CircuitUrbanCircuitWorld3 string = "Urban Circuit World 3"
+	CircuitUrbanCircuitWorld4 string = "Urban Circuit World 4"
+	CircuitUrbanCircuitWorld5 string = "Urban Circuit World 5"
+	CircuitUrbanCircuitWorld6 string = "Urban Circuit World 6"
+	CircuitUrbanCircuitWorld7 string = "Urban Circuit World 7"
+	CircuitUrbanCircuitWorld8 string = "Urban Circuit World 8"
 	// Container names
 	GazeboServerContainerName    string = "gzserver-container"
 	CommsBridgeContainerName     string = "comms-bridge"
@@ -451,15 +459,18 @@ func (sa *SubTApplication) launchCircuitOnCompetitionDay(ctx context.Context, s 
 // can shutdown a simulation.
 func (sa *SubTApplication) checkCanShutdownSimulation(ctx context.Context, s *Service, tx *gorm.DB,
 	dep *SimulationDeployment, user *users.User) (bool, *ign.ErrMsg) {
-
 	extra, err := ReadExtraInfoSubT(dep)
 	if err != nil {
 		return false, ign.NewErrorMessageWithBase(ign.ErrorUnexpected, err)
 	}
 
-	if extra.Circuit == circuitTunnelCircuit {
-		// Members of 'subt' Organization (ie. Competition Admins) are the only ones
-		// that can shutdown Tunnel Circuit simulations.
+	// Members of 'subt' Organization (ie. Competition Admins) are the only ones
+	// that can shutdown competition simulations.
+	circuits := []string{
+		CircuitTunnelCircuit,
+		CircuitUrbanCircuit,
+	}
+	if StrSliceContains(extra.Circuit, circuits) {
 		return s.userAccessor.CanPerformWithRole(sptr(applicationSubT), *user.Username, per.Member)
 	}
 

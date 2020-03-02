@@ -5,8 +5,8 @@ import (
 	per "gitlab.com/ignitionrobotics/web/fuelserver/permissions"
 	"gitlab.com/ignitionrobotics/web/ign-go"
 	"gitlab.com/ignitionrobotics/web/ign-go/scheduler"
-	"gitlab.com/ignitionrobotics/web/cloudsim/queues"
-	useracc "gitlab.com/ignitionrobotics/web/cloudsim/users"
+	"bitbucket.org/ignitionrobotics/web-cloudsim/queues"
+	useracc "bitbucket.org/ignitionrobotics/web-cloudsim/users"
 	"context"
 	"fmt"
 	"github.com/caarlos0/env"
@@ -1078,6 +1078,8 @@ func (s *Service) RestartSimulationAsync(ctx context.Context, tx *gorm.DB,
 	clone.ErrorStatus = nil
 	clone.DeletedAt = nil
 	clone.StoppedAt = nil
+	// Update the max runtime limit in case the server configuration was updated
+	clone.ValidFor = sptr(s.getMaxDurationForSimulation(ctx, tx, clone).String())
 
 	// Find out if the old simulation was also a "retry" and get its retry number
 	const retryStr = "-r-"

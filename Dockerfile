@@ -1,8 +1,8 @@
 FROM ignitionrobotics/web-cloudsim-base
 
-RUN mkdir -p /go/src/gitlab.com/ignitionrobotics/web/cloudsim
-COPY . /go/src/gitlab.com/ignitionrobotics/web/cloudsim
-WORKDIR /go/src/gitlab.com/ignitionrobotics/web/cloudsim
+RUN mkdir -p /go/src/bitbucket.org/ignitionrobotics/web-cloudsim
+COPY . /go/src/bitbucket.org/ignitionrobotics/web-cloudsim
+WORKDIR /go/src/bitbucket.org/ignitionrobotics/web-cloudsim
 
 # Install the dependencies without checking for go code
 RUN dep ensure -vendor-only

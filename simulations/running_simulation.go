@@ -2,8 +2,8 @@ package simulations
 
 import (
 	"gitlab.com/ignitionrobotics/web/ign-go"
-	igntran "gitlab.com/ignitionrobotics/web/cloudsim/ign-transport"
-	msgs "gitlab.com/ignitionrobotics/web/cloudsim/ign-transport/proto/ignition/msgs"
+	igntran "bitbucket.org/ignitionrobotics/web-cloudsim/ign-transport"
+	msgs "bitbucket.org/ignitionrobotics/web-cloudsim/ign-transport/proto/ignition/msgs"
 	"context"
 	"fmt"
 	proto "github.com/golang/protobuf/proto"
@@ -81,8 +81,8 @@ func NewRunningSimulation(ctx context.Context, dep *SimulationDeployment, worldS
 		lockCurrentState:     sync.RWMutex{},
 		lockDesiredState:     sync.RWMutex{},
 		publishing:           false,
-		SimCreatedAtTime:     dep.CreatedAt,
-		MaxValidUntil:        dep.CreatedAt.Add(validFor),
+		SimCreatedAtTime:     time.Now(),
+		MaxValidUntil:        time.Now().Add(validFor),
 		SimMaxAllowedSeconds: int64(maxSimSeconds),
 	}
 	var err error

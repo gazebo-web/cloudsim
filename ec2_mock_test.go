@@ -1,7 +1,7 @@
 package main
 
 import (
-	"gitlab.com/ignitionrobotics/web/cloudsim/simulations"
+	"bitbucket.org/ignitionrobotics/web-cloudsim/simulations"
 	"fmt"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ec2"
