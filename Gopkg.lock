@@ -334,12 +334,6 @@
   version = "v1.0.0"
 
 [[projects]]
-  name = "github.com/prprprus/scheduler"
-  packages = ["."]
-  revision = "76dc9da5882be6e98dbad344b0b55591b903fefb"
-  version = "v0.5.0"
-
-[[projects]]
   name = "github.com/rollbar/rollbar-go"
   packages = ["."]
   revision = "d450a931d7a085523b60f0f7c98487333a8ce5fa"
@@ -409,8 +403,14 @@
     "scheduler",
     "testhelpers"
   ]
-  revision = "0366041efcb3529850ce1fa2f0d88e94f8525722"
-  version = "4.0.0"
+  revision = "48b369571fcf660dbb0dda492c29ad5b38edb646"
+  version = "4.0.1"
+
+[[projects]]
+  name = "gitlab.com/ignitionrobotics/web/scheduler"
+  packages = ["."]
+  revision = "4bd85f4ff2d6efc3365cb53ad7340f85a50ed226"
+  version = "0.6.0"
 
 [[projects]]
   branch = "master"
@@ -756,6 +756,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "d3660c1fd5cee34ff6064830ae73d561e7c69683996e6951f19a566c8d9d387b"
+  inputs-digest = "2176f5d46694b620533c1de06606a5464ea55f99bbc2043f55a6f215a3fd3dfb"
   solver-name = "gps-cdcl"
   solver-version = 1
