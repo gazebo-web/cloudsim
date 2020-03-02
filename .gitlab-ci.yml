@@ -32,7 +32,7 @@ cache:
   untracked: true
   key: ${CI_COMMIT_REF_SLUG}
   paths:
-    - ${GOPATH}/src/${PKG_NAME}/vendor
+    - go/src/${PKG_NAME}/vendor
 
 #################################################################
 # Stages
