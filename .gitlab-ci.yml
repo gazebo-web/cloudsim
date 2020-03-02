@@ -33,6 +33,7 @@ cache:
   key: ${CI_COMMIT_REF_SLUG}
   paths:
     - vendor/
+    - /go/src/gitlab.com/ignitionrobotics/web/cloudsim/vendor/
 
 #################################################################
 # Stages
