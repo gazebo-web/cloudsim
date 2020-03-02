@@ -100,6 +100,7 @@ vet:
   before_script:
     - *setup_project
     - *setup_git_credentials
+    - *dep_ensure
     - *setup_db
   script:
     - go vet $(go list ./... | grep -v /vendor/)
@@ -115,6 +116,7 @@ test:
   before_script:
     - *setup_project
     - *setup_git_credentials
+    - *dep_ensure
     - *setup_db
   script:
     - go test $(go list ./... | grep -v /vendor/)
@@ -130,6 +132,7 @@ race:
   before_script:
     - *setup_project
     - *setup_git_credentials
+    - *dep_ensure
     - *setup_db
   script:
     - go test -race $(go list ./... | grep -v /vendor/)
@@ -145,6 +148,7 @@ coverage:
   before_script:
     - *setup_project
     - *setup_git_credentials
+    - *dep_ensure
     - *setup_db
   script:
     - go test -covermode=atomic -coverprofile=coverage.tx
@@ -165,6 +169,7 @@ build:
   before_script:
     - *setup_project
     - *setup_git_credentials
+    - *dep_ensure
   script:
     - go build
   artifacts:
