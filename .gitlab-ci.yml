@@ -107,6 +107,7 @@ vet:
     - mysql:5.7
   environment:
     name: testing
+  allow_failure: true
 
 test:
   stage: testing
@@ -139,6 +140,7 @@ race:
     - mysql:5.7
   environment:
     name: testing
+  allow_failure: true
 
 coverage:
   stage: testing
