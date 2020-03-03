@@ -59,7 +59,7 @@ func (m *EC2Mock) NewAWSErr(code string) awserr.Error {
 // NewInstance is a helper method to easily create ec2.Instance structs.
 func (m *EC2Mock) NewInstance(iID string) *ec2.Instance {
 	return &ec2.Instance{
-		InstanceID: &iID,
+		InstanceId: &iID,
 	}
 }
 
