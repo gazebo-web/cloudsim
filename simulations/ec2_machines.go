@@ -393,7 +393,7 @@ func (s *Ec2Client) launchNodes(ctx context.Context, tx *gorm.DB, dep *Simulatio
 		KeyName:          aws.String("ignitionFuel"),
 		MinCount:         aws.Int64(1),
 		MaxCount:         aws.Int64(1),
-		SecurityGroupIDs: aws.StringSlice([]string{"sg-0c5c791266694a3ca"}),
+		SecurityGroupIds: aws.StringSlice([]string{"sg-0c5c791266694a3ca"}),
 		SubnetId:         aws.String("subnet-0e632d68a9032ab9d"),
 		TagSpecifications: []*ec2.TagSpecification{
 			{
