@@ -12,7 +12,7 @@ func TestRunningSimulation_IsExpired(t *testing.T) {
 
 	dep := SimulationDeployment{
 		ID:        0,
-		GroupId:   sptr("group-Id-test"),
+		GroupID:   sptr("group-Id-test"),
 		Owner:     sptr("Test"),
 		CreatedAt: time.Now().Add(-10 * time.Hour),
 		ValidFor:  sptr("6h0m0s"),

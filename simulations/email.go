@@ -61,13 +61,13 @@ func SendSimulationSummaryEmail(dep *SimulationDeployment, summary AggregatedSub
 		Name    string
 		Circuit string
 		SimName string
-		GroupId string
+		GroupID string
 		Summary string
 	}{
 		Name:    *user.Name,
 		SimName: *dep.Name,
 		Circuit: *dep.ExtraSelector,
-		GroupId: *dep.GroupId,
+		GroupID: *dep.GroupID,
 		Summary: marshaledSummary.String(),
 	}
 

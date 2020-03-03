@@ -72,7 +72,7 @@ func (s *LocalNodes) launchNodes(ctx context.Context, tx *gorm.DB, dep *Simulati
 	nodesInterface := s.clientset.CoreV1().Nodes()
 	var err error
 
-	groupID := *dep.GroupId
+	groupID := *dep.GroupID
 
 	// Find a free node or the one already used by same groupID
 	// First, try to use same node
@@ -100,7 +100,7 @@ func (s *LocalNodes) launchNodes(ctx context.Context, tx *gorm.DB, dep *Simulati
 		}
 	}
 
-	ignlog.Info(fmt.Sprintf("Configured local node for Cloudsim GroupId: %s\n", groupID))
+	ignlog.Info(fmt.Sprintf("Configured local node for Cloudsim GroupID: %s\n", groupID))
 	nodeLabel := nodeLabelKey + "=" + groupID
 	return &nodeLabel, nil
 }
@@ -131,7 +131,7 @@ func (s *LocalNodes) deleteK8Nodes(ctx context.Context, tx *gorm.DB, groupID str
 		return nil, NewErrorMessageWithBase(ErrorMarkingLocalNodeAsFree, err)
 	}
 
-	ignlog.Info(fmt.Sprintf("Stopped using local node for Cloudsim GroupId: %s\n", groupID))
+	ignlog.Info(fmt.Sprintf("Stopped using local node for Cloudsim GroupID: %s\n", groupID))
 	return &nodeLabel, nil
 }
 

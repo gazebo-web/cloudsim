@@ -44,8 +44,8 @@ func TestSuccessfulSimulations(t *testing.T) {
 
 	unauth := ign.NewErrorMessage(ign.ErrorUnauthorized)
 
-	var teamBSimGroupId string
-	var teamASimGroupId string
+	var teamBSimGroupID string
+	var teamASimGroupID string
 	vStix := "Virtual Stix"
 	tunnel := "Tunnel Circuit"
 	createSimsTestsData := []createSimulationTest{
@@ -100,15 +100,15 @@ func TestSuccessfulSimulations(t *testing.T) {
 				assert.True(t, *simDep.Private)
 				assert.Equal(t, "subt", *simDep.Application)
 				assert.Equal(t, 0, simDep.MultiSim)
-				if teamBSimGroupId == "" && *simDep.Creator == "TeamBAdmin" {
+				if teamBSimGroupID == "" && *simDep.Creator == "TeamBAdmin" {
 					// save the created simDep groupID
 					// HACK
-					teamBSimGroupId = *simDep.GroupId
+					teamBSimGroupID = *simDep.GroupID
 				}
-				if teamASimGroupId == "" && *simDep.Creator == "TeamAUser1" {
+				if teamASimGroupID == "" && *simDep.Creator == "TeamAUser1" {
 					// save the created simDep groupID
 					// HACK
-					teamASimGroupId = *simDep.GroupId
+					teamASimGroupID = *simDep.GroupID
 				}
 			})
 			if test.expErrMsg == nil {

@@ -42,7 +42,7 @@ Status set to "Pending", and added to a queue of pending jobs.
 - There is another pool of workers (eg. 10) in charge of shutting down simulations. Each worker will:
     - Get a record from the queue of "ToBeTerminated" SimDeployments.
     - Update its status to "DeletingPods".
-    - Asks Kubernetes to stop pods/deployments associated to that Simulation (GroupId)
+    - Asks Kubernetes to stop pods/deployments associated to that Simulation (GroupID)
     - Wait until pods/services are stopped.
     - Update status to "DeletingNodes".
     - Ask K8 to remove the nodes from the cluster.

@@ -479,14 +479,14 @@ var Routes ign.Routes = ign.Routes{
 	// Extra route to access nodes and their associated hosts
 	ign.Route{
 		Name:        "Remove Nodes and Hosts associated to a group",
-		Description: "Deletes cluster nodes and terminates the instances associated to a given Cloudsim GroupId",
+		Description: "Deletes cluster nodes and terminates the instances associated to a given Cloudsim GroupID",
 		URI:         "/k8/nodes",
 		Headers:     ign.AuthHeadersRequired,
 		Methods:     ign.Methods{},
 		SecureMethods: ign.SecureMethods{
 			// swagger:route DELETE /k8/nodes k8 deleteNodesAndHosts
 			//
-			// Deletes a set of nodes and hosts (instances) associated to a GroupId
+			// Deletes a set of nodes and hosts (instances) associated to a GroupID
 			//
 			//   Produces:
 			//   - application/json

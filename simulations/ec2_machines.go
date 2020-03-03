@@ -23,7 +23,7 @@ import (
 // records in the DB based on their status.
 
 const (
-	nodeLabelKeyGroupId          = "cloudsim_groupid"
+	nodeLabelKeyGroupID          = "cloudsim_groupid"
 	nodeLabelKeyCloudsimNodeType = "cloudsim_node_type"
 	nodeLabelKeySubTRobotName    = "robot_name"
 )
@@ -167,7 +167,7 @@ func (s *Ec2Client) buildUserDataString(groupID string, extraLabels ...string) (
 	date '+%Y-%m-%d %H:%M:%S'
 	`
 
-	nodeGroupLabel := getNodeLabelForGroupId(groupID)
+	nodeGroupLabel := getNodeLabelForGroupID(groupID)
 	// NOTE: this nodeLabels trick helps setting labels to the new Node at creation time.
 	nodeLabels := `cat > /etc/systemd/system/kubelet.service.d/20-labels-taints.conf <<EOF
 [Service]
@@ -255,7 +255,7 @@ func (s *Ec2Client) checkNodeAvailability(ctx context.Context, simDep *Simulatio
 				"checkNodeAvailability - Not enough %s instances available (%d requested) for simulation [%s]: %s\n",
 				*template.InstanceType,
 				*template.MinCount,
-				*simDep.GroupId,
+				*simDep.GroupID,
 				awsErr.Message(),
 			))
 			return false, ign.NewErrorMessageWithBase(ign.ErrorLaunchingCloudInstanceNotEnoughResources, awsErr.OrigErr())
@@ -325,14 +325,14 @@ func (s *Ec2Client) launchInstances(ctx context.Context, tx *gorm.DB, dep *Simul
 		// info in 'runResult'.
 		for _, ins := range runResult.Instances {
 			// Get the created Instance ID(s).
-			iId := *ins.InstanceId
-			instanceIds = append(instanceIds, iId)
+			iID := *ins.InstanceId
+			instanceIds = append(instanceIds, iID)
 
 			// And create a DB record to track the machine instance in case of errors later
 			machine := MachineInstance{
-				InstanceId:      &iId,
+				InstanceId:      &iID,
 				LastKnownStatus: macInitializing.ToStringPtr(),
-				GroupId:         dep.GroupId,
+				GroupID:         dep.GroupID,
 				Application:     dep.Application,
 			}
 			err = tx.Create(&machine).Error
@@ -375,10 +375,10 @@ func (s *Ec2Client) launchNodes(ctx context.Context, tx *gorm.DB, dep *Simulatio
 
 	tstart := time.Now()
 
-	groupID := *dep.GroupId
+	groupID := *dep.GroupID
 
 	// This will be the return value if everything is ok
-	nodeSelectorGroupId := getNodeLabelForGroupId(groupID)
+	nodeSelectorGroupID := getNodeLabelForGroupID(groupID)
 	instanceName := s.getInstanceNameFor(groupID, "gazebo")
 	userData, _ := s.buildUserDataString(groupID, labelAndValue(nodeLabelKeyCloudsimNodeType, "gazebo"))
 
@@ -393,14 +393,14 @@ func (s *Ec2Client) launchNodes(ctx context.Context, tx *gorm.DB, dep *Simulatio
 		KeyName:          aws.String("ignitionFuel"),
 		MinCount:         aws.Int64(1),
 		MaxCount:         aws.Int64(1),
-		SecurityGroupIds: aws.StringSlice([]string{"sg-0c5c791266694a3ca"}),
+		SecurityGroupIDs: aws.StringSlice([]string{"sg-0c5c791266694a3ca"}),
 		SubnetId:         aws.String("subnet-0e632d68a9032ab9d"),
 		TagSpecifications: []*ec2.TagSpecification{
 			{
 				ResourceType: aws.String("instance"),
 				Tags: []*ec2.Tag{
 					{Key: aws.String("Name"), Value: aws.String(instanceName)},
-					{Key: aws.String("CloudsimGroupId"), Value: aws.String(groupID)},
+					{Key: aws.String("CloudsimGroupID"), Value: aws.String(groupID)},
 					{Key: aws.String("project"), Value: aws.String("cloudsim")},
 					{Key: dep.Platform, Value: aws.String("True")},
 				},
@@ -453,7 +453,7 @@ func (s *Ec2Client) launchNodes(ctx context.Context, tx *gorm.DB, dep *Simulatio
 
 			ignlog.Debug(fmt.Sprintf(
 				"launchNodes - not enough instances to start simulation for groupid [%s]. retrying: %s",
-				*dep.GroupId,
+				*dep.GroupID,
 				em.Msg,
 			))
 
@@ -512,8 +512,8 @@ func (s *Ec2Client) launchNodes(ctx context.Context, tx *gorm.DB, dep *Simulatio
 		}
 	}
 
-	ignlog.Info(fmt.Sprintf("Instances are now running: %v. Cloudsim GroupId: %s\n", instanceIds, groupID))
-	return &nodeSelectorGroupId, nil
+	ignlog.Info(fmt.Sprintf("Instances are now running: %v. Cloudsim GroupID: %s\n", instanceIds, groupID))
+	return &nodeSelectorGroupID, nil
 }
 
 func (s *Ec2Client) getInstanceNameFor(groupID, suffix string) string {
@@ -531,22 +531,22 @@ func replaceInstanceNameTag(input *ec2.RunInstancesInput, name string) {
 	input.TagSpecifications[0].Tags[0] = nameTag
 }
 
-func getNodeLabelForGroupId(groupID string) string {
-	return labelAndValue(nodeLabelKeyGroupId, groupID)
+func getNodeLabelForGroupID(groupID string) string {
+	return labelAndValue(nodeLabelKeyGroupID, groupID)
 }
 
 func labelAndValue(key, value string) string {
 	return key + "=" + value
 }
 
-// deleteK8Nodes deletes the kubernetes nodes used to run a GroupId.
+// deleteK8Nodes deletes the kubernetes nodes used to run a GroupID.
 // It is expected that if the labeled Nodes cannot be found, then this function should return
 // an ErrorLabeledNodeNotFound.
 // @public
 func (s *Ec2Client) deleteK8Nodes(ctx context.Context, tx *gorm.DB, groupID string) (interface{}, *ign.ErrMsg) {
 
-	// Find and Delete all k8 Nodes associated to the GroupId.
-	nodeLabel := getNodeLabelForGroupId(groupID)
+	// Find and Delete all k8 Nodes associated to the GroupID.
+	nodeLabel := getNodeLabelForGroupID(groupID)
 	nodesInterface := s.clientset.CoreV1().Nodes()
 	nodes, err := nodesInterface.List(metav1.ListOptions{LabelSelector: nodeLabel})
 	if err != nil {
@@ -572,7 +572,7 @@ func (s *Ec2Client) deleteK8Nodes(ctx context.Context, tx *gorm.DB, groupID stri
 }
 
 // deleteHosts is a helper function that sends a request AWS to terminate
-// all the EC2 instances associated to a given GroupId.
+// all the EC2 instances associated to a given GroupID.
 // It also updates the MachineInstance DB records with the status of the terminated instances.
 // @public
 func (s *Ec2Client) deleteHosts(ctx context.Context, tx *gorm.DB,
@@ -580,7 +580,7 @@ func (s *Ec2Client) deleteHosts(ctx context.Context, tx *gorm.DB,
 
 	// Get the EC2 instance Ids for the given groupID.
 	var machines MachineInstances
-	if err := tx.Model(&MachineInstance{}).Where("group_id = ?", *dep.GroupId).Find(&machines).Error; err != nil {
+	if err := tx.Model(&MachineInstance{}).Where("group_id = ?", *dep.GroupID).Find(&machines).Error; err != nil {
 		return nil, ign.NewErrorMessageWithBase(ign.ErrorSimGroupNotFound, err)
 	}
 

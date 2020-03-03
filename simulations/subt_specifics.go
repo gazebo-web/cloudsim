@@ -385,7 +385,7 @@ func (sa *SubTApplication) spawnChildSimulationDeployments(ctx context.Context, 
 			for j := 0; j < times[worldIdx]; j++ {
 				childIdx++
 				childSim := dep.Clone()
-				childSim.GroupId = sptr(fmt.Sprintf("%s-c-%d", *dep.GroupId, childIdx))
+				childSim.GroupID = sptr(fmt.Sprintf("%s-c-%d", *dep.GroupID, childIdx))
 				// Create a clone of the parent's extra info and set it to the child sim.
 				newExtra := *extra
 				newExtra.WorldIndex = &worldIdx
@@ -605,16 +605,16 @@ func (sa *SubTApplication) getSimulationLogsForDownload(ctx context.Context, tx 
 	// robot if a robot name is specified or the complete Gazebo logs otherwise.
 	var fileName string
 	if dep.isMultiSim() {
-		fileName = sa.getSimulationSummaryFilename(*dep.GroupId)
+		fileName = sa.getSimulationSummaryFilename(*dep.GroupID)
 	} else if robotName != nil {
-		fileName = sa.getRobotROSLogsFilename(*dep.GroupId, *robotName)
+		fileName = sa.getRobotROSLogsFilename(*dep.GroupID, *robotName)
 	} else {
-		fileName = sa.getGazeboLogsFilename(*dep.GroupId)
+		fileName = sa.getGazeboLogsFilename(*dep.GroupID)
 	}
 
 	bucket := sa.cfg.S3LogsBucket
 	ownerNameEscaped := url.PathEscape(*dep.Owner)
-	folderPath := fmt.Sprintf("/gz-logs/%s/%s/", ownerNameEscaped, *dep.GroupId)
+	folderPath := fmt.Sprintf("/gz-logs/%s/%s/", ownerNameEscaped, *dep.GroupID)
 	filePath := fmt.Sprintf("%s/%s", folderPath, fileName)
 	logger(ctx).Debug(fmt.Sprintf("SubT App - Fetching generating link to fetch logs from S3 bucket [%s] with path [%s]\n", bucket, filePath))
 
@@ -647,7 +647,7 @@ func (sa *SubTApplication) getSimulationLiveLogs(ctx context.Context, s *Service
 
 	var podName string
 	var container string
-	podPrefix := getSimulationPodNamePrefix(*dep.GroupId)
+	podPrefix := getSimulationPodNamePrefix(*dep.GroupID)
 
 	if robotName != nil {
 		identifier, err := sa.getRobotIdentifierFromNames(dep.Robots, *robotName)
@@ -689,7 +689,7 @@ func (sa *SubTApplication) getSimulationScore(ctx context.Context, s *Service,
 		return &score, nil
 	}
 
-	podName := sa.getGazeboPodName(getSimulationPodNamePrefix(*dep.GroupId))
+	podName := sa.getGazeboPodName(getSimulationPodNamePrefix(*dep.GroupID))
 	path := fmt.Sprintf("%s/logs/score.yml", sa.cfg.GazeboLogsVolumeMountPath)
 
 	out, err := KubernetesPodReadFile(ctx, s.clientset, metav1.NamespaceDefault, podName, GazeboServerContainerName, path)
@@ -722,7 +722,7 @@ func (sa *SubTApplication) getSimulationStatistics(ctx context.Context, s *Servi
 		}, nil
 	}
 
-	podName := sa.getGazeboPodName(getSimulationPodNamePrefix(*dep.GroupId))
+	podName := sa.getGazeboPodName(getSimulationPodNamePrefix(*dep.GroupID))
 	path := fmt.Sprintf("%s/logs/summary.yml", sa.cfg.GazeboLogsVolumeMountPath)
 
 	out, err := KubernetesPodReadFile(ctx, s.clientset, metav1.NamespaceDefault, podName, GazeboServerContainerName, path)
@@ -748,7 +748,7 @@ func (sa *SubTApplication) getSimulationStatistics(ctx context.Context, s *Servi
 func (sa *SubTApplication) launchApplication(ctx context.Context, s *Service, tx *gorm.DB,
 	dep *SimulationDeployment, podNamePrefix string, baseLabels map[string]string) (interface{}, *ign.ErrMsg) {
 
-	groupID := *dep.GroupId
+	groupID := *dep.GroupID
 
 	// Extend base labels with SubT specific ones
 	baseLabels[subtTagKey] = "true"
@@ -871,7 +871,7 @@ func (sa *SubTApplication) launchApplication(ctx context.Context, s *Service, tx
 			TerminationGracePeriodSeconds: int64ptr(sa.cfg.TerminationGracePeriodSeconds),
 			NodeSelector: map[string]string{
 				// Force this pod to run on the same node as the target pod
-				nodeLabelKeyGroupId:          *dep.GroupId,
+				nodeLabelKeyGroupID:          *dep.GroupID,
 				nodeLabelKeyCloudsimNodeType: "gazebo",
 			},
 			Containers: []corev1.Container{
@@ -1289,7 +1289,7 @@ func (sa *SubTApplication) createCommsBridgePod(ctx context.Context, dep *Simula
 			TerminationGracePeriodSeconds: int64ptr(sa.cfg.TerminationGracePeriodSeconds),
 			NodeSelector: map[string]string{
 				// Needed to force this pod to run on specific nodes
-				nodeLabelKeyGroupId:          *dep.GroupId,
+				nodeLabelKeyGroupID:          *dep.GroupID,
 				nodeLabelKeyCloudsimNodeType: "field-computer",
 				nodeLabelKeySubTRobotName:    strings.ToLower(robot.Name),
 			},
@@ -1314,7 +1314,7 @@ func (sa *SubTApplication) createCommsBridgePod(ctx context.Context, dep *Simula
 					Env: []corev1.EnvVar{
 						{
 							Name:  "IGN_PARTITION",
-							Value: *dep.GroupId,
+							Value: *dep.GroupID,
 						},
 						{
 							Name:  "IGN_VERBOSE",
@@ -1391,7 +1391,7 @@ func (sa *SubTApplication) createFieldComputerPod(ctx context.Context, dep *Simu
 			TerminationGracePeriodSeconds: int64ptr(sa.cfg.TerminationGracePeriodSeconds),
 			NodeSelector: map[string]string{
 				// Needed to force this pod to run on specific nodes
-				nodeLabelKeyGroupId:          groupID,
+				nodeLabelKeyGroupID:          groupID,
 				nodeLabelKeyCloudsimNodeType: "field-computer",
 				nodeLabelKeySubTRobotName:    strings.ToLower(robot.Name),
 			},
@@ -1640,18 +1640,18 @@ func (sa *SubTApplication) processSimulationResults(ctx context.Context, s *Serv
 
 	values := SimulationDeploymentsSubTValue{
 		SimulationDeployment: dep,
-		GroupId:              dep.GroupId,
+		GroupID:              dep.GroupID,
 	}
 
 	// Create and upload logs to S3
 	if sa.cfg.S3LogsCopyEnabled {
 		logger(ctx).Info(
-			fmt.Sprintf("processSimulationResults - Uploading simulation logs to S3 for simulation [%s]", *dep.GroupId),
+			fmt.Sprintf("processSimulationResults - Uploading simulation logs to S3 for simulation [%s]", *dep.GroupID),
 		)
 		if em := sa.uploadSimulationLogs(ctx, s, dep); em != nil {
 			logMsg := fmt.Sprintf(
 				"processSimulationResults - Could not upload simulation logs to S3 for simulation [%s].",
-				*dep.GroupId,
+				*dep.GroupID,
 			)
 			logger(ctx).Error(logMsg, em)
 			return em
@@ -1688,13 +1688,13 @@ func (sa *SubTApplication) processSimulationResults(ctx context.Context, s *Serv
 		// Create the score entry
 		if !globals.DisableScoreGeneration {
 			logger(ctx).Info(
-				fmt.Sprintf("processSimulationResults - Creating competition_scores entry for simulation [%s]", *dep.GroupId),
+				fmt.Sprintf("processSimulationResults - Creating competition_scores entry for simulation [%s]", *dep.GroupID),
 			)
-			if em := s.userAccessor.AddScore(dep.GroupId, dep.Application, dep.ExtraSelector, dep.Owner,
-				values.Score, dep.GroupId); em != nil {
+			if em := s.userAccessor.AddScore(dep.GroupID, dep.Application, dep.ExtraSelector, dep.Owner,
+				values.Score, dep.GroupID); em != nil {
 				logMsg := fmt.Sprintf(
 					"processSimulationResults - Could not create competition_scores entry for simulation [%s].",
-					*dep.GroupId,
+					*dep.GroupID,
 				)
 				logger(ctx).Error(logMsg, em)
 				return em
@@ -1730,7 +1730,7 @@ func isTeamSolutionPod(pod corev1.Pod) bool {
 func (sa *SubTApplication) deleteApplication(ctx context.Context, s *Service, tx *gorm.DB,
 	dep *SimulationDeployment) *ign.ErrMsg {
 
-	groupID := *dep.GroupId
+	groupID := *dep.GroupID
 	groupIDLabel := getPodLabelSelectorForSearches(groupID)
 
 	// Upload logs and process score and summary entries for the simulation
@@ -1835,13 +1835,13 @@ func (sa *SubTApplication) setupEC2InstanceSpecifics(ctx context.Context, s *Ec2
 		// AMI name: cloudsim-ubuntu-18_04-CUDA_10_1-nvidia-docker_2-kubernetes_1_14.10-v0.2.2
 		fcInput.ImageId = aws.String("ami-063fd908b66e4c2fd")
 		fcInput.InstanceType = aws.String("g3.4xlarge")
-		userData, _ := s.buildUserDataString(*dep.GroupId,
+		userData, _ := s.buildUserDataString(*dep.GroupID,
 			labelAndValue(nodeLabelKeyCloudsimNodeType, "field-computer"),
 			labelAndValue(nodeLabelKeySubTRobotName, strings.ToLower(r.Name)),
 		)
 		// logger(ctx).Debug("user data to send:\n" + plain)
 		fcInput.UserData = aws.String(userData)
-		replaceInstanceNameTag(fcInput, s.getInstanceNameFor(*dep.GroupId, "fc-"+r.Name))
+		replaceInstanceNameTag(fcInput, s.getInstanceNameFor(*dep.GroupID, "fc-"+r.Name))
 		inputs = append(inputs, fcInput)
 	}
 
@@ -1896,7 +1896,7 @@ func (sa *SubTApplication) uploadSimulationLogs(ctx context.Context, s *Service,
 
 	logger := logger(ctx)
 
-	groupID := *simDep.GroupId
+	groupID := *simDep.GroupID
 	bucket := filepath.Join(sa.cfg.S3LogsBucket, GetS3SimulationLogKey(simDep))
 	failedPodUploads := make(map[string]error, 0)
 
@@ -1976,7 +1976,7 @@ func (sa *SubTApplication) uploadSimulationSummary(simDep *SimulationDeployment,
 	if err != nil {
 		return ign.NewErrorMessageWithBase(ign.ErrorMarshalJSON, err)
 	}
-	fileName := sa.getSimulationSummaryFilename(*simDep.GroupId)
+	fileName := sa.getSimulationSummaryFilename(*simDep.GroupID)
 	if em := sa.uploadToS3SimulationLogBucket(simDep, fileName, values); em != nil {
 		return em
 	}
@@ -2002,20 +2002,20 @@ func (sa *SubTApplication) updateMultiSimStatuses(ctx context.Context, tx *gorm.
 	// Get the score for the simulation. Parent simulation scores are based on the performance of its children.
 	summary, err := GetAggregatedSubTSimulationValues(tx, simDep)
 	if err != nil {
-		logger(ctx).Error("Error computing aggregated values for simulation: "+*simDep.GroupId, err)
+		logger(ctx).Error("Error computing aggregated values for simulation: "+*simDep.GroupID, err)
 		return ign.NewErrorMessageWithBase(ign.ErrorUnexpected, err)
 	}
 
 	// Create the score entry
 	if !globals.DisableScoreGeneration {
 		logger(ctx).Info(
-			fmt.Sprintf("updateMultiSimStatuses - Creating competition_scores entry for simulation [%s]", *simDep.GroupId),
+			fmt.Sprintf("updateMultiSimStatuses - Creating competition_scores entry for simulation [%s]", *simDep.GroupID),
 		)
-		if em := userAccessor.AddScore(simDep.GroupId, simDep.Application, simDep.ExtraSelector, simDep.Owner,
+		if em := userAccessor.AddScore(simDep.GroupID, simDep.Application, simDep.ExtraSelector, simDep.Owner,
 			&summary.Score, &summary.Sources); em != nil {
 			logMsg := fmt.Sprintf(
 				"updateMultiSimStatuses - Could not create competition_scores entry for simulation [%s].",
-				*simDep.GroupId,
+				*simDep.GroupID,
 			)
 			logger(ctx).Error(logMsg, em)
 			return em
@@ -2025,12 +2025,12 @@ func (sa *SubTApplication) updateMultiSimStatuses(ctx context.Context, tx *gorm.
 	// Create and upload the parent summary to S3
 	if sa.cfg.S3LogsCopyEnabled {
 		logger(ctx).Info(
-			fmt.Sprintf("updateMultiSimStatuses - Uploading simulation summary for simulation [%s]", *simDep.GroupId),
+			fmt.Sprintf("updateMultiSimStatuses - Uploading simulation summary for simulation [%s]", *simDep.GroupID),
 		)
 		if em := sa.uploadSimulationSummary(simDep, summary); em != nil {
 			logMsg := fmt.Sprintf(
 				"updateMultiSimStatuses - Could not upload simulation summary to S3 for simulation [%s].",
-				*simDep.GroupId,
+				*simDep.GroupID,
 			)
 			logger(ctx).Error(logMsg, em)
 			return em
@@ -2057,7 +2057,7 @@ func (sa *SubTApplication) invalidateSimulation(ctx context.Context, tx *gorm.DB
 
 	// we just soft delete the SimulationDeploymentsSubTValue corresponding to the
 	// given simulation
-	if err := tx.Where("group_id = ?", *simDep.GroupId).
+	if err := tx.Where("group_id = ?", *simDep.GroupID).
 		Delete(&SimulationDeploymentsSubTValue{}).Error; err != nil {
 		return err
 	}
@@ -2086,7 +2086,7 @@ func (sa *SubTApplication) ValidateSimulationLaunch(ctx context.Context, tx *gor
 // It should be used inside the ValidateSimulationLaunch before pushing a simulation to the queue.
 func (sa *SubTApplication) checkHeldSimulation(ctx context.Context, tx *gorm.DB, dep *SimulationDeployment) *ign.ErrMsg {
 	if dep.Held {
-		logger(ctx).Warning(fmt.Sprintf("checkHeldSimulation - Cannot run a held simulation (Group ID: %s)", *dep.GroupId))
+		logger(ctx).Warning(fmt.Sprintf("checkHeldSimulation - Cannot run a held simulation (Group ID: %s)", *dep.GroupID))
 		return NewErrorMessage(ErrorLaunchHeldSimulation)
 	}
 	return nil
@@ -2097,7 +2097,7 @@ func (sa *SubTApplication) checkHeldSimulation(ctx context.Context, tx *gorm.DB,
 func (sa *SubTApplication) simulationIsHeld(ctx context.Context, tx *gorm.DB, dep *SimulationDeployment) bool {
 	extra, err := ReadExtraInfoSubT(dep)
 	if err != nil {
-		logger(ctx).Warning(fmt.Sprintf("simulationIsHeld - Cannot read extra field from simulation %s", *dep.GroupId))
+		logger(ctx).Warning(fmt.Sprintf("simulationIsHeld - Cannot read extra field from simulation %s", *dep.GroupID))
 		return false
 	}
 

@@ -47,7 +47,7 @@ func TestSystemAdminCanLaunchHeldSimulation(t *testing.T) {
 		func(bslice *[]byte, resp *igntest.AssertResponse) {
 			dep := sim.SimulationDeployment{}
 			json.Unmarshal(*bslice, &dep)
-			groupID = *dep.GroupId
+			groupID = *dep.GroupID
 			assert.True(t, dep.Held)
 		},
 	)
@@ -123,7 +123,7 @@ func TestSystemAdminCanLaunchHeldMultisim(t *testing.T) {
 		func(bslice *[]byte, resp *igntest.AssertResponse) {
 			dep := sim.SimulationDeployment{}
 			json.Unmarshal(*bslice, &dep)
-			groupID = *dep.GroupId
+			groupID = *dep.GroupID
 			assert.True(t, dep.Held)
 		},
 	)
@@ -206,7 +206,7 @@ func TestUserCannotLaunchHeldSimulation(t *testing.T) {
 	test := launchHeldSimsTest{
 		uriTest: uriTest{
 			testDesc:          "launchHeldSimulations -- User cannot deploy a held simulation",
-			URL:               fmt.Sprintf(launchHeldSimURI, *dep.GroupId),
+			URL:               fmt.Sprintf(launchHeldSimURI, *dep.GroupID),
 			jwtGen:            teamAUser1,
 			expErrMsg:         ign.NewErrorMessage(ign.ErrorUnauthorized),
 			ignoreErrorBody:   false,

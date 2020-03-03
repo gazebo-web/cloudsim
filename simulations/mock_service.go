@@ -40,7 +40,7 @@ func (s *MockService) RegisterApplication(ctx context.Context, app ApplicationTy
 // StartSimulationAsync is the main func to launch a new simulation
 func (s *MockService) StartSimulationAsync(ctx context.Context,
 	tx *gorm.DB, createSim *CreateSimulation, user *users.User) (interface{}, *ign.ErrMsg) {
-	// Create and assign a new GroupId
+	// Create and assign a new GroupID
 	groupID := uuid.NewV4().String()
 
 	private := true
@@ -55,7 +55,7 @@ func (s *MockService) StartSimulationAsync(ctx context.Context,
 		Private:          &private,
 		Platform:         &createSim.Platform,
 		Application:      &createSim.Application,
-		GroupId:          &groupID,
+		GroupID:          &groupID,
 		DeploymentStatus: simPending.ToPtr()}
 
 	if err := tx.Create(&simDep).Error; err != nil {
@@ -74,13 +74,13 @@ func (s *MockService) StartSimulationAsync(ctx context.Context,
 		return nil, em
 	}
 
-	iId := "i-" + uuid.NewV4().String()
+	iID := "i-" + uuid.NewV4().String()
 	status := "Running"
 	// Create a DB record for a  single machine instance
 	machine := MachineInstance{
-		InstanceId:      &iId,
+		InstanceId:      &iID,
 		LastKnownStatus: &status,
-		GroupId:         &groupID,
+		GroupID:         &groupID,
 	}
 	if err := tx.Create(&machine).Error; err != nil {
 		return nil, ign.NewErrorMessageWithBase(ign.ErrorDbSave, err)
@@ -137,7 +137,7 @@ func (s *MockService) ShutdownSimulationAsync(ctx context.Context, tx *gorm.DB,
 // and associated Hosts (instances) of a given Cloudsim Group Id.
 func (s *MockService) DeleteNodesAndHostsForGroup(ctx context.Context,
 	tx *gorm.DB, dep *SimulationDeployment, user *users.User) (interface{}, *ign.ErrMsg) {
-	logger(ctx).Debug("Mock delete nodes and hosts for groupID: " + *dep.GroupId)
+	logger(ctx).Debug("Mock delete nodes and hosts for groupID: " + *dep.GroupID)
 	return nil, nil
 }
 

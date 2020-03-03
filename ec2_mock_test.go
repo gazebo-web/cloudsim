@@ -57,16 +57,16 @@ func (m *EC2Mock) NewAWSErr(code string) awserr.Error {
 }
 
 // NewInstance is a helper method to easily create ec2.Instance structs.
-func (m *EC2Mock) NewInstance(iId string) *ec2.Instance {
+func (m *EC2Mock) NewInstance(iID string) *ec2.Instance {
 	return &ec2.Instance{
-		InstanceId: &iId,
+		InstanceId: &iID,
 	}
 }
 
 // NewReservation is a helper method to easily create "RunInstances" results.
-func (m *EC2Mock) NewReservation(iId ...string) *ec2.Reservation {
-	instances := make([]*ec2.Instance, len(iId))
-	for i, id := range iId {
+func (m *EC2Mock) NewReservation(iID ...string) *ec2.Reservation {
+	instances := make([]*ec2.Instance, len(iID))
+	for i, id := range iID {
 		instances[i] = m.NewInstance(id)
 	}
 	return &ec2.Reservation{
