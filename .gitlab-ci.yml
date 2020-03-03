@@ -5,7 +5,7 @@ variables:
   MYSQL_DATABASE: "cloudsim_test"
   MYSQL_ROOT_PASSWORD: "root"
 
-#################################################################
+##########################################################
 # Aliases
 
 .setup_project: &setup_project
@@ -25,7 +25,7 @@ variables:
 .setup_db: &setup_db
   - mysql -u root -proot -h mysql -e "CREATE DATABASE usersdb_test"
 
-#################################################################
+##########################################################
 # Cache configuration
 
 cache:
@@ -33,9 +33,10 @@ cache:
   key: ${CI_COMMIT_REF_SLUG}
   paths:
     - vendor/
+    - /builds/ignitionrobotics/web/cloudsim/vendor/
     - /go/src/gitlab.com/ignitionrobotics/web/cloudsim/vendor/
 
-#################################################################
+##########################################################
 # Stages
 
 stages:
@@ -47,7 +48,7 @@ stages:
   - packaging
   - deploying
 
-#################################################################
+##########################################################
 # Installing stage
 
 proto:
@@ -68,7 +69,11 @@ dep:
   script:
     - *dep_ensure
 
-#################################################################
+  after_script:
+    - mkdir -p -v /builds/ignitionrobotics/web/cloudsim/vendor
+    - mv /go/src/gitlab.com/ignitionrobotics/web/cloudsim/vendor/* /builds/ignitionrobotics/web/cloudsim/vendor/
+
+##########################################################
 # Formatting stage
 
 format:
@@ -79,7 +84,7 @@ format:
   script:
     - go fmt $(go list ./... | grep -v /vendor/)
 
-#################################################################
+##########################################################
 # Linting stage
 
 lint:
@@ -91,7 +96,7 @@ lint:
     - golint -set_exit_status $(go list ./... | grep -v /vendor/)
   allow_failure: true
 
-#################################################################
+##########################################################
 # Testing stage
 
 vet:
@@ -162,7 +167,7 @@ coverage:
   environment:
     name: testing
 
-#################################################################
+##########################################################
 # Building stage
 
 build:
@@ -181,8 +186,8 @@ build:
     expire_in: 1 month
 
 
-#################################################################
-# Packaging stage
+##########################################################
+# Packaging stage - WIP
 
 #package_default:
 #  stage: packaging
@@ -252,7 +257,7 @@ build:
 #  after_script:
 #    - "docker logout ${CI_REGISTRY}"
 
-#################################################################
+##########################################################
 # Deploying stage
 
 integration:
