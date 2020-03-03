@@ -4,6 +4,7 @@ import (
 	"gitlab.com/ignitionrobotics/web/ign-go"
 )
 
+// LaunchQueueRepository represents the Launch Queue Data Access Object
 type LaunchQueueRepository struct {
 	queue *ign.Queue
 }
@@ -127,6 +128,7 @@ func (lq *LaunchQueueRepository) Swap(a interface{}, b interface{}) (interface{}
 	return res, nil
 }
 
+// Count returns the length of the underlying queue's slice
 func (lq *LaunchQueueRepository) Count() int {
 	return lq.queue.GetLen()
 }

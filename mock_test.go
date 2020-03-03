@@ -1,9 +1,8 @@
 package main
 
 import (
-	"gitlab.com/ignitionrobotics/web/ign-go"
-	"errors"
 	"fmt"
+	"gitlab.com/ignitionrobotics/web/ign-go"
 	"reflect"
 )
 
@@ -120,13 +119,7 @@ func FixedValues(res ...interface{}) (MockFunction, MockFunctionValidator) {
 	mockFunctionValidator := func() error {
 		result := !strict || count == len(res)
 		if !result {
-			return errors.New(
-				fmt.Sprintf(
-					"FixedValues was not called enough times. It was called %d/%d times.",
-					count,
-					len(res),
-				),
-			)
+			return fmt.Errorf("fixedValues was not called enough times. It was called %d/%d times", count, len(res))
 		}
 		return nil
 	}

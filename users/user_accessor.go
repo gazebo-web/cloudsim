@@ -314,7 +314,7 @@ func (u *UserAccessorImpl) GetUserFromUsername(username string) (*users.User, *i
 	return user, nil
 }
 
-// GetUserFromUsername gets a user's organization database entry from the username
+// GetOrganization gets a user's organization database entry from the username
 func (u *UserAccessorImpl) GetOrganization(name string) (*users.Organization, *ign.ErrMsg) {
 	org := &users.Organization{}
 	if err := u.Db.

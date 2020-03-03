@@ -12,17 +12,17 @@ import (
 	"strconv"
 )
 
-// HttpHandler is used to invoke inner logic based on incoming Http requests.
-type HttpHandler struct {
+// HTTPHandler is used to invoke inner logic based on incoming Http requests.
+type HTTPHandler struct {
 	UserAccessor useracc.UserAccessor
 }
 
-// HttpHandlerInstance is the default HttpHandler instance. It is used by routes.go.
-var HttpHandlerInstance *HttpHandler
+// HTTPHandlerInstance is the default HTTPHandler instance. It is used by routes.go.
+var HTTPHandlerInstance *HTTPHandler
 
-// NewHttpHandler creates a new HttpHandler.
-func NewHttpHandler(ctx context.Context, ua useracc.UserAccessor) (*HttpHandler, error) {
-	return &HttpHandler{
+// NewHTTPHandler creates a new HTTPHandler.
+func NewHTTPHandler(ctx context.Context, ua useracc.UserAccessor) (*HTTPHandler, error) {
+	return &HTTPHandler{
 		UserAccessor: ua,
 	}, nil
 }
@@ -34,7 +34,7 @@ type handlerWithUser func(user *users.User, tx *gorm.DB, w http.ResponseWriter, 
 func WithUser(handler handlerWithUser) ign.HandlerWithResult {
 	return func(tx *gorm.DB, w http.ResponseWriter, r *http.Request) (interface{}, *ign.ErrMsg) {
 		// Get JWT user. Fail if invalid or missing
-		user, ok, em := HttpHandlerInstance.UserAccessor.UserFromJWT(r)
+		user, ok, em := HTTPHandlerInstance.UserAccessor.UserFromJWT(r)
 		if !ok {
 			return nil, em
 		}

@@ -280,10 +280,11 @@ func NewSimulationsService(ctx context.Context, db *gorm.DB, nm NodeManager,
 // PoolNotificationCallback type of the listeners
 type PoolNotificationCallback func(poolEvent PoolEvent, groupID string, result interface{}, em *ign.ErrMsg)
 
-// SetPoolEventsListener registers a single pool event listener that will receive
+// PoolEvent registers a single pool event listener that will receive
 // notifications any time a pool worker "finishes" its job (either with result or error).
 type PoolEvent int
 
+// PoolEvent enum
 const (
 	PoolStartSimulation PoolEvent = iota
 	PoolShutdownSimulation
@@ -1155,10 +1156,10 @@ func (s *Service) RestartSimulationAsync(ctx context.Context, tx *gorm.DB,
 }
 
 // bulkAddPermissions adds multiple permissions to multiple owners to access a resource.
-func (s *Service) bulkAddPermissions(resId string, permissions []per.Action, owners ...string) *ign.ErrMsg {
+func (s *Service) bulkAddPermissions(resID string, permissions []per.Action, owners ...string) *ign.ErrMsg {
 	for _, o := range owners {
 		for _, p := range permissions {
-			if ok, em := s.userAccessor.AddResourcePermission(o, resId, p); !ok {
+			if ok, em := s.userAccessor.AddResourcePermission(o, resID, p); !ok {
 				return em
 			}
 		}
@@ -1693,13 +1694,11 @@ func (s *Service) shutdownSimulation(ctx context.Context, tx *gorm.DB, groupID s
 			timeTrack(ctx, tstart, "shutdownSimulation - time tracker until error")
 			// Return without calling the error handler to avoid it from terminating this simulation's resources
 			return nil, em
-		} else {
-			logMsg := fmt.Sprintf("shutdownSimulation - error in shutdownSimulation for groupid [%s]. Error: %v", *dep.GroupID, em)
-			logger(ctx).Error(logMsg, em)
-			timeTrack(ctx, tstart, "shutdownSimulation - time tracker until error")
-
-			return nil, em
 		}
+		logMsg := fmt.Sprintf("shutdownSimulation - error in shutdownSimulation for groupid [%s]. Error: %v", *dep.GroupID, em)
+		logger(ctx).Error(logMsg, em)
+		timeTrack(ctx, tstart, "shutdownSimulation - time tracker until error")
+		return nil, em
 	}
 
 	logger(ctx).Info("shutdownSimulation - successfully removed groupID: " + groupID)

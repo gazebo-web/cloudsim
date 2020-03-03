@@ -251,14 +251,14 @@ func TestGetSimExtra(t *testing.T) {
 		t, ctx, db, teamAUser1, "TestMultiGroupIDSimulation", multiSimCircuit, "TeamA", nil, nil,
 	)
 
-	simUrl := fmt.Sprintf("%s/%s", uri, *singleSim.GroupID)
-	multiSimUrl := fmt.Sprintf("%s/%s", uri, *multiSim.GroupID)
+	simURL := fmt.Sprintf("%s/%s", uri, *singleSim.GroupID)
+	multisimURL := fmt.Sprintf("%s/%s", uri, *multiSim.GroupID)
 
 	getSingleSimMetadataTests := []getSimulationsMetadataTest{
-		{uriTest{"getSimMetadata - user does not get metadata", simUrl, teamAUser1, nil, true, false}, false, false},
-		{uriTest{"getSimMetadata - sysadmin does not get metadata", simUrl, sysAdmin, nil, true, false}, true, false},
-		{uriTest{"getMultiSimMetadata - user does not get metadata", multiSimUrl, teamAUser1, nil, true, false}, false, true},
-		{uriTest{"getMultiSimMetadata - sysadmin does get metadata", multiSimUrl, sysAdmin, nil, true, false}, true, true},
+		{uriTest{"getSimMetadata - user does not get metadata", simURL, teamAUser1, nil, true, false}, false, false},
+		{uriTest{"getSimMetadata - sysadmin does not get metadata", simURL, sysAdmin, nil, true, false}, true, false},
+		{uriTest{"getMultiSimMetadata - user does not get metadata", multisimURL, teamAUser1, nil, true, false}, false, true},
+		{uriTest{"getMultiSimMetadata - sysadmin does get metadata", multisimURL, sysAdmin, nil, true, false}, true, true},
 	}
 
 	for _, test := range getSingleSimMetadataTests {

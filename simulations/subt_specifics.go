@@ -638,11 +638,11 @@ func (sa *SubTApplication) getSimulationLiveLogs(ctx context.Context, s *Service
 
 	// This block covers the summary case indicated in the documentation above.
 	if dep.isMultiSim() {
-		if summary, err := GetAggregatedSubTSimulationValues(tx, dep); err == nil {
-			return summary, nil
-		} else {
+		summary, err := GetAggregatedSubTSimulationValues(tx, dep)
+		if err != nil {
 			return nil, NewErrorMessageWithBase(ErrorFailedToGetLiveLogs, err)
 		}
+		return summary, nil
 	}
 
 	var podName string
@@ -1250,17 +1250,17 @@ func podHasIPAddress(ctx context.Context, pod *corev1.Pod) (bool, error) {
 // the pod spec that changes the owner of the directory from root to developer
 // before the bridge container starts, giving write permissions to the bridge
 // container and allowing it to store logs.
-// `userId` is the linux user id (UID) of the user in the pod producing logs.
+// `userID` is the linux user id (UID) of the user in the pod producing logs.
 // `groupID` is the linux group id (GID) of the user in the pod producing logs.
 // `volumeName` is the name of the Kubernetes hostPath volume containing the shared directory.
-func (sa *SubTApplication) addSharedVolumeConfigurationContainer(pod *corev1.Pod, userId int, groupID int,
+func (sa *SubTApplication) addSharedVolumeConfigurationContainer(pod *corev1.Pod, userID int, groupID int,
 	volumeName string) {
 	pod.Spec.InitContainers = []corev1.Container{
 		{
 			Name:    "chown-shared-volume",
 			Image:   "infrastructureascode/aws-cli:latest",
 			Command: []string{"/bin/sh"},
-			Args:    []string{"-c", fmt.Sprintf("chown %d:%d /tmp", userId, groupID)},
+			Args:    []string{"-c", fmt.Sprintf("chown %d:%d /tmp", userID, groupID)},
 			VolumeMounts: []corev1.VolumeMount{
 				{
 					Name:      volumeName,
