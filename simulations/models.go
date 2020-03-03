@@ -590,7 +590,7 @@ type MachineInstance struct {
 	UpdatedAt time.Time  `json:"updated_at"`
 	DeletedAt *time.Time `gorm:"type:timestamp(2) NULL" sql:"index" json:"-"`
 
-	InstanceId      *string `json:"instance_id" gorm:"not null;unique"`
+	InstanceID      *string `json:"instance_id" gorm:"not null;unique"`
 	LastKnownStatus *string `json:"status,omitempty"`
 	// Cloudsim Group Id
 	GroupID *string `json:"group_id"`

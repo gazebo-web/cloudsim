@@ -325,12 +325,12 @@ func (s *Ec2Client) launchInstances(ctx context.Context, tx *gorm.DB, dep *Simul
 		// info in 'runResult'.
 		for _, ins := range runResult.Instances {
 			// Get the created Instance ID(s).
-			iID := *ins.InstanceId
+			iID := *ins.InstanceID
 			instanceIds = append(instanceIds, iID)
 
 			// And create a DB record to track the machine instance in case of errors later
 			machine := MachineInstance{
-				InstanceId:      &iID,
+				InstanceID:      &iID,
 				LastKnownStatus: macInitializing.ToStringPtr(),
 				GroupID:         dep.GroupID,
 				Application:     dep.Application,
@@ -350,10 +350,10 @@ func (s *Ec2Client) launchInstances(ctx context.Context, tx *gorm.DB, dep *Simul
 func (s *Ec2Client) terminateInstances(ctx context.Context, machines []*MachineInstance) {
 	terminateIds := make([]*string, 0)
 	for _, machine := range machines {
-		terminateIds = append(terminateIds, machine.InstanceId)
+		terminateIds = append(terminateIds, machine.InstanceID)
 	}
 	_, err := s.ec2Svc.TerminateInstances(&ec2.TerminateInstancesInput{
-		InstanceIds: terminateIds,
+		InstanceIDs: terminateIds,
 	})
 	if err != nil {
 		errorMsg := err.Error()
@@ -497,7 +497,7 @@ func (s *Ec2Client) launchNodes(ctx context.Context, tx *gorm.DB, dep *Simulatio
 
 	// Use a waiter function to Block until the instances are initialized
 	describeInstanceStatusInput := &ec2.DescribeInstanceStatusInput{
-		InstanceIds: aws.StringSlice(instanceIds),
+		InstanceIDs: aws.StringSlice(instanceIds),
 	}
 	ignlog.Info(fmt.Sprintf("About to WaitUntilInstanceStatusOk. Instance Ids: %v", instanceIds))
 	if err := s.ec2Svc.WaitUntilInstanceStatusOk(describeInstanceStatusInput); err != nil {
@@ -587,7 +587,7 @@ func (s *Ec2Client) deleteHosts(ctx context.Context, tx *gorm.DB,
 	var instIds []string
 	// Update each machine instance DB record, to mark the termination process as 'started'.
 	for _, m := range machines {
-		instIds = append(instIds, *m.InstanceId)
+		instIds = append(instIds, *m.InstanceID)
 		if em := m.updateMachineStatus(tx, macTerminating); em != nil {
 			return nil, em
 		}
@@ -604,7 +604,7 @@ func (s *Ec2Client) deleteHosts(ctx context.Context, tx *gorm.DB,
 	if s.awsCfg.ShouldTerminateInstances && !stopOnEnd {
 		input := &ec2.TerminateInstancesInput{
 			DryRun:      aws.Bool(true),
-			InstanceIds: instanceIds,
+			InstanceIDs: instanceIds,
 		}
 		result, err = s.ec2Svc.TerminateInstances(input)
 		if awsErr, ok := err.(awserr.Error); ok && awsErr.Code() == AWSErrCodeDryRunOperation {
@@ -616,7 +616,7 @@ func (s *Ec2Client) deleteHosts(ctx context.Context, tx *gorm.DB,
 	} else {
 		input := &ec2.StopInstancesInput{
 			DryRun:      aws.Bool(true),
-			InstanceIds: instanceIds,
+			InstanceIDs: instanceIds,
 		}
 		result, err = s.ec2Svc.StopInstances(input)
 		awsErr, ok := err.(awserr.Error)

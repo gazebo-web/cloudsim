@@ -292,6 +292,7 @@ const (
 	PoolCompleteFailedTermination
 )
 
+// SetPoolEventsListener sets a new PoolNotificationCallback to the poolNotificationCallback field.
 func (s *Service) SetPoolEventsListener(cb PoolNotificationCallback) {
 	s.poolNotificationCallback = cb
 }

@@ -44,7 +44,7 @@ type getSimulationsMetadataTest struct {
 }
 
 // createSimulationDeployment creates simulation deployments for testing.
-func createSimulationDeployment(t *testing.T, ctx context.Context, db *gorm.DB, jwt *testJWT, simName string,
+func createSimulationDeployment(ctx context.Context, t *testing.T, db *gorm.DB, jwt *testJWT, simName string,
 	circuit string, owner string, robotName *string, robotType *string) *sim.SimulationDeployment {
 
 	// Prepare sim creation request
@@ -245,10 +245,10 @@ func TestGetSimExtra(t *testing.T) {
 	ctx := context.Background()
 
 	singleSim := createSimulationDeployment(
-		t, ctx, db, teamAUser1, "TestSingleGroupIDSimulation", singleSimCircuit, "TeamA", nil, nil,
+		ctx, t, db, teamAUser1, "TestSingleGroupIDSimulation", singleSimCircuit, "TeamA", nil, nil,
 	)
 	multiSim := createSimulationDeployment(
-		t, ctx, db, teamAUser1, "TestMultiGroupIDSimulation", multiSimCircuit, "TeamA", nil, nil,
+		ctx, t, db, teamAUser1, "TestMultiGroupIDSimulation", multiSimCircuit, "TeamA", nil, nil,
 	)
 
 	simURL := fmt.Sprintf("%s/%s", uri, *singleSim.GroupID)
