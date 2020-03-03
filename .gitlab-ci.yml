@@ -22,6 +22,10 @@ variables:
   - $GOPATH/bin/dep ensure -vendor-only
   - $GOPATH/bin/dep status
 
+.dep_ensure_post: &dep_ensure_post
+  - mkdir -p -v /builds/ignitionrobotics/web/cloudsim/vendor
+  - mv /go/src/gitlab.com/ignitionrobotics/web/cloudsim/vendor/* /builds/ignitionrobotics/web/cloudsim/vendor/
+
 .setup_db: &setup_db
   - mysql -u root -proot -h mysql -e "CREATE DATABASE usersdb_test"
 
@@ -68,10 +72,8 @@ dep:
     - *setup_project
   script:
     - *dep_ensure
-
   after_script:
-    - mkdir -p -v /builds/ignitionrobotics/web/cloudsim/vendor
-    - mv /go/src/gitlab.com/ignitionrobotics/web/cloudsim/vendor/* /builds/ignitionrobotics/web/cloudsim/vendor/
+    - *dep_ensure_post
 
 ##########################################################
 # Formatting stage
@@ -110,6 +112,8 @@ vet:
     - *setup_db
   script:
     - go vet $(go list ./... | grep -v /vendor/)
+  after_script:
+    - *dep_ensure_post
   services:
     - mysql:5.7
   environment:
@@ -127,6 +131,8 @@ test:
     - *setup_db
   script:
     - go test $(go list ./... | grep -v /vendor/)
+  after_script:
+    - *dep_ensure_post
   services:
     - mysql:5.7
   environment:
@@ -143,6 +149,8 @@ race:
     - *setup_db
   script:
     - go test -race $(go list ./... | grep -v /vendor/)
+  after_script:
+    - *dep_ensure_post
   services:
     - mysql:5.7
   environment:
@@ -162,6 +170,8 @@ coverage:
     - go test -covermode=atomic -coverprofile=coverage.tx
     - go tool cover -func=coverage.tx
     - bash <(curl -s https://codecov.io/bash)
+  after_script:
+    - *dep_ensure_post
   services:
     - mysql:5.7
   environment:
