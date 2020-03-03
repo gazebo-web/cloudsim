@@ -96,7 +96,6 @@ lint:
     - *setup_git_credentials
   script:
     - golint -set_exit_status $(go list ./... | grep -v /vendor/)
-  allow_failure: true
 
 ##########################################################
 # Testing stage
@@ -118,7 +117,6 @@ vet:
     - mysql:5.7
   environment:
     name: testing
-  allow_failure: true
 
 test:
   stage: testing
