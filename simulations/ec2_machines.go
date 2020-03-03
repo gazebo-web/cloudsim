@@ -353,7 +353,7 @@ func (s *Ec2Client) terminateInstances(ctx context.Context, machines []*MachineI
 		terminateIds = append(terminateIds, machine.InstanceID)
 	}
 	_, err := s.ec2Svc.TerminateInstances(&ec2.TerminateInstancesInput{
-		InstanceIDs: terminateIds,
+		InstanceIds: terminateIds,
 	})
 	if err != nil {
 		errorMsg := err.Error()
@@ -497,7 +497,7 @@ func (s *Ec2Client) launchNodes(ctx context.Context, tx *gorm.DB, dep *Simulatio
 
 	// Use a waiter function to Block until the instances are initialized
 	describeInstanceStatusInput := &ec2.DescribeInstanceStatusInput{
-		InstanceIDs: aws.StringSlice(instanceIds),
+		InstanceIds: aws.StringSlice(instanceIds),
 	}
 	ignlog.Info(fmt.Sprintf("About to WaitUntilInstanceStatusOk. Instance Ids: %v", instanceIds))
 	if err := s.ec2Svc.WaitUntilInstanceStatusOk(describeInstanceStatusInput); err != nil {
@@ -604,7 +604,7 @@ func (s *Ec2Client) deleteHosts(ctx context.Context, tx *gorm.DB,
 	if s.awsCfg.ShouldTerminateInstances && !stopOnEnd {
 		input := &ec2.TerminateInstancesInput{
 			DryRun:      aws.Bool(true),
-			InstanceIDs: instanceIds,
+			InstanceIds: instanceIds,
 		}
 		result, err = s.ec2Svc.TerminateInstances(input)
 		if awsErr, ok := err.(awserr.Error); ok && awsErr.Code() == AWSErrCodeDryRunOperation {
@@ -616,7 +616,7 @@ func (s *Ec2Client) deleteHosts(ctx context.Context, tx *gorm.DB,
 	} else {
 		input := &ec2.StopInstancesInput{
 			DryRun:      aws.Bool(true),
-			InstanceIDs: instanceIds,
+			InstanceIds: instanceIds,
 		}
 		result, err = s.ec2Svc.StopInstances(input)
 		awsErr, ok := err.(awserr.Error)
