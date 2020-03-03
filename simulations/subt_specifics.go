@@ -66,6 +66,7 @@ import (
 			at port 30000 (?).
 */
 
+// SubT Specifics constants
 const (
 	subtTagKey string = "SubT"
 	// A predefined const to refer to the SubT Platform type.
@@ -227,20 +228,20 @@ func (sa *SubTApplication) getCopyPodName(targetPodName string) string {
 ////////////////////////////////////////////////////////////////////////////
 
 // getSimulationSummaryFilename returns the filename of a simulation summary.
-func (sa *SubTApplication) getSimulationSummaryFilename(groupId string) string {
-	return fmt.Sprintf("%s-summary.json", groupId)
+func (sa *SubTApplication) getSimulationSummaryFilename(groupID string) string {
+	return fmt.Sprintf("%s-summary.json", groupID)
 }
 
 // getGazeboLogsFilename returns the filename of the Gazebo logs for a specific
 // simulation.
-func (sa *SubTApplication) getGazeboLogsFilename(groupId string) string {
-	return fmt.Sprintf("%s.tar.gz", groupId)
+func (sa *SubTApplication) getGazeboLogsFilename(groupID string) string {
+	return fmt.Sprintf("%s.tar.gz", groupID)
 }
 
 // getRobotROSLogsFilename returns the filename of the ROS logs for a specific
 // robot in a simulation.
-func (sa *SubTApplication) getRobotROSLogsFilename(groupId string, robotName string) string {
-	return fmt.Sprintf("%s-fc-%s-commsbridge.tar.gz", groupId, strings.ToLower(robotName))
+func (sa *SubTApplication) getRobotROSLogsFilename(groupID string, robotName string) string {
+	return fmt.Sprintf("%s-fc-%s-commsbridge.tar.gz", groupID, strings.ToLower(robotName))
 }
 
 ////////////////////////////////////////////////////////////////////////////
@@ -349,7 +350,7 @@ func (sa *SubTApplication) isQualified(owner, circuit string, username string) b
 // spawnChildSimulationDeployments. By default, we launch a single simulation from a CreateSimulation request.
 // But we allow specific ApplicationTypes (eg. SubT) to spawn multiple simulations
 // from a single request. When that happens, we call those "child simulations"
-// and they will be grouped by the same parent simulation's groupId.
+// and they will be grouped by the same parent simulation's groupID.
 func (sa *SubTApplication) spawnChildSimulationDeployments(ctx context.Context, tx *gorm.DB,
 	dep *SimulationDeployment) ([]*SimulationDeployment, *ign.ErrMsg) {
 
@@ -747,7 +748,7 @@ func (sa *SubTApplication) getSimulationStatistics(ctx context.Context, s *Servi
 func (sa *SubTApplication) launchApplication(ctx context.Context, s *Service, tx *gorm.DB,
 	dep *SimulationDeployment, podNamePrefix string, baseLabels map[string]string) (interface{}, *ign.ErrMsg) {
 
-	groupId := *dep.GroupId
+	groupID := *dep.GroupId
 
 	// Extend base labels with SubT specific ones
 	baseLabels[subtTagKey] = "true"
@@ -931,7 +932,7 @@ func (sa *SubTApplication) launchApplication(ctx context.Context, s *Service, tx
 						},
 						{
 							Name:  "IGN_PARTITION",
-							Value: groupId,
+							Value: groupID,
 						},
 						{
 							Name:  "IGN_VERBOSE",
@@ -1020,7 +1021,7 @@ func (sa *SubTApplication) launchApplication(ctx context.Context, s *Service, tx
 			hostPath,
 			"logs",
 			sa.cfg.S3LogsBucket,
-			sa.getGazeboLogsFilename(groupId),
+			sa.getGazeboLogsFilename(groupID),
 		)
 		// Launch the copy pod
 		_, err := s.clientset.CoreV1().Pods(corev1.NamespaceDefault).Create(copyPod)
@@ -1096,7 +1097,7 @@ func (sa *SubTApplication) launchApplication(ctx context.Context, s *Service, tx
 				hostPath,
 				"robot-logs",
 				sa.cfg.S3LogsBucket,
-				sa.getRobotROSLogsFilename(groupId, robotNameLower),
+				sa.getRobotROSLogsFilename(groupID, robotNameLower),
 			)
 		}
 
@@ -1113,7 +1114,7 @@ func (sa *SubTApplication) launchApplication(ctx context.Context, s *Service, tx
 			dep,
 			fcPodName,
 			specificFcLabels,
-			groupId,
+			groupID,
 			robot,
 		)
 		fcPods[robotIdentifier] = fcPod
@@ -1250,16 +1251,16 @@ func podHasIPAddress(ctx context.Context, pod *corev1.Pod) (bool, error) {
 // before the bridge container starts, giving write permissions to the bridge
 // container and allowing it to store logs.
 // `userId` is the linux user id (UID) of the user in the pod producing logs.
-// `groupId` is the linux group id (GID) of the user in the pod producing logs.
+// `groupID` is the linux group id (GID) of the user in the pod producing logs.
 // `volumeName` is the name of the Kubernetes hostPath volume containing the shared directory.
-func (sa *SubTApplication) addSharedVolumeConfigurationContainer(pod *corev1.Pod, userId int, groupId int,
+func (sa *SubTApplication) addSharedVolumeConfigurationContainer(pod *corev1.Pod, userId int, groupID int,
 	volumeName string) {
 	pod.Spec.InitContainers = []corev1.Container{
 		{
 			Name:    "chown-shared-volume",
 			Image:   "infrastructureascode/aws-cli:latest",
 			Command: []string{"/bin/sh"},
-			Args:    []string{"-c", fmt.Sprintf("chown %d:%d /tmp", userId, groupId)},
+			Args:    []string{"-c", fmt.Sprintf("chown %d:%d /tmp", userId, groupID)},
 			VolumeMounts: []corev1.VolumeMount{
 				{
 					Name:      volumeName,
@@ -1378,7 +1379,7 @@ func (sa *SubTApplication) createCommsBridgePod(ctx context.Context, dep *Simula
 // change the Pod's Image, Command and Args fields.
 // The field-computer pod runs the Team Solution container.
 func (sa *SubTApplication) createFieldComputerPod(ctx context.Context, dep *SimulationDeployment,
-	podName string, labels map[string]string, groupId string, robot SubTRobot) *corev1.Pod {
+	podName string, labels map[string]string, groupID string, robot SubTRobot) *corev1.Pod {
 
 	fcPod := &corev1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
@@ -1390,7 +1391,7 @@ func (sa *SubTApplication) createFieldComputerPod(ctx context.Context, dep *Simu
 			TerminationGracePeriodSeconds: int64ptr(sa.cfg.TerminationGracePeriodSeconds),
 			NodeSelector: map[string]string{
 				// Needed to force this pod to run on specific nodes
-				nodeLabelKeyGroupId:          groupId,
+				nodeLabelKeyGroupId:          groupID,
 				nodeLabelKeyCloudsimNodeType: "field-computer",
 				nodeLabelKeySubTRobotName:    strings.ToLower(robot.Name),
 			},
@@ -1729,8 +1730,8 @@ func isTeamSolutionPod(pod corev1.Pod) bool {
 func (sa *SubTApplication) deleteApplication(ctx context.Context, s *Service, tx *gorm.DB,
 	dep *SimulationDeployment) *ign.ErrMsg {
 
-	groupId := *dep.GroupId
-	groupIdLabel := getPodLabelSelectorForSearches(groupId)
+	groupID := *dep.GroupId
+	groupIDLabel := getPodLabelSelectorForSearches(groupID)
 
 	// Upload logs and process score and summary entries for the simulation
 	if em := sa.processSimulationResults(ctx, s, tx, dep); em != nil {
@@ -1738,14 +1739,14 @@ func (sa *SubTApplication) deleteApplication(ctx context.Context, s *Service, tx
 		return em
 	}
 
-	// Find and delete all Pods associated to the groupId.
+	// Find and delete all Pods associated to the groupID.
 	podsInterface := s.clientset.CoreV1().Pods(corev1.NamespaceDefault)
-	pods, err := podsInterface.List(metav1.ListOptions{LabelSelector: groupIdLabel})
+	pods, err := podsInterface.List(metav1.ListOptions{LabelSelector: groupIDLabel})
 	if err != nil || len(pods.Items) == 0 {
-		// Pods for this groupId not found. Continue or fail?
-		logger(ctx).Warning("Pods not found for the groupId: "+groupId, err)
+		// Pods for this groupID not found. Continue or fail?
+		logger(ctx).Warning("Pods not found for the groupID: "+groupID, err)
 		if !sa.cfg.AllowNotFoundDuringShutdown {
-			err = errors.Wrap(err, "Pods not found for the groupId: "+groupId)
+			err = errors.Wrap(err, "Pods not found for the groupID: "+groupID)
 			return ign.NewErrorMessageWithBase(ign.ErrorSimGroupNotFound, err)
 		}
 	}
@@ -1764,19 +1765,19 @@ func (sa *SubTApplication) deleteApplication(ctx context.Context, s *Service, tx
 			}
 		}
 	}
-	logger(ctx).Info("Successfully requested to delete pods and services for groupId: " + groupId)
+	logger(ctx).Info("Successfully requested to delete pods and services for groupID: " + groupID)
 
-	// Find and delete all the network policies associated to the groupId.
+	// Find and delete all the network policies associated to the groupID.
 	// Dev note: it is important to remove the network policies AFTER the gzlogs are
 	// copied to S3. Otherwise, if we remove the policies before, the pod will lose
 	// access to outside world and the copy to S3 will not work.
 	npInterface := s.clientset.NetworkingV1().NetworkPolicies(corev1.NamespaceDefault)
-	nps, err := npInterface.List(metav1.ListOptions{LabelSelector: groupIdLabel})
+	nps, err := npInterface.List(metav1.ListOptions{LabelSelector: groupIDLabel})
 	if err != nil || len(nps.Items) == 0 {
-		logger(ctx).Warning("Network Policies not found for the groupId: "+groupId, err)
+		logger(ctx).Warning("Network Policies not found for the groupID: "+groupID, err)
 		// Continue or fail?
 		if !sa.cfg.AllowNotFoundDuringShutdown {
-			err = errors.Wrap(err, "Network Policies not found for the groupId: "+groupId)
+			err = errors.Wrap(err, "Network Policies not found for the groupID: "+groupID)
 			return ign.NewErrorMessageWithBase(ign.ErrorSimGroupNotFound, err)
 		}
 	}
@@ -1895,13 +1896,13 @@ func (sa *SubTApplication) uploadSimulationLogs(ctx context.Context, s *Service,
 
 	logger := logger(ctx)
 
-	groupId := *simDep.GroupId
+	groupID := *simDep.GroupId
 	bucket := filepath.Join(sa.cfg.S3LogsBucket, GetS3SimulationLogKey(simDep))
 	failedPodUploads := make(map[string]error, 0)
 
 	// Upload Gazebo logs
 	opts := MakeListOptions(
-		getPodLabelSelectorForSearches(groupId),
+		getPodLabelSelectorForSearches(groupID),
 		labelAndValue("gzserver", "true"),
 	)
 	pods, err := s.clientset.CoreV1().Pods(corev1.NamespaceDefault).List(opts)
@@ -1919,7 +1920,7 @@ func (sa *SubTApplication) uploadSimulationLogs(ctx context.Context, s *Service,
 				CopyToS3SidecarContainerName,
 				bucket,
 				sa.cfg.SidecarContainerLogsVolumeMountPath,
-				sa.getGazeboLogsFilename(groupId),
+				sa.getGazeboLogsFilename(groupID),
 			)
 			if err != nil {
 				failedPodUploads[podName] = err
@@ -1929,7 +1930,7 @@ func (sa *SubTApplication) uploadSimulationLogs(ctx context.Context, s *Service,
 
 	//Upload ROS logs
 	opts = MakeListOptions(
-		getPodLabelSelectorForSearches(groupId),
+		getPodLabelSelectorForSearches(groupID),
 		labelAndValue("comms-bridge", "true"),
 	)
 	pods, err = s.clientset.CoreV1().Pods(corev1.NamespaceDefault).List(opts)
@@ -1948,7 +1949,7 @@ func (sa *SubTApplication) uploadSimulationLogs(ctx context.Context, s *Service,
 				CopyToS3SidecarContainerName,
 				bucket,
 				sa.cfg.SidecarContainerLogsVolumeMountPath,
-				sa.getRobotROSLogsFilename(groupId, robotName),
+				sa.getRobotROSLogsFilename(groupID, robotName),
 			)
 			if err != nil {
 				failedPodUploads[podName] = err

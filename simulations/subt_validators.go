@@ -15,6 +15,7 @@ func InstallSubTCustomValidators(validate *validator.Validate) {
 	validate.RegisterValidation("ecrBelongToOwner", imageBelongsToOwnerAtECR)
 }
 
+// SubTRobotType represents a SubT robot
 type SubTRobotType struct {
 	Owner     string `json:"owner"`
 	Name      string `json:"name"`

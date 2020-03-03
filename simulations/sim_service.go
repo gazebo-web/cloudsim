@@ -54,26 +54,26 @@ type SimService interface {
 	Stop(ctx context.Context) error
 	CustomizeSimRequest(ctx context.Context, r *http.Request, tx *gorm.DB, createSim *CreateSimulation, username string) *ign.ErrMsg
 	GetCloudMachineInstances(ctx context.Context, p *ign.PaginationRequest,
-		tx *gorm.DB, byStatus *MachineStatus, invertStatus bool, groupId *string, user *users.User, application *string) (*MachineInstances, *ign.PaginationResult, *ign.ErrMsg)
+		tx *gorm.DB, byStatus *MachineStatus, invertStatus bool, groupID *string, user *users.User, application *string) (*MachineInstances, *ign.PaginationResult, *ign.ErrMsg)
 	DeleteNodesAndHostsForGroup(ctx context.Context, tx *gorm.DB,
 		dep *SimulationDeployment, user *users.User) (interface{}, *ign.ErrMsg)
 	GetSimulationDeployment(ctx context.Context, tx *gorm.DB,
-		groupId string, user *users.User) (interface{}, *ign.ErrMsg)
-	GetSimulationLiveLogs(ctx context.Context, tx *gorm.DB, user *users.User, groupId string,
+		groupID string, user *users.User) (interface{}, *ign.ErrMsg)
+	GetSimulationLiveLogs(ctx context.Context, tx *gorm.DB, user *users.User, groupID string,
 		robotName *string, lines *int64) (interface{}, *ign.ErrMsg)
-	GetSimulationLogsForDownload(ctx context.Context, tx *gorm.DB, user *users.User, groupId string,
+	GetSimulationLogsForDownload(ctx context.Context, tx *gorm.DB, user *users.User, groupID string,
 		robotName *string) (*string, *ign.ErrMsg)
 	RegisterApplication(ctx context.Context, app ApplicationType)
 	ShutdownSimulationAsync(ctx context.Context, tx *gorm.DB,
-		groupId string, user *users.User) (interface{}, *ign.ErrMsg)
+		groupID string, user *users.User) (interface{}, *ign.ErrMsg)
 	SimulationDeploymentList(ctx context.Context, p *ign.PaginationRequest, tx *gorm.DB, byStatus *DeploymentStatus,
 		invertStatus bool, byErrStatus *ErrorStatus, invertErrStatus bool, byCircuit *string, user *users.User,
 		application *string, includeChildren bool) (*SimulationDeployments, *ign.PaginationResult, *ign.ErrMsg)
 	StartSimulationAsync(ctx context.Context, tx *gorm.DB, createSim *CreateSimulation,
 		user *users.User) (interface{}, *ign.ErrMsg)
-	LaunchSimulationAsync(ctx context.Context, tx *gorm.DB, groupId string,
+	LaunchSimulationAsync(ctx context.Context, tx *gorm.DB, groupID string,
 		user *users.User) (interface{}, *ign.ErrMsg)
-	RestartSimulationAsync(ctx context.Context, tx *gorm.DB, groupId string,
+	RestartSimulationAsync(ctx context.Context, tx *gorm.DB, groupID string,
 		user *users.User) (interface{}, *ign.ErrMsg)
 	GetRemainingSubmissions(ctx context.Context, tx *gorm.DB, user *users.User, circuit *string,
 		owner *string) (interface{}, *ign.ErrMsg)
@@ -85,10 +85,10 @@ type SimService interface {
 		owner *string, ruleType *CustomRuleType) (interface{}, *ign.ErrMsg)
 	GetCompetitionRobots(applicationName string) (interface{}, *ign.ErrMsg)
 	QueueGetElements(ctx context.Context, user *users.User, page, pageSize *int) ([]interface{}, *ign.ErrMsg)
-	QueueMoveElementToFront(ctx context.Context, user *users.User, groupId string) (interface{}, *ign.ErrMsg)
-	QueueMoveElementToBack(ctx context.Context, user *users.User, groupId string) (interface{}, *ign.ErrMsg)
-	QueueSwapElements(ctx context.Context, user *users.User, groupIdA, groupIdB string) (interface{}, *ign.ErrMsg)
-	QueueRemoveElement(ctx context.Context, user *users.User, groupId string) (interface{}, *ign.ErrMsg)
+	QueueMoveElementToFront(ctx context.Context, user *users.User, groupID string) (interface{}, *ign.ErrMsg)
+	QueueMoveElementToBack(ctx context.Context, user *users.User, groupID string) (interface{}, *ign.ErrMsg)
+	QueueSwapElements(ctx context.Context, user *users.User, groupIDA, groupIDB string) (interface{}, *ign.ErrMsg)
+	QueueRemoveElement(ctx context.Context, user *users.User, groupID string) (interface{}, *ign.ErrMsg)
 	QueueCount(ctx context.Context, user *users.User) (interface{}, *ign.ErrMsg)
 }
 
@@ -98,13 +98,13 @@ type SimService interface {
 // Example implementations can be found in `ec2_machines.go` and `local_machines.go`.
 type NodeManager interface {
 	CloudMachinesList(ctx context.Context, p *ign.PaginationRequest,
-		tx *gorm.DB, byStatus *MachineStatus, invertStatus bool, groupId *string, application *string) (*MachineInstances, *ign.PaginationResult, *ign.ErrMsg)
+		tx *gorm.DB, byStatus *MachineStatus, invertStatus bool, groupID *string, application *string) (*MachineInstances, *ign.PaginationResult, *ign.ErrMsg)
 	// Requests the NodeManager to terminate the hosts (or instances or VMs) used to run a GroupId.
 	// It also updates the MachineInstance DB records with the status of the terminated hosts.
 	deleteHosts(ctx context.Context, tx *gorm.DB, dep *SimulationDeployment) (interface{}, *ign.ErrMsg)
 	// Requests the NodeManager to delete involved k8 nodes.
 	// It is expected that if the labeled Nodes cannot be found, then this function should return an ErrorLabeledNodeNotFound.
-	deleteK8Nodes(ctx context.Context, tx *gorm.DB, groupId string) (interface{}, *ign.ErrMsg)
+	deleteK8Nodes(ctx context.Context, tx *gorm.DB, groupID string) (interface{}, *ign.ErrMsg)
 	// asks the NodeManager to launch a set of nodes to run a simulation
 	launchNodes(ctx context.Context, tx *gorm.DB, dep *SimulationDeployment) (*string, *ign.ErrMsg)
 }
@@ -278,7 +278,7 @@ func NewSimulationsService(ctx context.Context, db *gorm.DB, nm NodeManager,
 }
 
 // PoolNotificationCallback type of the listeners
-type PoolNotificationCallback func(poolEvent PoolEvent, groupId string, result interface{}, em *ign.ErrMsg)
+type PoolNotificationCallback func(poolEvent PoolEvent, groupID string, result interface{}, em *ign.ErrMsg)
 
 // SetPoolEventsListener registers a single pool event listener that will receive
 // notifications any time a pool worker "finishes" its job (either with result or error).
@@ -295,22 +295,22 @@ func (s *Service) SetPoolEventsListener(cb PoolNotificationCallback) {
 	s.poolNotificationCallback = cb
 }
 
-func (s *Service) notify(poolEvent PoolEvent, groupId string, result interface{}, em *ign.ErrMsg) {
+func (s *Service) notify(poolEvent PoolEvent, groupID string, result interface{}, em *ign.ErrMsg) {
 	if s.poolNotificationCallback != nil {
-		s.poolNotificationCallback(poolEvent, groupId, result, em)
+		s.poolNotificationCallback(poolEvent, groupID, result, em)
 	}
 }
 
-func (s *Service) queueLaunchRequest(groupId string) {
-	s.launchHandlerQueue.Enqueue(groupId)
+func (s *Service) queueLaunchRequest(groupID string) {
+	s.launchHandlerQueue.Enqueue(groupID)
 }
 
-func (s *Service) queueShutdownRequest(groupId string) {
-	s.terminationHandlerQueue <- groupId
+func (s *Service) queueShutdownRequest(groupID string) {
+	s.terminationHandlerQueue <- groupID
 }
 
-func (s *Service) queueErrorHandlerRequest(groupId string) {
-	s.errorHandlerQueue <- groupId
+func (s *Service) queueErrorHandlerRequest(groupID string) {
+	s.errorHandlerQueue <- groupID
 }
 
 // defaultPoolFactory is the default implementation of the PoolFactory interface.
@@ -331,17 +331,17 @@ func (s *Service) Start(ctx context.Context) error {
 	// Start a routine that will move 'launch' requests from the Waiting Queue into
 	// the WorkerPool. If all the Workers are busy then this goroutine will block.
 	go func() {
-		var groupId string
+		var groupID string
 		var ok bool
 		for {
 			result, err := s.launchHandlerQueue.DequeueOrWait()
-			groupId, ok = result.(string)
+			groupID, ok = result.(string)
 			if ok && err == nil {
-				logger(ctx).Info("launchHandler queue - about to process launch task for groupId: " + groupId)
+				logger(ctx).Info("launchHandler queue - about to process launch task for groupID: " + groupID)
 				// This call will block if all Workers are busy
-				if err := s.launcher.Serve(groupId); err != nil {
+				if err := s.launcher.Serve(groupID); err != nil {
 					logMsg := fmt.Sprintf(
-						"launchHandler queue - Error in launch task for groupId [%s]. Error:[%v]\n", groupId, err,
+						"launchHandler queue - Error in launch task for groupID [%s]. Error:[%v]\n", groupID, err,
 					)
 					logger(ctx).Error(logMsg, err)
 				}
@@ -352,12 +352,12 @@ func (s *Service) Start(ctx context.Context) error {
 	// Start a routine that will move 'shutdown' requests from the Waiting Queue into
 	// the WorkerPool. If all the Workers are busy then this goroutine will block.
 	go func() {
-		for groupId := range s.terminationHandlerQueue {
-			logger(ctx).Info("shutdownHandler queue - about to submit shutdown task for groupId: " + groupId)
+		for groupID := range s.terminationHandlerQueue {
+			logger(ctx).Info("shutdownHandler queue - about to submit shutdown task for groupID: " + groupID)
 			// This call will block if all Workers are busy
-			if err := s.terminator.Serve(groupId); err != nil {
+			if err := s.terminator.Serve(groupID); err != nil {
 				logMsg := fmt.Sprintf(
-					"shutdownHandler queue - Error in shutdown task for groupId [%s]. Error:[%v]\n", groupId, err,
+					"shutdownHandler queue - Error in shutdown task for groupID [%s]. Error:[%v]\n", groupID, err,
 				)
 				logger(ctx).Error(logMsg, err)
 			}
@@ -367,12 +367,12 @@ func (s *Service) Start(ctx context.Context) error {
 	// Start a routine that will move 'error handler' requests from the Waiting Queue into
 	// the WorkerPool. If all the Workers are busy then this goroutine will block.
 	go func() {
-		for groupId := range s.errorHandlerQueue {
-			logger(ctx).Info("errorHandler queue - about to handle error for groupId: " + groupId)
+		for groupID := range s.errorHandlerQueue {
+			logger(ctx).Info("errorHandler queue - about to handle error for groupID: " + groupID)
 			// This call will block if all Workers are busy
-			if err := s.errorHandler.Serve(groupId); err != nil {
+			if err := s.errorHandler.Serve(groupID); err != nil {
 				logMsg := fmt.Sprintf(
-					"errorHandler queue - Error while handling errors for groupId [%s]. Error:[%v]\n", groupId, err,
+					"errorHandler queue - Error while handling errors for groupID [%s]. Error:[%v]\n", groupID, err,
 				)
 				logger(ctx).Error(logMsg, err)
 			}
@@ -405,14 +405,17 @@ func (s *Service) RegisterApplication(ctx context.Context, app ApplicationType) 
 	s.applications[app.getApplicationName()] = app
 }
 
+// GetNodeManager returns the NodeManager saved on hostsSvc
 func (s *Service) GetNodeManager() NodeManager {
 	return s.hostsSvc
 }
 
+// SetNodeManager sets a different to hostsSvc
 func (s *Service) SetNodeManager(nm NodeManager) {
 	s.hostsSvc = nm
 }
 
+// GetApplications returns a map of application name and application type.
 func (s *Service) GetApplications() map[string]ApplicationType {
 	return s.applications
 }
@@ -438,33 +441,33 @@ func (s *Service) initializeRunningSimulationsFromCluster(ctx context.Context, t
 	runningSims := make(map[string]bool)
 
 	for _, p := range pods.Items {
-		groupId := p.Labels[podLabelKeyGroupId]
+		groupID := p.Labels[podLabelKeyGroupId]
 
 		if p.ObjectMeta.DeletionTimestamp != nil {
 			// DeletionTimestamp != nil means the system has requested a deletion of this Pod.
 			// So, we won't consider this as a Running Pod.
-			runningSims[groupId] = false
+			runningSims[groupID] = false
 			continue
 		}
 
-		running, found := runningSims[groupId]
+		running, found := runningSims[groupID]
 		if !found {
 			// First pod processed for this simulation. Mark running with initial value to make the "&&"" work later
 			running = true
 		}
 		// is the current pod running. Update the whole simulation running status based on that.
 		running = running && (p.Status.Phase == corev1.PodRunning)
-		runningSims[groupId] = running
+		runningSims[groupID] = running
 
 	}
 
 	// Now iterate the simulations marked as 'running' and create RunningSimulations for them.
-	for groupId, running := range runningSims {
+	for groupID, running := range runningSims {
 		if !running {
 			continue
 		}
 		// Get the Simulation record from DB
-		simDep, err := GetSimulationDeployment(tx, groupId)
+		simDep, err := GetSimulationDeployment(tx, groupID)
 		if err != nil {
 			return err
 		}
@@ -477,7 +480,7 @@ func (s *Service) initializeRunningSimulationsFromCluster(ctx context.Context, t
 				return err
 			}
 
-			logger(ctx).Info(fmt.Sprintf("Init - Added RunningSimulation for groupId: [%s]. Deployment Status in DB: [%d]", groupId, *simDep.DeploymentStatus))
+			logger(ctx).Info(fmt.Sprintf("Init - Added RunningSimulation for groupID: [%s]. Deployment Status in DB: [%d]", groupID, *simDep.DeploymentStatus))
 		}
 	}
 
@@ -513,7 +516,7 @@ func (s *Service) DeployHeldSimulation(ctx context.Context, tx *gorm.DB, dep *Si
 			return NewErrorMessageWithBase(ErrorLaunchHeldSimulation, err)
 		}
 
-		logger(ctx).Info(fmt.Sprintf("DeployHeldSimulation about to submit launch task for groupId: %s", *sim.GroupId))
+		logger(ctx).Info(fmt.Sprintf("DeployHeldSimulation about to submit launch task for groupID: %s", *sim.GroupId))
 		if err := LaunchSimulation(s, ctx, tx, &sim); err != nil {
 			logger(ctx).Error(fmt.Sprintf("DeployHeldSimulation -- Cannot launch simulation: %s", err.Msg))
 		}
@@ -545,12 +548,12 @@ func (s *Service) rebuildState(ctx context.Context, db *gorm.DB) error {
 	}
 
 	for _, d := range deps {
-		groupId := *d.GroupId
+		groupID := *d.GroupId
 
 		if simPending.Eq(*d.DeploymentStatus) {
 			// If still Pending then re-add it to the scheduler, by adding a 'launch simulation'
 			// request to the Launcher Jobs-Pool
-			logger(ctx).Info("rebuildState -- about to submit launch task for groupId: " + groupId)
+			logger(ctx).Info("rebuildState -- about to submit launch task for groupID: " + groupID)
 			if err := LaunchSimulation(s, ctx, db, &d); err != nil {
 				logger(ctx).Error(fmt.Sprintf("rebuildState -- Cannot launch simulation: %s", err.Msg))
 			}
@@ -558,10 +561,10 @@ func (s *Service) rebuildState(ctx context.Context, db *gorm.DB) error {
 		}
 
 		if simRunning.Eq(*d.DeploymentStatus) {
-			_, podRunning := s.runningSimulations[groupId]
+			_, podRunning := s.runningSimulations[groupID]
 			if !podRunning {
 				logger(ctx).Info(fmt.Sprintf("rebuildState -- GroupId [%s] expected to be Running "+
-					"in DB but there is no matching Pod running. Marking with error", groupId))
+					"in DB but there is no matching Pod running. Marking with error", groupID))
 				// if the SimulationDeployment DB record has 'running' status but there is no matching
 				// running Pod in the cluster then we have an inconsistenty. Mark it as error.
 				d.setErrorStatus(db, simErrorServerRestart)
@@ -574,7 +577,7 @@ func (s *Service) rebuildState(ctx context.Context, db *gorm.DB) error {
 		// after a server restart.
 		statusStr := DeploymentStatus(*d.DeploymentStatus).String()
 		logger(ctx).Info(fmt.Sprintf("rebuildState -- GroupId [%s] found with intermediate "+
-			"DeploymentStatus [%s]. Marking with error", groupId, statusStr))
+			"DeploymentStatus [%s]. Marking with error", groupID, statusStr))
 		d.setErrorStatus(db, simErrorServerRestart)
 	}
 
@@ -716,25 +719,25 @@ func (s *Service) checkForExpiredSimulations(ctx context.Context) error {
 	s.lockRunningSimulations.RLock()
 	defer s.lockRunningSimulations.RUnlock()
 
-	for groupId := range s.runningSimulations {
-		rs := s.runningSimulations[groupId]
+	for groupID := range s.runningSimulations {
+		rs := s.runningSimulations[groupID]
 
 		if rs.IsExpired() || rs.Finished {
-			dep, err := GetSimulationDeployment(s.DB, groupId)
+			dep, err := GetSimulationDeployment(s.DB, groupID)
 			if err != nil {
-				logger(ctx).Error("Error while trying to get Simulation from DB: "+groupId, err)
+				logger(ctx).Error("Error while trying to get Simulation from DB: "+groupID, err)
 				continue
 			}
 
 			// Add a 'stop simulation' request to the Terminator Jobs-Pool.
 			if err := s.scheduleTermination(ctx, s.DB, dep); err != nil {
-				logger(ctx).Error("Error while trying to schedule automatic termination of Simulation: "+groupId, err)
+				logger(ctx).Error("Error while trying to schedule automatic termination of Simulation: "+groupID, err)
 			} else {
 				reason := "expired"
 				if rs.Finished {
 					reason = "finished"
 				}
-				logger(ctx).Info(fmt.Sprintf("Scheduled automatic termination of %s simulation: %s", reason, groupId))
+				logger(ctx).Info(fmt.Sprintf("Scheduled automatic termination of %s simulation: %s", reason, groupID))
 			}
 		}
 	}
@@ -763,8 +766,8 @@ var LaunchSimulation = func(s *Service, ctx context.Context,
 	}
 
 	// Process
-	groupId := *dep.GroupId
-	s.queueLaunchRequest(groupId)
+	groupID := *dep.GroupId
+	s.queueLaunchRequest(groupID)
 	return nil
 }
 
@@ -794,19 +797,19 @@ func (s *Service) countPods(ctx context.Context, user *users.User) (interface{},
 
 // workerStartSimulation is a thread pool worker that invokes the startSimulation.
 func (s *Service) workerStartSimulation(payload interface{}) {
-	groupId, ok := payload.(string)
+	groupID, ok := payload.(string)
 	if !ok {
 		return
 	}
 
 	// bind a specific logger to the worker
-	reqID := fmt.Sprintf("worker-start-sim-%s", groupId)
+	reqID := fmt.Sprintf("worker-start-sim-%s", groupID)
 	newLogger := logger(s.baseCtx).Clone(reqID)
 	workerCtx := ign.NewContextWithLogger(s.baseCtx, newLogger)
 
-	newLogger.Info("Worker about to invoke StartSimulation for groupId: " + groupId)
+	newLogger.Info("Worker about to invoke StartSimulation for groupID: " + groupID)
 
-	simDep, err := GetSimulationDeployment(s.DB, groupId)
+	simDep, err := GetSimulationDeployment(s.DB, groupID)
 	if err != nil {
 		logger(workerCtx).Error(fmt.Sprintf("startSimulation - %v", err))
 		return
@@ -816,7 +819,7 @@ func (s *Service) workerStartSimulation(payload interface{}) {
 	if res == launcherRelaunchNeeded {
 		s.requeueSimulation(simDep)
 	}
-	s.notify(PoolStartSimulation, groupId, res, em)
+	s.notify(PoolStartSimulation, groupID, res, em)
 }
 
 // ///////////////////////////////////////////////////////////////////////
@@ -824,18 +827,18 @@ func (s *Service) workerStartSimulation(payload interface{}) {
 
 // workerTerminateSimulation is a thread pool worker that invokes the shutdownSimulation.
 func (s *Service) workerTerminateSimulation(payload interface{}) {
-	groupId, ok := payload.(string)
+	groupID, ok := payload.(string)
 	if !ok {
 		return
 	}
 	// bind a specific logger to the worker-
-	reqID := fmt.Sprintf("worker-finish-sim-%s", groupId)
+	reqID := fmt.Sprintf("worker-finish-sim-%s", groupID)
 	newLogger := logger(s.baseCtx).Clone(reqID)
 	workerCtx := ign.NewContextWithLogger(s.baseCtx, newLogger)
 
-	newLogger.Info("Worker about to invoke ShutdownSimulation for groupId: " + groupId)
-	res, em := s.shutdownSimulation(workerCtx, s.DB, groupId)
-	s.notify(PoolShutdownSimulation, groupId, res, em)
+	newLogger.Info("Worker about to invoke ShutdownSimulation for groupID: " + groupID)
+	res, em := s.shutdownSimulation(workerCtx, s.DB, groupID)
+	s.notify(PoolShutdownSimulation, groupID, res, em)
 }
 
 // ///////////////////////////////////////////////////////////////////////
@@ -843,29 +846,29 @@ func (s *Service) workerTerminateSimulation(payload interface{}) {
 
 // workerErrorHandler is a pool worker responsible of handling errors.
 func (s *Service) workerErrorHandler(payload interface{}) {
-	groupId, ok := payload.(string)
+	groupID, ok := payload.(string)
 	if !ok {
 		return
 	}
 	// bind a specific logger to the worker
-	reqID := fmt.Sprintf("worker-error-handler-%s", groupId)
+	reqID := fmt.Sprintf("worker-error-handler-%s", groupID)
 	newLogger := logger(s.baseCtx).Clone(reqID)
 	workerCtx := ign.NewContextWithLogger(s.baseCtx, newLogger)
 
-	newLogger.Info("Worker about to (try to) handle error for groupId: " + groupId)
-	dep, err := GetSimulationDeployment(s.DB, groupId)
+	newLogger.Info("Worker about to (try to) handle error for groupID: " + groupID)
+	dep, err := GetSimulationDeployment(s.DB, groupID)
 	if err != nil {
-		logMsg := fmt.Sprintf("workerErrorHandler - Error getting SimulationDeployment from DB for GroupId [%s]", groupId)
+		logMsg := fmt.Sprintf("workerErrorHandler - Error getting SimulationDeployment from DB for GroupId [%s]", groupID)
 		newLogger.Error(logMsg, err)
 		return
 	}
 
 	if *dep.ErrorStatus == string(simErrorWhenInitializing) {
 		res, em := s.rollbackFailedLaunch(workerCtx, s.DB, dep)
-		s.notify(PoolRollbackFailedLaunch, groupId, res, em)
+		s.notify(PoolRollbackFailedLaunch, groupID, res, em)
 	} else if *dep.ErrorStatus == string(simErrorWhenTerminating) {
 		res, em := s.completeFailedTermination(workerCtx, s.DB, dep)
-		s.notify(PoolCompleteFailedTermination, groupId, res, em)
+		s.notify(PoolCompleteFailedTermination, groupID, res, em)
 	}
 }
 
@@ -932,7 +935,7 @@ func (s *Service) StartSimulationAsync(ctx context.Context,
 	}
 
 	// Create and assign a new GroupId
-	groupId := uuid.NewV4().String()
+	groupID := uuid.NewV4().String()
 
 	// Create the SimulationDeployment record in DB. Set initial status.
 	creator := *user.Username
@@ -946,7 +949,7 @@ func (s *Service) StartSimulationAsync(ctx context.Context,
 		Platform:         &createSim.Platform,
 		Application:      &createSim.Application,
 		Image:            &imageStr,
-		GroupId:          &groupId,
+		GroupId:          &groupID,
 		DeploymentStatus: simPending.ToPtr(),
 		Extra:            createSim.Extra,
 		ExtraSelector:    createSim.ExtraSelector,
@@ -973,7 +976,7 @@ func (s *Service) StartSimulationAsync(ctx context.Context,
 
 	// Set read and write permissions to owner (eg, the team) and to the Application
 	// organizing team (eg. subt).
-	if em := s.bulkAddPermissions(groupId, []per.Action{per.Read, per.Write}, owner, *simDep.Application); em != nil {
+	if em := s.bulkAddPermissions(groupID, []per.Action{per.Read, per.Write}, owner, *simDep.Application); em != nil {
 		return nil, em
 	}
 
@@ -994,7 +997,7 @@ func (s *Service) StartSimulationAsync(ctx context.Context,
 	// By default, we launch a single simulation from a createSimulation request.
 	// But we also allow specific ApplicationTypes (eg. SubT) to spawn multiple simulations
 	// from a single request. When that happens, we call those "child simulations"
-	// and they will be grouped by the same parent simulation's groupId.
+	// and they will be grouped by the same parent simulation's groupID.
 	simsToLaunch, err := s.prepareSimulations(ctx, tx, simDep)
 	if err != nil {
 		return nil, err
@@ -1002,8 +1005,8 @@ func (s *Service) StartSimulationAsync(ctx context.Context,
 
 	// Add a 'launch simulation' request to the Launcher Jobs-Pool
 	for _, sim := range simsToLaunch {
-		groupId := *sim.GroupId
-		logger(ctx).Info("StartSimulationAsync about to submit launch task for groupId: " + groupId)
+		groupID := *sim.GroupId
+		logger(ctx).Info("StartSimulationAsync about to submit launch task for groupID: " + groupID)
 		if err := LaunchSimulation(s, ctx, tx, sim); err != nil {
 			logger(ctx).Error(fmt.Sprintf("StartSimulationAsync -- Cannot launch simulation: %s", err.Msg))
 		}
@@ -1014,13 +1017,13 @@ func (s *Service) StartSimulationAsync(ctx context.Context,
 
 // LaunchSimulationAsync launches a simulation that is currently being held by cloudsim.
 func (s *Service) LaunchSimulationAsync(ctx context.Context, tx *gorm.DB,
-	groupId string, user *users.User) (interface{}, *ign.ErrMsg) {
+	groupID string, user *users.User) (interface{}, *ign.ErrMsg) {
 
 	if !s.userAccessor.IsSystemAdmin(*user.Username) {
 		return nil, ign.NewErrorMessage(ign.ErrorUnauthorized)
 	}
 
-	dep, err := GetSimulationDeployment(tx, groupId)
+	dep, err := GetSimulationDeployment(tx, groupID)
 	if err != nil {
 		return nil, ign.NewErrorMessageWithBase(ign.ErrorSimGroupNotFound, err)
 	}
@@ -1040,11 +1043,11 @@ func (s *Service) LaunchSimulationAsync(ctx context.Context, tx *gorm.DB,
 // RestartSimulationAsync re-launches a single (children) simulation that previosly
 // finished with an error status.
 func (s *Service) RestartSimulationAsync(ctx context.Context, tx *gorm.DB,
-	groupId string, user *users.User) (interface{}, *ign.ErrMsg) {
+	groupID string, user *users.User) (interface{}, *ign.ErrMsg) {
 
-	logger(ctx).Info("RestartSimulationAsync requested for groupId: " + groupId)
+	logger(ctx).Info("RestartSimulationAsync requested for groupID: " + groupID)
 
-	mainDep, err := GetSimulationDeployment(tx, groupId)
+	mainDep, err := GetSimulationDeployment(tx, groupID)
 	if err != nil {
 		return nil, ign.NewErrorMessageWithBase(ign.ErrorSimGroupNotFound, err)
 	}
@@ -1143,7 +1146,7 @@ func (s *Service) RestartSimulationAsync(ctx context.Context, tx *gorm.DB,
 	}
 
 	// Add a new 'launch simulation' request to the Launcher Jobs-Pool
-	logger(ctx).Info("RestartSimulationAsync about to submit task to re-launch groupId: " + *clone.GroupId)
+	logger(ctx).Info("RestartSimulationAsync about to submit task to re-launch groupID: " + *clone.GroupId)
 	if err := LaunchSimulation(s, ctx, tx, clone); err != nil {
 		logger(ctx).Error(fmt.Sprintf("rebuildState -- Cannot launch simulation: %s", err.Msg))
 	}
@@ -1345,9 +1348,9 @@ func (s *Service) getMaxDurationForSimulation(ctx context.Context, tx *gorm.DB,
 // pool worker will send the simulation again to the Pending queue.
 func (s *Service) startSimulation(ctx context.Context, tx *gorm.DB,
 	simDep *SimulationDeployment) (interface{}, *ign.ErrMsg) {
-	groupId := *simDep.GroupId
-	logger(ctx).Info("startSimulation running for groupId: " + groupId)
-	simDep, err := GetSimulationDeployment(tx, groupId)
+	groupID := *simDep.GroupId
+	logger(ctx).Info("startSimulation running for groupID: " + groupID)
+	simDep, err := GetSimulationDeployment(tx, groupID)
 	if err != nil {
 		logger(ctx).Error(fmt.Sprintf("startSimulation - %v", err))
 		return nil, ign.NewErrorMessageWithBase(ign.ErrorSimGroupNotFound, err)
@@ -1423,18 +1426,18 @@ func (s *Service) startSimulation(ctx context.Context, tx *gorm.DB,
 			return nil, em
 		}
 
-		logger(ctx).Info("startSimulation - about to launch pods for groupId: " + groupId)
+		logger(ctx).Info("startSimulation - about to launch pods for groupID: " + groupID)
 		// After getting the nodes ready we can schedule the Pods.
-		if _, em := s.launchGazeboServerInGroup(ctx, tx, groupId, simDep); em != nil {
+		if _, em := s.launchGazeboServerInGroup(ctx, tx, groupID, simDep); em != nil {
 			return nil, em
 		}
 
 		// Wait until Pods are actually running and ready before continuing.
 		// TODO: wait until Gazebo server is actually running and ready to receive data.
 		// Idea, use kubernetes's readinessProbes for that.
-		groupIdLabel := getPodLabelSelectorForSearches(groupId)
+		groupIDLabel := getPodLabelSelectorForSearches(groupID)
 		timeout = time.Duration(s.cfg.PodReadyTimeoutSeconds) * time.Second
-		if err := WaitForPodsReady(ctx, s.clientset, corev1.NamespaceDefault, groupIdLabel, timeout); err != nil {
+		if err := WaitForPodsReady(ctx, s.clientset, corev1.NamespaceDefault, groupIDLabel, timeout); err != nil {
 			return nil, ign.NewErrorMessageWithBase(ign.ErrorK8Create, err)
 		}
 
@@ -1458,14 +1461,14 @@ func (s *Service) startSimulation(ctx context.Context, tx *gorm.DB,
 			return launcherRelaunchNeeded, em
 		}
 		// Otherwise mark the simulation as failed
-		logMsg := fmt.Sprintf("startSimulation - error in startSimulation for groupid [%s]. Error: %v", groupId, em)
+		logMsg := fmt.Sprintf("startSimulation - error in startSimulation for groupid [%s]. Error: %v", groupID, em)
 		logger(ctx).Error(logMsg, em)
 		timeTrack(ctx, tstart, "startSimulation - time tracker until error")
 		s.registerError(ctx, tx, simDep, simErrorWhenInitializing)
 		return nil, em
 	}
 
-	logger(ctx).Info("startSimulation - successfully launched groupId: " + groupId)
+	logger(ctx).Info("startSimulation - successfully launched groupID: " + groupID)
 	return simDep, nil
 }
 
@@ -1510,17 +1513,17 @@ func (s *Service) requeueSimulation(simDep *SimulationDeployment) *ign.ErrMsg {
 
 // ShutdownSimulationAsync spawns a task to finish a simulation.
 func (s *Service) ShutdownSimulationAsync(ctx context.Context, tx *gorm.DB,
-	groupId string, user *users.User) (interface{}, *ign.ErrMsg) {
+	groupID string, user *users.User) (interface{}, *ign.ErrMsg) {
 
-	logger(ctx).Info("ShutdownSimulationAsync requested for groupId: " + groupId)
+	logger(ctx).Info("ShutdownSimulationAsync requested for groupID: " + groupID)
 
 	// Is the user authorized to shutdown the simulation? First we check generic
 	// permissions. Then we allow specific Applications to reject requests as well.
-	if ok, em := s.userAccessor.IsAuthorizedForResource(*user.Username, groupId, per.Read); !ok {
+	if ok, em := s.userAccessor.IsAuthorizedForResource(*user.Username, groupID, per.Read); !ok {
 		return nil, em
 	}
 
-	mainDep, err := GetSimulationDeployment(tx, groupId)
+	mainDep, err := GetSimulationDeployment(tx, groupID)
 	if err != nil {
 		return nil, ign.NewErrorMessageWithBase(ign.ErrorSimGroupNotFound, err)
 	}
@@ -1597,9 +1600,9 @@ func (s *Service) internalShutdownSimulation(ctx context.Context, tx *gorm.DB,
 		return nil, ign.NewErrorMessageWithBase(ign.ErrorK8Delete, err)
 	}
 
-	groupId := *dep.GroupId
+	groupID := *dep.GroupId
 
-	rs := s.removeRunningSimulation(groupId)
+	rs := s.removeRunningSimulation(groupID)
 	if rs != nil {
 		rs.Free(ctx)
 	}
@@ -1611,7 +1614,7 @@ func (s *Service) internalShutdownSimulation(ctx context.Context, tx *gorm.DB,
 
 	if *dep.DeploymentStatus == int(simDeletingPods) {
 		// Delete the pods, services , etc
-		logger(ctx).Info(fmt.Sprintf("%s - about to delete pods for groupId: %s", logPrefix, groupId))
+		logger(ctx).Info(fmt.Sprintf("%s - about to delete pods for groupID: %s", logPrefix, groupID))
 		// It is expected that deleteGazeboServerInGroup will block until Pods and Services
 		// were cleanly terminated (including preStop scripts, etc).
 		// Blocking is needed because after this call, the host/node will be killed (or reused).
@@ -1655,9 +1658,9 @@ func (s *Service) internalShutdownSimulation(ctx context.Context, tx *gorm.DB,
 // ShutdownSimulation finishes all resources associated to a cloudsim simulation.
 // (eg. Nodes, Hosts, Pods)
 // IMPORTANT: this function is invoked in a separate thread, from a Terminator Worker thread.
-func (s *Service) shutdownSimulation(ctx context.Context, tx *gorm.DB, groupId string) (interface{}, *ign.ErrMsg) {
+func (s *Service) shutdownSimulation(ctx context.Context, tx *gorm.DB, groupID string) (interface{}, *ign.ErrMsg) {
 
-	dep, err := GetSimulationDeployment(tx, groupId)
+	dep, err := GetSimulationDeployment(tx, groupID)
 	if err != nil {
 		return nil, ign.NewErrorMessageWithBase(ign.ErrorSimGroupNotFound, err)
 	}
@@ -1699,7 +1702,7 @@ func (s *Service) shutdownSimulation(ctx context.Context, tx *gorm.DB, groupId s
 		}
 	}
 
-	logger(ctx).Info("shutdownSimulation - successfully removed groupId: " + groupId)
+	logger(ctx).Info("shutdownSimulation - successfully removed groupID: " + groupID)
 	timeTrack(ctx, tstart, "shutdownSimulation - Success")
 	return dep, nil
 }
@@ -1795,44 +1798,44 @@ func (s *Service) DeleteNodesAndHostsForGroup(ctx context.Context, tx *gorm.DB,
 // ///////////////////////////////////////////////////////////////////////
 
 // getSimulationPodNamePrefix returns the pod name prefix for a simulation
-func getSimulationPodNamePrefix(groupId string) string {
-	return fmt.Sprintf("sim-%s", groupId)
+func getSimulationPodNamePrefix(groupID string) string {
+	return fmt.Sprintf("sim-%s", groupID)
 }
 
 // launchGazeboServerInGroup launches a set of gzserver pods and associated services in the
 // given group.
 func (s *Service) launchGazeboServerInGroup(ctx context.Context, tx *gorm.DB,
-	groupId string, dep *SimulationDeployment) (interface{}, *ign.ErrMsg) {
+	groupID string, dep *SimulationDeployment) (interface{}, *ign.ErrMsg) {
 
 	// It is quite important that application's specific launchers do add the following
 	// labels to the created Pods / Services.
-	podName := getSimulationPodNamePrefix(groupId)
+	podName := getSimulationPodNamePrefix(groupID)
 	labels := map[string]string{
 		cloudsimTagLabelKey: "true",
 		podLabelPodGroup:    podName,
-		podLabelKeyGroupId:  groupId,
+		podLabelKeyGroupId:  groupID,
 	}
 
-	// Add the parent's groupId to the labels as well.
+	// Add the parent's groupID to the labels as well.
 	if dep.isMultiSimChild() {
 		labels["parent-group-id"] = *dep.ParentGroupId
 	}
 
 	// Find the specific Application handler and ask it to launch the app, using
-	// the given base labels and groupId.
+	// the given base labels and groupID.
 	return s.applications[*dep.Application].launchApplication(ctx, s, tx, dep, podName, labels)
 }
 
-// getPodLabelSelectorForSearches is a helper function to return the full groupId label
-// used for searching Pods associated to a groupId.
-func getPodLabelSelectorForSearches(groupId string) string {
-	return podLabelKeyGroupId + "=" + groupId
+// getPodLabelSelectorForSearches is a helper function to return the full groupID label
+// used for searching Pods associated to a groupID.
+func getPodLabelSelectorForSearches(groupID string) string {
+	return podLabelKeyGroupId + "=" + groupID
 }
 
 // deleteGazeboServerInGroup removes an existing gzserver pod and its services from a group.
 func (s *Service) deleteGazeboServerInGroup(ctx context.Context, tx *gorm.DB, dep *SimulationDeployment) *ign.ErrMsg {
 	// Find the specific Application handler and ask it to delete the app, using
-	// the given groupId to find the involved pods/services.
+	// the given groupID to find the involved pods/services.
 	return s.applications[*dep.Application].deleteApplication(ctx, s, tx, dep)
 }
 
@@ -1936,19 +1939,19 @@ func (s *Service) SimulationDeploymentList(ctx context.Context, p *ign.Paginatio
 // ///////////////////////////////////////////////////////////////////////
 // ///////////////////////////////////////////////////////////////////////
 
-// GetSimulationDeployment returns a single simulation deployment based on its groupId
+// GetSimulationDeployment returns a single simulation deployment based on its groupID
 func (s *Service) GetSimulationDeployment(ctx context.Context, tx *gorm.DB,
-	groupId string, user *users.User) (interface{}, *ign.ErrMsg) {
+	groupID string, user *users.User) (interface{}, *ign.ErrMsg) {
 
 	// make sure the user has the correct permissions
-	if ok, em := s.userAccessor.IsAuthorizedForResource(*user.Username, groupId, per.Read); !ok {
+	if ok, em := s.userAccessor.IsAuthorizedForResource(*user.Username, groupID, per.Read); !ok {
 		return nil, em
 	}
 
 	var dep *SimulationDeployment
 	var err error
 
-	dep, err = GetSimulationDeployment(tx, groupId)
+	dep, err = GetSimulationDeployment(tx, groupID)
 	if err != nil {
 		return nil, ign.NewErrorMessageWithBase(ign.ErrorSimGroupNotFound, err)
 	}
@@ -1978,15 +1981,15 @@ func (s *Service) GetSimulationDeployment(ctx context.Context, tx *gorm.DB,
 
 // GetSimulationLogsForDownload returns the generated logs from a simulation.
 func (s *Service) GetSimulationLogsForDownload(ctx context.Context, tx *gorm.DB,
-	user *users.User, groupId string, robotName *string) (*string, *ign.ErrMsg) {
+	user *users.User, groupID string, robotName *string) (*string, *ign.ErrMsg) {
 
-	dep, err := GetSimulationDeployment(tx, groupId)
+	dep, err := GetSimulationDeployment(tx, groupID)
 	if err != nil {
 		return nil, ign.NewErrorMessageWithBase(ign.ErrorSimGroupNotFound, err)
 	}
 
 	// make sure the requesting user has the correct permissions
-	if ok, em := s.userAccessor.IsAuthorizedForResource(*user.Username, groupId, per.Read); !ok {
+	if ok, em := s.userAccessor.IsAuthorizedForResource(*user.Username, groupID, per.Read); !ok {
 		return nil, em
 	}
 
@@ -1998,16 +2001,16 @@ func (s *Service) GetSimulationLogsForDownload(ctx context.Context, tx *gorm.DB,
 // ///////////////////////////////////////////////////////////////////////
 
 // GetSimulationLiveLogs returns the live logs from a simulation.
-func (s *Service) GetSimulationLiveLogs(ctx context.Context, tx *gorm.DB, user *users.User, groupId string, robotName *string, lines *int64) (interface{}, *ign.ErrMsg) {
+func (s *Service) GetSimulationLiveLogs(ctx context.Context, tx *gorm.DB, user *users.User, groupID string, robotName *string, lines *int64) (interface{}, *ign.ErrMsg) {
 
-	dep, err := GetSimulationDeployment(tx, groupId)
+	dep, err := GetSimulationDeployment(tx, groupID)
 
 	if err != nil {
 		return nil, ign.NewErrorMessageWithBase(ign.ErrorSimGroupNotFound, err)
 	}
 
 	// make sure the requesting user has the correct permissions
-	if ok, em := s.userAccessor.IsAuthorizedForResource(*user.Username, groupId, per.Read); !ok {
+	if ok, em := s.userAccessor.IsAuthorizedForResource(*user.Username, groupID, per.Read); !ok {
 		return nil, em
 	}
 
@@ -2020,7 +2023,7 @@ func (s *Service) GetSimulationLiveLogs(ctx context.Context, tx *gorm.DB, user *
 
 // GetCloudMachineInstances returns a paginated list with all cloud instances.
 func (s *Service) GetCloudMachineInstances(ctx context.Context, p *ign.PaginationRequest,
-	tx *gorm.DB, byStatus *MachineStatus, invertStatus bool, groupId *string, user *users.User,
+	tx *gorm.DB, byStatus *MachineStatus, invertStatus bool, groupID *string, user *users.User,
 	application *string) (*MachineInstances, *ign.PaginationResult, *ign.ErrMsg) {
 
 	// check if the requesting user has permission to access machines in the given
@@ -2033,18 +2036,18 @@ func (s *Service) GetCloudMachineInstances(ctx context.Context, p *ign.Paginatio
 		return nil, nil, em
 	}
 
-	return s.hostsSvc.CloudMachinesList(ctx, p, tx, byStatus, invertStatus, groupId, application)
+	return s.hostsSvc.CloudMachinesList(ctx, p, tx, byStatus, invertStatus, groupID, application)
 }
 
 // ///////////////////////////////////////////////////////////////////////
 // ///////////////////////////////////////////////////////////////////////
 
 // removeRunningSimulation deletes and return a RunningSimulation
-func (s *Service) removeRunningSimulation(groupId string) *RunningSimulation {
+func (s *Service) removeRunningSimulation(groupID string) *RunningSimulation {
 	s.lockRunningSimulations.Lock()
 	defer s.lockRunningSimulations.Unlock()
-	rs := s.runningSimulations[groupId]
-	delete(s.runningSimulations, groupId)
+	rs := s.runningSimulations[groupID]
+	delete(s.runningSimulations, groupID)
 	return rs
 }
 
@@ -2109,34 +2112,34 @@ func (s *Service) QueueCount(ctx context.Context, user *users.User) (interface{}
 	return s.launchHandlerQueue.Count(), nil
 }
 
-// QueueMoveElementToFront moves an element by the given groupId to the front of the queue.
-func (s *Service) QueueMoveElementToFront(ctx context.Context, user *users.User, groupId string) (interface{}, *ign.ErrMsg) {
+// QueueMoveElementToFront moves an element by the given groupID to the front of the queue.
+func (s *Service) QueueMoveElementToFront(ctx context.Context, user *users.User, groupID string) (interface{}, *ign.ErrMsg) {
 	if ok := s.userAccessor.IsSystemAdmin(*user.Username); !ok {
 		return nil, ign.NewErrorMessage(ign.ErrorUnauthorized)
 	}
-	return s.launchHandlerQueue.MoveToFront(groupId)
+	return s.launchHandlerQueue.MoveToFront(groupID)
 }
 
-// QueueMoveElementToBack moves an element by the given groupId to the back of the queue.
-func (s *Service) QueueMoveElementToBack(ctx context.Context, user *users.User, groupId string) (interface{}, *ign.ErrMsg) {
+// QueueMoveElementToBack moves an element by the given groupID to the back of the queue.
+func (s *Service) QueueMoveElementToBack(ctx context.Context, user *users.User, groupID string) (interface{}, *ign.ErrMsg) {
 	if ok := s.userAccessor.IsSystemAdmin(*user.Username); !ok {
 		return nil, ign.NewErrorMessage(ign.ErrorUnauthorized)
 	}
-	return s.launchHandlerQueue.MoveToBack(groupId)
+	return s.launchHandlerQueue.MoveToBack(groupID)
 }
 
-// QueueSwapElements swaps positions of groupIds A and B.
-func (s *Service) QueueSwapElements(ctx context.Context, user *users.User, groupIdA, groupIdB string) (interface{}, *ign.ErrMsg) {
+// QueueSwapElements swaps positions of groupIDs A and B.
+func (s *Service) QueueSwapElements(ctx context.Context, user *users.User, groupIDA, groupIDB string) (interface{}, *ign.ErrMsg) {
 	if ok := s.userAccessor.IsSystemAdmin(*user.Username); !ok {
 		return nil, ign.NewErrorMessage(ign.ErrorUnauthorized)
 	}
-	return s.launchHandlerQueue.Swap(groupIdA, groupIdB)
+	return s.launchHandlerQueue.Swap(groupIDA, groupIDB)
 }
 
-// QueueRemoveElement removes an element by the given groupId from the queue
-func (s *Service) QueueRemoveElement(ctx context.Context, user *users.User, groupId string) (interface{}, *ign.ErrMsg) {
+// QueueRemoveElement removes an element by the given groupID from the queue
+func (s *Service) QueueRemoveElement(ctx context.Context, user *users.User, groupID string) (interface{}, *ign.ErrMsg) {
 	if ok := s.userAccessor.IsSystemAdmin(*user.Username); !ok {
 		return nil, ign.NewErrorMessage(ign.ErrorUnauthorized)
 	}
-	return s.launchHandlerQueue.Remove(groupId)
+	return s.launchHandlerQueue.Remove(groupID)
 }

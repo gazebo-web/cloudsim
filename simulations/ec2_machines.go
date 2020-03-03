@@ -114,7 +114,7 @@ func (s *Ec2Client) RegisterPlatform(ctx context.Context, p PlatformType) {
 // CloudMachinesList returns a paginated list with all cloud machines.
 // @public
 func (s *Ec2Client) CloudMachinesList(ctx context.Context, p *ign.PaginationRequest, tx *gorm.DB,
-	byStatus *MachineStatus, invertStatus bool, groupId *string, application *string) (*MachineInstances, *ign.PaginationResult, *ign.ErrMsg) {
+	byStatus *MachineStatus, invertStatus bool, groupID *string, application *string) (*MachineInstances, *ign.PaginationResult, *ign.ErrMsg) {
 
 	// Create the DB query
 	var machines MachineInstances
@@ -132,9 +132,9 @@ func (s *Ec2Client) CloudMachinesList(ctx context.Context, p *ign.PaginationRequ
 		q = q.Where("application = ?", *application)
 	}
 
-	if groupId != nil && len(strings.TrimSpace(*groupId)) > 0 {
+	if groupID != nil && len(strings.TrimSpace(*groupID)) > 0 {
 		// Replace * with the SQL equivalient
-		pattern := strings.Replace(*groupId, "*", "%", -1)
+		pattern := strings.Replace(*groupID, "*", "%", -1)
 		// Replace ? with the SQL equivalient
 		pattern = strings.Replace(pattern, "?", "_", -1)
 		q = q.Where("group_id LIKE ?", pattern)
@@ -158,7 +158,7 @@ func (s *Ec2Client) CloudMachinesList(ctx context.Context, p *ign.PaginationRequ
 // instance.
 // @param extraLabels is an array of labels. Each label has the form label=value.
 // @return the userData in base64
-func (s *Ec2Client) buildUserDataString(groupId string, extraLabels ...string) (base64Data, userData string) {
+func (s *Ec2Client) buildUserDataString(groupID string, extraLabels ...string) (base64Data, userData string) {
 
 	const constLaunchEc2UserData = `#!/bin/bash
 	set -x
@@ -167,7 +167,7 @@ func (s *Ec2Client) buildUserDataString(groupId string, extraLabels ...string) (
 	date '+%Y-%m-%d %H:%M:%S'
 	`
 
-	nodeGroupLabel := getNodeLabelForGroupId(groupId)
+	nodeGroupLabel := getNodeLabelForGroupId(groupID)
 	// NOTE: this nodeLabels trick helps setting labels to the new Node at creation time.
 	nodeLabels := `cat > /etc/systemd/system/kubelet.service.d/20-labels-taints.conf <<EOF
 [Service]
@@ -375,12 +375,12 @@ func (s *Ec2Client) launchNodes(ctx context.Context, tx *gorm.DB, dep *Simulatio
 
 	tstart := time.Now()
 
-	groupId := *dep.GroupId
+	groupID := *dep.GroupId
 
 	// This will be the return value if everything is ok
-	nodeSelectorGroupId := getNodeLabelForGroupId(groupId)
-	instanceName := s.getInstanceNameFor(groupId, "gazebo")
-	userData, _ := s.buildUserDataString(groupId, labelAndValue(nodeLabelKeyCloudsimNodeType, "gazebo"))
+	nodeSelectorGroupId := getNodeLabelForGroupId(groupID)
+	instanceName := s.getInstanceNameFor(groupID, "gazebo")
+	userData, _ := s.buildUserDataString(groupID, labelAndValue(nodeLabelKeyCloudsimNodeType, "gazebo"))
 
 	ignlog := logger(ctx)
 
@@ -400,7 +400,7 @@ func (s *Ec2Client) launchNodes(ctx context.Context, tx *gorm.DB, dep *Simulatio
 				ResourceType: aws.String("instance"),
 				Tags: []*ec2.Tag{
 					{Key: aws.String("Name"), Value: aws.String(instanceName)},
-					{Key: aws.String("CloudsimGroupId"), Value: aws.String(groupId)},
+					{Key: aws.String("CloudsimGroupId"), Value: aws.String(groupID)},
 					{Key: aws.String("project"), Value: aws.String("cloudsim")},
 					{Key: dep.Platform, Value: aws.String("True")},
 				},
@@ -512,12 +512,12 @@ func (s *Ec2Client) launchNodes(ctx context.Context, tx *gorm.DB, dep *Simulatio
 		}
 	}
 
-	ignlog.Info(fmt.Sprintf("Instances are now running: %v. Cloudsim GroupId: %s\n", instanceIds, groupId))
+	ignlog.Info(fmt.Sprintf("Instances are now running: %v. Cloudsim GroupId: %s\n", instanceIds, groupID))
 	return &nodeSelectorGroupId, nil
 }
 
-func (s *Ec2Client) getInstanceNameFor(groupId, suffix string) string {
-	return fmt.Sprintf("%s-node-group-%s-%s", s.awsCfg.NamePrefix, groupId, suffix)
+func (s *Ec2Client) getInstanceNameFor(groupID, suffix string) string {
+	return fmt.Sprintf("%s-node-group-%s-%s", s.awsCfg.NamePrefix, groupID, suffix)
 }
 
 func appendTags(input *ec2.RunInstancesInput, tags ...*ec2.Tag) {
@@ -531,8 +531,8 @@ func replaceInstanceNameTag(input *ec2.RunInstancesInput, name string) {
 	input.TagSpecifications[0].Tags[0] = nameTag
 }
 
-func getNodeLabelForGroupId(groupId string) string {
-	return labelAndValue(nodeLabelKeyGroupId, groupId)
+func getNodeLabelForGroupId(groupID string) string {
+	return labelAndValue(nodeLabelKeyGroupId, groupID)
 }
 
 func labelAndValue(key, value string) string {
@@ -543,10 +543,10 @@ func labelAndValue(key, value string) string {
 // It is expected that if the labeled Nodes cannot be found, then this function should return
 // an ErrorLabeledNodeNotFound.
 // @public
-func (s *Ec2Client) deleteK8Nodes(ctx context.Context, tx *gorm.DB, groupId string) (interface{}, *ign.ErrMsg) {
+func (s *Ec2Client) deleteK8Nodes(ctx context.Context, tx *gorm.DB, groupID string) (interface{}, *ign.ErrMsg) {
 
 	// Find and Delete all k8 Nodes associated to the GroupId.
-	nodeLabel := getNodeLabelForGroupId(groupId)
+	nodeLabel := getNodeLabelForGroupId(groupID)
 	nodesInterface := s.clientset.CoreV1().Nodes()
 	nodes, err := nodesInterface.List(metav1.ListOptions{LabelSelector: nodeLabel})
 	if err != nil {
@@ -578,7 +578,7 @@ func (s *Ec2Client) deleteK8Nodes(ctx context.Context, tx *gorm.DB, groupId stri
 func (s *Ec2Client) deleteHosts(ctx context.Context, tx *gorm.DB,
 	dep *SimulationDeployment) (interface{}, *ign.ErrMsg) {
 
-	// Get the EC2 instance Ids for the given groupId.
+	// Get the EC2 instance Ids for the given groupID.
 	var machines MachineInstances
 	if err := tx.Model(&MachineInstance{}).Where("group_id = ?", *dep.GroupId).Find(&machines).Error; err != nil {
 		return nil, ign.NewErrorMessageWithBase(ign.ErrorSimGroupNotFound, err)

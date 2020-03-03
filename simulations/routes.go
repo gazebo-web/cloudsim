@@ -83,15 +83,15 @@ var Routes ign.Routes = ign.Routes{
 
 	// Get single simulation route
 	ign.Route{
-		Name:        "Works with a single simulation based on its groupId",
-		Description: "Single simulation based on its groupId",
+		Name:        "Works with a single simulation based on its groupID",
+		Description: "Single simulation based on its groupID",
 		URI:         "/simulations/{group}",
 		Headers:     ign.AuthHeadersRequired,
 		Methods:     ign.Methods{},
 		SecureMethods: ign.SecureMethods{
 			// swagger:route GET /simulations/{group} simulations getSimulation
 			//
-			// Get a single simulation based on its groupId
+			// Get a single simulation based on its groupID
 			//
 			//   Produces:
 			//   - application/json
@@ -103,7 +103,7 @@ var Routes ign.Routes = ign.Routes{
 			//     200: jsonSim
 			ign.Method{
 				Type:        "GET",
-				Description: "Get a single simulation based on its groupId",
+				Description: "Get a single simulation based on its groupID",
 				Handlers: ign.FormatHandlers{
 					ign.FormatHandler{Handler: ign.JSONResultNoTx(WithUser(GetCloudsimSimulation))},
 				},
@@ -132,8 +132,8 @@ var Routes ign.Routes = ign.Routes{
 	// Launch a simulation by the given GroupID that is currently being held by Cloudsim.
 	// This route will launch all child simulations for a multisim.
 	ign.Route{
-		Name:        "Launches a held simulation based on its groupId",
-		Description: "Launches a held simulation based on its groupId",
+		Name:        "Launches a held simulation based on its groupID",
+		Description: "Launches a held simulation based on its groupID",
 		URI:         "/simulations/{group}/launch",
 		Headers:     ign.AuthHeadersRequired,
 		Methods:     ign.Methods{},
@@ -152,15 +152,15 @@ var Routes ign.Routes = ign.Routes{
 
 	// Restart a simulation based on its Group ID
 	ign.Route{
-		Name:        "Restarts a failed simulation based on its groupId",
-		Description: "Restarts a failed simulation based on its groupId",
+		Name:        "Restarts a failed simulation based on its groupID",
+		Description: "Restarts a failed simulation based on its groupID",
 		URI:         "/simulations/{group}/restart",
 		Headers:     ign.AuthHeadersRequired,
 		Methods:     ign.Methods{},
 		SecureMethods: ign.SecureMethods{
 			// swagger:route POST /simulations/{group}/restart simulations restartSimulation
 			//
-			// Restarts a failed simulation based on its groupId
+			// Restarts a failed simulation based on its groupID
 			//
 			//   Produces:
 			//   - application/json
@@ -172,7 +172,7 @@ var Routes ign.Routes = ign.Routes{
 			//     200: jsonSim
 			ign.Method{
 				Type:        "POST",
-				Description: "Restart a failed simulation based on its groupId",
+				Description: "Restart a failed simulation based on its groupID",
 				Handlers: ign.FormatHandlers{
 					ign.FormatHandler{Handler: ign.JSONResult(WithUser(CloudsimSimulationRestart))},
 				},
@@ -586,7 +586,7 @@ var Routes ign.Routes = ign.Routes{
 	ign.Route{
 		Name:        "Swap queue elements moving A to B and vice versa",
 		Description: "Swap queue elements moving A to B and vice versa",
-		URI:         "/queue/{groupIdA}/swap/{groupIdB}",
+		URI:         "/queue/{groupIDA}/swap/{groupIDB}",
 		Headers:     ign.AuthHeadersRequired,
 		Methods:     ign.Methods{},
 		SecureMethods: ign.SecureMethods{
@@ -606,7 +606,7 @@ var Routes ign.Routes = ign.Routes{
 	ign.Route{
 		Name:        "Move an element to the front of the queue",
 		Description: "Move an element to the front of the queue",
-		URI:         "/queue/{groupId}/move/front",
+		URI:         "/queue/{groupID}/move/front",
 		Headers:     ign.AuthHeadersRequired,
 		Methods:     ign.Methods{},
 		SecureMethods: ign.SecureMethods{
@@ -626,7 +626,7 @@ var Routes ign.Routes = ign.Routes{
 	ign.Route{
 		Name:        "Move an element to the back of the queue",
 		Description: "Move an element to the back of the queue",
-		URI:         "/queue/{groupId}/move/back",
+		URI:         "/queue/{groupID}/move/back",
 		Headers:     ign.AuthHeadersRequired,
 		Methods:     ign.Methods{},
 		SecureMethods: ign.SecureMethods{
@@ -646,7 +646,7 @@ var Routes ign.Routes = ign.Routes{
 	ign.Route{
 		Name:        "Remove an element from the queue",
 		Description: "Remove an element from the queue",
-		URI:         "/queue/{groupId}",
+		URI:         "/queue/{groupID}",
 		Headers:     ign.AuthHeadersRequired,
 		Methods:     ign.Methods{},
 		SecureMethods: ign.SecureMethods{

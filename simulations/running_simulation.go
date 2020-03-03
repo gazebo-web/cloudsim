@@ -67,15 +67,15 @@ const (
 // is used to get notifications about the time when the Simulation actually started.
 func NewRunningSimulation(ctx context.Context, dep *SimulationDeployment, worldStatsTopic string,
 	worldWarmupTopic string, maxSimSeconds int) (*RunningSimulation, error) {
-	groupId := *dep.GroupId
-	logger(ctx).Info(fmt.Sprintf("Creating new RunningSimulation for groupId[%s] with topics stats[%s] and maxSimSeconds[%d]", groupId, worldStatsTopic, maxSimSeconds))
+	groupID := *dep.GroupId
+	logger(ctx).Info(fmt.Sprintf("Creating new RunningSimulation for groupID[%s] with topics stats[%s] and maxSimSeconds[%d]", groupID, worldStatsTopic, maxSimSeconds))
 
 	// Backward compatibility: we assume 30 minutes by default.
 	var validFor time.Duration
 	validFor, _ = time.ParseDuration(*dep.ValidFor)
 
 	s := RunningSimulation{
-		GroupId:              groupId,
+		GroupId:              groupID,
 		Owner:                *dep.Owner,
 		currentState:         stateUnknown,
 		lockCurrentState:     sync.RWMutex{},
@@ -86,12 +86,12 @@ func NewRunningSimulation(ctx context.Context, dep *SimulationDeployment, worldS
 		SimMaxAllowedSeconds: int64(maxSimSeconds),
 	}
 	var err error
-	if s.ignTransportNode, err = igntran.NewIgnTransportNode(&groupId); err != nil {
+	if s.ignTransportNode, err = igntran.NewIgnTransportNode(&groupID); err != nil {
 		return nil, err
 	}
 
 	// create a new specific logger for this running simulation
-	reqID := fmt.Sprintf("RunningSimulation-sim-%s", groupId)
+	reqID := fmt.Sprintf("RunningSimulation-sim-%s", groupID)
 	newLogger := logger(ctx).Clone(reqID)
 	// Override logger
 	ctx = ign.NewContextWithLogger(ctx, newLogger)
@@ -110,7 +110,7 @@ func NewRunningSimulation(ctx context.Context, dep *SimulationDeployment, worldS
 
 // Free releases the resources of this running simulation.
 func (s *RunningSimulation) Free(ctx context.Context) {
-	logger(ctx).Info(fmt.Sprintf("RunningSimulation groupId[%s] Free() invoked", s.GroupId))
+	logger(ctx).Info(fmt.Sprintf("RunningSimulation groupID[%s] Free() invoked", s.GroupId))
 	s.publishing = false
 	if s.ignTransportNode != nil {
 		s.ignTransportNode.Free()
@@ -132,7 +132,7 @@ func (s *RunningSimulation) IsExpired() bool {
 // Dev note: To do it, this node will send `resume` messages to Gazebo until the node receives
 // a message saying the simulation is running.
 func (s *RunningSimulation) ResumeSimulation(ctx context.Context) error {
-	logger(ctx).Info(fmt.Sprintf("RunningSimulation groupId[%s]- ResumeSimulation invoked", s.GroupId))
+	logger(ctx).Info(fmt.Sprintf("RunningSimulation groupID[%s]- ResumeSimulation invoked", s.GroupId))
 
 	s.lockCurrentState.RLock()
 	defer s.lockCurrentState.RUnlock()
@@ -146,7 +146,7 @@ func (s *RunningSimulation) ResumeSimulation(ctx context.Context) error {
 
 // PauseSimulation request Gazebo to pause the simulation.
 func (s *RunningSimulation) PauseSimulation(ctx context.Context) error {
-	logger(ctx).Info(fmt.Sprintf("RunningSimulation groupId[%s]- PauseSimulation invoked", s.GroupId))
+	logger(ctx).Info(fmt.Sprintf("RunningSimulation groupID[%s]- PauseSimulation invoked", s.GroupId))
 
 	s.lockCurrentState.RLock()
 	defer s.lockCurrentState.RUnlock()
@@ -208,14 +208,14 @@ func buildGazeboSetStateMessage(ctx context.Context, state gazeboState) (msg, ms
 }
 
 // callbackWorldStats is the callback passed to ign-transport. It will be invoked
-// each time a message is received in the topic associated to this node's groupId.
+// each time a message is received in the topic associated to this node's groupID.
 func (s *RunningSimulation) callbackWorldStats(ctx context.Context, msg []byte, msgType string) {
 
 	ws := msgs.WorldStatistics{}
 	var err error
 	if err = proto.Unmarshal(msg, &ws); err != nil {
 		// do nothing . Just log it
-		logger(ctx).Error(fmt.Sprintf("RunningSimulation groupId[%s]- error while unmarshalling WorldStats msg. Got type[%s]. Msg[%s]", s.GroupId, msgType, msg), err)
+		logger(ctx).Error(fmt.Sprintf("RunningSimulation groupID[%s]- error while unmarshalling WorldStats msg. Got type[%s]. Msg[%s]", s.GroupId, msgType, msg), err)
 		return
 	}
 
@@ -223,7 +223,7 @@ func (s *RunningSimulation) callbackWorldStats(ctx context.Context, msg []byte, 
 	s.stdoutSkipStatsMsgsCount++
 	if s.stdoutSkipStatsMsgsCount > stdoutSkipStatsMsgs {
 		s.stdoutSkipStatsMsgsCount = 0
-		logger(ctx).Debug(fmt.Sprintf("RunningSimulation groupId[%s]- WorldStats message received. Parsed struct: [%v]", s.GroupId, ws))
+		logger(ctx).Debug(fmt.Sprintf("RunningSimulation groupID[%s]- WorldStats message received. Parsed struct: [%v]", s.GroupId, ws))
 	}
 
 	s.lockCurrentState.Lock()
@@ -245,19 +245,19 @@ func (s *RunningSimulation) callbackWarmup(ctx context.Context, msg []byte, msgT
 	var err error
 	if err = proto.Unmarshal(msg, &wup); err != nil {
 		// do nothing . Just log it
-		logger(ctx).Error(fmt.Sprintf("RunningSimulation groupId[%s]- error while unmarshalling Warmup msg. Got type[%s]. Msg[%s]", s.GroupId, msgType, msg), err)
+		logger(ctx).Error(fmt.Sprintf("RunningSimulation groupID[%s]- error while unmarshalling Warmup msg. Got type[%s]. Msg[%s]", s.GroupId, msgType, msg), err)
 		return
 	}
 
 	if wup.Data == "started" {
 		// We only act the first time we receive this message
 		if s.SimWarmupSeconds == 0 {
-			logger(ctx).Info(fmt.Sprintf("RunningSimulation groupId[%s]- Warmup message received. Parsed struct: [%v]", s.GroupId, wup))
+			logger(ctx).Info(fmt.Sprintf("RunningSimulation groupID[%s]- Warmup message received. Parsed struct: [%v]", s.GroupId, wup))
 
 			s.SimWarmupSeconds = s.SimTimeSeconds
 		}
 	} else if !s.Finished && wup.Data == "finished" {
-		logger(ctx).Info(fmt.Sprintf("RunningSimulation groupId[%s]- Finished message received. Parsed struct: [%v]", s.GroupId, wup))
+		logger(ctx).Info(fmt.Sprintf("RunningSimulation groupID[%s]- Finished message received. Parsed struct: [%v]", s.GroupId, wup))
 
 		s.Finished = true
 	}
@@ -265,7 +265,7 @@ func (s *RunningSimulation) callbackWarmup(ctx context.Context, msg []byte, msgT
 
 // SendMessage publishes a string message to an specific topic.
 func (s *RunningSimulation) SendMessage(ctx context.Context, topic, msg, msgType string) {
-	logger(ctx).Info(fmt.Sprintf("RunningSimulation groupId[%s]- publish msg [%s] to topic [%s] with type [%s]", s.GroupId, msg, topic, msgType))
+	logger(ctx).Info(fmt.Sprintf("RunningSimulation groupID[%s]- publish msg [%s] to topic [%s] with type [%s]", s.GroupId, msg, topic, msgType))
 	if s.ignTransportNode != nil {
 		_ = s.ignTransportNode.IgnTransportPublishStringMsg(topic, msg)
 	}

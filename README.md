@@ -290,7 +290,7 @@ curl -k -X POST --url http://localhost:8001/1.0/simulations -F name=testSim --he
 
 Delete an existing simulation:
 ```
-curl -k -X DELETE --url http://localhost:8001/1.0/simulations/{simulation-groupId} --header 'authorization: Bearer <token>'
+curl -k -X DELETE --url http://localhost:8001/1.0/simulations/{simulation-groupID} --header 'authorization: Bearer <token>'
 ```
 
 Tip: an easy way to test if the web-cloudsim can connect to a kubernetes cluster is to run:

@@ -40,6 +40,7 @@ func SendEmail(recipient *[]string, sender *string, subject string, templateFile
 	return nil
 }
 
+// SendSimulationSummaryEmail sends a summary email to the user that created the simulation
 func SendSimulationSummaryEmail(dep *SimulationDeployment, summary AggregatedSubTSimulationValues) *ign.ErrMsg {
 	var marshaledSummary bytes.Buffer
 	b, err := json.MarshalIndent(summary, "", "  ")

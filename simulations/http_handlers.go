@@ -102,11 +102,11 @@ func CloudsimSimulationCreate(user *users.User, tx *gorm.DB, w http.ResponseWrit
 //   curl -k -X DELETE --url http://localhost:8001/1.0/simulations/{group}
 //     --header 'authorization: Bearer <A_VALID_AUTH0_JWT_TOKEN>'
 func CloudsimSimulationDelete(user *users.User, tx *gorm.DB, w http.ResponseWriter, r *http.Request) (interface{}, *ign.ErrMsg) {
-	groupId, ok := mux.Vars(r)["group"]
+	groupID, ok := mux.Vars(r)["group"]
 	if !ok {
 		return nil, ign.NewErrorMessage(ign.ErrorIDNotInRequest)
 	}
-	return SimServImpl.ShutdownSimulationAsync(r.Context(), tx, groupId, user)
+	return SimServImpl.ShutdownSimulationAsync(r.Context(), tx, groupID, user)
 }
 
 // CloudsimSimulationLaunch launches a held simulation.
@@ -114,11 +114,11 @@ func CloudsimSimulationDelete(user *users.User, tx *gorm.DB, w http.ResponseWrit
 //   curl -k -X POST --url http://localhost:8001/1.0/simulations/{group}/launch
 //     --header 'authorization: Bearer <A_VALID_AUTH0_JWT_TOKEN>'
 func CloudsimSimulationLaunch(user *users.User, tx *gorm.DB, w http.ResponseWriter, r *http.Request) (interface{}, *ign.ErrMsg) {
-	groupId, ok := mux.Vars(r)["group"]
+	groupID, ok := mux.Vars(r)["group"]
 	if !ok {
 		return nil, ign.NewErrorMessage(ign.ErrorIDNotInRequest)
 	}
-	return SimServImpl.LaunchSimulationAsync(r.Context(), tx, groupId, user)
+	return SimServImpl.LaunchSimulationAsync(r.Context(), tx, groupID, user)
 }
 
 // CloudsimSimulationRestart restarts a failed single simulation.
@@ -126,11 +126,11 @@ func CloudsimSimulationLaunch(user *users.User, tx *gorm.DB, w http.ResponseWrit
 //   curl -k -X POST --url http://localhost:8001/1.0/simulations/{group}/restart
 //     --header 'authorization: Bearer <A_VALID_AUTH0_JWT_TOKEN>'
 func CloudsimSimulationRestart(user *users.User, tx *gorm.DB, w http.ResponseWriter, r *http.Request) (interface{}, *ign.ErrMsg) {
-	groupId, ok := mux.Vars(r)["group"]
+	groupID, ok := mux.Vars(r)["group"]
 	if !ok {
 		return nil, ign.NewErrorMessage(ign.ErrorIDNotInRequest)
 	}
-	return SimServImpl.RestartSimulationAsync(r.Context(), tx, groupId, user)
+	return SimServImpl.RestartSimulationAsync(r.Context(), tx, groupID, user)
 }
 
 // CloudsimSimulationList returns a list with simulation deployments.
@@ -347,12 +347,12 @@ func DeleteCustomRule(user *users.User, tx *gorm.DB, w http.ResponseWriter,
 //   curl -k -X GET --url http://localhost:8000/1.0/simulations/{group}
 //     --header 'authorization: Bearer <A_VALID_AUTH0_JWT_TOKEN>'
 func GetCloudsimSimulation(user *users.User, tx *gorm.DB, w http.ResponseWriter, r *http.Request) (interface{}, *ign.ErrMsg) {
-	groupId, ok := mux.Vars(r)["group"]
+	groupID, ok := mux.Vars(r)["group"]
 	if !ok {
 		return nil, ign.NewErrorMessage(ign.ErrorIDNotInRequest)
 	}
 
-	return SimServImpl.GetSimulationDeployment(r.Context(), tx, groupId, user)
+	return SimServImpl.GetSimulationDeployment(r.Context(), tx, groupID, user)
 }
 
 // GetCompetitionRobots returns an array of robots for the competition.
@@ -375,8 +375,8 @@ func CountPods(user *users.User, tx *gorm.DB, w http.ResponseWriter, r *http.Req
 //     --header 'authorization: Bearer <A_VALID_AUTH0_JWT_TOKEN>'
 func DeleteNodesAndHosts(user *users.User, tx *gorm.DB, w http.ResponseWriter, r *http.Request) (interface{}, *ign.ErrMsg) {
 	// TODO: future. Remove this func. It will not be part of the public api.
-	groupId := r.URL.Query().Get("group")
-	dep, err := GetSimulationDeployment(tx, groupId)
+	groupID := r.URL.Query().Get("group")
+	dep, err := GetSimulationDeployment(tx, groupID)
 	if err != nil {
 		return nil, ign.NewErrorMessageWithBase(ign.ErrorSimGroupNotFound, err)
 	}
@@ -410,13 +410,13 @@ func CloudMachineList(user *users.User, tx *gorm.DB,
 		status = MachineStatusFrom(statusStr[sliceIndex:])
 	}
 
-	var groupId string
-	if len(params["groupId"]) > 0 && len(params["groupId"][0]) > 0 {
-		groupId = params["groupId"][0]
+	var groupID string
+	if len(params["groupID"]) > 0 && len(params["groupID"][0]) > 0 {
+		groupID = params["groupID"][0]
 	}
 
 	// TODO: remove hardcoded application name
-	sims, pagination, em := SimServImpl.GetCloudMachineInstances(r.Context(), pr, tx, status, invertStatus, &groupId, user, sptr(getDefaultApplicationName()))
+	sims, pagination, em := SimServImpl.GetCloudMachineInstances(r.Context(), pr, tx, status, invertStatus, &groupID, user, sptr(getDefaultApplicationName()))
 	if em != nil {
 		return nil, em
 	}
@@ -436,12 +436,12 @@ func CloudMachineList(user *users.User, tx *gorm.DB,
 //     --header 'authorization: Bearer <A_VALID_AUTH0_JWT_TOKEN>'
 func SimulationLogGateway(user *users.User, tx *gorm.DB, w http.ResponseWriter, r *http.Request) (interface{}, *ign.ErrMsg) {
 
-	groupId, ok := mux.Vars(r)["group"]
+	groupID, ok := mux.Vars(r)["group"]
 	if !ok {
 		return nil, ign.NewErrorMessage(ign.ErrorIDNotInRequest)
 	}
 
-	sim, err := GetSimulationDeployment(tx, groupId)
+	sim, err := GetSimulationDeployment(tx, groupID)
 
 	if err != nil {
 		return nil, ign.NewErrorMessage(ign.ErrorUnexpected)
@@ -450,10 +450,10 @@ func SimulationLogGateway(user *users.User, tx *gorm.DB, w http.ResponseWriter, 
 	var logGateway LogGateway
 	var path string
 	if sim.IsRunning() {
-		path = fmt.Sprintf("simulations/%s/logs/live", groupId)
+		path = fmt.Sprintf("simulations/%s/logs/live", groupID)
 		logGateway = LogGateway{path, false}
 	} else {
-		path = fmt.Sprintf("simulations/%s/logs/file", groupId)
+		path = fmt.Sprintf("simulations/%s/logs/file", groupID)
 		logGateway = LogGateway{path, true}
 	}
 
@@ -471,7 +471,7 @@ func SimulationLogGateway(user *users.User, tx *gorm.DB, w http.ResponseWriter, 
 //   curl -k -X GET --url http://localhost:8001/1.0/simulations/{group}/logs/live?lines=200
 //     --header 'authorization: Bearer <A_VALID_AUTH0_JWT_TOKEN>'
 func SimulationLogLive(user *users.User, tx *gorm.DB, w http.ResponseWriter, r *http.Request) (interface{}, *ign.ErrMsg) {
-	groupId, ok := mux.Vars(r)["group"]
+	groupID, ok := mux.Vars(r)["group"]
 	if !ok {
 		return nil, ign.NewErrorMessage(ign.ErrorIDNotInRequest)
 	}
@@ -491,7 +491,7 @@ func SimulationLogLive(user *users.User, tx *gorm.DB, w http.ResponseWriter, r *
 		}
 	}
 
-	log, em := SimServImpl.GetSimulationLiveLogs(r.Context(), tx, user, groupId, robotName, lines)
+	log, em := SimServImpl.GetSimulationLiveLogs(r.Context(), tx, user, groupID, robotName, lines)
 
 	if em != nil {
 		return nil, em
@@ -511,7 +511,7 @@ func SimulationLogLive(user *users.User, tx *gorm.DB, w http.ResponseWriter, r *
 //     --header 'authorization: Bearer <A_VALID_AUTH0_JWT_TOKEN>'
 func SimulationLogFileDownload(user *users.User, tx *gorm.DB, w http.ResponseWriter, r *http.Request) (interface{}, *ign.ErrMsg) {
 
-	groupId, ok := mux.Vars(r)["group"]
+	groupID, ok := mux.Vars(r)["group"]
 	if !ok {
 		return nil, ign.NewErrorMessage(ign.ErrorIDNotInRequest)
 	}
@@ -526,7 +526,7 @@ func SimulationLogFileDownload(user *users.User, tx *gorm.DB, w http.ResponseWri
 		robotName = &val[0]
 	}
 
-	url, em := SimServImpl.GetSimulationLogsForDownload(r.Context(), tx, user, groupId, robotName)
+	url, em := SimServImpl.GetSimulationLogsForDownload(r.Context(), tx, user, groupID, robotName)
 	if em != nil {
 		return nil, em
 	}
@@ -572,50 +572,50 @@ func QueueCount(user *users.User, tx *gorm.DB, w http.ResponseWriter, r *http.Re
 }
 
 // QueueSwap swaps elements from position A to position B and vice versa
-//   curl -k -X PATCH --url http://localhost:8001/1.0/simulations/queue/{groupIdA}/swap/{groupIdB}
+//   curl -k -X PATCH --url http://localhost:8001/1.0/simulations/queue/{groupIDA}/swap/{groupIDB}
 //     --header 'authorization: Bearer <A_VALID_AUTH0_JWT_TOKEN>'
 func QueueSwap(user *users.User, tx *gorm.DB, w http.ResponseWriter, r *http.Request) (interface{}, *ign.ErrMsg) {
-	groupIdA, ok := mux.Vars(r)["groupIdA"]
+	groupIDA, ok := mux.Vars(r)["groupIDA"]
 	if !ok {
 		return nil, ign.NewErrorMessage(ign.ErrorIDNotInRequest)
 	}
 
-	groupIdB, ok := mux.Vars(r)["groupIdB"]
+	groupIDB, ok := mux.Vars(r)["groupIDB"]
 	if !ok {
 		return nil, ign.NewErrorMessage(ign.ErrorIDNotInRequest)
 	}
-	return SimServImpl.QueueSwapElements(r.Context(), user, groupIdA, groupIdB)
+	return SimServImpl.QueueSwapElements(r.Context(), user, groupIDA, groupIDB)
 }
 
 // QueueMoveToFront moves the element to the front of the queue.
-//   curl -k -X PATCH --url http://localhost:8001/1.0/simulations/queue/{groupId}/move/front
+//   curl -k -X PATCH --url http://localhost:8001/1.0/simulations/queue/{groupID}/move/front
 //     --header 'authorization: Bearer <A_VALID_AUTH0_JWT_TOKEN>'
 func QueueMoveToFront(user *users.User, tx *gorm.DB, w http.ResponseWriter, r *http.Request) (interface{}, *ign.ErrMsg) {
-	groupId, ok := mux.Vars(r)["groupId"]
+	groupID, ok := mux.Vars(r)["groupID"]
 	if !ok {
 		return nil, ign.NewErrorMessage(ign.ErrorIDNotInRequest)
 	}
-	return SimServImpl.QueueMoveElementToFront(r.Context(), user, groupId)
+	return SimServImpl.QueueMoveElementToFront(r.Context(), user, groupID)
 }
 
 // QueueMoveToBack moves the element to the back of the queue.
-//   curl -k -X PATCH --url http://localhost:8001/1.0/simulations/queue/{groupId}/move/back
+//   curl -k -X PATCH --url http://localhost:8001/1.0/simulations/queue/{groupID}/move/back
 //     --header 'authorization: Bearer <A_VALID_AUTH0_JWT_TOKEN>'
 func QueueMoveToBack(user *users.User, tx *gorm.DB, w http.ResponseWriter, r *http.Request) (interface{}, *ign.ErrMsg) {
-	groupId, ok := mux.Vars(r)["groupId"]
+	groupID, ok := mux.Vars(r)["groupID"]
 	if !ok {
 		return nil, ign.NewErrorMessage(ign.ErrorIDNotInRequest)
 	}
-	return SimServImpl.QueueMoveElementToBack(r.Context(), user, groupId)
+	return SimServImpl.QueueMoveElementToBack(r.Context(), user, groupID)
 }
 
 // QueueRemove removes an element from the queue.
-//   curl -k -X DELETE --url http://localhost:8001/1.0/simulations/queue/{groupId}
+//   curl -k -X DELETE --url http://localhost:8001/1.0/simulations/queue/{groupID}
 //     --header 'authorization: Bearer <A_VALID_AUTH0_JWT_TOKEN>'
 func QueueRemove(user *users.User, tx *gorm.DB, w http.ResponseWriter, r *http.Request) (interface{}, *ign.ErrMsg) {
-	groupId, ok := mux.Vars(r)["groupId"]
+	groupID, ok := mux.Vars(r)["groupID"]
 	if !ok {
 		return nil, ign.NewErrorMessage(ign.ErrorIDNotInRequest)
 	}
-	return SimServImpl.QueueRemoveElement(r.Context(), user, groupId)
+	return SimServImpl.QueueRemoveElement(r.Context(), user, groupID)
 }

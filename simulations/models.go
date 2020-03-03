@@ -37,7 +37,7 @@ type SimulationDeployment struct {
 	// The docker image url to use for the simulation (usually for the Field Computer)
 	Image *string `json:"image,omitempty" form:"image"`
 	// GroupId - Simulation Unique identifier
-	// All k8 pods and services (or other created resources) will share this groupId
+	// All k8 pods and services (or other created resources) will share this groupID
 	GroupId *string `gorm:"not null;unique" json:"group_id"`
 	// ParentGroupId (optional) holds the GroupId of the parent simulation record.
 	// It is used with requests for multi simulations (multiSims), where a single
@@ -74,9 +74,9 @@ type SimulationDeployment struct {
 
 // GetSimulationDeployment gets a simulation deployment record by its GroupId
 // Fails if not found.
-func GetSimulationDeployment(tx *gorm.DB, groupId string) (*SimulationDeployment, error) {
+func GetSimulationDeployment(tx *gorm.DB, groupID string) (*SimulationDeployment, error) {
 	var dep SimulationDeployment
-	if err := tx.Model(&SimulationDeployment{}).Where("group_id = ?", groupId).First(&dep).Error; err != nil {
+	if err := tx.Model(&SimulationDeployment{}).Where("group_id = ?", groupID).First(&dep).Error; err != nil {
 		return nil, err
 	}
 	return &dep, nil

@@ -149,12 +149,12 @@ func TestSimulationsRoute(t *testing.T) {
 				assert.Equal(t, "subt", *dep.Application)
 				assert.Equal(t, 0, dep.MultiSim)
 				if teamBSimGroupId == "" && *dep.Creator == "TeamBAdmin" {
-					// save the created dep groupId
+					// save the created dep groupID
 					// HACK
 					teamBSimGroupId = *dep.GroupId
 				}
 				if teamASimGroupId == "" && *dep.Creator == "TeamAUser1" {
-					// save the created dep groupId
+					// save the created dep groupID
 					// HACK
 					teamASimGroupId = *dep.GroupId
 				}
@@ -620,7 +620,7 @@ func TestDownloadLogsRouter(t *testing.T) {
 
 	// Create simulation deployments
 	db := globals.Server.Db
-	createSimulationDeployment := func(db *gorm.DB, owner string, groupId string, name string,
+	createSimulationDeployment := func(db *gorm.DB, owner string, groupID string, name string,
 		multiSim int) sim.SimulationDeployment {
 		extra := `{"circuit":"Tunnel Test 1","robots":[
 			{"Name":"X1","Type":"X1_SENSOR_CONFIG_1","Image":"image"},
@@ -631,7 +631,7 @@ func TestDownloadLogsRouter(t *testing.T) {
 			Owner:            sptr(owner),
 			Creator:          sptr("test_user"),
 			Private:          boolptr(true),
-			GroupId:          sptr(groupId),
+			GroupId:          sptr(groupID),
 			DeploymentStatus: intptr(90),
 			Platform:         sptr("subt"),
 			Application:      sptr("subt"),
@@ -647,10 +647,10 @@ func TestDownloadLogsRouter(t *testing.T) {
 		return simDep
 	}
 	simDepSingle := createSimulationDeployment(
-		db, "TeamA", "test-single-groupId-simulation", "TestSingleSimSimulation", 0,
+		db, "TeamA", "test-single-groupID-simulation", "TestSingleSimSimulation", 0,
 	)
 	simDepMulti := createSimulationDeployment(
-		db, "TeamA", "test-multi-groupId-simulation", "TestMultiSimSimulation", 1,
+		db, "TeamA", "test-multi-groupID-simulation", "TestMultiSimSimulation", 1,
 	)
 
 	// User setup
@@ -665,7 +665,7 @@ func TestDownloadLogsRouter(t *testing.T) {
 	type logFileDownloadTest struct {
 		uriTest  uriTest
 		link     bool
-		groupId  string
+		groupID  string
 		filename string
 		robot    *string
 	}
