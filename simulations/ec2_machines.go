@@ -325,7 +325,7 @@ func (s *Ec2Client) launchInstances(ctx context.Context, tx *gorm.DB, dep *Simul
 		// info in 'runResult'.
 		for _, ins := range runResult.Instances {
 			// Get the created Instance ID(s).
-			iID := *ins.InstanceID
+			iID := *ins.InstanceId
 			instanceIds = append(instanceIds, iID)
 
 			// And create a DB record to track the machine instance in case of errors later
