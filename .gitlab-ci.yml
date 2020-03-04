@@ -45,12 +45,12 @@ cache:
 
 stages:
   - installing
-  - building
-  - packaging
-  - deploying
   - formatting
   - linting
   - testing
+  - building
+  - packaging
+  - deploying
 
 ##########################################################
 # Installing stage
