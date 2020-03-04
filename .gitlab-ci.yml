@@ -288,7 +288,7 @@ integration:
     - develop
   when: manual
 
-integration _1:
+integration_1:
   image: python:3.5
   stage: deploying
   dependencies:
@@ -301,7 +301,7 @@ integration _1:
     - zip -r artifact.zip * .ebextensions -x bin/\* -x vendor/\*
     - python beanstalk_deploy.py
   environment:
-    name: integration
+    name: integration-1
     url: https://web-cloudsim-integration-1.us-east-1.elasticbeanstalk.com/1.0
   except:
     - master
@@ -309,6 +309,7 @@ integration _1:
   when: manual
 
 staging:
+  image: python:3.5
   stage: deploying
   dependencies:
     - build
@@ -328,6 +329,7 @@ staging:
   when: manual
 
 production:
+  image: python:3.5
   stage: deploying
   dependencies:
     - build
