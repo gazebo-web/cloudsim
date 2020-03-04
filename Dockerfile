@@ -14,6 +14,6 @@ RUN go install
 COPY kube_config /root/.kube/config
 
 ENTRYPOINT [ "./docker-entrypoint.sh" ]
-CMD ["/go/bin/web-cloudsim"]
+CMD ["/go/bin/cloudsim"]
 
 EXPOSE 8001
