@@ -272,6 +272,7 @@ integration:
   image: python:3.5
   stage: deploying
   dependencies:
+    - proto
     - build
   before_script:
     - apt-get update
@@ -292,6 +293,7 @@ integration_1:
   image: python:3.5
   stage: deploying
   dependencies:
+    - proto
     - build
   before_script:
     - apt-get update
@@ -312,6 +314,7 @@ staging:
   image: python:3.5
   stage: deploying
   dependencies:
+    - proto
     - build
   before_script:
     - apt-get update
@@ -332,6 +335,7 @@ production:
   image: python:3.5
   stage: deploying
   dependencies:
+    - proto
     - build
   before_script:
     - apt-get update
