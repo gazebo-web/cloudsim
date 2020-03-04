@@ -281,6 +281,7 @@ integration:
   script:
     - zip -r artifact.zip * .ebextensions -x bin/\* -x vendor/\*
     - python beanstalk_deploy.py
+    - mv /builds/ignitionrobotics/web/cloudsim/ign-transport/proto/ignition/msgs/*.go /go/src/gitlab.com/ignitionrobotics/web/cloudsim/ign-transport/proto/ignition/msgs
   environment:
     name: integration
     url: https://web-cloudsim-integration.us-east-1.elasticbeanstalk.com/1.0
@@ -299,6 +300,7 @@ integration_1:
     - apt-get update
     - apt-get install -y zip python-pip
     - pip install boto3==1.3.0
+    - mv /builds/ignitionrobotics/web/cloudsim/ign-transport/proto/ignition/msgs/*.go /go/src/gitlab.com/ignitionrobotics/web/cloudsim/ign-transport/proto/ignition/msgs
   script:
     - zip -r artifact.zip * .ebextensions -x bin/\* -x vendor/\*
     - python beanstalk_deploy.py
@@ -320,6 +322,7 @@ staging:
     - apt-get update
     - apt-get install -y zip python-pip
     - pip install boto3==1.3.0
+    - mv /builds/ignitionrobotics/web/cloudsim/ign-transport/proto/ignition/msgs/*.go /go/src/gitlab.com/ignitionrobotics/web/cloudsim/ign-transport/proto/ignition/msgs
   script:
     - zip -r artifact.zip * .ebextensions -x bin/\* -x vendor/\*
     - python beanstalk_deploy.py
@@ -341,6 +344,7 @@ production:
     - apt-get update
     - apt-get install -y zip python-pip
     - pip install boto3==1.3.0
+    - mv /builds/ignitionrobotics/web/cloudsim/ign-transport/proto/ignition/msgs/*.go /go/src/gitlab.com/ignitionrobotics/web/cloudsim/ign-transport/proto/ignition/msgs
   script:
     - zip -r artifact.zip * .ebextensions -x bin/\* -x vendor/\*
     - python beanstalk_deploy.py
