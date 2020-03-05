@@ -36,13 +36,13 @@ type SimulationDeployment struct {
 	Name *string `json:"name,omitempty"`
 	// The docker image url to use for the simulation (usually for the Field Computer)
 	Image *string `json:"image,omitempty" form:"image"`
-	// GroupId - Simulation Unique identifier
-	// All k8 pods and services (or other created resources) will share this groupId
-	GroupId *string `gorm:"not null;unique" json:"group_id"`
-	// ParentGroupId (optional) holds the GroupId of the parent simulation record.
+	// GroupID - Simulation Unique identifier
+	// All k8 pods and services (or other created resources) will share this groupID
+	GroupID *string `gorm:"not null;unique" json:"group_id"`
+	// ParentGroupID (optional) holds the GroupID of the parent simulation record.
 	// It is used with requests for multi simulations (multiSims), where a single
 	// user request spawns multiple simulation runs based on a single template.
-	ParentGroupId *string `json:"parent"`
+	ParentGroupID *string `json:"parent"`
 	// MultiSim holds which role this simulation plays within a multiSim deployment.
 	// Values should be of type MultiSimType.
 	MultiSim int
@@ -72,11 +72,11 @@ type SimulationDeployment struct {
 	Held bool `json:"held"`
 }
 
-// GetSimulationDeployment gets a simulation deployment record by its GroupId
+// GetSimulationDeployment gets a simulation deployment record by its GroupID
 // Fails if not found.
-func GetSimulationDeployment(tx *gorm.DB, groupId string) (*SimulationDeployment, error) {
+func GetSimulationDeployment(tx *gorm.DB, groupID string) (*SimulationDeployment, error) {
 	var dep SimulationDeployment
-	if err := tx.Model(&SimulationDeployment{}).Where("group_id = ?", groupId).First(&dep).Error; err != nil {
+	if err := tx.Model(&SimulationDeployment{}).Where("group_id = ?", groupID).First(&dep).Error; err != nil {
 		return nil, err
 	}
 	return &dep, nil
@@ -126,7 +126,7 @@ func GetChildSimulationDeployments(tx *gorm.DB, dep *SimulationDeployment, statu
 
 	var deps SimulationDeployments
 	if err := tx.Model(&SimulationDeployment{}).
-		Where("parent_group_id = ?", *dep.GroupId).
+		Where("parent_group_id = ?", *dep.GroupID).
 		Where("multi_sim = ?", multiSimChild).
 		Where("error_status IS NULL").
 		Where("deployment_status BETWEEN ? AND ?", int(statusFrom), int(statusTo)).
@@ -157,7 +157,7 @@ func GetParentSimulationDeployments(tx *gorm.DB, statusFrom,
 func GetParentSimulation(tx *gorm.DB, dep *SimulationDeployment) (*SimulationDeployment, error) {
 	var parent SimulationDeployment
 	if err := tx.Model(&SimulationDeployment{}).
-		Where("group_id = ?", *dep.ParentGroupId).
+		Where("group_id = ?", *dep.ParentGroupID).
 		Find(&parent).Error; err != nil {
 		return nil, err
 	}
@@ -240,7 +240,7 @@ func (dep *SimulationDeployment) updateCompoundStatuses(tx *gorm.DB) *ign.ErrMsg
 
 	// Get this parent's children simulations (all of them)
 	var children SimulationDeployments
-	if err := tx.Model(&SimulationDeployment{}).Where("parent_group_id = ?", *dep.GroupId).
+	if err := tx.Model(&SimulationDeployment{}).Where("parent_group_id = ?", *dep.GroupID).
 		Where("multi_sim = ?", multiSimChild).Find(&children).Error; err != nil {
 		return ign.NewErrorMessageWithBase(ign.ErrorSimGroupNotFound, err)
 	}
@@ -408,9 +408,9 @@ func (dep *SimulationDeployment) MarkAsMultiSimParent(tx *gorm.DB) *ign.ErrMsg {
 // MarkAsMultiSimChild marks this SimulationDeployment to be a child of the given simulation.
 func (dep *SimulationDeployment) MarkAsMultiSimChild(tx *gorm.DB, parent *SimulationDeployment) *ign.ErrMsg {
 	// Add or Update
-	if err := tx.Where("group_id = ?", *dep.GroupId).Assign(SimulationDeployment{
+	if err := tx.Where("group_id = ?", *dep.GroupID).Assign(SimulationDeployment{
 		MultiSim:      int(multiSimChild),
-		ParentGroupId: parent.GroupId,
+		ParentGroupID: parent.GroupID,
 	}).FirstOrCreate(&dep).Error; err != nil {
 		return ign.NewErrorMessageWithBase(ign.ErrorDbSave, err)
 	}
@@ -590,10 +590,10 @@ type MachineInstance struct {
 	UpdatedAt time.Time  `json:"updated_at"`
 	DeletedAt *time.Time `gorm:"type:timestamp(2) NULL" sql:"index" json:"-"`
 
-	InstanceId      *string `json:"instance_id" gorm:"not null;unique"`
+	InstanceID      *string `json:"instance_id" gorm:"not null;unique"`
 	LastKnownStatus *string `json:"status,omitempty"`
 	// Cloudsim Group Id
-	GroupId *string `json:"group_id"`
+	GroupID *string `json:"group_id"`
 	// Applicaton to which this machine belongs to
 	Application *string `json:"application,omitempty"`
 }
@@ -653,11 +653,11 @@ func (ms MachineStatus) ToStringPtr() *string {
 	return &str
 }
 
-// GetMachine gets a machine instance record by its instanceId
+// GetMachine gets a machine instance record by its instanceID
 // Fails if not found.
-func GetMachine(tx *gorm.DB, instanceId string) (*MachineInstance, error) {
+func GetMachine(tx *gorm.DB, instanceID string) (*MachineInstance, error) {
 	var m MachineInstance
-	if err := tx.Model(&MachineInstance{}).Where("instance_id = ?", instanceId).First(&m).Error; err != nil {
+	if err := tx.Model(&MachineInstance{}).Where("instance_id = ?", instanceID).First(&m).Error; err != nil {
 		return nil, err
 	}
 	return &m, nil

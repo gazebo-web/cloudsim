@@ -40,8 +40,8 @@ func (s *MockService) RegisterApplication(ctx context.Context, app ApplicationTy
 // StartSimulationAsync is the main func to launch a new simulation
 func (s *MockService) StartSimulationAsync(ctx context.Context,
 	tx *gorm.DB, createSim *CreateSimulation, user *users.User) (interface{}, *ign.ErrMsg) {
-	// Create and assign a new GroupId
-	groupId := uuid.NewV4().String()
+	// Create and assign a new GroupID
+	groupID := uuid.NewV4().String()
 
 	private := true
 	if createSim.Private != nil {
@@ -55,7 +55,7 @@ func (s *MockService) StartSimulationAsync(ctx context.Context,
 		Private:          &private,
 		Platform:         &createSim.Platform,
 		Application:      &createSim.Application,
-		GroupId:          &groupId,
+		GroupID:          &groupID,
 		DeploymentStatus: simPending.ToPtr()}
 
 	if err := tx.Create(&simDep).Error; err != nil {
@@ -74,30 +74,30 @@ func (s *MockService) StartSimulationAsync(ctx context.Context,
 		return nil, em
 	}
 
-	iId := "i-" + uuid.NewV4().String()
+	iID := "i-" + uuid.NewV4().String()
 	status := "Running"
 	// Create a DB record for a  single machine instance
 	machine := MachineInstance{
-		InstanceId:      &iId,
+		InstanceID:      &iID,
 		LastKnownStatus: &status,
-		GroupId:         &groupId,
+		GroupID:         &groupID,
 	}
 	if err := tx.Create(&machine).Error; err != nil {
 		return nil, ign.NewErrorMessageWithBase(ign.ErrorDbSave, err)
 	}
 
-	logger(ctx).Debug("Mock StartSimulationAsync created fake simulation for groupId: " + groupId)
+	logger(ctx).Debug("Mock StartSimulationAsync created fake simulation for groupID: " + groupID)
 
 	return simDep, nil
 }
 
 // ShutdownSimulationAsync finishes all resources associated to a cloudsim simulation.
 func (s *MockService) ShutdownSimulationAsync(ctx context.Context, tx *gorm.DB,
-	groupId string, user *users.User) (interface{}, *ign.ErrMsg) {
+	groupID string, user *users.User) (interface{}, *ign.ErrMsg) {
 
-	logger(ctx).Debug("Mock ShutdownSimulationAsync requested for groupId: " + groupId)
+	logger(ctx).Debug("Mock ShutdownSimulationAsync requested for groupID: " + groupID)
 
-	dep, err := GetSimulationDeployment(tx, groupId)
+	dep, err := GetSimulationDeployment(tx, groupID)
 	if err != nil {
 		return nil, ign.NewErrorMessageWithBase(ign.ErrorSimGroupNotFound, err)
 	}
@@ -122,10 +122,10 @@ func (s *MockService) ShutdownSimulationAsync(ctx context.Context, tx *gorm.DB,
 		return nil, ign.NewErrorMessageWithBase(ign.ErrorDbSave, err)
 	}
 
-	logger(ctx).Debug("Mock ShutdownSimulationAsync - successfully removed groupId: " + groupId)
+	logger(ctx).Debug("Mock ShutdownSimulationAsync - successfully removed groupID: " + groupID)
 
 	// Get fresh simulation record from DB and return it
-	dep, err = GetSimulationDeployment(tx, groupId)
+	dep, err = GetSimulationDeployment(tx, groupID)
 	if err != nil {
 		return nil, ign.NewErrorMessageWithBase(ign.ErrorSimGroupNotFound, err)
 	}
@@ -137,7 +137,7 @@ func (s *MockService) ShutdownSimulationAsync(ctx context.Context, tx *gorm.DB,
 // and associated Hosts (instances) of a given Cloudsim Group Id.
 func (s *MockService) DeleteNodesAndHostsForGroup(ctx context.Context,
 	tx *gorm.DB, dep *SimulationDeployment, user *users.User) (interface{}, *ign.ErrMsg) {
-	logger(ctx).Debug("Mock delete nodes and hosts for groupId: " + *dep.GroupId)
+	logger(ctx).Debug("Mock delete nodes and hosts for groupID: " + *dep.GroupID)
 	return nil, nil
 }
 
@@ -207,11 +207,11 @@ func (s *MockService) SimulationDeploymentList(ctx context.Context,
 	return &sims, pagination, nil
 }
 
-// GetSimulationDeployment returns a single simulation deployment based on its groupId
+// GetSimulationDeployment returns a single simulation deployment based on its groupID
 func (s *MockService) GetSimulationDeployment(ctx context.Context, tx *gorm.DB,
-	groupId string, user *users.User) (interface{}, *ign.ErrMsg) {
+	groupID string, user *users.User) (interface{}, *ign.ErrMsg) {
 
-	dep, err := GetSimulationDeployment(tx, groupId)
+	dep, err := GetSimulationDeployment(tx, groupID)
 	if err != nil {
 		return nil, ign.NewErrorMessageWithBase(ign.ErrorSimGroupNotFound, err)
 	}
@@ -220,7 +220,7 @@ func (s *MockService) GetSimulationDeployment(ctx context.Context, tx *gorm.DB,
 
 // GetSimulationLogsForDownload returns the generated logs from a simulation.
 func (s *MockService) GetSimulationLogsForDownload(ctx context.Context, tx *gorm.DB,
-	groupId string, user *users.User) (*string, *ign.ErrMsg) {
+	groupID string, user *users.User) (*string, *ign.ErrMsg) {
 
 	return sptr("invalid link"), nil
 }

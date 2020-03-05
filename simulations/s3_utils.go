@@ -13,9 +13,9 @@ import (
 
 // GetS3SimulationLogKey returns the key where logs for a given simulation are stored within a bucket.
 func GetS3SimulationLogKey(dep *SimulationDeployment) string {
-	groupId := *dep.GroupId
+	groupID := *dep.GroupID
 	ownerNameEscaped := url.PathEscape(*dep.Owner)
-	key := fmt.Sprintf("/gz-logs/%s/%s/", ownerNameEscaped, groupId)
+	key := fmt.Sprintf("/gz-logs/%s/%s/", ownerNameEscaped, groupID)
 
 	return key
 }

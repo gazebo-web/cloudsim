@@ -23,7 +23,7 @@ import (
 // records in the DB based on their status.
 
 const (
-	nodeLabelKeyGroupId          = "cloudsim_groupid"
+	nodeLabelKeyGroupID          = "cloudsim_groupid"
 	nodeLabelKeyCloudsimNodeType = "cloudsim_node_type"
 	nodeLabelKeySubTRobotName    = "robot_name"
 )
@@ -114,7 +114,7 @@ func (s *Ec2Client) RegisterPlatform(ctx context.Context, p PlatformType) {
 // CloudMachinesList returns a paginated list with all cloud machines.
 // @public
 func (s *Ec2Client) CloudMachinesList(ctx context.Context, p *ign.PaginationRequest, tx *gorm.DB,
-	byStatus *MachineStatus, invertStatus bool, groupId *string, application *string) (*MachineInstances, *ign.PaginationResult, *ign.ErrMsg) {
+	byStatus *MachineStatus, invertStatus bool, groupID *string, application *string) (*MachineInstances, *ign.PaginationResult, *ign.ErrMsg) {
 
 	// Create the DB query
 	var machines MachineInstances
@@ -132,9 +132,9 @@ func (s *Ec2Client) CloudMachinesList(ctx context.Context, p *ign.PaginationRequ
 		q = q.Where("application = ?", *application)
 	}
 
-	if groupId != nil && len(strings.TrimSpace(*groupId)) > 0 {
+	if groupID != nil && len(strings.TrimSpace(*groupID)) > 0 {
 		// Replace * with the SQL equivalient
-		pattern := strings.Replace(*groupId, "*", "%", -1)
+		pattern := strings.Replace(*groupID, "*", "%", -1)
 		// Replace ? with the SQL equivalient
 		pattern = strings.Replace(pattern, "?", "_", -1)
 		q = q.Where("group_id LIKE ?", pattern)
@@ -158,7 +158,7 @@ func (s *Ec2Client) CloudMachinesList(ctx context.Context, p *ign.PaginationRequ
 // instance.
 // @param extraLabels is an array of labels. Each label has the form label=value.
 // @return the userData in base64
-func (s *Ec2Client) buildUserDataString(groupId string, extraLabels ...string) (base64Data, userData string) {
+func (s *Ec2Client) buildUserDataString(groupID string, extraLabels ...string) (base64Data, userData string) {
 
 	const constLaunchEc2UserData = `#!/bin/bash
 	set -x
@@ -167,7 +167,7 @@ func (s *Ec2Client) buildUserDataString(groupId string, extraLabels ...string) (
 	date '+%Y-%m-%d %H:%M:%S'
 	`
 
-	nodeGroupLabel := getNodeLabelForGroupId(groupId)
+	nodeGroupLabel := getNodeLabelForGroupID(groupID)
 	// NOTE: this nodeLabels trick helps setting labels to the new Node at creation time.
 	nodeLabels := `cat > /etc/systemd/system/kubelet.service.d/20-labels-taints.conf <<EOF
 [Service]
@@ -255,7 +255,7 @@ func (s *Ec2Client) checkNodeAvailability(ctx context.Context, simDep *Simulatio
 				"checkNodeAvailability - Not enough %s instances available (%d requested) for simulation [%s]: %s\n",
 				*template.InstanceType,
 				*template.MinCount,
-				*simDep.GroupId,
+				*simDep.GroupID,
 				awsErr.Message(),
 			))
 			return false, ign.NewErrorMessageWithBase(ign.ErrorLaunchingCloudInstanceNotEnoughResources, awsErr.OrigErr())
@@ -325,14 +325,14 @@ func (s *Ec2Client) launchInstances(ctx context.Context, tx *gorm.DB, dep *Simul
 		// info in 'runResult'.
 		for _, ins := range runResult.Instances {
 			// Get the created Instance ID(s).
-			iId := *ins.InstanceId
-			instanceIds = append(instanceIds, iId)
+			iID := *ins.InstanceId
+			instanceIds = append(instanceIds, iID)
 
 			// And create a DB record to track the machine instance in case of errors later
 			machine := MachineInstance{
-				InstanceId:      &iId,
+				InstanceID:      &iID,
 				LastKnownStatus: macInitializing.ToStringPtr(),
-				GroupId:         dep.GroupId,
+				GroupID:         dep.GroupID,
 				Application:     dep.Application,
 			}
 			err = tx.Create(&machine).Error
@@ -350,7 +350,7 @@ func (s *Ec2Client) launchInstances(ctx context.Context, tx *gorm.DB, dep *Simul
 func (s *Ec2Client) terminateInstances(ctx context.Context, machines []*MachineInstance) {
 	terminateIds := make([]*string, 0)
 	for _, machine := range machines {
-		terminateIds = append(terminateIds, machine.InstanceId)
+		terminateIds = append(terminateIds, machine.InstanceID)
 	}
 	_, err := s.ec2Svc.TerminateInstances(&ec2.TerminateInstancesInput{
 		InstanceIds: terminateIds,
@@ -375,12 +375,12 @@ func (s *Ec2Client) launchNodes(ctx context.Context, tx *gorm.DB, dep *Simulatio
 
 	tstart := time.Now()
 
-	groupId := *dep.GroupId
+	groupID := *dep.GroupID
 
 	// This will be the return value if everything is ok
-	nodeSelectorGroupId := getNodeLabelForGroupId(groupId)
-	instanceName := s.getInstanceNameFor(groupId, "gazebo")
-	userData, _ := s.buildUserDataString(groupId, labelAndValue(nodeLabelKeyCloudsimNodeType, "gazebo"))
+	nodeSelectorGroupID := getNodeLabelForGroupID(groupID)
+	instanceName := s.getInstanceNameFor(groupID, "gazebo")
+	userData, _ := s.buildUserDataString(groupID, labelAndValue(nodeLabelKeyCloudsimNodeType, "gazebo"))
 
 	ignlog := logger(ctx)
 
@@ -400,7 +400,7 @@ func (s *Ec2Client) launchNodes(ctx context.Context, tx *gorm.DB, dep *Simulatio
 				ResourceType: aws.String("instance"),
 				Tags: []*ec2.Tag{
 					{Key: aws.String("Name"), Value: aws.String(instanceName)},
-					{Key: aws.String("CloudsimGroupId"), Value: aws.String(groupId)},
+					{Key: aws.String("CloudsimGroupID"), Value: aws.String(groupID)},
 					{Key: aws.String("project"), Value: aws.String("cloudsim")},
 					{Key: dep.Platform, Value: aws.String("True")},
 				},
@@ -453,7 +453,7 @@ func (s *Ec2Client) launchNodes(ctx context.Context, tx *gorm.DB, dep *Simulatio
 
 			ignlog.Debug(fmt.Sprintf(
 				"launchNodes - not enough instances to start simulation for groupid [%s]. retrying: %s",
-				*dep.GroupId,
+				*dep.GroupID,
 				em.Msg,
 			))
 
@@ -512,12 +512,12 @@ func (s *Ec2Client) launchNodes(ctx context.Context, tx *gorm.DB, dep *Simulatio
 		}
 	}
 
-	ignlog.Info(fmt.Sprintf("Instances are now running: %v. Cloudsim GroupId: %s\n", instanceIds, groupId))
-	return &nodeSelectorGroupId, nil
+	ignlog.Info(fmt.Sprintf("Instances are now running: %v. Cloudsim GroupID: %s\n", instanceIds, groupID))
+	return &nodeSelectorGroupID, nil
 }
 
-func (s *Ec2Client) getInstanceNameFor(groupId, suffix string) string {
-	return fmt.Sprintf("%s-node-group-%s-%s", s.awsCfg.NamePrefix, groupId, suffix)
+func (s *Ec2Client) getInstanceNameFor(groupID, suffix string) string {
+	return fmt.Sprintf("%s-node-group-%s-%s", s.awsCfg.NamePrefix, groupID, suffix)
 }
 
 func appendTags(input *ec2.RunInstancesInput, tags ...*ec2.Tag) {
@@ -531,22 +531,22 @@ func replaceInstanceNameTag(input *ec2.RunInstancesInput, name string) {
 	input.TagSpecifications[0].Tags[0] = nameTag
 }
 
-func getNodeLabelForGroupId(groupId string) string {
-	return labelAndValue(nodeLabelKeyGroupId, groupId)
+func getNodeLabelForGroupID(groupID string) string {
+	return labelAndValue(nodeLabelKeyGroupID, groupID)
 }
 
 func labelAndValue(key, value string) string {
 	return key + "=" + value
 }
 
-// deleteK8Nodes deletes the kubernetes nodes used to run a GroupId.
+// deleteK8Nodes deletes the kubernetes nodes used to run a GroupID.
 // It is expected that if the labeled Nodes cannot be found, then this function should return
 // an ErrorLabeledNodeNotFound.
 // @public
-func (s *Ec2Client) deleteK8Nodes(ctx context.Context, tx *gorm.DB, groupId string) (interface{}, *ign.ErrMsg) {
+func (s *Ec2Client) deleteK8Nodes(ctx context.Context, tx *gorm.DB, groupID string) (interface{}, *ign.ErrMsg) {
 
-	// Find and Delete all k8 Nodes associated to the GroupId.
-	nodeLabel := getNodeLabelForGroupId(groupId)
+	// Find and Delete all k8 Nodes associated to the GroupID.
+	nodeLabel := getNodeLabelForGroupID(groupID)
 	nodesInterface := s.clientset.CoreV1().Nodes()
 	nodes, err := nodesInterface.List(metav1.ListOptions{LabelSelector: nodeLabel})
 	if err != nil {
@@ -572,22 +572,22 @@ func (s *Ec2Client) deleteK8Nodes(ctx context.Context, tx *gorm.DB, groupId stri
 }
 
 // deleteHosts is a helper function that sends a request AWS to terminate
-// all the EC2 instances associated to a given GroupId.
+// all the EC2 instances associated to a given GroupID.
 // It also updates the MachineInstance DB records with the status of the terminated instances.
 // @public
 func (s *Ec2Client) deleteHosts(ctx context.Context, tx *gorm.DB,
 	dep *SimulationDeployment) (interface{}, *ign.ErrMsg) {
 
-	// Get the EC2 instance Ids for the given groupId.
+	// Get the EC2 instance Ids for the given groupID.
 	var machines MachineInstances
-	if err := tx.Model(&MachineInstance{}).Where("group_id = ?", *dep.GroupId).Find(&machines).Error; err != nil {
+	if err := tx.Model(&MachineInstance{}).Where("group_id = ?", *dep.GroupID).Find(&machines).Error; err != nil {
 		return nil, ign.NewErrorMessageWithBase(ign.ErrorSimGroupNotFound, err)
 	}
 
 	var instIds []string
 	// Update each machine instance DB record, to mark the termination process as 'started'.
 	for _, m := range machines {
-		instIds = append(instIds, *m.InstanceId)
+		instIds = append(instIds, *m.InstanceID)
 		if em := m.updateMachineStatus(tx, macTerminating); em != nil {
 			return nil, em
 		}

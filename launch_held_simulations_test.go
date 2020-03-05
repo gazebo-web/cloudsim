@@ -32,7 +32,7 @@ func TestSystemAdminCanLaunchHeldSimulation(t *testing.T) {
 		"robot_image": "infrastructureascode/aws-cli:latest",
 	}
 
-	var groupId string
+	var groupID string
 	invokeURITestMultipartPOST(
 		t,
 		uriTest{
@@ -47,7 +47,7 @@ func TestSystemAdminCanLaunchHeldSimulation(t *testing.T) {
 		func(bslice *[]byte, resp *igntest.AssertResponse) {
 			dep := sim.SimulationDeployment{}
 			json.Unmarshal(*bslice, &dep)
-			groupId = *dep.GroupId
+			groupID = *dep.GroupID
 			assert.True(t, dep.Held)
 		},
 	)
@@ -58,7 +58,7 @@ func TestSystemAdminCanLaunchHeldSimulation(t *testing.T) {
 	test := launchHeldSimsTest{
 		uriTest: uriTest{
 			testDesc:          "launchHeldSimulations -- SystemAdmin can deploy a held simulation",
-			URL:               fmt.Sprintf(launchHeldSimURI, groupId),
+			URL:               fmt.Sprintf(launchHeldSimURI, groupID),
 			jwtGen:            sysAdmin,
 			expErrMsg:         nil,
 			ignoreErrorBody:   false,
@@ -76,7 +76,7 @@ func TestSystemAdminCanLaunchHeldSimulation(t *testing.T) {
 		invokeURITest(t,
 			uriTest{
 				testDesc:          "launchHeldSimulations -- Get launched simulation deployment",
-				URL:               fmt.Sprintf(getURI, groupId),
+				URL:               fmt.Sprintf(getURI, groupID),
 				jwtGen:            test.jwtGen,
 				expErrMsg:         nil,
 				ignoreErrorBody:   false,
@@ -108,7 +108,7 @@ func TestSystemAdminCanLaunchHeldMultisim(t *testing.T) {
 		"robot_image": "infrastructureascode/aws-cli:latest",
 	}
 
-	var groupId string
+	var groupID string
 	invokeURITestMultipartPOST(
 		t,
 		uriTest{
@@ -123,7 +123,7 @@ func TestSystemAdminCanLaunchHeldMultisim(t *testing.T) {
 		func(bslice *[]byte, resp *igntest.AssertResponse) {
 			dep := sim.SimulationDeployment{}
 			json.Unmarshal(*bslice, &dep)
-			groupId = *dep.GroupId
+			groupID = *dep.GroupID
 			assert.True(t, dep.Held)
 		},
 	)
@@ -135,7 +135,7 @@ func TestSystemAdminCanLaunchHeldMultisim(t *testing.T) {
 	test := launchHeldSimsTest{
 		uriTest: uriTest{
 			testDesc:          "launchHeldSimulations -- SystemAdmin can deploy a held simulation",
-			URL:               fmt.Sprintf(launchHeldSimURI, groupId),
+			URL:               fmt.Sprintf(launchHeldSimURI, groupID),
 			jwtGen:            sysAdmin,
 			expErrMsg:         nil,
 			ignoreErrorBody:   false,
@@ -153,7 +153,7 @@ func TestSystemAdminCanLaunchHeldMultisim(t *testing.T) {
 		invokeURITest(t,
 			uriTest{
 				testDesc:          "launchHeldSimulations -- Get launched simulation deployment",
-				URL:               fmt.Sprintf(getURI, groupId),
+				URL:               fmt.Sprintf(getURI, groupID),
 				jwtGen:            test.jwtGen,
 				expErrMsg:         nil,
 				ignoreErrorBody:   false,
@@ -206,7 +206,7 @@ func TestUserCannotLaunchHeldSimulation(t *testing.T) {
 	test := launchHeldSimsTest{
 		uriTest: uriTest{
 			testDesc:          "launchHeldSimulations -- User cannot deploy a held simulation",
-			URL:               fmt.Sprintf(launchHeldSimURI, *dep.GroupId),
+			URL:               fmt.Sprintf(launchHeldSimURI, *dep.GroupID),
 			jwtGen:            teamAUser1,
 			expErrMsg:         ign.NewErrorMessage(ign.ErrorUnauthorized),
 			ignoreErrorBody:   false,

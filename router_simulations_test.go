@@ -44,7 +44,7 @@ type getSimulationsMetadataTest struct {
 }
 
 // createSimulationDeployment creates simulation deployments for testing.
-func createSimulationDeployment(t *testing.T, ctx context.Context, db *gorm.DB, jwt *testJWT, simName string,
+func createSimulationDeployment(ctx context.Context, t *testing.T, db *gorm.DB, jwt *testJWT, simName string,
 	circuit string, owner string, robotName *string, robotType *string) *sim.SimulationDeployment {
 
 	// Prepare sim creation request
@@ -99,8 +99,8 @@ func TestSimulationsRoute(t *testing.T) {
 
 	unauth := ign.NewErrorMessage(ign.ErrorUnauthorized)
 
-	var teamBSimGroupId string
-	var teamASimGroupId string
+	var teamBSimGroupID string
+	var teamASimGroupID string
 
 	vStix := "Virtual Stix"
 	tunnel := "Tunnel Circuit"
@@ -148,15 +148,15 @@ func TestSimulationsRoute(t *testing.T) {
 				assert.True(t, *dep.Private)
 				assert.Equal(t, "subt", *dep.Application)
 				assert.Equal(t, 0, dep.MultiSim)
-				if teamBSimGroupId == "" && *dep.Creator == "TeamBAdmin" {
-					// save the created dep groupId
+				if teamBSimGroupID == "" && *dep.Creator == "TeamBAdmin" {
+					// save the created dep groupID
 					// HACK
-					teamBSimGroupId = *dep.GroupId
+					teamBSimGroupID = *dep.GroupID
 				}
-				if teamASimGroupId == "" && *dep.Creator == "TeamAUser1" {
-					// save the created dep groupId
+				if teamASimGroupID == "" && *dep.Creator == "TeamAUser1" {
+					// save the created dep groupID
 					// HACK
-					teamASimGroupId = *dep.GroupId
+					teamASimGroupID = *dep.GroupID
 				}
 			})
 		})
@@ -189,7 +189,7 @@ func TestSimulationsRoute(t *testing.T) {
 			})
 		})
 	}
-	teamBSim := uri + "/" + teamBSimGroupId
+	teamBSim := uri + "/" + teamBSimGroupID
 	getSingleSimTestsData := []getSimulationsTest{
 		{uriTest{"getSingleSim - invalid uri", uri + "/invalid", defaultJWT, ign.NewErrorMessage(ign.ErrorNameNotFound), true, true}, nil, nil},
 		{uriTest{"getSingleSim - with no jwt", teamBSim, nil, unauth, true, false}, nil, nil},
@@ -209,7 +209,7 @@ func TestSimulationsRoute(t *testing.T) {
 		})
 	}
 
-	teamASim := uri + "/" + teamASimGroupId
+	teamASim := uri + "/" + teamASimGroupID
 	stopSimTestsData := []getSimulationsTest{
 		{uriTest{"stopSimB - invalid uri", uri + "/invalid", defaultJWT, ign.NewErrorMessage(ign.ErrorNameNotFound), true, true}, nil, nil},
 		{uriTest{"stopSimB - with no jwt", teamBSim, nil, unauth, true, false}, nil, nil},
@@ -245,20 +245,20 @@ func TestGetSimExtra(t *testing.T) {
 	ctx := context.Background()
 
 	singleSim := createSimulationDeployment(
-		t, ctx, db, teamAUser1, "TestSingleGroupIdSimulation", singleSimCircuit, "TeamA", nil, nil,
+		ctx, t, db, teamAUser1, "TestSingleGroupIDSimulation", singleSimCircuit, "TeamA", nil, nil,
 	)
 	multiSim := createSimulationDeployment(
-		t, ctx, db, teamAUser1, "TestMultiGroupIdSimulation", multiSimCircuit, "TeamA", nil, nil,
+		ctx, t, db, teamAUser1, "TestMultiGroupIDSimulation", multiSimCircuit, "TeamA", nil, nil,
 	)
 
-	simUrl := fmt.Sprintf("%s/%s", uri, *singleSim.GroupId)
-	multiSimUrl := fmt.Sprintf("%s/%s", uri, *multiSim.GroupId)
+	simURL := fmt.Sprintf("%s/%s", uri, *singleSim.GroupID)
+	multisimURL := fmt.Sprintf("%s/%s", uri, *multiSim.GroupID)
 
 	getSingleSimMetadataTests := []getSimulationsMetadataTest{
-		{uriTest{"getSimMetadata - user does not get metadata", simUrl, teamAUser1, nil, true, false}, false, false},
-		{uriTest{"getSimMetadata - sysadmin does not get metadata", simUrl, sysAdmin, nil, true, false}, true, false},
-		{uriTest{"getMultiSimMetadata - user does not get metadata", multiSimUrl, teamAUser1, nil, true, false}, false, true},
-		{uriTest{"getMultiSimMetadata - sysadmin does get metadata", multiSimUrl, sysAdmin, nil, true, false}, true, true},
+		{uriTest{"getSimMetadata - user does not get metadata", simURL, teamAUser1, nil, true, false}, false, false},
+		{uriTest{"getSimMetadata - sysadmin does not get metadata", simURL, sysAdmin, nil, true, false}, true, false},
+		{uriTest{"getMultiSimMetadata - user does not get metadata", multisimURL, teamAUser1, nil, true, false}, false, true},
+		{uriTest{"getMultiSimMetadata - sysadmin does get metadata", multisimURL, sysAdmin, nil, true, false}, true, true},
 	}
 
 	for _, test := range getSingleSimMetadataTests {
@@ -390,7 +390,7 @@ func TestGetRemainingSubmissionsRoute(t *testing.T) {
 			// Create a fake simulation
 			globals.Server.Db.Create(&sim.SimulationDeployment{
 				Owner:         sptr(owner),
-				GroupId:       sptr(uuid.NewV4().String()),
+				GroupID:       sptr(uuid.NewV4().String()),
 				ExtraSelector: sptr(circuit),
 			})
 
@@ -620,7 +620,7 @@ func TestDownloadLogsRouter(t *testing.T) {
 
 	// Create simulation deployments
 	db := globals.Server.Db
-	createSimulationDeployment := func(db *gorm.DB, owner string, groupId string, name string,
+	createSimulationDeployment := func(db *gorm.DB, owner string, groupID string, name string,
 		multiSim int) sim.SimulationDeployment {
 		extra := `{"circuit":"Tunnel Test 1","robots":[
 			{"Name":"X1","Type":"X1_SENSOR_CONFIG_1","Image":"image"},
@@ -631,7 +631,7 @@ func TestDownloadLogsRouter(t *testing.T) {
 			Owner:            sptr(owner),
 			Creator:          sptr("test_user"),
 			Private:          boolptr(true),
-			GroupId:          sptr(groupId),
+			GroupID:          sptr(groupID),
 			DeploymentStatus: intptr(90),
 			Platform:         sptr("subt"),
 			Application:      sptr("subt"),
@@ -647,10 +647,10 @@ func TestDownloadLogsRouter(t *testing.T) {
 		return simDep
 	}
 	simDepSingle := createSimulationDeployment(
-		db, "TeamA", "test-single-groupId-simulation", "TestSingleSimSimulation", 0,
+		db, "TeamA", "test-single-groupID-simulation", "TestSingleSimSimulation", 0,
 	)
 	simDepMulti := createSimulationDeployment(
-		db, "TeamA", "test-multi-groupId-simulation", "TestMultiSimSimulation", 1,
+		db, "TeamA", "test-multi-groupID-simulation", "TestMultiSimSimulation", 1,
 	)
 
 	// User setup
@@ -665,7 +665,7 @@ func TestDownloadLogsRouter(t *testing.T) {
 	type logFileDownloadTest struct {
 		uriTest  uriTest
 		link     bool
-		groupId  string
+		groupID  string
 		filename string
 		robot    *string
 	}
@@ -673,70 +673,70 @@ func TestDownloadLogsRouter(t *testing.T) {
 		{
 			uriTest{
 				"Gazebo logs for single sim",
-				fmt.Sprintf(URI, *simDepSingle.GroupId),
+				fmt.Sprintf(URI, *simDepSingle.GroupID),
 				sysAdmin,
 				nil,
 				true,
 				true,
 			},
 			true,
-			*simDepSingle.GroupId,
-			fmt.Sprintf("%s.tar.gz", *simDepSingle.GroupId),
+			*simDepSingle.GroupID,
+			fmt.Sprintf("%s.tar.gz", *simDepSingle.GroupID),
 			nil,
 		},
 		{
 			uriTest{
 				"ROS logs for first robot of single sim",
-				fmt.Sprintf(URI, *simDepSingle.GroupId),
+				fmt.Sprintf(URI, *simDepSingle.GroupID),
 				sysAdmin,
 				nil,
 				true,
 				true,
 			},
 			true,
-			*simDepSingle.GroupId,
-			fmt.Sprintf("%s-fc-%s-commsbridge.tar.gz", *simDepSingle.GroupId, robots[0]),
+			*simDepSingle.GroupID,
+			fmt.Sprintf("%s-fc-%s-commsbridge.tar.gz", *simDepSingle.GroupID, robots[0]),
 			&robots[0],
 		},
 		{
 			uriTest{
 				"ROS logs for second robot of single sim",
-				fmt.Sprintf(URI, *simDepSingle.GroupId),
+				fmt.Sprintf(URI, *simDepSingle.GroupID),
 				sysAdmin,
 				nil,
 				true,
 				true,
 			},
 			true,
-			*simDepSingle.GroupId,
-			fmt.Sprintf("%s-fc-%s-commsbridge.tar.gz", *simDepSingle.GroupId, robots[1]),
+			*simDepSingle.GroupID,
+			fmt.Sprintf("%s-fc-%s-commsbridge.tar.gz", *simDepSingle.GroupID, robots[1]),
 			&robots[1],
 		},
 		{
 			uriTest{
 				"Summary for multisim",
-				fmt.Sprintf(URI, *simDepMulti.GroupId),
+				fmt.Sprintf(URI, *simDepMulti.GroupID),
 				sysAdmin,
 				nil,
 				true,
 				true,
 			},
 			true,
-			*simDepMulti.GroupId,
+			*simDepMulti.GroupID,
 			fmt.Sprintf("summary.json"),
 			nil,
 		},
 		{
 			uriTest{
 				"Summary for multisim with robot parameter",
-				fmt.Sprintf(URI, *simDepMulti.GroupId),
+				fmt.Sprintf(URI, *simDepMulti.GroupID),
 				sysAdmin,
 				nil,
 				true,
 				true,
 			},
 			true,
-			*simDepMulti.GroupId,
+			*simDepMulti.GroupID,
 			fmt.Sprintf("summary.json"),
 			&robots[0],
 		},

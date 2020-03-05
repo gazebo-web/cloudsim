@@ -52,9 +52,11 @@ var DefaultEmailRecipients []string
 // It is set using IGN_DEFAULT_EMAIL_SENDER env var.
 var DefaultEmailSender string
 
+// DisableSummaryEmails defines if cloudsim should send summary emails
 // TODO This should probably be placed in the service configuration
 var DisableSummaryEmails = false
 
+// DisableScoreGeneration defines if cloud should generate score for simulations
 // TODO This should probably be placed in the service configuration
 var DisableScoreGeneration = false
 

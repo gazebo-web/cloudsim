@@ -21,8 +21,8 @@ func TestSimulationDeployment_Clone(t *testing.T) {
 		StopOnEnd:        boolptr(false),
 		Name:             sptr("TestSimDep"),
 		Image:            sptr("test"),
-		GroupId:          sptr("11111111-1111-1111-1111-111111111111-c-1"),
-		ParentGroupId:    sptr("11111111-1111-1111-1111-111111111111-c-1"),
+		GroupID:          sptr("11111111-1111-1111-1111-111111111111-c-1"),
+		ParentGroupID:    sptr("11111111-1111-1111-1111-111111111111-c-1"),
 		MultiSim:         2,
 		DeploymentStatus: intptr(90),
 		ErrorStatus:      sptr("InitializationFailed"),
@@ -34,7 +34,7 @@ func TestSimulationDeployment_Clone(t *testing.T) {
 	}
 
 	simDepClone := simDep.Clone()
-	simDepClone.GroupId = sptr(fmt.Sprintf("%s-r-1", *simDep.GroupId))
+	simDepClone.GroupID = sptr(fmt.Sprintf("%s-r-1", *simDep.GroupID))
 
 	// Check that the model fields have been cleared
 	assert.Equal(t, uint(0), simDepClone.ID)
@@ -42,5 +42,5 @@ func TestSimulationDeployment_Clone(t *testing.T) {
 	assert.Nil(t, simDepClone.StoppedAt)
 
 	// Check that the references are copied and can be overwritten
-	assert.NotEqual(t, *simDep.GroupId, *simDepClone.GroupId)
+	assert.NotEqual(t, *simDep.GroupID, *simDepClone.GroupID)
 }

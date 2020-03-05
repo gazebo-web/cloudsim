@@ -172,9 +172,9 @@ func init() {
 	// After loading initial data, apply custom indexes. Eg: fulltext indexes
 	DBAddCustomIndexes(logCtx, globals.Server.Db)
 
-	sim.HttpHandlerInstance, err = sim.NewHttpHandler(logCtx, globals.UserAccessor)
+	sim.HTTPHandlerInstance, err = sim.NewHTTPHandler(logCtx, globals.UserAccessor)
 	if err != nil {
-		logger.Critical("Critical error trying to create the HttpHandler", err)
+		logger.Critical("Critical error trying to create the HTTPHandler", err)
 		log.Fatalf("%+v\n", err)
 	}
 

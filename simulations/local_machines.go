@@ -44,7 +44,7 @@ func NewLocalNodesClient(ctx context.Context, kcli kubernetes.Interface) (*Local
 // we just return an empty set (for now).
 // @public
 func (s *LocalNodes) CloudMachinesList(ctx context.Context, p *ign.PaginationRequest,
-	tx *gorm.DB, byStatus *MachineStatus, invertStatus bool, groupId *string, application *string) (*MachineInstances, *ign.PaginationResult, *ign.ErrMsg) {
+	tx *gorm.DB, byStatus *MachineStatus, invertStatus bool, groupID *string, application *string) (*MachineInstances, *ign.PaginationResult, *ign.ErrMsg) {
 	// Create the DB query
 	var machines MachineInstances
 
@@ -63,7 +63,7 @@ func (s *LocalNodes) CloudMachinesList(ctx context.Context, p *ign.PaginationReq
 	return &machines, pagination, nil
 }
 
-// launchNodes will try to re-use existing nodes (if not already used) for the given groupId.
+// launchNodes will try to re-use existing nodes (if not already used) for the given groupID.
 // It will return an error if all nodes are currently being used.
 // Returns the node labels that can be used to identify the chosen nodes.
 // @public
@@ -72,11 +72,11 @@ func (s *LocalNodes) launchNodes(ctx context.Context, tx *gorm.DB, dep *Simulati
 	nodesInterface := s.clientset.CoreV1().Nodes()
 	var err error
 
-	groupId := *dep.GroupId
+	groupID := *dep.GroupID
 
-	// Find a free node or the one already used by same groupId
+	// Find a free node or the one already used by same groupID
 	// First, try to use same node
-	sameNodeLabel := nodeLabelKey + "=" + groupId
+	sameNodeLabel := nodeLabelKey + "=" + groupID
 	sameNode := true
 	nodes, _ := nodesInterface.List(metav1.ListOptions{LabelSelector: sameNodeLabel})
 	if len(nodes.Items) == 0 {
@@ -93,15 +93,15 @@ func (s *LocalNodes) launchNodes(ctx context.Context, tx *gorm.DB, dep *Simulati
 	if !sameNode {
 		node := nodes.Items[0]
 		node.ObjectMeta.Labels[freeNodeLabelKey] = "false"
-		node.ObjectMeta.Labels[nodeLabelKey] = groupId
+		node.ObjectMeta.Labels[nodeLabelKey] = groupID
 		_, err = nodesInterface.Update(&node)
 		if err != nil {
 			return nil, NewErrorMessageWithBase(ErrorMarkingLocalNodeAsUsed, err)
 		}
 	}
 
-	ignlog.Info(fmt.Sprintf("Configured local node for Cloudsim GroupId: %s\n", groupId))
-	nodeLabel := nodeLabelKey + "=" + groupId
+	ignlog.Info(fmt.Sprintf("Configured local node for Cloudsim GroupID: %s\n", groupID))
+	nodeLabel := nodeLabelKey + "=" + groupID
 	return &nodeLabel, nil
 }
 
@@ -109,16 +109,16 @@ func (s *LocalNodes) launchNodes(ctx context.Context, tx *gorm.DB, dep *Simulati
 // It is expected that if the labeled Node cannot be found, this func should return
 // an ErrorLabeledNodeNotFound.
 // @public
-func (s *LocalNodes) deleteK8Nodes(ctx context.Context, tx *gorm.DB, groupId string) (interface{}, *ign.ErrMsg) {
+func (s *LocalNodes) deleteK8Nodes(ctx context.Context, tx *gorm.DB, groupID string) (interface{}, *ign.ErrMsg) {
 
 	ignlog := logger(ctx)
 	nodesInterface := s.clientset.CoreV1().Nodes()
-	nodeLabel := nodeLabelKey + "=" + groupId
+	nodeLabel := nodeLabelKey + "=" + groupID
 
 	// Find the nodes
 	nodes, err := nodesInterface.List(metav1.ListOptions{LabelSelector: nodeLabel})
 	if err != nil || len(nodes.Items) == 0 {
-		logger(ctx).Info("Nodes not found for the groupId: " + groupId)
+		logger(ctx).Info("Nodes not found for the groupID: " + groupID)
 		return nil, NewErrorMessageWithBase(ErrorLabeledNodeNotFound, err)
 	}
 
@@ -131,7 +131,7 @@ func (s *LocalNodes) deleteK8Nodes(ctx context.Context, tx *gorm.DB, groupId str
 		return nil, NewErrorMessageWithBase(ErrorMarkingLocalNodeAsFree, err)
 	}
 
-	ignlog.Info(fmt.Sprintf("Stopped using local node for Cloudsim GroupId: %s\n", groupId))
+	ignlog.Info(fmt.Sprintf("Stopped using local node for Cloudsim GroupID: %s\n", groupID))
 	return &nodeLabel, nil
 }
 

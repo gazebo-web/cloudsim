@@ -9,10 +9,11 @@
 # BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 # License for the specific language governing permissions and limitations under the License.
 """
-A Bitbucket Builds template for deploying
+A GitLab Builds template for deploying
 an application to AWS Elastic Beanstalk
 joshcb@amazon.com
-v1.0.0
+marcoshuck@ekumenlabs.com
+v1.0.1
 """
 from __future__ import print_function
 import os
@@ -23,7 +24,7 @@ from botocore.exceptions import ClientError
 
 VERSION_LABEL = strftime("%Y%m%d%H%M%S")
 BUCKET_KEY = os.getenv('APPLICATION_NAME') + '/' + VERSION_LABEL + \
-    '-bitbucket_builds.zip'
+    '-gitlab_builds.zip'
 
 def upload_to_s3(artifact):
     """
@@ -64,7 +65,7 @@ def create_new_version():
         response = client.create_application_version(
             ApplicationName=os.getenv('APPLICATION_NAME'),
             VersionLabel=VERSION_LABEL,
-            Description='New build from Bitbucket',
+            Description='New build from GitLab',
             SourceBundle={
                 'S3Bucket': os.getenv('S3_BUCKET'),
                 'S3Key': BUCKET_KEY
@@ -110,7 +111,7 @@ def deploy_new_version():
 
 def main():
     " Your favorite wrapper's favorite wrapper "
-    if not upload_to_s3('/tmp/artifact.zip'):
+    if not upload_to_s3('./artifact.zip'):
         sys.exit(1)
     if not create_new_version():
         sys.exit(1)

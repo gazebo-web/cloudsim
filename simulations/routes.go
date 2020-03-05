@@ -5,7 +5,7 @@ import (
 )
 
 // Routes declares the routes related to simulations. See also IGN's router.go
-var Routes = ign.Routes{
+var Routes ign.Routes = ign.Routes{
 
 	/////////////////
 	// Simulations //
@@ -13,12 +13,12 @@ var Routes = ign.Routes{
 
 	// Route for all simulations
 	ign.Route{
-		"Simulations",
-		"Information about all simulations",
-		"/simulations",
-		ign.AuthHeadersRequired,
-		ign.Methods{},
-		ign.SecureMethods{
+		Name:        "Simulations",
+		Description: "Information about all simulations",
+		URI:         "/simulations",
+		Headers:     ign.AuthHeadersRequired,
+		Methods:     ign.Methods{},
+		SecureMethods: ign.SecureMethods{
 			// swagger:route GET /simulations simulations listSimulations
 			//
 			// Get list of simulations.
@@ -52,11 +52,11 @@ var Routes = ign.Routes{
 			//     default: Error
 			//     200: jsonSims
 			ign.Method{
-				"GET",
-				"Get all simulations",
-				ign.FormatHandlers{
-					ign.FormatHandler{".json", ign.JSONResult(WithUser(CloudsimSimulationList))},
-					ign.FormatHandler{"", ign.JSONResult(WithUser(CloudsimSimulationList))},
+				Type:        "GET",
+				Description: "Get all simulations",
+				Handlers: ign.FormatHandlers{
+					ign.FormatHandler{Extension: ".json", Handler: ign.JSONResult(WithUser(CloudsimSimulationList))},
+					ign.FormatHandler{Handler: ign.JSONResult(WithUser(CloudsimSimulationList))},
 				},
 			},
 			// swagger:route POST /simulations simulations createSimulation
@@ -72,10 +72,10 @@ var Routes = ign.Routes{
 			//     default: Error
 			//     200: jsonSim
 			ign.Method{
-				"POST",
-				"Starts a simulation, creating all needed resources",
-				ign.FormatHandlers{
-					ign.FormatHandler{"", ign.JSONResultNoTx(WithUser(CloudsimSimulationCreate))},
+				Type:        "POST",
+				Description: "Starts a simulation, creating all needed resources",
+				Handlers: ign.FormatHandlers{
+					ign.FormatHandler{Handler: ign.JSONResultNoTx(WithUser(CloudsimSimulationCreate))},
 				},
 			},
 		},
@@ -83,15 +83,15 @@ var Routes = ign.Routes{
 
 	// Get single simulation route
 	ign.Route{
-		"Works with a single simulation based on its groupId",
-		"Single simulation based on its groupId",
-		"/simulations/{group}",
-		ign.AuthHeadersRequired,
-		ign.Methods{},
-		ign.SecureMethods{
+		Name:        "Works with a single simulation based on its groupID",
+		Description: "Single simulation based on its groupID",
+		URI:         "/simulations/{group}",
+		Headers:     ign.AuthHeadersRequired,
+		Methods:     ign.Methods{},
+		SecureMethods: ign.SecureMethods{
 			// swagger:route GET /simulations/{group} simulations getSimulation
 			//
-			// Get a single simulation based on its groupId
+			// Get a single simulation based on its groupID
 			//
 			//   Produces:
 			//   - application/json
@@ -102,10 +102,10 @@ var Routes = ign.Routes{
 			//     default: Error
 			//     200: jsonSim
 			ign.Method{
-				"GET",
-				"Get a single simulation based on its groupId",
-				ign.FormatHandlers{
-					ign.FormatHandler{"", ign.JSONResultNoTx(WithUser(GetCloudsimSimulation))},
+				Type:        "GET",
+				Description: "Get a single simulation based on its groupID",
+				Handlers: ign.FormatHandlers{
+					ign.FormatHandler{Handler: ign.JSONResultNoTx(WithUser(GetCloudsimSimulation))},
 				},
 			},
 			// swagger:route DELETE /simulations/{group} simulations deleteSimulation
@@ -121,10 +121,10 @@ var Routes = ign.Routes{
 			//     default: Error
 			//     200: jsonSim
 			ign.Method{
-				"DELETE",
-				"shutdowns a simulation, removing all associated resources",
-				ign.FormatHandlers{
-					ign.FormatHandler{"", ign.JSONResultNoTx(WithUser(CloudsimSimulationDelete))},
+				Type:        "DELETE",
+				Description: "shutdowns a simulation, removing all associated resources",
+				Handlers: ign.FormatHandlers{
+					ign.FormatHandler{Handler: ign.JSONResultNoTx(WithUser(CloudsimSimulationDelete))},
 				},
 			},
 		},
@@ -132,8 +132,8 @@ var Routes = ign.Routes{
 	// Launch a simulation by the given GroupID that is currently being held by Cloudsim.
 	// This route will launch all child simulations for a multisim.
 	ign.Route{
-		Name:        "Launches a held simulation based on its groupId",
-		Description: "Launches a held simulation based on its groupId",
+		Name:        "Launches a held simulation based on its groupID",
+		Description: "Launches a held simulation based on its groupID",
 		URI:         "/simulations/{group}/launch",
 		Headers:     ign.AuthHeadersRequired,
 		Methods:     ign.Methods{},
@@ -152,15 +152,15 @@ var Routes = ign.Routes{
 
 	// Restart a simulation based on its Group ID
 	ign.Route{
-		"Restarts a failed simulation based on its groupId",
-		"Restarts a failed simulation based on its groupId",
-		"/simulations/{group}/restart",
-		ign.AuthHeadersRequired,
-		ign.Methods{},
-		ign.SecureMethods{
+		Name:        "Restarts a failed simulation based on its groupID",
+		Description: "Restarts a failed simulation based on its groupID",
+		URI:         "/simulations/{group}/restart",
+		Headers:     ign.AuthHeadersRequired,
+		Methods:     ign.Methods{},
+		SecureMethods: ign.SecureMethods{
 			// swagger:route POST /simulations/{group}/restart simulations restartSimulation
 			//
-			// Restarts a failed simulation based on its groupId
+			// Restarts a failed simulation based on its groupID
 			//
 			//   Produces:
 			//   - application/json
@@ -171,10 +171,10 @@ var Routes = ign.Routes{
 			//     default: Error
 			//     200: jsonSim
 			ign.Method{
-				"POST",
-				"Restart a failed simulation based on its groupId",
-				ign.FormatHandlers{
-					ign.FormatHandler{"", ign.JSONResult(WithUser(CloudsimSimulationRestart))},
+				Type:        "POST",
+				Description: "Restart a failed simulation based on its groupID",
+				Handlers: ign.FormatHandlers{
+					ign.FormatHandler{Handler: ign.JSONResult(WithUser(CloudsimSimulationRestart))},
 				},
 			},
 		},
@@ -182,12 +182,12 @@ var Routes = ign.Routes{
 
 	// Gateway route to get the URL to live logs or downloadable logs of a simulation.
 	ign.Route{
-		"Get logs depending on the simulation status",
-		"Get file logs or live logs depending on the simulation status",
-		"/simulations/{group}/logs",
-		ign.AuthHeadersRequired,
-		ign.Methods{},
-		ign.SecureMethods{
+		Name:        "Get logs depending on the simulation status",
+		Description: "Get file logs or live logs depending on the simulation status",
+		URI:         "/simulations/{group}/logs",
+		Headers:     ign.AuthHeadersRequired,
+		Methods:     ign.Methods{},
+		SecureMethods: ign.SecureMethods{
 			// swagger:route GET /simulations/{group}/logs/ simulations getLogsGateway
 			//
 			// Get the current log depending on the simulation status
@@ -200,10 +200,13 @@ var Routes = ign.Routes{
 			//     default: Error
 			//     200: application/json
 			ign.Method{
-				"GET",
-				"Get logs from a simulation",
-				ign.FormatHandlers{
-					ign.FormatHandler{"", ign.JSONResult(WithUser(SimulationLogGateway))},
+				Type:        "GET",
+				Description: "Get logs from a simulation",
+				Handlers: ign.FormatHandlers{
+					ign.FormatHandler{
+						Extension: "",
+						Handler: ign.JSONResult(WithUser(SimulationLogGateway)),
+					},
 				},
 			},
 		},
@@ -211,12 +214,12 @@ var Routes = ign.Routes{
 
 	// Route to get the live logs of a single simulation
 	ign.Route{
-		"Live logs of a single simulation",
-		"Live logs of a single simulation",
-		"/simulations/{group}/logs/live",
-		ign.AuthHeadersRequired,
-		ign.Methods{},
-		ign.SecureMethods{
+		Name:        "Live logs of a single simulation",
+		Description: "Live logs of a single simulation",
+		URI:         "/simulations/{group}/logs/live",
+		Headers:     ign.AuthHeadersRequired,
+		Methods:     ign.Methods{},
+		SecureMethods: ign.SecureMethods{
 			// swagger:route GET /simulations/{group}/logs/live/ simulations getLogFile
 			//
 			// Get live logs from a running simulation
@@ -229,10 +232,10 @@ var Routes = ign.Routes{
 			//     default: Error
 			//     200: text/plain
 			ign.Method{
-				"GET",
-				"Get a live log",
-				ign.FormatHandlers{
-					ign.FormatHandler{"", ign.JSONResult(WithUser(SimulationLogLive))},
+				Type:        "GET",
+				Description: "Get a live log",
+				Handlers: ign.FormatHandlers{
+					ign.FormatHandler{Handler: ign.JSONResult(WithUser(SimulationLogLive))},
 				},
 			},
 		},
@@ -240,12 +243,12 @@ var Routes = ign.Routes{
 
 	// Route to get the logs of a single simulation
 	ign.Route{
-		"Download the logs of a single simulation",
-		"Download the logs of a single simulation",
-		"/simulations/{group}/logs/file",
-		ign.AuthHeadersRequired,
-		ign.Methods{},
-		ign.SecureMethods{
+		Name:        "Download the logs of a single simulation",
+		Description: "Download the logs of a single simulation",
+		URI:         "/simulations/{group}/logs/file",
+		Headers:     ign.AuthHeadersRequired,
+		Methods:     ign.Methods{},
+		SecureMethods: ign.SecureMethods{
 			// swagger:route GET /simulations/{group}/logs/file simulations downloadLogFile
 			//
 			// Download simulation's log files
@@ -258,10 +261,10 @@ var Routes = ign.Routes{
 			//     default: Error
 			//     200: File
 			ign.Method{
-				"GET",
-				"Get a log file",
-				ign.FormatHandlers{
-					ign.FormatHandler{"", ign.JSONResultNoTx(WithUser(SimulationLogFileDownload))},
+				Type:        "GET",
+				Description: "Get a log file",
+				Handlers: ign.FormatHandlers{
+					ign.FormatHandler{Handler: ign.JSONResultNoTx(WithUser(SimulationLogFileDownload))},
 				},
 			},
 		},
@@ -269,12 +272,12 @@ var Routes = ign.Routes{
 
 	// Route to get machine information
 	ign.Route{
-		"Machines",
-		"Information about machines",
-		"/machines",
-		ign.AuthHeadersRequired,
-		ign.Methods{},
-		ign.SecureMethods{
+		Name:        "Machines",
+		Description: "Information about machines",
+		URI:         "/machines",
+		Headers:     ign.AuthHeadersRequired,
+		Methods:     ign.Methods{},
+		SecureMethods: ign.SecureMethods{
 			// swagger:route GET /machines simulations listMachines
 			//
 			// Get list of cloud machines.
@@ -301,11 +304,11 @@ var Routes = ign.Routes{
 			//     default: Error
 			//     200: jsonMachines
 			ign.Method{
-				"GET",
-				"Get all machines",
-				ign.FormatHandlers{
-					ign.FormatHandler{".json", ign.JSONResult(WithUser(CloudMachineList))},
-					ign.FormatHandler{"", ign.JSONResult(WithUser(CloudMachineList))},
+				Type:        "GET",
+				Description: "Get all machines",
+				Handlers: ign.FormatHandlers{
+					ign.FormatHandler{Extension: ".json", Handler: ign.JSONResult(WithUser(CloudMachineList))},
+					ign.FormatHandler{Handler: ign.JSONResult(WithUser(CloudMachineList))},
 				},
 			},
 		},
@@ -317,12 +320,12 @@ var Routes = ign.Routes{
 
 	// Route to get the remaining number of submissions for an owner in a circuit
 	ign.Route{
-		"RemainingSubmissions",
-		"Returns the number of remaining submissions for an owner in a circuit",
-		"/{circuit}/remaining_submissions/{owner}",
-		ign.AuthHeadersRequired,
-		ign.Methods{},
-		ign.SecureMethods{
+		Name:        "RemainingSubmissions",
+		Description: "Returns the number of remaining submissions for an owner in a circuit",
+		URI:         "/{circuit}/remaining_submissions/{owner}",
+		Headers:     ign.AuthHeadersRequired,
+		Methods:     ign.Methods{},
+		SecureMethods: ign.SecureMethods{
 			// swagger:route GET /{circuit}/remaining_submissions/{owner} submissions getSubmissions
 			//
 			// Returns the number of remaining submissions for an owner in
@@ -337,10 +340,10 @@ var Routes = ign.Routes{
 			//     default: Error
 			//     200: jsonSim
 			ign.Method{
-				"GET",
-				"Gets the number of remaining submissions in a circuit for an owner ",
-				ign.FormatHandlers{
-					ign.FormatHandler{"", ign.JSONResultNoTx(WithUser(GetRemainingSubmissions))},
+				Type:        "GET",
+				Description: "Gets the number of remaining submissions in a circuit for an owner ",
+				Handlers: ign.FormatHandlers{
+					ign.FormatHandler{Handler: ign.JSONResultNoTx(WithUser(GetRemainingSubmissions))},
 				},
 			},
 		},
@@ -348,12 +351,12 @@ var Routes = ign.Routes{
 
 	// Route to get all circuit custom rules
 	ign.Route{
-		"Rules",
-		"Gets the list of all circuit custom rules.",
-		"/rules",
-		ign.AuthHeadersRequired,
-		ign.Methods{},
-		ign.SecureMethods{
+		Name:        "Rules",
+		Description: "Gets the list of all circuit custom rules.",
+		URI:         "/rules",
+		Headers:     ign.AuthHeadersRequired,
+		Methods:     ign.Methods{},
+		SecureMethods: ign.SecureMethods{
 			// swagger:route GET /rules rules listRules
 			//
 			// Gets the list of all circuit custom rules. Rules will be returned
@@ -375,11 +378,11 @@ var Routes = ign.Routes{
 			//     default: Error
 			//     200: jsonSim
 			ign.Method{
-				"GET",
-				"Gets the list of all circuit custom rules.",
-				ign.FormatHandlers{
-					ign.FormatHandler{"", ign.JSONResult(WithUser(CustomRuleList))},
-					ign.FormatHandler{".json", ign.JSONResult(WithUser(CustomRuleList))},
+				Type:        "GET",
+				Description: "Gets the list of all circuit custom rules.",
+				Handlers: ign.FormatHandlers{
+					ign.FormatHandler{Handler: ign.JSONResult(WithUser(CustomRuleList))},
+					ign.FormatHandler{Extension: ".json", Handler: ign.JSONResult(WithUser(CustomRuleList))},
 				},
 			},
 		},
@@ -387,12 +390,12 @@ var Routes = ign.Routes{
 
 	// Route to create/update a custom rule for an owner in a circuit
 	ign.Route{
-		"SetRule",
-		"Creates or updates a custom rule for an owner in a circuit.",
-		"/rules/{circuit}/{owner}/{rule}/{value}",
-		ign.AuthHeadersRequired,
-		ign.Methods{},
-		ign.SecureMethods{
+		Name:        "SetRule",
+		Description: "Creates or updates a custom rule for an owner in a circuit.",
+		URI:         "/rules/{circuit}/{owner}/{rule}/{value}",
+		Headers:     ign.AuthHeadersRequired,
+		Methods:     ign.Methods{},
+		SecureMethods: ign.SecureMethods{
 			// swagger:route PUT /rules/{circuit}/{owner}/{rule}/{value} rules setRules
 			//
 			// Creates or updates a custom rule for an owner in a circuit.
@@ -406,10 +409,10 @@ var Routes = ign.Routes{
 			//     default: Error
 			//     200: jsonSim
 			ign.Method{
-				"PUT",
-				"Creates or updates a custom rule for an owner in a circuit.",
-				ign.FormatHandlers{
-					ign.FormatHandler{"", ign.JSONResult(WithUser(SetCustomRule))},
+				Type:        "PUT",
+				Description: "Creates or updates a custom rule for an owner in a circuit.",
+				Handlers: ign.FormatHandlers{
+					ign.FormatHandler{Handler: ign.JSONResult(WithUser(SetCustomRule))},
 				},
 			},
 		},
@@ -417,12 +420,12 @@ var Routes = ign.Routes{
 
 	// Route to delete a custom rule for an owner in a circuit
 	ign.Route{
-		"DeleteRule",
-		"Deletes a custom rule for an owner in a circuit.",
-		"/rules/{circuit}/{owner}/{rule}",
-		ign.AuthHeadersRequired,
-		ign.Methods{},
-		ign.SecureMethods{
+		Name:        "DeleteRule",
+		Description: "Deletes a custom rule for an owner in a circuit.",
+		URI:         "/rules/{circuit}/{owner}/{rule}",
+		Headers:     ign.AuthHeadersRequired,
+		Methods:     ign.Methods{},
+		SecureMethods: ign.SecureMethods{
 			// swagger:route DELETE /rules/{circuit}/{owner}/{rule} rules setRules
 			//
 			// Creates or updates a custom rule for an owner in a circuit.
@@ -433,10 +436,10 @@ var Routes = ign.Routes{
 			//     default: Error
 			//     200: jsonSim
 			ign.Method{
-				"DELETE",
-				"Deletes a custom rule for an owner in a circuit.",
-				ign.FormatHandlers{
-					ign.FormatHandler{"", ign.JSONResult(WithUser(DeleteCustomRule))},
+				Type:        "DELETE",
+				Description: "Deletes a custom rule for an owner in a circuit.",
+				Handlers: ign.FormatHandlers{
+					ign.FormatHandler{Handler: ign.JSONResult(WithUser(DeleteCustomRule))},
 				},
 			},
 		},
@@ -444,12 +447,12 @@ var Routes = ign.Routes{
 
 	// Route to get robots from competition
 	ign.Route{
-		"Competition robots",
-		"Gets the list of robots from the competition",
-		"/competition/robots",
-		ign.AuthHeadersRequired,
-		ign.Methods{},
-		ign.SecureMethods{
+		Name:        "Competition robots",
+		Description: "Gets the list of robots from the competition",
+		URI:         "/competition/robots",
+		Headers:     ign.AuthHeadersRequired,
+		Methods:     ign.Methods{},
+		SecureMethods: ign.SecureMethods{
 			// swagger:route GET /competition/robots competition robots
 			//
 			// Gets the list of all competition robots.
@@ -463,11 +466,11 @@ var Routes = ign.Routes{
 			//     default: Error
 			//     200: Robots
 			ign.Method{
-				"GET",
-				"Gets the list of robots from the competition",
-				ign.FormatHandlers{
-					ign.FormatHandler{"", ign.JSONResult(WithUser(GetCompetitionRobots))},
-					ign.FormatHandler{".json", ign.JSONResult(WithUser(GetCompetitionRobots))},
+				Type:        "GET",
+				Description: "Gets the list of robots from the competition",
+				Handlers: ign.FormatHandlers{
+					ign.FormatHandler{Handler: ign.JSONResult(WithUser(GetCompetitionRobots))},
+					ign.FormatHandler{Extension: ".json", Handler: ign.JSONResult(WithUser(GetCompetitionRobots))},
 				},
 			},
 		},
@@ -475,15 +478,15 @@ var Routes = ign.Routes{
 
 	// Extra route to access nodes and their associated hosts
 	ign.Route{
-		"Remove Nodes and Hosts associated to a group",
-		"Deletes cluster nodes and terminates the instances associated to a given Cloudsim GroupId",
-		"/k8/nodes",
-		ign.AuthHeadersRequired,
-		ign.Methods{},
-		ign.SecureMethods{
+		Name:        "Remove Nodes and Hosts associated to a group",
+		Description: "Deletes cluster nodes and terminates the instances associated to a given Cloudsim GroupID",
+		URI:         "/k8/nodes",
+		Headers:     ign.AuthHeadersRequired,
+		Methods:     ign.Methods{},
+		SecureMethods: ign.SecureMethods{
 			// swagger:route DELETE /k8/nodes k8 deleteNodesAndHosts
 			//
-			// Deletes a set of nodes and hosts (instances) associated to a GroupId
+			// Deletes a set of nodes and hosts (instances) associated to a GroupID
 			//
 			//   Produces:
 			//   - application/json
@@ -494,10 +497,10 @@ var Routes = ign.Routes{
 			//     default: Error
 			//     200: string
 			ign.Method{
-				"DELETE",
-				"terminates nodes and instances associated to a given groupid",
-				ign.FormatHandlers{
-					ign.FormatHandler{"", ign.JSONResultNoTx(WithUser(DeleteNodesAndHosts))},
+				Type:        "DELETE",
+				Description: "terminates nodes and instances associated to a given groupid",
+				Handlers: ign.FormatHandlers{
+					ign.FormatHandler{Handler: ign.JSONResultNoTx(WithUser(DeleteNodesAndHosts))},
 				},
 			},
 		},
@@ -505,12 +508,12 @@ var Routes = ign.Routes{
 
 	// Extra route to count the pods in a k8 cluster
 	ign.Route{
-		"Checks the access to k8 cluster and return the count of running pods",
-		"Checks the access to k8 cluster and return the count of running pods",
-		"/k8/countpods",
-		ign.AuthHeadersRequired,
-		ign.Methods{},
-		ign.SecureMethods{
+		Name:        "Checks the access to k8 cluster and return the count of running pods",
+		Description: "Checks the access to k8 cluster and return the count of running pods",
+		URI:         "/k8/countpods",
+		Headers:     ign.AuthHeadersRequired,
+		Methods:     ign.Methods{},
+		SecureMethods: ign.SecureMethods{
 			// swagger:route GET /k8/countpods k8 countPods
 			//
 			// Checks the access to k8 cluster and return the count of running pods.
@@ -526,10 +529,10 @@ var Routes = ign.Routes{
 			//     default: Error
 			//     200: string
 			ign.Method{
-				"GET",
-				"Checks the access to k8 cluster and return the count of running pods",
-				ign.FormatHandlers{
-					ign.FormatHandler{"", ign.JSONResult(WithUser(CountPods))},
+				Type:        "GET",
+				Description: "Checks the access to k8 cluster and return the count of running pods",
+				Handlers: ign.FormatHandlers{
+					ign.FormatHandler{Handler: ign.JSONResult(WithUser(CountPods))},
 				},
 			},
 		},
@@ -583,7 +586,7 @@ var Routes = ign.Routes{
 	ign.Route{
 		Name:        "Swap queue elements moving A to B and vice versa",
 		Description: "Swap queue elements moving A to B and vice versa",
-		URI:         "/queue/{groupIdA}/swap/{groupIdB}",
+		URI:         "/queue/{groupIDA}/swap/{groupIDB}",
 		Headers:     ign.AuthHeadersRequired,
 		Methods:     ign.Methods{},
 		SecureMethods: ign.SecureMethods{
@@ -603,7 +606,7 @@ var Routes = ign.Routes{
 	ign.Route{
 		Name:        "Move an element to the front of the queue",
 		Description: "Move an element to the front of the queue",
-		URI:         "/queue/{groupId}/move/front",
+		URI:         "/queue/{groupID}/move/front",
 		Headers:     ign.AuthHeadersRequired,
 		Methods:     ign.Methods{},
 		SecureMethods: ign.SecureMethods{
@@ -623,7 +626,7 @@ var Routes = ign.Routes{
 	ign.Route{
 		Name:        "Move an element to the back of the queue",
 		Description: "Move an element to the back of the queue",
-		URI:         "/queue/{groupId}/move/back",
+		URI:         "/queue/{groupID}/move/back",
 		Headers:     ign.AuthHeadersRequired,
 		Methods:     ign.Methods{},
 		SecureMethods: ign.SecureMethods{
@@ -643,7 +646,7 @@ var Routes = ign.Routes{
 	ign.Route{
 		Name:        "Remove an element from the queue",
 		Description: "Remove an element from the queue",
-		URI:         "/queue/{groupId}",
+		URI:         "/queue/{groupID}",
 		Headers:     ign.AuthHeadersRequired,
 		Methods:     ign.Methods{},
 		SecureMethods: ign.SecureMethods{

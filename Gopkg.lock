@@ -2,29 +2,6 @@
 
 
 [[projects]]
-  name = "bitbucket.org/ignitionrobotics/ign-fuelserver"
-  packages = [
-    "bundles/common_resources",
-    "bundles/subt",
-    "bundles/users",
-    "globals",
-    "permissions",
-    "proto",
-    "vcs"
-  ]
-  revision = "e6b990656e0af1976b762a13224a549f6ca1d69b"
-
-[[projects]]
-  branch = "default"
-  name = "gitlab.com/ignitionrobotics/web/ign-go"
-  packages = [
-    ".",
-    "scheduler",
-    "testhelpers"
-  ]
-  revision = "a507ce6b2deb058b8177661586744535bafa6ad4"
-
-[[projects]]
   name = "github.com/Knetic/govaluate"
   packages = ["."]
   revision = "d216395917cc49052c7c7094cf57f09657ca08a8"
@@ -337,7 +314,6 @@
   name = "github.com/panjf2000/ants"
   packages = ["."]
   revision = "2ba69cd1384d2316956962735418a73007f4b881"
-  version = "v3.9.9"
 
 [[projects]]
   name = "github.com/pelletier/go-buffruneio"
@@ -405,6 +381,30 @@
   packages = ["."]
   revision = "6a3e2ff9e7c564f36873c2e36413f634534f1c44"
   version = "v0.2.1"
+
+[[projects]]
+  name = "gitlab.com/ignitionrobotics/web/fuelserver"
+  packages = [
+    "bundles/common_resources",
+    "bundles/subt",
+    "bundles/users",
+    "globals",
+    "permissions",
+    "proto",
+    "vcs"
+  ]
+  revision = "e30fc2dc1ada34cc2ebf586571b67104c1ffd694"
+  version = "1.1.0"
+
+[[projects]]
+  name = "gitlab.com/ignitionrobotics/web/ign-go"
+  packages = [
+    ".",
+    "scheduler",
+    "testhelpers"
+  ]
+  revision = "48b369571fcf660dbb0dda492c29ad5b38edb646"
+  version = "4.0.1"
 
 [[projects]]
   name = "gitlab.com/ignitionrobotics/web/scheduler"
@@ -756,6 +756,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "38c3d6c9855d66ce811acc117737154f82bfec5a9a75164f3a2add929109d494"
+  inputs-digest = "2176f5d46694b620533c1de06606a5464ea55f99bbc2043f55a6f215a3fd3dfb"
   solver-name = "gps-cdcl"
   solver-version = 1

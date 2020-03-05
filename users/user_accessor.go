@@ -51,13 +51,13 @@ type UserAccessor interface {
 	// AddResourcePermission adds a user (or group) permission on a resource
 	AddResourcePermission(user, resource string, action per.Action) (bool, *ign.ErrMsg)
 	// AddScore creates a score entry for a simulation.
-	AddScore(groupId *string, competition *string, circuit *string, owner *string, score *float64,
+	AddScore(groupID *string, competition *string, circuit *string, owner *string, score *float64,
 		sources *string) *ign.ErrMsg
 	// IsSystemAdmin returns a bool indicating if the given user is a system admin.
 	IsSystemAdmin(user string) bool
 	// GetUserFromUsername returns the user database entry from the username
 	GetUserFromUsername(username string) (*users.User, *ign.ErrMsg)
-	// GetUserFromUsername gets a user's organization database entry from the username
+	// GetOrganization gets a user's organization database entry from the username
 	GetOrganization(username string) (*users.Organization, *ign.ErrMsg)
 }
 
@@ -278,10 +278,10 @@ func (u *UserAccessorImpl) AddResourcePermission(user, resource string, action p
 
 // AddScore creates a new score entry for an owner in a competition circuit
 // TODO HACK This is accessing Fuel's database directly
-func (u *UserAccessorImpl) AddScore(groupId *string, competition *string, circuit *string, owner *string,
+func (u *UserAccessorImpl) AddScore(groupID *string, competition *string, circuit *string, owner *string,
 	score *float64, sources *string) *ign.ErrMsg {
 	entry := subt.CompetitionScore{
-		GroupId:     groupId,
+		GroupID:     groupID,
 		Competition: competition,
 		Circuit:     circuit,
 		Owner:       owner,
@@ -314,7 +314,7 @@ func (u *UserAccessorImpl) GetUserFromUsername(username string) (*users.User, *i
 	return user, nil
 }
 
-// GetUserFromUsername gets a user's organization database entry from the username
+// GetOrganization gets a user's organization database entry from the username
 func (u *UserAccessorImpl) GetOrganization(name string) (*users.Organization, *ign.ErrMsg) {
 	org := &users.Organization{}
 	if err := u.Db.

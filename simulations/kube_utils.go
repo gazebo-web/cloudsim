@@ -77,6 +77,7 @@ func WaitForPodsReady(ctx context.Context, c kubernetes.Interface, namespace str
 	return WaitForMatchPodsCondition(ctx, c, namespace, opts, "Ready", timeout, podRunningAndReady)
 }
 
+// PodCondition is a function type that returns the pod condition or error by the given Kubernetes Pod.
 type PodCondition func(ctx context.Context, pod *apiv1.Pod) (bool, error)
 
 // WaitForMatchPodsCondition finds match pods based on the input ListOptions.

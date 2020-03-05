@@ -27,7 +27,7 @@ To view environments, press `Ctrl` + `E`. The base environment contains :
  * `username` Account username. Some requests require that this username is the same as the one in the Auth0 bearer 
  token.
  * `solution_image` Used to start new simulations. This is the image used for solution containers.
- * `sim` Simulation GroupId. Used in some requests to target a specific simulation.
+ * `sim` Simulation GroupID. Used in some requests to target a specific simulation.
  * `token` Auth0 Security Bearer Token. All requests are configured to include this token in the header, so 
  configuring is required to send requests.
  

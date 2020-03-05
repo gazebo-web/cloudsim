@@ -169,7 +169,7 @@ type SimulationDeploymentsSubTValue struct {
 	gorm.Model
 	SimulationDeployment *SimulationDeployment `gorm:"foreignkey:SimDep" json:"-"`
 	// Simulation unique identifier
-	GroupId *string `gorm:"not null;unique" json:"-"`
+	GroupID *string `gorm:"not null;unique" json:"-"`
 	// Simulation score
 	Score *float64 `gorm:"not null" json:"score"`
 	// Simulation run info
@@ -209,7 +209,7 @@ func GetAggregatedSubTSimulationValues(tx *gorm.DB, simDep *SimulationDeployment
 			   AVG(model_count) AS model_count_avg,
 			   STD(model_count) AS model_count_std_dev,
 			   GROUP_CONCAT(group_id SEPARATOR ',') AS sources`).
-		Where("group_id LIKE ?", fmt.Sprintf("%%%s%%", *simDep.GroupId)).
+		Where("group_id LIKE ?", fmt.Sprintf("%%%s%%", *simDep.GroupID)).
 		Where("deleted_at IS NULL").
 		Scan(&values).
 		Error; err != nil {

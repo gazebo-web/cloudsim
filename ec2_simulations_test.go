@@ -44,8 +44,8 @@ func TestSuccessfulSimulations(t *testing.T) {
 
 	unauth := ign.NewErrorMessage(ign.ErrorUnauthorized)
 
-	var teamBSimGroupId string
-	var teamASimGroupId string
+	var teamBSimGroupID string
+	var teamASimGroupID string
 	vStix := "Virtual Stix"
 	tunnel := "Tunnel Circuit"
 	createSimsTestsData := []createSimulationTest{
@@ -85,7 +85,7 @@ func TestSuccessfulSimulations(t *testing.T) {
 				t.Log("WG add")
 				wg.Add(1)
 			}
-			sim.SimServImpl.(*sim.Service).SetPoolEventsListener(func(poolEvent sim.PoolEvent, groupId string,
+			sim.SimServImpl.(*sim.Service).SetPoolEventsListener(func(poolEvent sim.PoolEvent, groupID string,
 				result interface{}, em *ign.ErrMsg) {
 				t.Log("WG done")
 				wg.Done()
@@ -100,15 +100,15 @@ func TestSuccessfulSimulations(t *testing.T) {
 				assert.True(t, *simDep.Private)
 				assert.Equal(t, "subt", *simDep.Application)
 				assert.Equal(t, 0, simDep.MultiSim)
-				if teamBSimGroupId == "" && *simDep.Creator == "TeamBAdmin" {
-					// save the created simDep groupId
+				if teamBSimGroupID == "" && *simDep.Creator == "TeamBAdmin" {
+					// save the created simDep groupID
 					// HACK
-					teamBSimGroupId = *simDep.GroupId
+					teamBSimGroupID = *simDep.GroupID
 				}
-				if teamASimGroupId == "" && *simDep.Creator == "TeamAUser1" {
-					// save the created simDep groupId
+				if teamASimGroupID == "" && *simDep.Creator == "TeamAUser1" {
+					// save the created simDep groupID
 					// HACK
-					teamASimGroupId = *simDep.GroupId
+					teamASimGroupID = *simDep.GroupID
 				}
 			})
 			if test.expErrMsg == nil {
@@ -200,7 +200,7 @@ func TestInsufficientCapacityRequeue(t *testing.T) {
 			}
 			//The pool listener acts as the tester as it is the last thing called when returning. Once it ends,
 			//the work group is released to let other tests run.
-			sim.SimServImpl.(*sim.Service).SetPoolEventsListener(func(poolEvent sim.PoolEvent, groupId string,
+			sim.SimServImpl.(*sim.Service).SetPoolEventsListener(func(poolEvent sim.PoolEvent, groupID string,
 				result interface{}, em *ign.ErrMsg) {
 				// If there are not enough resources, then the simulation will have been requeued and the lock should be
 				// kept. Otherwise, this simulation is done and the lock can be released.
@@ -297,7 +297,7 @@ func TestFailedPodCreation(t *testing.T) {
 				t.Log("WG add")
 				wg.Add(1)
 			}
-			sim.SimServImpl.(*sim.Service).SetPoolEventsListener(func(poolEvent sim.PoolEvent, groupId string,
+			sim.SimServImpl.(*sim.Service).SetPoolEventsListener(func(poolEvent sim.PoolEvent, groupID string,
 				result interface{}, em *ign.ErrMsg) {
 				// If there are not enough resources, then the simulation will have been requeued and the lock should be
 				// kept. Otherwise, this simulation is done and the lock can be released.
