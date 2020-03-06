@@ -1,6 +1,8 @@
-# Ignition CloudSim
-
-Test coverage: [![codecov](https://codecov.io/bb/ignitionrobotics/ign-cloudsim/branch/default/graph/badge.svg)](https://codecov.io/bb/ignitionrobotics/ign-cloudsim)
+<div align="center">
+  <img src="./assets/logo.png" width="200" alt="Ignition Robotics" />
+  <h1>Ignition Robotics</h1>
+  <p>Ignition Web Cloudsim is an open source web application that launches pre-configured machines designed to run many of the most common open source robotic tools, especially the open source robotics simluator Gazebo</p>
+</div>
 
 # Development and Code style
 
