@@ -1,6 +1,8 @@
-# Ignition CloudSim
-
-Test coverage: [![codecov](https://codecov.io/bb/ignitionrobotics/ign-cloudsim/branch/default/graph/badge.svg)](https://codecov.io/bb/ignitionrobotics/ign-cloudsim)
+<div align="center">
+  <img src="./assets/logo.png" width="200" alt="Ignition Robotics" />
+  <h1>Ignition Robotics</h1>
+  <p>Ignition Web Cloudsim is a web server that allows launching, running and processing simulations in the cloud. It currently has support for AWS, but support for other providers can be implemented.</p>
+</div>
 
 # Development and Code style
 
