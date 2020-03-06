@@ -1,7 +1,7 @@
 <div align="center">
   <img src="./assets/logo.png" width="200" alt="Ignition Robotics" />
   <h1>Ignition Robotics</h1>
-  <p>Ignition Web Cloudsim is an open source web application that launches pre-configured machines designed to run many of the most common open source robotic tools, especially the open source robotics simluator Gazebo</p>
+  <p>Ignition Web Cloudsim is a web server that allows launching, running and processing simulations in the cloud. It currently has support for AWS, but support for other providers can be implemented.</p>
 </div>
 
 # Development and Code style
