@@ -1,11 +1,6 @@
 package simulations
 
 import (
-	"gitlab.com/ignitionrobotics/web/fuelserver/bundles/users"
-	per "gitlab.com/ignitionrobotics/web/fuelserver/permissions"
-	"gitlab.com/ignitionrobotics/web/ign-go"
-	"gitlab.com/ignitionrobotics/web/cloudsim/globals"
-	useracc "gitlab.com/ignitionrobotics/web/cloudsim/users"
 	"bytes"
 	"context"
 	"encoding/gob"
@@ -19,6 +14,11 @@ import (
 	"github.com/caarlos0/env"
 	"github.com/jinzhu/gorm"
 	"github.com/pkg/errors"
+	"gitlab.com/ignitionrobotics/web/cloudsim/globals"
+	useracc "gitlab.com/ignitionrobotics/web/cloudsim/users"
+	"gitlab.com/ignitionrobotics/web/fuelserver/bundles/users"
+	per "gitlab.com/ignitionrobotics/web/fuelserver/permissions"
+	"gitlab.com/ignitionrobotics/web/ign-go"
 	"gopkg.in/yaml.v2"
 	corev1 "k8s.io/api/core/v1"
 	networkingv1 "k8s.io/api/networking/v1"
@@ -282,7 +282,7 @@ func (sa *SubTApplication) getRobotIdentifierFromList(robotList []SubTRobot, rob
 // customizeSimulationRequest performs operations to a simulation request in order to be
 // executed by SubT application.
 func (sa *SubTApplication) customizeSimulationRequest(ctx context.Context,
-	r *http.Request, tx *gorm.DB, createSim *CreateSimulation, username string) *ign.ErrMsg {
+	s *Service, r *http.Request, tx *gorm.DB, createSim *CreateSimulation, username string) *ign.ErrMsg {
 	var subtSim SubTCreateSimulation
 	var rules *SubTCircuitRules
 	var creditsSum int
@@ -310,14 +310,22 @@ func (sa *SubTApplication) customizeSimulationRequest(ctx context.Context,
 	if err != nil {
 		return NewErrorMessageWithBase(ErrorCircuitRuleNotFound, err)
 	}
-	if rules.MaxCredits != nil {
-		if creditsSum > *rules.MaxCredits {
-			return NewErrorMessage(ErrorCreditsExceeded)
-		}
-	}
 
-	if !sa.isQualified(subtSim.Owner, subtSim.Circuit, username) {
-		return NewErrorMessage(ErrorNotQualified)
+	// Perform some additional checks if the user is not a system admin
+	if !s.userAccessor.IsSystemAdmin(username) {
+		if rules.MaxCredits != nil {
+			if creditsSum > *rules.MaxCredits {
+				return NewErrorMessage(ErrorCreditsExceeded)
+			}
+		}
+
+		if !subtSim.robotImagesBelongsToECROwner() {
+			return NewErrorMessage(ErrorInvalidRobotImage)
+		}
+
+		if !sa.isQualified(subtSim.Owner, subtSim.Circuit, username) {
+			return NewErrorMessage(ErrorNotQualified)
+		}
 	}
 
 	extra := &ExtraInfoSubT{

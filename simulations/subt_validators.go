@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"gopkg.in/go-playground/validator.v9"
 	"html"
-	"strings"
 )
 
 // InstallSubTCustomValidators extends validator.v9 with custom validation functions
@@ -12,7 +11,6 @@ import (
 func InstallSubTCustomValidators(validate *validator.Validate) {
 	validate.RegisterValidation("isrobottype", isValidRobotType)
 	validate.RegisterValidation("iscircuit", isValidCircuit)
-	validate.RegisterValidation("ecrBelongToOwner", imageBelongsToOwnerAtECR)
 }
 
 // SubTRobotType represents a SubT robot
@@ -314,31 +312,4 @@ func isValidRobotType(fl validator.FieldLevel) bool {
 // isValidCircuit checks if the field value is a valid SubT Circuit.
 func isValidCircuit(fl validator.FieldLevel) bool {
 	return StrSliceContains(fl.Field().String(), SubTCircuits)
-}
-
-// imageBelongsToOwnerAtECR checks if the field value is a valid SubT image.
-// If an ECR image then it needs to below to the same owner.
-//
-func imageBelongsToOwnerAtECR(fl validator.FieldLevel) bool {
-	field := fl.Field()
-	kind := field.Kind()
-
-	ownerField, ownerKind, ok := fl.GetStructFieldOK()
-	if !ok || ownerKind != kind {
-		return false
-	}
-
-	image := field.String()
-	// Is ECR image? Otherwise return OK
-	// HACK
-	if !strings.Contains(image, "dkr.ecr.us-east-1.amazonaws.com") {
-		return true
-	}
-	ss := strings.Split(image, "/")
-	teamRepo := strings.Split(ss[len(ss)-1], ":")[0]
-
-	owner := ownerField.String()
-	ownerWithUnderscores := strings.Replace(owner, " ", "_", -1)
-
-	return strings.EqualFold(ownerWithUnderscores, teamRepo)
 }

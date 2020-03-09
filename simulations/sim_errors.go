@@ -1,9 +1,9 @@
 package simulations
 
 import (
-	"gitlab.com/ignitionrobotics/web/ign-go"
 	"github.com/pkg/errors"
 	"github.com/satori/go.uuid"
+	"gitlab.com/ignitionrobotics/web/ign-go"
 	"net/http"
 )
 
@@ -59,6 +59,9 @@ const (
 	ErrorNotQualified SimErrCode = 5518
 	// ErrorLaunchHeldSimulation is triggered when an error is found while launching a held simulation.
 	ErrorLaunchHeldSimulation SimErrCode = 5519
+	// ErrorInvalidRobotImage is triggered when an owner attempts to start a simulation with a robot image that does
+	// not belong to them
+	ErrorInvalidRobotImage SimErrCode = 5520
 )
 
 // NewErrorMessageWithBase receives an error code and a root error
@@ -85,31 +88,31 @@ func ErrorMessage(err SimErrCode) ign.ErrMsg {
 
 	switch err {
 	case ErrorMarkingLocalNodeAsFree:
-		em.Msg = "Error marking minikube node as free"
+		em.Msg = "Error marking minikube node as free."
 		em.ErrCode = int(ErrorMarkingLocalNodeAsFree)
 		em.StatusCode = http.StatusInternalServerError
 	case ErrorMarkingLocalNodeAsUsed:
-		em.Msg = "Error marking minikube node as being used"
+		em.Msg = "Error marking minikube node as being used."
 		em.ErrCode = int(ErrorMarkingLocalNodeAsUsed)
 		em.StatusCode = http.StatusInternalServerError
 	case ErrorFreeNodeNotFound:
-		em.Msg = "There are no free minikubes nodes to use"
+		em.Msg = "There are no free minikubes nodes to use."
 		em.ErrCode = int(ErrorFreeNodeNotFound)
 		em.StatusCode = http.StatusInternalServerError
 	case ErrorLabeledNodeNotFound:
-		em.Msg = "Node could not be found using a label selector"
+		em.Msg = "Node could not be found using a label selector."
 		em.ErrCode = int(ErrorLabeledNodeNotFound)
 		em.StatusCode = http.StatusInternalServerError
 	case ErrorCreatingRunningSimulationNode:
-		em.Msg = "RunningSimulation node could not be created"
+		em.Msg = "RunningSimulation node could not be created."
 		em.ErrCode = int(ErrorCreatingRunningSimulationNode)
 		em.StatusCode = http.StatusInternalServerError
 	case ErrorOwnerSimulationsLimitReached:
-		em.Msg = "Simultaneous simulations limit reached"
+		em.Msg = "Simultaneous simulations limit reached."
 		em.ErrCode = int(ErrorOwnerSimulationsLimitReached)
 		em.StatusCode = http.StatusBadRequest
 	case ErrorCircuitSubmissionLimitReached:
-		em.Msg = "Circuit simulation submission limit reached"
+		em.Msg = "Circuit simulation submission limit reached."
 		em.ErrCode = int(ErrorCircuitSubmissionLimitReached)
 		em.StatusCode = http.StatusBadRequest
 	case ErrorRuleForOwnerNotFound:
@@ -145,7 +148,7 @@ func ErrorMessage(err SimErrCode) ign.ErrMsg {
 		em.ErrCode = int(ErrorFailedToGetLiveLogs)
 		em.StatusCode = http.StatusInternalServerError
 	case ErrorRobotIdentifierNotFound:
-		em.Msg = "Robot identifier not found"
+		em.Msg = "Robot identifier not found."
 		em.ErrCode = int(ErrorRobotIdentifierNotFound)
 		em.StatusCode = http.StatusNotFound
 	case ErrorCompetitionNotStarted:
@@ -153,13 +156,17 @@ func ErrorMessage(err SimErrCode) ign.ErrMsg {
 		em.ErrCode = int(ErrorCompetitionNotStarted)
 		em.StatusCode = http.StatusInternalServerError
 	case ErrorNotQualified:
-		em.Msg = "Not qualified to compete on this circuit"
+		em.Msg = "Not qualified to compete on this circuit."
 		em.ErrCode = int(ErrorNotQualified)
 		em.StatusCode = http.StatusUnauthorized
 	case ErrorLaunchHeldSimulation:
-		em.Msg = "Failed to launch a held simulation"
+		em.Msg = "Failed to launch a held simulation."
 		em.ErrCode = int(ErrorLaunchHeldSimulation)
 		em.StatusCode = http.StatusInternalServerError
+	case ErrorInvalidRobotImage:
+		em.Msg = "Attempted to use a robot image that does not belong to the owner."
+		em.ErrCode = int(ErrorInvalidRobotImage)
+		em.StatusCode = http.StatusBadRequest
 	}
 
 	em.BaseError = errors.New(em.Msg)
