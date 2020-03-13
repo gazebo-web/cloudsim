@@ -319,7 +319,7 @@ func (sa *SubTApplication) customizeSimulationRequest(ctx context.Context,
 			}
 		}
 
-		if !subtSim.robotImagesBelongsToECROwner() {
+		if !subtSim.robotImagesBelongToECROwner() {
 			return NewErrorMessage(ErrorInvalidRobotImage)
 		}
 
