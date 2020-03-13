@@ -23,9 +23,9 @@ type SubTCreateSimulation struct {
 	Circuit    string   `json:"circuit" validate:"required,iscircuit" form:"circuit"`
 }
 
-// imageBelongsToOwnerAtECR checks if the field value is a valid SubT image.
+// robotImagesBelongToECROwner checks if the field value is a valid SubT image.
 // If an ECR image then it needs to below to the same owner.
-func (cs *SubTCreateSimulation) robotImagesBelongsToECROwner() bool {
+func (cs *SubTCreateSimulation) robotImagesBelongToECROwner() bool {
 	ownerWithUnderscores := strings.Replace(cs.Owner, " ", "_", -1)
 	for _, image := range cs.RobotImage {
 		// If it's not an ECR image, continue
