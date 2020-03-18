@@ -7,7 +7,6 @@ import (
 	"github.com/caarlos0/env"
 	"github.com/joho/godotenv"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/auth0"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/logger"
 	"gitlab.com/ignitionrobotics/web/ign-go"
 	"log"
 )
@@ -24,6 +23,7 @@ type Config struct {
 	isGoTest                bool
 	logger                  ign.Logger
 	logCtx                  context.Context
+	Auth0					auth0.Auth0
 	// From aws go documentation:
 	// Sessions should be cached when possible, because creating a new Session
 	// will load all configuration values from the environment, and config files
@@ -52,14 +52,5 @@ func NewConfig() Config {
 		log.Fatalf("Error parsing environment into appConfig struct. %+v\n", err)
 	}
 
-	var err error
-
-	cfg.logger, err = logger.New()
-	if err != nil {
-		log.Fatalf("Error parsing environment variables for Logger. %+v\n", err)
-	}
-
-	cfg.logCtx = ign.NewContextWithLogger(context.Background(), cfg.logger)
-
-	auth0.New()
+	return cfg
 }
