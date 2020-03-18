@@ -1,3 +1,3 @@
 package pool
 
-type Factory func(poolSize int, jobF func(interface{})) (Job, error)
+type Factory func(poolSize int, jobF func(interface{})) (IJob, error)
