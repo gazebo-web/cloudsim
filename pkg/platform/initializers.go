@@ -3,6 +3,7 @@ package platform
 import (
 	"context"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/logger"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/router"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/server"
 	"gitlab.com/ignitionrobotics/web/ign-go"
 	"log"
@@ -36,5 +37,14 @@ func initializeServer(p Platform, config Config) Platform {
 		log.Fatalf("Error while initializing server. %v\n", err)
 	}
 	p.Server = s
+	return p
+}
+
+func initializeRouter(p Platform) Platform {
+	cfg := router.Config{
+		Version: "1.0",
+	}
+	r := router.New(cfg)
+	p.Server.SetRouter(r)
 	return p
 }
