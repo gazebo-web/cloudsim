@@ -5,8 +5,6 @@ import (
 	"gitlab.com/ignitionrobotics/web/ign-go"
 )
 
-var Server *ign.Server
-
 type Config struct {
 	Auth0 auth0.Auth0
 	HTTPport string
@@ -18,6 +16,5 @@ func New(config Config) (*ign.Server, error) {
 	if err != nil {
 		return nil, err
 	}
-	Server = s
-
+	return s, nil
 }

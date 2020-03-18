@@ -11,6 +11,6 @@ type Transporter struct {
 	Topic string
 }
 
-func New()  {
+func New() {
 
 }

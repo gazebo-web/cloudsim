@@ -51,6 +51,5 @@ func NewConfig() Config {
 		// This is a log.Fatal because ign.Logger is not setup yet
 		log.Fatalf("Error parsing environment into appConfig struct. %+v\n", err)
 	}
-
 	return cfg
 }
