@@ -2,6 +2,7 @@ package platform
 
 import (
 	"context"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/email"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/logger"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/router"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/server"
@@ -9,7 +10,7 @@ import (
 	"log"
 )
 
-func initializeLogger(p Platform) Platform {
+func (p *Platform) initializeLogger() *Platform {
 	l, err := logger.New()
 	if err != nil {
 		log.Fatalf("Error parsing environment variables for Logger. %+v\n", err)
@@ -18,13 +19,13 @@ func initializeLogger(p Platform) Platform {
 	return p
 }
 
-func initializeContext(p Platform) Platform {
+func (p *Platform) initializeContext() *Platform {
 	ctx := ign.NewContextWithLogger(context.Background(), p.Logger)
 	p.Context = ctx
 	return p
 }
 
-func initializeServer(p Platform, config Config) Platform {
+func (p *Platform) initializeServer(config Config) *Platform {
 	serverConfig := server.Config{
 		Auth0:    config.Auth0,
 		HTTPport: config.HTTPport,
@@ -40,11 +41,16 @@ func initializeServer(p Platform, config Config) Platform {
 	return p
 }
 
-func initializeRouter(p Platform) Platform {
+func (p *Platform) initializeRouter() *Platform {
 	cfg := router.Config{
 		Version: "1.0",
 	}
 	r := router.New(cfg)
 	p.Server.SetRouter(r)
+	return p
+}
+
+func (p *Platform) initializeEmail() *Platform {
+	p.Email = email.New()
 	return p
 }

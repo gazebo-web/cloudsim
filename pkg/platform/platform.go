@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/go-playground/form"
 	"github.com/go-playground/validator"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/email"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/transporter"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/users"
 	"gitlab.com/ignitionrobotics/web/ign-go"
@@ -15,27 +16,20 @@ type Platform struct {
 	Logger ign.Logger
 	Context context.Context
 	Validator *validator.Validate
-	Decoder *form.Decoder
+	FormDecoder *form.Decoder
 	Transporter *transporter.Transporter
 	UserAccessor *users.UserAccessor
+	Email email.Email
 }
 
 func New(config Config) Platform {
-	p := Platform{
-		Server:       nil,
-		Logger:       config.logger,
-		Context:      nil,
-		Validator:    nil,
-		Decoder:      nil,
-		Transporter:  nil,
-		UserAccessor: nil,
-	}
+	p := Platform{}
 
-	p = initializeLogger(p)
-	p = initializeContext(p)
-	p = initializeServer(p, config)
-	p = initializeRouter(p)
+	p.initializeLogger()
+	p.initializeContext()
+	p.initializeServer(config)
+	p.initializeRouter()
+	p.initializeEmail()
 	p.Logger.Info(fmt.Sprintf("Using HTTP port [%s] and SSL port [%s]", p.Server.HTTPPort, p.Server.SSLport))
-
 	return p
 }

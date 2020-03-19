@@ -2,7 +2,6 @@ package platform
 
 import (
 	"context"
-	"flag"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/caarlos0/env"
 	"github.com/joho/godotenv"
@@ -20,7 +19,6 @@ type Config struct {
 	ConnectToCloud          bool   `env:"IGN_CLOUDSIM_CONNECT_TO_CLOUD"`
 	NodesManagerImpl        string `env:"IGN_CLOUDSIM_NODES_MGR_IMPL" envDefault:"ec2"`
 	IgnTransportTopic       string `env:"IGN_TRANSPORT_TEST_TOPIC" envDefault:"/foo"`
-	isGoTest                bool
 	logger                  ign.Logger
 	logCtx                  context.Context
 	Auth0					auth0.Auth0
@@ -37,19 +35,29 @@ type Config struct {
 
 func NewConfig() Config {
 	cfg := Config{}
-	cfg.isGoTest = flag.Lookup("test.v") != nil
 	if err := godotenv.Load(); err != nil {
 		log.Printf("Error loading .env file. %+v\n", err)
-	}
-	if cfg.isGoTest {
-		// allow the testing environment to define variables if not yet defined.
-		godotenv.Load(".env.testing")
 	}
 
 	// Also using env-to-struct approach to read configuration
 	if err := env.Parse(&cfg); err != nil {
 		// This is a log.Fatal because ign.Logger is not setup yet
-		log.Fatalf("Error parsing environment into appConfig struct. %+v\n", err)
+		log.Fatalf("Error parsing environment into Platform config struct. %+v\n", err)
 	}
+	return cfg
+}
+
+func NewTestConfig() Config {
+	cfg := Config{}
+	if err := godotenv.Load(".env.testing"); err != nil {
+		log.Printf("Error loading .env.testing file. %+v\n", err)
+	}
+
+	// Also using env-to-struct approach to read configuration
+	if err := env.Parse(&cfg); err != nil {
+		// This is a log.Fatal because ign.Logger is not setup yet
+		log.Fatalf("Error parsing environment into Platform config struct. %+v\n", err)
+	}
+
 	return cfg
 }
