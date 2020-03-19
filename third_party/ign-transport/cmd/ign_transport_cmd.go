@@ -1,8 +1,8 @@
 package main
 
 import (
-	igntran "gitlab.com/ignitionrobotics/web/cloudsim/ign-transport"
 	"fmt"
+	igntran "gitlab.com/ignitionrobotics/web/cloudsim/third_party/ign-transport"
 )
 
 func main() {
