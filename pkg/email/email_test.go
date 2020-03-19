@@ -6,6 +6,13 @@ import (
 	"testing"
 )
 
+func TestNew_Null(t *testing.T) {
+	email := New()
+
+	assert.Zero(t, email.DefaultEmailSender)
+	assert.Len(t, email.DefaultEmailRecipients, 0)
+}
+
 func TestNew_Empty(t *testing.T) {
 	os.Setenv("IGN_DEFAULT_EMAIL_SENDER", "")
 	os.Setenv("IGN_DEFAULT_EMAIL_RECIPIENT", "")
@@ -24,7 +31,7 @@ func TestNew_SetRecipient(t *testing.T) {
 
 	assert.Equal(t, email.DefaultEmailSender, "sender@ignitionrobotics.org")
 	assert.Len(t, email.DefaultEmailRecipients, 1)
-	assert.Equal(t, email.DefaultEmailRecipients, []string{"recipient@ignitionrobotics.org"})
+	assert.Equal(t, []string{"recipient@ignitionrobotics.org"}, email.DefaultEmailRecipients)
 }
 
 func TestNew_SetRecipients(t *testing.T) {
@@ -35,5 +42,5 @@ func TestNew_SetRecipients(t *testing.T) {
 
 	assert.Equal(t, email.DefaultEmailSender, "sender@ignitionrobotics.org")
 	assert.Len(t, email.DefaultEmailRecipients, 3)
-	assert.Equal(t, email.DefaultEmailRecipients, []string{"recipient@ignitionrobotics.org", "another@ignitionrobotics.org", "example@ignitionrobotics.org"})
+	assert.Equal(t, []string{"recipient@ignitionrobotics.org", "another@ignitionrobotics.org", "example@ignitionrobotics.org"}, email.DefaultEmailRecipients)
 }
