@@ -1,11 +1,12 @@
 package simulations
 
 import (
-	"gitlab.com/ignitionrobotics/web/cloudsim/globals"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/jinzhu/gorm"
+	"gitlab.com/ignitionrobotics/web/cloudsim/globals"
+	"strings"
 	"time"
 )
 
@@ -18,8 +19,29 @@ type SubTCreateSimulation struct {
 	RobotName []string `json:"robot_name" validate:"gt=0,unique,dive,required,min=2,max=24,alphanum" form:"robot_name"`
 	RobotType []string `json:"robot_type" validate:"lenEqFieldLen=RobotName,dive,isrobottype" form:"robot_type"`
 	// Override the CreateSimulation Image field
-	RobotImage []string `json:"robot_image" validate:"lenEqFieldLen=RobotName,dive,ecrBelongToOwner=CreateSimulation.Owner" form:"robot_image"`
+	RobotImage []string `json:"robot_image" validate:"lenEqFieldLen=RobotName" form:"robot_image"`
 	Circuit    string   `json:"circuit" validate:"required,iscircuit" form:"circuit"`
+}
+
+// robotImagesBelongToECROwner checks if the field value is a valid SubT image.
+// If an ECR image then it needs to below to the same owner.
+func (cs *SubTCreateSimulation) robotImagesBelongToECROwner() bool {
+	ownerWithUnderscores := strings.Replace(cs.Owner, " ", "_", -1)
+	for _, image := range cs.RobotImage {
+		// If it's not an ECR image, continue
+		// HACK
+		if !strings.Contains(image, "dkr.ecr.") && !strings.Contains(image, ".amazonaws.com") {
+			continue
+		}
+
+		ss := strings.Split(image, "/")
+		teamRepo := strings.Split(ss[len(ss)-1], ":")[0]
+		if !strings.EqualFold(ownerWithUnderscores, teamRepo) {
+			return false
+		}
+	}
+
+	return true
 }
 
 // SubTRobot is an internal type used to describe a single SubT robot (field-computer) request.

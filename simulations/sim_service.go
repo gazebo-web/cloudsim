@@ -1,12 +1,6 @@
 package simulations
 
 import (
-	"gitlab.com/ignitionrobotics/web/fuelserver/bundles/users"
-	per "gitlab.com/ignitionrobotics/web/fuelserver/permissions"
-	"gitlab.com/ignitionrobotics/web/ign-go"
-	"gitlab.com/ignitionrobotics/web/ign-go/scheduler"
-	"gitlab.com/ignitionrobotics/web/cloudsim/queues"
-	useracc "gitlab.com/ignitionrobotics/web/cloudsim/users"
 	"context"
 	"fmt"
 	"github.com/caarlos0/env"
@@ -14,6 +8,12 @@ import (
 	"github.com/panjf2000/ants"
 	"github.com/pkg/errors"
 	"github.com/satori/go.uuid"
+	"gitlab.com/ignitionrobotics/web/cloudsim/queues"
+	useracc "gitlab.com/ignitionrobotics/web/cloudsim/users"
+	"gitlab.com/ignitionrobotics/web/fuelserver/bundles/users"
+	per "gitlab.com/ignitionrobotics/web/fuelserver/permissions"
+	"gitlab.com/ignitionrobotics/web/ign-go"
+	"gitlab.com/ignitionrobotics/web/ign-go/scheduler"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
@@ -186,7 +186,8 @@ type ApplicationType interface {
 	GetSchedulableTasks(ctx context.Context, s *Service, tx *gorm.DB) []SchedulableTask
 	checkCanShutdownSimulation(ctx context.Context, s *Service, tx *gorm.DB, dep *SimulationDeployment, user *users.User) (bool, *ign.ErrMsg)
 	checkValidNumberOfSimulations(ctx context.Context, s *Service, tx *gorm.DB, dep *SimulationDeployment) *ign.ErrMsg
-	customizeSimulationRequest(ctx context.Context, r *http.Request, tx *gorm.DB, createSim *CreateSimulation, username string) *ign.ErrMsg
+	customizeSimulationRequest(ctx context.Context, s *Service, r *http.Request, tx *gorm.DB,
+		createSim *CreateSimulation, username string) *ign.ErrMsg
 	// allow specific applications to create multiSimulations from a single CreateSimulation request.
 	spawnChildSimulationDeployments(ctx context.Context, tx *gorm.DB, dep *SimulationDeployment) ([]*SimulationDeployment, *ign.ErrMsg)
 	// invoked when a simulation is about to be restarted. The old simulation run should be invalidated.
@@ -324,7 +325,7 @@ func defaultPoolFactory(poolSize int, jobF func(interface{})) (JobPool, error) {
 // CustomizeSimRequest allows registered Applications to customize the incoming CreateSimulation request.
 // Eg. reading specific SubT fields.
 func (s *Service) CustomizeSimRequest(ctx context.Context, r *http.Request, tx *gorm.DB, createSim *CreateSimulation, username string) *ign.ErrMsg {
-	return s.applications[createSim.Application].customizeSimulationRequest(ctx, r, tx, createSim, username)
+	return s.applications[createSim.Application].customizeSimulationRequest(ctx, s, r, tx, createSim, username)
 }
 
 // Start starts this simulation service. It needs to be invoked AFTER 'Applications'
