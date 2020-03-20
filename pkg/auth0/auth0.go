@@ -2,12 +2,12 @@ package auth0
 
 import "github.com/caarlos0/env"
 
-type Auth0 struct {
+type Config struct {
 	PublicKey   string `env:"AUTH0_RSA256_PUBLIC_KEY"`
 }
 
-func New() Auth0 {
-	auth := Auth0{}
+func New() Config {
+	auth := Config{}
 	if err := env.Parse(&auth); err != nil {
 		auth.PublicKey = ""
 	}

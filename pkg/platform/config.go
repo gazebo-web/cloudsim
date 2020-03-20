@@ -1,12 +1,10 @@
 package platform
 
 import (
-	"context"
-	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/caarlos0/env"
 	"github.com/joho/godotenv"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/auth0"
-	"gitlab.com/ignitionrobotics/web/ign-go"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/email"
 	"log"
 )
 
@@ -19,16 +17,8 @@ type Config struct {
 	ConnectToCloud          bool   `env:"IGN_CLOUDSIM_CONNECT_TO_CLOUD"`
 	NodesManagerImpl        string `env:"IGN_CLOUDSIM_NODES_MGR_IMPL" envDefault:"ec2"`
 	IgnTransportTopic       string `env:"IGN_TRANSPORT_TEST_TOPIC" envDefault:"/foo"`
-	logger                  ign.Logger
-	logCtx                  context.Context
-	Auth0					auth0.Auth0
-	// From aws go documentation:
-	// Sessions should be cached when possible, because creating a new Session
-	// will load all configuration values from the environment, and config files
-	// each time the Session is created. Sharing the Session value across all of
-	// your service clients will ensure the configuration is loaded the fewest
-	// number of times possible.
-	awsSession *session.Session
+	Auth0					auth0.Config
+	Email 					email.Config
 	// Are we using S3 for logs?
 	S3LogsCopyEnabled bool `env:"AWS_GZ_LOGS_ENABLED" envDefault:"true"`
 }
@@ -44,6 +34,9 @@ func NewConfig() Config {
 		// This is a log.Fatal because ign.Logger is not setup yet
 		log.Fatalf("Error parsing environment into Platform config struct. %+v\n", err)
 	}
+
+	cfg.Auth0 = auth0.New()
+	cfg.Email = email.New()
 	return cfg
 }
 

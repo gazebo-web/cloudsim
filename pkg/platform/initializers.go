@@ -2,10 +2,12 @@ package platform
 
 import (
 	"context"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/email"
+	"github.com/go-playground/form"
+	"github.com/go-playground/validator"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/logger"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/router"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/server"
+	"gitlab.com/ignitionrobotics/web/fuelserver/permissions"
 	"gitlab.com/ignitionrobotics/web/ign-go"
 	"log"
 )
@@ -25,14 +27,13 @@ func (p *Platform) initializeContext() *Platform {
 	return p
 }
 
-func (p *Platform) initializeServer(config Config) *Platform {
-	serverConfig := server.Config{
-		Auth0:    config.Auth0,
-		HTTPport: config.HTTPport,
-		SSLport:  config.SSLport,
+func (p *Platform) initializeServer() *Platform {
+	cfg := server.Config{
+		Auth0:    p.Config.Auth0,
+		HTTPport: p.Config.HTTPport,
+		SSLport:  p.Config.SSLport,
 	}
-
-	s, err := server.New(serverConfig)
+	s, err := server.New(cfg)
 	if err != nil {
 		p.Logger.Critical(err)
 		log.Fatalf("Error while initializing server. %v\n", err)
@@ -50,7 +51,18 @@ func (p *Platform) initializeRouter() *Platform {
 	return p
 }
 
-func (p *Platform) initializeEmail() *Platform {
-	p.Email = email.New()
+func (p *Platform) initializeValidator() *Platform {
+	validate := validator.New()
+	p.Validator = validate
+	return p
+}
+
+func (p *Platform) initializeFormDecoder() *Platform {
+	p.FormDecoder = form.NewDecoder()
+}
+
+func (p *Platform) initializePermissions() *Platform {
+	per := &permissions.Permissions{}
+	per.Init(p.Server.Db, p.Config.SysAdmin)
 	return p
 }
