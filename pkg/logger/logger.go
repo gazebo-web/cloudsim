@@ -1,6 +1,7 @@
 package logger
 
 import (
+	"context"
 	"github.com/caarlos0/env"
 	"gitlab.com/ignitionrobotics/web/ign-go"
 	"strconv"
@@ -38,4 +39,9 @@ func New() (ign.Logger, error) {
 	std := ign.ReadStdLogEnvVar()
 	logger := ign.NewLoggerWithRollbarVerbosity("init", std, verbosity, rollbarVerbosity)
 	return logger, nil
+}
+
+
+func Logger(ctx context.Context) ign.Logger {
+	return ign.LoggerFromContext(ctx)
 }
