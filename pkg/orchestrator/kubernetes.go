@@ -2,20 +2,21 @@ package orchestrator
 
 import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/tools"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/kubernetes/fake"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 	"log"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 type Kubernetes struct {
 	kubernetes.Interface
 }
 
-// NewClient creates a new Kubernetes client.
+// New creates a new Kubernetes client to access a kubernetes master.
 func New() *Kubernetes {
 	kcli, err := NewClientset()
 	if err != nil {
@@ -25,12 +26,10 @@ func New() *Kubernetes {
 	return &k
 }
 
-// NewTestClient creates a new Kubernetes client for testing purposes.
-func NewTestClient() kubernetes.Interface {
-	return &MockClientset{Interface: fake.NewSimpleClientset()}
-}
-
 // NewClientset creates a new Kubernetes Clientset from the kubeconfig file.
+// Note that this kube client assumes there is a kubernetes configuration in the
+// server's ~/.kube/config file. That config is used to connect to the kubernetes
+// master.
 func NewClientset() (*kubernetes.Clientset, error) {
 	config, err := NewConfig(nil)
 	if err != nil {
@@ -59,4 +58,15 @@ func NewConfig(kubeconfig *string) (*rest.Config, error) {
 	}
 
 	return config, nil
+}
+
+func (kc *Kubernetes) SetClientset(cli kubernetes.Interface) {
+	kc.Interface = cli
+}
+
+// MakeListOptions returns a ListOptions object for an array of labels.
+func MakeListOptions(labels ...string) metav1.ListOptions {
+	return metav1.ListOptions{
+		LabelSelector: strings.Join(labels, ","),
+	}
 }
