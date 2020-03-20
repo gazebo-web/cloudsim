@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"github.com/go-playground/form"
 	"github.com/go-playground/validator"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/cloud"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/transporter"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/users"
 	"gitlab.com/ignitionrobotics/web/ign-go"
@@ -18,6 +20,8 @@ type Platform struct {
 	FormDecoder *form.Decoder
 	Transporter *transporter.Transporter
 	UserAccessor *users.UserAccessor
+	Orchestrator *orchestrator.Kubernetes
+	CloudProvider *cloud.AmazonWS
 	Config Config
 }
 
@@ -52,8 +56,8 @@ func New(config Config) Platform {
 	p.initializeDatabase()
 	p.Logger.Debug("[INIT] Database initialized: Migration, default data and custom indexes.")
 
-
-
+	p.initializeCloudProvider()
+	p.initializeOrchestrator()
 
 	return p
 }

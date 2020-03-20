@@ -11,13 +11,18 @@ import (
 	"path/filepath"
 )
 
+type Kubernetes struct {
+	kubernetes.Interface
+}
+
 // NewClient creates a new Kubernetes client.
-func NewClient() kubernetes.Interface {
+func New() *Kubernetes {
 	kcli, err := NewClientset()
 	if err != nil {
 		log.Fatalf("[KUBERNETES] Error trying to create a client to kubernetes %+v\n", err)
 	}
-	return kcli
+	k := Kubernetes{kcli}
+	return &k
 }
 
 // NewTestClient creates a new Kubernetes client for testing purposes.

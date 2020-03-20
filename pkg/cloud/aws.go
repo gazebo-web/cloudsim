@@ -14,7 +14,7 @@ type AmazonWS struct {
 	session *session.Session
 }
 
-func NewWS() *AmazonWS {
+func New() *AmazonWS {
 	ws := AmazonWS{}
 	ws.session = session.Must(session.NewSession())
 	return &ws

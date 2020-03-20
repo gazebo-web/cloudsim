@@ -4,8 +4,10 @@ import (
 	"context"
 	"github.com/go-playground/form"
 	"github.com/go-playground/validator"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/cloud"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/db"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/logger"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/router"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/server"
 	"gitlab.com/ignitionrobotics/web/fuelserver/permissions"
@@ -73,5 +75,15 @@ func (p *Platform) initializeDatabase() *Platform {
 	db.Migrate(p.Context, p.Server.Db)
 	db.AddDefaultData(p.Context, p.Server.Db)
 	db.AddCustomIndexes(p.Context, p.Server.Db)
+	return p
+}
+
+func (p *Platform) initializeCloudProvider() *Platform {
+	p.Orchestrator = orchestrator.New()
+	return p
+}
+
+func (p *Platform) initializeOrchestrator() *Platform {
+	p.CloudProvider = cloud.New()
 	return p
 }
