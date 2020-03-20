@@ -57,7 +57,9 @@ func New(config Config) Platform {
 	p.Logger.Debug("[INIT] Database initialized: Migration, default data and custom indexes.")
 
 	p.initializeCloudProvider()
-	p.initializeOrchestrator()
+	p.Logger.Debug("[INIT] Cloud provider initialized: AWS.")
 
+	p.initializeOrchestrator()
+	p.Logger.Debug("[INIT] Orchestrator initialized: Kubernetes.")
 	return p
 }
