@@ -4,6 +4,7 @@
 !.elasticbeanstalk/*.global.yml
 
 *.pb.go
+*.orig
 bin/
 *.pem
 test_model*
