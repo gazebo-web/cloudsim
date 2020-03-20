@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/go-playground/form"
 	"github.com/go-playground/validator"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/db"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/logger"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/router"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/server"
@@ -59,10 +60,18 @@ func (p *Platform) initializeValidator() *Platform {
 
 func (p *Platform) initializeFormDecoder() *Platform {
 	p.FormDecoder = form.NewDecoder()
+	return p
 }
 
 func (p *Platform) initializePermissions() *Platform {
 	per := &permissions.Permissions{}
 	per.Init(p.Server.Db, p.Config.SysAdmin)
+	return p
+}
+
+func (p *Platform) initializeDatabase() *Platform {
+	db.Migrate(p.Context, p.Server.Db)
+	db.AddDefaultData(p.Context, p.Server.Db)
+	db.AddCustomIndexes(p.Context, p.Server.Db)
 	return p
 }

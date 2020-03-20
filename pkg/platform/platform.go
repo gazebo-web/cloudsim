@@ -24,15 +24,36 @@ type Platform struct {
 func New(config Config) Platform {
 	p := Platform{}
 	p.Config = config
-	p.initializeLogger()
-	// TODO: Decide where the score generation should go
-	p.initializeContext()
-	p.initializeServer()
-	p.initializeRouter()
-	p.initializeValidator() // TODO: Decide where should the custom validators should go
-	p.initializeFormDecoder()
-	p.initializePermissions()
 
-	p.Logger.Info(fmt.Sprintf("Using HTTP port [%s] and SSL port [%s]", p.Server.HTTPPort, p.Server.SSLport))
+	p.initializeLogger()
+	p.Logger.Debug("[INIT] Logger initialized.")
+
+	// TODO: Decide where the score generation should go
+
+	p.initializeContext()
+	p.Logger.Debug("[INIT] Context initialized.")
+
+	p.initializeServer()
+	p.Logger.Debug(fmt.Sprintf("[INIT] Server initialized using HTTP port [%s] and SSL port [%s].", p.Server.HTTPPort, p.Server.SSLport))
+	p.Logger.Debug(fmt.Sprintf("[INIT] Database [%s] initialized", p.Server.DbConfig.Name))
+
+	p.initializeRouter()
+	p.Logger.Debug("[INIT] Router initialized.")
+
+	p.initializeValidator() // TODO: Decide where should the custom validators should go
+	p.Logger.Debug("[INIT] Validators initialized.")
+
+	p.initializeFormDecoder()
+	p.Logger.Debug("[INIT] Form decoder initialized.")
+
+	p.initializePermissions()
+	p.Logger.Debug("[INIT] Permissions initialized.")
+
+	p.initializeDatabase()
+	p.Logger.Debug("[INIT] Database initialized: Migration, default data and custom indexes.")
+
+
+
+
 	return p
 }
