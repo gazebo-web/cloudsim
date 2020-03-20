@@ -10,12 +10,27 @@ import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/router"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/server"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/users"
 	"gitlab.com/ignitionrobotics/web/fuelserver/permissions"
 	"gitlab.com/ignitionrobotics/web/ign-go"
 	"log"
 )
 
-func (p *Platform) initializeLogger() *Platform {
+type ISetup interface {
+	setupLogger() *Platform
+	setupContext() *Platform
+	setupServer() *Platform
+	setupRouter() *Platform
+	setupValidator() *Platform
+	setupFormDecoder() *Platform
+	setupPermissions() *Platform
+	setupUserService() *Platform
+	setupDatabase() *Platform
+	setupCloudProvider() *Platform
+	setupOrchestrator() *Platform
+}
+
+func (p *Platform) setupLogger() *Platform {
 	l, err := logger.New()
 	if err != nil {
 		log.Fatalf("Error parsing environment variables for Logger. %+v\n", err)
@@ -24,13 +39,13 @@ func (p *Platform) initializeLogger() *Platform {
 	return p
 }
 
-func (p *Platform) initializeContext() *Platform {
+func (p *Platform) setupContext() *Platform {
 	ctx := ign.NewContextWithLogger(context.Background(), p.Logger)
 	p.Context = ctx
 	return p
 }
 
-func (p *Platform) initializeServer() *Platform {
+func (p *Platform) setupServer() *Platform {
 	cfg := server.Config{
 		Auth0:    p.Config.Auth0,
 		HTTPport: p.Config.HTTPport,
@@ -45,7 +60,7 @@ func (p *Platform) initializeServer() *Platform {
 	return p
 }
 
-func (p *Platform) initializeRouter() *Platform {
+func (p *Platform) setupRouter() *Platform {
 	cfg := router.Config{
 		Version: "1.0",
 	}
@@ -54,36 +69,49 @@ func (p *Platform) initializeRouter() *Platform {
 	return p
 }
 
-func (p *Platform) initializeValidator() *Platform {
+func (p *Platform) setupValidator() *Platform {
 	validate := validator.New()
 	p.Validator = validate
 	return p
 }
 
-func (p *Platform) initializeFormDecoder() *Platform {
+func (p *Platform) setupFormDecoder() *Platform {
 	p.FormDecoder = form.NewDecoder()
 	return p
 }
 
-func (p *Platform) initializePermissions() *Platform {
+func (p *Platform) setupPermissions() *Platform {
 	per := &permissions.Permissions{}
-	per.Init(p.Server.Db, p.Config.SysAdmin)
+	err := per.Init(p.Server.Db, p.Config.SysAdmin)
+	if err != nil {
+		// TODO: Throw error
+	}
+	p.Permissions = per
 	return p
 }
 
-func (p *Platform) initializeDatabase() *Platform {
+func (p *Platform) setupUserService() *Platform {
+	s, err := users.NewService(p.Permissions, p.Config)
+	if err != nil {
+		// TODO: Throw error
+	}
+	p.UserService = s
+	return p
+}
+
+func (p *Platform) setupDatabase() *Platform {
 	db.Migrate(p.Context, p.Server.Db)
 	db.AddDefaultData(p.Context, p.Server.Db)
 	db.AddCustomIndexes(p.Context, p.Server.Db)
 	return p
 }
 
-func (p *Platform) initializeCloudProvider() *Platform {
-	p.Orchestrator = orchestrator.New()
+func (p *Platform) setupCloudProvider() *Platform {
+	p.CloudProvider = cloud.New()
 	return p
 }
 
-func (p *Platform) initializeOrchestrator() *Platform {
-	p.CloudProvider = cloud.New()
+func (p *Platform) setupOrchestrator() *Platform {
+	p.Orchestrator = orchestrator.New()
 	return p
 }

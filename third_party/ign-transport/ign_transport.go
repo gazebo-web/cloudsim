@@ -87,7 +87,7 @@ func NewIgnTransportNode(partition *string) (*GoIgnTransportNode, error) {
 	ign.partition = partition
 	ign.lockTopicsToPointers = sync.RWMutex{}
 	ign.topicsToPointers = make(map[string][]unsafe.Pointer, 0)
-	ign.initializedPubTopics = make(map[string]bool, 0)
+	ign.setupdPubTopics = make(map[string]bool, 0)
 	ign.lockIniatilizedPubTopics = sync.RWMutex{}
 	return &ign, nil
 }
@@ -228,7 +228,7 @@ func (ign *GoIgnTransportNode) IgnTransportPublishStringMsg(topic, msg string) e
 
 	// Is this the first time we send a message to this topic?
 	ign.lockIniatilizedPubTopics.RLock()
-	val, ok := ign.initializedPubTopics[topic]
+	val, ok := ign.setupdPubTopics[topic]
 	ign.lockIniatilizedPubTopics.RUnlock()
 
 	if !ok || !val {
@@ -240,7 +240,7 @@ func (ign *GoIgnTransportNode) IgnTransportPublishStringMsg(topic, msg string) e
 		// create the advertiser node. Otherwise messages won't be sent.
 		time.Sleep(1000 * time.Millisecond)
 		ign.lockIniatilizedPubTopics.Lock()
-		ign.initializedPubTopics[topic] = true
+		ign.setupdPubTopics[topic] = true
 		ign.lockIniatilizedPubTopics.Unlock()
 	}
 

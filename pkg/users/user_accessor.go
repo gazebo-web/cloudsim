@@ -1,15 +1,14 @@
 package users
 
 import (
-	"gitlab.com/ignitionrobotics/web/fuelserver/bundles/subt"
-	"gitlab.com/ignitionrobotics/web/fuelserver/bundles/users"
-	per "gitlab.com/ignitionrobotics/web/fuelserver/permissions"
-	"gitlab.com/ignitionrobotics/web/ign-go"
-	"context"
 	"github.com/caarlos0/env"
 	"github.com/casbin/casbin"
 	"github.com/casbin/gorm-adapter"
 	"github.com/jinzhu/gorm"
+	"gitlab.com/ignitionrobotics/web/fuelserver/bundles/subt"
+	"gitlab.com/ignitionrobotics/web/fuelserver/bundles/users"
+	per "gitlab.com/ignitionrobotics/web/fuelserver/permissions"
+	"gitlab.com/ignitionrobotics/web/ign-go"
 	"net/http"
 	"strings"
 	"time"
@@ -20,9 +19,9 @@ type userAccessorConf struct {
 	sysAdmin              string
 }
 
-// UserAccessor is used by the cloudsim server to remotely get Users and their membership
+// IUserAccessor is used by the cloudsim server to remotely get Users and their membership
 // to Organizations.
-type UserAccessor interface {
+type IUserAccessor interface {
 	// UserFromJWT returns the User associated to the http request's JWT token.
 	// This function can return ErrorAuthJWTInvalid if the token cannot be
 	// read, or ErrorAuthNoUser no user with such identity exists in the DB.
@@ -61,9 +60,9 @@ type UserAccessor interface {
 	GetOrganization(username string) (*users.Organization, *ign.ErrMsg)
 }
 
-// UserAccessorImpl is the default implementation of UserAccessor interface.
-type UserAccessorImpl struct {
-	// The UserAccessor config. Read from environment variables
+// UserAccessor is the default implementation of IUserAccessor interface.
+type UserAccessor struct {
+	// The IUserAccessor config. Read from environment variables
 	cfg userAccessorConf
 	// Global database interface to Users DB
 	Db *gorm.DB
@@ -74,10 +73,10 @@ type UserAccessorImpl struct {
 	resourcePermissions *per.Permissions
 }
 
-// NewUserAccessor initializes a new UserAccessor.
-func NewUserAccessor(ctx context.Context, resourcePermissions *per.Permissions, usersDb *gorm.DB, sysAdmin string) (*UserAccessorImpl, error) {
+// NewUserAccessor initializes a new IUserAccessor.
+func NewUserAccessor(resourcePermissions *per.Permissions, usersDb *gorm.DB, sysAdmin string) (*UserAccessor, error) {
 
-	ua := UserAccessorImpl{}
+	ua := UserAccessor{}
 	ua.Db = usersDb
 	ua.resourcePermissions = resourcePermissions
 
@@ -100,7 +99,7 @@ func NewUserAccessor(ctx context.Context, resourcePermissions *per.Permissions, 
 }
 
 // StartAutoLoadPolicy starts the auto load remote policy
-func (u *UserAccessorImpl) StartAutoLoadPolicy() {
+func (u *UserAccessor) StartAutoLoadPolicy() {
 	// Auto load remote policy
 	u.syncedEnforcer.StartAutoLoadPolicy(time.Duration(u.cfg.AutoLoadPolicySeconds) * time.Second)
 }
@@ -108,7 +107,7 @@ func (u *UserAccessorImpl) StartAutoLoadPolicy() {
 // UserFromJWT returns the User associated to the http request's JWT token.
 // This function can return ErrorAuthJWTInvalid if the token cannot be
 // read, or ErrorAuthNoUser no user with such identity exists in the DB.
-func (u *UserAccessorImpl) UserFromJWT(r *http.Request) (*users.User, bool, *ign.ErrMsg) {
+func (u *UserAccessor) UserFromJWT(r *http.Request) (*users.User, bool, *ign.ErrMsg) {
 	return getUserFromToken(u.Db, r)
 }
 
@@ -149,7 +148,7 @@ func getUserFromToken(tx *gorm.DB, r *http.Request) (*users.User, bool, *ign.Err
 // permission in the organization. If the 'owner' is a user, it verifies that the
 // 'user' arg is the same as the owner.
 // Dev note: this is an alternative implementation of ign-fuelserver UserService's VerifyOwner.
-func (u *UserAccessorImpl) VerifyOwner(owner, user string, p per.Action) (bool, *ign.ErrMsg) {
+func (u *UserAccessor) VerifyOwner(owner, user string, p per.Action) (bool, *ign.ErrMsg) {
 	// check if owner is an organization
 	org, em := users.ByOrganizationName(u.Db, owner, false)
 	if org != nil && em == nil {
@@ -175,7 +174,7 @@ func (u *UserAccessorImpl) VerifyOwner(owner, user string, p per.Action) (bool, 
 // the owner.
 // As a third alternative, if 'owner' is nil then it checks if the 'user' is part
 // of the System Admins.
-func (u *UserAccessorImpl) CanPerformWithRole(owner *string, user string, role per.Role) (bool, *ign.ErrMsg) {
+func (u *UserAccessor) CanPerformWithRole(owner *string, user string, role per.Role) (bool, *ign.ErrMsg) {
 	if owner == nil {
 		ok := u.p.IsSystemAdmin(user)
 		if !ok {
@@ -204,7 +203,7 @@ func (u *UserAccessorImpl) CanPerformWithRole(owner *string, user string, role p
 // QueryForResourceVisibility checks the relationship between requestor (user)
 // and the resource owner to formulate a database query to determine whether a
 // resource is visible to the user
-func (u *UserAccessorImpl) QueryForResourceVisibility(q *gorm.DB, owner *string, user *users.User) *gorm.DB {
+func (u *UserAccessor) QueryForResourceVisibility(q *gorm.DB, owner *string, user *users.User) *gorm.DB {
 	// Check resource visibility
 	publicOnly := false
 	// if owner is specified
@@ -253,7 +252,7 @@ func (u *UserAccessorImpl) QueryForResourceVisibility(q *gorm.DB, owner *string,
 
 // IsAuthorizedForResource checks if user has the permission to perform an action on a
 // resource.
-func (u *UserAccessorImpl) IsAuthorizedForResource(user, resource string, action per.Action) (bool, *ign.ErrMsg) {
+func (u *UserAccessor) IsAuthorizedForResource(user, resource string, action per.Action) (bool, *ign.ErrMsg) {
 	ok, _ := u.resourcePermissions.IsAuthorized(user, resource, action)
 	if ok {
 		return true, nil
@@ -272,13 +271,13 @@ func (u *UserAccessorImpl) IsAuthorizedForResource(user, resource string, action
 }
 
 // AddResourcePermission adds a user (or group) permission on a resource
-func (u *UserAccessorImpl) AddResourcePermission(user, resource string, action per.Action) (bool, *ign.ErrMsg) {
+func (u *UserAccessor) AddResourcePermission(user, resource string, action per.Action) (bool, *ign.ErrMsg) {
 	return u.resourcePermissions.AddPermission(user, resource, action)
 }
 
 // AddScore creates a new score entry for an owner in a competition circuit
 // TODO HACK This is accessing Fuel's database directly
-func (u *UserAccessorImpl) AddScore(groupID *string, competition *string, circuit *string, owner *string,
+func (u *UserAccessor) AddScore(groupID *string, competition *string, circuit *string, owner *string,
 	score *float64, sources *string) *ign.ErrMsg {
 	entry := subt.CompetitionScore{
 		GroupID:     groupID,
@@ -296,12 +295,12 @@ func (u *UserAccessorImpl) AddScore(groupID *string, competition *string, circui
 }
 
 // IsSystemAdmin returns a bool indicating if the given user is a system admin.
-func (u *UserAccessorImpl) IsSystemAdmin(user string) bool {
+func (u *UserAccessor) IsSystemAdmin(user string) bool {
 	return u.resourcePermissions.IsSystemAdmin(user)
 }
 
 // GetUserFromUsername gets the user database entry from the username
-func (u *UserAccessorImpl) GetUserFromUsername(username string) (*users.User, *ign.ErrMsg) {
+func (u *UserAccessor) GetUserFromUsername(username string) (*users.User, *ign.ErrMsg) {
 	user := &users.User{}
 	if err := u.Db.
 		Model(user).
@@ -315,7 +314,7 @@ func (u *UserAccessorImpl) GetUserFromUsername(username string) (*users.User, *i
 }
 
 // GetOrganization gets a user's organization database entry from the username
-func (u *UserAccessorImpl) GetOrganization(name string) (*users.Organization, *ign.ErrMsg) {
+func (u *UserAccessor) GetOrganization(name string) (*users.Organization, *ign.ErrMsg) {
 	org := &users.Organization{}
 	if err := u.Db.
 		Model(org).
