@@ -8,13 +8,16 @@ import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/db"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/logger"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/manager"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/nodes"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/pool"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/queue"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/router"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/server"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/users"
 	"gitlab.com/ignitionrobotics/web/fuelserver/permissions"
 	"gitlab.com/ignitionrobotics/web/ign-go"
+	"gitlab.com/ignitionrobotics/web/ign-go/scheduler"
 	"log"
 )
 
@@ -31,8 +34,10 @@ type IPlatformSetup interface {
 	setupDatabase() *Platform
 	setupCloudProvider() *Platform
 	setupOrchestrator() *Platform
-	setupManager() *Platform
+	setupNodeManager() *Platform
 	setupPoolFactory() *Platform
+	setupScheduler() *Platform
+	setupQueues() *Platform
 }
 
 // setupLogger initializes the logger.
@@ -135,8 +140,8 @@ func (p *Platform) setupOrchestrator() *Platform {
 	return p
 }
 
-func (p *Platform) setupManager() *Platform {
-	p.Manager = manager.New(p.Orchestrator, p.CloudProvider)
+func (p *Platform) setupNodeManager() *Platform {
+	p.NodeManager = nodes.NewManager(p.Orchestrator, p.CloudProvider)
 	return p
 }
 
@@ -144,3 +149,16 @@ func (p *Platform) setupPoolFactory() *Platform {
 	p.PoolFactory = pool.DefaultFactory
 	return p
 }
+
+func (p *Platform) setupScheduler() *Platform {
+	p.Scheduler = scheduler.GetInstance()
+	return p
+}
+
+func (p *Platform) setupQueues() *Platform {
+	p.LaunchQueue = queue.New()
+	// TODO: Adapt code for actions
+	p.TerminationQueue = make(chan string, 1000)
+	return p
+}
+

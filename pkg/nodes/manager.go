@@ -1,4 +1,4 @@
-package manager
+package nodes
 
 import (
 	"github.com/caarlos0/env"
@@ -14,18 +14,18 @@ type Config struct {
 	AvailableEC2Machines int `env:"IGN_EC2_MACHINES_LIMIT" envDefault:"-1"`
 }
 
-type Manager struct {
+type NodeManager struct {
 	kc  *orchestrator.Kubernetes
 	aws  *cloud.AmazonWS
 	config Config
 }
 
-func New(kubernetes *orchestrator.Kubernetes, aws *cloud.AmazonWS) *Manager {
+func NewManager(kubernetes *orchestrator.Kubernetes, aws *cloud.AmazonWS) *NodeManager {
 	cfg := Config{}
 	if err := env.Parse(cfg); err != nil {
 		// TODO: Throw an error
 	}
-	m := Manager{
+	m := NodeManager{
 		kc:     kubernetes,
 		aws:    aws,
 		config: cfg,

@@ -35,7 +35,7 @@ func New(config Config) Platform {
 	p.Logger.Debug("[INIT] User service initialized")
 
 	p.setupDatabase()
-	p.Logger.Debug("[INIT] Database initialized: Migration, default data and custom indexes.")
+	p.Logger.Debug("[INIT] Database configured: Migration, default data and custom indexes.")
 
 	p.setupCloudProvider()
 	p.Logger.Debug("[INIT] Cloud provider initialized: AWS.")
@@ -43,11 +43,17 @@ func New(config Config) Platform {
 	p.setupOrchestrator()
 	p.Logger.Debug("[INIT] Orchestrator initialized: Kubernetes.")
 
-	// TODO: Move http instance logic to applications
+	// TODO: Move http handler instance logic to applications
 
 	// TODO: Initialize applications? We might need to register them instead.
 
-	p.setupManager()
-	p.Logger.Debug("[INIT] Manager initialized. Using: AWS and Kubernetes.")
+	p.setupNodeManager()
+	p.Logger.Debug("[INIT] NodeManager initialized. Using: AWS and Kubernetes.")
+
+	p.setupScheduler()
+	p.Logger.Debug("[INIT] Scheduler initialized.")
+
+	p.setupQueues()
+	p.Logger.Debug("[INIT] Launch and termination queues have been initialized.")
 	return p
 }
