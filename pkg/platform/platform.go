@@ -42,6 +42,8 @@ type Platform struct {
 	Scheduler *scheduler.Scheduler
 	LaunchQueue *queue.IQueue
 	TerminationQueue chan string
+	LaunchPool pool.IPool
+	TerminationPool pool.IPool
 }
 
 // Name returns the platform name

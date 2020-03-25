@@ -21,6 +21,18 @@ type Config struct {
 	Email 					email.Config
 	// Are we using S3 for logs?
 	S3LogsCopyEnabled bool `env:"AWS_GZ_LOGS_ENABLED" envDefault:"true"`
+	PoolSizeLaunchSim    int `env:"SIMSVC_POOL_LAUNCH_SIM" envDefault:"10"`
+	PoolSizeTerminateSim int `env:"SIMSVC_POOL_TERMINATE_SIM" envDefault:"10"`
+	PoolSizeErrorHandler int `env:"SIMSVC_POOL_ERROR_HANDLER" envDefault:"20"`
+	// Timeout in seconds to wait until a new Pod is ready. Default: 5 minutes.
+	PodReadyTimeoutSeconds int `env:"SIMSVC_POD_READY_TIMEOUT_SECONDS" envDefault:"300"`
+	// Timeout in seconds to wait until a new Node is ready. Default: 5 minutes.
+	NodeReadyTimeoutSeconds int `env:"SIMSVC_NODE_READY_TIMEOUT_SECONDS" envDefault:"300"`
+	// The number of live simulations a team can have running in parallel. Zero value means unlimited.
+	MaxSimultaneousSimsPerOwner int `env:"SIMSVC_SIMULTANEOUS_SIMS_PER_TEAM" envDefault:"1"`
+	// MaxDurationForSimulations is the maximum number of minutes a simulation can run in cloudsim.
+	// This is a default value. Specific ApplicationTypes are expected to overwrite this.
+	MaxDurationForSimulations int `env:"SIMSVC_SIM_MAX_DURATION_MINUTES" envDefault:"45"`
 }
 
 func NewConfig() Config {

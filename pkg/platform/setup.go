@@ -15,6 +15,7 @@ import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/router"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/server"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/users"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/worker"
 	"gitlab.com/ignitionrobotics/web/fuelserver/permissions"
 	"gitlab.com/ignitionrobotics/web/ign-go"
 	"gitlab.com/ignitionrobotics/web/ign-go/scheduler"
@@ -38,6 +39,7 @@ type IPlatformSetup interface {
 	setupPoolFactory() *Platform
 	setupScheduler() *Platform
 	setupQueues() *Platform
+	setupWorkers() (*Platform, error)
 }
 
 // setupLogger initializes the logger.
@@ -140,25 +142,47 @@ func (p *Platform) setupOrchestrator() *Platform {
 	return p
 }
 
+// setupNodeManager initializes the Node manager.
 func (p *Platform) setupNodeManager() *Platform {
 	p.NodeManager = nodes.NewManager(p.Orchestrator, p.CloudProvider)
 	return p
 }
 
+// setupPoolFactory initializes the Default Pool Factory.
 func (p *Platform) setupPoolFactory() *Platform {
 	p.PoolFactory = pool.DefaultFactory
 	return p
 }
 
+// setupScheduler gets the instance from the scheduler package.
 func (p *Platform) setupScheduler() *Platform {
 	p.Scheduler = scheduler.GetInstance()
 	return p
 }
 
+// setupQueues initializes the Launch and Termination queues.
 func (p *Platform) setupQueues() *Platform {
 	p.LaunchQueue = queue.New()
 	// TODO: Adapt code for actions
 	p.TerminationQueue = make(chan string, 1000)
 	return p
+}
+
+// setupWorkers configures the Launch and the Termination Pool
+// If there is an error during the PoolFactory execution, it returns an error.
+func (p *Platform) setupWorkers() (*Platform, error) {
+	var err error
+
+	p.LaunchPool, err = p.PoolFactory(p.Config.PoolSizeLaunchSim, worker.Start)
+	if err != nil {
+		return nil, err
+	}
+
+	p.TerminationPool, err = p.PoolFactory(p.Config.PoolSizeErrorHandler, worker.Terminate)
+	if err != nil {
+		return nil, err
+	}
+
+	return p, nil
 }
 

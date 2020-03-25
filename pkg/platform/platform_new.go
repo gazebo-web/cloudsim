@@ -55,5 +55,8 @@ func New(config Config) Platform {
 
 	p.setupQueues()
 	p.Logger.Debug("[INIT] Launch and termination queues have been initialized.")
+
+	p.setupWorkers()
+	p.Logger.Debug("[INIT] Launch and termination workers have been initialized.")
 	return p
 }
