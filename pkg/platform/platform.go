@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/go-playground/form"
 	"github.com/go-playground/validator"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/application"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/cloud"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/handlers"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/manager"
@@ -32,6 +33,7 @@ type Platform struct {
 	Config Config
 	HTTPHandlers *handlers.HTTPHandler
 	Manager *manager.Manager
+	Applications []*application.IApplication
 }
 
 // Name returns the platform name

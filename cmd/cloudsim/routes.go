@@ -6,7 +6,7 @@ import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/router"
 )
 
-func RegisterRoutes(p platform.Platform) {
+func RegisterRoutes(p *platform.Platform) {
 	router.ConfigureRoutes(p.Server, p.Server.Router, "1.0", "subt", subt.RegisterRoutes())
 	// router.ConfigureRoutes(p.Server, p.Server.Router, "2.0", "app", app.RegisterRoutes())
 }

@@ -30,6 +30,7 @@ type IPlatformSetup interface {
 	setupDatabase() *Platform
 	setupCloudProvider() *Platform
 	setupOrchestrator() *Platform
+	setupManager() *Platform
 }
 
 // setupLogger initializes the logger.
