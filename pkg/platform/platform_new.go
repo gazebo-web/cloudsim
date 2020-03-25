@@ -47,7 +47,7 @@ func New(config Config) Platform {
 
 	// TODO: Initialize applications? We might need to register them instead.
 
-
-
+	p.setupManager()
+	p.Logger.Debug("[INIT] Manager initialized. Using: AWS and Kubernetes.")
 	return p
 }

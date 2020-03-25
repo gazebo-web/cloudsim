@@ -7,6 +7,7 @@ import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/cloud"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/db"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/logger"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/manager"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/router"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/server"
@@ -128,5 +129,10 @@ func (p *Platform) setupCloudProvider() *Platform {
 // setupOrchestrator initializes the container Orchestrator.
 func (p *Platform) setupOrchestrator() *Platform {
 	p.Orchestrator = orchestrator.New()
+	return p
+}
+
+func (p *Platform) setupManager() *Platform {
+	p.Manager = manager.New(p.Orchestrator, p.CloudProvider)
 	return p
 }

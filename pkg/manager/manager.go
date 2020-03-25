@@ -20,7 +20,7 @@ type Manager struct {
 	config Config
 }
 
-func New(kubernetes *orchestrator.Kubernetes, aws *cloud.AmazonWS) Manager {
+func New(kubernetes *orchestrator.Kubernetes, aws *cloud.AmazonWS) *Manager {
 	cfg := Config{}
 	if err := env.Parse(cfg); err != nil {
 		// TODO: Throw an error
@@ -30,5 +30,5 @@ func New(kubernetes *orchestrator.Kubernetes, aws *cloud.AmazonWS) Manager {
 		aws:    aws,
 		config: cfg,
 	}
-	return m
+	return &m
 }
