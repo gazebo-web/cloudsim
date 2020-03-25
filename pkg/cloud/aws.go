@@ -12,14 +12,14 @@ type AmazonWS struct {
 	// your service clients will ensure the configuration is loaded the fewest
 	// number of times possible.
 	session *session.Session
-	ec2 AmazonEC2
-	s3 AmazonS3
+	Ec2 AmazonEC2
+	S3 AmazonS3
 }
 
 func New() *AmazonWS {
 	ws := AmazonWS{}
 	ws.session = session.Must(session.NewSession())
-	ws.ec2 = NewAmazonEC2(ws.session)
-	ws.s3 = NewAmazonS3(ws.session)
+	ws.Ec2 = NewAmazonEC2(ws.session)
+	ws.S3 = NewAmazonS3(ws.session)
 	return &ws
 }
