@@ -9,6 +9,7 @@ import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/logger"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/manager"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/pool"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/router"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/server"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/users"
@@ -31,6 +32,7 @@ type IPlatformSetup interface {
 	setupCloudProvider() *Platform
 	setupOrchestrator() *Platform
 	setupManager() *Platform
+	setupPoolFactory() *Platform
 }
 
 // setupLogger initializes the logger.
@@ -135,5 +137,10 @@ func (p *Platform) setupOrchestrator() *Platform {
 
 func (p *Platform) setupManager() *Platform {
 	p.Manager = manager.New(p.Orchestrator, p.CloudProvider)
+	return p
+}
+
+func (p *Platform) setupPoolFactory() *Platform {
+	p.PoolFactory = pool.DefaultFactory
 	return p
 }

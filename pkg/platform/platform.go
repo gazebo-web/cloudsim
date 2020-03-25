@@ -35,7 +35,7 @@ type Platform struct {
 	HTTPHandlers *handlers.HTTPHandler
 	Manager *manager.Manager
 	Applications map[string]*application.IApplication
-	Pool pool.Factory
+	PoolFactory pool.Factory
 }
 
 // Name returns the platform name

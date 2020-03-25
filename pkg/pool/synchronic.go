@@ -39,9 +39,9 @@ func (sp *Synchronic) Serve(args interface{}) error {
 	return nil
 }
 
-// NewSynchronic is a Factory function that creates a new Synchronic job using
+// SynchronicFactory is a Factory function that creates a new Synchronic job using
 // the given arguments.
-func NewSynchronic(poolSize int, jobFn func(interface{})) (IJob, error) {
+func SynchronicFactory(poolSize int, jobFn func(interface{})) (IJob, error) {
 
 	jobWithMultipleArgs := func(payload interface{}) {
 		// This is a wrapper on top of the original job function
