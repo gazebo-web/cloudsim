@@ -7,6 +7,6 @@ import (
 )
 
 func RegisterRoutes(p *platform.Platform) {
-	router.ConfigureRoutes(p.Server, p.Server.Router, "1.0", "subt", subt.RegisterRoutes())
-	// router.ConfigureRoutes(p.Server, p.Server.Router, "2.0", "app", app.RegisterRoutes())
+	p.Server.Router = router.ConfigureRoutes(p.Server, p.Server.Router, "1.0", "subt", subt.RegisterRoutes())
+	// p.Server.Router = router.ConfigureRoutes(p.Server, p.Server.Router, "2.0", "app", app.RegisterRoutes())
 }

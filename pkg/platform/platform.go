@@ -9,6 +9,7 @@ import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/handlers"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/manager"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/pool"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/transporter"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/users"
 	"gitlab.com/ignitionrobotics/web/fuelserver/permissions"
@@ -33,7 +34,8 @@ type Platform struct {
 	Config Config
 	HTTPHandlers *handlers.HTTPHandler
 	Manager *manager.Manager
-	Applications []*application.IApplication
+	Applications map[string]*application.IApplication
+	Pool pool.Factory
 }
 
 // Name returns the platform name
