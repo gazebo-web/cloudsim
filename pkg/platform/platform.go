@@ -14,6 +14,10 @@ import (
 	"gitlab.com/ignitionrobotics/web/ign-go"
 )
 
+type IPlatform interface {
+	Name() string
+}
+
 type Platform struct {
 	Server *ign.Server
 	Logger ign.Logger
@@ -29,6 +33,7 @@ type Platform struct {
 	HTTPHandlers *handlers.HTTPHandler
 }
 
+// New returns a new application from the given configuration.
 func New(config Config) Platform {
 	p := Platform{}
 	p.Config = config
@@ -68,9 +73,14 @@ func New(config Config) Platform {
 
 	p.setupOrchestrator()
 	p.Logger.Debug("[INIT] Orchestrator initialized: Kubernetes.")
+
+	// TODO: Move http instance logic to applications
+
+
 	return p
 }
 
+// Name returns the platform name
 func (p Platform) Name() string {
 	return "cloudsim"
 }
