@@ -91,7 +91,7 @@ func (p *Platform) setupPermissions() *Platform {
 }
 
 func (p *Platform) setupUserService() *Platform {
-	s, err := users.NewService(p.Permissions, p.Config)
+	s, err := users.NewService(p.Permissions, p.Config.SysAdmin)
 	if err != nil {
 		// TODO: Throw error
 	}

@@ -8,7 +8,6 @@ import (
 	apiv1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/wait"
-	"k8s.io/client-go/kubernetes"
 	"time"
 )
 
@@ -16,12 +15,12 @@ import (
 // is a timeout or error.
 func (kc Kubernetes) NodeWaitForReady(ctx context.Context, namespace string, groupIDLabel string, timeout time.Duration) error {
 	opts := metav1.ListOptions{LabelSelector: groupIDLabel}
-	return kc.NodeWaitToMatchCondition(ctx, c, namespace, opts, timeout)
+	return kc.NodeWaitToMatchCondition(ctx, namespace, opts, timeout)
 }
 
 // WaitForMatchNodesCondition finds match Nodes based on the input ListOptions.
 // Waits and checks if all matched nodes are in the given PodCondition
-func (kc Kubernetes) NodeWaitToMatchCondition(ctx context.Context, c kubernetes.Interface, namespace string, opts metav1.ListOptions, timeout time.Duration) error {
+func (kc Kubernetes) NodeWaitToMatchCondition(ctx context.Context, namespace string, opts metav1.ListOptions, timeout time.Duration) error {
 	logger.Logger(ctx).Info(fmt.Sprintf("Waiting up to %v for match nodes to be ready", timeout))
 
 	maxAllowedNotReadyNodes := 0
@@ -29,7 +28,7 @@ func (kc Kubernetes) NodeWaitToMatchCondition(ctx context.Context, c kubernetes.
 	err := wait.PollImmediate(pollFrequency, timeout, func() (bool, error) {
 		notReady = nil
 		// It should be OK to list unschedulable Nodes here.
-		nodes, err := c.CoreV1().Nodes().List(opts)
+		nodes, err := kc.CoreV1().Nodes().List(opts)
 		if err != nil {
 			return false, err
 		}

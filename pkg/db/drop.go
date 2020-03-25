@@ -12,7 +12,7 @@ func DropModels(ctx context.Context, db *gorm.DB) {
 		// IMPORTANT NOTE: DROP TABLE order is important, due to FKs
 		db.DropTableIfExists(
 			//&sim.SimulationDeploymentsSubTValue{},
-			//&sim.SimulationDeployment{},
+			//&sim.Simulation{},
 			//&sim.MachineInstance{},
 			//&sim.SubTCircuitRules{},
 			//&sim.CircuitCustomRule{},

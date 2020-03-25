@@ -6,7 +6,7 @@ import (
 )
 
 type Config struct {
-	Auth0 auth0.Auth0
+	Auth0 auth0.Config
 	HTTPport string
 	SSLport string
 }

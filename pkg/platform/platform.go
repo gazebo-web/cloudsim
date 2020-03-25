@@ -6,6 +6,7 @@ import (
 	"github.com/go-playground/form"
 	"github.com/go-playground/validator"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/cloud"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/handlers"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/transporter"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/users"
@@ -25,6 +26,7 @@ type Platform struct {
 	Permissions *permissions.Permissions
 	UserService *users.Service
 	Config Config
+	HTTPHandlers *handlers.HTTPHandler
 }
 
 func New(config Config) Platform {
@@ -67,4 +69,8 @@ func New(config Config) Platform {
 	p.setupOrchestrator()
 	p.Logger.Debug("[INIT] Orchestrator initialized: Kubernetes.")
 	return p
+}
+
+func (p Platform) Name() string {
+	return "cloudsim"
 }

@@ -3,6 +3,7 @@ package db
 import (
 	"context"
 	"github.com/jinzhu/gorm"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulation"
 	"log"
 )
 
@@ -16,7 +17,7 @@ func Migrate(ctx context.Context, db *gorm.DB) {
 
 	if db != nil {
 		db.AutoMigrate(
-			//&sim.SimulationDeployment{},
+			//&sim.Simulation{},
 			//&sim.SimulationDeploymentsSubTValue{},
 			//&sim.MachineInstance{},
 			//&sim.SubTCircuitRules{},
@@ -27,7 +28,7 @@ func Migrate(ctx context.Context, db *gorm.DB) {
 		migrateMultiSimRoles(ctx, db)
 		migrateCircuitRules(ctx, db)
 		migrateDeploymentStatusConstantValues(ctx, db)
-		migrateSimulationDeploymentRobots(ctx, db)
+		migrateSimulationRobots(ctx, db)
 	}
 }
 
@@ -97,13 +98,13 @@ func migrateDeploymentStatusConstantValues(ctx context.Context, db *gorm.DB) {
 	}
 }
 
-func migrateSimulationDeploymentRobots(ctx context.Context, db *gorm.DB) {
+func migrateSimulationRobots(ctx context.Context, db *gorm.DB) {
 
-	log.Println("[MIGRATION] Updating SimulationDeployment NULL robots values.")
+	log.Println("[MIGRATION] Updating Simulation NULL robots values.")
 
 	// First check if the migration is needed, otherwise return.
 	var count int
-	if err := db.Model(&sim.SimulationDeployment{}).
+	if err := db.Model(&simulation.Simulation{}).
 		Where("robots IS NULL").
 		Count(&count).Error; err != nil {
 		log.Fatal("[MIGRATION] Migrating DeploymentStatus robots values: could not get number of entries for migration")
