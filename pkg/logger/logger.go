@@ -12,6 +12,8 @@ type config struct {
 	RollbarLogVerbosity string `env:"IGN_LOGGER_ROLLBAR_VERBOSITY"`
 }
 
+// New initializes a new ign.Logger.
+// If there is an error while parsing the environment variables, it will return an error.
 func New() (ign.Logger, error) {
 	cfg := config{}
 	var err error
@@ -41,7 +43,7 @@ func New() (ign.Logger, error) {
 	return logger, nil
 }
 
-
+// Logger returns the logger instance from the given context.
 func Logger(ctx context.Context) ign.Logger {
 	return ign.LoggerFromContext(ctx)
 }

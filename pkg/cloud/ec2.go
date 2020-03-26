@@ -8,10 +8,12 @@ import (
 	"reflect"
 )
 
+// AmazonEC2 wraps the AWS EC2 API.
 type AmazonEC2 struct {
 	API ec2iface.EC2API
 }
 
+// NewAmazonEC2 returns a new AmazonEC2 instance by the given AWS session and configuration.
 func NewAmazonEC2(p client.ConfigProvider, cfgs ...*aws.Config) AmazonEC2 {
 	var instance AmazonEC2
 	if !reflect.ValueOf(p).IsNil() {

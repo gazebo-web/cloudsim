@@ -5,11 +5,14 @@ import (
 	"gitlab.com/ignitionrobotics/web/ign-go"
 )
 
+// Config represents a set of options to configure the Email service.
 type Config struct {
 	DefaultEmailRecipients []string
 	DefaultEmailSender string
 }
 
+// TODO: Find a better name. This should be its own service and not only a configuration parser.
+// New returns a new Email configuration.
 func New() Config {
 	email := Config{}
 	email.DefaultEmailRecipients = tools.EnvVarToSlice("IGN_DEFAULT_EMAIL_RECIPIENT")

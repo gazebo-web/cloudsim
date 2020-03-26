@@ -5,7 +5,9 @@ import (
 )
 
 // SubT is an IApplication implementation
-type SubT struct {}
+type SubT struct {
+	application.Application
+}
 
 // New creates a new SubT application.
 func New() SubT {
@@ -18,8 +20,10 @@ func (s SubT) Name() string {
 }
 
 // Register creates a New application to be registered in the platform.
-func Register() *application.IApplication {
+func Register() func() *application.IApplication {
 	var subt application.IApplication
-	subt = New()
-	return &subt
+	return func() *application.IApplication {
+		subt = New()
+		return &subt
+	}
 }

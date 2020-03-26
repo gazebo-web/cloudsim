@@ -15,7 +15,7 @@ type IQueue interface {
 }
 
 type Queue struct {
-	dao *ign.Queue
+	queue *ign.Queue
 }
 
 func New() *IQueue {
@@ -26,7 +26,7 @@ func New() *IQueue {
 
 func initialize() *Queue {
 	q := Queue{}
-	q.dao = ign.NewQueue()
+	q.queue = ign.NewQueue()
 	return &q
 }
 
@@ -34,9 +34,9 @@ func initialize() *Queue {
 // If `offset` and `limit` are not nil, it will return up to `limit` results from the provided `offset`.
 func (q *Queue) Get(offset, limit *int) ([]interface{}, *ign.ErrMsg) {
 	if offset == nil || limit == nil {
-		return q.dao.GetElements()
+		return q.queue.GetElements()
 	}
-	return q.dao.GetFilteredElements(*offset, *limit)
+	return q.queue.GetFilteredElements(*offset, *limit)
 }
 
 // Remove removes a groupID from the queue.
@@ -47,7 +47,7 @@ func (q *Queue) Remove(id interface{}) (interface{}, *ign.ErrMsg) {
 		return nil, ign.NewErrorMessage(ign.ErrorCastingID)
 	}
 
-	if err := q.dao.Remove(groupID); err != nil {
+	if err := q.queue.Remove(groupID); err != nil {
 		return nil, err
 	}
 
@@ -63,18 +63,18 @@ func (q *Queue) Enqueue(entity interface{}) interface{} {
 		return nil
 	}
 
-	q.dao.Enqueue(groupID)
+	q.queue.Enqueue(groupID)
 	return entity
 }
 
 // Dequeue returns the next groupID from the queue.
 func (q *Queue) Dequeue() (interface{}, *ign.ErrMsg) {
-	return q.dao.Dequeue()
+	return q.queue.Dequeue()
 }
 
 // DequeueOrWait returns the next groupID from the queue or waits until there is one available.
 func (q *Queue) DequeueOrWait() (interface{}, *ign.ErrMsg) {
-	return q.dao.DequeueOrWaitForNextElement()
+	return q.queue.DequeueOrWaitForNextElement()
 }
 
 // MoveToFront moves a target groupID to the front of the queue.
@@ -85,7 +85,7 @@ func (q *Queue) MoveToFront(target interface{}) (interface{}, *ign.ErrMsg) {
 		return nil, ign.NewErrorMessage(ign.ErrorCastingID)
 	}
 
-	if err := q.dao.MoveToFront(groupID); err != nil {
+	if err := q.queue.MoveToFront(groupID); err != nil {
 		return nil, err
 	}
 	return target, nil
@@ -99,7 +99,7 @@ func (q *Queue) MoveToBack(target interface{}) (interface{}, *ign.ErrMsg) {
 		return nil, ign.NewErrorMessage(ign.ErrorCastingID)
 	}
 
-	if err := q.dao.MoveToBack(groupID); err != nil {
+	if err := q.queue.MoveToBack(groupID); err != nil {
 		return nil, err
 	}
 	return target, nil
@@ -119,7 +119,7 @@ func (q *Queue) Swap(a interface{}, b interface{}) (interface{}, *ign.ErrMsg) {
 		return nil, ign.NewErrorMessage(ign.ErrorCastingID)
 	}
 
-	err := q.dao.Swap(groupIDA, groupIDB)
+	err := q.queue.Swap(groupIDA, groupIDB)
 	if err != nil {
 		return nil, err
 	}
@@ -137,5 +137,5 @@ func (q *Queue) Swap(a interface{}, b interface{}) (interface{}, *ign.ErrMsg) {
 
 // Count returns the length of the underlying queue's slice
 func (q *Queue) Count() int {
-	return q.dao.GetLen()
+	return q.queue.GetLen()
 }

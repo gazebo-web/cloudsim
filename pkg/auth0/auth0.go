@@ -2,6 +2,7 @@ package auth0
 
 import "github.com/caarlos0/env"
 
+// Config represents a set of options to configure Auth0.
 type Config struct {
 	PublicKey   string `env:"AUTH0_RSA256_PUBLIC_KEY"`
 }

@@ -6,6 +6,7 @@ import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator"
 )
 
+// Config represents a set of options to configure a Manager.
 type Config struct {
 	NamePrefix string `env:"AWS_INSTANCE_NAME_PREFIX,required"`
 	ShouldTerminateInstances bool   `env:"EC2_NODE_MGR_TERMINATE_INSTANCES" envDefault:"true"`
@@ -14,18 +15,21 @@ type Config struct {
 	AvailableEC2Machines int `env:"IGN_EC2_MACHINES_LIMIT" envDefault:"-1"`
 }
 
-type NodeManager struct {
+// TODO: Understand the meaning of Manager.
+// Manager represents a ...
+type Manager struct {
 	kc  *orchestrator.Kubernetes
 	aws  *cloud.AmazonWS
 	config Config
 }
 
-func NewManager(kubernetes *orchestrator.Kubernetes, aws *cloud.AmazonWS) *NodeManager {
+// NewManager returns a new Manager instance.
+func NewManager(kubernetes *orchestrator.Kubernetes, aws *cloud.AmazonWS) *Manager {
 	cfg := Config{}
 	if err := env.Parse(cfg); err != nil {
-		// TODO: Throw an error
+		// TODO: Throw an error. Logger? Log Fatal?
 	}
-	m := NodeManager{
+	m := Manager{
 		kc:     kubernetes,
 		aws:    aws,
 		config: cfg,

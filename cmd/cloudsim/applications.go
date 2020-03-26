@@ -8,6 +8,6 @@ import (
 
 // Register applications inserts an application to the map of applications in the platform
 func RegisterApplications(p *platform.Platform) {
-	p.Applications = application.RegisterApplications(p.Applications, subt.Register)
+	application.RegisterApplications(p.Applications, subt.Register())
 	// p.Applications = application.RegisterApplications(p.Applications, app.Register)
 }

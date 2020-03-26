@@ -7,7 +7,6 @@ import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/cloud"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/db"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/logger"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/manager"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/nodes"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/pool"
