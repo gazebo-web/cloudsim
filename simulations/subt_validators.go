@@ -90,7 +90,7 @@ func loadSubTRobotTypes(cfg *subTSpecificsConfig) {
 			"openrobotics",
 			"X1 Config 6",
 			"X1_SENSOR_CONFIG_6",
-			360,
+			380,
 		),
 		"EXPLORER_X1_SENSOR_CONFIG_1": generateSubTRobotType(
 			cfg,
