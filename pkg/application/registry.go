@@ -2,8 +2,7 @@ package application
 
 // RegisterApplications adds a given application to the platform.
 // Returns the list of applications
-func RegisterApplications(applications map[string]*IApplication, fn func() *IApplication) map[string]*IApplication {
-	app := fn()
+func RegisterApplications(applications map[string]*IApplication, app *IApplication) map[string]*IApplication {
 	if app == nil {
 		panic("Invalid application")
 	}

@@ -7,7 +7,6 @@ import (
 	"github.com/go-playground/validator"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/application"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/cloud"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/handlers"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/pool"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/queue"
@@ -35,7 +34,6 @@ type Platform struct {
 	Permissions   *permissions.Permissions
 	UserService   *users.Service
 	Config        Config
-	HTTPHandlers  *handlers.HTTPHandler
 	NodeManager   *simulator.Manager
 	Applications  map[string]*application.IApplication
 	PoolFactory   pool.Factory

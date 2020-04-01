@@ -10,8 +10,10 @@ type SubT struct {
 }
 
 // New creates a new SubT application.
-func New() SubT {
-	return SubT{}
+func New() *application.IApplication {
+	var subt application.IApplication
+	subt = &SubT{}
+	return &subt
 }
 
 // Name returns the SubT application name.
@@ -20,10 +22,6 @@ func (s SubT) Name() string {
 }
 
 // Register creates a New application to be registered in the platform.
-func Register() func() *application.IApplication {
-	var subt application.IApplication
-	return func() *application.IApplication {
-		subt = New()
-		return &subt
-	}
+func Register() *application.IApplication {
+	return New()
 }
