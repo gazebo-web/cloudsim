@@ -13,6 +13,7 @@ import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/queue"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/router"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/server"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulator"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/users"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/worker"
 	"gitlab.com/ignitionrobotics/web/fuelserver/permissions"
@@ -77,10 +78,7 @@ func (p *Platform) setupServer() *Platform {
 
 // setupRouter initializes the server's router.
 func (p *Platform) setupRouter() *Platform {
-	cfg := router.Config{
-		Version: "1.0",
-	}
-	r := router.New(cfg)
+	r := router.New()
 	p.Server.SetRouter(r)
 	return p
 }
@@ -143,7 +141,7 @@ func (p *Platform) setupOrchestrator() *Platform {
 
 // setupNodeManager initializes the Node manager.
 func (p *Platform) setupNodeManager() *Platform {
-	p.NodeManager = nodes.NewManager(p.Orchestrator, p.CloudProvider)
+	p.NodeManager = simulator.NewManager(p.Orchestrator, p.CloudProvider)
 	return p
 }
 

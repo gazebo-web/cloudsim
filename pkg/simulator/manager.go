@@ -1,4 +1,4 @@
-package nodes
+package simulator
 
 import (
 	"github.com/caarlos0/env"
@@ -15,8 +15,7 @@ type Config struct {
 	AvailableEC2Machines int `env:"IGN_EC2_MACHINES_LIMIT" envDefault:"-1"`
 }
 
-// TODO: Understand the meaning of Manager.
-// Manager represents a ...
+// Manager is the responsible of creating the nodes and registering them in the kubernetes master.
 type Manager struct {
 	kc  *orchestrator.Kubernetes
 	aws  *cloud.AmazonWS

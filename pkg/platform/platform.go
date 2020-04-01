@@ -8,10 +8,10 @@ import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/application"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/cloud"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/handlers"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/nodes"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/pool"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/queue"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulator"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/transporter"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/users"
 	"gitlab.com/ignitionrobotics/web/fuelserver/permissions"
@@ -36,7 +36,7 @@ type Platform struct {
 	UserService   *users.Service
 	Config        Config
 	HTTPHandlers  *handlers.HTTPHandler
-	NodeManager   *nodes.Manager
+	NodeManager   *simulator.Manager
 	Applications  map[string]*application.IApplication
 	PoolFactory   pool.Factory
 	Scheduler *scheduler.Scheduler

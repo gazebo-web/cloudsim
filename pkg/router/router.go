@@ -10,7 +10,7 @@ type Config struct {
 	Version string
 }
 
-func New(config Config) *mux.Router {
+func New() *mux.Router {
 	r := ign.NewRouter()
 	return r
 }
