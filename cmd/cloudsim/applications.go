@@ -7,7 +7,7 @@ import (
 )
 
 // Register applications inserts an application to the map of applications in the platform
-func RegisterApplications(p *platform.Platform) {
-	application.RegisterApplications(p.Applications, subt.Register())
-	// p.Applications = application.RegisterApplications(p.Applications, app.Register)
+func RegisterApplications(p *platform.Platform, apps *map[string]application.IApplication) {
+	application.RegisterApplication(apps, subt.Register(p))
+	// p.Applications = application.RegisterApplication(p.Applications, app.Register)
 }

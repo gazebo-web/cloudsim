@@ -2,20 +2,23 @@ package main
 
 import (
 	"fmt"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/application"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/platform"
 )
 
 func main() {
-	config := platform.NewConfig()
-	cloudsim := platform.New(config)
+	var cloudsim platform.Platform
+	var applications map[string]application.IApplication
 
-	RegisterApplications(&cloudsim)
+	config := platform.NewConfig()
+	cloudsim = platform.New(config)
+
+	RegisterApplications(&cloudsim, &applications)
 	RegisterRoutes(&cloudsim)
 
 	if err := cloudsim.Start(cloudsim.Context); err != nil {
-		cloudsim.Logger.Critical("[CLOUDSIM] Error when starting platform up")
-		cloudsim.Logger.Error(fmt.Sprintf("[ERROR] %v", err))
-		for name, _ := range cloudsim.Applications {
+		cloudsim.Logger.Critical(fmt.Sprintf("[CLOUDSIM|CRITICAL] Error when initializing the platform\n%v", err))
+		for name, _ := range applications {
 			cloudsim.Logger.Info(fmt.Sprintf("\tRunning with application [%s]", name))
 		}
 		panic(err)
@@ -25,8 +28,7 @@ func main() {
 
 	err := cloudsim.Stop(cloudsim.Context)
 	if err != nil {
-		cloudsim.Logger.Critical("[CLOUDSIM] Error on shutdown")
-		cloudsim.Logger.Error(fmt.Sprintf("[ERROR] %v", err))
+		cloudsim.Logger.Critical(fmt.Sprintf("[CLOUDSIM|CRITICAL] Error on shutdown\n%v", err))
 	}
-	cloudsim.Transporter.Transport.Free()
+	cloudsim.Transport.Stop()
 }

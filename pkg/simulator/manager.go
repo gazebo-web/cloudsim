@@ -6,6 +6,14 @@ import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator"
 )
 
+type IManager interface {
+	ListAllNodes() []Node
+	ListAllClusters() []Cluster
+	ListNodes(cluster Cluster) []Node
+	DeleteCluster(cluster Cluster)
+	LaunchCluster(cluster Cluster)
+}
+
 // Config represents a set of options to configure a Manager.
 type Config struct {
 	NamePrefix string `env:"AWS_INSTANCE_NAME_PREFIX,required"`

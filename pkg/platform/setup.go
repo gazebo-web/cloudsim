@@ -13,6 +13,7 @@ import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/router"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/server"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulator"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/transport"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/users"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/worker"
 	"gitlab.com/ignitionrobotics/web/fuelserver/permissions"
@@ -39,6 +40,7 @@ type IPlatformSetup interface {
 	setupScheduler() *Platform
 	setupQueues() *Platform
 	setupWorkers() (*Platform, error)
+	setupTransport() (*Platform, error)
 }
 
 // setupLogger initializes the logger.
@@ -138,9 +140,9 @@ func (p *Platform) setupOrchestrator() *Platform {
 	return p
 }
 
-// setupNodeManager initializes the Node manager.
-func (p *Platform) setupNodeManager() *Platform {
-	p.NodeManager = simulator.NewManager(p.Orchestrator, p.CloudProvider)
+// setupNodeManager initializes the Simulator.
+func (p *Platform) setupSimulator() *Platform {
+	p.Simulator = simulator.NewManager(p.Orchestrator, p.CloudProvider)
 	return p
 }
 
@@ -159,7 +161,6 @@ func (p *Platform) setupScheduler() *Platform {
 // setupQueues initializes the Launch and Termination queues.
 func (p *Platform) setupQueues() *Platform {
 	p.LaunchQueue = queue.New()
-	// TODO: Adapt code for actions
 	p.TerminationQueue = make(chan string, 1000)
 	return p
 }
@@ -182,3 +183,11 @@ func (p *Platform) setupWorkers() (*Platform, error) {
 	return p, nil
 }
 
+func (p *Platform) setupTransport() (*Platform, error) {
+	t, err := transport.New()
+	if err != nil {
+		return nil, err
+	}
+	p.Transport = t
+	return p, nil
+}
