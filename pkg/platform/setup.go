@@ -6,6 +6,7 @@ import (
 	"github.com/go-playground/validator"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/cloud"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/db"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/email"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/logger"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/pool"
@@ -28,6 +29,7 @@ type IPlatformSetup interface {
 	setupContext() *Platform
 	setupServer() *Platform
 	setupRouter() *Platform
+	setupEmail() *Platform
 	setupValidator() *Platform
 	setupFormDecoder() *Platform
 	setupPermissions() *Platform
@@ -81,6 +83,12 @@ func (p *Platform) setupServer() *Platform {
 func (p *Platform) setupRouter() *Platform {
 	r := router.New()
 	p.Server.SetRouter(r)
+	return p
+}
+
+func (p *Platform) setupEmail() *Platform {
+	e := email.New()
+	p.Email = e
 	return p
 }
 
@@ -142,7 +150,7 @@ func (p *Platform) setupOrchestrator() *Platform {
 
 // setupNodeManager initializes the Simulator.
 func (p *Platform) setupSimulator() *Platform {
-	p.Simulator = simulator.NewManager(p.Orchestrator, p.CloudProvider)
+	p.Simulator = simulator.New(p.Orchestrator, p.CloudProvider)
 	return p
 }
 

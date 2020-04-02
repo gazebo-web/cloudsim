@@ -6,6 +6,7 @@ import (
 	"github.com/go-playground/form"
 	"github.com/go-playground/validator"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/cloud"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/email"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/pool"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/queue"
@@ -25,6 +26,7 @@ type Platform struct {
 	Server           *ign.Server
 	Logger           ign.Logger
 	Context          context.Context
+	Email *email.Email
 	Validator        *validator.Validate
 	FormDecoder      *form.Decoder
 	Transport        *transport.Transport
@@ -33,7 +35,7 @@ type Platform struct {
 	Permissions      *permissions.Permissions
 	UserService      *users.Service
 	Config           Config
-	Simulator        *simulator.Manager
+	Simulator        simulator.ISimulator
 	PoolFactory      pool.Factory
 	Scheduler        *scheduler.Scheduler
 	LaunchQueue      *queue.IQueue

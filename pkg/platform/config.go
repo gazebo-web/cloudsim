@@ -4,7 +4,6 @@ import (
 	"github.com/caarlos0/env"
 	"github.com/joho/godotenv"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/auth0"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/email"
 	"log"
 )
 
@@ -18,7 +17,6 @@ type Config struct {
 	NodesManagerImpl        string `env:"IGN_CLOUDSIM_NODES_MGR_IMPL" envDefault:"ec2"`
 	IgnTransportTopic       string `env:"IGN_TRANSPORT_TEST_TOPIC" envDefault:"/foo"`
 	Auth0					auth0.Config
-	Email 					email.Email
 	// Are we using S3 for logs?
 	S3LogsCopyEnabled bool `env:"AWS_GZ_LOGS_ENABLED" envDefault:"true"`
 	PoolSizeLaunchSim    int `env:"SIMSVC_POOL_LAUNCH_SIM" envDefault:"10"`
@@ -48,7 +46,6 @@ func NewConfig() Config {
 	}
 
 	cfg.Auth0 = auth0.New()
-	cfg.Email = email.New()
 	return cfg
 }
 
