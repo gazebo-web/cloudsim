@@ -29,7 +29,7 @@ func NewTemplateConfig(joinCmd, groupLabels string, extraLabels []string) *Templ
 	}
 }
 
-// FillTemplate takes the template and fills it with the given configuration.
+// FillTemplate takes a template and fills it with the given configuration.
 func FillTemplate(t *template.Template, config TemplateConfig) string {
 	var w io.Writer
 	var result []byte

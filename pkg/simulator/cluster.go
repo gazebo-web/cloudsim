@@ -1,29 +1,43 @@
 package simulator
 
-type Status int64
+import "github.com/jinzhu/gorm"
 
 const (
+	//////////////////////////////////////////////////////////////////
+	// INIT
 	CLUSTER_STATUS_INITIALIZING = iota + 1000
 	CLUSTER_STATUS_INITIALIZED
-	CLUSTER_STATUS_LAUNCHING
+	//////////////////////////////////////////////////////////////////
+	// LAUNCH
+	CLUSTER_STATUS_LAUNCHING = iota + 2000
 	CLUSTER_STATUS_LAUNCHED
-	CLUSTER_STATUS_STOPPING
+	//////////////////////////////////////////////////////////////////
+	// STOP
+	CLUSTER_STATUS_STOPPING = iota + 3000
 	CLUSTER_STATUS_STOPPED
-	CLUSTER_STATUS_RESTARTING
+	//////////////////////////////////////////////////////////////////
+	// RESTART
+	CLUSTER_STATUS_RESTARTING = iota + 4000
 	CLUSTER_STATUS_RESTARTED
-	CLUSTER_STATUS_DELETING
+	//////////////////////////////////////////////////////////////////
+	// DELETE
+	CLUSTER_STATUS_DELETING = iota + 5000
 	CLUSTER_STATUS_DELETED
 )
 
 // Cluster represents a set of nodes working together to run a simulation.
 type Cluster struct {
-	Name string
-	Status Status
+	gorm.Model
+	Name string `json:"name"`
+	GroupID string `json:"group_id"`
+	Platform string `json:"platform"`
+	Application string `json:"application"`
+	Status int64 `json:"status"`
+	PrivateKey string `json:"private_key"`
+	Iam string `json:"iam"`
+	Region string `json:"region"`
+	Zone string `json:"zone"`
 	Nodes []Node
-}
-
-func (c Cluster) ListNodes() []Node {
-	return c.Nodes
 }
 
 func (c *Cluster) Launch() {
