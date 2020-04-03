@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3iface"
 	"net/http"
+	"net/url"
 	"path/filepath"
 	"reflect"
 )
@@ -26,7 +27,7 @@ func NewAmazonS3(p client.ConfigProvider, cfgs ...*aws.Config) *AmazonS3 {
 	return &instance
 }
 
-func (s *AmazonS3) Address(bucket string, key string) string {
+func (s *AmazonS3) GetAddress(bucket string, key string) string {
 	return fmt.Sprintf("s3://%s", filepath.Join(bucket, key))
 }
 
@@ -41,4 +42,9 @@ func (s *AmazonS3) Upload(bucket string, key string, file []byte) (*s3.PutObject
 		ContentDisposition:   aws.String("attachment"),
 		ServerSideEncryption: aws.String("AES256"),
 	})
+}
+
+func (s *AmazonS3) GetLogKey(groupID string, owner string) string {
+	escaped := url.PathEscape(owner)
+	return fmt.Sprintf("/gz-logs/%s/%s/", escaped, groupID)
 }

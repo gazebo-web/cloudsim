@@ -10,7 +10,7 @@ import (
 	"time"
 )
 
-func (ec AmazonEC2) RunInstance(ctx context.Context, input *ec2.RunInstancesInput) (*ec2.Reservation, error) {
+func (ec *AmazonEC2) RunInstance(ctx context.Context, input *ec2.RunInstancesInput) (*ec2.Reservation, error) {
 	input.SetDryRun(true)
 	for try := 1; try <= ec.Retries; try++ {
 		_, err := ec.API.RunInstances(input)
@@ -42,7 +42,7 @@ func (ec AmazonEC2) RunInstance(ctx context.Context, input *ec2.RunInstancesInpu
 	return reservation, nil
 }
 
-func (ec AmazonEC2) RunInstances(ctx context.Context, inputs []*ec2.RunInstancesInput) (reservations []*ec2.Reservation, err error) {
+func (ec *AmazonEC2) RunInstances(ctx context.Context, inputs []*ec2.RunInstancesInput) (reservations []*ec2.Reservation, err error) {
 	var reservation *ec2.Reservation
 	for _, input := range inputs {
 		reservation, err = ec.RunInstance(ctx, input)

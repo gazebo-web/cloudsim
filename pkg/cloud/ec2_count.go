@@ -7,7 +7,7 @@ import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/logger"
 )
 
-func (ec AmazonEC2) CountInstances(ctx context.Context) int {
+func (ec *AmazonEC2) CountInstances(ctx context.Context) int {
 	input := &ec2.DescribeInstancesInput{
 		MaxResults: aws.Int64(1000),
 		Filters: []*ec2.Filter{
