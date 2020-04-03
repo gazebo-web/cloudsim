@@ -18,12 +18,12 @@ type AmazonS3 struct {
 }
 
 // NewAmazonS3 returns a new AmazonS3 instance by the given AWS session and configuration.
-func NewAmazonS3(p client.ConfigProvider, cfgs ...*aws.Config) AmazonS3 {
+func NewAmazonS3(p client.ConfigProvider, cfgs ...*aws.Config) *AmazonS3 {
 	var instance AmazonS3
 	if !reflect.ValueOf(p).IsNil() {
 		instance.API = s3.New(p, cfgs...)
 	}
-	return instance
+	return &instance
 }
 
 func (s AmazonS3) Address(bucket string, key string) string {
