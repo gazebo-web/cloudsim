@@ -11,11 +11,14 @@ import (
 )
 
 func (ec AmazonEC2) Launch(ctx context.Context, input *ec2.RunInstancesInput) (*ec2.Reservation, error) {
+
 	input.SetDryRun(true)
 	for try := 1; try <= ec.Retries; try++ {
+		ec.lockLaunch.Lock()
 		_, err := ec.API.RunInstances(input)
 		awsErr, ok := err.(awserr.Error)
 		if !ok {
+			ec.lockLaunch.Unlock()
 			return nil, err
 		}
 		if ec.isErrorRetryable(awsErr) {
@@ -25,9 +28,11 @@ func (ec AmazonEC2) Launch(ctx context.Context, input *ec2.RunInstancesInput) (*
 			break
 		}
 		if try != ec.Retries {
-			tools.Sleep(time.Second * time.Duration(ec.Delay))
+			ec.lockLaunch.Unlock()
+			tools.Sleep(time.Second * time.Duration(try))
 		}
 	}
+
 	input.SetDryRun(false)
 	reservation, err := ec.API.RunInstances(input)
 	if err != nil {

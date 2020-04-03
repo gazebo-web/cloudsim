@@ -7,22 +7,20 @@ import (
 
 // SubT is an IApplication implementation
 type SubT struct {
-	application.Application
+	*application.Application
 }
 
 // New creates a new SubT application.
-func New(p *platform.Platform) application.IApplication {
-	var subt application.IApplication
+func New(p *platform.Platform) *SubT {
 	app := application.New(p)
-
-	subt = &SubT{
-		Application: app.Instance(),
+	subt := &SubT{
+		Application: app,
 	}
 	return subt
 }
 
 // Name returns the SubT application name.
-func (s SubT) Name() string {
+func (s *SubT) Name() string {
 	return "subt"
 }
 

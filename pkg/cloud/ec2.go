@@ -1,24 +1,19 @@
 package cloud
 
 import (
-	"context"
-	"fmt"
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/aws/client"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/aws/aws-sdk-go/service/ec2/ec2iface"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/logger"
-	"gitlab.com/ignitionrobotics/web/cloudsim/tools"
 	"reflect"
-	"time"
+	"sync"
 )
 
 // AmazonEC2 wraps the AWS EC2 API.
 type AmazonEC2 struct {
 	API ec2iface.EC2API
 	Retries int
-	Delay int
+	lockLaunch sync.Mutex
 }
 
 // NewAmazonEC2 returns a new AmazonEC2 instance by the given AWS session and configuration.

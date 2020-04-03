@@ -21,7 +21,6 @@ func (ec AmazonEC2) Terminate(ctx context.Context, input *ec2.TerminateInstances
 			return nil, err
 		}
 	}
-
 	input.SetDryRun(false)
 	output, err := ec.API.TerminateInstances(input)
 	if err != nil {

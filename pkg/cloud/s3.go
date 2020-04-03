@@ -26,11 +26,11 @@ func NewAmazonS3(p client.ConfigProvider, cfgs ...*aws.Config) *AmazonS3 {
 	return &instance
 }
 
-func (s AmazonS3) Address(bucket string, key string) string {
+func (s *AmazonS3) Address(bucket string, key string) string {
 	return fmt.Sprintf("s3://%s", filepath.Join(bucket, key))
 }
 
-func (s AmazonS3) Upload(bucket string, key string, file []byte) (*s3.PutObjectOutput, error) {
+func (s *AmazonS3) Upload(bucket string, key string, file []byte) (*s3.PutObjectOutput, error) {
 	return s.API.PutObject(&s3.PutObjectInput{
 		Bucket:               &bucket,
 		Key:                  &key,

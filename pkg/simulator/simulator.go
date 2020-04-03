@@ -24,8 +24,8 @@ type Config struct {
 
 // Simulator is the responsible of creating the nodes and registering them in the kubernetes master.
 type Simulator struct {
-	kc  *orchestrator.Kubernetes
-	aws  *cloud.AmazonWS
+	orchestrator  *orchestrator.Kubernetes
+	cloud  *cloud.AmazonWS
 	config Config
 }
 
@@ -36,8 +36,8 @@ func New(kubernetes *orchestrator.Kubernetes, aws *cloud.AmazonWS) *Simulator {
 		// TODO: Throw an error. Logger? Log Fatal?
 	}
 	m := Simulator{
-		kc:     kubernetes,
-		aws:    aws,
+		orchestrator:     kubernetes,
+		cloud:    aws,
 		config: cfg,
 	}
 	return &m
