@@ -6,14 +6,12 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/aws/aws-sdk-go/service/ec2/ec2iface"
 	"reflect"
-	"sync"
 )
 
 // AmazonEC2 wraps the AWS EC2 API.
 type AmazonEC2 struct {
 	API ec2iface.EC2API
 	Retries int
-	lockLaunch sync.Mutex
 	NamePrefix string
 }
 
