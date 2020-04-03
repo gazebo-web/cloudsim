@@ -14,6 +14,7 @@ type AmazonEC2 struct {
 	API ec2iface.EC2API
 	Retries int
 	lockLaunch sync.Mutex
+	NamePrefix string
 }
 
 // NewAmazonEC2 returns a new AmazonEC2 instance by the given AWS session and configuration.
