@@ -1,4 +1,4 @@
-package simulation
+package simulations
 
 import "time"
 
@@ -45,21 +45,7 @@ type Simulation struct {
 	// NOTE: statuses should be updated in sequential DB Transactions. ie. one status per TX.
 	Platform    *string `json:"platform,omitempty" form:"platform"`
 	Application *string `json:"application,omitempty" form:"application"`
-	// TODO: both fields Extra and ExtraSelector should be a separate table, specific to
-	//   each Application, and with a reference back to this simulation ID.
-	// A free form string field to store extra details, usually associated to the
-	// chosen Application. Eg. SubT would store here the different robot names, types
-	// and images.
-	Extra *string `gorm:"size:999999" json:"extra,omitempty"`
-	// A extra string field to store a selector that can help specific Applications
-	// to filter simulations (eg. SQL WHERE). SubT could store the circuit here.
-	ExtraSelector *string `json:"-"`
-	// TODO: This is a field specific to SubT. As such this is a temporary field
-	//  that should be included in the same separate table where Extra and
-	//  ExtraSelector should reside.
 	// Contains the names of all robots in the simulation in a comma-separated list.
 	Robots *string `gorm:"size:1000" json:"robots"`
-	// TODO: This is a field specific to SubT. This is a temporary field that should be
-	//  extracted from the Simulation struct.
 	Held bool `json:"held"`
 }

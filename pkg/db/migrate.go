@@ -104,7 +104,7 @@ func migrateSimulationRobots(ctx context.Context, db *gorm.DB) {
 
 	// First check if the migration is needed, otherwise return.
 	var count int
-	if err := db.Model(&simulation.Simulation{}).
+	if err := db.Model(&simulations.Simulation{}).
 		Where("robots IS NULL").
 		Count(&count).Error; err != nil {
 		log.Fatal("[MIGRATION] Migrating DeploymentStatus robots values: could not get number of entries for migration")
