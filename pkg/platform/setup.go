@@ -178,12 +178,12 @@ func (p *Platform) setupQueues() *Platform {
 func (p *Platform) setupWorkers() (*Platform, error) {
 	var err error
 
-	p.LaunchPool, err = p.PoolFactory(p.Config.PoolSizeLaunchSim, worker.Start)
+	p.LaunchPool, err = p.PoolFactory(p.Config.PoolSizeLaunchSim, workers.Start)
 	if err != nil {
 		return nil, err
 	}
 
-	p.TerminationPool, err = p.PoolFactory(p.Config.PoolSizeErrorHandler, worker.Terminate)
+	p.TerminationPool, err = p.PoolFactory(p.Config.PoolSizeErrorHandler, workers.Terminate)
 	if err != nil {
 		return nil, err
 	}

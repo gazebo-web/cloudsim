@@ -13,6 +13,7 @@ import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulator"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/transport"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/users"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/workers"
 	"gitlab.com/ignitionrobotics/web/fuelserver/permissions"
 	"gitlab.com/ignitionrobotics/web/ign-go"
 	"gitlab.com/ignitionrobotics/web/ign-go/scheduler"
@@ -38,19 +39,19 @@ type Platform struct {
 	Simulator        simulator.ISimulator
 	PoolFactory      pool.Factory
 	Scheduler        *scheduler.Scheduler
-	LaunchQueue      *queue.IQueue
-	TerminationQueue chan string
+	LaunchQueue      queue.IQueue
+	TerminationQueue chan workers.TerminateDTO
 	LaunchPool       pool.IPool
 	TerminationPool  pool.IPool
 }
 
 // Name returns the platform name
-func (p Platform) Name() string {
+func (p *Platform) Name() string {
 	return "cloudsim"
 }
 
 // New returns a new application from the given configuration.
-func New(config Config) Platform {
+func New(config Config) *Platform {
 	p := Platform{}
 	p.Config = config
 
@@ -109,5 +110,5 @@ func New(config Config) Platform {
 		p.Logger.Critical("[INIT|CRITICAL] Could not initialize transport.")
 	}
 	p.Logger.Debug("[INIT] Transport initialized. Using: IGN Transport.")
-	return p
+	return &p
 }
