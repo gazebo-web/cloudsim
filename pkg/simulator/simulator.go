@@ -26,6 +26,8 @@ type Simulator struct {
 	orchestrator    *orchestrator.Kubernetes
 	cloud           *cloud.AmazonWS
 	config          Config
+	groupRepository IGroupRepository
+	nodeRepository  INodeRepository
 }
 
 // New returns a new Simulator instance.
