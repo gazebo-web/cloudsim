@@ -8,20 +8,20 @@ import (
 )
 
 type Config struct {
-	SysAdmin            string `env:"IGN_CLOUDSIM_SYSTEM_ADMIN"`
-	SSLport             string `env:"IGN_CLOUDSIM_SSL_PORT" envDefault:":4431"`
-	HTTPport            string `env:"IGN_CLOUDSIM_HTTP_PORT" envDefault:":8001"`
+	SysAdmin string `env:"IGN_CLOUDSIM_SYSTEM_ADMIN"`
+	SSLport  string `env:"IGN_CLOUDSIM_SSL_PORT" envDefault:":4431"`
+	HTTPport string `env:"IGN_CLOUDSIM_HTTP_PORT" envDefault:":8001"`
 	// Identity for the systemAdmin to be used during `go test`.
 	SysAdminIdentityForTest string `env:"IGN_SYSTEM_ADMIN_IDENTITY_TEST"`
 	ConnectToCloud          bool   `env:"IGN_CLOUDSIM_CONNECT_TO_CLOUD"`
 	NodesManagerImpl        string `env:"IGN_CLOUDSIM_NODES_MGR_IMPL" envDefault:"ec2"`
 	IgnTransportTopic       string `env:"IGN_TRANSPORT_TEST_TOPIC" envDefault:"/foo"`
-	Auth0					auth0.Config
+	Auth0                   auth0.Config
 	// Are we using S3 for logs?
-	S3LogsCopyEnabled bool `env:"AWS_GZ_LOGS_ENABLED" envDefault:"true"`
-	PoolSizeLaunchSim    int `env:"SIMSVC_POOL_LAUNCH_SIM" envDefault:"10"`
-	PoolSizeTerminateSim int `env:"SIMSVC_POOL_TERMINATE_SIM" envDefault:"10"`
-	PoolSizeErrorHandler int `env:"SIMSVC_POOL_ERROR_HANDLER" envDefault:"20"`
+	S3LogsCopyEnabled    bool `env:"AWS_GZ_LOGS_ENABLED" envDefault:"true"`
+	PoolSizeLaunchSim    int  `env:"SIMSVC_POOL_LAUNCH_SIM" envDefault:"10"`
+	PoolSizeTerminateSim int  `env:"SIMSVC_POOL_TERMINATE_SIM" envDefault:"10"`
+	PoolSizeErrorHandler int  `env:"SIMSVC_POOL_ERROR_HANDLER" envDefault:"20"`
 	// Timeout in seconds to wait until a new Pod is ready. Default: 5 minutes.
 	PodReadyTimeoutSeconds int `env:"SIMSVC_POD_READY_TIMEOUT_SECONDS" envDefault:"300"`
 	// Timeout in seconds to wait until a new Node is ready. Default: 5 minutes.

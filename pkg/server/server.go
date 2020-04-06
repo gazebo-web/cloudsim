@@ -6,9 +6,9 @@ import (
 )
 
 type Config struct {
-	Auth0 auth0.Config
+	Auth0    auth0.Config
 	HTTPport string
-	SSLport string
+	SSLport  string
 }
 
 func New(config Config) (*ign.Server, error) {

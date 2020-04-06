@@ -17,12 +17,12 @@ func Migrate(ctx context.Context, db *gorm.DB) {
 
 	if db != nil {
 		db.AutoMigrate(
-			//&sim.Simulation{},
-			//&sim.SimulationDeploymentsSubTValue{},
-			//&sim.MachineInstance{},
-			//&sim.SubTCircuitRules{},
-			//&sim.CircuitCustomRule{},
-			//&sim.SubTQualifiedParticipant{},
+		//&sim.Simulation{},
+		//&sim.SimulationDeploymentsSubTValue{},
+		//&sim.MachineInstance{},
+		//&sim.SubTCircuitRules{},
+		//&sim.CircuitCustomRule{},
+		//&sim.SubTQualifiedParticipant{},
 		)
 
 		migrateMultiSimRoles(ctx, db)

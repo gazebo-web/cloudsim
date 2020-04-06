@@ -30,26 +30,18 @@ const (
 // Group represents a set of nodes working together to run a simulation.
 type Group struct {
 	gorm.Model
-	Name string `json:"name"`
-	GroupID string `json:"group_id"`
-	Platform string `json:"platform"`
+	Name        string `json:"name"`
+	GroupID     string `json:"group_id"`
+	Platform    string `json:"platform"`
 	Application string `json:"application"`
-	Status int64 `json:"status"`
-	PrivateKey string `json:"private_key"`
-	Iam string `json:"iam"`
-	Region string `json:"region"`
-	Zone string `json:"zone"`
-	Nodes []Node
+	Status      int64  `json:"status"`
+	PrivateKey  string `json:"private_key"`
+	IAM         string `json:"iam"`
+	Region      string `json:"region"`
+	Zone        string `json:"zone"`
+	Nodes       []Node
 }
 
-func (c *Group) Launch() {
-	c.Status = GROUP_STATUS_LAUNCHING
-}
-
-func (c *Group) Stop() {
-	c.Status = GROUP_STATUS_STOPPING
-}
-
-func (c *Group) Delete() {
-	c.Status = GROUP_STATUS_DELETING
+func (Group) TableName() string {
+	return "cloudsim_simulator_groups"
 }

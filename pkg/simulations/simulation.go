@@ -47,5 +47,5 @@ type Simulation struct {
 	Application *string `json:"application,omitempty" form:"application"`
 	// Contains the names of all robots in the simulation in a comma-separated list.
 	Robots *string `gorm:"size:1000" json:"robots"`
-	Held bool `json:"held"`
+	Held   bool    `json:"held"`
 }

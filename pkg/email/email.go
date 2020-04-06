@@ -8,7 +8,7 @@ import (
 // Config represents a set of options to configure the Email service.
 type Email struct {
 	DefaultEmailRecipients []string
-	DefaultEmailSender string
+	DefaultEmailSender     string
 }
 
 // TODO: Find a better name. This should be its own service and not only a configuration parser.

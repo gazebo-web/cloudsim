@@ -10,8 +10,8 @@ import (
 
 // AmazonEC2 wraps the AWS EC2 API.
 type AmazonEC2 struct {
-	API ec2iface.EC2API
-	Retries int
+	API        ec2iface.EC2API
+	Retries    int
 	NamePrefix string
 }
 

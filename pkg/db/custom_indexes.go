@@ -29,8 +29,6 @@ func AddCustomIndexes(ctx context.Context, db *gorm.DB) {
 
 }
 
-
-
 // indexIsPresent returns true if the index with name idxName already exists in the given table
 func indexIsPresent(db *gorm.DB, table string, idxName string) (bool, error) {
 	// Raw SQL

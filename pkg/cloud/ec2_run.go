@@ -12,13 +12,13 @@ import (
 )
 
 type RunInstanceConfig struct {
-	DryRun bool
-	KeyName string
-	MinCount int64
-	MaxCount int64
+	DryRun           bool
+	KeyName          string
+	MinCount         int64
+	MaxCount         int64
 	SecurityGroupIds []string
-	SubnetId string
-	Tags map[*string]*string
+	SubnetId         string
+	Tags             map[*string]*string
 }
 
 // NewRunInstancesInput initializes a new RunInstancesInput from the given config.
@@ -30,16 +30,16 @@ func (ec *AmazonEC2) NewRunInstancesInput(config RunInstanceConfig) ec2.RunInsta
 	}
 
 	input := ec2.RunInstancesInput{
-		DryRun: aws.Bool(config.DryRun),
-		KeyName: aws.String(config.KeyName),
-		MinCount: aws.Int64(config.MinCount),
-		MaxCount: aws.Int64(config.MaxCount),
+		DryRun:           aws.Bool(config.DryRun),
+		KeyName:          aws.String(config.KeyName),
+		MinCount:         aws.Int64(config.MinCount),
+		MaxCount:         aws.Int64(config.MaxCount),
 		SecurityGroupIds: aws.StringSlice(config.SecurityGroupIds),
-		SubnetId: aws.String(""),
+		SubnetId:         aws.String(""),
 		TagSpecifications: []*ec2.TagSpecification{
 			{
 				ResourceType: aws.String("instance"),
-				Tags: tags,
+				Tags:         tags,
 			},
 		},
 	}

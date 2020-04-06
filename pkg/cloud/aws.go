@@ -13,8 +13,8 @@ type AmazonWS struct {
 	// your service clients will ensure the configuration is loaded the fewest
 	// number of times possible.
 	session *session.Session
-	EC2 *AmazonEC2
-	S3 *AmazonS3
+	EC2     *AmazonEC2
+	S3      *AmazonS3
 }
 
 // New returns a new Amazon Web Service client.

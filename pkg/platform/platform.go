@@ -26,7 +26,7 @@ type Platform struct {
 	Server           *ign.Server
 	Logger           ign.Logger
 	Context          context.Context
-	Email 			 *email.Email
+	Email            *email.Email
 	Validator        *validator.Validate
 	FormDecoder      *form.Decoder
 	Transport        *transport.Transport

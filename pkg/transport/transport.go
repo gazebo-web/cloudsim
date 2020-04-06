@@ -10,7 +10,7 @@ type config struct {
 }
 
 type Transport struct {
-	Node *igntransport.GoIgnTransportNode
+	Node  *igntransport.GoIgnTransportNode
 	Topic string
 }
 

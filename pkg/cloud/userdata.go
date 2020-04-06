@@ -9,7 +9,7 @@ import (
 type RunUserDataConfig struct {
 	GroupLabels string
 	ExtraLabels string
-	JoinCmd string
+	JoinCmd     string
 }
 
 // NewTemplate creates a new Template from the parsed file called template.gotxt.

@@ -6,7 +6,6 @@ import (
 	"testing"
 )
 
-
 func TestNew_Null(t *testing.T) {
 	auth := New()
 	assert.Zero(t, auth.PublicKey)
