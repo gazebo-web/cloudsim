@@ -3,12 +3,48 @@ package cloud
 import (
 	"context"
 	"fmt"
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/logger"
 	"gitlab.com/ignitionrobotics/web/cloudsim/tools"
 	"time"
 )
+
+type RunInstanceConfig struct {
+	DryRun bool
+	KeyName string
+	MinCount int64
+	MaxCount int64
+	SecurityGroupIds []string
+	SubnetId string
+	Tags map[*string]*string
+}
+
+// NewRunInstancesInput initializes a new RunInstancesInput from the given config.
+func (ec *AmazonEC2) NewRunInstancesInput(config RunInstanceConfig) ec2.RunInstancesInput {
+	var tags []*ec2.Tag
+
+	for key, v := range config.Tags {
+		tags = append(tags, &ec2.Tag{Key: key, Value: v})
+	}
+
+	input := ec2.RunInstancesInput{
+		DryRun: aws.Bool(config.DryRun),
+		KeyName: aws.String(config.KeyName),
+		MinCount: aws.Int64(config.MinCount),
+		MaxCount: aws.Int64(config.MaxCount),
+		SecurityGroupIds: aws.StringSlice(config.SecurityGroupIds),
+		SubnetId: aws.String(""),
+		TagSpecifications: []*ec2.TagSpecification{
+			{
+				ResourceType: aws.String("instance"),
+				Tags: tags,
+			},
+		},
+	}
+	return input
+}
 
 // RunInstance requests a single new EC2 instance to AWS.
 func (ec *AmazonEC2) RunInstance(ctx context.Context, input *ec2.RunInstancesInput) (*ec2.Reservation, error) {
