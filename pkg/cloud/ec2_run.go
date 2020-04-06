@@ -10,6 +10,7 @@ import (
 	"time"
 )
 
+// RunInstance requests a single new EC2 instance to AWS.
 func (ec *AmazonEC2) RunInstance(ctx context.Context, input *ec2.RunInstancesInput) (*ec2.Reservation, error) {
 	input.SetDryRun(true)
 	for try := 1; try <= ec.Retries; try++ {
@@ -26,7 +27,9 @@ func (ec *AmazonEC2) RunInstance(ctx context.Context, input *ec2.RunInstancesInp
 		}
 		if try != ec.Retries {
 			tools.Sleep(time.Second * time.Duration(try))
+			continue
 		}
+		return nil, err
 	}
 
 	input.SetDryRun(false)
@@ -42,6 +45,8 @@ func (ec *AmazonEC2) RunInstance(ctx context.Context, input *ec2.RunInstancesInp
 	return reservation, nil
 }
 
+// RunInstances requests a set of new EC2 instances to AWS.
+// If there is an error in the middle of the operation, it will return the current reservations as well as the error.
 func (ec *AmazonEC2) RunInstances(ctx context.Context, inputs []*ec2.RunInstancesInput) (reservations []*ec2.Reservation, err error) {
 	var reservation *ec2.Reservation
 	for _, input := range inputs {

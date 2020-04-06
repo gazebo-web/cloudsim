@@ -8,7 +8,11 @@ import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/logger"
 )
 
-func (ec *AmazonEC2) TerminateInstances(ctx context.Context, input *ec2.TerminateInstancesInput) (*ec2.TerminateInstancesOutput, error) {
+// TerminateInstances terminates a set of EC2 instances by the given instances IDs.
+func (ec *AmazonEC2) TerminateInstances(ctx context.Context, instances []*string) (*ec2.TerminateInstancesOutput, error) {
+	input := &ec2.TerminateInstancesInput{
+		InstanceIds: instances,
+	}
 	input.SetDryRun(true)
 	_, err := ec.API.TerminateInstances(input)
 	if err != nil {

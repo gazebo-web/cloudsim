@@ -6,7 +6,7 @@ import (
 	"text/template"
 )
 
-type TemplateConfig struct {
+type RunUserDataConfig struct {
 	GroupLabels string
 	ExtraLabels string
 	JoinCmd string
@@ -14,23 +14,23 @@ type TemplateConfig struct {
 
 // NewTemplate creates a new Template from the parsed file called template.gotxt.
 // template.gotxt includes the ec2 user data commands to run when the EC2 instance starts.
-func NewTemplate() *template.Template {
+func NewRunUserDataCommand() *template.Template {
 	t := template.Must(template.ParseFiles("template.gotxt"))
 	return t
 }
 
-// NewTemplateConfig creates a TemplateConfig to configure a Template.
+// NewRunUserDataConfig creates a RunUserDataConfig to configure a Template.
 // It includes the kubeadm join command, and the node labels to set to the Kubelet.
-func NewTemplateConfig(joinCmd, groupLabels string, extraLabels []string) *TemplateConfig {
-	return &TemplateConfig{
+func NewRunUserDataConfig(joinCmd, groupLabels string, extraLabels []string) *RunUserDataConfig {
+	return &RunUserDataConfig{
 		GroupLabels: groupLabels,
 		ExtraLabels: strings.Join(extraLabels, ","),
 		JoinCmd:     joinCmd,
 	}
 }
 
-// FillTemplate takes a template and fills it with the given configuration.
-func FillTemplate(t *template.Template, config TemplateConfig) string {
+// FillUserDataCommand takes a template and fills it with the given configuration.
+func FillUserDataCommand(t *template.Template, config RunUserDataConfig) string {
 	var w io.Writer
 	var result []byte
 	t.Execute(w, config)
