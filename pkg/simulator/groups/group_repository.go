@@ -1,25 +1,25 @@
-package simulator
+package groups
 
 import (
 	"github.com/jinzhu/gorm"
 	"github.com/pkg/errors"
 )
 
-type IGroupRepository interface {
+type IRepository interface {
 	Crete(group Group) (*Group, error)
 }
 
-type GroupRepository struct {
+type Repository struct {
 	db *gorm.DB
 }
 
-func NewGroupRepository(db *gorm.DB) *GroupRepository {
-	return &GroupRepository{
+func NewRepository(db *gorm.DB) *Repository {
+	return &Repository{
 		db: db,
 	}
 }
 
-func (r *GroupRepository) Create(group Group) (*Group, error) {
+func (r *Repository) Create(group Group) (*Group, error) {
 	if pk := r.db.NewRecord(group); !pk {
 		return nil, errors.New("Group already exists")
 	}

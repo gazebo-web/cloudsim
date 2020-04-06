@@ -4,6 +4,8 @@ import (
 	"github.com/caarlos0/env"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/cloud"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulator/groups"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulator/nodes"
 )
 
 type ISimulator interface {
@@ -26,9 +28,15 @@ type Simulator struct {
 	orchestrator    *orchestrator.Kubernetes
 	cloud           *cloud.AmazonWS
 	config          Config
-	groupRepository IGroupRepository
-	nodeRepository  INodeRepository
+	repositories 	Repositories
+	Controller		IController
 }
+
+type Repositories struct {
+	group groups.IRepository
+	node nodes.IRepository
+}
+
 
 // New returns a new Simulator instance.
 func New(kubernetes *orchestrator.Kubernetes, aws *cloud.AmazonWS) *Simulator {

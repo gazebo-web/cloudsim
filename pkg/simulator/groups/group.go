@@ -1,4 +1,4 @@
-package simulator
+package groups
 
 import "github.com/jinzhu/gorm"
 
