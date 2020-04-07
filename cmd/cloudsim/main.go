@@ -7,14 +7,14 @@ import (
 )
 
 func main() {
-	var cloudsim platform.Platform
+	var cloudsim *platform.Platform
 	var applications map[string]application.IApplication
 
 	config := platform.NewConfig()
 	cloudsim = platform.New(config)
 
-	RegisterApplications(&cloudsim, &applications)
-	RegisterRoutes(&cloudsim)
+	RegisterApplications(cloudsim, &applications)
+	RegisterRoutes(cloudsim)
 
 	if err := cloudsim.Start(cloudsim.Context); err != nil {
 		cloudsim.Logger.Critical(fmt.Sprintf("[CLOUDSIM|CRITICAL] Error when initializing the platform\n%v", err))
