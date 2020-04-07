@@ -18,10 +18,10 @@ type Queue struct {
 	queue *ign.Queue
 }
 
-func New() *IQueue {
+func New() IQueue {
 	var q IQueue
 	q = initialize()
-	return &q
+	return q
 }
 
 func initialize() *Queue {

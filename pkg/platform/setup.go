@@ -17,6 +17,7 @@ import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/transport"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/users"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/worker"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/workers"
 	"gitlab.com/ignitionrobotics/web/fuelserver/permissions"
 	"gitlab.com/ignitionrobotics/web/ign-go"
 	"gitlab.com/ignitionrobotics/web/ign-go/scheduler"
@@ -169,7 +170,7 @@ func (p *Platform) setupScheduler() *Platform {
 // setupQueues initializes the Launch and Termination queues.
 func (p *Platform) setupQueues() *Platform {
 	p.LaunchQueue = queue.New()
-	p.TerminationQueue = make(chan string, 1000)
+	p.TerminationQueue = make(chan workers.TerminateDTO, 1000)
 	return p
 }
 
