@@ -160,7 +160,7 @@ func (p *Platform) setupSimulator() *Platform {
 
 // setupPoolFactory initializes the Default Pool Factory.
 func (p *Platform) setupPoolFactory() *Platform {
-	p.PoolFactory = pool.DefaultFactory
+	p.PoolFactory = pool.NewPool
 	return p
 }
 
