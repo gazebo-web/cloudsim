@@ -76,8 +76,8 @@ func (p *Platform) Start(ctx context.Context) error {
 
 // Stop stops the platform.
 func (p *Platform) Stop(ctx context.Context) error {
-	// TODO: Stop expired simulations cleaner
-	// TODO: Stop multisim status updater
+	p.Updater.Ticker.Stop()
+	p.Cleaner.Ticker.Stop()
 	close(p.TerminationQueue)
 	return nil
 }
