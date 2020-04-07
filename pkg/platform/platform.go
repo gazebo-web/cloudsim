@@ -7,6 +7,7 @@ import (
 	"github.com/go-playground/validator"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/cloud"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/email"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/monitors"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/pool"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/queue"
@@ -43,6 +44,8 @@ type Platform struct {
 	TerminationQueue chan workers.TerminateDTO
 	LaunchPool       pool.IPool
 	TerminationPool  pool.IPool
+	Cleaner			 *monitors.Monitor
+	Updater			 *monitors.Monitor
 }
 
 // Name returns the platform name
@@ -110,5 +113,7 @@ func New(config Config) *Platform {
 		p.Logger.Critical("[INIT|CRITICAL] Could not initialize transport.")
 	}
 	p.Logger.Debug("[INIT] Transport initialized. Using: IGN Transport.")
+
+	p.setupMonitors()
 	return &p
 }

@@ -6,7 +6,6 @@ import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/monitors"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/workers"
 	"gitlab.com/ignitionrobotics/web/ign-go"
-	"time"
 )
 
 // IPlatformCore represents a set of methods to start, stop, restart and reload the application.
@@ -54,23 +53,18 @@ func (p *Platform) Start(ctx context.Context) error {
 
 	// TODO: Rebuild state
 
-	cleaner := monitors.New(time.Minute)
+
 	cleanerRunner := monitors.NewRunner(
 		ctx,
-		"expired-simulations-cleaner",
-		"Expired Simulations Cleaner",
-		cleaner,
+		p.Cleaner,
 		// TODO: Add checkForExpiredSimulations
 		func(ctx context.Context) error { return nil },
 	)
 	go cleanerRunner()
 
-	updater := monitors.New(20 * time.Second)
 	updaterRunner := monitors.NewRunner(
 		ctx,
-		"multisim-status-updater",
-		"MultiSim Parent Status Updater",
-		updater,
+		p.Updater,
 		// TODO: Add updateMultiSimStatuses
 		func(ctx context.Context) error { return nil },
 	)

@@ -8,6 +8,7 @@ import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/db"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/email"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/logger"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/monitors"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/pool"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/queue"
@@ -22,6 +23,7 @@ import (
 	"gitlab.com/ignitionrobotics/web/ign-go"
 	"gitlab.com/ignitionrobotics/web/ign-go/scheduler"
 	"log"
+	"time"
 )
 
 // IPlatformSetup represent a set of methods to initialize the Platform.
@@ -44,6 +46,7 @@ type IPlatformSetup interface {
 	setupQueues() *Platform
 	setupWorkers() (*Platform, error)
 	setupTransport() (*Platform, error)
+	setupMonitors() *Platform
 }
 
 // setupLogger initializes the logger.
@@ -199,4 +202,10 @@ func (p *Platform) setupTransport() (*Platform, error) {
 	}
 	p.Transport = t
 	return p, nil
+}
+
+func (p *Platform) setupMonitors() *Platform {
+	p.Updater = monitors.New("expired-simulations-cleaner", "Expired Simulations Cleaner", 20 * time.Second)
+	p.Cleaner = monitors.New("multisim-status-updater", "MultiSim Parent Status Updater", time.Minute)
+	return p
 }
