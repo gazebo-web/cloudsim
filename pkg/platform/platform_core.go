@@ -55,7 +55,7 @@ func (p *Platform) Start(ctx context.Context) error {
 	// TODO: Rebuild state
 
 	cleaner := monitors.New(time.Minute)
-	cleanerRunner := monitors.GetRunner(
+	cleanerRunner := monitors.NewRunner(
 		ctx,
 		"expired-simulations-cleaner",
 		"Expired Simulations Cleaner",
@@ -66,7 +66,7 @@ func (p *Platform) Start(ctx context.Context) error {
 	go cleanerRunner()
 
 	updater := monitors.New(20 * time.Second)
-	updaterRunner := monitors.GetRunner(
+	updaterRunner := monitors.NewRunner(
 		ctx,
 		"multisim-status-updater",
 		"MultiSim Parent Status Updater",

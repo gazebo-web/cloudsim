@@ -24,7 +24,7 @@ func New(d time.Duration) *Monitor {
 	}
 }
 
-func GetRunner(baseCtx context.Context, id string, name string, monitor *Monitor, job Job) Runner {
+func NewRunner(baseCtx context.Context, id string, name string, monitor *Monitor, job Job) Runner {
 	newLogger := logger.Logger(baseCtx).Clone(id)
 	ctx := ign.NewContextWithLogger(baseCtx, newLogger)
 
