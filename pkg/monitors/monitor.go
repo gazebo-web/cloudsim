@@ -36,7 +36,7 @@ func NewRunner(baseCtx context.Context, monitor *Monitor, job Job) Runner {
 		for {
 			select {
 			case <-monitor.Done:
-				newLogger.Info(fmt.Sprintf("%s is done", monitor.Name))
+				newLogger.Info(fmt.Sprintf("[RUNNER] %s is done", monitor.Name))
 				return
 			case <-monitor.Ticker.C:
 				_ = job(ctx)
