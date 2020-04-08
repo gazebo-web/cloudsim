@@ -3,7 +3,6 @@ package platform
 import (
 	"context"
 	"github.com/go-playground/form"
-	"github.com/go-playground/validator"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/cloud"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/db"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/email"
@@ -21,6 +20,7 @@ import (
 	"gitlab.com/ignitionrobotics/web/fuelserver/permissions"
 	"gitlab.com/ignitionrobotics/web/ign-go"
 	"gitlab.com/ignitionrobotics/web/ign-go/scheduler"
+	"gopkg.in/go-playground/validator.v9"
 	"log"
 	"time"
 )

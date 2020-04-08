@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"github.com/go-playground/form"
-	"github.com/go-playground/validator"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/cloud"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/email"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/monitors"
@@ -18,6 +17,7 @@ import (
 	"gitlab.com/ignitionrobotics/web/fuelserver/permissions"
 	"gitlab.com/ignitionrobotics/web/ign-go"
 	"gitlab.com/ignitionrobotics/web/ign-go/scheduler"
+	"gopkg.in/go-playground/validator.v9"
 )
 
 type IPlatform interface {

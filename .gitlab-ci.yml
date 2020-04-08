@@ -58,7 +58,7 @@ stages:
 proto:
   stage: installing
   before_script:
-    - cd ./ign-transport/proto/
+    - cd ./third_party/ign-transport/proto/
   script:
     - protoc --proto_path=. --go_out=. ignition/msgs/*.proto
   artifacts:

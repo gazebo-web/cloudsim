@@ -369,10 +369,7 @@
 
 [[projects]]
   name = "github.com/stretchr/testify"
-  packages = [
-    "assert",
-    "require"
-  ]
+  packages = ["assert"]
   revision = "ffdc059bfe9ce6a4e144ba849dbedead332c6053"
   version = "v1.3.0"
 
@@ -400,8 +397,7 @@
   name = "gitlab.com/ignitionrobotics/web/ign-go"
   packages = [
     ".",
-    "scheduler",
-    "testhelpers"
+    "scheduler"
   ]
   revision = "48b369571fcf660dbb0dda492c29ad5b38edb646"
   version = "4.0.1"
@@ -756,6 +752,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "2176f5d46694b620533c1de06606a5464ea55f99bbc2043f55a6f215a3fd3dfb"
+  inputs-digest = "c101702486426479e030c68031a8165616e4dcd7ad70c6374937a589fc544333"
   solver-name = "gps-cdcl"
   solver-version = 1
