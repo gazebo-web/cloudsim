@@ -20,8 +20,12 @@ func New(p *platform.Platform) *SubT {
 }
 
 // Name returns the SubT application name.
-func (s *SubT) Name() string {
+func (app *SubT) Name() string {
 	return "subt"
+}
+
+func (app *SubT) Version() string {
+	return "2.0"
 }
 
 // Register creates a New application to be registered in the platform.

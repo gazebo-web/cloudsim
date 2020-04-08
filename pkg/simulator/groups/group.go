@@ -6,28 +6,28 @@ import (
 )
 
 const (
-	GROUP_STATUS_INITIALIZING = iota + 1000
-	GROUP_STATUS_INITIALIZED
+	StatusGroupInitializing = iota + 1000
+	StatusGroupInitialized
 )
 
 const (
-	GROUP_STATUS_LAUNCHING = iota + 2000
-	GROUP_STATUS_LAUNCHED
+	StatusGroupLaunching = iota + 2000
+	StatusGroupLaunched
 )
 
 const (
-	GROUP_STATUS_STOPPING = iota + 3000
-	GROUP_STATUS_STOPPED
+	StatusGroupStopping = iota + 3000
+	StatusGroupStopped
 )
 
 const (
-	GROUP_STATUS_RESTARTING = iota + 4000
-	GROUP_STATUS_RESTARTED
+	StatusGroupRestarting = iota + 4000
+	StatusGroupRestarted
 )
 
 const (
-	GROUP_STATUS_DELETING = iota + 5000
-	GROUP_STATUS_DELETED
+	StatusGroupDeleting = iota + 5000
+	StatusGroupDeleted
 )
 
 // Group represents a set of nodes working together to run a simulation.

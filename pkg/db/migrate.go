@@ -27,7 +27,7 @@ func Migrate(ctx context.Context, db *gorm.DB) {
 
 		migrateMultiSimRoles(ctx, db)
 		migrateCircuitRules(ctx, db)
-		migrateDeploymentStatusConstantValues(ctx, db)
+		migrateStatusConstantValues(ctx, db)
 		migrateSimulationRobots(ctx, db)
 	}
 }
@@ -59,9 +59,9 @@ func migrateCircuitRules(ctx context.Context, db *gorm.DB) {
 	}
 }
 
-func migrateDeploymentStatusConstantValues(ctx context.Context, db *gorm.DB) {
+func migrateStatusConstantValues(ctx context.Context, db *gorm.DB) {
 
-	log.Println("[MIGRATION] updating DeploymentStatus constant values. From 0..9 to 0..100")
+	log.Println("[MIGRATION] updating Status constant values. From 0..9 to 0..100")
 
 	// First check if the migration is needed. Otherwise return
 	var needToUpdate bool
@@ -74,7 +74,7 @@ func migrateDeploymentStatusConstantValues(ctx context.Context, db *gorm.DB) {
 	}
 
 	if !needToUpdate {
-		log.Println("[MIGRATION] updating DeploymentStatus constant values. NO needToUpdate")
+		log.Println("[MIGRATION] updating Status constant values. NO needToUpdate")
 		return
 	}
 
@@ -86,15 +86,15 @@ func migrateDeploymentStatusConstantValues(ctx context.Context, db *gorm.DB) {
 	// to rows with higher values ( >= 4).
 	if err := tx.Exec("UPDATE simulation_deployments SET deployment_status = (deployment_status+1)*10 WHERE deployment_status BETWEEN 4 AND 9;").Error; err != nil {
 		tx.Rollback()
-		log.Fatal("[MIGRATION] Error updating DeploymentStatus constant values. From 0..9 to 0..100", err)
+		log.Fatal("[MIGRATION] Error updating Status constant values. From 0..9 to 0..100", err)
 	}
 	if err := tx.Exec("UPDATE simulation_deployments SET deployment_status = (deployment_status)*10 WHERE deployment_status <= 3;").Error; err != nil {
 		tx.Rollback()
-		log.Fatal("[MIGRATION] Error updating DeploymentStatus constant values. From 0..9 to 0..100", err)
+		log.Fatal("[MIGRATION] Error updating Status constant values. From 0..9 to 0..100", err)
 	}
 
 	if err := tx.Commit().Error; err != nil {
-		log.Fatal("[MIGRATION] Error while committing TX to update DeploymentStatus constant values", err)
+		log.Fatal("[MIGRATION] Error while committing TX to update Status constant values", err)
 	}
 }
 
@@ -107,9 +107,9 @@ func migrateSimulationRobots(ctx context.Context, db *gorm.DB) {
 	if err := db.Model(&simulations.Simulation{}).
 		Where("robots IS NULL").
 		Count(&count).Error; err != nil {
-		log.Fatal("[MIGRATION] Migrating DeploymentStatus robots values: could not get number of entries for migration")
+		log.Fatal("[MIGRATION] Migrating Status robots values: could not get number of entries for migration")
 	} else if count == 0 {
-		log.Println("[MIGRATION] Migrating DeploymentStatus robots values: migration is not required")
+		log.Println("[MIGRATION] Migrating Status robots values: migration is not required")
 		return
 	}
 
@@ -131,10 +131,10 @@ func migrateSimulationRobots(ctx context.Context, db *gorm.DB) {
 		  ON sd.id = r.id
 		SET sd.robots = r.robots`).Error; err != nil {
 		tx.Rollback()
-		log.Fatal("[MIGRATION] Error updating DeploymentStatus robots values", err)
+		log.Fatal("[MIGRATION] Error updating Status robots values", err)
 	}
 
 	if err := tx.Commit().Error; err != nil {
-		log.Fatal("[MIGRATION] Error while committing TX to update DeploymentStatus robots values", err)
+		log.Fatal("[MIGRATION] Error while committing TX to update Status robots values", err)
 	}
 }

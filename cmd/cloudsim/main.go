@@ -14,7 +14,8 @@ func main() {
 	cloudsim = platform.New(config)
 
 	RegisterApplications(cloudsim, &applications)
-	RegisterRoutes(cloudsim)
+	RegisterRoutes(cloudsim, applications)
+	ScheduleTasks(cloudsim, applications)
 
 	if err := cloudsim.Start(cloudsim.Context); err != nil {
 		cloudsim.Logger.Critical(fmt.Sprintf("[CLOUDSIM|CRITICAL] Error when initializing the platform\n%v", err))

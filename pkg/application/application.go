@@ -2,25 +2,23 @@ package application
 
 import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/platform"
-	"reflect"
+	"gitlab.com/ignitionrobotics/web/ign-go"
 )
 
 // IApplication describes a set of methods for an Application.
 type IApplication interface {
 	Name() string
-	Platform() platform.IPlatform
+	Version() string
+	RegisterRoutes() ign.Routes
 }
 
 type Application struct {
-	parent platform.IPlatform
+	Platform *platform.Platform
 }
 
-func New(p platform.IPlatform) *Application {
-	if reflect.ValueOf(p).Kind() != reflect.Ptr {
-		panic("p must a pointer to an IPlatform implementation")
-	}
+func New(p *platform.Platform) *Application {
 	app := &Application{
-		parent: p,
+		Platform: p,
 	}
 	return app
 }
@@ -29,6 +27,10 @@ func (app *Application) Name() string {
 	panic("Name should be implemented by the application")
 }
 
-func (app *Application) Platform() platform.IPlatform {
-	return app.parent
+func (app *Application) Version() string {
+	return "1.0"
+}
+
+func (app *Application) RegisterRoutes() ign.Routes {
+	panic("RegisterRoutes should be implemented by the application")
 }

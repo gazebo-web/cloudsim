@@ -36,7 +36,7 @@ func (p *Platform) Start(ctx context.Context) error {
 				p.Logger.Error(fmt.Sprintf("[QUEUE|LAUNCH] Error while serving launch action. Group ID: [%s]. Error: [%v]", dto.GroupID, err))
 				continue
 			}
-			p.Logger.Info(fmt.Sprintf("[QUEUE|LAUNCH] The launch action was successfully served to the workers pool. Group ID: [%s]", dto.GroupID))
+			p.Logger.Info(fmt.Sprintf("[QUEUE|LAUNCH] The launch action was successfully served to the worker pool. Group ID: [%s]", dto.GroupID))
 		}
 	}()
 
@@ -47,7 +47,7 @@ func (p *Platform) Start(ctx context.Context) error {
 				p.Logger.Error(fmt.Sprintf("[QUEUE|TERMINATE] Error while serving terminate action. Group ID: [%s]. Error: [%v]", dto.GroupID, err))
 				continue
 			}
-			p.Logger.Info(fmt.Sprintf("[QUEUE|TERMINATE] The terminate action was successfully served to the workers pool. Group ID: [%s]", dto.GroupID))
+			p.Logger.Info(fmt.Sprintf("[QUEUE|TERMINATE] The terminate action was successfully served to the worker pool. Group ID: [%s]", dto.GroupID))
 		}
 	}()
 

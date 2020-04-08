@@ -38,8 +38,8 @@ type Simulation struct {
 	// MultiSim holds which role this simulation plays within a multiSim deployment.
 	// Values should be of type MultiSimType.
 	MultiSim int
-	// A value from DeploymentStatus constants
-	DeploymentStatus *int `json:"status,omitempty"`
+	// A value from Status constants
+	Status *int `json:"status,omitempty"`
 	// A value from ErrorStatus constants
 	ErrorStatus *string `json:"error_status,omitempty"`
 	// NOTE: statuses should be updated in sequential DB Transactions. ie. one status per TX.
@@ -48,4 +48,17 @@ type Simulation struct {
 	// Contains the names of all robots in the simulation in a comma-separated list.
 	Robots *string `gorm:"size:1000" json:"robots"`
 	Held   bool    `json:"held"`
+}
+
+func (sim *Simulation) Clone() *Simulation {
+	clone := *sim
+
+	// Clear default GORM Model fields
+	clone.ID = uint(0)
+	clone.CreatedAt = time.Time{}
+	clone.UpdatedAt = time.Time{}
+	clone.StoppedAt = nil
+	clone.DeletedAt = nil
+
+	return &clone
 }
