@@ -3,7 +3,7 @@ package db
 import (
 	"context"
 	"github.com/jinzhu/gorm"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulation"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
 	"log"
 )
 

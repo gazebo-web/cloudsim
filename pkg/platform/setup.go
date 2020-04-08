@@ -17,7 +17,6 @@ import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulator"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/transport"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/users"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/worker"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/workers"
 	"gitlab.com/ignitionrobotics/web/fuelserver/permissions"
 	"gitlab.com/ignitionrobotics/web/ign-go"

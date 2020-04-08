@@ -35,13 +35,3 @@ func TestName_NameMatches(t *testing.T) {
 	m := mockApp2{}
 	assert.Equal(t, "test", m.Name())
 }
-
-func TestRegistry_RegisterApplication(t *testing.T) {
-	apps := map[string]*IApplication{}
-	RegisterApplications(apps, func() *IApplication {
-		var app IApplication
-		app = mockApp2{}
-		return &app
-	})
-	assert.Len(t, apps, 1)
-}

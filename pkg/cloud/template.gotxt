@@ -5,6 +5,6 @@ echo BEGIN
 date '+%Y-%m-%d %H:%M:%S'
 cat > /etc/systemd/system/kubelet.service.d/20-labels-taints.conf <<EOF
 [Service]
-Environment="KUBELET_EXTRA_ARGS=--node-labels={{.GroupLabels}},{{.ExtraLabels}},
+Environment="KUBELET_EXTRA_ARGS=--node-labels={{.GroupLabels}},{{.ExtraLabels}},"
 EOF
 {{.JoinCmd}}

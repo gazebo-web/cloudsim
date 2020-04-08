@@ -1,7 +1,7 @@
 package platform
 
 type Mock struct {
-	Platform
+	*Platform
 }
 
 func NewMock(config Config) IPlatform {

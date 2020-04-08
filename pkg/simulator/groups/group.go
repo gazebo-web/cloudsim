@@ -1,6 +1,9 @@
 package groups
 
-import "github.com/jinzhu/gorm"
+import (
+	"github.com/jinzhu/gorm"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulator/nodes"
+)
 
 const (
 	GROUP_STATUS_INITIALIZING = iota + 1000
@@ -39,7 +42,7 @@ type Group struct {
 	IAM         string `json:"iam"`
 	Region      string `json:"region"`
 	Zone        string `json:"zone"`
-	Nodes       []Node
+	Nodes       []nodes.Node
 }
 
 func (Group) TableName() string {
