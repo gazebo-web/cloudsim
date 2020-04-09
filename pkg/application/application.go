@@ -2,6 +2,7 @@ package application
 
 import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/platform"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/tasks"
 	"gitlab.com/ignitionrobotics/web/ign-go"
 )
 
@@ -10,6 +11,7 @@ type IApplication interface {
 	Name() string
 	Version() string
 	RegisterRoutes() ign.Routes
+	RegisterTasks() []tasks.Task
 }
 
 type Application struct {
@@ -33,4 +35,8 @@ func (app *Application) Version() string {
 
 func (app *Application) RegisterRoutes() ign.Routes {
 	panic("RegisterRoutes should be implemented by the application")
+}
+
+func (app *Application) RegisterTasks() []tasks.Task {
+	return []tasks.Task{}
 }

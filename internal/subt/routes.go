@@ -15,7 +15,7 @@ func (app *SubT) RegisterRoutes() ign.Routes {
 					Type:        "GET",
 					Description: "Get all simulations",
 					Handlers: ign.FormatHandlers{
-						ign.FormatHandler{Extension: ".json", Handler: nil},
+						ign.FormatHandler{Extension: ".json", Handler: app.Controllers.Simulations.GetAll},
 						ign.FormatHandler{Handler: nil},
 					},
 				},

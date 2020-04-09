@@ -69,8 +69,6 @@ func (p *Platform) Start(ctx context.Context) error {
 		func(ctx context.Context) error { return nil },
 	)
 	go updaterRunner()
-
-	// TODO: Register tasks for the scheduler
 	return nil
 }
 

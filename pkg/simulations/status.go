@@ -67,5 +67,5 @@ func GetStatusLabel(status Status) string {
 		return "Rejected"
 		break
 	}
-	panic("Invalid status")
+	panic("GetStatusLabel should receive a valid status")
 }

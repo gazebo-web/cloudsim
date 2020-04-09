@@ -13,17 +13,17 @@ func main() {
 	config := platform.NewConfig()
 	cloudsim = platform.New(config)
 
-	RegisterApplications(cloudsim, &applications)
-	RegisterRoutes(cloudsim, applications)
-	ScheduleTasks(cloudsim, applications)
-
 	if err := cloudsim.Start(cloudsim.Context); err != nil {
-		cloudsim.Logger.Critical(fmt.Sprintf("[CLOUDSIM|CRITICAL] Error when initializing the platform\n%v", err))
+		cloudsim.Logger.Critical(fmt.Sprintf("[CLOUDSIM|CRITICAL] Error when initializing cloudsim\n%v", err))
 		for name, _ := range applications {
 			cloudsim.Logger.Info(fmt.Sprintf("\tRunning with application [%s]", name))
 		}
 		panic(err)
 	}
+
+	RegisterApplications(cloudsim, &applications)
+	RegisterRoutes(cloudsim, applications)
+	ScheduleTasks(cloudsim, applications)
 
 	cloudsim.Server.Run()
 

@@ -28,7 +28,7 @@ func (app *SubT) Version() string {
 	return "2.0"
 }
 
-// Register creates a New application to be registered in the platform.
+// Register runs a set of instructions to initialize as an application for.
 func Register(p *platform.Platform) application.IApplication {
 	return New(p)
 }
