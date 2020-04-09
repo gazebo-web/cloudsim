@@ -11,7 +11,6 @@ type Email struct {
 	DefaultEmailSender     string `env:"IGN_DEFAULT_EMAIL_SENDER"`
 }
 
-// TODO: Find a better name. This should be its own service and not only a configuration parser.
 // New returns a new Email service.
 func New() *Email {
 	email := Email{}

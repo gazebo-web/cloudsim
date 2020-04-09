@@ -8,10 +8,13 @@ import (
 	"time"
 )
 
+// Runner represents a function that will trigger a monitor to run a job.
 type Runner func()
 
+// Job represents the set of instructions to be executed by the monitor.
 type Job func(ctx context.Context) error
 
+// Monitor is in charge of executing a job.
 type Monitor struct {
 	UUID string
 	Name string
@@ -19,6 +22,7 @@ type Monitor struct {
 	Done chan bool
 }
 
+// New creates a new Monitor.
 func New(uuid, name string, d time.Duration) *Monitor {
 	return &Monitor{
 		UUID: uuid,
@@ -28,6 +32,7 @@ func New(uuid, name string, d time.Duration) *Monitor {
 	}
 }
 
+// NewRunner creates a new runner by the given monitor and job.
 func NewRunner(baseCtx context.Context, monitor *Monitor, job Job) Runner {
 	newLogger := logger.Logger(baseCtx).Clone(monitor.UUID)
 	ctx := ign.NewContextWithLogger(baseCtx, newLogger)
