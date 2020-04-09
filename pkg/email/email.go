@@ -1,22 +1,21 @@
 package email
 
 import (
-	"gitlab.com/ignitionrobotics/web/cloudsim/tools"
+	"github.com/caarlos0/env"
 	"gitlab.com/ignitionrobotics/web/ign-go"
 )
 
 // Config represents a set of options to configure the Email service.
 type Email struct {
-	DefaultEmailRecipients []string
-	DefaultEmailSender     string
+	DefaultEmailRecipients []string `env:"IGN_DEFAULT_EMAIL_RECIPIENT" envSeparator:","`
+	DefaultEmailSender     string `env:"IGN_DEFAULT_EMAIL_SENDER"`
 }
 
 // TODO: Find a better name. This should be its own service and not only a configuration parser.
 // New returns a new Email service.
 func New() *Email {
 	email := Email{}
-	email.DefaultEmailRecipients = tools.EnvVarToSlice("IGN_DEFAULT_EMAIL_RECIPIENT")
-	email.DefaultEmailSender, _ = ign.ReadEnvVar("IGN_DEFAULT_EMAIL_SENDER")
+	_ = env.Parse(&email)
 	return &email
 }
 
