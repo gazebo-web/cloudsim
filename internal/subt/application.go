@@ -19,16 +19,17 @@ func New(p *platform.Platform) *SubT {
 	return subt
 }
 
-// Name returns the SubT application name.
+// Name returns the SubT application's name.
 func (app *SubT) Name() string {
 	return "subt"
 }
 
+// Version returns the SubT application's version.
 func (app *SubT) Version() string {
 	return "2.0"
 }
 
-// Register runs a set of instructions to initialize as an application for.
+// Register runs a set of instructions to initialize an application for the given platform.
 func Register(p *platform.Platform) application.IApplication {
 	return New(p)
 }

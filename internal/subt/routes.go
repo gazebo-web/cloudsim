@@ -2,6 +2,7 @@ package subt
 
 import "gitlab.com/ignitionrobotics/web/ign-go"
 
+// RegisterRoutes returns a slice of routes for the SubT application.
 func (app *SubT) RegisterRoutes() ign.Routes {
 	return ign.Routes{
 		ign.Route{
@@ -15,7 +16,7 @@ func (app *SubT) RegisterRoutes() ign.Routes {
 					Type:        "GET",
 					Description: "Get all simulations",
 					Handlers: ign.FormatHandlers{
-						ign.FormatHandler{Extension: ".json", Handler: app.Controllers.Simulations.GetAll},
+						ign.FormatHandler{Extension: ".json", Handler: nil},
 						ign.FormatHandler{Handler: nil},
 					},
 				},

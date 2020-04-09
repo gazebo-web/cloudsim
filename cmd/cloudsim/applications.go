@@ -6,14 +6,14 @@ import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/platform"
 )
 
-// Register applications inserts an application to the map of applications in the platform
+// RegisterApplications registers every application by calling their Register method.
+// The platform is passed to the
 func RegisterApplications(p *platform.Platform, apps *map[string]application.IApplication) {
 	RegisterApplication(apps, subt.Register(p))
 	// p.Applications = application.RegisterApplication(p.Applications, app.Register)
 }
 
-// RegisterApplications adds a given application to the platform.
-// Returns the list of applications
+// RegisterApplication adds a given application to the map of applications.
 func RegisterApplication(applications *map[string]application.IApplication, app application.IApplication) {
 	if app == nil || applications == nil {
 		panic("Invalid application")
