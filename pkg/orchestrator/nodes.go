@@ -18,7 +18,7 @@ func (kc Kubernetes) NodeWaitForReady(ctx context.Context, namespace string, gro
 	return kc.NodeWaitToMatchCondition(ctx, namespace, opts, timeout)
 }
 
-// WaitForMatchNodesCondition finds match Nodes based on the input ListOptions.
+// NodeWaitToMatchCondition finds match Nodes based on the input ListOptions.
 // Waits and checks if all matched nodes are in the given PodCondition
 func (kc Kubernetes) NodeWaitToMatchCondition(ctx context.Context, namespace string, opts metav1.ListOptions, timeout time.Duration) error {
 	logger.Logger(ctx).Info(fmt.Sprintf("Waiting up to %v for match nodes to be ready", timeout))

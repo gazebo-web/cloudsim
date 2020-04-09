@@ -89,6 +89,7 @@ func (p *Platform) setupRouter() *Platform {
 	return p
 }
 
+// setupEmail initializes the email service.
 func (p *Platform) setupEmail() *Platform {
 	e := email.New()
 	p.Email = e
@@ -194,6 +195,7 @@ func (p *Platform) setupWorkers() (*Platform, error) {
 	return p, nil
 }
 
+// setupTransport initializes Ignition Transport.
 func (p *Platform) setupTransport() (*Platform, error) {
 	t, err := transport.New()
 	if err != nil {
@@ -203,6 +205,7 @@ func (p *Platform) setupTransport() (*Platform, error) {
 	return p, nil
 }
 
+// setupMonitors initializes the platform's monitors.
 func (p *Platform) setupMonitors() *Platform {
 	p.Updater = monitors.New("expired-simulations-cleaner", "Expired Simulations Cleaner", 20 * time.Second)
 	p.Cleaner = monitors.New("multisim-status-updater", "MultiSim Parent Status Updater", time.Minute)

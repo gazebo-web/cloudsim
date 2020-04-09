@@ -60,6 +60,7 @@ func NewConfig(kubeconfig *string) (*rest.Config, error) {
 	return config, nil
 }
 
+// SetClientset assigns the given cli to the interal Interface
 func (kc *Kubernetes) SetClientset(cli kubernetes.Interface) {
 	kc.Interface = cli
 }

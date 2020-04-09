@@ -9,6 +9,10 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
+// WeaveRemovePeer removes a node from the list of peers of the weave network.
+// This step must be done manually before shutdown as per the weave documentation.
+//   https://www.weave.works/docs/net/latest/operational-guide/tasks/#detecting-and-reclaiming-lost-ip-address-space
+// Not doing so will make weave lose unrecoverable addresses to dead nodes.
 func (kc Kubernetes) WeaveRemovePeer(ctx context.Context, node *apiv1.Node) error {
 	// Get the weave pod name for the node
 	nodeName := node.Name

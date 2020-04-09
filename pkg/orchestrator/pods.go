@@ -18,6 +18,8 @@ const (
 	pollFrequency = 2 * time.Second
 )
 
+// PodExec creates a command for a specific kubernetes pod. stdin, stdout and stderr io can be defined
+// through the options parameter.
 func (kc Kubernetes) PodExec(ctx context.Context, namespace string, podName string, container string, command []string, options *remotecommand.StreamOptions) (opts *remotecommand.StreamOptions, err error) {
 	// Handle panics if pod exec cannot be run
 	defer func() {
@@ -77,6 +79,7 @@ func (kc Kubernetes) PodExec(ctx context.Context, namespace string, podName stri
 	return options, nil
 }
 
+// PodGetLog returns the log from a pod
 func (kc Kubernetes) PodGetLog(ctx context.Context, namespace string, podName string, container string, lines int64) (log *string, err error) {
 	// Handle panics if get pod logs cannot be run
 	defer func() {

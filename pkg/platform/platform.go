@@ -20,10 +20,12 @@ import (
 	"gopkg.in/go-playground/validator.v9"
 )
 
+// IPlatform defines the set of methods of a Platform.
 type IPlatform interface {
 	Name() string
 }
 
+// Platform represents a set of components to run applications.
 type Platform struct {
 	Server           *ign.Server
 	Logger           ign.Logger
@@ -53,7 +55,7 @@ func (p *Platform) Name() string {
 	return "cloudsim"
 }
 
-// New returns a new application from the given configuration.
+// New returns a new Platform from the given configuration.
 func New(config Config) *Platform {
 	p := Platform{}
 	p.Config = config
