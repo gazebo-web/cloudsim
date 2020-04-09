@@ -27,10 +27,12 @@ func NewAmazonS3(p client.ConfigProvider, cfgs ...*aws.Config) *AmazonS3 {
 	return &instance
 }
 
+// GetAddress returns a S3 address from the given bucket and key.
 func (s *AmazonS3) GetAddress(bucket string, key string) string {
 	return fmt.Sprintf("s3://%s", filepath.Join(bucket, key))
 }
-
+// Upload receives a bucket, a key and a file, and tries to upload that object to S3.
+// Returns the response from the S3 API PutObject method.
 func (s *AmazonS3) Upload(bucket string, key string, file []byte) (*s3.PutObjectOutput, error) {
 	return s.API.PutObject(&s3.PutObjectInput{
 		Bucket:               &bucket,
@@ -44,6 +46,7 @@ func (s *AmazonS3) Upload(bucket string, key string, file []byte) (*s3.PutObject
 	})
 }
 
+// GetLogKey returns the path to the gz logs by the given GroupID and Owner.
 func (s *AmazonS3) GetLogKey(groupID string, owner string) string {
 	escaped := url.PathEscape(owner)
 	return fmt.Sprintf("/gz-logs/%s/%s/", escaped, groupID)

@@ -7,6 +7,7 @@ import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/logger"
 )
 
+// CountInstances returns the number of instances running and pending.
 func (ec *AmazonEC2) CountInstances(ctx context.Context) int {
 	input := &ec2.DescribeInstancesInput{
 		MaxResults: aws.Int64(1000),
