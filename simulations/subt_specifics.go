@@ -949,6 +949,14 @@ func (sa *SubTApplication) launchApplication(ctx context.Context, s *Service, tx
 							Name:  "IGN_VERBOSE",
 							Value: sa.cfg.IgnVerbose,
 						},
+						{
+							Name: "POD_IP",
+							ValueFrom: &corev1.EnvVarSource{
+								FieldRef: &corev1.ObjectFieldSelector{
+									FieldPath: "status.podIP",
+								},
+							},
+						},
 					},
 				},
 			},
@@ -1336,6 +1344,14 @@ func (sa *SubTApplication) createCommsBridgePod(ctx context.Context, dep *Simula
 							Value: robot.Name,
 						},
 						{
+							Name: "POD_IP",
+							ValueFrom: &corev1.EnvVarSource{
+								FieldRef: &corev1.ObjectFieldSelector{
+									FieldPath: "status.podIP",
+								},
+							},
+						},
+						{
 							Name: "ROS_IP",
 							ValueFrom: &corev1.EnvVarSource{
 								FieldRef: &corev1.ObjectFieldSelector{
@@ -1430,6 +1446,14 @@ func (sa *SubTApplication) createFieldComputerPod(ctx context.Context, dep *Simu
 						},
 						{
 							Name: "ROS_IP",
+							ValueFrom: &corev1.EnvVarSource{
+								FieldRef: &corev1.ObjectFieldSelector{
+									FieldPath: "status.podIP",
+								},
+							},
+						},
+						{
+							Name: "POD_IP",
 							ValueFrom: &corev1.EnvVarSource{
 								FieldRef: &corev1.ObjectFieldSelector{
 									FieldPath: "status.podIP",
