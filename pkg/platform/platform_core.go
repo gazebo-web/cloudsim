@@ -12,8 +12,7 @@ import (
 type IPlatformCore interface {
 	Start(ctx context.Context) error
 	Stop(ctx context.Context) error
-	Restart(ctx context.Context) error
-	Reload(ctx context.Context) error
+	RebuildState(ctx context.Context) error
 }
 
 // Start starts the platform.
@@ -77,5 +76,15 @@ func (p *Platform) Stop(ctx context.Context) error {
 	p.Updater.Ticker.Stop()
 	p.Cleaner.Ticker.Stop()
 	close(p.TerminationQueue)
+	return nil
+}
+
+func (p *Platform) RebuildState(ctx context.Context) error {
+	p.Simulator.Recover(ctx)
+
+	// Push pending simulations to the queue.
+	// Check that the running simulations have the pods in the Kubernetes cluster, otherwise mark them as failed with ErrorServerRestart.
+	// DEFAULT:
+	// Mark with error
 	return nil
 }

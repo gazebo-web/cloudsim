@@ -2,6 +2,7 @@ package orchestrator
 
 import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/tools"
+	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
@@ -63,6 +64,10 @@ func NewConfig(kubeconfig *string) (*rest.Config, error) {
 // SetClientset assigns the given cli to the interal Interface
 func (kc *Kubernetes) SetClientset(cli kubernetes.Interface) {
 	kc.Interface = cli
+}
+
+func (kc *Kubernetes) Namespace() string {
+	return v1.NamespaceDefault
 }
 
 // MakeListOptions returns a ListOptions object for an array of labels.

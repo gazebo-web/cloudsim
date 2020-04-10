@@ -9,6 +9,7 @@ import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/tools"
 	"io"
 	apiv1 "k8s.io/api/core/v1"
+	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/tools/remotecommand"
 	"time"
@@ -17,6 +18,22 @@ import (
 const (
 	pollFrequency = 2 * time.Second
 )
+
+const (
+	podLabelPodGroup       = "pod-group"
+	podLabelKeyGroupID     = "cloudsim-group-id"
+	cloudsimTagLabelKey    = "cloudsim"
+	cloudsimTagLabel       = "cloudsim=true"
+	launcherRelaunchNeeded = "relaunch"
+)
+
+type Pod struct {
+	apiv1.Pod
+	IsRunning bool
+	GroupID string
+}
+
+type Pods []Pod
 
 // PodExec creates a command for a specific kubernetes pod. stdin, stdout and stderr io can be defined
 // through the options parameter.
@@ -118,4 +135,23 @@ func (kc Kubernetes) PodGetLog(ctx context.Context, namespace string, podName st
 	log = tools.Sptr(buffer.String())
 
 	return log, nil
+}
+
+func (kc Kubernetes) GetAllPods() (Pods, error) {
+	list, err := kc.CoreV1().Pods(kc.Namespace()).List(v1.ListOptions{LabelSelector: cloudsimTagLabel})
+	if err != nil {
+		return nil, err
+	}
+	var pods Pods
+	for _, p := range list.Items {
+		var pod Pod
+		pod.GroupID = p.Labels[podLabelKeyGroupID]
+		if p.ObjectMeta.DeletionTimestamp != nil {
+			pod.IsRunning = false
+			continue
+		}
+		pod.IsRunning = p.Status.Phase == apiv1.PodRunning
+		pods = append(pods, pod)
+	}
+	return pods, nil
 }

@@ -69,3 +69,7 @@ func GetStatusLabel(status Status) string {
 	}
 	panic("GetStatusLabel should receive a valid status")
 }
+
+func (s Status) Equal(status int) bool {
+	return int(s) == status
+}

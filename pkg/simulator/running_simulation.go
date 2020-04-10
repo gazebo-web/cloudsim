@@ -1,4 +1,4 @@
-package simulations
+package simulator
 
 import (
 	"context"
