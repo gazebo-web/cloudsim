@@ -14,9 +14,22 @@ type IQueue interface {
 	Count() int
 }
 
+// Queue is an IQueue implementation that uses the ign.Queue.
 type Queue struct {
 	queue *ign.Queue
 }
+
+// Item represents an element from the queue.
+type Item struct {
+	GroupID string
+}
+
+// SwapOutput represents the result from a Swap operation.
+type SwapOutput struct {
+	ItemA Item
+	ItemB Item
+}
+
 
 func New() IQueue {
 	var q IQueue
@@ -30,7 +43,7 @@ func initialize() *Queue {
 	return &q
 }
 
-// Get returns the entire launch queue.
+// Get returns the entire list of items from the queue.
 // If `offset` and `limit` are not nil, it will return up to `limit` results from the provided `offset`.
 func (q *Queue) Get(offset, limit *int) ([]interface{}, *ign.ErrMsg) {
 	if offset == nil || limit == nil {

@@ -33,6 +33,7 @@ type Config struct {
 	MaxDurationForSimulations int `env:"SIMSVC_SIM_MAX_DURATION_MINUTES" envDefault:"45"`
 }
 
+// NewConfig returns a new Config populated with the values from the environment variables, loaded from the .env file.
 func NewConfig() Config {
 	cfg := Config{}
 	if err := godotenv.Load(); err != nil {
@@ -49,6 +50,7 @@ func NewConfig() Config {
 	return cfg
 }
 
+// NewTestConfig returns a new Config populated with values from the environment variables, loaded from the .env.testing file.
 func NewTestConfig() Config {
 	cfg := Config{}
 	if err := godotenv.Load(".env.testing"); err != nil {

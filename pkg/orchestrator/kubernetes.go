@@ -61,11 +61,12 @@ func NewConfig(kubeconfig *string) (*rest.Config, error) {
 	return config, nil
 }
 
-// SetClientset assigns the given cli to the interal Interface
+// SetClientset assigns the given cli to the internal Interface
 func (kc *Kubernetes) SetClientset(cli kubernetes.Interface) {
 	kc.Interface = cli
 }
 
+// Namespace returns the default Kubernetes namespace.
 func (kc *Kubernetes) Namespace() string {
 	return v1.NamespaceDefault
 }

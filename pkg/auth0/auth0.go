@@ -7,6 +7,7 @@ type Config struct {
 	PublicKey string `env:"AUTH0_RSA256_PUBLIC_KEY"`
 }
 
+// New returns a new Auth0 Config.
 func New() Config {
 	auth := Config{}
 	if err := env.Parse(&auth); err != nil {

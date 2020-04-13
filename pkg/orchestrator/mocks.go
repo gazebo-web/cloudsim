@@ -14,6 +14,7 @@ func NewTest() kubernetes.Interface {
 	return &KubernetesMock{Interface: fake.NewSimpleClientset()}
 }
 
+// SetClientset assigns the given cli to the internal Interface
 func (kc *KubernetesMock) SetClientset(cli kubernetes.Interface) {
 	kc.Interface = cli
 }

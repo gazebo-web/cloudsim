@@ -11,11 +11,14 @@ import (
 	"time"
 )
 
+// PodWaitForReadyCondition calls PodWaitToMatchCondition with the "Ready" status.
 func (kc Kubernetes) PodWaitForReadyCondition(ctx context.Context, c kubernetes.Interface, namespace string, groupIDLabel string, timeout time.Duration) error {
 	opts := metav1.ListOptions{LabelSelector: groupIDLabel}
 	return kc.PodWaitToMatchCondition(ctx, namespace, opts, "Ready", timeout, podRunningAndReady)
 }
 
+// TODO: Add comment
+// PodWaitToMatchCondition waits...
 func (kc Kubernetes) PodWaitToMatchCondition(ctx context.Context, namespace string, opts metav1.ListOptions, condStr string, timeout time.Duration, condition PodCondition) error {
 	logger.Logger(ctx).Info(fmt.Sprintf("Waiting up to %v for matching pods' status to be %s", timeout, condStr))
 	for start := time.Now(); time.Since(start) < timeout; tools.Sleep(pollFrequency) {

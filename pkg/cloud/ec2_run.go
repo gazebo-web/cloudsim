@@ -11,7 +11,8 @@ import (
 	"time"
 )
 
-type RunInstanceConfig struct {
+// RunInstancesConfig describes the argument to initialize a new group of EC2 instances.
+type RunInstancesConfig struct {
 	DryRun           bool
 	KeyName          string
 	MinCount         int64
@@ -22,7 +23,7 @@ type RunInstanceConfig struct {
 }
 
 // NewRunInstancesInput initializes a new RunInstancesInput from the given config.
-func (ec *AmazonEC2) NewRunInstancesInput(config RunInstanceConfig) ec2.RunInstancesInput {
+func (ec *AmazonEC2) NewRunInstancesInput(config RunInstancesConfig) ec2.RunInstancesInput {
 	var tags []*ec2.Tag
 
 	for key, v := range config.Tags {

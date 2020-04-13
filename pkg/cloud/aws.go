@@ -17,7 +17,7 @@ type AmazonWS struct {
 	S3      *AmazonS3
 }
 
-// New returns a new Amazon Web Service client.
+// New returns a new Amazon Web Service client wrapper.
 func New() *AmazonWS {
 	ws := AmazonWS{}
 	ws.session = session.Must(session.NewSession())
