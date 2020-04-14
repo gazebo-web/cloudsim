@@ -39,7 +39,7 @@ type IPlatformSetup interface {
 	setupDatabase() *Platform
 	setupCloudProvider() *Platform
 	setupOrchestrator() *Platform
-	setupNodeManager() *Platform
+	setupSimulator() *Platform
 	setupPoolFactory() *Platform
 	setupScheduler() *Platform
 	setupQueues() *Platform
@@ -152,7 +152,7 @@ func (p *Platform) setupOrchestrator() *Platform {
 	return p
 }
 
-// setupNodeManager initializes the Simulator.
+// setupSimulator initializes the Simulator.
 func (p *Platform) setupSimulator() *Platform {
 	input := simulator.NewSimulatorInput{}
 	p.Simulator = simulator.NewSimulator(input)

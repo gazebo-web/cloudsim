@@ -142,43 +142,6 @@ func (s *Simulator) Recover(ctx context.Context) error {
 			return err
 		}
 	}
-
-	s.RLock()
-	defer s.RUnlock()
-
-	var sims simulations.Simulations
-	// if err := db.Model(&SimulationDeployment{}).Where("error_status IS NULL").Where("multi_sim != ?", multiSimParent).
-	//		Where("deployment_status BETWEEN ? AND ?", int(simPending), int(simTerminatingInstances)).Find(&deps).Error; err != nil {
-	//		return err
-	//	}
-
-	for _, sim := range sims {
-		switch sim.GetStatus() {
-		case simulations.StatusPending:
-			logger.Logger(ctx).Info(fmt.Sprintf("[SIMULATOR|RECOVER] Resuming launch process. GroupID: [%s]", *sim.GroupID))
-			if err := s.services.simulations.Launch(ctx, &sim); err != nil {
-				logger.Logger(ctx).Error(fmt.Sprintf("[SIMULATOR|RECOVER] Error while launching simulation. GroupID: [%s]", *sim.GroupID))
-			}
-			continue
-		case simulations.StatusRunning:
-			_, running := s.runningSimulations[*sim.GroupID]
-			if !running {
-				logger.Logger(ctx).Info(fmt.Sprintf("[SIMULATOR|RECOVER] The expected running simulation doesn't have any node running. GroupID: [%s]. Marking with error.", *sim.GroupID))
-				sim.ErrorStatus = simulations.ErrServerRestart.ToStringPtr()
-				if _, err := s.services.simulations.Update(*sim.GroupID, sim); err != nil {
-					logger.Logger(ctx).Error(fmt.Sprintf("[SIMULATOR|RECOVER] Error while updating simulation. GroupID: [%s]", *sim.GroupID))
-				}
-			}
-			continue
-		default:
-			logger.Logger(ctx).Info(fmt.Sprintf("[SIMULATOR|RECOVER] Simulation found with intermediate Status: [%s]. GroupID: [%s]. Marking with error.", sim.GetStatus().ToString(), *sim.GroupID))
-			sim.ErrorStatus = simulations.ErrServerRestart.ToStringPtr()
-			if _, err := s.services.simulations.Update(*sim.GroupID, sim); err != nil {
-				logger.Logger(ctx).Error(fmt.Sprintf("[SIMULATOR|RECOVER] Error while updating simulation. GroupID: [%s]", *sim.GroupID))
-			}
-		}
-	}
-
 	return nil
 }
 
