@@ -5,7 +5,7 @@ import (
 	"github.com/jinzhu/gorm"
 )
 
-// DropModels drops all tables from DB. Used by tests.
+// DropModels drops all tables from db. Used by tests.
 func DropModels(ctx context.Context, db *gorm.DB) {
 
 	if db != nil {

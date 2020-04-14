@@ -154,7 +154,8 @@ func (p *Platform) setupOrchestrator() *Platform {
 
 // setupNodeManager initializes the Simulator.
 func (p *Platform) setupSimulator() *Platform {
-	p.Simulator = simulator.New(p.Orchestrator, p.CloudProvider)
+	input := simulator.NewSimulatorInput{}
+	p.Simulator = simulator.NewSimulator(input)
 	return p
 }
 

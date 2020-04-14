@@ -6,12 +6,18 @@ import (
 )
 
 type IRepository interface{
-	Node(node Node) (*Node, error)
+	Create(node Node) (*Node, error)
 }
 
 type Repository struct{
 	db *gorm.DB
 
+}
+
+func NewRepository() IRepository {
+	return &Repository{
+		db: nil,
+	}
 }
 
 func (r *Repository) Create(node Node) (*Node, error) {

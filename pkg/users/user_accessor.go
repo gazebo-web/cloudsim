@@ -24,7 +24,7 @@ type userAccessorConf struct {
 type IUserAccessor interface {
 	// UserFromJWT returns the User associated to the http request's JWT token.
 	// This function can return ErrorAuthJWTInvalid if the token cannot be
-	// read, or ErrorAuthNoUser no user with such identity exists in the DB.
+	// read, or ErrorAuthNoUser no user with such identity exists in the db.
 	UserFromJWT(r *http.Request) (*users.User, bool, *ign.ErrMsg)
 	// VerifyOwner checks if the 'owner' arg is an organization or a user. If the
 	// 'owner' is an organization, it verifies that the given 'user' arg has the expected
@@ -64,7 +64,7 @@ type IUserAccessor interface {
 type UserAccessor struct {
 	// The IUserAccessor config. Read from environment variables
 	cfg userAccessorConf
-	// Global database interface to Users DB
+	// Global database interface to Users db
 	Db *gorm.DB
 	// Membership and permissions for Users/Orgs.
 	p              *per.Permissions
@@ -106,14 +106,14 @@ func (u *UserAccessor) StartAutoLoadPolicy() {
 
 // UserFromJWT returns the User associated to the http request's JWT token.
 // This function can return ErrorAuthJWTInvalid if the token cannot be
-// read, or ErrorAuthNoUser no user with such identity exists in the DB.
+// read, or ErrorAuthNoUser no user with such identity exists in the db.
 func (u *UserAccessor) UserFromJWT(r *http.Request) (*users.User, bool, *ign.ErrMsg) {
 	return getUserFromToken(u.Db, r)
 }
 
 // getUserFromToken returns the User associated to the http request's JWT token.
 // This function can return ErrorAuthJWTInvalid if the token cannot be
-// read, or ErrorAuthNoUser no user with such identity exists in the DB.
+// read, or ErrorAuthNoUser no user with such identity exists in the db.
 func getUserFromToken(tx *gorm.DB, r *http.Request) (*users.User, bool, *ign.ErrMsg) {
 	var user *users.User
 	if token := r.Header.Get("Private-Token"); len(token) > 0 {

@@ -42,13 +42,15 @@ type Simulation struct {
 	Status *int `json:"status,omitempty"`
 	// A value from ErrorStatus constants
 	ErrorStatus *string `json:"error_status,omitempty"`
-	// NOTE: statuses should be updated in sequential DB Transactions. ie. one status per TX.
+	// NOTE: statuses should be updated in sequential db Transactions. ie. one status per TX.
 	Platform    *string `json:"platform,omitempty" form:"platform"`
 	Application *string `json:"application,omitempty" form:"application"`
 	// Contains the names of all robots in the simulation in a comma-separated list.
 	Robots *string `gorm:"size:1000" json:"robots"`
 	Held   bool    `json:"held"`
 }
+
+type Simulations []Simulation
 
 func (sim *Simulation) Clone() *Simulation {
 	clone := *sim
@@ -61,4 +63,8 @@ func (sim *Simulation) Clone() *Simulation {
 	clone.DeletedAt = nil
 
 	return &clone
+}
+
+func (sim *Simulation) GetStatus() Status {
+	return Status(*sim.Status)
 }

@@ -18,8 +18,8 @@ func AddCustomIndexes(ctx context.Context, db *gorm.DB) {
 	// First add indexes for Models
 	// found, err := indexIsPresent(db, "models", "models_fultext")
 	// if err != nil {
-	// 	ign.LoggerFromContext(ctx).Critical("Error with DB while checking index", err)
-	// 	log.Fatal("Error with DB while checking index", err)
+	// 	ign.LoggerFromContext(ctx).Critical("Error with db while checking index", err)
+	// 	log.Fatal("Error with db while checking index", err)
 	// 	return
 	// }
 	// if !found {

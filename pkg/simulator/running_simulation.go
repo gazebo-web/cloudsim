@@ -2,7 +2,11 @@ package simulator
 
 import (
 	"context"
+	"fmt"
+	"github.com/golang/protobuf/proto"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/logger"
 	igntransport "gitlab.com/ignitionrobotics/web/cloudsim/third_party/ign-transport"
+	msgs "gitlab.com/ignitionrobotics/web/cloudsim/third_party/ign-transport/proto/ignition/msgs"
 	"sync"
 	"time"
 )
@@ -48,6 +52,51 @@ type RunningSimulation struct {
 	stdoutSkipStatsMsgsCount int
 }
 
+type NewRunningSimulationInput struct {
+	GroupID string
+	Owner string
+	MaxSeconds int64
+	ValidFor	time.Duration
+	worldStatsTopic string
+	worldWarmupTopic string
+}
+
+func NewRunningSimulation(ctx context.Context, input NewRunningSimulationInput) (*RunningSimulation, error) {
+	s := RunningSimulation{
+		GroupID:              input.GroupID,
+		Owner:                input.Owner,
+		currentState:         GazeboStateUnknown,
+		lockCurrentState:     sync.RWMutex{},
+		lockDesiredState:     sync.RWMutex{},
+		publishing:           false,
+		SimCreatedAtTime:     time.Now(),
+		MaxValidUntil:        time.Now().Add(input.ValidFor),
+		SimMaxAllowedSeconds: input.MaxSeconds,
+	}
+	var err error
+	if s.ignTransportNode, err = igntransport.NewIgnTransportNode(&input.GroupID); err != nil {
+		return nil, err
+	}
+
+	// TODO: Create a new logger from context
+
+	// 	create a new specific logger for this running simulation
+	//	reqID := fmt.Sprintf("RunningSimulation-sim-%s", groupID)
+	//	newLogger := logger(ctx).Clone(reqID)
+	//	Override logger
+	//	ctx = ign.NewContextWithLogger(ctx, newLogger)
+
+	_ = s.ignTransportNode.IgnTransportSubscribe(input.worldStatsTopic, func(msg []byte, msgType string) {
+		s.callbackWorldStats(ctx, msg, msgType)
+	})
+
+	_ = s.ignTransportNode.IgnTransportSubscribe(input.worldWarmupTopic, func(msg []byte, msgType string) {
+		s.callbackWarmup(ctx, msg, msgType)
+	})
+
+	return &s, nil
+}
+
 type gazeboState string
 
 const (
@@ -65,4 +114,68 @@ func (s *RunningSimulation) Free(ctx context.Context) {
 		s.ignTransportNode.Free()
 	}
 	s.ignTransportNode = nil
+}
+
+// callbackWorldStats is the callback passed to ign-transport. It will be invoked
+// each time a message is received in the topic associated to this node's groupID.
+func (s *RunningSimulation) callbackWorldStats(ctx context.Context, msg []byte, msgType string) {
+
+	ws := msgs.WorldStatistics{}
+	var err error
+	if err = proto.Unmarshal(msg, &ws); err != nil {
+		// do nothing . Just log it
+		logger.Logger(ctx).Error(fmt.Sprintf("RunningSimulation groupID[%s]- error while unmarshalling WorldStats msg. Got type[%s]. Msg[%s]", s.GroupID, msgType, msg), err)
+		return
+	}
+
+	// Simple attempt to control throttling while printing debug messages to stdout
+	s.stdoutSkipStatsMsgsCount++
+	if s.stdoutSkipStatsMsgsCount > stdoutSkipStatsMsgs {
+		s.stdoutSkipStatsMsgsCount = 0
+		logger.Logger(ctx).Debug(fmt.Sprintf("RunningSimulation groupID[%s]- WorldStats message received. Parsed struct: [%v]", s.GroupID, ws))
+	}
+
+	s.lockCurrentState.Lock()
+	defer s.lockCurrentState.Unlock()
+	if ws.Paused {
+		s.currentState = GazeboStatePause
+	} else {
+		s.currentState = GazeboStateRun
+	}
+
+	// Also update the reported Sim time
+	s.SimTimeSeconds = ws.SimTime.Sec
+}
+
+// callbackWarmup is the callback passed to ign-transport that will be invoked each time
+// a message is received at the /warmup/ready topic.
+func (s *RunningSimulation) callbackWarmup(ctx context.Context, msg []byte, msgType string) {
+	wup := msgs.StringMsg{}
+	var err error
+	if err = proto.Unmarshal(msg, &wup); err != nil {
+		// do nothing . Just log it
+		logger.Logger(ctx).Error(fmt.Sprintf("RunningSimulation groupID[%s]- error while unmarshalling Warmup msg. Got type[%s]. Msg[%s]", s.GroupID, msgType, msg), err)
+		return
+	}
+
+	if wup.Data == "started" {
+		// We only act the first time we receive this message
+		if s.SimWarmupSeconds == 0 {
+			logger.Logger(ctx).Info(fmt.Sprintf("RunningSimulation groupID[%s]- Warmup message received. Parsed struct: [%v]", s.GroupID, wup))
+
+			s.SimWarmupSeconds = s.SimTimeSeconds
+		}
+	} else if !s.Finished && wup.Data == "finished" {
+		logger.Logger(ctx).Info(fmt.Sprintf("RunningSimulation groupID[%s]- Finished message received. Parsed struct: [%v]", s.GroupID, wup))
+
+		s.Finished = true
+	}
+}
+
+// SendMessage publishes a string message to an specific topic.
+func (s *RunningSimulation) SendMessage(ctx context.Context, topic, msg, msgType string) {
+	logger.Logger(ctx).Info(fmt.Sprintf("RunningSimulation groupID[%s]- publish msg [%s] to topic [%s] with type [%s]", s.GroupID, msg, topic, msgType))
+	if s.ignTransportNode != nil {
+		_ = s.ignTransportNode.IgnTransportPublishStringMsg(topic, msg)
+	}
 }

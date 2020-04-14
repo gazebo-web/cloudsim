@@ -13,3 +13,10 @@ type Service struct {
 	groupRepository groups.IRepository
 	nodeRepository nodes.IRepository
 }
+
+func NewSimulatorService(node nodes.IRepository, group groups.IRepository) *Service {
+	return &Service{
+		groupRepository: group,
+		nodeRepository:  node,
+	}
+}

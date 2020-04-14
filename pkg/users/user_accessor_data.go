@@ -10,7 +10,7 @@ import (
 	"strings"
 )
 
-// Test data and DB functions to use with tests, to mock the real Users DB.
+// Test data and db functions to use with tests, to mock the real Users db.
 
 /*
 	It will create a set of default users and organizations used
@@ -140,7 +140,7 @@ func (m *UserAccessorDataMock) addUserToDb(tx *gorm.DB, u *fuelusers.User) *ign.
 }
 
 func (m *UserAccessorDataMock) addOrgToDB(tx *gorm.DB, org *fuelusers.Organization, creator *fuelusers.User) *ign.ErrMsg {
-	// Create the organization in the permissions DB as a 'group' and set the
+	// Create the organization in the permissions db as a 'group' and set the
 	// creator as the 'owner'.
 	// This is the same as adding the user to the 'default' team of the Org.
 	ok, em := m.ua.p.AddUserGroupRole(*creator.Username, *org.Name, per.Owner)
@@ -202,7 +202,7 @@ func (m *UserAccessorDataMock) createUser(username string) *fuelusers.User {
 	return user
 }
 
-// usersDBMigrate creates the users DB tables
+// usersDBMigrate creates the users db tables
 func (m *UserAccessorDataMock) usersDBMigrate(ctx context.Context) {
 
 	usersDb := m.ua.Db
@@ -222,7 +222,7 @@ func (m *UserAccessorDataMock) usersDBMigrate(ctx context.Context) {
 
 }
 
-// usersDBDropModels drops all tables from DB. Used by tests.
+// usersDBDropModels drops all tables from db. Used by tests.
 func (m *UserAccessorDataMock) usersDBDropModels(ctx context.Context) {
 
 	usersDb := m.ua.Db

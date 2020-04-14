@@ -58,7 +58,7 @@ func (p *Platform) Name() string {
 	return "cloudsim"
 }
 
-// New returns a new Platform from the given configuration.
+// NewSimulator returns a new Platform from the given configuration.
 func New(config Config) *Platform {
 	p := Platform{}
 	p.Config = config
