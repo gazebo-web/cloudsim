@@ -208,6 +208,11 @@ func init() {
 		nm, err = sim.NewLocalNodesClient(cfg.logCtx, kcli)
 	} else if cfg.NodesManagerImpl == "ec2" {
 		ecNm, err = sim.NewEC2Client(logCtx, kcli, ec2Svc)
+		if err != nil {
+			cfg.logger.Critical("Critical error while creating a new EC2 client", err)
+			log.Fatalf("%+v\n", err)
+		}
+
 		ecNm.RegisterPlatform(logCtx, subT)
 		nm = ecNm
 	} else {

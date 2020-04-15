@@ -1,12 +1,12 @@
 package main
 
 import (
-	"gitlab.com/ignitionrobotics/web/ign-go"
-	"gitlab.com/ignitionrobotics/web/ign-go/testhelpers"
+	"context"
 	"gitlab.com/ignitionrobotics/web/cloudsim/globals"
 	sim "gitlab.com/ignitionrobotics/web/cloudsim/simulations"
 	"gitlab.com/ignitionrobotics/web/cloudsim/users"
-	"context"
+	"gitlab.com/ignitionrobotics/web/ign-go"
+	"gitlab.com/ignitionrobotics/web/ign-go/testhelpers"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"log"
@@ -88,7 +88,7 @@ func useEC2NodeManager() func() {
 		logCtx := context.Background()
 		ec2nm, err := sim.NewEC2Client(logCtx, globals.KClientset, globals.EC2Svc)
 		if err != nil {
-			log.Fatal("Could not create EC2 client.")
+			log.Fatal("Could not create EC2 client. Error:", err)
 		}
 		for _, application := range service.GetApplications() {
 			ec2nm.RegisterPlatform(logCtx, application.(sim.PlatformType))
