@@ -3,7 +3,6 @@ package simulator
 import (
 	"context"
 	"errors"
-	"fmt"
 	"github.com/caarlos0/env"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/cloud"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/logger"
@@ -12,11 +11,12 @@ import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulator/groups"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulator/nodes"
 	"sync"
+	"time"
 )
 
 type ISimulator interface {
 	Create(ctx context.Context, simulation *simulations.Simulation) error
-	Recover(ctx context.Context) error
+	Recover(ctx context.Context, getApplicationLabel func() *string) error
 	GetRunningSimulations() (*map[string]*RunningSimulation, error)
 	SetRunningSimulations(simulations  *map[string]*RunningSimulation) error
 	RLock()
@@ -102,14 +102,38 @@ func (s *Simulator) SetRunningSimulations(simulations *map[string]*RunningSimula
 	return nil
 }
 
+func (s *Simulator) appendRunningSimulation(simulation *RunningSimulation) {
+	s.Lock()
+	defer s.Unlock()
+	s.runningSimulations[simulation.GroupID] = simulation
+}
 
-func (s *Simulator) Create(ctx context.Context, simulation *simulations.Simulation) error {
+// RestoreRunning
+func (s *Simulator) RestoreRunning(ctx context.Context, simulation *simulations.Simulation) error {
+	validFor, err := time.ParseDuration(*simulation.ValidFor)
+	if err != nil {
+		return err
+	}
+	input := NewRunningSimulationInput{
+		GroupID:          *simulation.GroupID,
+		Owner:            *simulation.Owner,
+		MaxSeconds:       0,
+		ValidFor:         validFor,
+		worldStatsTopic:  "",
+		worldWarmupTopic: "",
+	}
+	rs, err := NewRunningSimulation(ctx, input)
+	if err != nil {
+		return err
+	}
+	s.appendRunningSimulation(rs)
 	return nil
 }
 
 
-func (s *Simulator) Recover(ctx context.Context) error {
-	pods, err := s.orchestrator.GetAllPods()
+func (s *Simulator) Recover(ctx context.Context, getApplicationLabel func() *string) error {
+	label := getApplicationLabel()
+	pods, err := s.orchestrator.GetAllPods(label)
 	if err != nil {
 		logger.Logger(ctx).Error("[SIMULATOR|RECOVER] Error getting initial list of cloudsim pods from orchestrator", err)
 		return err
@@ -138,7 +162,7 @@ func (s *Simulator) Recover(ctx context.Context) error {
 			continue
 		}
 
-		if err := s.Create(ctx, sim); err != nil {
+		if err := s.RestoreRunning(ctx, sim); err != nil {
 			return err
 		}
 	}

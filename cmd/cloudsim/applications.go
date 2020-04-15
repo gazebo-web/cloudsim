@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"gitlab.com/ignitionrobotics/web/cloudsim/internal/subt"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/application"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/platform"
@@ -20,4 +21,13 @@ func RegisterApplication(applications *map[string]application.IApplication, app 
 	}
 	name := app.Name()
 	(*applications)[name] = app
+}
+
+func RebuildState(p *platform.Platform, applications map[string]application.IApplication) {
+	for _, app := range applications {
+		err := app.RebuildState(p.Context)
+		if err != nil {
+			panic(fmt.Sprintf("Error rebuilding state for application. Name: %s. Version: %s", app.Name(), app.Version()))
+		}
+	}
 }

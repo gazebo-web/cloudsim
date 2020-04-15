@@ -20,8 +20,8 @@ func main() {
 		}
 		panic(err)
 	}
-
 	RegisterApplications(cloudsim, &applications)
+	RebuildState(cloudsim, applications)
 	RegisterRoutes(cloudsim, applications)
 	ScheduleTasks(cloudsim, applications)
 

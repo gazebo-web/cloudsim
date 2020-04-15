@@ -137,9 +137,12 @@ func (kc Kubernetes) PodGetLog(ctx context.Context, namespace string, podName st
 	return log, nil
 }
 
-// GetAllPods returns a set of Pods that have the cloudim tag label "cloudsim=true".
-func (kc Kubernetes) GetAllPods() (Pods, error) {
-	list, err := kc.CoreV1().Pods(kc.Namespace()).List(v1.ListOptions{LabelSelector: cloudsimTagLabel})
+// GetAllPods returns a set of Pods that match the given label
+func (kc Kubernetes) GetAllPods(label *string) (Pods, error) {
+	if label == nil {
+		label = tools.Sptr(cloudsimTagLabel)
+	}
+	list, err := kc.CoreV1().Pods(kc.Namespace()).List(v1.ListOptions{LabelSelector: *label})
 	if err != nil {
 		return nil, err
 	}

@@ -1,6 +1,7 @@
 package application
 
 import (
+	"context"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/platform"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/tasks"
 	"gitlab.com/ignitionrobotics/web/ign-go"
@@ -12,6 +13,7 @@ type IApplication interface {
 	Version() string
 	RegisterRoutes() ign.Routes
 	RegisterTasks() []tasks.Task
+	RebuildState(ctx context.Context) error
 }
 
 // Application is a generic implementation of an application to be extended by a specific application.
@@ -49,4 +51,15 @@ func (app *Application) RegisterRoutes() ign.Routes {
 // If the specific application doesn't implement this method, it will return an empty slice.
 func (app *Application) RegisterTasks() []tasks.Task {
 	return []tasks.Task{}
+}
+
+func (app *Application) RebuildState(ctx context.Context) error {
+	err := app.Platform.Simulator.Recover(ctx, app.getLabel)
+	if err != nil {
+		return err
+	}
+}
+
+func (app *Application) getLabel() *string {
+	return nil
 }
