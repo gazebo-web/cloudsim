@@ -5,7 +5,7 @@ import "github.com/jinzhu/gorm"
 type IRepository interface {
 	GetDB() *gorm.DB
 	SetDB(db *gorm.DB)
-	Get(groupID string) (*[]Simulation, error)
+	Get(groupID string) (*Simulations, error)
 	GetAllByOwner(owner string, application string, statusFrom, statusTo Status) (*Simulations, error)
 	GetChildren(groupID string, application string, statusFrom, statusTo Status) (*Simulations, error)
 	GetAllParents(application string, statusFrom, statusTo Status) (*Simulations, error)
@@ -13,15 +13,21 @@ type IRepository interface {
 }
 
 type Repository struct {
-	db *gorm.DB
+	Db *gorm.DB
+}
+
+func NewRepository(db *gorm.DB) IRepository {
+	var r IRepository
+	r = &Repository{ Db: db }
+	return r
 }
 
 func (r *Repository) GetDB() *gorm.DB {
-	return r.db
+	return r.Db
 }
 
 func (r *Repository) SetDB(db *gorm.DB) {
-	r.db = db
+	r.Db = db
 }
 
 func (r *Repository) Get(groupID string) (*Simulations, error) {

@@ -1,6 +1,7 @@
 package subt
 
 import (
+	"gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/simulations"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/application"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/platform"
 )
@@ -16,6 +17,7 @@ func New(p *platform.Platform) *SubT {
 	subt := &SubT{
 		Application: app,
 	}
+	app.Services.Simulation = simulations.NewService()
 	return subt
 }
 

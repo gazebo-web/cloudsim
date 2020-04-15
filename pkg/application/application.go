@@ -19,7 +19,7 @@ type IApplication interface {
 	Version() string
 	RegisterRoutes() ign.Routes
 	RegisterTasks() []tasks.Task
-	RegisterMonitors()
+	RegisterMonitors(ctx context.Context)
 	RebuildState(ctx context.Context) error
 	Shutdown(ctx context.Context)
 }
@@ -27,13 +27,13 @@ type IApplication interface {
 // Application is a generic implementation of an application to be extended by a specific application.
 type Application struct {
 	Platform *platform.Platform
-	services services
+	Services Services
 	Cleaner	 *monitors.Monitor
 	Updater	 *monitors.Monitor
 }
 
-type services struct {
-	simulation simulations.IService
+type Services struct {
+	Simulation simulations.IService
 }
 
 // New creates a new application for the given platform.
@@ -74,16 +74,14 @@ func (app *Application) RegisterMonitors(ctx context.Context) {
 	cleanerRunner := monitors.NewRunner(
 		ctx,
 		app.Cleaner,
-		// TODO: Add checkForExpiredSimulations
-		func(ctx context.Context) error { return nil },
+		func(ctx context.Context) error { return app.checkForExpiredSimulations() },
 	)
 	go cleanerRunner()
 
 	updaterRunner := monitors.NewRunner(
 		ctx,
 		app.Updater,
-		// TODO: Add updateMultiSimStatuses
-		func(ctx context.Context) error { return nil },
+		func(ctx context.Context) error { return app.updateMultiSimStatuses() },
 	)
 	go updaterRunner()
 }
@@ -112,16 +110,14 @@ func (app *Application) RebuildState(ctx context.Context) error {
 		switch sim.GetStatus() {
 		case simulations.StatusPending:
 			logger.Logger(ctx).Info(fmt.Sprintf("[APP|REBUILDING] Resuming launch process. GroupID: [%s]", *sim.GroupID))
-			if err := app.Platform.LaunchQueue.Enqueue(); err != nil {
-				logger.Logger(ctx).Error(fmt.Sprintf("[APP|REBUILDING] Error while launching simulation. GroupID: [%s]", *sim.GroupID))
-			}
+			app.Platform.RequestLaunch(ctx, *sim.GroupID)
 			continue
 		case simulations.StatusRunning:
 			running := app.Platform.Simulator.GetRunningSimulation(*sim.GroupID)
 			if running != nil {
 				logger.Logger(ctx).Info(fmt.Sprintf("[APP|RECOVER] The expected running simulation doesn't have any node running. GroupID: [%s]. Marking with error.", *sim.GroupID))
 				sim.ErrorStatus = simulations.ErrServerRestart.ToStringPtr()
-				if _, err := app.services.simulation.Update(*sim.GroupID, sim); err != nil {
+				if _, err := app.Services.Simulation.Update(*sim.GroupID, sim); err != nil {
 					logger.Logger(ctx).Error(fmt.Sprintf("[APP|REBUILDING] Error while updating simulation. GroupID: [%s]", *sim.GroupID))
 				}
 			}
@@ -129,7 +125,7 @@ func (app *Application) RebuildState(ctx context.Context) error {
 		default:
 			logger.Logger(ctx).Info(fmt.Sprintf("[APP|REBUILDING] Simulation found with intermediate Status: [%s]. GroupID: [%s]. Marking with error.", sim.GetStatus().ToString(), *sim.GroupID))
 			sim.ErrorStatus = simulations.ErrServerRestart.ToStringPtr()
-			if _, err := app.services.simulation.Update(*sim.GroupID, sim); err != nil {
+			if _, err := app.Services.Simulation.Update(*sim.GroupID, sim); err != nil {
 				logger.Logger(ctx).Error(fmt.Sprintf("[APP|REBUILDING] Error while updating simulation. GroupID: [%s]", *sim.GroupID))
 			}
 		}

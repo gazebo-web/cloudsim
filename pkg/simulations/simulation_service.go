@@ -24,6 +24,12 @@ type Service struct {
 	repository IRepository
 }
 
+func NewService(repository IRepository) IService {
+	var s IService
+	s = &Service{repository: repository}
+	return s
+}
+
 func (s *Service) GetRepository() IRepository {
 	return s.repository
 }
@@ -37,7 +43,6 @@ func (s *Service) Launch(ctx context.Context, simulation *Simulation) *ign.ErrMs
 	if err := s.ValidateLaunch(ctx, simulation); err != nil {
 		return err
 	}
-	// TODO: Add to queue
 	return nil
 }
 
@@ -60,4 +65,24 @@ func (s *Service) isSimulationHeld(ctx context.Context, simulation *Simulation) 
 
 func (s *Service) Update(groupID string, simulation Simulation) (*Simulation, error) {
 	s.repository.Update(groupID, simulation)
+}
+
+func (s *Service) Get(groupID string) (*Simulation, error) {
+
+}
+
+func (s *Service) GetAll() []Simulation {
+
+}
+
+func (s *Service) GetAllByOwner(owner string, application string, statusFrom, statusTo Status) (*Simulations, error) {
+
+}
+
+func (s *Service) GetChildren(groupID string, application string, statusFrom, statusTo Status) (*Simulations, error) {
+
+}
+
+func (s *Service) GetAllParents(application string, statusFrom, statusTo Status) (*Simulations, error) {
+
 }
