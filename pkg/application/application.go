@@ -21,7 +21,7 @@ type IApplication interface {
 	RegisterTasks() []tasks.Task
 	RegisterMonitors(ctx context.Context)
 	RebuildState(ctx context.Context) error
-	Shutdown(ctx context.Context)
+	Shutdown(ctx context.Context) error
 }
 
 // Application is a generic implementation of an application to be extended by a specific application.
@@ -86,9 +86,10 @@ func (app *Application) RegisterMonitors(ctx context.Context) {
 	go updaterRunner()
 }
 
-func (app *Application) Shutdown(ctx context.Context) {
+func (app *Application) Shutdown(ctx context.Context) error {
 	app.Updater.Ticker.Stop()
 	app.Cleaner.Ticker.Stop()
+	return nil
 }
 
 func (app *Application) RebuildState(ctx context.Context) error {

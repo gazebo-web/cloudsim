@@ -17,7 +17,8 @@ func New(p *platform.Platform) *SubT {
 	subt := &SubT{
 		Application: app,
 	}
-	app.Services.Simulation = simulations.NewService()
+	repository := simulations.NewRepository(p.Server.Db)
+	app.Services.Simulation = simulations.NewService(repository)
 	return subt
 }
 

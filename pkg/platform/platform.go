@@ -24,7 +24,6 @@ type IPlatform interface {
 	Name() string
 	Start(ctx context.Context) error
 	Stop(ctx context.Context) error
-	RebuildState(ctx context.Context) error
 }
 
 // Platform represents a set of components to run applications.
@@ -115,8 +114,6 @@ func New(config Config) *Platform {
 		p.Logger.Critical("[INIT|CRITICAL] Could not initialize transport.")
 	}
 	p.Logger.Debug("[INIT] Transport initialized. Using: IGN Transport.")
-
-	p.setupMonitors()
 	return &p
 }
 

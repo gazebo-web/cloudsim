@@ -64,25 +64,31 @@ func (s *Service) isSimulationHeld(ctx context.Context, simulation *Simulation) 
 }
 
 func (s *Service) Update(groupID string, simulation Simulation) (*Simulation, error) {
-	s.repository.Update(groupID, simulation)
+	sim, err := s.repository.Update(groupID, simulation)
+	if err != nil {
+		return nil, err
+	}
+	return sim, nil
 }
 
 func (s *Service) Get(groupID string) (*Simulation, error) {
-
+	panic("Not implemented")
 }
 
 func (s *Service) GetAll() []Simulation {
+	panic("Not implemented")
 
 }
 
 func (s *Service) GetAllByOwner(owner string, application string, statusFrom, statusTo Status) (*Simulations, error) {
+	panic("Not implemented")
 
 }
 
 func (s *Service) GetChildren(groupID string, application string, statusFrom, statusTo Status) (*Simulations, error) {
-
+	panic("Not implemented")
 }
 
 func (s *Service) GetAllParents(application string, statusFrom, statusTo Status) (*Simulations, error) {
-
+	panic("Not implemented")
 }

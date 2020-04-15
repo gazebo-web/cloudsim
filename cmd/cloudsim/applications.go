@@ -26,8 +26,7 @@ func RegisterApplication(applications *map[string]application.IApplication, app 
 // RebuildState calls the RebuildState method for all the given applications.
 func RebuildState(p *platform.Platform, applications map[string]application.IApplication) {
 	for _, app := range applications {
-		err := app.RebuildState(p.Context)
-		if err != nil {
+		if err := app.RebuildState(p.Context); err != nil {
 			panic(fmt.Sprintf("Error rebuilding state for application. Name: %s. Version: %s", app.Name(), app.Version()))
 		}
 	}
@@ -43,6 +42,8 @@ func RegisterMonitors(p *platform.Platform, applications map[string]application.
 // ShutdownApplications calls the Shutdown method for all given applications.
 func ShutdownApplications(p *platform.Platform, applications map[string]application.IApplication) {
 	for _, app := range applications {
-		app.Shutdown(p.Context)
+		if err := app.Shutdown(p.Context); err != nil {
+			panic(fmt.Sprintf("Error shutting down an application. Name: %s. Version: %s", app.Name(), app.Version()))
+		}
 	}
 }
