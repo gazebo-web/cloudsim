@@ -6,7 +6,7 @@ import (
 )
 
 type IRepository interface {
-	Crete(group Group) (*Group, error)
+	Create(group Group) (*Group, error)
 }
 
 type Repository struct {

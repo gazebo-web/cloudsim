@@ -14,9 +14,9 @@ type Repository struct{
 
 }
 
-func NewRepository() IRepository {
+func NewRepository(db *gorm.DB) IRepository {
 	return &Repository{
-		db: nil,
+		db: db,
 	}
 }
 

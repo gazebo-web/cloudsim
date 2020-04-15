@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"github.com/caarlos0/env"
+	"github.com/jinzhu/gorm"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/cloud"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/logger"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator"
@@ -15,10 +16,11 @@ import (
 )
 
 type ISimulator interface {
-	Create(ctx context.Context, simulation *simulations.Simulation) error
-	Recover(ctx context.Context, getApplicationLabel func() *string) error
-	GetRunningSimulations() (*map[string]*RunningSimulation, error)
-	SetRunningSimulations(simulations  *map[string]*RunningSimulation) error
+	appendRunningSimulation(simulation *RunningSimulation)
+	Recover(ctx context.Context, getApplicationLabel func() *string, getGazeboConfig func() GazeboConfig) error
+	GetRunningSimulation(groupID string) *RunningSimulation
+	GetRunningSimulations() map[string]*RunningSimulation
+	SetRunningSimulations(simulations *map[string]*RunningSimulation) error
 	RLock()
 	RUnlock()
 	Lock()
@@ -59,6 +61,7 @@ type repositories struct {
 type NewSimulatorInput struct {
 	Orchestrator *orchestrator.Kubernetes
 	Cloud        *cloud.AmazonWS
+	Db			 *gorm.DB
 }
 
 
@@ -72,24 +75,22 @@ func NewSimulator(input NewSimulatorInput) ISimulator {
 		orchestrator: input.Orchestrator,
 		cloud:        input.Cloud,
 		repositories: repositories{
-			group: nil,
-			node:  nil,
-		},
-		services:	  services{
-			simulations: nil,
-			simulator:   NewSimulatorService(),
-		},
-		Controller:	  Controller{
-			Service: NewController(),
+			group: groups.NewRepository(input.Db),
+			node:  nodes.NewRepository(input.Db),
 		},
 		config:       cfg,
 	}
+	s.services.simulator = NewSimulatorService(s.repositories.node, s.repositories.group)
 	return &s
 }
 
+func (s *Simulator) GetRunningSimulation(groupID string) *RunningSimulation {
+	return s.runningSimulations[groupID]
+}
 
-func (s *Simulator) GetRunningSimulations() (*map[string]*RunningSimulation, error) {
-	return &s.runningSimulations, nil
+
+func (s *Simulator) GetRunningSimulations() map[string]*RunningSimulation {
+	return s.runningSimulations
 }
 
 
@@ -97,19 +98,24 @@ func (s *Simulator) SetRunningSimulations(simulations *map[string]*RunningSimula
 	if simulations == nil {
 		return errors.New("SetRunningSimulations cannot receive a nil argument")
 	}
-	// TODO: Check the lock.
+	s.Lock()
+	defer s.Unlock()
 	s.runningSimulations = *simulations
 	return nil
 }
 
+// appendRunningSimulation adds a new running simulation to the map of running simulations.
 func (s *Simulator) appendRunningSimulation(simulation *RunningSimulation) {
 	s.Lock()
 	defer s.Unlock()
+	if s.runningSimulations[simulation.GroupID] != nil {
+		return
+	}
 	s.runningSimulations[simulation.GroupID] = simulation
 }
 
-// RestoreRunning
-func (s *Simulator) RestoreRunning(ctx context.Context, simulation *simulations.Simulation) error {
+// RestoreRunningSimulation
+func (s *Simulator) RestoreRunningSimulation(ctx context.Context, simulation *simulations.Simulation, config GazeboConfig) error {
 	validFor, err := time.ParseDuration(*simulation.ValidFor)
 	if err != nil {
 		return err
@@ -117,10 +123,10 @@ func (s *Simulator) RestoreRunning(ctx context.Context, simulation *simulations.
 	input := NewRunningSimulationInput{
 		GroupID:          *simulation.GroupID,
 		Owner:            *simulation.Owner,
-		MaxSeconds:       0,
+		MaxSeconds:       config.MaxSeconds,
 		ValidFor:         validFor,
-		worldStatsTopic:  "",
-		worldWarmupTopic: "",
+		worldStatsTopic:  config.WorldStatsTopic,
+		worldWarmupTopic: config.WorldWarmupTopic,
 	}
 	rs, err := NewRunningSimulation(ctx, input)
 	if err != nil {
@@ -131,11 +137,11 @@ func (s *Simulator) RestoreRunning(ctx context.Context, simulation *simulations.
 }
 
 
-func (s *Simulator) Recover(ctx context.Context, getApplicationLabel func() *string) error {
+func (s *Simulator) Recover(ctx context.Context, getApplicationLabel func() *string, getGazeboConfig func() GazeboConfig) error {
 	label := getApplicationLabel()
 	pods, err := s.orchestrator.GetAllPods(label)
 	if err != nil {
-		logger.Logger(ctx).Error("[SIMULATOR|RECOVER] Error getting initial list of cloudsim pods from orchestrator", err)
+		logger.Logger(ctx).Error("[SIMULATOR|RECOVER] Error getting initial list of pods from orchestrator", err)
 		return err
 	}
 
@@ -162,7 +168,7 @@ func (s *Simulator) Recover(ctx context.Context, getApplicationLabel func() *str
 			continue
 		}
 
-		if err := s.RestoreRunning(ctx, sim); err != nil {
+		if err := s.RestoreRunningSimulation(ctx, sim, getGazeboConfig()); err != nil {
 			return err
 		}
 	}

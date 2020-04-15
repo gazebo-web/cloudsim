@@ -6,12 +6,10 @@ import (
 	"github.com/go-playground/form"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/cloud"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/email"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/logger"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/monitors"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/pool"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/queue"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulator"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/transport"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/users"
@@ -160,10 +158,6 @@ func (p *Platform) Start(ctx context.Context) error {
 		}
 	}()
 
-	// TODO: Rebuild state
-	p.RebuildState(ctx)
-
-
 	cleanerRunner := monitors.NewRunner(
 		ctx,
 		p.Cleaner,
@@ -190,48 +184,20 @@ func (p *Platform) Stop(ctx context.Context) error {
 	return nil
 }
 
-func (p *Platform) RebuildState(ctx context.Context) error {
-	p.Simulator.Recover(ctx)
-
-	p.Simulator.RLock()
-	defer p.Simulator.RUnlock()
-
-	var sims simulations.Simulations
-	// if err := db.Model(&SimulationDeployment{}).Where("error_status IS NULL").Where("multi_sim != ?", multiSimParent).
-	//		Where("deployment_status BETWEEN ? AND ?", int(simPending), int(simTerminatingInstances)).Find(&deps).Error; err != nil {
-	//		return err
-	//	}
-
-	for _, sim := range sims {
-		switch sim.GetStatus() {
-		case simulations.StatusPending:
-			logger.Logger(ctx).Info(fmt.Sprintf("[SIMULATOR|RECOVER] Resuming launch process. GroupID: [%s]", *sim.GroupID))
-			if err := s.services.simulations.Launch(ctx, &sim); err != nil {
-				logger.Logger(ctx).Error(fmt.Sprintf("[SIMULATOR|RECOVER] Error while launching simulation. GroupID: [%s]", *sim.GroupID))
-			}
-			continue
-		case simulations.StatusRunning:
-			_, running := s.runningSimulations[*sim.GroupID]
-			if !running {
-				logger.Logger(ctx).Info(fmt.Sprintf("[SIMULATOR|RECOVER] The expected running simulation doesn't have any node running. GroupID: [%s]. Marking with error.", *sim.GroupID))
-				sim.ErrorStatus = simulations.ErrServerRestart.ToStringPtr()
-				if _, err := s.services.simulations.Update(*sim.GroupID, sim); err != nil {
-					logger.Logger(ctx).Error(fmt.Sprintf("[SIMULATOR|RECOVER] Error while updating simulation. GroupID: [%s]", *sim.GroupID))
-				}
-			}
-			continue
-		default:
-			logger.Logger(ctx).Info(fmt.Sprintf("[SIMULATOR|RECOVER] Simulation found with intermediate Status: [%s]. GroupID: [%s]. Marking with error.", sim.GetStatus().ToString(), *sim.GroupID))
-			sim.ErrorStatus = simulations.ErrServerRestart.ToStringPtr()
-			if _, err := s.services.simulations.Update(*sim.GroupID, sim); err != nil {
-				logger.Logger(ctx).Error(fmt.Sprintf("[SIMULATOR|RECOVER] Error while updating simulation. GroupID: [%s]", *sim.GroupID))
-			}
-		}
+// Launch enqueues a launch action to launch a simulation from the given Group ID.
+func (p *Platform) Launch(ctx context.Context, groupID string) {
+	job := workers.LaunchDTO{
+		GroupID: groupID,
+		Action: nil,
 	}
+	p.LaunchQueue.Enqueue(job)
+}
 
-	// Push pending simulations to the queue.
-	// Check that the running simulations have the pods in the Kubernetes cluster, otherwise mark them as failed with ErrorServerRestart.
-	// DEFAULT:
-	// Mark with error
-	return nil
+// Terminate enqueues a termination action to terminate a simulation from the given Group ID.
+func (p *Platform) Terminate(ctx context.Context, groupID string) {
+	job := workers.TerminateDTO{
+		GroupID: groupID,
+		Action: nil,
+	}
+	p.TerminationQueue <- job
 }
