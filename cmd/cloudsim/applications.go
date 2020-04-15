@@ -1,21 +1,20 @@
 package main
 
 import (
-	"context"
 	"fmt"
 	"gitlab.com/ignitionrobotics/web/cloudsim/internal/subt"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/application"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/platform"
 )
 
-// RegisterApplications registers every application by calling their Register method.
-// The platform is passed to the
+// RegisterApplications registers the given applications by calling their Register method.
+// The platform is passed to each application in order to allow the application have a reference to the platform.
 func RegisterApplications(p *platform.Platform, apps *map[string]application.IApplication) {
 	RegisterApplication(apps, subt.Register(p))
-	// p.Applications = application.RegisterApplication(p.Applications, app.Register)
+	// RegisterApplication(p.Applications, app.Register(p))
 }
 
-// RegisterApplication adds a given application to the map of applications.
+// RegisterApplication sets the given application to the map of applications.
 func RegisterApplication(applications *map[string]application.IApplication, app application.IApplication) {
 	if app == nil || applications == nil {
 		panic("Invalid application")
@@ -24,6 +23,7 @@ func RegisterApplication(applications *map[string]application.IApplication, app 
 	(*applications)[name] = app
 }
 
+// RebuildState calls the RebuildState method for all the given applications.
 func RebuildState(p *platform.Platform, applications map[string]application.IApplication) {
 	for _, app := range applications {
 		err := app.RebuildState(p.Context)
@@ -33,14 +33,16 @@ func RebuildState(p *platform.Platform, applications map[string]application.IApp
 	}
 }
 
-func RegisterMonitors(applications map[string]application.IApplication) {
+// RegisterMonitors calls the RegisterMonitors method for all the given applications.
+func RegisterMonitors(p *platform.Platform, applications map[string]application.IApplication) {
 	for _, app := range applications {
-		app.RegisterMonitors()
+		app.RegisterMonitors(p.Context)
 	}
 }
 
-func ShutdownApplications(applications map[string]application.IApplication) {
+// ShutdownApplications calls the Shutdown method for all given applications.
+func ShutdownApplications(p *platform.Platform, applications map[string]application.IApplication) {
 	for _, app := range applications {
-		app.Shutdown(context.Background())
+		app.Shutdown(p.Context)
 	}
 }

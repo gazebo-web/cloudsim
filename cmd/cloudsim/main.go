@@ -22,14 +22,14 @@ func main() {
 	}
 
 	RegisterApplications(cloudsim, &applications)
-	RegisterMonitors(applications)
+	RegisterMonitors(cloudsim, applications)
 	RebuildState(cloudsim, applications)
 	RegisterRoutes(cloudsim, applications)
 	ScheduleTasks(cloudsim, applications)
 
 	cloudsim.Server.Run()
 
-	ShutdownApplications(applications)
+	ShutdownApplications(cloudsim, applications)
 
 	err := cloudsim.Stop(cloudsim.Context)
 	if err != nil {
