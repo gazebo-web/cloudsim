@@ -20,12 +20,16 @@ func main() {
 		}
 		panic(err)
 	}
+
 	RegisterApplications(cloudsim, &applications)
+	RegisterMonitors(applications)
 	RebuildState(cloudsim, applications)
 	RegisterRoutes(cloudsim, applications)
 	ScheduleTasks(cloudsim, applications)
 
 	cloudsim.Server.Run()
+
+	ShutdownApplications(applications)
 
 	err := cloudsim.Stop(cloudsim.Context)
 	if err != nil {

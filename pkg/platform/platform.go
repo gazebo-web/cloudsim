@@ -6,7 +6,6 @@ import (
 	"github.com/go-playground/form"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/cloud"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/email"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/monitors"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/pool"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/queue"
@@ -49,8 +48,6 @@ type Platform struct {
 	TerminationQueue chan workers.TerminateDTO
 	LaunchPool       pool.IPool
 	TerminationPool  pool.IPool
-	Cleaner			 *monitors.Monitor
-	Updater			 *monitors.Monitor
 }
 
 // Name returns the platform name
@@ -106,13 +103,13 @@ func New(config Config) *Platform {
 	p.Logger.Debug("[INIT] Scheduler initialized.")
 
 	p.setupQueues()
-	p.Logger.Debug("[INIT] Launch and termination queues have been initialized.")
+	p.Logger.Debug("[INIT] RequestLaunch and termination queues have been initialized.")
 
 	p.setupPoolFactory()
 	if _, err := p.setupWorkers(); err != nil {
 		p.Logger.Critical("[INIT|CRITICAL] Could not initialize workers.")
 	}
-	p.Logger.Debug("[INIT] Launch and termination workers have been initialized.")
+	p.Logger.Debug("[INIT] RequestLaunch and termination workers have been initialized.")
 
 	if _, err := p.setupTransport(); err != nil {
 		p.Logger.Critical("[INIT|CRITICAL] Could not initialize transport.")
@@ -157,35 +154,17 @@ func (p *Platform) Start(ctx context.Context) error {
 			p.Logger.Info(fmt.Sprintf("[QUEUE|TERMINATE] The terminate action was successfully served to the worker pool. Group ID: [%s]", dto.GroupID))
 		}
 	}()
-
-	cleanerRunner := monitors.NewRunner(
-		ctx,
-		p.Cleaner,
-		// TODO: Add checkForExpiredSimulations
-		func(ctx context.Context) error { return nil },
-	)
-	go cleanerRunner()
-
-	updaterRunner := monitors.NewRunner(
-		ctx,
-		p.Updater,
-		// TODO: Add updateMultiSimStatuses
-		func(ctx context.Context) error { return nil },
-	)
-	go updaterRunner()
 	return nil
 }
 
 // Stop stops the platform.
 func (p *Platform) Stop(ctx context.Context) error {
-	p.Updater.Ticker.Stop()
-	p.Cleaner.Ticker.Stop()
 	close(p.TerminationQueue)
 	return nil
 }
 
-// Launch enqueues a launch action to launch a simulation from the given Group ID.
-func (p *Platform) Launch(ctx context.Context, groupID string) {
+// RequestLaunch enqueues a launch action to launch a simulation from the given Group ID.
+func (p *Platform) RequestLaunch(ctx context.Context, groupID string) {
 	job := workers.LaunchDTO{
 		GroupID: groupID,
 		Action: nil,
@@ -193,8 +172,8 @@ func (p *Platform) Launch(ctx context.Context, groupID string) {
 	p.LaunchQueue.Enqueue(job)
 }
 
-// Terminate enqueues a termination action to terminate a simulation from the given Group ID.
-func (p *Platform) Terminate(ctx context.Context, groupID string) {
+// RequestTermination enqueues a termination action to terminate a simulation from the given Group ID.
+func (p *Platform) RequestTermination(ctx context.Context, groupID string) {
 	job := workers.TerminateDTO{
 		GroupID: groupID,
 		Action: nil,

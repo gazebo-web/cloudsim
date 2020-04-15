@@ -7,7 +7,6 @@ import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/db"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/email"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/logger"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/monitors"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/pool"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/queue"
@@ -22,7 +21,6 @@ import (
 	"gitlab.com/ignitionrobotics/web/ign-go/scheduler"
 	"gopkg.in/go-playground/validator.v9"
 	"log"
-	"time"
 )
 
 // IPlatformSetup represent a set of methods to initialize the Platform.
@@ -45,7 +43,6 @@ type IPlatformSetup interface {
 	setupQueues() *Platform
 	setupWorkers() (*Platform, error)
 	setupTransport() (*Platform, error)
-	setupMonitors() *Platform
 }
 
 // setupLogger initializes the logger.
@@ -171,14 +168,14 @@ func (p *Platform) setupScheduler() *Platform {
 	return p
 }
 
-// setupQueues initializes the Launch and Termination queues.
+// setupQueues initializes the RequestLaunch and Termination queues.
 func (p *Platform) setupQueues() *Platform {
 	p.LaunchQueue = queue.New()
 	p.TerminationQueue = make(chan workers.TerminateDTO, 1000)
 	return p
 }
 
-// setupWorkers configures the Launch and the Termination Pool
+// setupWorkers configures the RequestLaunch and the Termination Pool
 // If there is an error during the PoolFactory execution, it returns an error.
 func (p *Platform) setupWorkers() (*Platform, error) {
 	var err error
@@ -204,11 +201,4 @@ func (p *Platform) setupTransport() (*Platform, error) {
 	}
 	p.Transport = t
 	return p, nil
-}
-
-// setupMonitors initializes the platform's monitors.
-func (p *Platform) setupMonitors() *Platform {
-	p.Updater = monitors.New("expired-simulations-cleaner", "Expired Simulations Cleaner", 20 * time.Second)
-	p.Cleaner = monitors.New("multisim-status-updater", "MultiSim Parent Status Updater", time.Minute)
-	return p
 }

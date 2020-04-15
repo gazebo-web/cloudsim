@@ -4,11 +4,13 @@ import (
 	"context"
 	"fmt"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/logger"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/monitors"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/platform"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulator"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/tasks"
 	"gitlab.com/ignitionrobotics/web/ign-go"
+	"time"
 )
 
 // IApplication describes a set of methods for an Application.
@@ -17,27 +19,29 @@ type IApplication interface {
 	Version() string
 	RegisterRoutes() ign.Routes
 	RegisterTasks() []tasks.Task
+	RegisterMonitors()
 	RebuildState(ctx context.Context) error
+	Shutdown(ctx context.Context)
 }
 
 // Application is a generic implementation of an application to be extended by a specific application.
 type Application struct {
 	Platform *platform.Platform
 	services services
-	controllers controllers
+	Cleaner	 *monitors.Monitor
+	Updater	 *monitors.Monitor
 }
 
 type services struct {
 	simulation simulations.IService
 }
 
-type controllers struct {
-}
-
 // New creates a new application for the given platform.
 func New(p *platform.Platform) *Application {
 	app := &Application{
 		Platform: p,
+		Cleaner: monitors.New("expired-simulations-cleaner", "Expired Simulations Cleaner", 20 * time.Second),
+		Updater: monitors.New("multisim-status-updater", "MultiSim Parent Status Updater", time.Minute),
 	}
 	return app
 }
@@ -64,6 +68,29 @@ func (app *Application) RegisterRoutes() ign.Routes {
 // If the specific application doesn't implement this method, it will return an empty slice.
 func (app *Application) RegisterTasks() []tasks.Task {
 	return []tasks.Task{}
+}
+
+func (app *Application) RegisterMonitors(ctx context.Context) {
+	cleanerRunner := monitors.NewRunner(
+		ctx,
+		app.Cleaner,
+		// TODO: Add checkForExpiredSimulations
+		func(ctx context.Context) error { return nil },
+	)
+	go cleanerRunner()
+
+	updaterRunner := monitors.NewRunner(
+		ctx,
+		app.Updater,
+		// TODO: Add updateMultiSimStatuses
+		func(ctx context.Context) error { return nil },
+	)
+	go updaterRunner()
+}
+
+func (app *Application) Shutdown(ctx context.Context) {
+	app.Updater.Ticker.Stop()
+	app.Cleaner.Ticker.Stop()
 }
 
 func (app *Application) RebuildState(ctx context.Context) error {
