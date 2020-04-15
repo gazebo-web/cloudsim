@@ -1,7 +1,6 @@
 package simulations
 
 import (
-	"gitlab.com/ignitionrobotics/web/ign-go"
 	"context"
 	"encoding/base64"
 	"fmt"
@@ -11,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2/ec2iface"
 	"github.com/caarlos0/env"
 	"github.com/jinzhu/gorm"
+	"gitlab.com/ignitionrobotics/web/ign-go"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"strings"
@@ -46,6 +46,8 @@ type kubeConfig struct {
 }
 
 type ec2Config struct {
+	Subnet string `env:"IGN_EC2_SUBNET,required"`
+	AvailabilityZone string `env:"IGN_EC2_AVAILABILITY_ZONE" envDefault:"us-east-1a"`
 	AvailableEC2Machines int `env:"IGN_EC2_MACHINES_LIMIT" envDefault:"-1"`
 }
 
@@ -389,12 +391,21 @@ func (s *Ec2Client) launchNodes(ctx context.Context, tx *gorm.DB, dep *Simulatio
 	// Note: specific Applications/Platforms can override these.
 	instanceTemplate := &ec2.RunInstancesInput{
 		DryRun: aws.Bool(true),
+		IamInstanceProfile: &ec2.IamInstanceProfileSpecification{
+			// This IAM role is assigned to the EC2 instance so it can write logs to AWS CloudWatch
+			// and access ECR. It can be configured using an env var: AWS_IAM_INSTANCE_PROFILE_ARN.
+			// The default value is: "arn:aws:iam::200670743174:instance-profile/cloudsim-ec2-node"
+			Arn: aws.String(s.awsCfg.IamInstanceProfile),
+		},
 		// IMPORTANT: the 'KeyName' is the name of the ssh key to use to remotely access this instance.
 		KeyName:          aws.String("ignitionFuel"),
-		MinCount:         aws.Int64(1),
 		MaxCount:         aws.Int64(1),
+		MinCount:         aws.Int64(1),
 		SecurityGroupIds: aws.StringSlice([]string{"sg-0c5c791266694a3ca"}),
-		SubnetId:         aws.String("subnet-0e632d68a9032ab9d"),
+		SubnetId:         aws.String(s.ec2Cfg.Subnet),
+		Placement:        &ec2.Placement{
+			AvailabilityZone: aws.String(s.ec2Cfg.AvailabilityZone),
+		},
 		TagSpecifications: []*ec2.TagSpecification{
 			{
 				ResourceType: aws.String("instance"),
@@ -405,12 +416,6 @@ func (s *Ec2Client) launchNodes(ctx context.Context, tx *gorm.DB, dep *Simulatio
 					{Key: dep.Platform, Value: aws.String("True")},
 				},
 			},
-		},
-		IamInstanceProfile: &ec2.IamInstanceProfileSpecification{
-			// This IAM role is assigned to the EC2 instance so it can write logs to AWS CloudWatch
-			// and access ECR. It can be configured using an env var: AWS_IAM_INSTANCE_PROFILE_ARN.
-			// The default value is: "arn:aws:iam::200670743174:instance-profile/cloudsim-ec2-node"
-			Arn: aws.String(s.awsCfg.IamInstanceProfile),
 		},
 		// UserData is an initialization script run after the instance is launched.
 		// We use it to make the Node 'join' the k8 cluster.

@@ -56,14 +56,6 @@ import (
 		- field-computer pods should not be able to access internet.
 		- The Gzserver Pod can access internet.
 		If you notice any of the above not being true, please raise an issue.
-
-		Limitations:
-		- Field-computers should not be able to communicate with the cloudsim server or the
-			kubernetes master. But we had to allow traffic to make "ign-transport" work, as it
-			dynamically opens ports for the pub/sub connections.
-			TODO: test updating the NetworkPolicies to limit allowed ports only to dynamic ports range
-			used by ign-transport. Find out which ports are those. They would seem to start
-			at port 30000 (?).
 */
 
 // SubT Specifics constants
@@ -99,9 +91,9 @@ const (
 	CircuitUrbanCircuitWorld6 string = "Urban Circuit World 6"
 	CircuitUrbanCircuitWorld7 string = "Urban Circuit World 7"
 	CircuitUrbanCircuitWorld8 string = "Urban Circuit World 8"
-	CircuitCaveSimple1 string = "Cave Simple 1"
-	CircuitCaveSimple2 string = "Cave Simple 2"
-	CircuitCaveSimple3 string = "Cave Simple 3"
+	CircuitCaveSimple1        string = "Cave Simple 1"
+	CircuitCaveSimple2        string = "Cave Simple 2"
+	CircuitCaveSimple3        string = "Cave Simple 3"
 	// Container names
 	GazeboServerContainerName    string = "gzserver-container"
 	CommsBridgeContainerName     string = "comms-bridge"
@@ -1326,6 +1318,20 @@ func (sa *SubTApplication) createCommsBridgePod(ctx context.Context, dep *Simula
 						{
 							Name:  "IGN_PARTITION",
 							Value: *dep.GroupID,
+						},
+						{
+							// IGN_IP contains the IP of the subscriber (this pod)
+							Name: "IGN_IP",
+							ValueFrom: &corev1.EnvVarSource{
+								FieldRef: &corev1.ObjectFieldSelector{
+									FieldPath: "status.podIP",
+								},
+							},
+						},
+						{
+							// IGN_RELAY should contain the IP of the publisher (the gzserver)
+							Name:  "IGN_RELAY",
+							Value: gzserverIP,
 						},
 						{
 							Name:  "IGN_VERBOSE",
