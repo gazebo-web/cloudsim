@@ -179,3 +179,13 @@ func (s *RunningSimulation) SendMessage(ctx context.Context, topic, msg, msgType
 		_ = s.ignTransportNode.IgnTransportPublishStringMsg(topic, msg)
 	}
 }
+
+// IsExpired returns true is the RunningSimulation is expired.
+func (s *RunningSimulation) IsExpired() bool {
+	secondsExpired := false
+	// If SimMaxAllowedSeconds is 0 then there is no limit for Sim seconds
+	if s.SimMaxAllowedSeconds > 0 {
+		secondsExpired = (s.SimTimeSeconds - s.SimWarmupSeconds) > s.SimMaxAllowedSeconds
+	}
+	return secondsExpired || time.Now().After(s.MaxValidUntil)
+}

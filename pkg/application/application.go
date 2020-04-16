@@ -22,6 +22,8 @@ type IApplication interface {
 	RegisterMonitors(ctx context.Context)
 	RebuildState(ctx context.Context) error
 	Shutdown(ctx context.Context) error
+	Launch(ctx context.Context, simulation *simulations.Simulation) error
+	ValidateLaunch(ctx context.Context, simulation *simulations.Simulation) error
 }
 
 // Application is a generic implementation of an application to be extended by a specific application.
@@ -92,6 +94,7 @@ func (app *Application) Shutdown(ctx context.Context) error {
 	return nil
 }
 
+// RebuildState runs a set of instructions to restore the application to the previous state before a restart.
 func (app *Application) RebuildState(ctx context.Context) error {
 	err := app.Platform.Simulator.Recover(ctx, app.getLabel, app.getGazeboConfig)
 	if err != nil {
@@ -134,14 +137,28 @@ func (app *Application) RebuildState(ctx context.Context) error {
 	return nil
 }
 
+// getLabel returns the label that's being used to identify the application's running simulations.
 func (app *Application) getLabel() *string {
 	return nil
 }
 
-func (app *Application) getGazeboConfig() simulator.GazeboConfig {
-	return simulator.GazeboConfig{
-		WorldStatsTopic:  "",
-		WorldWarmupTopic: "",
-		MaxSeconds:       0,
+// getGazeboConfig returns a GazeboConfig for the application.
+func (app *Application) getGazeboConfig(sim *simulations.Simulation) simulator.GazeboConfig {
+	panic("getGazeboConfig should be implemented by the specific application.")
+}
+
+
+
+// LaunchSimulation -- sim_service.go:763
+func (app *Application) Launch(ctx context.Context, simulation *simulations.Simulation) error {
+	if err := app.ValidateLaunch(ctx, simulation); err != nil {
+		return err
 	}
+	app.Platform.RequestLaunch(ctx, *simulation.GroupID)
+	return nil
+}
+
+// ValidateLaunch -- subt_specifics.go:2089
+func (app *Application) ValidateLaunch(ctx context.Context, simulation *simulations.Simulation) error {
+	return nil
 }

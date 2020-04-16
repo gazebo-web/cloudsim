@@ -23,9 +23,9 @@ func main() {
 
 	RegisterApplications(cloudsim, &applications)
 	RegisterMonitors(cloudsim, applications)
-	RebuildState(cloudsim, applications)
 	RegisterRoutes(cloudsim, applications)
 	ScheduleTasks(cloudsim, applications)
+	RebuildState(cloudsim, applications)
 
 	cloudsim.Server.Run()
 

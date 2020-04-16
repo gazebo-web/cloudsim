@@ -14,7 +14,7 @@ func RegisterApplications(p *platform.Platform, apps *map[string]application.IAp
 	// RegisterApplication(p.Applications, app.Register(p))
 }
 
-// RegisterApplication sets the given application to the map of applications.
+// RegisterApplication sets the given application on the map of applications.
 func RegisterApplication(applications *map[string]application.IApplication, app application.IApplication) {
 	if app == nil || applications == nil {
 		panic("Invalid application")

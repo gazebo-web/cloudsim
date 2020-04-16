@@ -17,7 +17,7 @@ import (
 
 type ISimulator interface {
 	appendRunningSimulation(simulation *RunningSimulation)
-	Recover(ctx context.Context, getApplicationLabel func() *string, getGazeboConfig func() GazeboConfig) error
+	Recover(ctx context.Context, getApplicationLabel func() *string, getGazeboConfig func(sim *simulations.Simulation) GazeboConfig) error
 	GetRunningSimulation(groupID string) *RunningSimulation
 	GetRunningSimulations() map[string]*RunningSimulation
 	SetRunningSimulations(simulations *map[string]*RunningSimulation) error
@@ -137,7 +137,7 @@ func (s *Simulator) RestoreRunningSimulation(ctx context.Context, simulation *si
 }
 
 
-func (s *Simulator) Recover(ctx context.Context, getApplicationLabel func() *string, getGazeboConfig func() GazeboConfig) error {
+func (s *Simulator) Recover(ctx context.Context, getApplicationLabel func() *string, getGazeboConfig func(sim *simulations.Simulation) GazeboConfig) error {
 	label := getApplicationLabel()
 	pods, err := s.orchestrator.GetAllPods(label)
 	if err != nil {
@@ -168,7 +168,7 @@ func (s *Simulator) Recover(ctx context.Context, getApplicationLabel func() *str
 			continue
 		}
 
-		if err := s.RestoreRunningSimulation(ctx, sim, getGazeboConfig()); err != nil {
+		if err := s.RestoreRunningSimulation(ctx, sim, getGazeboConfig(sim)); err != nil {
 			return err
 		}
 	}
