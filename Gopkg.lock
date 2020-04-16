@@ -369,7 +369,10 @@
 
 [[projects]]
   name = "github.com/stretchr/testify"
-  packages = ["assert"]
+  packages = [
+    "assert",
+    "require"
+  ]
   revision = "ffdc059bfe9ce6a4e144ba849dbedead332c6053"
   version = "v1.3.0"
 
@@ -397,7 +400,8 @@
   name = "gitlab.com/ignitionrobotics/web/ign-go"
   packages = [
     ".",
-    "scheduler"
+    "scheduler",
+    "testhelpers"
   ]
   revision = "48b369571fcf660dbb0dda492c29ad5b38edb646"
   version = "4.0.1"

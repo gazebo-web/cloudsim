@@ -9,4 +9,7 @@ db.env
 *.Dockerfile
 Dockerfile
 docker-compose.yml
-insomnia/
+deprecated/
+scripts/
+docs/
+assets/
