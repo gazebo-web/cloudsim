@@ -35,3 +35,8 @@ func TestName_NameMatches(t *testing.T) {
 	m := mockApp2{}
 	assert.Equal(t, "test", m.Name())
 }
+
+func TestVersion_DefaultValue(t *testing.T) {
+	m := mockApp{}
+	assert.Equal(t, "1.0", m.Version())
+}

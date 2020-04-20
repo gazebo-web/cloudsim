@@ -24,6 +24,8 @@ type IPlatform interface {
 	Name() string
 	Start(ctx context.Context) error
 	Stop(ctx context.Context) error
+	RequestLaunch(ctx context.Context, groupID string)
+	RequestTermination(ctx context.Context, groupID string)
 }
 
 // Platform represents a set of components to run applications.
@@ -164,7 +166,7 @@ func (p *Platform) Stop(ctx context.Context) error {
 func (p *Platform) RequestLaunch(ctx context.Context, groupID string) {
 	job := workers.LaunchDTO{
 		GroupID: groupID,
-		Action: nil,
+		Action:  nil,
 	}
 	p.LaunchQueue.Enqueue(job)
 }
@@ -173,7 +175,7 @@ func (p *Platform) RequestLaunch(ctx context.Context, groupID string) {
 func (p *Platform) RequestTermination(ctx context.Context, groupID string) {
 	job := workers.TerminateDTO{
 		GroupID: groupID,
-		Action: nil,
+		Action:  nil,
 	}
 	p.TerminationQueue <- job
 }

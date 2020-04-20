@@ -1,13 +1,21 @@
 package platform
 
 type Mock struct {
-	*Platform
+	IPlatform
+	IPlatformSetup
 }
 
 // NewMock creates a mocked platform to be used by tests.
 func NewMock(config Config) IPlatform {
-	p := &Mock{}
-	p.Config = config
-	p.Platform = New(config)
+	var p IPlatform
+	p = &Mock{}
+	p = New(config)
+	return p
+}
+
+func NewSetupMock(config Config) IPlatformSetup {
+	var p IPlatformSetup
+	p = &Mock{}
+	p = New(config)
 	return p
 }

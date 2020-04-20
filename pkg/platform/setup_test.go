@@ -47,5 +47,28 @@ func TestInitializers_Router(t *testing.T) {
 }
 
 func TestInitializers_Email(t *testing.T) {
+	p := Platform{}
+	p.Config = NewConfig()
+	p.setupLogger()
+	p.setupContext()
+	p.setupEmail()
+	assert.NotNil(t, p.Email)
+}
 
+func TestInitializers_Validator(t *testing.T) {
+	p := Platform{}
+	p.Config = NewConfig()
+	p.setupLogger()
+	p.setupContext()
+	p.setupValidator()
+	assert.NotNil(t, p.Validator)
+}
+
+func TestInitializers_FormDecoder(t *testing.T) {
+	p := Platform{}
+	p.Config = NewConfig()
+	p.setupLogger()
+	p.setupContext()
+	p.setupFormDecoder()
+	assert.NotNil(t, p.FormDecoder)
 }

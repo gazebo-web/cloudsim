@@ -30,8 +30,8 @@ type IApplication interface {
 type Application struct {
 	Platform *platform.Platform
 	Services Services
-	Cleaner	 *monitors.Monitor
-	Updater	 *monitors.Monitor
+	Cleaner  *monitors.Monitor
+	Updater  *monitors.Monitor
 }
 
 type Services struct {
@@ -42,8 +42,8 @@ type Services struct {
 func New(p *platform.Platform) *Application {
 	app := &Application{
 		Platform: p,
-		Cleaner: monitors.New("expired-simulations-cleaner", "Expired Simulations Cleaner", 20 * time.Second),
-		Updater: monitors.New("multisim-status-updater", "MultiSim Parent Status Updater", time.Minute),
+		Cleaner:  monitors.New("expired-simulations-cleaner", "Expired Simulations Cleaner", 20*time.Second),
+		Updater:  monitors.New("multisim-status-updater", "MultiSim Parent Status Updater", time.Minute),
 	}
 	return app
 }
@@ -144,10 +144,8 @@ func (app *Application) getLabel() *string {
 
 // getGazeboConfig returns a GazeboConfig for the application.
 func (app *Application) getGazeboConfig(sim *simulations.Simulation) simulator.GazeboConfig {
-	panic("getGazeboConfig should be implemented by the specific application.")
+	panic("getGazeboConfig should be implemented by the application.")
 }
-
-
 
 // LaunchSimulation -- sim_service.go:763
 func (app *Application) Launch(ctx context.Context, simulation *simulations.Simulation) error {
