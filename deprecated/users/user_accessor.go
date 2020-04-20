@@ -20,7 +20,7 @@ type userAccessorConf struct {
 	sysAdmin              string
 }
 
-// UserAccessor is used by the cloudsim server to remotely get Users and their membership
+// Deprecated: UserAccessor is used by the cloudsim server to remotely get Users and their membership
 // to Organizations.
 type UserAccessor interface {
 	// UserFromJWT returns the User associated to the http request's JWT token.
