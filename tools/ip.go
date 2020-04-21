@@ -2,8 +2,8 @@ package tools
 
 import "net"
 
-// getLocalIPAddress returns a local IP address of this host.
-func getLocalIPAddress() (string, error) {
+// GetLocalIPAddress returns a local IP address of this host.
+func GetLocalIPAddress() (string, error) {
 	addrs, err := net.InterfaceAddrs()
 	if err != nil {
 		return "", err
