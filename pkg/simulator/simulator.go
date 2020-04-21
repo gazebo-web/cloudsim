@@ -9,7 +9,6 @@ import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/logger"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulator/groups"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulator/nodes"
 	"sync"
 	"time"
@@ -54,7 +53,6 @@ type services struct {
 }
 
 type repositories struct {
-	group groups.IRepository
 	node nodes.IRepository
 }
 
@@ -75,12 +73,11 @@ func NewSimulator(input NewSimulatorInput) ISimulator {
 		orchestrator: input.Orchestrator,
 		cloud:        input.Cloud,
 		repositories: repositories{
-			group: groups.NewRepository(input.Db),
 			node:  nodes.NewRepository(input.Db),
 		},
 		config:       cfg,
 	}
-	s.services.simulator = NewSimulatorService(s.repositories.node, s.repositories.group)
+	s.services.simulator = NewSimulatorService(s.repositories.node)
 	return &s
 }
 

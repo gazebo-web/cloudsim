@@ -10,7 +10,8 @@ type IService interface {
 	GetAllParents(application string, statusFrom, statusTo Status) (*Simulations, error)
 	GetAllParentsWithErrors(application string, statusFrom, statusTo Status, errors []ErrorStatus) (*Simulations, error)
 	Update(groupID string, simulation Simulation) (*Simulation, error)
-	UpdateParentFromChildren(parent *Simulation) error
+	UpdateParentFromChildren(parent *Simulation) (*Simulation, error)
+	GetParent(application string, groupID string) (*Simulation, error)
 }
 
 type Service struct {
@@ -65,6 +66,10 @@ func (s * Service) GetAllParentsWithErrors(application string, statusFrom, statu
 	panic("Not implemented")
 }
 
-func (s *Service) UpdateParentFromChildren(parent *Simulation) error {
-	panic("Not implemented")
+func (s *Service) UpdateParentFromChildren(parent *Simulation) (*Simulation, error) {
+	panic("implement me")
+}
+
+func (s *Service) GetParent(application string, groupID string) (*Simulation, error) {
+	panic("implement me")
 }

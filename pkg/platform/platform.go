@@ -51,7 +51,7 @@ type Platform struct {
 	TerminationPool  pool.IPool
 }
 
-// Name returns the platform name
+// Name returns the platform's name
 func (p *Platform) Name() string {
 	return "cloudsim"
 }
@@ -76,7 +76,8 @@ func New(config Config) *Platform {
 	p.setupRouter()
 	p.Logger.Debug("[INIT] Router initialized.")
 
-	p.setupValidator() // TODO: Decide where should the custom validators should go
+	// TODO: Decide where should the custom validators should go
+	p.setupValidator()
 	p.Logger.Debug("[INIT] Validators initialized.")
 
 	p.setupFormDecoder()

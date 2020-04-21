@@ -109,3 +109,23 @@ func (s ErrorStatus) ToStringPtr() *string {
 	str := string(s)
 	return &str
 }
+
+func (s ErrorStatus) weight() int {
+	switch s {
+	case ErrWhenInitializing, ErrWhenTerminating:
+		return 0
+	case ErrRejected:
+		return 1
+	case ErrServerRestart:
+		return 2
+	case ErrAdminReview, ErrFailedToUploadLogs:
+		return 5
+	}
+	panic("Invalid value")
+}
+
+// isMoreSevere checks if the given error is more severe than the current status.
+// Returns true if the given error is more severe than the current status.
+func (s ErrorStatus) isMoreSevere(err ErrorStatus) bool {
+	return err.weight() > s.weight()
+}
