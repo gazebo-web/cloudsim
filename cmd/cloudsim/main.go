@@ -15,7 +15,7 @@ func main() {
 
 	if err := cloudsim.Start(cloudsim.Context); err != nil {
 		cloudsim.Logger.Critical(fmt.Sprintf("[CLOUDSIM|CRITICAL] Error when initializing cloudsim\n%v", err))
-		for name, _ := range applications {
+		for name := range applications {
 			cloudsim.Logger.Info(fmt.Sprintf("\tRunning with application [%s]", name))
 		}
 		panic(err)

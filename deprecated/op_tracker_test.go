@@ -1,4 +1,4 @@
-package deprecated
+package main
 
 // OpType represents the identifier of an operation to invoke.
 type OpType string

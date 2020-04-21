@@ -11,7 +11,7 @@
 //
 // swagger:meta
 // go:generate swagger generate spec
-package deprecated
+package main
 
 // Import this file's dependencies
 import (

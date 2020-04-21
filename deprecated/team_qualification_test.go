@@ -1,4 +1,4 @@
-package deprecated
+package main
 
 import (
 	igntest "gitlab.com/ignitionrobotics/web/ign-go/testhelpers"

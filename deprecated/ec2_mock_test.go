@@ -1,4 +1,4 @@
-package deprecated
+package main
 
 import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/simulations"
