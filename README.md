@@ -253,6 +253,11 @@ export IGN_ROLLBAR_TOKEN=
 export IGN_ROLLBAR_ENV=
 export IGN_ROLLBAR_ROOT=
 
+# EC2 Machines
+export IGN_EC2_AVAILABILITY_ZONES=us-east-1a
+export IGN_EC2_SUBNETS=subnet-0e632d68a9032ab9d
+export IGN_EC2_MACHINES_LIMIT=-1
+
 # Configure AWS access
 export AWS_ACCOUNT=your account id (eg. used by AWS ECR)
 export AWS_REGION=us-east-1
