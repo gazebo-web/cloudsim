@@ -12,10 +12,7 @@ type Repository struct {
 type IRepository interface {
 	simulations.IRepository
 	CountByOwnerAndCircuit(owner, circuit string) (int, error)
-}
-
-func (r *Repository) CountByOwnerAndCircuit(owner, circuit string) (int, error) {
-	panic("Not implemented")
+	GetSubT(groupID string) (*SubTSimulation, error)
 }
 
 func NewRepository(db *gorm.DB) IRepository {
@@ -26,4 +23,13 @@ func NewRepository(db *gorm.DB) IRepository {
 		Repository: repository,
 	}
 	return r
+}
+
+
+func (r *Repository) CountByOwnerAndCircuit(owner, circuit string) (int, error) {
+	panic("Not implemented")
+}
+
+func (r *Repository) GetSubT(groupID string) (*SubTSimulation, error) {
+
 }
