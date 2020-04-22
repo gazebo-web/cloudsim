@@ -2,6 +2,7 @@ package simulations
 
 import "time"
 
+// Simulation represents a Cloudsim Simulation.
 type Simulation struct {
 	// Override default GORM Model fields
 	ID        uint      `gorm:"primary_key" json:"-"`
@@ -50,8 +51,11 @@ type Simulation struct {
 	Held   bool    `json:"held"`
 }
 
+// Simulations is a slice of Simulation.
 type Simulations []Simulation
 
+// Clone clones the given simulation.
+// Returns the clone.
 func (sim *Simulation) Clone() *Simulation {
 	clone := *sim
 
@@ -65,6 +69,7 @@ func (sim *Simulation) Clone() *Simulation {
 	return &clone
 }
 
+// GetStatus returns the Simulation status.
 func (sim *Simulation) GetStatus() Status {
 	return Status(*sim.Status)
 }

@@ -6,6 +6,7 @@ import (
 	"gitlab.com/ignitionrobotics/web/ign-go"
 )
 
+// dbConfig
 type dbConfig struct {
 	UserName     string `env:"IGN_USER_DB_USERNAME" envDefault:":notset"`
 	Password     string `env:"IGN_USER_DB_PASSWORD"`
@@ -15,6 +16,7 @@ type dbConfig struct {
 	EnableLog    bool   `env:"IGN_USER_DB_LOG" envDefault:"false"`
 }
 
+// newDbConfig
 func newDbConfig() (*ign.DatabaseConfig, error) {
 	cfg := dbConfig{}
 	if err := env.Parse(&cfg); err != nil {

@@ -7,6 +7,7 @@ import (
 	"log"
 )
 
+// Config represents the Platform configuration.
 type Config struct {
 	SysAdmin string `env:"IGN_CLOUDSIM_SYSTEM_ADMIN"`
 	SSLport  string `env:"IGN_CLOUDSIM_SSL_PORT" envDefault:":4431"`

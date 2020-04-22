@@ -5,10 +5,12 @@ import (
 	"gitlab.com/ignitionrobotics/web/ign-go"
 )
 
+// Service
 type Service struct {
 	Accessor IUserAccessor
 }
 
+// NewService
 func NewService(p *permissions.Permissions, sysAdmin string) (*Service, error) {
 	s := Service{}
 	dbConfig, err := newDbConfig()

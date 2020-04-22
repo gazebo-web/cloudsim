@@ -5,6 +5,7 @@ import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/internal/subt"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/application"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/platform"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/router"
 )
 
 // RegisterApplications registers the given applications by calling their Register method.
@@ -44,6 +45,23 @@ func ShutdownApplications(p *platform.Platform, applications map[string]applicat
 	for _, app := range applications {
 		if err := app.Shutdown(p.Context); err != nil {
 			panic(fmt.Sprintf("Error shutting down an application. Name: %s. Version: %s", app.Name(), app.Version()))
+		}
+	}
+}
+
+// RegisterRoutes appends an slice of routes by the given applications to the Platform's router.
+func RegisterRoutes(p *platform.Platform, apps map[string]application.IApplication) {
+	for _, app := range apps {
+		p.Server.Router = router.ConfigureRoutes(p.Server, p.Server.Router, app.Version(), app.Name(), app.RegisterRoutes())
+	}
+}
+
+// ScheduleTasks gets all the tasks from each application and add them to the platform's scheduler.
+func ScheduleTasks(cloudsim *platform.Platform, apps map[string]application.IApplication) {
+	for _, app := range apps {
+		tasks := app.RegisterTasks()
+		for _, task := range tasks {
+			cloudsim.Scheduler.DoAt(task.Job, task.Date)
 		}
 	}
 }

@@ -8,6 +8,7 @@ import (
 	"gitlab.com/ignitionrobotics/web/ign-go"
 )
 
+// IController represents a group of methods to expose in the API Rest.
 type IController interface {
 	GetAll(ctx context.Context, user *fuel.User, page, perPage *int) ([]interface{}, *ign.ErrMsg)
 	Count(ctx context.Context, user *fuel.User) (interface{}, *ign.ErrMsg)
@@ -17,10 +18,12 @@ type IController interface {
 	Remove(ctx context.Context, user *fuel.User, groupID string) (interface{}, *ign.ErrMsg)
 }
 
+// Controller is an IController implementation.
 type Controller struct {
 	services services
 }
 
+// services is a group of services used by the Controller.
 type services struct {
 	user  *users.Service
 	queue IQueue

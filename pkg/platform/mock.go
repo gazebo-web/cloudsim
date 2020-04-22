@@ -13,6 +13,7 @@ func NewMock(config Config) IPlatform {
 	return p
 }
 
+// NewSetupMock creates a mocked platform initializer to be used by tests.
 func NewSetupMock(config Config) IPlatformSetup {
 	var p IPlatformSetup
 	p = &Mock{}

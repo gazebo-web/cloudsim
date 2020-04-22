@@ -34,6 +34,7 @@ type Application struct {
 	Updater  *monitors.Monitor
 }
 
+// Services group a list of services to be used by the Application.
 type Services struct {
 	Simulation simulations.IService
 }
@@ -72,6 +73,7 @@ func (app *Application) RegisterTasks() []tasks.Task {
 	return []tasks.Task{}
 }
 
+// RegisterMonitors runs the Cleaner Job and the Updater job.
 func (app *Application) RegisterMonitors(ctx context.Context) {
 	cleanerRunner := monitors.NewRunner(
 		ctx,
@@ -88,6 +90,7 @@ func (app *Application) RegisterMonitors(ctx context.Context) {
 	go updaterRunner()
 }
 
+// Shutdown executes a set of instructions to turn off the application.
 func (app *Application) Shutdown(ctx context.Context) error {
 	app.Updater.Ticker.Stop()
 	app.Cleaner.Ticker.Stop()
@@ -147,7 +150,7 @@ func (app *Application) getGazeboConfig(sim *simulations.Simulation) simulator.G
 	panic("getGazeboConfig should be implemented by the application.")
 }
 
-// LaunchSimulation -- sim_service.go:763
+// LaunchSimulation receives a Simulation and requests a Launch to the Platform.
 func (app *Application) Launch(ctx context.Context, simulation *simulations.Simulation) error {
 	if err := app.ValidateLaunch(ctx, simulation); err != nil {
 		return err
@@ -156,7 +159,8 @@ func (app *Application) Launch(ctx context.Context, simulation *simulations.Simu
 	return nil
 }
 
-// ValidateLaunch -- subt_specifics.go:2089
+// ValidateLaunch receives a simulation and performs a set of checks to
+// ensure that the simulation is good to be launched.
 func (app *Application) ValidateLaunch(ctx context.Context, simulation *simulations.Simulation) error {
 	return nil
 }

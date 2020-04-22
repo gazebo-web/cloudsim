@@ -1,7 +1,9 @@
 package simulator
 
+// IController
 type IController interface {}
 
+// Controller
 type Controller struct {
 	Service IService
 }

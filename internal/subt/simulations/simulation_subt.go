@@ -7,7 +7,7 @@ import (
 
 type SubTSimulation struct {
 	gorm.Model
-	Simulation *simulations.Simulation `gorm:"foreignkey:SimDep" json:"-"`
+	Simulation *simulations.Simulation `gorm:"foreignkey:Sim" json:"-"`
 	// Simulation unique identifier
 	GroupID *string `gorm:"not null;unique" json:"-"`
 	// Simulation score

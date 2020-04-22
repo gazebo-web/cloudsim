@@ -25,6 +25,7 @@ const (
 	StatusRejected             Status = 100
 )
 
+// GetStatusLabel returns a status string from the given status.
 func GetStatusLabel(status Status) string {
 	switch status {
 	case StatusPending:
@@ -70,6 +71,7 @@ func GetStatusLabel(status Status) string {
 	panic("GetStatusLabel should receive a valid status")
 }
 
+// Equal compares if the given status is the same as the current status.
 func (s Status) Equal(status int) bool {
 	return int(s) == status
 }

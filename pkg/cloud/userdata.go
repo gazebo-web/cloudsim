@@ -7,6 +7,7 @@ import (
 	"text/template"
 )
 
+// RunUserDataConfig is the configuration to create an User Data command for EC2 machines initialization.
 type RunUserDataConfig struct {
 	GroupLabels string
 	ExtraLabels string

@@ -5,15 +5,18 @@ import (
 	igntransport "gitlab.com/ignitionrobotics/web/cloudsim/third_party/ign-transport"
 )
 
+// config
 type config struct {
 	Topic string `env:"IGN_TRANSPORT_TEST_TOPIC" envDefault:"/foo"`
 }
 
+// Transport
 type Transport struct {
 	Node  *igntransport.GoIgnTransportNode
 	Topic string
 }
 
+// New
 func New() (*Transport, error) {
 	cfg := config{}
 	if err := env.Parse(&cfg); err != nil {
@@ -29,6 +32,7 @@ func New() (*Transport, error) {
 	}, nil
 }
 
+// Stop
 func (t *Transport) Stop() {
 	t.Node.Free()
 }

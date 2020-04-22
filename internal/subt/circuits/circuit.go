@@ -30,3 +30,7 @@ type Circuit struct {
 	// a new simulation for this circuit.
 	RequiresQualification *bool `json:"-"`
 }
+
+func (Circuit) TableName() string {
+	return "subt_circuits"
+}

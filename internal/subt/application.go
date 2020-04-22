@@ -1,11 +1,16 @@
 package subt
 
+// TODO: Find a way of avoiding the usage of .
 import (
 	"context"
 	"errors"
 	"fmt"
-	// TODO: Find a way of avoiding the usage of .
-	. "gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/simulations"
+	"gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/circuits"
+	"gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/metadata"
+	"gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/quals"
+	"gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/robots"
+	"gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/rules"
+	sim "gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/simulations"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/application"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/logger"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/platform"
@@ -16,6 +21,16 @@ import (
 // SubT is an IApplication implementation
 type SubT struct {
 	*application.Application
+	Services services
+}
+
+type services struct {
+	Simulation sim.Service
+	Circuit		circuits.Service
+	Metadata 	metadata.Service
+	Qualification quals.Service
+	Robot		robots.Service
+	Rule		rules.Service
 }
 
 // New creates a new SubT application.
@@ -24,8 +39,8 @@ func New(p *platform.Platform) *SubT {
 	subt := &SubT{
 		Application: app,
 	}
-	repository := NewRepository(p.Server.Db)
-	app.Services.Simulation = NewService(repository)
+	repository := sim.NewRepository(p.Server.Db)
+	app.Services.Simulation = sim.NewService(repository)
 	return subt
 }
 

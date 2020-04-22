@@ -8,3 +8,7 @@ type Qualification struct {
 	Circuit string
 	Owner string
 }
+
+func (Qualification) TableName() string {
+	return "subt_qualifications"
+}

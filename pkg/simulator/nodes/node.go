@@ -29,6 +29,7 @@ type Node struct {
 	Status         string   `json:"status"`
 }
 
+// TableName
 func (Node) TableName() string {
 	return "simulator_nodes"
 }

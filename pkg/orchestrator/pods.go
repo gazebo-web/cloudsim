@@ -27,6 +27,7 @@ const (
 	launcherRelaunchNeeded = "relaunch"
 )
 
+// Pod wraps the Kubernetes Pod to aggregate two field related to simulations.
 type Pod struct {
 	apiv1.Pod
 	IsRunning bool

@@ -14,6 +14,7 @@ import (
 	"time"
 )
 
+// userAccessorConf
 type userAccessorConf struct {
 	AutoLoadPolicySeconds int `env:"USER_ACCESSOR_AUTOLOAD_SECONDS" envDefault:"10"`
 	sysAdmin              string

@@ -6,6 +6,8 @@ import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
 )
 
+// checkForExpiredSimulations is an internal helper that tests all the runningSimulations
+// to check if they were alive more than expected, and in that case, schedules their termination.
 func (app *Application) checkForExpiredSimulations() error {
 	app.Platform.Simulator.RLock()
 	defer app.Platform.Simulator.RUnlock()
@@ -27,6 +29,7 @@ func (app *Application) checkForExpiredSimulations() error {
 	return nil
 }
 
+// updateMultiSimStatuses updates the the statuses of parent simulations from their children.
 func (app *Application) updateMultiSimStatuses() error {
 	parents, err := app.Services.Simulation.GetAllParentsWithErrors(
 		"cloudsim",
@@ -38,7 +41,7 @@ func (app *Application) updateMultiSimStatuses() error {
 		return err
 	}
 	for _, p := range *parents {
-		if err := app.Services.Simulation.UpdateParentFromChildren(&p); err != nil {
+		if _, err := app.Services.Simulation.UpdateParentFromChildren(&p); err != nil {
 			return err
 		}
 	}

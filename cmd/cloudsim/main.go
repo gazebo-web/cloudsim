@@ -1,3 +1,13 @@
+// Package main Ignition Cloudsim Server REST API
+//
+// This package provides a REST API to the Ignition CloudSim server.
+//
+// Schemes: https
+// Host: cloudsim.ignitionrobotics.org
+// BasePath: /1.0
+// Version: 0.1.0
+// License: Apache 2.0
+// Contact: info@openrobotics.org
 package main
 
 import (

@@ -52,6 +52,7 @@ type RunningSimulation struct {
 	stdoutSkipStatsMsgsCount int
 }
 
+// NewRunningSimulationInput
 type NewRunningSimulationInput struct {
 	GroupID string
 	Owner string
@@ -61,6 +62,7 @@ type NewRunningSimulationInput struct {
 	worldWarmupTopic string
 }
 
+// NewRunningSimulation
 func NewRunningSimulation(ctx context.Context, input NewRunningSimulationInput) (*RunningSimulation, error) {
 	s := RunningSimulation{
 		GroupID:              input.GroupID,
@@ -97,6 +99,7 @@ func NewRunningSimulation(ctx context.Context, input NewRunningSimulationInput) 
 	return &s, nil
 }
 
+// gazeboState
 type gazeboState string
 
 const (

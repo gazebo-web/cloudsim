@@ -17,7 +17,7 @@ type IRepository interface {
 
 func NewRepository(db *gorm.DB) IRepository {
 	var r IRepository
-	parent := simulations.NewRepository(db)
+	parent := simulations.NewRepository(db, "subt")
 	repository := parent.(*simulations.Repository)
 	r = &Repository{
 		Repository: repository,
@@ -27,7 +27,7 @@ func NewRepository(db *gorm.DB) IRepository {
 
 
 func (r *Repository) CountByOwnerAndCircuit(owner, circuit string) (int, error) {
-	panic("Not implemented")
+
 }
 
 func (r *Repository) GetSubT(groupID string) (*SubTSimulation, error) {

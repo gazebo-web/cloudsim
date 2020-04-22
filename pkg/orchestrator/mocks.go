@@ -5,6 +5,7 @@ import (
 	"k8s.io/client-go/kubernetes/fake"
 )
 
+// KubernetesMock wraps the Kubernetes CLi for testing purposes.
 type KubernetesMock struct {
 	kubernetes.Interface
 }

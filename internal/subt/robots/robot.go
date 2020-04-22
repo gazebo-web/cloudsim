@@ -11,3 +11,7 @@ type Robot struct {
 	robots.Robot
 	Circuit string
 }
+
+func (Robot) TableName() string {
+	return "subt_robots"
+}

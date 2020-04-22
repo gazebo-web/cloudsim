@@ -2,6 +2,7 @@ package queue
 
 import "gitlab.com/ignitionrobotics/web/ign-go"
 
+// IQueue represents a Queue service to access the underlying Ignition Queue.
 type IQueue interface {
 	Get(offset, limit *int) ([]interface{}, *ign.ErrMsg)
 	Enqueue(entity interface{}) interface{}

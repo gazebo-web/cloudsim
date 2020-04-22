@@ -14,6 +14,7 @@ import (
 	"time"
 )
 
+// ISimulator
 type ISimulator interface {
 	appendRunningSimulation(simulation *RunningSimulation)
 	Recover(ctx context.Context, getApplicationLabel func() *string, getGazeboConfig func(sim *simulations.Simulation) GazeboConfig) error
@@ -35,7 +36,8 @@ type Config struct {
 	AvailableEC2Machines     int    `env:"IGN_EC2_MACHINES_LIMIT" envDefault:"-1"`
 }
 
-// Simulator is the responsible of creating the nodes and registering them in the kubernetes master.
+// Simulator is the component responsible of creating the nodes
+// and registering them in the kubernetes master.
 type Simulator struct {
 	orchestrator           *orchestrator.Kubernetes
 	cloud                  *cloud.AmazonWS
@@ -47,21 +49,23 @@ type Simulator struct {
 	Controller             IController
 }
 
+// services
 type services struct {
 	simulations simulations.IService
 	simulator	IService
 }
 
+// repositories
 type repositories struct {
 	node nodes.IRepository
 }
 
+// NewSimulatorInput
 type NewSimulatorInput struct {
 	Orchestrator *orchestrator.Kubernetes
 	Cloud        *cloud.AmazonWS
 	Db			 *gorm.DB
 }
-
 
 // NewSimulator returns a new Simulator instance.
 func NewSimulator(input NewSimulatorInput) ISimulator {
@@ -81,16 +85,17 @@ func NewSimulator(input NewSimulatorInput) ISimulator {
 	return &s
 }
 
+// GetRunningSimulation
 func (s *Simulator) GetRunningSimulation(groupID string) *RunningSimulation {
 	return s.runningSimulations[groupID]
 }
 
-
+// GetRunningSimulations
 func (s *Simulator) GetRunningSimulations() map[string]*RunningSimulation {
 	return s.runningSimulations
 }
 
-
+// SetRunningSimulations
 func (s *Simulator) SetRunningSimulations(simulations *map[string]*RunningSimulation) error {
 	if simulations == nil {
 		return errors.New("SetRunningSimulations cannot receive a nil argument")
@@ -133,7 +138,7 @@ func (s *Simulator) RestoreRunningSimulation(ctx context.Context, simulation *si
 	return nil
 }
 
-
+// Recover
 func (s *Simulator) Recover(ctx context.Context, getApplicationLabel func() *string, getGazeboConfig func(sim *simulations.Simulation) GazeboConfig) error {
 	label := getApplicationLabel()
 	pods, err := s.orchestrator.GetAllPods(label)
@@ -172,18 +177,19 @@ func (s *Simulator) Recover(ctx context.Context, getApplicationLabel func() *str
 	return nil
 }
 
+// RLock
 func (s *Simulator) RLock() {
 	s.lockRunningSimulations.RLock()
 }
-
+// RUnlock
 func (s *Simulator) RUnlock() {
 	s.lockRunningSimulations.RUnlock()
 }
-
+// Lock
 func (s *Simulator) Lock() {
 	s.lockRunningSimulations.Lock()
 }
-
+// Unlock
 func (s *Simulator) Unlock() {
 	s.lockRunningSimulations.Unlock()
 }

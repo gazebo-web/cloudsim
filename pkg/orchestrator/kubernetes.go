@@ -13,6 +13,7 @@ import (
 	"strings"
 )
 
+// Kubernetes wraps the Kubernetes CLI.
 type Kubernetes struct {
 	kubernetes.Interface
 }
