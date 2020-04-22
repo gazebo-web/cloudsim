@@ -88,16 +88,16 @@ type ErrorStatus string
 const (
 	ErrWhenInitializing ErrorStatus = "InitializationFailed"
 	ErrWhenTerminating  ErrorStatus = "TerminationFailed"
-	// Set when there was a second error during error handling. Marking for human review
+	// ErrAdminReview is set when there was a second error during error handling. Marking for human review
 	ErrAdminReview ErrorStatus = "AdminReview"
-	// Set when the simulation did not start due to a rejection by the SimService
+	// ErrRejected is set when the simulation did not start due to a rejection by the SimService
 	ErrRejected ErrorStatus = "Rejected"
 	// ErrServerRestart is set by the server initialization process when it finds
 	// Simulation Deployments left with intermediate statuses (either starting or terminating).
 	// Having this error means that the server suffered a shutdown in the middle of a start
 	// or terminate operation.
 	ErrServerRestart ErrorStatus = "ServerRestart"
-	// Set when there was an error during log upload. Marking for human review
+	// ErrFailedToUploadLogs is set when there was an error during log upload. Marking for human review
 	ErrFailedToUploadLogs ErrorStatus = "FailedToUploadLogs"
 )
 
