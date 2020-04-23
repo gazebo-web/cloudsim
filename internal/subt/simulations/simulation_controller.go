@@ -3,6 +3,7 @@ package simulations
 import (
 	"github.com/go-playground/form"
 	"github.com/gorilla/mux"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/users"
 	"gitlab.com/ignitionrobotics/web/cloudsim/tools"
 	fuel "gitlab.com/ignitionrobotics/web/fuelserver/bundles/users"
@@ -42,7 +43,7 @@ func (c *Controller) Start(user *fuel.User, w http.ResponseWriter, r *http.Reque
 	}
 	defer r.MultipartForm.RemoveAll()
 
-	var createSim SimulationCreate
+	var createSim simulations.SimulationCreate
 	if em := tools.ParseFormStruct(&createSim, r, c.formDecoder); em != nil {
 		return nil, em
 	}
@@ -51,15 +52,34 @@ func (c *Controller) Start(user *fuel.User, w http.ResponseWriter, r *http.Reque
 		return nil, em
 	}
 
-	return c.services.Simulation.Create(r.Context(), &createSim, user)
+	// HACK until we have more platforms and applications.
+	// TODO: remove this
+	if createSim.Platform == "" {
+		createSim.Platform = getDefaultPlatformName()
+	}
+	if createSim.Application == "" {
+		createSim.Application = getDefaultApplicationName()
+	}
+
+	// Set the owner, if missing
+	if createSim.Owner == "" {
+		createSim.Owner = *user.Username
+	}
+
+	// Allow the custom Application to customize the SimulationCreate request
+	if em := SimServImpl.CustomizeSimRequest(r.Context(), r, tx, &createSim, *user.Username); em != nil {
+		return nil, em
+	}
+
+	return SimServImpl.StartSimulationAsync(r.Context(), tx, &createSim, user)
 }
 
-func (c *Controller) LunchHeld(user *fuel.User, w http.ResponseWriter, r *http.Request) (interface{}, *ign.ErrMsg) {
+func (c *Controller) LunchHeld() {
 	groupID, ok := mux.Vars(r)["group"]
 	if !ok {
 		return nil, ign.NewErrorMessage(ign.ErrorIDNotInRequest)
 	}
-	return c.services.Simulation.LaunchHeld(r.Context(), tx, groupID, user)
+	return SimServImpl.LaunchSimulationAsync(r.Context(), tx, groupID, user)
 }
 
 func (c *Controller) Restart() {

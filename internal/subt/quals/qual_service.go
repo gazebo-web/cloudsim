@@ -5,6 +5,10 @@ import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/users"
 )
 
+type IService interface {
+	IsQualified(owner, circuit, username string) bool
+}
+
 type Service struct {
 	services services
 	repository IRepository
@@ -16,7 +20,7 @@ type services struct {
 }
 
 func (s *Service) IsQualified(owner, circuit, username string) bool {
-	if s.services.User.Accessor.IsSystemAdmin(username) {
+	if s.services.User.IsSystemAdmin(username) {
 		return true
 	}
 	var c *circuits.Circuit

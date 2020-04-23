@@ -32,7 +32,7 @@ type services struct {
 // GetAll returns a paginated list of elements from the queue.
 // If no page or perPage arguments are passed, it sets those value to 0 and 10 respectively.
 func (c *Service) GetAll(ctx context.Context, user *fuel.User, page, perPage *int) ([]interface{}, *ign.ErrMsg) {
-	if ok := c.services.user.Accessor.IsSystemAdmin(*user.Name); !ok {
+	if ok := c.services.user.IsSystemAdmin(*user.Name); !ok {
 		return nil, ign.NewErrorMessage(ign.ErrorUnauthorized)
 	}
 	if page == nil {
@@ -48,7 +48,7 @@ func (c *Service) GetAll(ctx context.Context, user *fuel.User, page, perPage *in
 
 // Count returns the element count from the queue.
 func (c *Service) Count(ctx context.Context, user *fuel.User) (interface{}, *ign.ErrMsg) {
-	if ok := c.services.user.Accessor.IsSystemAdmin(*user.Name); !ok {
+	if ok := c.services.user.IsSystemAdmin(*user.Name); !ok {
 		return nil, ign.NewErrorMessage(ign.ErrorUnauthorized)
 	}
 	return c.services.queue.Count(), nil
@@ -56,7 +56,7 @@ func (c *Service) Count(ctx context.Context, user *fuel.User) (interface{}, *ign
 
 // MoveToFront moves an element by the given groupID to the front of the queue.
 func (c *Service) MoveToFront(ctx context.Context, user *fuel.User, groupID string) (interface{}, *ign.ErrMsg) {
-	if ok := c.services.user.Accessor.IsSystemAdmin(*user.Name); !ok {
+	if ok := c.services.user.IsSystemAdmin(*user.Name); !ok {
 		return nil, ign.NewErrorMessage(ign.ErrorUnauthorized)
 	}
 	return c.services.queue.MoveToFront(groupID)
@@ -64,7 +64,7 @@ func (c *Service) MoveToFront(ctx context.Context, user *fuel.User, groupID stri
 
 // MoveToBack moves an element by the given groupID to the back of the queue.
 func (c *Service) MoveToBack(ctx context.Context, user *fuel.User, groupID string) (interface{}, *ign.ErrMsg) {
-	if ok := c.services.user.Accessor.IsSystemAdmin(*user.Name); !ok {
+	if ok := c.services.user.IsSystemAdmin(*user.Name); !ok {
 		return nil, ign.NewErrorMessage(ign.ErrorUnauthorized)
 	}
 	return c.services.queue.MoveToBack(groupID)
@@ -72,7 +72,7 @@ func (c *Service) MoveToBack(ctx context.Context, user *fuel.User, groupID strin
 
 // Swap swaps positions of groupIDs A and B.
 func (c *Service) Swap(ctx context.Context, user *fuel.User, groupIDA, groupIDB string) (interface{}, *ign.ErrMsg) {
-	if ok := c.services.user.Accessor.IsSystemAdmin(*user.Name); !ok {
+	if ok := c.services.user.IsSystemAdmin(*user.Name); !ok {
 		return nil, ign.NewErrorMessage(ign.ErrorUnauthorized)
 	}
 	return c.services.queue.Swap(groupIDA, groupIDB)
@@ -80,7 +80,7 @@ func (c *Service) Swap(ctx context.Context, user *fuel.User, groupIDA, groupIDB 
 
 // Remove removes an element by the given groupID from the queue.
 func (c *Service) Remove(ctx context.Context, user *fuel.User, groupID string) (interface{}, *ign.ErrMsg) {
-	if ok := c.services.user.Accessor.IsSystemAdmin(*user.Name); !ok {
+	if ok := c.services.user.IsSystemAdmin(*user.Name); !ok {
 		return nil, ign.NewErrorMessage(ign.ErrorUnauthorized)
 	}
 	return c.services.queue.Remove(groupID)

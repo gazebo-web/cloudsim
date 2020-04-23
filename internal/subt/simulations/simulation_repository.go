@@ -25,11 +25,10 @@ func NewRepository(db *gorm.DB) IRepository {
 	return r
 }
 
-
 func (r *Repository) CountByOwnerAndCircuit(owner, circuit string) (int, error) {
-
+	panic("Not implemented")
 }
 
-func (r *Repository) GetSubT(groupID string) (*SubTSimulation, error) {
-
+func (r *Repository) GetSubT(groupID string) (*Simulation, error) {
+	panic("Not implemented")
 }

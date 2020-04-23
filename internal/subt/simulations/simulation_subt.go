@@ -5,6 +5,7 @@ import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
 )
 
+// Simulation represents a set of aggregated values of a Cloudsim Simulation for SubT.
 type Simulation struct {
 	gorm.Model
 	Simulation *simulations.Simulation `gorm:"foreignkey:Sim" json:"-"`

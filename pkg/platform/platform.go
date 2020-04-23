@@ -48,7 +48,7 @@ type Platform struct {
 	PoolFactory      pool.Factory
 	Scheduler        *scheduler.Scheduler
 	LaunchQueue      queue.IQueue
-	TerminationQueue chan workers.TerminateDTO
+	TerminationQueue chan workers.TerminateInput
 	LaunchPool       pool.IPool
 	TerminationPool  pool.IPool
 	Controllers		controllers
@@ -138,7 +138,7 @@ func (p *Platform) Start(ctx context.Context) error {
 				continue
 			}
 
-			dto, ok := element.(workers.LaunchDTO)
+			dto, ok := element.(workers.LaunchInput)
 			if !ok {
 				continue
 			}
@@ -173,7 +173,7 @@ func (p *Platform) Stop(ctx context.Context) error {
 
 // RequestLaunch enqueues a launch action to launch a simulation from the given Group ID.
 func (p *Platform) RequestLaunch(ctx context.Context, groupID string) {
-	job := workers.LaunchDTO{
+	job := workers.LaunchInput{
 		GroupID: groupID,
 		Action:  nil,
 	}
@@ -182,7 +182,7 @@ func (p *Platform) RequestLaunch(ctx context.Context, groupID string) {
 
 // RequestTermination enqueues a termination action to terminate a simulation from the given Group ID.
 func (p *Platform) RequestTermination(ctx context.Context, groupID string) {
-	job := workers.TerminateDTO{
+	job := workers.TerminateInput{
 		GroupID: groupID,
 		Action:  nil,
 	}

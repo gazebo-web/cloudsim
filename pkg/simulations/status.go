@@ -76,10 +76,23 @@ func (s Status) Equal(status int) bool {
 	return int(s) == status
 }
 
+func (s Status) ToInt() int {
+	return int(s)
+}
+
+func (s Status) ToIntPtr() *int {
+	value := int(s)
+	return &value
+}
 
 // ToString returns a string of this status value
 func (s Status) ToString() string {
 	return string(s)
+}
+
+func (s Status) ToStringPtr() *string {
+	value := string(s)
+	return &value
 }
 
 // ErrorStatus are possible status values of Simulation ErrorStatus field.

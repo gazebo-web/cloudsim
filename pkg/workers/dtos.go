@@ -1,13 +1,13 @@
 package workers
 
-// LaunchDTO
-type LaunchDTO struct {
+// LaunchInput
+type LaunchInput struct {
 	GroupID string
 	Action interface{}
 }
 
-// TerminateDTO
-type TerminateDTO struct {
+// TerminateInput
+type TerminateInput struct {
 	GroupID string
 	Action interface{}
 }
