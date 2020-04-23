@@ -82,7 +82,7 @@ func (s Status) ToString() string {
 	return string(s)
 }
 
-// ErrorStatus are possible status values of SimulationDeployment ErrorStatus field.
+// ErrorStatus are possible status values of Simulation ErrorStatus field.
 type ErrorStatus string
 
 const (

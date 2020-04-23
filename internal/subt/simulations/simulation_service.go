@@ -6,6 +6,7 @@ import (
 
 type IService interface {
 	simulations.IService
+	CountByOwnerAndCircuit(owner, circuit string) (*int, error)
 }
 
 type Service struct {
@@ -20,4 +21,8 @@ func NewService(repository IRepository) IService {
 		Service: service,
 	}
 	return s
+}
+
+func (s *Service) CountByOwnerAndCircuit(owner, circuit string) (*int, error) {
+	panic("Not implemented")
 }

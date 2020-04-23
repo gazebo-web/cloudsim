@@ -155,7 +155,7 @@ type Service struct {
 	multisimStatusUpdater     *time.Ticker
 	multisimStatusUpdaterDone chan bool
 	applications              map[string]ApplicationType
-	// The UserAccessor to check for Users/Orgs permissions
+	// The Service to check for Users/Orgs permissions
 	userAccessor             useracc.UserAccessor
 	poolNotificationCallback PoolNotificationCallback
 	scheduler                *scheduler.Scheduler

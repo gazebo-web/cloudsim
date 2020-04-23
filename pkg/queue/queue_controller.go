@@ -1,87 +1,87 @@
 package queue
 
 import (
-	"context"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/users"
+	"fmt"
+	"github.com/gorilla/mux"
 	"gitlab.com/ignitionrobotics/web/cloudsim/tools"
 	fuel "gitlab.com/ignitionrobotics/web/fuelserver/bundles/users"
 	"gitlab.com/ignitionrobotics/web/ign-go"
+	"net/http"
+	"strconv"
 )
 
-// IController represents a group of methods to expose in the API Rest.
 type IController interface {
-	GetAll(ctx context.Context, user *fuel.User, page, perPage *int) ([]interface{}, *ign.ErrMsg)
-	Count(ctx context.Context, user *fuel.User) (interface{}, *ign.ErrMsg)
-	MoveToFront(ctx context.Context, user *fuel.User, groupID string) (interface{}, *ign.ErrMsg)
-	MoveToBack(ctx context.Context, user *fuel.User, groupID string) (interface{}, *ign.ErrMsg)
-	Swap(ctx context.Context, user *fuel.User, groupIDA, groupIDB string) (interface{}, *ign.ErrMsg)
-	Remove(ctx context.Context, user *fuel.User, groupID string) (interface{}, *ign.ErrMsg)
+	GetAll(user *fuel.User, w http.ResponseWriter, r *http.Request) (interface{}, *ign.ErrMsg)
+	Count(user *fuel.User, w http.ResponseWriter, r *http.Request) (interface{}, *ign.ErrMsg)
+	Swap(user *fuel.User, w http.ResponseWriter, r *http.Request) (interface{}, *ign.ErrMsg)
+	MoveToFront(user *fuel.User, w http.ResponseWriter, r *http.Request) (interface{}, *ign.ErrMsg)
+	MoveToBack(user *fuel.User, w http.ResponseWriter, r *http.Request) (interface{}, *ign.ErrMsg)
+	Remove(user *fuel.User, w http.ResponseWriter, r *http.Request) (interface{}, *ign.ErrMsg)
 }
 
-// Controller is an IController implementation.
 type Controller struct {
-	services services
+	service IService
 }
 
-// services is a group of services used by the Controller.
-type services struct {
-	user  *users.Service
-	queue IQueue
+func (c *Controller) GetAll(user *fuel.User, w http.ResponseWriter, r *http.Request) (interface{}, *ign.ErrMsg) {
+	var page *int
+	var perPage *int
+	params := r.URL.Query()
+	if param, ok := params["page"]; ok {
+		if value, err := strconv.Atoi(param[0]); err == nil {
+			page = tools.Intptr(value)
+		}
+	}
+	if param, ok := params["per_page"]; ok {
+		if value, err := strconv.Atoi(param[0]); err == nil {
+			perPage = tools.Intptr(value)
+		}
+	}
+
+	count, _ := c.service.Count(r.Context(), user)
+	w.Header().Set("X-Total-Count", fmt.Sprint(count))
+
+	return c.service.GetAll(r.Context(), user, page, perPage)
 }
 
-// GetAll returns a paginated list of elements from the queue.
-// If no page or perPage arguments are passed, it sets those value to 0 and 10 respectively.
-func (c *Controller) GetAll(ctx context.Context, user *fuel.User, page, perPage *int) ([]interface{}, *ign.ErrMsg) {
-	if ok := c.services.user.Accessor.IsSystemAdmin(*user.Name); !ok {
-		return nil, ign.NewErrorMessage(ign.ErrorUnauthorized)
-	}
-	if page == nil {
-		page = tools.Intptr(0)
-	}
-	if perPage == nil {
-		perPage = tools.Intptr(10)
-	}
-	offset := *page * *perPage
-	limit := *perPage
-	return c.services.queue.Get(&offset, &limit)
+func (c *Controller) Count(user *fuel.User, w http.ResponseWriter, r *http.Request) (interface{}, *ign.ErrMsg) {
+	return c.service.Count(r.Context(), user)
 }
 
-// Count returns the element count from the queue.
-func (c *Controller) Count(ctx context.Context, user *fuel.User) (interface{}, *ign.ErrMsg) {
-	if ok := c.services.user.Accessor.IsSystemAdmin(*user.Name); !ok {
-		return nil, ign.NewErrorMessage(ign.ErrorUnauthorized)
+func (c *Controller) Swap(user *fuel.User, w http.ResponseWriter, r *http.Request) (interface{}, *ign.ErrMsg) {
+	groupIDA, ok := mux.Vars(r)["groupIDA"]
+	if !ok {
+		return nil, ign.NewErrorMessage(ign.ErrorIDNotInRequest)
 	}
-	return c.services.queue.Count(), nil
+
+	groupIDB, ok := mux.Vars(r)["groupIDB"]
+	if !ok {
+		return nil, ign.NewErrorMessage(ign.ErrorIDNotInRequest)
+	}
+
+	return c.service.Swap(r.Context(), user, groupIDA, groupIDB)
 }
 
-// MoveToFront moves an element by the given groupID to the front of the queue.
-func (c *Controller) MoveToFront(ctx context.Context, user *fuel.User, groupID string) (interface{}, *ign.ErrMsg) {
-	if ok := c.services.user.Accessor.IsSystemAdmin(*user.Name); !ok {
-		return nil, ign.NewErrorMessage(ign.ErrorUnauthorized)
+func (c *Controller) MoveToFront(user *fuel.User, w http.ResponseWriter, r *http.Request) (interface{}, *ign.ErrMsg) {
+	groupID, ok := mux.Vars(r)["groupID"]
+	if !ok {
+		return nil, ign.NewErrorMessage(ign.ErrorIDNotInRequest)
 	}
-	return c.services.queue.MoveToFront(groupID)
+	return c.service.MoveToFront(r.Context(), user, groupID)
 }
 
-// MoveToBack moves an element by the given groupID to the back of the queue.
-func (c *Controller) MoveToBack(ctx context.Context, user *fuel.User, groupID string) (interface{}, *ign.ErrMsg) {
-	if ok := c.services.user.Accessor.IsSystemAdmin(*user.Name); !ok {
-		return nil, ign.NewErrorMessage(ign.ErrorUnauthorized)
+func (c *Controller) MoveToBack(user *fuel.User, w http.ResponseWriter, r *http.Request) (interface{}, *ign.ErrMsg) {
+	groupID, ok := mux.Vars(r)["groupID"]
+	if !ok {
+		return nil, ign.NewErrorMessage(ign.ErrorIDNotInRequest)
 	}
-	return c.services.queue.MoveToBack(groupID)
+	return c.service.MoveToBack(r.Context(), user, groupID)
 }
 
-// Swap swaps positions of groupIDs A and B.
-func (c *Controller) Swap(ctx context.Context, user *fuel.User, groupIDA, groupIDB string) (interface{}, *ign.ErrMsg) {
-	if ok := c.services.user.Accessor.IsSystemAdmin(*user.Name); !ok {
-		return nil, ign.NewErrorMessage(ign.ErrorUnauthorized)
+func (c *Controller) Remove(user *fuel.User, w http.ResponseWriter, r *http.Request) (interface{}, *ign.ErrMsg) {
+	groupID, ok := mux.Vars(r)["groupID"]
+	if !ok {
+		return nil, ign.NewErrorMessage(ign.ErrorIDNotInRequest)
 	}
-	return c.services.queue.Swap(groupIDA, groupIDB)
-}
-
-// Remove removes an element by the given groupID from the queue.
-func (c *Controller) Remove(ctx context.Context, user *fuel.User, groupID string) (interface{}, *ign.ErrMsg) {
-	if ok := c.services.user.Accessor.IsSystemAdmin(*user.Name); !ok {
-		return nil, ign.NewErrorMessage(ign.ErrorUnauthorized)
-	}
-	return c.services.queue.Remove(groupID)
+	return c.service.Remove(r.Context(), user, groupID)
 }

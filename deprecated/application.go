@@ -159,7 +159,7 @@ func init() {
 	userAccessor, err := initUserAccessor(logCtx, cfg)
 	if err != nil {
 		// Log and shutdown the app , if there is an error during startup
-		logger.Critical("Critical error trying to create UserAccessor", err)
+		logger.Critical("Critical error trying to create Service", err)
 		log.Fatalf("%+v\n", err)
 	}
 	globals.UserAccessor = userAccessor

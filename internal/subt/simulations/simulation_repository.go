@@ -12,7 +12,7 @@ type Repository struct {
 type IRepository interface {
 	simulations.IRepository
 	CountByOwnerAndCircuit(owner, circuit string) (int, error)
-	GetSubT(groupID string) (*SubTSimulation, error)
+	GetSubT(groupID string) (*Simulation, error)
 }
 
 func NewRepository(db *gorm.DB) IRepository {

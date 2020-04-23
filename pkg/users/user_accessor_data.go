@@ -3,6 +3,7 @@ package users
 import (
 	"context"
 	"github.com/jinzhu/gorm"
+	"gitlab.com/ignitionrobotics/web/cloudsim/tools"
 	fuelusers "gitlab.com/ignitionrobotics/web/fuelserver/bundles/users"
 	per "gitlab.com/ignitionrobotics/web/fuelserver/permissions"
 	"gitlab.com/ignitionrobotics/web/ign-go"
@@ -42,14 +43,14 @@ import (
 
 // UserAccessorDataMock allows us to configure the IUserAccessor with mock data used in tests.
 type UserAccessorDataMock struct {
-	ua              *UserAccessor
+	ua              *Service
 	sysadminIdentiy string
 	app             string
 }
 
 // NewUserAccessorDataMock ...
-func NewUserAccessorDataMock(ctx context.Context, ua IUserAccessor, sysadminIdentiy, application string) *UserAccessorDataMock {
-	useracc := ua.(*UserAccessor)
+func NewUserAccessorDataMock(ctx context.Context, ua IService, sysadminIdentiy, application string) *UserAccessorDataMock {
+	useracc := ua.(*Service)
 	mock := UserAccessorDataMock{
 		ua:              useracc,
 		sysadminIdentiy: sysadminIdentiy,
@@ -86,7 +87,7 @@ func (m *UserAccessorDataMock) addTestData(ctx context.Context) *ign.ErrMsg {
 	}
 
 	appOrg := &fuelusers.Organization{Name: &m.app, Description: &m.app,
-		Email: sptr(m.app + "@email.com"), Creator: sysAdminUser.Username}
+		Email: tools.Sptr(m.app + "@email.com"), Creator: sysAdminUser.Username}
 	appAdmin := m.createUser(m.app + "Admin")
 	if em := m.addUserToDb(usersDb, appAdmin); em != nil {
 		return em
@@ -181,7 +182,7 @@ func (m *UserAccessorDataMock) createOrgAndUsers(teamName string) (*fuelusers.Or
 	owner := m.createUser(ownerName)
 	// Create the Org mock
 	org := &fuelusers.Organization{Name: &teamName, Description: &teamName,
-		Email: sptr(teamName + "@email.com"), Creator: &ownerName}
+		Email: tools.Sptr(teamName + "@email.com"), Creator: &ownerName}
 	// create extra users
 	users := []*fuelusers.User{
 		owner,
@@ -197,7 +198,7 @@ func (m *UserAccessorDataMock) createUser(username string) *fuelusers.User {
 		Identity: &username,
 		Name:     &username,
 		Username: &username,
-		Email:    sptr("test@email.com"),
+		Email:    tools.Sptr("test@email.com"),
 	}
 	return user
 }
@@ -235,10 +236,4 @@ func (m *UserAccessorDataMock) usersDBDropModels(ctx context.Context) {
 		&fuelusers.UniqueOwner{},
 		p.DBTable(),
 	)
-}
-
-// sptr returns a pointer to a given string.
-// This function is specially useful when using string literals as argument.
-func sptr(s string) *string {
-	return &s
 }

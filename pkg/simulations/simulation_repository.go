@@ -39,7 +39,8 @@ func (r *Repository) SetDB(db *gorm.DB) {
 	r.Db = db
 }
 
-// Get
+// Get gets a simulation deployment record by its GroupID
+// Fails if not found.
 func (r *Repository) Get(groupID string) (*Simulation, error) {
 	var sim Simulation
 	if err := r.Db.Model(&Simulation{}).

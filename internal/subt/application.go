@@ -1,6 +1,5 @@
 package subt
 
-// TODO: Find a way of avoiding the usage of .
 import (
 	"context"
 	"errors"

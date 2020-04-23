@@ -5,7 +5,7 @@ import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
 )
 
-type SubTSimulation struct {
+type Simulation struct {
 	gorm.Model
 	Simulation *simulations.Simulation `gorm:"foreignkey:Sim" json:"-"`
 	// Simulation unique identifier
@@ -18,6 +18,6 @@ type SubTSimulation struct {
 	ModelCount          int `gorm:"not null" json:"model_count"`
 }
 
-func (SubTSimulation) TableName() string {
+func (Simulation) TableName() string {
 	return "subt_simulations"
 }

@@ -17,8 +17,7 @@ func (kc Kubernetes) PodWaitForReadyCondition(ctx context.Context, c kubernetes.
 	return kc.PodWaitToMatchCondition(ctx, namespace, opts, "Ready", timeout, podRunningAndReady)
 }
 
-// TODO: Add comment
-// PodWaitToMatchCondition waits...
+// PodWaitToMatchCondition waits for a pod to match a certain condition
 func (kc Kubernetes) PodWaitToMatchCondition(ctx context.Context, namespace string, opts metav1.ListOptions, condStr string, timeout time.Duration, condition PodCondition) error {
 	logger.Logger(ctx).Info(fmt.Sprintf("Waiting up to %v for matching pods' status to be %s", timeout, condStr))
 	for start := time.Now(); time.Since(start) < timeout; tools.Sleep(pollFrequency) {

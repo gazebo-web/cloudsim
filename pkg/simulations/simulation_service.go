@@ -6,13 +6,13 @@ type IService interface {
 	SetRepository(repository IRepository)
 	Get(groupID string) (*Simulation, error)
 	GetAll() []Simulation
-	GetAllByOwner(owner string, application string, statusFrom, statusTo Status) (*Simulations, error)
-	GetChildren(groupID string, application string, statusFrom, statusTo Status) (*Simulations, error)
-	GetAllParents(application string, statusFrom, statusTo Status) (*Simulations, error)
-	GetAllParentsWithErrors(application string, statusFrom, statusTo Status, errors []ErrorStatus) (*Simulations, error)
+	GetAllByOwner(owner string, statusFrom, statusTo Status) (*Simulations, error)
+	GetChildren(groupID string, statusFrom, statusTo Status) (*Simulations, error)
+	GetAllParents(statusFrom, statusTo Status) (*Simulations, error)
+	GetAllParentsWithErrors(statusFrom, statusTo Status, errors []ErrorStatus) (*Simulations, error)
+	GetParent(groupID string) (*Simulation, error)
 	Update(groupID string, simulation Simulation) (*Simulation, error)
 	UpdateParentFromChildren(parent *Simulation) (*Simulation, error)
-	GetParent(application string, groupID string) (*Simulation, error)
 }
 
 // Service
@@ -37,15 +37,6 @@ func (s *Service) SetRepository(repository IRepository) {
 	s.repository = repository
 }
 
-// Update
-func (s *Service) Update(groupID string, simulation Simulation) (*Simulation, error) {
-	sim, err := s.repository.Update(groupID, simulation)
-	if err != nil {
-		return nil, err
-	}
-	return sim, nil
-}
-
 // Get
 func (s *Service) Get(groupID string) (*Simulation, error) {
 	panic("Not implemented")
@@ -58,24 +49,29 @@ func (s *Service) GetAll() []Simulation {
 }
 
 // GetAllByOwner
-func (s *Service) GetAllByOwner(owner string, application string, statusFrom, statusTo Status) (*Simulations, error) {
+func (s *Service) GetAllByOwner(owner string, statusFrom, statusTo Status) (*Simulations, error) {
 	panic("Not implemented")
 
 }
 
 // GetChildren
-func (s *Service) GetChildren(groupID string, application string, statusFrom, statusTo Status) (*Simulations, error) {
+func (s *Service) GetChildren(groupID string, statusFrom, statusTo Status) (*Simulations, error) {
 	panic("Not implemented")
 }
 
 // GetAllParents
-func (s *Service) GetAllParents(application string, statusFrom, statusTo Status) (*Simulations, error) {
+func (s *Service) GetAllParents(statusFrom, statusTo Status) (*Simulations, error) {
 	panic("Not implemented")
 }
 
 // GetAllParentsWithErrors
-func (s * Service) GetAllParentsWithErrors(application string, statusFrom, statusTo Status, errors []ErrorStatus) (*Simulations, error) {
+func (s * Service) GetAllParentsWithErrors(statusFrom, statusTo Status, errors []ErrorStatus) (*Simulations, error) {
 	panic("Not implemented")
+}
+
+// GetParent
+func (s *Service) GetParent(groupID string) (*Simulation, error) {
+	panic("implement me")
 }
 
 // UpdateParentFromChildren
@@ -83,7 +79,11 @@ func (s *Service) UpdateParentFromChildren(parent *Simulation) (*Simulation, err
 	panic("implement me")
 }
 
-// GetParent
-func (s *Service) GetParent(application string, groupID string) (*Simulation, error) {
-	panic("implement me")
+// Update
+func (s *Service) Update(groupID string, simulation Simulation) (*Simulation, error) {
+	sim, err := s.repository.Update(groupID, simulation)
+	if err != nil {
+		return nil, err
+	}
+	return sim, nil
 }
