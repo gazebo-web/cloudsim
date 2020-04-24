@@ -71,7 +71,7 @@ type appConfig struct {
 var ecNm *sim.Ec2Client
 
 /////////////////////////////////////////////////
-/// Initialize this package
+/// Deprecated: Initialize this package
 func init() {
 
 	cfg := appConfig{}

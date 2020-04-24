@@ -1,7 +1,6 @@
 package simulator
 
 import (
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulator/groups"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulator/nodes"
 )
 

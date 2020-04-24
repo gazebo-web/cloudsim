@@ -1,12 +1,17 @@
 package simulations
 
-import "github.com/jinzhu/gorm"
+import (
+	"github.com/jinzhu/gorm"
+	fuel "gitlab.com/ignitionrobotics/web/fuelserver/bundles/users"
+	"gitlab.com/ignitionrobotics/web/ign-go"
+)
 
 // IRepository represents a set of methods of a Data Access Object for Simulations.
 type IRepository interface {
 	GetDB() *gorm.DB
 	SetDB(db *gorm.DB)
 	Get(groupID string) (*Simulation, error)
+	GetAllPaginated(input GetAllPaginatedInput) (*Simulations, *ign.PaginationResult, error)
 	GetAllByOwner(owner string, statusFrom, statusTo Status) (*Simulations, error)
 	GetChildren(groupID string, statusFrom, statusTo Status) (*Simulations, error)
 	GetAllParents(statusFrom, statusTo Status, validErrors []ErrorStatus) (*Simulations, error)
@@ -39,6 +44,14 @@ func (r *Repository) SetDB(db *gorm.DB) {
 	r.Db = db
 }
 
+func (r *Repository) BeingTX() *gorm.DB {
+	return r.Db.Begin()
+}
+
+func (r *Repository) CommitTX() *gorm.DB {
+	return r.Db.Commit()
+}
+
 // Get gets a simulation deployment record by its GroupID
 // Fails if not found.
 func (r *Repository) Get(groupID string) (*Simulation, error) {
@@ -49,6 +62,55 @@ func (r *Repository) Get(groupID string) (*Simulation, error) {
 		return nil, err
 	}
 	return &sim, nil
+}
+
+type GetAllPaginatedInput struct {
+	PaginationRequest *ign.PaginationRequest
+	ByStatus *Status
+	InvertStatus bool
+	ByErrorStatus *ErrorStatus
+	InvertErrorStatus bool
+	IncludeChildren bool
+	CanPerformWithRole bool
+	QueryForResourceVisibility func(q *gorm.DB, owner *string, user *fuel.User) *gorm.DB
+	User *fuel.User
+}
+
+func (r *Repository) GetAllPaginated(input GetAllPaginatedInput) (*Simulations, *ign.PaginationResult, error)  {
+	var sims Simulations
+	q := r.Db.Order("created_at desc, id", true).Where("application = ?", r.Application)
+
+	if !input.IncludeChildren {
+		// TODO: Replace 2 with multisimChild value.
+		q = q.Where("multi_sim != ?", 2)
+	}
+
+	if input.ByStatus != nil {
+		query := "status = ?"
+		if input.InvertStatus {
+			query = "status != ?"
+		}
+		q = q.Where(query, input.ByStatus.ToInt())
+	}
+
+	if input.ByErrorStatus != nil {
+		query := "error_status = ?"
+		if input.InvertErrorStatus {
+			query = "error_status != ?"
+		}
+		q = q.Where(query, input.ByErrorStatus.ToString())
+	}
+
+	if !input.CanPerformWithRole {
+		q = input.QueryForResourceVisibility(q, nil, input.User)
+	}
+
+	pagination, err := ign.PaginateQuery(q, &sims, *input.PaginationRequest)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	return &sims, pagination, nil
 }
 
 // GetAllByOwner gets a list of simulation deployment records for given application

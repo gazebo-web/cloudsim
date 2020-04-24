@@ -3,6 +3,7 @@ package simulations
 import (
 	"context"
 	"fmt"
+	"github.com/jinzhu/gorm"
 	uuid "github.com/satori/go.uuid"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/users"
 	fuel "gitlab.com/ignitionrobotics/web/fuelserver/bundles/users"
@@ -10,6 +11,7 @@ import (
 	per "gitlab.com/ignitionrobotics/web/fuelserver/permissions"
 	"gitlab.com/ignitionrobotics/web/ign-go"
 	"strings"
+	"time"
 )
 
 // IService
@@ -17,7 +19,7 @@ type IService interface {
 	GetRepository() IRepository
 	SetRepository(repository IRepository)
 	Get(groupID string) (*Simulation, error)
-	GetAll() []Simulation
+	GetAll(ctx context.Context, input GetAllInput) (*Simulations, *ign.PaginationResult, *ign.ErrMsg)
 	GetAllByOwner(owner string, statusFrom, statusTo Status) (*Simulations, error)
 	GetChildren(groupID string, statusFrom, statusTo Status) (*Simulations, error)
 	GetAllParents(statusFrom, statusTo Status) (*Simulations, error)
@@ -25,16 +27,31 @@ type IService interface {
 	GetParent(groupID string) (*Simulation, error)
 	Create(ctx context.Context, simulation *SimulationCreate, user *fuel.User) (*Simulation, *ign.ErrMsg)
 	Launch(ctx context.Context, groupID string, user *fuel.User) (*Simulation, *ign.ErrMsg)
-	Update(groupID string, simulation Simulation) (*Simulation, error)
-	UpdateParentFromChildren(parent *Simulation) (*Simulation, error)
-	addPermission(resourceID string, permission []per.Action, owner string) *ign.ErrMsg
-	addPermissions(resourceID string, permission []per.Action, owner string) *ign.ErrMsg
+	Restart(ctx context.Context, groupID string, user *fuel.User) (*Simulation, *ign.ErrMsg)
+	Shutdown(ctx context.Context, groupID string, user *fuel.User) (*Simulation, *ign.ErrMsg)
+	Update(ctx context.Context, groupID string, simulation Simulation) (*Simulation, error)
+	UpdateParentFromChildren(ctx context.Context, parent *Simulation) (*Simulation, error)
+	addPermissionsToOwner(resourceID string, permissions []per.Action, owner string) (bool, *ign.ErrMsg)
+	addPermissionsToOwners(resourceID string, permissions []per.Action, owners ...string) *ign.ErrMsg
 }
 
 // Service
 type Service struct {
 	repository IRepository
 	userService users.IService
+	config ServiceConfig
+}
+
+type NewServiceInput struct {
+	Repository IRepository
+	Config ServiceConfig
+}
+
+type ServiceConfig struct {
+	Platform    string
+	Application string
+	MaxDuration time.Duration
+
 }
 
 // NewService
@@ -59,10 +76,46 @@ func (s *Service) Get(groupID string) (*Simulation, error) {
 	panic("Not implemented")
 }
 
-// GetAll
-func (s *Service) GetAll() []Simulation {
-	panic("Not implemented")
+type GetAllInput struct {
+	p *ign.PaginationRequest
+	byStatus *Status
+	invertStatus bool
+	byErrStatus *ErrorStatus
+	invertErrStatus bool
+	user *fuel.User
+	includeChildren bool
+}
 
+// GetAll
+func (s *Service) GetAll(ctx context.Context, input GetAllInput) (*Simulations, *ign.PaginationResult, *ign.ErrMsg) {
+	canPerformWithRole, _ := s.userService.CanPerformWithRole(&s.config.Application, *input.user.Username, per.Member)
+
+	includeChildren := false
+	if s.userService.IsSystemAdmin(*input.user.Username) {
+		includeChildren = true
+	}
+
+	sims, pagination, err := s.repository.GetAllPaginated(GetAllPaginatedInput{
+		PaginationRequest:          input.p,
+		ByStatus:                   input.byStatus,
+		InvertStatus:               input.invertStatus,
+		ByErrorStatus:              input.byErrStatus,
+		InvertErrorStatus:          input.invertErrStatus,
+		IncludeChildren:            includeChildren && input.includeChildren,
+		CanPerformWithRole:         canPerformWithRole,
+		QueryForResourceVisibility: s.userService.QueryForResourceVisibility,
+		User: input.user,
+	})
+
+	if err != nil {
+		return nil, nil, ign.NewErrorMessageWithBase(ign.ErrorInvalidPaginationRequest, err)
+	}
+
+	if !pagination.PageFound {
+		return nil, nil, ign.NewErrorMessage(ign.ErrorInvalidPaginationRequest)
+	}
+
+	return sims, pagination, nil
 }
 
 // GetAllByOwner
@@ -92,12 +145,11 @@ func (s *Service) GetParent(groupID string) (*Simulation, error) {
 }
 
 func (s *Service) Create(ctx context.Context, createSimulation *SimulationCreate, user *fuel.User) (*Simulation, *ign.ErrMsg) {
-	// TODO: Move this to SubT implementation.
 	if createSimulation.Platform == "" {
-		createSimulation.Platform = getDefaultPlatformName()
+		createSimulation.Platform = s.config.Platform
 	}
 	if createSimulation.Application == "" {
-		createSimulation.Application = getDefaultApplicationName()
+		createSimulation.Application = s.config.Application
 	}
 
 	// Set the owner, if missing
@@ -154,16 +206,15 @@ func (s *Service) Create(ctx context.Context, createSimulation *SimulationCreate
 	}
 
 	// Set the maximum simulation expiration time.
-	validFor := s.getMaxDurationForSimulation(ctx, tx, sim)
-	validForStr := validFor.String()
-	sim.ValidFor = &validForStr
+	validFor := s.config.MaxDuration.String()
+	sim.ValidFor = &validFor
 
 	// TODO: Move to Repository
 	if err := tx.Create(sim).Error; err != nil {
 		return nil, ign.NewErrorMessageWithBase(ign.ErrorDbSave, err)
 	}
 
-	// TODO: Move to SubT implementation
+	// TODO: Move to application
 	// Set held state if the user is not a sysadmin and the simulations needs to be held
 	if !s.userService.IsSystemAdmin(*user.Username) && s.applications[*sim.Application].simulationIsHeld(ctx, tx, sim) {
 		err := sim.UpdateHeldStatus(tx, true)
@@ -174,7 +225,7 @@ func (s *Service) Create(ctx context.Context, createSimulation *SimulationCreate
 
 	// Set read and write permissions to owner (eg, the team) and to the Application
 	// organizing team (eg. subt).
-	if em := s.bulkAddPermissions(groupID, []per.Action{per.Read, per.Write}, owner, *sim.Application); em != nil {
+	if em := s.addPermissions(groupID, []per.Action{per.Read, per.Write}, owner, *sim.Application); em != nil {
 		return nil, em
 	}
 
@@ -185,8 +236,9 @@ func (s *Service) Create(ctx context.Context, createSimulation *SimulationCreate
 	// and one of those (or both) can be rejected immediately.
 	if em := s.checkValidNumberOfSimulations(ctx, tx, sim); em != nil {
 		// In case of error we delete the simulation request from DB and exit.
-		tx.Model(sim).Update(SimulationDeployment{
-			DeploymentStatus: simRejected.ToPtr(),
+		// TODO: Move to repository
+		tx.Model(sim).Update(Simulation{
+			Status: simRejected.ToPtr(),
 			ErrorStatus:      simErrorRejected.ToStringPtr(),
 		}).Delete(sim)
 		return nil, em
@@ -205,7 +257,8 @@ func (s *Service) Create(ctx context.Context, createSimulation *SimulationCreate
 	for _, sim := range simsToLaunch {
 		groupID := *sim.GroupID
 		logger(ctx).Info("StartSimulationAsync about to submit launch task for groupID: " + groupID)
-		if err := LaunchSimulation(s, ctx, tx, sim); err != nil {
+		// TODO: Call the application's Launch method.
+		if err := app.Launch(ctx, sim); err != nil {
 			logger(ctx).Error(fmt.Sprintf("StartSimulationAsync -- Cannot launch simulation: %s", err.Msg))
 		}
 	}
@@ -213,20 +266,50 @@ func (s *Service) Create(ctx context.Context, createSimulation *SimulationCreate
 	return sim, nil
 }
 
+func (s *Service) Restart(ctx context.Context, groupID string, user *fuel.User) (*Simulation, *ign.ErrMsg) {
+
+}
+
 func (s *Service) Launch(ctx context.Context, groupID string, user *fuel.User) (*Simulation, *ign.ErrMsg) {
 	panic("implement me")
 }
 
-// UpdateParentFromChildren
-func (s *Service) UpdateParentFromChildren(parent *Simulation) (*Simulation, error) {
-	panic("implement me")
+func (s *Service) Shutdown(ctx context.Context, groupID string, user *fuel.User) (*Simulation, *ign.ErrMsg) {
+
 }
 
 // Update
-func (s *Service) Update(groupID string, simulation Simulation) (*Simulation, error) {
+func (s *Service) Update(ctx context.Context, groupID string, simulation Simulation) (*Simulation, error) {
 	sim, err := s.repository.Update(groupID, simulation)
 	if err != nil {
 		return nil, err
 	}
 	return sim, nil
+}
+
+// UpdateParentFromChildren
+func (s *Service) UpdateParentFromChildren(ctx context.Context, parent *Simulation) (*Simulation, error) {
+	panic("implement me")
+}
+
+func (s *Service) addPermissionsToOwner(resourceID string, permissions []per.Action, owner string) (bool, *ign.ErrMsg) {
+	var ok bool
+	var em *ign.ErrMsg
+	for _, p := range permissions {
+		ok, em = s.userService.AddResourcePermission(owner, resourceID, p)
+		if !ok {
+			return ok, em
+		}
+	}
+	return ok, em
+}
+
+func (s *Service) addPermissionsToOwners(resourceID string, permissions []per.Action, owners ...string) *ign.ErrMsg {
+	for _, owner := range owners {
+		ok, err := s.addPermissionsToOwner(resourceID, permissions, owner)
+		if !ok {
+			return err
+		}
+	}
+	return nil
 }

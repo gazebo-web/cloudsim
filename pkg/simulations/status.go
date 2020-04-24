@@ -25,50 +25,29 @@ const (
 	StatusRejected             Status = 100
 )
 
-// GetStatusLabel returns a status string from the given status.
-func GetStatusLabel(status Status) string {
-	switch status {
-	case StatusPending:
-		return "Pending"
-		break
-	case StatusLaunchingNodes:
-		return "LaunchingNodes"
-		break
-	case StatusLaunchingPods:
-		return "LaunchingPods"
-		break
-	case StatusParentLaunching:
-		return "Launching"
-		break
-	case StatusParentLaunchingWithErrors:
-		return "RunningWithErrors"
-		break
-	case StatusRunning:
-		return "Running"
-		break
-	case StatusRunningWithErrors:
-		return "RunningWithErrorsDoNotUse"
-		break
-	case StatusTerminateRequested:
-		return "ToBeTerminated"
-		break
-	case StatusDeletingPods:
-		return "DeletingPods"
-		break
-	case StatusDeletingNodes:
-		return "DeletingNodes"
-		break
-	case StatusTerminatingInstances:
-		return "TerminatingInstances"
-		break
-	case StatusTerminated:
-		return "Terminated"
-		break
-	case StatusRejected:
-		return "Rejected"
-		break
+var statuses = map[Status]string{
+	StatusPending:                   "Pending",
+	StatusLaunchingNodes:            "LaunchingNodes",
+	StatusLaunchingPods:             "LaunchingPods",
+	StatusParentLaunching:           "Launching",
+	StatusParentLaunchingWithErrors: "RunningWithErrors",
+	StatusRunning:                   "Running",
+	StatusRunningWithErrors:         "RunningWithErrorsDoNotUse",
+	StatusTerminateRequested:        "ToBeTerminated",
+	StatusDeletingPods:              "DeletingPods",
+	StatusDeletingNodes:             "DeletingNodes",
+	StatusTerminatingInstances:      "TerminatingInstances",
+	StatusTerminated:                "Terminated",
+	StatusRejected:                  "Rejected",
+}
+
+func NewStatus(status string) *Status {
+	for k, v := range statuses {
+		if v == status {
+			return &k
+		}
 	}
-	panic("GetStatusLabel should receive a valid status")
+	return nil
 }
 
 // Equal compares if the given status is the same as the current status.
@@ -87,11 +66,11 @@ func (s Status) ToIntPtr() *int {
 
 // ToString returns a string of this status value
 func (s Status) ToString() string {
-	return string(s)
+	return statuses[s]
 }
 
 func (s Status) ToStringPtr() *string {
-	value := string(s)
+	value := s.ToString()
 	return &value
 }
 
