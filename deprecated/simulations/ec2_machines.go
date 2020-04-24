@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2/ec2iface"
 	"github.com/caarlos0/env"
 	"github.com/jinzhu/gorm"
+	"github.com/pkg/errors"
 	"gitlab.com/ignitionrobotics/web/ign-go"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
@@ -46,9 +47,12 @@ type kubeConfig struct {
 }
 
 type ec2Config struct {
-	Subnet string `env:"IGN_EC2_SUBNET,required"`
-	AvailabilityZone string `env:"IGN_EC2_AVAILABILITY_ZONE" envDefault:"us-east-1a"`
-	AvailableEC2Machines int `env:"IGN_EC2_MACHINES_LIMIT" envDefault:"-1"`
+	// Subnets is a slice of AWS subnet IDs where to launch simulations (Example: subnet-1270518251)
+	Subnets              []string `env:"IGN_EC2_SUBNETS,required" envSeparator:","`
+	// AvailabilityZones is a slice of AWS availability zones where to launch simulations. (Example: us-east-1a)
+	AvailabilityZones    []string `env:"IGN_EC2_AVAILABILITY_ZONES,required" envSeparator:","`
+	// AvailableEC2Machines is the maximum number of machines that Cloudsim can have running at a single time.
+	AvailableEC2Machines int      `env:"IGN_EC2_MACHINES_LIMIT" envDefault:"-1"`
 }
 
 // Ec2Client is an implementation of NodeManager interface. It is the client to use
@@ -62,8 +66,10 @@ type Ec2Client struct {
 	// Mutex to ensure AWS resource availability checks are not invalidated by other workers
 	lockRunInstances sync.Mutex
 	// A reference to the kubernetes client
-	clientset kubernetes.Interface
-	platforms map[string]PlatformType
+	clientset             kubernetes.Interface
+	platforms             map[string]PlatformType
+	// availabilityZoneIndex holds the value of the latest availability zone index used to launch a simulation in AWS.
+	availabilityZoneIndex int
 }
 
 // PlatformType is used to tailor an instance that is being created.
@@ -89,6 +95,10 @@ func NewEC2Client(ctx context.Context, kcli kubernetes.Interface, ec2Svc ec2ifac
 	ec.ec2Cfg = ec2Config{}
 	if err := env.Parse(&ec.ec2Cfg); err != nil {
 		return nil, err
+	}
+
+	if len(ec.ec2Cfg.Subnets) != len(ec.ec2Cfg.AvailabilityZones) {
+		return nil, errors.New("Subnet and AZ list length mismatch")
 	}
 
 	ec.kubeCfg = kubeConfig{}
@@ -386,6 +396,8 @@ func (s *Ec2Client) launchNodes(ctx context.Context, tx *gorm.DB, dep *Simulatio
 
 	ignlog := logger(ctx)
 
+	s.availabilityZoneIndex = (s.availabilityZoneIndex + 1) % len(s.ec2Cfg.AvailabilityZones)
+
 	// Set the initial details of the instances that will be created.
 	// Set the default values for the instances.
 	// Note: specific Applications/Platforms can override these.
@@ -402,9 +414,9 @@ func (s *Ec2Client) launchNodes(ctx context.Context, tx *gorm.DB, dep *Simulatio
 		MaxCount:         aws.Int64(1),
 		MinCount:         aws.Int64(1),
 		SecurityGroupIds: aws.StringSlice([]string{"sg-0c5c791266694a3ca"}),
-		SubnetId:         aws.String(s.ec2Cfg.Subnet),
+		SubnetId:         aws.String(s.ec2Cfg.Subnets[s.availabilityZoneIndex]),
 		Placement:        &ec2.Placement{
-			AvailabilityZone: aws.String(s.ec2Cfg.AvailabilityZone),
+			AvailabilityZone: aws.String(s.ec2Cfg.AvailabilityZones[s.availabilityZoneIndex]),
 		},
 		TagSpecifications: []*ec2.TagSpecification{
 			{
