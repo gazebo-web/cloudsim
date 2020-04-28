@@ -5,5 +5,17 @@ type IService interface {
 }
 
 type Service struct {
+	repository IRepository
+}
 
+func NewService(repository IRepository) IService {
+	var s IService
+	s = &Service{
+		repository: repository,
+	}
+	return s
+}
+
+func (s *Service) GetByName(name string) (*Circuit, error) {
+	panic("implement me")
 }
