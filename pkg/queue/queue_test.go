@@ -35,6 +35,10 @@ func TestIntegration_GetAll(t *testing.T) {
 	service := NewService(queue, userService)
 	controller := NewController(service)
 
+	queue.Enqueue("1")
+	queue.Enqueue("2")
+	queue.Enqueue("3")
+
 	router := mux.NewRouter()
 
 	router.HandleFunc("/queue", func(writer http.ResponseWriter, request *http.Request) {
@@ -59,24 +63,72 @@ func TestIntegration_GetAll(t *testing.T) {
 
 	router.ServeHTTP(recorder, req)
 
-	var response []Item
+	var response []string
 	assert.NoError(t, json.Unmarshal(recorder.Body.Bytes(), &response))
 	assert.Equal(t, http.StatusOK, recorder.Code)
-}
-
-func TestIntegration_Get(t *testing.T) {
-}
-
-func TestIntegration_Enqueue(t *testing.T) {
-}
-
-func TestIntegration_Dequeue(t *testing.T) {
-}
-
-func TestIntegration_EnqueueOrWait(t *testing.T) {
+	assert.Len(t, response, 3)
 }
 
 func TestIntegration_MoveToFront(t *testing.T) {
+	userService := users.NewUserServiceMock()
+
+	adminUsername := "root"
+	admin := fuel.User{
+		Name:             tools.Sptr("Admin Root"),
+		Username:         &adminUsername,
+		Email:            tools.Sptr("root@admin.com"),
+	}
+
+	userService.GetUserFromUsernameMock = func(username string) (user *fuel.User, msg *ign.ErrMsg) {
+		return &admin, nil
+	}
+
+	userService.IsSystemAdminMock = func(user string) bool {
+		return user == adminUsername
+	}
+
+	queue := NewQueue()
+	service := NewService(queue, userService)
+	controller := NewController(service)
+
+	router := mux.NewRouter()
+
+	router.HandleFunc("/queue/{groupID}/front", func(writer http.ResponseWriter, request *http.Request) {
+		result, err := controller.MoveToFront(&admin, writer, request)
+		if err != nil {
+			body, _ := json.Marshal(err)
+			writer.WriteHeader(err.StatusCode)
+			writer.Write(body)
+			return
+		}
+		body, _ := json.Marshal(result)
+		writer.Write(body)
+		writer.WriteHeader(http.StatusOK)
+	}).Methods("PATCH")
+
+	queue.Enqueue("1")
+	queue.Enqueue("2")
+	queue.Enqueue("3")
+
+	req, err := http.NewRequest(http.MethodPatch, "/queue/3/front", nil)
+	if err != nil {
+		t.Errorf("Error creating HTTP Request. Error: [%v]", err)
+	}
+
+	recorder := httptest.NewRecorder()
+
+	router.ServeHTTP(recorder, req)
+
+	var response string
+	assert.NoError(t, json.Unmarshal(recorder.Body.Bytes(), &response))
+	assert.Equal(t, http.StatusOK, recorder.Code)
+
+	items, _ := queue.Get(nil, nil)
+
+	casted, ok := items[0].(string)
+	assert.True(t, ok)
+
+	assert.Equal(t, "3", casted)
 
 }
 

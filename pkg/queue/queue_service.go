@@ -52,7 +52,7 @@ func (s *Service) GetAll(ctx context.Context, user *fuel.User, page, perPage *in
 
 // Count returns the element count from the queue.
 func (s *Service) Count(ctx context.Context, user *fuel.User) (interface{}, *ign.ErrMsg) {
-	if ok := s.userService.IsSystemAdmin(*user.Name); !ok {
+	if ok := s.userService.IsSystemAdmin(*user.Username); !ok {
 		return nil, ign.NewErrorMessage(ign.ErrorUnauthorized)
 	}
 	return s.queue.Count(), nil
@@ -60,7 +60,7 @@ func (s *Service) Count(ctx context.Context, user *fuel.User) (interface{}, *ign
 
 // MoveToFront moves an element by the given groupID to the front of the queue.
 func (s *Service) MoveToFront(ctx context.Context, user *fuel.User, groupID string) (interface{}, *ign.ErrMsg) {
-	if ok := s.userService.IsSystemAdmin(*user.Name); !ok {
+	if ok := s.userService.IsSystemAdmin(*user.Username); !ok {
 		return nil, ign.NewErrorMessage(ign.ErrorUnauthorized)
 	}
 	return s.queue.MoveToFront(groupID)
@@ -68,7 +68,7 @@ func (s *Service) MoveToFront(ctx context.Context, user *fuel.User, groupID stri
 
 // MoveToBack moves an element by the given groupID to the back of the queue.
 func (s *Service) MoveToBack(ctx context.Context, user *fuel.User, groupID string) (interface{}, *ign.ErrMsg) {
-	if ok := s.userService.IsSystemAdmin(*user.Name); !ok {
+	if ok := s.userService.IsSystemAdmin(*user.Username); !ok {
 		return nil, ign.NewErrorMessage(ign.ErrorUnauthorized)
 	}
 	return s.queue.MoveToBack(groupID)
@@ -76,7 +76,7 @@ func (s *Service) MoveToBack(ctx context.Context, user *fuel.User, groupID strin
 
 // Swap swaps positions of groupIDs A and B.
 func (s *Service) Swap(ctx context.Context, user *fuel.User, groupIDA, groupIDB string) (interface{}, *ign.ErrMsg) {
-	if ok := s.userService.IsSystemAdmin(*user.Name); !ok {
+	if ok := s.userService.IsSystemAdmin(*user.Username); !ok {
 		return nil, ign.NewErrorMessage(ign.ErrorUnauthorized)
 	}
 	return s.queue.Swap(groupIDA, groupIDB)
@@ -84,7 +84,7 @@ func (s *Service) Swap(ctx context.Context, user *fuel.User, groupIDA, groupIDB 
 
 // Remove removes an element by the given groupID from the queue.
 func (s *Service) Remove(ctx context.Context, user *fuel.User, groupID string) (interface{}, *ign.ErrMsg) {
-	if ok := s.userService.IsSystemAdmin(*user.Name); !ok {
+	if ok := s.userService.IsSystemAdmin(*user.Username); !ok {
 		return nil, ign.NewErrorMessage(ign.ErrorUnauthorized)
 	}
 	return s.queue.Remove(groupID)
