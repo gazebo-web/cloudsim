@@ -3,11 +3,11 @@ package simulations
 import (
 	"context"
 	"fmt"
-	"github.com/jinzhu/gorm"
 	uuid "github.com/satori/go.uuid"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/application"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/logger"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/users"
 	fuel "gitlab.com/ignitionrobotics/web/fuelserver/bundles/users"
-	"gitlab.com/ignitionrobotics/web/fuelserver/permissions"
 	per "gitlab.com/ignitionrobotics/web/fuelserver/permissions"
 	"gitlab.com/ignitionrobotics/web/ign-go"
 	"strings"
@@ -29,10 +29,12 @@ type IService interface {
 	Launch(ctx context.Context, groupID string, user *fuel.User) (*Simulation, *ign.ErrMsg)
 	Restart(ctx context.Context, groupID string, user *fuel.User) (*Simulation, *ign.ErrMsg)
 	Shutdown(ctx context.Context, groupID string, user *fuel.User) (*Simulation, *ign.ErrMsg)
-	Update(ctx context.Context, groupID string, simulation Simulation) (*Simulation, error)
-	UpdateParentFromChildren(ctx context.Context, parent *Simulation) (*Simulation, error)
+	Update(ctx context.Context, groupID string, simulationUpdate SimulationUpdate) (*Simulation, *ign.ErrMsg)
+	UpdateParentFromChildren(ctx context.Context, parent *Simulation) (*Simulation, *ign.ErrMsg)
+	Reject(ctx context.Context, simulation *Simulation) (*Simulation, *ign.ErrMsg)
 	addPermissionsToOwner(resourceID string, permissions []per.Action, owner string) (bool, *ign.ErrMsg)
 	addPermissionsToOwners(resourceID string, permissions []per.Action, owners ...string) *ign.ErrMsg
+	prepareSimulations(ctx context.Context, sim *Simulation) (Simulations, *ign.ErrMsg)
 }
 
 // Service
@@ -40,6 +42,7 @@ type Service struct {
 	repository IRepository
 	userService users.IService
 	config ServiceConfig
+	application application.IApplication
 }
 
 type NewServiceInput struct {
@@ -51,13 +54,14 @@ type ServiceConfig struct {
 	Platform    string
 	Application string
 	MaxDuration time.Duration
-
 }
 
 // NewService
 func NewService(repository IRepository) IService {
 	var s IService
-	s = &Service{repository: repository}
+	s = &Service{
+		repository: repository,
+	}
 	return s
 }
 
@@ -187,7 +191,7 @@ func (s *Service) Create(ctx context.Context, createSimulation *SimulationCreate
 	// Create the SimulationDeployment record in DB. Set initial status.
 	creator := *user.Username
 	imageStr := strings.Join(createSimulation.Image, ",")
-	sim := &Simulation{
+	sim := Simulation{
 		Owner:            &owner,
 		Name:             &createSimulation.Name,
 		Creator:          &creator,
@@ -198,9 +202,8 @@ func (s *Service) Create(ctx context.Context, createSimulation *SimulationCreate
 		Image:            &imageStr,
 		GroupID:          &groupID,
 		Status: 		  StatusPending.ToIntPtr(),
-		// TODO: Move Extra and ExtraSelector to SubT implementation
-		// Extra:            createSimulation.Extra,
-		// ExtraSelector:    createSimulation.ExtraSelector,
+		Extra:            createSimulation.Extra,
+		ExtraSelector:    createSimulation.ExtraSelector,
 		Robots:           createSimulation.Robots,
 		Held:             false,
 	}
@@ -209,38 +212,14 @@ func (s *Service) Create(ctx context.Context, createSimulation *SimulationCreate
 	validFor := s.config.MaxDuration.String()
 	sim.ValidFor = &validFor
 
-	// TODO: Move to Repository
-	if err := tx.Create(sim).Error; err != nil {
+	createdSim, err := s.repository.Create(&sim)
+	if err != nil {
 		return nil, ign.NewErrorMessageWithBase(ign.ErrorDbSave, err)
-	}
-
-	// TODO: Move to application
-	// Set held state if the user is not a sysadmin and the simulations needs to be held
-	if !s.userService.IsSystemAdmin(*user.Username) && s.applications[*sim.Application].simulationIsHeld(ctx, tx, sim) {
-		err := sim.UpdateHeldStatus(tx, true)
-		if err != nil {
-			return nil, ign.NewErrorMessageWithBase(ign.ErrorDbSave, err)
-		}
 	}
 
 	// Set read and write permissions to owner (eg, the team) and to the Application
 	// organizing team (eg. subt).
-	if em := s.addPermissions(groupID, []per.Action{per.Read, per.Write}, owner, *sim.Application); em != nil {
-		return nil, em
-	}
-
-	// Sanity check: check for maximum number of allowed simultaneous simulations per Owner.
-	// Also allow Applications to provide custom validations.
-	// Dev note: in this case we check 'after' creating the record in the DB to make
-	// sure that in case of a race condition then both records are added with pending state
-	// and one of those (or both) can be rejected immediately.
-	if em := s.checkValidNumberOfSimulations(ctx, tx, sim); em != nil {
-		// In case of error we delete the simulation request from DB and exit.
-		// TODO: Move to repository
-		tx.Model(sim).Update(Simulation{
-			Status: simRejected.ToPtr(),
-			ErrorStatus:      simErrorRejected.ToStringPtr(),
-		}).Delete(sim)
+	if em := s.addPermissionsToOwners(groupID, []per.Action{per.Read, per.Write}, owner, *createdSim.Application); em != nil {
 		return nil, em
 	}
 
@@ -248,26 +227,26 @@ func (s *Service) Create(ctx context.Context, createSimulation *SimulationCreate
 	// But we also allow specific ApplicationTypes (eg. SubT) to spawn multiple simulations
 	// from a single request. When that happens, we call those "child simulations"
 	// and they will be grouped by the same parent simulation's groupID.
-	simsToLaunch, err := s.prepareSimulations(ctx, tx, sim)
-	if err != nil {
-		return nil, err
+	simsToLaunch, em := s.prepareSimulations(ctx, createdSim)
+	if em != nil {
+		return nil, em
 	}
 
 	// Add a 'launch simulation' request to the Launcher Jobs-Pool
 	for _, sim := range simsToLaunch {
 		groupID := *sim.GroupID
-		logger(ctx).Info("StartSimulationAsync about to submit launch task for groupID: " + groupID)
+		logger.Logger(ctx).Info(fmt.Sprintf("[SUBT|SIMULATIONS] About to submit launch task for GroupID: [%s]", groupID))
 		// TODO: Call the application's Launch method.
-		if err := app.Launch(ctx, sim); err != nil {
-			logger(ctx).Error(fmt.Sprintf("StartSimulationAsync -- Cannot launch simulation: %s", err.Msg))
+		if err := s.application.Launch(ctx, &sim); err != nil {
+			logger.Logger(ctx).Error(fmt.Sprintf("[SUBT|SIMULATIONS] Cannot launch simulation. GroupID: [%s]", groupID))
 		}
 	}
 
-	return sim, nil
+	return &sim, nil
 }
 
 func (s *Service) Restart(ctx context.Context, groupID string, user *fuel.User) (*Simulation, *ign.ErrMsg) {
-
+	panic("implement me")
 }
 
 func (s *Service) Launch(ctx context.Context, groupID string, user *fuel.User) (*Simulation, *ign.ErrMsg) {
@@ -275,21 +254,46 @@ func (s *Service) Launch(ctx context.Context, groupID string, user *fuel.User) (
 }
 
 func (s *Service) Shutdown(ctx context.Context, groupID string, user *fuel.User) (*Simulation, *ign.ErrMsg) {
-
+	panic("Not implemented")
 }
 
 // Update
-func (s *Service) Update(ctx context.Context, groupID string, simulation Simulation) (*Simulation, error) {
-	sim, err := s.repository.Update(groupID, simulation)
+func (s *Service) Update(ctx context.Context, groupID string, simulationUpdate SimulationUpdate) (*Simulation, *ign.ErrMsg) {
+	var simulation *Simulation
+	var err error
+
+	simulation, err = s.Get(groupID)
 	if err != nil {
-		return nil, err
+		return nil, ign.NewErrorMessageWithBase(ign.ErrorDbSave, err)
 	}
-	return sim, nil
+
+	if simulationUpdate.Held != nil {
+		simulation.Held = *simulationUpdate.Held
+	}
+
+	if simulationUpdate.ErrorStatus != nil {
+		simulation.ErrorStatus = simulationUpdate.ErrorStatus
+	}
+
+	updatedSim, err := s.repository.Update(groupID, simulation)
+	if err != nil {
+		return nil, ign.NewErrorMessageWithBase(ign.ErrorDbSave, err)
+	}
+
+	return updatedSim, nil
 }
 
 // UpdateParentFromChildren
-func (s *Service) UpdateParentFromChildren(ctx context.Context, parent *Simulation) (*Simulation, error) {
+func (s *Service) UpdateParentFromChildren(ctx context.Context, parent *Simulation) (*Simulation, *ign.ErrMsg) {
 	panic("implement me")
+}
+
+func (s *Service) Reject(ctx context.Context, simulation *Simulation) (*Simulation, *ign.ErrMsg) {
+	var err error
+	if simulation, err = s.repository.Reject(simulation); err != nil {
+		return nil, ign.NewErrorMessageWithBase(ign.ErrorDbSave, err)
+	}
+	return simulation, nil
 }
 
 func (s *Service) addPermissionsToOwner(resourceID string, permissions []per.Action, owner string) (bool, *ign.ErrMsg) {
@@ -312,4 +316,8 @@ func (s *Service) addPermissionsToOwners(resourceID string, permissions []per.Ac
 		}
 	}
 	return nil
+}
+
+func (s *Service) prepareSimulations(ctx context.Context, sim *Simulation) (Simulations, *ign.ErrMsg) {
+	panic("implement me")
 }

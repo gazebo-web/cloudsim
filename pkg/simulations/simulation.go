@@ -49,6 +49,13 @@ type Simulation struct {
 	// Contains the names of all robots in the simulation in a comma-separated list.
 	Robots *string `gorm:"size:1000" json:"robots"`
 	Held   bool    `json:"held"`
+	// A free form string field to store extra details, usually associated to the
+	// chosen Application. Eg. SubT would store here the different robot names, types
+	// and images.
+	Extra *string `gorm:"size:999999" json:"extra,omitempty"`
+	// A extra string field to store a selector that can help specific Applications
+	// to filter simulations (eg. SQL WHERE). SubT could store the circuit here.
+	ExtraSelector *string `json:"-"`
 }
 
 // Simulations is a slice of Simulation.

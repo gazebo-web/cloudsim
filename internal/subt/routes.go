@@ -1,6 +1,9 @@
 package subt
 
-import "gitlab.com/ignitionrobotics/web/ign-go"
+import (
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/handlers"
+	"gitlab.com/ignitionrobotics/web/ign-go"
+)
 
 // RegisterRoutes returns a slice of routes for the SubT application.
 func (app *SubT) RegisterRoutes() ign.Routes {
@@ -16,7 +19,7 @@ func (app *SubT) RegisterRoutes() ign.Routes {
 					Type:        "GET",
 					Description: "Get all simulations",
 					Handlers: ign.FormatHandlers{
-						ign.FormatHandler{Extension: ".json", Handler: nil},
+						ign.FormatHandler{Extension: ".json", Handler: ign.JSONResult(handlers.WithUser(app.Services.User, app.Controllers.Simulation.Get))},
 						ign.FormatHandler{Handler: nil},
 					},
 				},

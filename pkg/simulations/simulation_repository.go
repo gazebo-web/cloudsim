@@ -10,12 +10,14 @@ import (
 type IRepository interface {
 	GetDB() *gorm.DB
 	SetDB(db *gorm.DB)
+	Create(simulation *Simulation) (*Simulation, error)
 	Get(groupID string) (*Simulation, error)
 	GetAllPaginated(input GetAllPaginatedInput) (*Simulations, *ign.PaginationResult, error)
 	GetAllByOwner(owner string, statusFrom, statusTo Status) (*Simulations, error)
 	GetChildren(groupID string, statusFrom, statusTo Status) (*Simulations, error)
 	GetAllParents(statusFrom, statusTo Status, validErrors []ErrorStatus) (*Simulations, error)
-	Update(groupID string, simulation Simulation) (*Simulation, error)
+	Update(groupID string, simulation *Simulation) (*Simulation, error)
+	Reject(simulation *Simulation) (*Simulation, error)
 }
 
 // Repository is the IRepository implementation
@@ -50,6 +52,29 @@ func (r *Repository) BeingTX() *gorm.DB {
 
 func (r *Repository) CommitTX() *gorm.DB {
 	return r.Db.Commit()
+}
+
+func (r *Repository) Create(simulation *Simulation) (*Simulation, error) {
+	if err := r.Db.Create(simulation).Error; err != nil {
+		return nil, err
+	}
+	return simulation, nil
+}
+
+func (r *Repository) Update(groupID string, simulation *Simulation) (*Simulation, error) {
+	panic("implement me")
+}
+
+func (r *Repository) Reject(simulation *Simulation) (*Simulation, error) {
+	if err := r.Db.Model(simulation).Update(Simulation{
+		Status: StatusRejected.ToIntPtr(),
+		ErrorStatus:      ErrRejected.ToStringPtr(),
+	}).Delete(simulation).Error; err != nil {
+		return nil, err
+	}
+	simulation.Status = StatusRejected.ToIntPtr()
+	simulation.ErrorStatus = ErrRejected.ToStringPtr()
+	return simulation, nil
 }
 
 // Get gets a simulation deployment record by its GroupID
@@ -159,9 +184,4 @@ func (r *Repository) GetAllParents(statusFrom, statusTo Status, validErrors []Er
 		return nil, err
 	}
 	return &sims, nil
-}
-
-// Update
-func (r *Repository) Update(groupID string, simulation Simulation) (*Simulation, error) {
-	panic("Not implemented")
 }

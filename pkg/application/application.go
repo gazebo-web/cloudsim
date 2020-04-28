@@ -9,6 +9,7 @@ import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulator"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/tasks"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/users"
 	"gitlab.com/ignitionrobotics/web/ign-go"
 	"time"
 )
@@ -37,14 +38,19 @@ type Application struct {
 // Services group a list of services to be used by the Application.
 type Services struct {
 	Simulation simulations.IService
+	User	   users.IService
 }
 
 // New creates a new application for the given platform.
-func New(p *platform.Platform) *Application {
+func New(p *platform.Platform, simulationService simulations.IService, userService users.IService) *Application {
 	app := &Application{
 		Platform: p,
 		Cleaner:  monitors.New("expired-simulations-cleaner", "Expired Simulations Cleaner", 20*time.Second),
 		Updater:  monitors.New("multisim-status-updater", "MultiSim Parent Status Updater", time.Minute),
+		Services: Services{
+			Simulation: simulationService,
+			User:       userService,
+		},
 	}
 	return app
 }
@@ -123,16 +129,20 @@ func (app *Application) RebuildState(ctx context.Context) error {
 			running := app.Platform.Simulator.GetRunningSimulation(*sim.GroupID)
 			if running != nil {
 				logger.Logger(ctx).Info(fmt.Sprintf("[APP|RECOVER] The expected running simulation doesn't have any node running. GroupID: [%s]. Marking with error.", *sim.GroupID))
-				sim.ErrorStatus = simulations.ErrServerRestart.ToStringPtr()
-				if _, err := app.Services.Simulation.Update(*sim.GroupID, sim); err != nil {
+				updateSim := simulations.SimulationUpdate{
+					ErrorStatus: simulations.ErrServerRestart.ToStringPtr(),
+				}
+				if _, err := app.Services.Simulation.Update(ctx, *sim.GroupID, updateSim); err != nil {
 					logger.Logger(ctx).Error(fmt.Sprintf("[APP|REBUILDING] Error while updating simulation. GroupID: [%s]", *sim.GroupID))
 				}
 			}
 			continue
 		default:
 			logger.Logger(ctx).Info(fmt.Sprintf("[APP|REBUILDING] Simulation found with intermediate Status: [%s]. GroupID: [%s]. Marking with error.", sim.GetStatus().ToString(), *sim.GroupID))
-			sim.ErrorStatus = simulations.ErrServerRestart.ToStringPtr()
-			if _, err := app.Services.Simulation.Update(*sim.GroupID, sim); err != nil {
+			updateSim := simulations.SimulationUpdate{
+				ErrorStatus: simulations.ErrServerRestart.ToStringPtr(),
+			}
+			if _, err := app.Services.Simulation.Update(ctx, *sim.GroupID, updateSim); err != nil {
 				logger.Logger(ctx).Error(fmt.Sprintf("[APP|REBUILDING] Error while updating simulation. GroupID: [%s]", *sim.GroupID))
 			}
 		}

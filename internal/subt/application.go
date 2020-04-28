@@ -4,11 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/circuits"
-	"gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/metadata"
-	"gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/quals"
-	"gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/robots"
-	"gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/rules"
 	sim "gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/simulations"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/application"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/logger"
@@ -17,29 +12,39 @@ import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulator"
 )
 
+type IApplication interface {
+	application.IApplication
+	isSimulationHeld(ctx context.Context, simulation *simulations.Simulation) error
+}
+
 // SubT is an IApplication implementation
 type SubT struct {
 	*application.Application
-	Services services
+	Controllers controllers
 }
 
-type services struct {
-	Simulation sim.Service
-	Circuit		circuits.Service
-	Metadata 	metadata.Service
-	Qualification quals.Service
-	Robot		robots.Service
-	Rule		rules.Service
+type controllers struct {
+	Simulation sim.IController
 }
 
 // New creates a new SubT application.
-func New(p *platform.Platform) *SubT {
-	app := application.New(p)
+func New(p *platform.Platform) IApplication {
+
+	simulationRepository := sim.NewRepository(p.Server.Db)
+	simulationService := sim.NewService(simulationRepository)
+	baseApp := application.New(p, simulationService, p.UserService)
 	subt := &SubT{
-		Application: app,
+		Application: baseApp,
+		Controllers: controllers{
+			Simulation: sim.NewController(sim.NewControllerInput{
+				Service:     simulationService,
+				Decoder:     p.FormDecoder,
+				Validator:   p.Validator,
+				Permissions: p.Permissions,
+				UserService: p.UserService,
+			}),
+		},
 	}
-	repository := sim.NewRepository(p.Server.Db)
-	app.Services.Simulation = sim.NewService(repository)
 	return subt
 }
 
