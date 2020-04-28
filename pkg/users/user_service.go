@@ -76,7 +76,7 @@ type Service struct {
 }
 
 // NewUserAccessor initializes a new IUserAccessor.
-func NewService(resourcePermissions *per.Permissions, sysAdmin string) (*Service, error) {
+func NewService(resourcePermissions *per.Permissions, sysAdmin string) (IService, error) {
 	dbConfig, err := newDbConfig()
 	if err != nil {
 		return nil, err
@@ -86,26 +86,28 @@ func NewService(resourcePermissions *per.Permissions, sysAdmin string) (*Service
 		return nil, err
 	}
 
-	ua := Service{}
-	ua.Db = usersDb
-	ua.resourcePermissions = resourcePermissions
-
 	// Read configuration from environment
-	ua.cfg = userAccessorConf{}
-	if err := env.Parse(&ua.cfg); err != nil {
+	cfg := userAccessorConf{}
+	if err := env.Parse(&cfg); err != nil {
 		return nil, err
 	}
-	ua.cfg.sysAdmin = sysAdmin
-
+	cfg.sysAdmin = sysAdmin
 	// Create Casbin helpers
 	adapter := gormadapter.NewAdapterByDB(usersDb)
 	enforcer := casbin.NewSyncedEnforcer("permissions/policy.conf", adapter)
-	ua.syncedEnforcer = enforcer
 
-	ua.p = &per.Permissions{}
-	ua.p.InitWithEnforcerAndAdapter(enforcer, adapter, sysAdmin)
+	p := &per.Permissions{}
+	p.InitWithEnforcerAndAdapter(enforcer, adapter, sysAdmin)
 
-	return &ua, nil
+	var ua IService
+	ua = &Service{
+		Db:                  usersDb,
+		resourcePermissions: resourcePermissions,
+		cfg:                 cfg,
+		syncedEnforcer: enforcer,
+		p: p,
+	}
+	return ua, nil
 }
 
 // StartAutoLoadPolicy starts the auto load remote policy

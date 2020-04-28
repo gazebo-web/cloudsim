@@ -20,19 +20,23 @@ type IService interface {
 
 // Service is an IService implementation.
 type Service struct {
-	services services
+	queue IQueue
+	userService users.IService
 }
 
-// services is a group of services used by the Service.
-type services struct {
-	user  *users.Service
-	queue IQueue
+func NewService(queue IQueue, userService users.IService) IService {
+	var c IService
+	c = &Service{
+		queue: queue,
+		userService: userService,
+	}
+	return c
 }
 
 // GetAll returns a paginated list of elements from the queue.
 // If no page or perPage arguments are passed, it sets those value to 0 and 10 respectively.
-func (c *Service) GetAll(ctx context.Context, user *fuel.User, page, perPage *int) ([]interface{}, *ign.ErrMsg) {
-	if ok := c.services.user.IsSystemAdmin(*user.Name); !ok {
+func (s *Service) GetAll(ctx context.Context, user *fuel.User, page, perPage *int) ([]interface{}, *ign.ErrMsg) {
+	if ok := s.userService.IsSystemAdmin(*user.Username); !ok {
 		return nil, ign.NewErrorMessage(ign.ErrorUnauthorized)
 	}
 	if page == nil {
@@ -43,45 +47,45 @@ func (c *Service) GetAll(ctx context.Context, user *fuel.User, page, perPage *in
 	}
 	offset := *page * *perPage
 	limit := *perPage
-	return c.services.queue.Get(&offset, &limit)
+	return s.queue.Get(&offset, &limit)
 }
 
 // Count returns the element count from the queue.
-func (c *Service) Count(ctx context.Context, user *fuel.User) (interface{}, *ign.ErrMsg) {
-	if ok := c.services.user.IsSystemAdmin(*user.Name); !ok {
+func (s *Service) Count(ctx context.Context, user *fuel.User) (interface{}, *ign.ErrMsg) {
+	if ok := s.userService.IsSystemAdmin(*user.Name); !ok {
 		return nil, ign.NewErrorMessage(ign.ErrorUnauthorized)
 	}
-	return c.services.queue.Count(), nil
+	return s.queue.Count(), nil
 }
 
 // MoveToFront moves an element by the given groupID to the front of the queue.
-func (c *Service) MoveToFront(ctx context.Context, user *fuel.User, groupID string) (interface{}, *ign.ErrMsg) {
-	if ok := c.services.user.IsSystemAdmin(*user.Name); !ok {
+func (s *Service) MoveToFront(ctx context.Context, user *fuel.User, groupID string) (interface{}, *ign.ErrMsg) {
+	if ok := s.userService.IsSystemAdmin(*user.Name); !ok {
 		return nil, ign.NewErrorMessage(ign.ErrorUnauthorized)
 	}
-	return c.services.queue.MoveToFront(groupID)
+	return s.queue.MoveToFront(groupID)
 }
 
 // MoveToBack moves an element by the given groupID to the back of the queue.
-func (c *Service) MoveToBack(ctx context.Context, user *fuel.User, groupID string) (interface{}, *ign.ErrMsg) {
-	if ok := c.services.user.IsSystemAdmin(*user.Name); !ok {
+func (s *Service) MoveToBack(ctx context.Context, user *fuel.User, groupID string) (interface{}, *ign.ErrMsg) {
+	if ok := s.userService.IsSystemAdmin(*user.Name); !ok {
 		return nil, ign.NewErrorMessage(ign.ErrorUnauthorized)
 	}
-	return c.services.queue.MoveToBack(groupID)
+	return s.queue.MoveToBack(groupID)
 }
 
 // Swap swaps positions of groupIDs A and B.
-func (c *Service) Swap(ctx context.Context, user *fuel.User, groupIDA, groupIDB string) (interface{}, *ign.ErrMsg) {
-	if ok := c.services.user.IsSystemAdmin(*user.Name); !ok {
+func (s *Service) Swap(ctx context.Context, user *fuel.User, groupIDA, groupIDB string) (interface{}, *ign.ErrMsg) {
+	if ok := s.userService.IsSystemAdmin(*user.Name); !ok {
 		return nil, ign.NewErrorMessage(ign.ErrorUnauthorized)
 	}
-	return c.services.queue.Swap(groupIDA, groupIDB)
+	return s.queue.Swap(groupIDA, groupIDB)
 }
 
 // Remove removes an element by the given groupID from the queue.
-func (c *Service) Remove(ctx context.Context, user *fuel.User, groupID string) (interface{}, *ign.ErrMsg) {
-	if ok := c.services.user.IsSystemAdmin(*user.Name); !ok {
+func (s *Service) Remove(ctx context.Context, user *fuel.User, groupID string) (interface{}, *ign.ErrMsg) {
+	if ok := s.userService.IsSystemAdmin(*user.Name); !ok {
 		return nil, ign.NewErrorMessage(ign.ErrorUnauthorized)
 	}
-	return c.services.queue.Remove(groupID)
+	return s.queue.Remove(groupID)
 }

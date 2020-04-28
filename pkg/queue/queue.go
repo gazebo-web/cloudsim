@@ -20,6 +20,14 @@ type Queue struct {
 	queue *ign.Queue
 }
 
+func NewQueue() IQueue {
+	var q IQueue
+	q = &Queue{
+		queue: ign.NewQueue(),
+	}
+	return q
+}
+
 // Item represents an element from the queue.
 type Item struct {
 	GroupID string
@@ -29,19 +37,6 @@ type Item struct {
 type SwapOutput struct {
 	ItemA Item
 	ItemB Item
-}
-
-
-func New() IQueue {
-	var q IQueue
-	q = initialize()
-	return q
-}
-
-func initialize() *Queue {
-	q := Queue{}
-	q.queue = ign.NewQueue()
-	return &q
 }
 
 // Get returns the entire list of items from the queue.

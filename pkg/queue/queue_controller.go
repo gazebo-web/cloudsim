@@ -23,6 +23,12 @@ type Controller struct {
 	service IService
 }
 
+func NewController(service IService) IController {
+	var c IController
+	c = &Controller{service: service}
+	return c
+}
+
 func (c *Controller) GetAll(user *fuel.User, w http.ResponseWriter, r *http.Request) (interface{}, *ign.ErrMsg) {
 	var page *int
 	var perPage *int
