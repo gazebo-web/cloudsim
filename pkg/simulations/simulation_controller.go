@@ -26,17 +26,17 @@ type IController interface {
 
 // Controller is an IController implementation.
 type Controller struct {
-	services services
+	services    services
 	formDecoder *form.Decoder
-	validator *validator.Validate
+	validator   *validator.Validate
 }
 
 // NewControllerInput is the input needed to create a new IController implementation.
 type NewControllerInput struct {
 	SimulationService IService
-	UserService users.IService
-	FormDecoder *form.Decoder
-	Validator *validator.Validate
+	UserService       users.IService
+	FormDecoder       *form.Decoder
+	Validator         *validator.Validate
 }
 
 // NewController receives a NewControllerInput to initialize a new IController implementation.
@@ -57,9 +57,9 @@ func NewController(input NewControllerInput) IController {
 	}
 
 	c = &Controller{
-		services:    services{
+		services: services{
 			Simulation: input.SimulationService,
-			User: input.UserService,
+			User:       input.UserService,
 		},
 		formDecoder: input.FormDecoder,
 		validator:   input.Validator,
@@ -70,7 +70,7 @@ func NewController(input NewControllerInput) IController {
 // services represents a set of services used by the Controller.
 type services struct {
 	Simulation IService
-	User users.IService
+	User       users.IService
 }
 
 // Start is the handler to create a new simulation.
@@ -103,7 +103,7 @@ func (c *Controller) LunchHeld(user *fuel.User, w http.ResponseWriter, r *http.R
 }
 
 // Restart is the handler to restart a given simulation.
-func (c *Controller) Restart(user *fuel.User, w http.ResponseWriter, r *http.Request) (interface{}, *ign.ErrMsg)  {
+func (c *Controller) Restart(user *fuel.User, w http.ResponseWriter, r *http.Request) (interface{}, *ign.ErrMsg) {
 	groupID, ok := mux.Vars(r)["group"]
 	if !ok {
 		return nil, ign.NewErrorMessage(ign.ErrorIDNotInRequest)
@@ -161,10 +161,10 @@ func (c *Controller) GetAll(user *fuel.User, w http.ResponseWriter, r *http.Requ
 	}
 
 	// TODO: This is SubT specific and should be moved
-	var circuit *string
-	if len(params["circuit"]) > 0 && len(params["circuit"][0]) > 0 {
-		circuit = &params["circuit"][0]
-	}
+	// var circuit *string
+	// if len(params["circuit"]) > 0 && len(params["circuit"][0]) > 0 {
+	// 	circuit = &params["circuit"][0]
+	// }
 
 	sims, pagination, em := c.services.Simulation.GetAll(r.Context(), GetAllInput{
 		p:               pr,
@@ -185,13 +185,14 @@ func (c *Controller) GetAll(user *fuel.User, w http.ResponseWriter, r *http.Requ
 }
 
 func (c *Controller) Get(user *fuel.User, w http.ResponseWriter, r *http.Request) (interface{}, *ign.ErrMsg) {
-
+	panic("Not implemented")
 }
 
 func (c *Controller) GetDownloadableLogs(user *fuel.User, w http.ResponseWriter, r *http.Request) (interface{}, *ign.ErrMsg) {
+	panic("Not implemented")
 
 }
 
 func (c *Controller) GetLiveLogs(user *fuel.User, w http.ResponseWriter, r *http.Request) (interface{}, *ign.ErrMsg) {
-
+	panic("Not implemented")
 }

@@ -32,17 +32,16 @@ func (app *Application) checkForExpiredSimulations() error {
 // updateMultiSimStatuses updates the the statuses of parent simulations from their children.
 func (app *Application) updateMultiSimStatuses() error {
 	parents, err := app.Services.Simulation.GetAllParentsWithErrors(
-		"cloudsim",
 		simulations.StatusPending,
 		simulations.StatusTerminatingInstances,
 		[]simulations.ErrorStatus{simulations.ErrWhenInitializing, simulations.ErrWhenTerminating},
-		)
+	)
 	if err != nil {
 		return err
 	}
 	for _, p := range *parents {
 		if _, err := app.Services.Simulation.UpdateParentFromChildren(&p); err != nil {
-			return err
+			return err.BaseError
 		}
 	}
 	return nil

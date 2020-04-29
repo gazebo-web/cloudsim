@@ -7,7 +7,6 @@ import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/cloud"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/email"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/handlers"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/interfaces"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/pool"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/queue"
@@ -43,7 +42,7 @@ type Platform struct {
 	Orchestrator     *orchestrator.Kubernetes
 	CloudProvider    *cloud.AmazonWS
 	Permissions      *permissions.Permissions
-	UserService      *users.Service
+	UserService      users.IService
 	Config           Config
 	Simulator        simulator.ISimulator
 	PoolFactory      pool.Factory
@@ -52,7 +51,7 @@ type Platform struct {
 	TerminationQueue chan workers.TerminateInput
 	LaunchPool       pool.IPool
 	TerminationPool  pool.IPool
-	Controllers		controllers
+	Controllers      controllers
 }
 
 // TODO: Add initializer for queue controller.
@@ -66,7 +65,7 @@ func (p *Platform) Name() string {
 }
 
 // NewSimulator returns a new Platform from the given configuration.
-func New(config Config) interfaces.IPlatform {
+func New(config Config) IPlatform {
 	p := Platform{}
 	p.Config = config
 
@@ -191,7 +190,7 @@ func (p *Platform) RequestTermination(ctx context.Context, groupID string) {
 }
 
 func (p *Platform) registerRoutes() {
-	p.Server.Router = router.ConfigureRoutes(p.Server, p.Server.Router, "2.0", "", p.getLaunchQueueRoutes())
+	router.ConfigureRoutes(p.Server, "2.0", "", p.getLaunchQueueRoutes())
 }
 
 func (p *Platform) getLaunchQueueRoutes() ign.Routes {

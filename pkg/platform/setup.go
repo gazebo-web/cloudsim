@@ -170,7 +170,7 @@ func (p *Platform) setupScheduler() *Platform {
 
 // setupQueues initializes the RequestLaunch and Termination queues.
 func (p *Platform) setupQueues() *Platform {
-	p.LaunchQueue = queue.New()
+	p.LaunchQueue = queue.NewQueue()
 	p.TerminationQueue = make(chan workers.TerminateInput, 1000)
 	return p
 }

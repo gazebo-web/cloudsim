@@ -2,10 +2,7 @@ package simulations
 
 import (
 	"context"
-	"fmt"
 	uuid "github.com/satori/go.uuid"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/interfaces"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/logger"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/users"
 	fuel "gitlab.com/ignitionrobotics/web/fuelserver/bundles/users"
 	per "gitlab.com/ignitionrobotics/web/fuelserver/permissions"
@@ -30,24 +27,23 @@ type IService interface {
 	Restart(ctx context.Context, groupID string, user *fuel.User) (*Simulation, *ign.ErrMsg)
 	Shutdown(ctx context.Context, groupID string, user *fuel.User) (*Simulation, *ign.ErrMsg)
 	Update(ctx context.Context, groupID string, simulationUpdate SimulationUpdate) (*Simulation, *ign.ErrMsg)
-	UpdateParentFromChildren(ctx context.Context, parent *Simulation) (*Simulation, *ign.ErrMsg)
+	UpdateParentFromChildren(parent *Simulation) (*Simulation, *ign.ErrMsg)
 	Reject(ctx context.Context, simulation *Simulation) (*Simulation, *ign.ErrMsg)
 	addPermissionsToOwner(resourceID string, permissions []per.Action, owner string) (bool, *ign.ErrMsg)
 	addPermissionsToOwners(resourceID string, permissions []per.Action, owners ...string) *ign.ErrMsg
-	prepareSimulations(ctx context.Context, sim *Simulation) (Simulations, *ign.ErrMsg)
+	Prepare(ctx context.Context, sim *Simulation) (Simulations, *ign.ErrMsg)
 }
 
 // Service
 type Service struct {
-	repository IRepository
+	repository  IRepository
 	userService users.IService
-	config ServiceConfig
-	application interfaces.IApplication
+	config      ServiceConfig
 }
 
 type NewServiceInput struct {
 	Repository IRepository
-	Config ServiceConfig
+	Config     ServiceConfig
 }
 
 type ServiceConfig struct {
@@ -81,12 +77,12 @@ func (s *Service) Get(groupID string) (*Simulation, error) {
 }
 
 type GetAllInput struct {
-	p *ign.PaginationRequest
-	byStatus *Status
-	invertStatus bool
-	byErrStatus *ErrorStatus
+	p               *ign.PaginationRequest
+	byStatus        *Status
+	invertStatus    bool
+	byErrStatus     *ErrorStatus
 	invertErrStatus bool
-	user *fuel.User
+	user            *fuel.User
 	includeChildren bool
 }
 
@@ -108,7 +104,7 @@ func (s *Service) GetAll(ctx context.Context, input GetAllInput) (*Simulations, 
 		IncludeChildren:            includeChildren && input.includeChildren,
 		CanPerformWithRole:         canPerformWithRole,
 		QueryForResourceVisibility: s.userService.QueryForResourceVisibility,
-		User: input.user,
+		User:                       input.user,
 	})
 
 	if err != nil {
@@ -139,7 +135,7 @@ func (s *Service) GetAllParents(statusFrom, statusTo Status) (*Simulations, erro
 }
 
 // GetAllParentsWithErrors
-func (s * Service) GetAllParentsWithErrors(statusFrom, statusTo Status, errors []ErrorStatus) (*Simulations, error) {
+func (s *Service) GetAllParentsWithErrors(statusFrom, statusTo Status, errors []ErrorStatus) (*Simulations, error) {
 	panic("Not implemented")
 }
 
@@ -192,20 +188,20 @@ func (s *Service) Create(ctx context.Context, createSimulation *SimulationCreate
 	creator := *user.Username
 	imageStr := strings.Join(createSimulation.Image, ",")
 	sim := Simulation{
-		Owner:            &owner,
-		Name:             &createSimulation.Name,
-		Creator:          &creator,
-		Private:          &private,
-		StopOnEnd:        &stopOnEnd,
-		Platform:         &createSimulation.Platform,
-		Application:      &createSimulation.Application,
-		Image:            &imageStr,
-		GroupID:          &groupID,
-		Status: 		  StatusPending.ToIntPtr(),
-		Extra:            createSimulation.Extra,
-		ExtraSelector:    createSimulation.ExtraSelector,
-		Robots:           createSimulation.Robots,
-		Held:             false,
+		Owner:         &owner,
+		Name:          &createSimulation.Name,
+		Creator:       &creator,
+		Private:       &private,
+		StopOnEnd:     &stopOnEnd,
+		Platform:      &createSimulation.Platform,
+		Application:   &createSimulation.Application,
+		Image:         &imageStr,
+		GroupID:       &groupID,
+		Status:        StatusPending.ToIntPtr(),
+		Extra:         createSimulation.Extra,
+		ExtraSelector: createSimulation.ExtraSelector,
+		Robots:        createSimulation.Robots,
+		Held:          false,
 	}
 
 	// Set the maximum simulation expiration time.
@@ -223,26 +219,7 @@ func (s *Service) Create(ctx context.Context, createSimulation *SimulationCreate
 		return nil, em
 	}
 
-	// By default, we launch a single simulation from a createSimulation request.
-	// But we also allow specific ApplicationTypes (eg. SubT) to spawn multiple simulations
-	// from a single request. When that happens, we call those "child simulations"
-	// and they will be grouped by the same parent simulation's groupID.
-	simsToLaunch, em := s.prepareSimulations(ctx, createdSim)
-	if em != nil {
-		return nil, em
-	}
-
-	// Add a 'launch simulation' request to the Launcher Jobs-Pool
-	for _, sim := range simsToLaunch {
-		groupID := *sim.GroupID
-		logger.Logger(ctx).Info(fmt.Sprintf("[SUBT|SIMULATIONS] About to submit launch task for GroupID: [%s]", groupID))
-		// TODO: Call the application's Launch method.
-		if err := s.application.Launch(ctx, &sim); err != nil {
-			logger.Logger(ctx).Error(fmt.Sprintf("[SUBT|SIMULATIONS] Cannot launch simulation. GroupID: [%s]", groupID))
-		}
-	}
-
-	return &sim, nil
+	return createdSim, nil
 }
 
 func (s *Service) Restart(ctx context.Context, groupID string, user *fuel.User) (*Simulation, *ign.ErrMsg) {
@@ -284,7 +261,7 @@ func (s *Service) Update(ctx context.Context, groupID string, simulationUpdate S
 }
 
 // UpdateParentFromChildren
-func (s *Service) UpdateParentFromChildren(ctx context.Context, parent *Simulation) (*Simulation, *ign.ErrMsg) {
+func (s *Service) UpdateParentFromChildren(parent *Simulation) (*Simulation, *ign.ErrMsg) {
 	panic("implement me")
 }
 
@@ -318,6 +295,6 @@ func (s *Service) addPermissionsToOwners(resourceID string, permissions []per.Ac
 	return nil
 }
 
-func (s *Service) prepareSimulations(ctx context.Context, sim *Simulation) (Simulations, *ign.ErrMsg) {
+func (s *Service) Prepare(ctx context.Context, sim *Simulation) (Simulations, *ign.ErrMsg) {
 	panic("implement me")
 }

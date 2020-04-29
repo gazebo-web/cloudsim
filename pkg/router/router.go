@@ -15,9 +15,8 @@ func New() *mux.Router {
 // ConfigureRoutes attaches a set of routes in the given router to run on the server.
 // It appends the version and the namespace to those routes.
 // Returns the configured router.
-func ConfigureRoutes(server *ign.Server, router *mux.Router, version string, namespace string, routes ign.Routes) *mux.Router {
+func ConfigureRoutes(server *ign.Server, version string, namespace string, routes ign.Routes) {
 	prefix := fmt.Sprintf("/%s/%s", version, namespace)
-	sub := router.PathPrefix(prefix).Subrouter()
+	sub := server.Router.PathPrefix(prefix).Subrouter()
 	server.ConfigureRouterWithRoutes(prefix, sub, routes)
-	return router
 }

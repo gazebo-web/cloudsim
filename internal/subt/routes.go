@@ -9,18 +9,28 @@ import (
 func (app *SubT) RegisterRoutes() ign.Routes {
 	return ign.Routes{
 		ign.Route{
-			Name:          "Simulations",
-			Description:   "Information about all simulations",
-			URI:           "/simulations",
-			Headers:       ign.AuthHeadersRequired,
-			Methods:       ign.Methods{},
+			Name:        "Simulations",
+			Description: "Information about all simulations",
+			URI:         "/simulations",
+			Headers:     ign.AuthHeadersRequired,
+			Methods:     ign.Methods{},
 			SecureMethods: ign.SecureMethods{
 				ign.Method{
 					Type:        "GET",
 					Description: "Get all simulations",
 					Handlers: ign.FormatHandlers{
-						ign.FormatHandler{Extension: ".json", Handler: ign.JSONResult(handlers.WithUser(app.Services.User, app.Controllers.Simulation.Get))},
-						ign.FormatHandler{Handler: ign.JSONResult(handlers.WithUser(app.Services.User, app.Controllers.Simulation.GetAll))},
+						ign.FormatHandler{
+							Extension: ".json",
+							Handler: ign.JSONResult(
+								handlers.AfterFn(
+									handlers.WithUser(app.Services.User, app.Controllers.Simulation.Get),
+									app.Launch,
+								),
+							),
+						},
+						ign.FormatHandler{
+							Handler: ign.JSONResult(handlers.WithUser(app.Services.User, app.Controllers.Simulation.GetAll)),
+						},
 					},
 				},
 			},

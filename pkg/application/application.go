@@ -3,7 +3,6 @@ package application
 import (
 	"context"
 	"fmt"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/interfaces"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/logger"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/monitors"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/platform"
@@ -12,8 +11,22 @@ import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/tasks"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/users"
 	"gitlab.com/ignitionrobotics/web/ign-go"
+	"strings"
 	"time"
 )
+
+// IApplication describes a set of methods for an Application.
+type IApplication interface {
+	Name() string
+	Version() string
+	RegisterRoutes() ign.Routes
+	RegisterTasks() []tasks.Task
+	RegisterMonitors(ctx context.Context)
+	RebuildState(ctx context.Context) error
+	Shutdown(ctx context.Context) error
+	Launch(payload interface{}) (interface{}, *ign.ErrMsg)
+	ValidateLaunch(ctx context.Context, simulation *simulations.Simulation) *ign.ErrMsg
+}
 
 // Application is a generic implementation of an application to be extended by a specific application.
 type Application struct {
@@ -26,11 +39,11 @@ type Application struct {
 // Services group a list of services to be used by the Application.
 type Services struct {
 	Simulation simulations.IService
-	User	   users.IService
+	User       users.IService
 }
 
 // New creates a new application for the given platform.
-func New(p *platform.Platform, simulationService simulations.IService, userService users.IService) interfaces.IApplication {
+func New(p *platform.Platform, simulationService simulations.IService, userService users.IService) IApplication {
 	app := &Application{
 		Platform: p,
 		Cleaner:  monitors.New("expired-simulations-cleaner", "Expired Simulations Cleaner", 20*time.Second),
@@ -149,16 +162,34 @@ func (app *Application) getGazeboConfig(sim *simulations.Simulation) simulator.G
 }
 
 // LaunchSimulation receives a Simulation and requests a Launch to the Platform.
-func (app *Application) Launch(ctx context.Context, simulation *simulations.Simulation) error {
-	if err := app.ValidateLaunch(ctx, simulation); err != nil {
-		return err
+func (app *Application) Launch(payload interface{}) (interface{}, *ign.ErrMsg) {
+	simulation := payload.(*simulations.Simulation)
+	ctx := context.Background()
+
+	sims, err := app.Services.Simulation.Prepare(ctx, simulation)
+
+	if err != nil {
+		return nil, err
 	}
-	app.Platform.RequestLaunch(ctx, *simulation.GroupID)
-	return nil
+
+	for _, sim := range sims {
+		groupID := *sim.GroupID
+		logger.Logger(ctx).Info(
+			fmt.Sprintf(
+				"[%s|SIMULATIONS] About to submit launch task for GroupID: [%s]", strings.ToUpper(app.Name()), groupID,
+			),
+		)
+		if err := app.ValidateLaunch(ctx, &sim); err != nil {
+			return nil, err
+		}
+		app.Platform.RequestLaunch(ctx, *sim.GroupID)
+	}
+
+	return simulation, nil
 }
 
 // ValidateLaunch receives a simulation and performs a set of checks to
 // ensure that the simulation is good to be launched.
-func (app *Application) ValidateLaunch(ctx context.Context, simulation *simulations.Simulation) error {
+func (app *Application) ValidateLaunch(ctx context.Context, simulation *simulations.Simulation) *ign.ErrMsg {
 	return nil
 }

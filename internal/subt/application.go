@@ -2,26 +2,25 @@ package subt
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	sim "gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/simulations"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/application"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/interfaces"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/logger"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/platform"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulator"
+	"gitlab.com/ignitionrobotics/web/ign-go"
 )
 
 type IApplication interface {
-	interfaces.IApplication
-	isSimulationHeld(ctx context.Context, simulation *simulations.Simulation) error
+	application.IApplication
+	isSimulationHeld(ctx context.Context, simulation *simulations.Simulation) *ign.ErrMsg
 }
 
 // SubT is an IApplication implementation
 type SubT struct {
-	interfaces.IApplication
-	Services services
+	application.IApplication
+	Services    services
 	Controllers controllers
 }
 
@@ -32,7 +31,6 @@ type controllers struct {
 type services struct {
 	application.Services
 	Simulation sim.IService
-
 }
 
 // New creates a new SubT application.
@@ -53,7 +51,7 @@ func New(p *platform.Platform) IApplication {
 			}),
 		},
 		Services: services{
-			Services:   application.Services{
+			Services: application.Services{
 				User: p.UserService,
 			},
 			Simulation: simulationService,
@@ -83,7 +81,7 @@ func (app *SubT) getGazeboConfig(sim *simulations.Simulation) simulator.GazeboCo
 }
 
 // ValidateLaunch runs a set of checks before launching a simulation. It will return an error if one of those checks fail.
-func (app *SubT) ValidateLaunch(ctx context.Context, simulation *simulations.Simulation) error {
+func (app *SubT) ValidateLaunch(ctx context.Context, simulation *simulations.Simulation) *ign.ErrMsg {
 	if err := app.IApplication.ValidateLaunch(ctx, simulation); err != nil {
 		return err
 	}
@@ -97,15 +95,15 @@ func (app *SubT) ValidateLaunch(ctx context.Context, simulation *simulations.Sim
 }
 
 // isSimulationHeld checks if the simulations is being held.
-func (app *SubT) isSimulationHeld(ctx context.Context, simulation *simulations.Simulation) error {
+func (app *SubT) isSimulationHeld(ctx context.Context, simulation *simulations.Simulation) *ign.ErrMsg {
 	if simulation.Held {
 		// TODO: Replace with ign.NewErrorMessage(ign.ErrorLaunchHeld).
-		return errors.New("launch held simulation")
+		return ign.NewErrorMessage(ign.ErrorInvalidSimulationStatus)
 	}
 	return nil
 }
 
 // Register runs a set of instructions to initialize an application for the given platform.
-func Register(p *platform.Platform) interfaces.IApplication {
+func Register(p *platform.Platform) application.IApplication {
 	return New(p)
 }
