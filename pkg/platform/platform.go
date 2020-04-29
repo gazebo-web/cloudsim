@@ -7,6 +7,7 @@ import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/cloud"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/email"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/handlers"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/interfaces"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/pool"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/queue"
@@ -65,7 +66,7 @@ func (p *Platform) Name() string {
 }
 
 // NewSimulator returns a new Platform from the given configuration.
-func New(config Config) *Platform {
+func New(config Config) interfaces.IPlatform {
 	p := Platform{}
 	p.Config = config
 

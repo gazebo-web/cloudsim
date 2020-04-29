@@ -3,6 +3,7 @@ package application
 import (
 	"context"
 	"fmt"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/interfaces"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/logger"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/monitors"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/platform"
@@ -13,19 +14,6 @@ import (
 	"gitlab.com/ignitionrobotics/web/ign-go"
 	"time"
 )
-
-// IApplication describes a set of methods for an Application.
-type IApplication interface {
-	Name() string
-	Version() string
-	RegisterRoutes() ign.Routes
-	RegisterTasks() []tasks.Task
-	RegisterMonitors(ctx context.Context)
-	RebuildState(ctx context.Context) error
-	Shutdown(ctx context.Context) error
-	Launch(ctx context.Context, simulation *simulations.Simulation) error
-	ValidateLaunch(ctx context.Context, simulation *simulations.Simulation) error
-}
 
 // Application is a generic implementation of an application to be extended by a specific application.
 type Application struct {
@@ -42,7 +30,7 @@ type Services struct {
 }
 
 // New creates a new application for the given platform.
-func New(p *platform.Platform, simulationService simulations.IService, userService users.IService) *Application {
+func New(p *platform.Platform, simulationService simulations.IService, userService users.IService) interfaces.IApplication {
 	app := &Application{
 		Platform: p,
 		Cleaner:  monitors.New("expired-simulations-cleaner", "Expired Simulations Cleaner", 20*time.Second),

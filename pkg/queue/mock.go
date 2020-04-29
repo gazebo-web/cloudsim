@@ -1,53 +1,88 @@
 package queue
 
-import "gitlab.com/ignitionrobotics/web/ign-go"
+import (
+	"github.com/stretchr/testify/mock"
+	"gitlab.com/ignitionrobotics/web/ign-go"
+)
 
 type Mock struct {
-	GetMock func(offset, limit *int) ([]interface{}, *ign.ErrMsg)
-	EnqueueMock func(entity interface{}) interface{}
-	DequeueMock func() (interface{}, *ign.ErrMsg)
-	DequeueOrWaitMock func() (interface{}, *ign.ErrMsg)
-	MoveToFrontMock func(target interface{}) (interface{}, *ign.ErrMsg)
-	MoveToBackMock func(target interface{}) (interface{}, *ign.ErrMsg)
-	SwapMock func(a interface{}, b interface{}) (interface{}, *ign.ErrMsg)
-	RemoveMock func(id interface{}) (interface{}, *ign.ErrMsg)
-	CountMock func() int
+	mock.Mock
 }
 
 func (m *Mock) Get(offset, limit *int) ([]interface{}, *ign.ErrMsg) {
-	return m.GetMock(offset, limit)
+	args := m.Called(offset, limit)
+
+	var result []interface{}
+	result = append(result, args.Get(0))
+
+	var err *ign.ErrMsg
+	err = args.Get(1).(*ign.ErrMsg)
+
+	return result, err
 }
 
 func (m *Mock) Enqueue(entity interface{}) interface{} {
-	return m.EnqueueMock(entity)
+	args := m.Called(entity)
+	return args.Get(0)
 }
 
 func (m *Mock) Dequeue() (interface{}, *ign.ErrMsg) {
-	return m.DequeueMock()
+	args := m.Called()
+
+	var err *ign.ErrMsg
+	err = args.Get(1).(*ign.ErrMsg)
+
+	return args.Get(0), err
 }
 
 func (m *Mock) DequeueOrWait() (interface{}, *ign.ErrMsg) {
-	return m.DequeueOrWaitMock()
+	args := m.Called()
+
+	var err *ign.ErrMsg
+	err = args.Get(1).(*ign.ErrMsg)
+
+	return args.Get(0), err
 }
 
 func (m *Mock) MoveToFront(target interface{}) (interface{}, *ign.ErrMsg) {
-	return m.MoveToFrontMock(target)
+	args := m.Called(target)
+
+	var err *ign.ErrMsg
+	err = args.Get(1).(*ign.ErrMsg)
+
+	return args.Get(0), err
 }
 
 func (m *Mock) MoveToBack(target interface{}) (interface{}, *ign.ErrMsg) {
-	return m.MoveToBackMock(target)
+	args := m.Called(target)
+
+	var err *ign.ErrMsg
+	err = args.Get(1).(*ign.ErrMsg)
+
+	return args.Get(0), err
 }
 
 func (m *Mock) Swap(a interface{}, b interface{}) (interface{}, *ign.ErrMsg) {
-	return m.SwapMock(a, b)
+	args := m.Called(a, b)
+
+	var err *ign.ErrMsg
+	err = args.Get(1).(*ign.ErrMsg)
+
+	return args.Get(0), err
 }
 
 func (m *Mock) Remove(id interface{}) (interface{}, *ign.ErrMsg) {
-	return m.RemoveMock(id)
+	args := m.Called(id)
+
+	var err *ign.ErrMsg
+	err = args.Get(1).(*ign.ErrMsg)
+
+	return args.Get(0), err
 }
 
 func (m *Mock) Count() int {
-	return m.CountMock()
+	args := m.Called()
+	return args.Int(0)
 }
 
 func NewMock() IQueue {

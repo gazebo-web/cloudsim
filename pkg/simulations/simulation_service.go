@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 	uuid "github.com/satori/go.uuid"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/application"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/interfaces"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/logger"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/users"
 	fuel "gitlab.com/ignitionrobotics/web/fuelserver/bundles/users"
@@ -42,7 +42,7 @@ type Service struct {
 	repository IRepository
 	userService users.IService
 	config ServiceConfig
-	application application.IApplication
+	application interfaces.IApplication
 }
 
 type NewServiceInput struct {

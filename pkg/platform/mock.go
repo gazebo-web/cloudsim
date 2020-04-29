@@ -1,22 +1,36 @@
 package platform
 
+import "context"
+
 type Mock struct {
-	IPlatform
-	IPlatformSetup
+	StartMock func(ctx context.Context) error
+	StopMock func(ctx context.Context) error
+	RequestLaunchMock func(ctx context.Context, groupID string)
+	RequestTerminationMock func(ctx context.Context, groupID string)
+}
+
+func (m *Mock) Name() string {
+	return "platform_test"
+}
+
+func (m *Mock) Start(ctx context.Context) error {
+	return m.StartMock(ctx)
+}
+
+func (m *Mock) Stop(ctx context.Context) error {
+	return m.StopMock(ctx)
+}
+
+func (m *Mock) RequestLaunch(ctx context.Context, groupID string) {
+	m.RequestLaunchMock(ctx, groupID)
+}
+
+func (m *Mock) RequestTermination(ctx context.Context, groupID string) {
+	m.RequestTerminationMock(ctx, groupID)
 }
 
 // NewMock creates a mocked platform to be used by tests.
-func NewMock(config Config) IPlatform {
-	var p IPlatform
-	p = &Mock{}
-	p = New(config)
-	return p
-}
-
-// NewSetupMock creates a mocked platform initializer to be used by tests.
-func NewSetupMock(config Config) IPlatformSetup {
-	var p IPlatformSetup
-	p = &Mock{}
-	p = New(config)
+func NewMock() *Mock {
+	p := &Mock{}
 	return p
 }
