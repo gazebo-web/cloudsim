@@ -3,7 +3,6 @@ package queue
 import (
 	"encoding/json"
 	"github.com/gorilla/mux"
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/users"
 	"gitlab.com/ignitionrobotics/web/cloudsim/tools"
@@ -41,12 +40,13 @@ func (suite *IntegrationTestSuite) SetupTest() {
 	suite.service = NewService(suite.queue, suite.userService)
 	suite.router = mux.NewRouter()
 	suite.recorder = httptest.NewRecorder()
+	suite.controller = NewController(suite.service)
 }
 
 
-func (suite *IntegrationTestSuite) GetAll(t *testing.T) {
-	suite.userService.On("GetUserFromUsername", suite.admin.Username).Return(suite.admin, nil)
-	suite.userService.On("IsSystemAdmin", suite.admin.Username).Return(true)
+func (suite *IntegrationTestSuite) TestGetAll() {
+	suite.userService.On("GetUserFromUsername", *suite.admin.Username).Return(suite.admin, nil)
+	suite.userService.On("IsSystemAdmin", *suite.admin.Username).Return(true)
 
 	suite.queue.Enqueue("1")
 	suite.queue.Enqueue("2")
@@ -67,22 +67,20 @@ func (suite *IntegrationTestSuite) GetAll(t *testing.T) {
 
 	req, err := http.NewRequest(http.MethodGet, "/queue", nil)
 	if err != nil {
-		t.Errorf("Error creating HTTP Request. Error: [%v]", err)
+		suite.Errorf(err, "Error creating HTTP Request.")
 	}
 
 	suite.router.ServeHTTP(suite.recorder, req)
 
 	var response []string
-	assert.NoError(t, json.Unmarshal(suite.recorder.Body.Bytes(), &response))
-	assert.Equal(t, http.StatusOK, suite.recorder.Code)
-	assert.Len(t, response, 3)
+	suite.NoError(json.Unmarshal(suite.recorder.Body.Bytes(), &response))
+	suite.Equal(http.StatusOK, suite.recorder.Code)
+	suite.Len(response, 3)
 }
 
-
-
-func (suite *IntegrationTestSuite) MoveToFront(t *testing.T) {
-	suite.userService.On("GetUserFromUsername", suite.admin.Username).Return(suite.admin, nil)
-	suite.userService.On("IsSystemAdmin", suite.admin.Username).Return(true)
+func (suite *IntegrationTestSuite) TestMoveToFront() {
+	suite.userService.On("GetUserFromUsername", *suite.admin.Username).Return(suite.admin, nil)
+	suite.userService.On("IsSystemAdmin", *suite.admin.Username).Return(true)
 
 	suite.queue.Enqueue("1")
 	suite.queue.Enqueue("2")
@@ -103,27 +101,27 @@ func (suite *IntegrationTestSuite) MoveToFront(t *testing.T) {
 
 	req, err := http.NewRequest(http.MethodPatch, "/queue/3/front", nil)
 	if err != nil {
-		t.Errorf("Error creating HTTP Request. Error: [%v]", err)
+		suite.Errorf(err, "Error creating HTTP Request.")
 	}
 
 	suite.router.ServeHTTP(suite.recorder, req)
 
 	var response string
-	assert.NoError(t, json.Unmarshal(suite.recorder.Body.Bytes(), &response))
-	assert.Equal(t, http.StatusOK, suite.recorder.Code)
+	suite.NoError(json.Unmarshal(suite.recorder.Body.Bytes(), &response))
+	suite.Equal(http.StatusOK, suite.recorder.Code)
 
 	items, _ := suite.queue.Get(nil, nil)
 
 	casted, ok := items[0].(string)
-	assert.True(t, ok)
-	assert.Equal(t, response, casted)
+	suite.True(ok)
+	suite.Equal(response, casted)
 }
 
 
 
-func (suite *IntegrationTestSuite) MoveToBack(t *testing.T) {
-	suite.userService.On("GetUserFromUsername", suite.admin.Username).Return(suite.admin, nil)
-	suite.userService.On("IsSystemAdmin", suite.admin.Username).Return(true)
+func (suite *IntegrationTestSuite) TestMoveToBack() {
+	suite.userService.On("GetUserFromUsername", *suite.admin.Username).Return(suite.admin, nil)
+	suite.userService.On("IsSystemAdmin", *suite.admin.Username).Return(true)
 
 	suite.queue.Enqueue("1")
 	suite.queue.Enqueue("2")
@@ -144,27 +142,27 @@ func (suite *IntegrationTestSuite) MoveToBack(t *testing.T) {
 
 	req, err := http.NewRequest(http.MethodPatch, "/queue/1/back", nil)
 	if err != nil {
-		t.Errorf("Error creating HTTP Request. Error: [%v]", err)
+		suite.Errorf(err, "Error creating HTTP Request.")
 	}
 
 	suite.router.ServeHTTP(suite.recorder, req)
 
 	var response string
-	assert.NoError(t, json.Unmarshal(suite.recorder.Body.Bytes(), &response))
-	assert.Equal(t, http.StatusOK, suite.recorder.Code)
+	suite.NoError(json.Unmarshal(suite.recorder.Body.Bytes(), &response))
+	suite.Equal(http.StatusOK, suite.recorder.Code)
 
 	items, _ := suite.queue.Get(nil, nil)
 
 	casted, ok := items[2].(string)
-	assert.True(t, ok)
-	assert.Equal(t, response, casted)
+	suite.True(ok)
+	suite.Equal(response, casted)
 }
 
 
 
-func (suite *IntegrationTestSuite) Count(t *testing.T) {
-	suite.userService.On("GetUserFromUsername", suite.admin.Username).Return(suite.admin, nil)
-	suite.userService.On("IsSystemAdmin", suite.admin.Username).Return(true)
+func (suite *IntegrationTestSuite) TestCount() {
+	suite.userService.On("GetUserFromUsername", *suite.admin.Username).Return(suite.admin, nil)
+	suite.userService.On("IsSystemAdmin", *suite.admin.Username).Return(true)
 
 	suite.queue.Enqueue("1")
 	suite.queue.Enqueue("2")
@@ -185,24 +183,24 @@ func (suite *IntegrationTestSuite) Count(t *testing.T) {
 
 	req, err := http.NewRequest(http.MethodPatch, "/queue/count", nil)
 	if err != nil {
-		t.Errorf("Error creating HTTP Request. Error: [%v]", err)
+		suite.Errorf(err, "Error creating HTTP Request.")
 	}
 
 	suite.router.ServeHTTP(suite.recorder, req)
 
 	var response int
-	assert.NoError(t, json.Unmarshal(suite.recorder.Body.Bytes(), &response))
-	assert.Equal(t, http.StatusOK, suite.recorder.Code)
+	suite.NoError(json.Unmarshal(suite.recorder.Body.Bytes(), &response))
+	suite.Equal(http.StatusOK, suite.recorder.Code)
 
 	count := suite.queue.Count()
-	assert.Equal(t, count, response)
+	suite.Equal(count, response)
 }
 
 
 
-func (suite *IntegrationTestSuite) Remove(t *testing.T) {
-	suite.userService.On("GetUserFromUsername", suite.admin.Username).Return(suite.admin, nil)
-	suite.userService.On("IsSystemAdmin", suite.admin.Username).Return(true)
+func (suite *IntegrationTestSuite) TestRemove() {
+	suite.userService.On("GetUserFromUsername", *suite.admin.Username).Return(suite.admin, nil)
+	suite.userService.On("IsSystemAdmin", *suite.admin.Username).Return(true)
 
 	suite.queue.Enqueue("1")
 	suite.queue.Enqueue("2")
@@ -223,16 +221,16 @@ func (suite *IntegrationTestSuite) Remove(t *testing.T) {
 
 	req, err := http.NewRequest(http.MethodDelete, "/queue/1", nil)
 	if err != nil {
-		t.Errorf("Error creating HTTP Request. Error: [%v]", err)
+		suite.Errorf(err,"Error creating HTTP Request.")
 	}
 
 	suite.router.ServeHTTP(suite.recorder, req)
 
 	var response string
-	assert.NoError(t, json.Unmarshal(suite.recorder.Body.Bytes(), &response))
-	assert.Equal(t, http.StatusOK, suite.recorder.Code)
+	suite.NoError(json.Unmarshal(suite.recorder.Body.Bytes(), &response))
+	suite.Equal(http.StatusOK, suite.recorder.Code)
 
 	items, _ := suite.queue.Get(nil, nil)
-	assert.Len(t, items, 2)
-	assert.NotContains(t, items, response)
+	suite.Len(items, 2)
+	suite.NotContains(items, response)
 }
