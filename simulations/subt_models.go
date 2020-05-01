@@ -20,6 +20,7 @@ type SubTCreateSimulation struct {
 	RobotType []string `json:"robot_type" validate:"lenEqFieldLen=RobotName,dive,isrobottype" form:"robot_type"`
 	// Override the CreateSimulation Image field
 	RobotImage []string `json:"robot_image" validate:"lenEqFieldLen=RobotName" form:"robot_image"`
+	TeamBaseImage string `json:"team_base_image" form:"team_base_image"`
 	Circuit    string   `json:"circuit" validate:"required,iscircuit" form:"circuit"`
 }
 
