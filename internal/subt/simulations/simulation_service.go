@@ -9,23 +9,22 @@ import (
 )
 
 type IService interface {
-	simulations.IService
+	Create(ctx context.Context, createSimulation *SimulationCreate, user *fuel.User) (*Simulation, *ign.ErrMsg)
 	CountByOwnerAndCircuit(owner, circuit string) (*int, error)
 	simulationIsHeld(ctx context.Context, sim *simulations.Simulation) bool
 	checkValidNumberOfSimulations(ctx context.Context, sim *simulations.Simulation) *ign.ErrMsg
 }
 
 type Service struct {
-	*simulations.Service
+	parent simulations.IService
 	userService users.IService
 }
 
 func NewService(repository IRepository) IService {
 	var s IService
 	parent := simulations.NewService(repository)
-	service := parent.(*simulations.Service)
 	s = &Service{
-		Service: service,
+		parent: parent,
 	}
 	return s
 }
@@ -39,10 +38,9 @@ func (s *Service) simulationIsHeld(ctx context.Context, sim *simulations.Simulat
 }
 
 
-func (s *Service) Create(ctx context.Context, createSimulation *simulations.SimulationCreate, user *fuel.User) (*simulations.Simulation, *ign.ErrMsg) {
+func (s *Service) Create(ctx context.Context, createSimulation *SimulationCreate, user *fuel.User) (*Simulation, *ign.ErrMsg) {
 
-
-	sim, err := s.Service.Create(ctx, createSimulation, user)
+	sim, err := s.parent.Create(ctx, &createSimulation.SimulationCreate, user)
 
 	// Set held state if the user is not a sysadmin and the simulations needs to be held
 	if !s.userService.IsSystemAdmin(*user.Username) && s.simulationIsHeld(ctx, sim) {
@@ -50,7 +48,7 @@ func (s *Service) Create(ctx context.Context, createSimulation *simulations.Simu
 		simUpdate := simulations.SimulationUpdate{
 			Held: &held,
 		}
-		sim, err = s.Update(ctx, *sim.GroupID, simUpdate)
+		sim, err = s.parent.Update(ctx, *sim.GroupID, simUpdate)
 		if err != nil {
 			return nil, err
 		}
@@ -61,11 +59,21 @@ func (s *Service) Create(ctx context.Context, createSimulation *simulations.Simu
 	// sure that in case of a race condition then both records are added with pending state
 	// and one of those (or both) can be rejected immediately.
 	if em := s.checkValidNumberOfSimulations(ctx, sim); em != nil {
-		s.Reject(ctx, sim)
+		s.parent.Reject(ctx, sim)
 		return nil, em
 	}
 
-	return sim, nil
+	// TODO: Add specific subt entity to the database from the given generic simulation.
+	subtSim := &Simulation{
+		Base:                sim,
+		GroupID:             sim.GroupID,
+		Score:               nil,
+		SimTimeDurationSec:  0,
+		RealTimeDurationSec: 0,
+		ModelCount:          0,
+	}
+
+	return subtSim, nil
 }
 
 func (s *Service) checkValidNumberOfSimulations(ctx context.Context, sim *simulations.Simulation) *ign.ErrMsg {

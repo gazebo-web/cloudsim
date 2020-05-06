@@ -2,6 +2,12 @@
 
 
 [[projects]]
+  name = "github.com/DATA-DOG/go-sqlmock"
+  packages = ["."]
+  revision = "7d7fc89ac4d6e7994c74cf16a6cb774b0374f2f9"
+  version = "v1.4.1"
+
+[[projects]]
   name = "github.com/Knetic/govaluate"
   packages = ["."]
   revision = "d216395917cc49052c7c7094cf57f09657ca08a8"
@@ -368,10 +374,18 @@
   version = "v1.4.0"
 
 [[projects]]
+  name = "github.com/stretchr/objx"
+  packages = ["."]
+  revision = "477a77ecc69700c7cdeb1fa9e129548e1c1c393c"
+  version = "v0.1.1"
+
+[[projects]]
   name = "github.com/stretchr/testify"
   packages = [
     "assert",
-    "require"
+    "mock",
+    "require",
+    "suite"
   ]
   revision = "ffdc059bfe9ce6a4e144ba849dbedead332c6053"
   version = "v1.3.0"
@@ -756,6 +770,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "2176f5d46694b620533c1de06606a5464ea55f99bbc2043f55a6f215a3fd3dfb"
+  inputs-digest = "d80ea9ec1e02ef429cd160fa2fbcb7a2dca7773a6c099bf33bc40d23d2cc0bca"
   solver-name = "gps-cdcl"
   solver-version = 1

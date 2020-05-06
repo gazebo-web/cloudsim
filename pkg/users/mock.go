@@ -15,7 +15,7 @@ type ServiceMock struct {
 	*mock.Mock
 }
 
-func NewUserServiceMock() *ServiceMock {
+func NewServiceMock() *ServiceMock {
 	m := &ServiceMock{
 		Mock: new(mock.Mock),
 	}

@@ -13,10 +13,10 @@ import (
 )
 
 func TestQueueIntegration(t *testing.T) {
-	suite.Run(t, new(IntegrationTestSuite))
+	suite.Run(t, new(queueTestSuite))
 }
 
-type IntegrationTestSuite struct {
+type queueTestSuite struct {
 	suite.Suite
 	userService *users.ServiceMock
 	adminUsername string
@@ -28,8 +28,8 @@ type IntegrationTestSuite struct {
 	recorder *httptest.ResponseRecorder
 }
 
-func (suite *IntegrationTestSuite) SetupTest() {
-	suite.userService = users.NewUserServiceMock()
+func (suite *queueTestSuite) SetupTest() {
+	suite.userService = users.NewServiceMock()
 	suite.adminUsername = "root"
 	suite.admin = fuel.User{
 		Name:             tools.Sptr("Admin Root"),
@@ -44,7 +44,7 @@ func (suite *IntegrationTestSuite) SetupTest() {
 }
 
 
-func (suite *IntegrationTestSuite) TestGetAll() {
+func (suite *queueTestSuite) TestGetAll() {
 	suite.userService.On("GetUserFromUsername", *suite.admin.Username).Return(suite.admin, nil)
 	suite.userService.On("IsSystemAdmin", *suite.admin.Username).Return(true)
 
@@ -78,7 +78,7 @@ func (suite *IntegrationTestSuite) TestGetAll() {
 	suite.Len(response, 3)
 }
 
-func (suite *IntegrationTestSuite) TestMoveToFront() {
+func (suite *queueTestSuite) TestMoveToFront() {
 	suite.userService.On("GetUserFromUsername", *suite.admin.Username).Return(suite.admin, nil)
 	suite.userService.On("IsSystemAdmin", *suite.admin.Username).Return(true)
 
@@ -119,7 +119,7 @@ func (suite *IntegrationTestSuite) TestMoveToFront() {
 
 
 
-func (suite *IntegrationTestSuite) TestMoveToBack() {
+func (suite *queueTestSuite) TestMoveToBack() {
 	suite.userService.On("GetUserFromUsername", *suite.admin.Username).Return(suite.admin, nil)
 	suite.userService.On("IsSystemAdmin", *suite.admin.Username).Return(true)
 
@@ -160,7 +160,7 @@ func (suite *IntegrationTestSuite) TestMoveToBack() {
 
 
 
-func (suite *IntegrationTestSuite) TestCount() {
+func (suite *queueTestSuite) TestCount() {
 	suite.userService.On("GetUserFromUsername", *suite.admin.Username).Return(suite.admin, nil)
 	suite.userService.On("IsSystemAdmin", *suite.admin.Username).Return(true)
 
@@ -198,7 +198,7 @@ func (suite *IntegrationTestSuite) TestCount() {
 
 
 
-func (suite *IntegrationTestSuite) TestRemove() {
+func (suite *queueTestSuite) TestRemove() {
 	suite.userService.On("GetUserFromUsername", *suite.admin.Username).Return(suite.admin, nil)
 	suite.userService.On("IsSystemAdmin", *suite.admin.Username).Return(true)
 

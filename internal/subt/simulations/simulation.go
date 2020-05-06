@@ -8,7 +8,7 @@ import (
 // Simulation represents a set of aggregated values of a Cloudsim Simulation for SubT.
 type Simulation struct {
 	gorm.Model
-	Simulation *simulations.Simulation `gorm:"foreignkey:Sim" json:"-"`
+	Base *simulations.Simulation `gorm:"foreignkey:Sim" json:"-"`
 	// Simulation unique identifier
 	GroupID *string `gorm:"not null;unique" json:"-"`
 	// Simulation score
