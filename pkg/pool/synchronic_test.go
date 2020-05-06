@@ -7,7 +7,6 @@ import (
 
 func TestSynchronic_Serve(t *testing.T) {
 	flag := false
-
 	synchronicPool, err := NewSynchronicPool(1, func(i interface{}) {
 		value, ok := i.(bool)
 		assert.True(t, ok)

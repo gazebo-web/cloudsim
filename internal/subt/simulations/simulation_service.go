@@ -9,6 +9,7 @@ import (
 )
 
 type IService interface {
+	Parent() simulations.IService
 	Create(ctx context.Context, createSimulation *SimulationCreate, user *fuel.User) (*Simulation, *ign.ErrMsg)
 	CountByOwnerAndCircuit(owner, circuit string) (*int, error)
 	simulationIsHeld(ctx context.Context, sim *simulations.Simulation) bool
@@ -18,6 +19,7 @@ type IService interface {
 type Service struct {
 	parent simulations.IService
 	userService users.IService
+	repository IRepository
 }
 
 func NewService(repository IRepository) IService {
@@ -25,8 +27,13 @@ func NewService(repository IRepository) IService {
 	parent := simulations.NewService(repository)
 	s = &Service{
 		parent: parent,
+		repository: repository,
 	}
 	return s
+}
+
+func (s *Service) Parent() simulations.IService {
+	return s.parent
 }
 
 func (s *Service) CountByOwnerAndCircuit(owner, circuit string) (*int, error) {
@@ -34,13 +41,16 @@ func (s *Service) CountByOwnerAndCircuit(owner, circuit string) (*int, error) {
 }
 
 func (s *Service) simulationIsHeld(ctx context.Context, sim *simulations.Simulation) bool {
-	panic("implement me")
 }
 
 
 func (s *Service) Create(ctx context.Context, createSimulation *SimulationCreate, user *fuel.User) (*Simulation, *ign.ErrMsg) {
+	var sim *simulations.Simulation
+	var em *ign.ErrMsg
 
-	sim, err := s.parent.Create(ctx, &createSimulation.SimulationCreate, user)
+	if sim, em = s.parent.Create(ctx, &createSimulation.SimulationCreate, user); em != nil {
+		return nil, em
+	}
 
 	// Set held state if the user is not a sysadmin and the simulations needs to be held
 	if !s.userService.IsSystemAdmin(*user.Username) && s.simulationIsHeld(ctx, sim) {
@@ -48,9 +58,9 @@ func (s *Service) Create(ctx context.Context, createSimulation *SimulationCreate
 		simUpdate := simulations.SimulationUpdate{
 			Held: &held,
 		}
-		sim, err = s.parent.Update(ctx, *sim.GroupID, simUpdate)
-		if err != nil {
-			return nil, err
+		sim, em = s.parent.Update(ctx, *sim.GroupID, simUpdate)
+		if em != nil {
+			return nil, em
 		}
 	}
 	// Sanity check: check for maximum number of allowed simultaneous simulations per Owner.
@@ -62,17 +72,10 @@ func (s *Service) Create(ctx context.Context, createSimulation *SimulationCreate
 		s.parent.Reject(ctx, sim)
 		return nil, em
 	}
-
-	// TODO: Add specific subt entity to the database from the given generic simulation.
-	subtSim := &Simulation{
-		Base:                sim,
-		GroupID:             sim.GroupID,
-		Score:               nil,
-		SimTimeDurationSec:  0,
-		RealTimeDurationSec: 0,
-		ModelCount:          0,
+	subtSim, err := s.repository.CreateAggregated(sim)
+	if err != nil {
+		return nil, ign.NewErrorMessageWithBase(ign.ErrorDbSave, err)
 	}
-
 	return subtSim, nil
 }
 

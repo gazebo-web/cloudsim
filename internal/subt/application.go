@@ -37,7 +37,7 @@ type services struct {
 func New(p *platform.Platform) IApplication {
 	simulationRepository := sim.NewRepository(p.Server.Db)
 	simulationService := sim.NewService(simulationRepository)
-	baseApp := application.New(p, simulationService, p.UserService)
+	baseApp := application.New(p, simulationService.Parent(), p.UserService)
 
 	subt := &SubT{
 		IApplication: baseApp,
