@@ -2,12 +2,6 @@
 
 
 [[projects]]
-  name = "github.com/DATA-DOG/go-sqlmock"
-  packages = ["."]
-  revision = "7d7fc89ac4d6e7994c74cf16a6cb774b0374f2f9"
-  version = "v1.4.1"
-
-[[projects]]
   name = "github.com/Knetic/govaluate"
   packages = ["."]
   revision = "d216395917cc49052c7c7094cf57f09657ca08a8"
@@ -417,8 +411,8 @@
     "scheduler",
     "testhelpers"
   ]
-  revision = "48b369571fcf660dbb0dda492c29ad5b38edb646"
-  version = "4.0.1"
+  revision = "5694142fb0de68efe8a36cbcb8909ee2e065f89d"
+  version = "4.1.0"
 
 [[projects]]
   name = "gitlab.com/ignitionrobotics/web/scheduler"
@@ -770,6 +764,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "d80ea9ec1e02ef429cd160fa2fbcb7a2dca7773a6c099bf33bc40d23d2cc0bca"
+  inputs-digest = "6598b5d01ae0518d8a7fc6e1c488a1bfe5020c070558a4b44b8cba568265a5ad"
   solver-name = "gps-cdcl"
   solver-version = 1
