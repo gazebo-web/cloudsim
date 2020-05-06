@@ -12,6 +12,8 @@ type Robot struct {
 	Circuit string
 }
 
+type Robots []Robot
+
 func (Robot) TableName() string {
 	return "subt_robots"
 }

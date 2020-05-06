@@ -6,9 +6,10 @@ import "github.com/jinzhu/gorm"
 type Qualification struct {
 	gorm.Model
 	Circuit string
-	Owner string
+	Owner   string
 }
 
+// TableName defines the table name for the Qualification entity.
 func (Qualification) TableName() string {
 	return "subt_qualifications"
 }
