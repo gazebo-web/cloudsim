@@ -95,7 +95,7 @@ lint:
     - *setup_project
     - *setup_git_credentials
   script:
-    - golint -set_exit_status $(go list ./... | grep -v /vendor/ | grep -v /deprecated/)
+    - golint -set_exit_status $(go list ./... | grep -v /vendor/ | grep -v /deprecated)
   allow_failure: true
 
 ##########################################################
@@ -111,7 +111,7 @@ vet:
     - *dep_ensure
     - *setup_db
   script:
-    - go vet $(go list ./... | grep -v /vendor/)
+    - go vet $(go list ./... | grep -v /vendor/ | grep -v /deprecated)
   after_script:
     - *dep_ensure_post
   services:
@@ -129,7 +129,7 @@ test:
     - *dep_ensure
     - *setup_db
   script:
-    - go test $(go list ./... | grep -v /vendor/ | grep -v /deprecated/)
+    - go test $(go list ./... | grep -v /vendor/ | grep -v /deprecated)
   after_script:
     - *dep_ensure_post
   services:
@@ -147,7 +147,7 @@ race:
     - *dep_ensure
     - *setup_db
   script:
-    - go test -race $(go list ./... | grep -v /vendor/ | grep -v /deprecated/)
+    - go test -race $(go list ./... | grep -v /vendor/ | grep -v /deprecated)
   after_script:
     - *dep_ensure_post
   services:
@@ -166,7 +166,7 @@ coverage:
     - *dep_ensure
     - *setup_db
   script:
-    - go test -covermode=atomic -coverprofile=coverage.tx $(go list ./... | grep -v /vendor/ | grep -v /deprecated/)
+    - go test -covermode=atomic -coverprofile=coverage.tx $(go list ./... | grep -v /vendor/ | grep -v /deprecated)
     - go tool cover -func=coverage.tx
     - bash <(curl -s https://codecov.io/bash)
   after_script:
