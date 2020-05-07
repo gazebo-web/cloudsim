@@ -2,21 +2,27 @@ package subt
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
-	"github.com/go-playground/form"
+	"gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/circuits"
+	"gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/robots"
 	sim "gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/simulations"
+	"gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/stats"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/application"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/logger"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/platform"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulator"
+	"gitlab.com/ignitionrobotics/web/cloudsim/tools"
 	"gitlab.com/ignitionrobotics/web/ign-go"
 	"gopkg.in/go-playground/validator.v9"
+	"path"
 )
 
 type IApplication interface {
 	application.IApplication
 	isSimulationHeld(ctx context.Context, simulation *simulations.Simulation) *ign.ErrMsg
+	UploadSummary(sim *sim.Simulation, score stats.Score) *ign.ErrMsg
 }
 
 // SubT is an IApplication implementation
@@ -24,8 +30,7 @@ type SubT struct {
 	application.IApplication
 	Services    services
 	Controllers controllers
-	Validator        *validator.Validate
-	FormDecoder      *form.Decoder
+	Validator   *validator.Validate
 }
 
 type controllers struct {
@@ -35,6 +40,8 @@ type controllers struct {
 type services struct {
 	application.Services
 	Simulation sim.IService
+	Circuit    circuits.IService
+	Robot      robots.IService
 }
 
 // New creates a new SubT application.
@@ -42,24 +49,26 @@ func New(p *platform.Platform) IApplication {
 	simulationRepository := sim.NewRepository(p.Server.Db)
 	simulationService := sim.NewService(simulationRepository)
 	baseApp := application.New(p, simulationService.Parent(), p.UserService)
-
+	validate := validator.New()
 	subt := &SubT{
 		IApplication: baseApp,
+		Services: services{
+			Services: application.Services{
+				Simulation: simulationService.Parent(),
+				User:       p.UserService,
+			},
+			Simulation: simulationService,
+		},
 		Controllers: controllers{
 			Simulation: sim.NewController(sim.NewControllerInput{
 				Service:     simulationService,
 				Decoder:     p.FormDecoder,
-				Validator:   p.Validator,
+				Validator:   validate,
 				Permissions: p.Permissions,
 				UserService: p.UserService,
 			}),
 		},
-		Services: services{
-			Services: application.Services{
-				User: p.UserService,
-			},
-			Simulation: simulationService,
-		},
+		Validator: validate,
 	}
 
 	return subt
@@ -111,4 +120,29 @@ func (app *SubT) isSimulationHeld(ctx context.Context, simulation *simulations.S
 func Register(p *platform.Platform) application.IApplication {
 	subt := New(p)
 	return subt
+}
+
+func (app *SubT) RegisterValidators(ctx context.Context) {
+	app.Validator.RegisterValidation("iscircuit", app.Services.Circuit.IsValidCircuit)
+	app.Validator.RegisterValidation("isrobottype", app.Services.Robot.IsValidRobotType)
+}
+
+func (app *SubT) UploadSummary(sim *sim.Simulation, score stats.Score) *ign.ErrMsg {
+	b, err := json.Marshal(score)
+	if err != nil {
+		return ign.NewErrorMessageWithBase(ign.ErrorMarshalJSON, err)
+	}
+
+	fileName := tools.GenerateSummaryFilename(*sim.GroupID)
+	key := path.Join(app.Platform().CloudProvider.S3.GetLogKey(*sim.GroupID, *sim.Base.Owner), fileName)
+
+	_, err = app.Platform().CloudProvider.S3.Upload("AWS_GZ_LOGS_BUCKET", key, b)
+	if err != nil {
+		return ign.NewErrorMessageWithBase(ign.ErrorUnexpected, err)
+	}
+	return nil
+}
+
+func (app *SubT) UploadLogs() *ign.ErrMsg {
+
 }

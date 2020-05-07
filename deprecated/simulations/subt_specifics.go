@@ -61,7 +61,7 @@ import (
 // SubT Specifics constants
 const (
 	subtTagKey string = "SubT"
-	// A predefined const to refer to the SubT Platform type.
+	// A predefined const to refer to the SubT platform type.
 	// This will be used to provision the Nodes (Nvidia, CPU, etc)
 	platformSubT string = "subt"
 	// A predefined const to refer to the SubT Application type

@@ -7,7 +7,7 @@ import (
 	"log"
 )
 
-// Config represents the Platform configuration.
+// Config represents the platform configuration.
 type Config struct {
 	SysAdmin string `env:"IGN_CLOUDSIM_SYSTEM_ADMIN"`
 	SSLport  string `env:"IGN_CLOUDSIM_SSL_PORT" envDefault:":4431"`
@@ -44,7 +44,7 @@ func NewConfig() Config {
 	// Also using env-to-struct approach to read configuration
 	if err := env.Parse(&cfg); err != nil {
 		// This is a log.Fatal because ign.Logger is not setup yet
-		log.Fatalf("Error parsing environment into Platform config struct. %+v\n", err)
+		log.Fatalf("Error parsing environment into platform config struct. %+v\n", err)
 	}
 
 	cfg.Auth0 = auth0.New()
@@ -61,7 +61,7 @@ func NewTestConfig() Config {
 	// Also using env-to-struct approach to read configuration
 	if err := env.Parse(&cfg); err != nil {
 		// This is a log.Fatal because ign.Logger is not setup yet
-		log.Fatalf("Error parsing environment into Platform config struct. %+v\n", err)
+		log.Fatalf("Error parsing environment into platform config struct. %+v\n", err)
 	}
 
 	return cfg

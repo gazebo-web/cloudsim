@@ -21,7 +21,7 @@ import (
 	"gopkg.in/go-playground/validator.v9"
 )
 
-// IPlatform defines the set of methods of a Platform.
+// IPlatform defines the set of methods of a platform.
 type IPlatform interface {
 	Name() string
 	Start(ctx context.Context) error
@@ -64,7 +64,7 @@ func (p *Platform) Name() string {
 	return "cloudsim"
 }
 
-// NewSimulator returns a new Platform from the given configuration.
+// NewSimulator returns a new platform from the given configuration.
 func New(config Config) IPlatform {
 	p := Platform{}
 	p.Config = config

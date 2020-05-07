@@ -18,9 +18,11 @@ import (
 type IApplication interface {
 	Name() string
 	Version() string
+	Platform() *platform.Platform
 	RegisterRoutes() ign.Routes
 	RegisterTasks() []monitors.Task
 	RegisterMonitors(ctx context.Context)
+	RegisterValidators(ctx context.Context)
 	RebuildState(ctx context.Context) error
 	Shutdown(ctx context.Context) error
 	Launch(payload interface{}) (interface{}, *ign.ErrMsg)
@@ -29,7 +31,7 @@ type IApplication interface {
 
 // Application is a generic implementation of an application to be extended by a specific application.
 type Application struct {
-	Platform *platform.Platform
+	platform *platform.Platform
 	Services Services
 	Cleaner  *monitors.Monitor
 	Updater  *monitors.Monitor
@@ -44,7 +46,7 @@ type Services struct {
 // New creates a new application for the given platform.
 func New(p *platform.Platform, simulationService simulations.IService, userService users.IService) IApplication {
 	app := &Application{
-		Platform: p,
+		platform: p,
 		Cleaner:  monitors.New("expired-simulations-cleaner", "Expired Simulations Cleaner", 20*time.Second),
 		Updater:  monitors.New("multisim-status-updater", "MultiSim Parent Status Updater", time.Minute),
 		Services: Services{
@@ -65,6 +67,11 @@ func (app *Application) Name() string {
 // If the specific application doesn't implement this method, it will return 1.0.
 func (app *Application) Version() string {
 	return "1.0"
+}
+
+// Platform returns the reference the application's platform.
+func (app *Application) Platform() *platform.Platform {
+	return app.platform
 }
 
 // RegisterRoutes returns the slice of the application's routes.
@@ -94,6 +101,10 @@ func (app *Application) RegisterMonitors(ctx context.Context) {
 		func(ctx context.Context) error { return app.updateMultiSimStatuses() },
 	)
 	go updaterRunner()
+}
+
+func (app *Application) RegisterValidators(ctx context.Context) {
+	return
 }
 
 // Shutdown executes a set of instructions to turn off the application.
@@ -160,7 +171,7 @@ func (app *Application) getGazeboConfig(sim *simulations.Simulation) simulator.G
 	panic("getGazeboConfig should be implemented by the application.")
 }
 
-// LaunchSimulation receives a Simulation and requests a Launch to the Platform.
+// LaunchSimulation receives a Simulation and requests a Launch to the platform.
 func (app *Application) Launch(payload interface{}) (interface{}, *ign.ErrMsg) {
 	simulation := payload.(*simulations.Simulation)
 	ctx := context.Background()

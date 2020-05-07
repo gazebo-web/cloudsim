@@ -10,20 +10,20 @@ type IService interface {
 }
 
 type Service struct {
-	services services
+	services   services
 	repository IRepository
 }
 
 type NewServiceInput struct {
-	UserService users.IService
+	UserService    users.IService
 	CircuitService circuits.IService
-	Repository IRepository
+	Repository     IRepository
 }
 
 func NewService(input NewServiceInput) IService {
 	var s IService
 	s = &Service{
-		services:   services{
+		services: services{
 			User:    input.UserService,
 			Circuit: input.CircuitService,
 		},
@@ -34,10 +34,12 @@ func NewService(input NewServiceInput) IService {
 
 // services represents the imported services used by the Qualification Service.
 type services struct {
-	User users.IService
+	User    users.IService
 	Circuit circuits.IService
 }
 
+// IsQualified returns true if the given owner was qualified for the given circuit.
+// If the provided username is an admin, it will skip the qualified condition.
 func (s *Service) IsQualified(owner, circuit, username string) bool {
 	if s.services.User.IsSystemAdmin(username) {
 		return true

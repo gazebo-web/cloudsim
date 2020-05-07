@@ -31,7 +31,7 @@ const (
 
 // Deprecated: MaxAWSRetries holds how many retries will be done against AWS. It is a var
 // to allow tests to change this value.
-var MaxAWSRetries int = 8
+var MaxAWSRetries = 8
 
 type awsConfig struct {
 	NamePrefix string `env:"AWS_INSTANCE_NAME_PREFIX,required"`
@@ -117,7 +117,7 @@ func (s *Ec2Client) Stop() {
 	// nothing to do at the moment
 }
 
-// Deprecated: RegisterPlatform registers a new Platform type.
+// Deprecated: RegisterPlatform registers a new platform type.
 func (s *Ec2Client) RegisterPlatform(ctx context.Context, p PlatformType) {
 	logger(ctx).Info(fmt.Sprintf("EC2 Nodes Manager - Registered new platform [%s]", p.getPlatformName()))
 	s.platforms[p.getPlatformName()] = p

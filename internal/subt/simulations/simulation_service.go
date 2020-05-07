@@ -17,16 +17,16 @@ type IService interface {
 }
 
 type Service struct {
-	parent simulations.IService
+	parent      simulations.IService
 	userService users.IService
-	repository IRepository
+	repository  IRepository
 }
 
 func NewService(repository IRepository) IService {
 	var s IService
 	parent := simulations.NewService(repository)
 	s = &Service{
-		parent: parent,
+		parent:     parent,
 		repository: repository,
 	}
 	return s
@@ -42,7 +42,6 @@ func (s *Service) CountByOwnerAndCircuit(owner, circuit string) (*int, error) {
 
 func (s *Service) simulationIsHeld(ctx context.Context, sim *simulations.Simulation) bool {
 }
-
 
 func (s *Service) Create(ctx context.Context, createSimulation *SimulationCreate, user *fuel.User) (*Simulation, *ign.ErrMsg) {
 	var sim *simulations.Simulation

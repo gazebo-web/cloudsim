@@ -23,7 +23,7 @@ import (
 	"log"
 )
 
-// IPlatformSetup represent a set of methods to initialize the Platform.
+// IPlatformSetup represent a set of methods to initialize the platform.
 type IPlatformSetup interface {
 	setupLogger() *Platform
 	setupContext() *Platform

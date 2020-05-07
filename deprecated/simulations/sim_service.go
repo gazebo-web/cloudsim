@@ -40,7 +40,7 @@ import (
 	Nodes in the Kubernetes cluster.
 	Some examples of NodeManager implementations are EC2Client and LocalNodes.
 
-	This service also delegates to "Application" and "Platform" specific handlers, so they can
+	This service also delegates to "Application" and "platform" specific handlers, so they can
 	manage the specific details of the simulations to launch. As an example, a competition
 	can have custom request for the Nodes to be launched and the simulation details.
 

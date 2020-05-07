@@ -7,7 +7,7 @@ import (
 
 type Circuit struct {
 	gorm.Model
-	Name     	*string `gorm:"not null;unique" json:"-"`
+	Name        *string `gorm:"not null;unique" json:"-"`
 	Image       *string `json:"-"`
 	BridgeImage *string `json:"-"`
 	Worlds      *string `gorm:"size:2048" json:"-"`
@@ -29,6 +29,7 @@ type Circuit struct {
 	// All the participants that were not added to the qualified participants table will be rejected when submitting
 	// a new simulation for this circuit.
 	RequiresQualification *bool `json:"-"`
+	Enabled               bool  `json:"-"`
 }
 
 func (Circuit) TableName() string {

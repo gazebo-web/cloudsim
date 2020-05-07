@@ -49,7 +49,7 @@ func ShutdownApplications(p *platform.Platform, applications map[string]applicat
 	}
 }
 
-// RegisterRoutes appends an slice of routes by the given applications to the Platform's router.
+// RegisterRoutes appends an slice of routes by the given applications to the platform's router.
 func RegisterRoutes(p *platform.Platform, apps map[string]application.IApplication) {
 	for _, app := range apps {
 		router.ConfigureRoutes(p.Server, app.Version(), app.Name(), app.RegisterRoutes())
@@ -57,11 +57,17 @@ func RegisterRoutes(p *platform.Platform, apps map[string]application.IApplicati
 }
 
 // ScheduleTasks gets all the tasks from each application and add them to the platform's scheduler.
-func ScheduleTasks(cloudsim *platform.Platform, apps map[string]application.IApplication) {
+func ScheduleTasks(p *platform.Platform, apps map[string]application.IApplication) {
 	for _, app := range apps {
 		tasks := app.RegisterTasks()
 		for _, task := range tasks {
-			cloudsim.Scheduler.DoAt(task.Job, task.Date)
+			p.Scheduler.DoAt(task.Job, task.Date)
 		}
+	}
+}
+
+func RegisterValidators(p *platform.Platform, apps map[string]application.IApplication) {
+	for _, app := range apps {
+		app.RegisterValidators(p.Context)
 	}
 }
