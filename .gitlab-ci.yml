@@ -96,6 +96,7 @@ lint:
     - *setup_git_credentials
   script:
     - golint -set_exit_status $(go list ./... | grep -v /vendor/ | grep -v /deprecated/)
+  allow_failure: true
 
 ##########################################################
 # Testing stage
