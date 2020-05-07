@@ -20,7 +20,7 @@ type IApplication interface {
 	Name() string
 	Version() string
 	RegisterRoutes() ign.Routes
-	RegisterTasks() []tasks.Task
+	RegisterTasks() []monitors.Task
 	RegisterMonitors(ctx context.Context)
 	RebuildState(ctx context.Context) error
 	Shutdown(ctx context.Context) error
@@ -76,8 +76,8 @@ func (app *Application) RegisterRoutes() ign.Routes {
 
 // RegisterTasks returns an array of the tasks that need to be executed by the scheduler.
 // If the specific application doesn't implement this method, it will return an empty slice.
-func (app *Application) RegisterTasks() []tasks.Task {
-	return []tasks.Task{}
+func (app *Application) RegisterTasks() []monitors.Task {
+	return []monitors.Task{}
 }
 
 // RegisterMonitors runs the Cleaner Job and the Updater job.

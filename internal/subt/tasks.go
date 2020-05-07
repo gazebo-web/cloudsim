@@ -6,8 +6,8 @@ import (
 )
 
 // RegisterTasks returns an array of the tasks that need to be executed by the scheduler.
-func (app *SubT) RegisterTasks() []tasks.Task {
-	return []tasks.Task{
+func (app *SubT) RegisterTasks() []monitors.Task {
+	return []monitors.Task{
 		{
 			Job:  func() {
 

@@ -3,6 +3,7 @@ package subt
 import (
 	"context"
 	"fmt"
+	"github.com/go-playground/form"
 	sim "gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/simulations"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/application"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/logger"
@@ -10,6 +11,7 @@ import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulator"
 	"gitlab.com/ignitionrobotics/web/ign-go"
+	"gopkg.in/go-playground/validator.v9"
 )
 
 type IApplication interface {
@@ -22,6 +24,8 @@ type SubT struct {
 	application.IApplication
 	Services    services
 	Controllers controllers
+	Validator        *validator.Validate
+	FormDecoder      *form.Decoder
 }
 
 type controllers struct {

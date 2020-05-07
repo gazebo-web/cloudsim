@@ -18,7 +18,7 @@ func (m *Mock) Version() string {
 	return "1.0"
 }
 
-func (m *Mock) RegisterTasks() []tasks.Task {
+func (m *Mock) RegisterTasks() []monitors.Task {
 	panic("implement me")
 }
 
