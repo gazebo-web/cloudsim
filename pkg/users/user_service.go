@@ -14,8 +14,8 @@ import (
 	"time"
 )
 
-// userAccessorConf
-type userAccessorConf struct {
+// conf
+type conf struct {
 	AutoLoadPolicySeconds int `env:"USER_ACCESSOR_AUTOLOAD_SECONDS" envDefault:"10"`
 	sysAdmin              string
 }
@@ -65,7 +65,7 @@ type IService interface {
 // Service is the default implementation of IService interface.
 type Service struct {
 	// The IUserAccessor config. Read from environment variables
-	cfg userAccessorConf
+	cfg conf
 	// Global database interface to Users db
 	Db *gorm.DB
 	// Membership and permissions for Users/Orgs.
@@ -87,7 +87,7 @@ func NewService(resourcePermissions *per.Permissions, sysAdmin string) (IService
 	}
 
 	// Read configuration from environment
-	cfg := userAccessorConf{}
+	cfg := conf{}
 	if err := env.Parse(&cfg); err != nil {
 		return nil, err
 	}

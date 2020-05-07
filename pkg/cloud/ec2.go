@@ -14,6 +14,14 @@ import (
 	"time"
 )
 
+type IAmazonEC2 interface {
+	CountInstances(ctx context.Context) int
+	TerminateInstances(ctx context.Context, instances []*string) (*ec2.TerminateInstancesOutput, error)
+	NewRunInstancesInput(config RunInstancesConfig) ec2.RunInstancesInput
+	RunInstance(ctx context.Context, input *ec2.RunInstancesInput) (*ec2.Reservation, error)
+	RunInstances(ctx context.Context, inputs []*ec2.RunInstancesInput) (reservations []*ec2.Reservation, err error)
+}
+
 // AmazonEC2 wraps the AWS EC2 API.
 type AmazonEC2 struct {
 	API        ec2iface.EC2API
@@ -22,7 +30,7 @@ type AmazonEC2 struct {
 }
 
 // NewAmazonEC2 returns a new AmazonEC2 instance by the given AWS session and configuration.
-func NewAmazonEC2(p client.ConfigProvider, cfgs ...*aws.Config) *AmazonEC2 {
+func NewAmazonEC2(p client.ConfigProvider, cfgs ...*aws.Config) IAmazonEC2 {
 	var instance AmazonEC2
 	if !reflect.ValueOf(p).IsNil() {
 		instance.API = ec2.New(p, cfgs...)
