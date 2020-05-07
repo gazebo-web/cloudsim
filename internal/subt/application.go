@@ -109,5 +109,6 @@ func (app *SubT) isSimulationHeld(ctx context.Context, simulation *simulations.S
 
 // Register runs a set of instructions to initialize an application for the given platform.
 func Register(p *platform.Platform) application.IApplication {
-	return New(p)
+	subt := New(p)
+	return subt
 }
