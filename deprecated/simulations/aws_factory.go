@@ -10,24 +10,24 @@ import (
 	"reflect"
 )
 
-// AWSFactory is the single place where all AWS service instances are created.
+// Deprecated: AWSFactory is the single place where all AWS service instances are created.
 type AWSFactory struct {
 	isGoTest bool
 }
 
-// NewAWSFactory creates a new AWSFactory
+// Deprecated: NewAWSFactory creates a new AWSFactory
 func NewAWSFactory(isGoTest bool) *AWSFactory {
 	f := AWSFactory{}
 	f.isGoTest = isGoTest
 	return &f
 }
 
-// MockableS3 is a type used in tests to allow for easy mocking of S3 service.
+// Deprecated: MockableS3 is a type used in tests to allow for easy mocking of S3 service.
 type MockableS3 struct {
 	s3iface.S3API
 }
 
-// NewS3Svc creates a new instance of the S3 client with a session.
+// Deprecated: NewS3Svc creates a new instance of the S3 client with a session.
 // If additional configuration is needed for the client instance use the optional
 // aws.Config parameter to add your extra config.
 func (f *AWSFactory) NewS3Svc(p client.ConfigProvider, cfgs ...*aws.Config) s3iface.S3API {
@@ -42,17 +42,17 @@ func (f *AWSFactory) NewS3Svc(p client.ConfigProvider, cfgs ...*aws.Config) s3if
 	return svc
 }
 
-// EnsureMockableS3 casts the given arg to MockableS3 or fails.
+// Deprecated: EnsureMockableS3 casts the given arg to MockableS3 or fails.
 func EnsureMockableS3(svc s3iface.S3API) *MockableS3 {
 	return svc.(*MockableS3)
 }
 
-// MockableEC2 is a type used in tests to allow for easy mocking of EC2 operations.
+// Deprecated: MockableEC2 is a type used in tests to allow for easy mocking of EC2 operations.
 type MockableEC2 struct {
 	ec2iface.EC2API
 }
 
-// NewEC2Svc creates a new instance of the EC2 client with a session.
+// Deprecated: NewEC2Svc creates a new instance of the EC2 client with a session.
 // If additional configuration is needed for the client instance use the optional
 // aws.Config parameter to add your extra config.
 func (f *AWSFactory) NewEC2Svc(p client.ConfigProvider, cfgs ...*aws.Config) ec2iface.EC2API {
@@ -67,12 +67,12 @@ func (f *AWSFactory) NewEC2Svc(p client.ConfigProvider, cfgs ...*aws.Config) ec2
 	return svc
 }
 
-// AssertMockedEC2 casts the given arg to MockableEC2 or fails.
+// Deprecated: AssertMockedEC2 casts the given arg to MockableEC2 or fails.
 func AssertMockedEC2(svc ec2iface.EC2API) *MockableEC2 {
 	return svc.(*MockableEC2)
 }
 
-// SetImpl sets the underlying implementation of this MockableEC2
+// Deprecated: SetImpl sets the underlying implementation of this MockableEC2
 func (m *MockableEC2) SetImpl(svc ec2iface.EC2API) {
 	m.EC2API = svc
 }

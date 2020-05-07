@@ -4,7 +4,7 @@ import (
 	"gitlab.com/ignitionrobotics/web/ign-go"
 )
 
-// QueueRepository represents a set of methods to interact with the queue
+// Deprecated: QueueRepository represents a set of methods to interact with the queue
 type QueueRepository interface {
 	initialize()
 	Get(offset, limit *int) ([]interface{}, *ign.ErrMsg)

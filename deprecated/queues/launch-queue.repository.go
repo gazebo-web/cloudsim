@@ -4,12 +4,12 @@ import (
 	"gitlab.com/ignitionrobotics/web/ign-go"
 )
 
-// LaunchQueueRepository represents the Launch Queue Data Access Object
+// Deprecated: LaunchQueueRepository represents the Launch Queue Data Access Object
 type LaunchQueueRepository struct {
 	queue *ign.Queue
 }
 
-// NewLaunchQueueRepository returns a new LaunchQueueRepository instance.
+// Deprecated: NewLaunchQueueRepository returns a new LaunchQueueRepository instance.
 func NewLaunchQueueRepository() (lq *LaunchQueueRepository) {
 	lq = &LaunchQueueRepository{}
 	lq.initialize()
@@ -18,7 +18,7 @@ func NewLaunchQueueRepository() (lq *LaunchQueueRepository) {
 
 // QueueRepository Implementation
 
-// Get returns the entire launch queue.
+// Deprecated: Get returns the entire launch queue.
 // If `offset` and `limit` are not nil, it will return up to `limit` results from the provided `offset`.
 func (lq *LaunchQueueRepository) Get(offset, limit *int) ([]interface{}, *ign.ErrMsg) {
 	if offset == nil || limit == nil {
@@ -27,7 +27,7 @@ func (lq *LaunchQueueRepository) Get(offset, limit *int) ([]interface{}, *ign.Er
 	return lq.queue.GetFilteredElements(*offset, *limit)
 }
 
-// Remove removes a groupID from the queue.
+// Deprecated: Remove removes a groupID from the queue.
 func (lq *LaunchQueueRepository) Remove(id interface{}) (interface{}, *ign.ErrMsg) {
 	groupID, ok := id.(string)
 
@@ -42,13 +42,13 @@ func (lq *LaunchQueueRepository) Remove(id interface{}) (interface{}, *ign.ErrMs
 	return groupID, nil
 }
 
-// initialize initializes the queue data structure.
+// Deprecated: initialize initializes the queue data structure.
 func (lq *LaunchQueueRepository) initialize() {
 	lq.queue = ign.NewQueue()
 }
 
-// Enqueue enqueues a groupID on the queue.
-// Returns the groupID that was pushed.
+// Deprecated: Enqueue enqueues a groupID on the queue.
+// Deprecated: Returns the groupID that was pushed.
 func (lq *LaunchQueueRepository) Enqueue(entity interface{}) interface{} {
 	groupID, ok := entity.(string)
 
@@ -60,17 +60,17 @@ func (lq *LaunchQueueRepository) Enqueue(entity interface{}) interface{} {
 	return entity
 }
 
-// Dequeue returns the next groupID from the queue.
+// Deprecated: Dequeue returns the next groupID from the queue.
 func (lq *LaunchQueueRepository) Dequeue() (interface{}, *ign.ErrMsg) {
 	return lq.queue.Dequeue()
 }
 
-// DequeueOrWait returns the next groupID from the queue or waits until there is one available.
+// Deprecated: DequeueOrWait returns the next groupID from the queue or waits until there is one available.
 func (lq *LaunchQueueRepository) DequeueOrWait() (interface{}, *ign.ErrMsg) {
 	return lq.queue.DequeueOrWaitForNextElement()
 }
 
-// MoveToFront moves a target groupID to the front of the queue.
+// Deprecated: MoveToFront moves a target groupID to the front of the queue.
 func (lq *LaunchQueueRepository) MoveToFront(target interface{}) (interface{}, *ign.ErrMsg) {
 	groupID, ok := target.(string)
 
@@ -84,7 +84,7 @@ func (lq *LaunchQueueRepository) MoveToFront(target interface{}) (interface{}, *
 	return target, nil
 }
 
-// MoveToBack moves a target element to the front of the queue.
+// Deprecated: MoveToBack moves a target element to the front of the queue.
 func (lq *LaunchQueueRepository) MoveToBack(target interface{}) (interface{}, *ign.ErrMsg) {
 	groupID, ok := target.(string)
 
@@ -98,7 +98,7 @@ func (lq *LaunchQueueRepository) MoveToBack(target interface{}) (interface{}, *i
 	return target, nil
 }
 
-// Swap switch places between groupID A and groupID B.
+// Deprecated: Swap switch places between groupID A and groupID B.
 func (lq *LaunchQueueRepository) Swap(a interface{}, b interface{}) (interface{}, *ign.ErrMsg) {
 	var groupIDA string
 	var groupIDB string
@@ -128,7 +128,7 @@ func (lq *LaunchQueueRepository) Swap(a interface{}, b interface{}) (interface{}
 	return res, nil
 }
 
-// Count returns the length of the underlying queue's slice
+// Deprecated: Count returns the length of the underlying queue's slice
 func (lq *LaunchQueueRepository) Count() int {
 	return lq.queue.GetLen()
 }

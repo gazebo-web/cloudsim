@@ -7,13 +7,13 @@ import (
 	"log"
 )
 
-// K8Factory is the single place where K8 instances are created.
+// Deprecated: K8Factory is the single place where K8 instances are created.
 type K8Factory struct {
 	isGoTest               bool
 	connectToCloudServices bool
 }
 
-// NewK8Factory creates a new K8 factory
+// Deprecated: NewK8Factory creates a new K8 factory
 func NewK8Factory(isGoTest, connectToCloudServices bool) *K8Factory {
 	f := K8Factory{}
 	f.isGoTest = isGoTest
@@ -21,7 +21,7 @@ func NewK8Factory(isGoTest, connectToCloudServices bool) *K8Factory {
 	return &f
 }
 
-// NewK8 creates a new instance of Kubernetes client.
+// Deprecated: NewK8 creates a new instance of Kubernetes client.
 func (f *K8Factory) NewK8(ctx context.Context) kubernetes.Interface {
 
 	if f.isGoTest {
@@ -37,13 +37,13 @@ func (f *K8Factory) NewK8(ctx context.Context) kubernetes.Interface {
 	return nil
 }
 
-// MockableClientset is a type used in tests to allow for easy mocking of
+// Deprecated: MockableClientset is a type used in tests to allow for easy mocking of
 // Kubernetes clientset.
 type MockableClientset struct {
 	kubernetes.Interface
 }
 
-// AssertMockedClientset casts the given arg to MockableClientset or fails.
+// Deprecated: AssertMockedClientset casts the given arg to MockableClientset or fails.
 func AssertMockedClientset(cli kubernetes.Interface) *MockableClientset {
 	return cli.(*MockableClientset)
 }

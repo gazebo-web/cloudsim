@@ -31,7 +31,7 @@ const (
 	pollFrequency = 2 * time.Second
 )
 
-// GetKubernetesConfig returns the kubernetes config file in the specified path.
+// Deprecated: GetKubernetesConfig returns the kubernetes config file in the specified path.
 // If no path is provided (i.e. nil), then the configuration in ~/.kube/config
 // is returned.
 func GetKubernetesConfig(kubeconfig *string) (*restclient.Config, error) {
@@ -46,7 +46,7 @@ func GetKubernetesConfig(kubeconfig *string) (*restclient.Config, error) {
 	return config, nil
 }
 
-// GetKubernetesClient returns a client object to access a kubernetes master.
+// Deprecated: GetKubernetesClient returns a client object to access a kubernetes master.
 // Note that this kube client assumes there is a kubernetes configuration in the
 // server's ~/.kube/config file. That config is used to connect to the kubernetes
 // master.
@@ -63,24 +63,24 @@ func GetKubernetesClient() (*kubernetes.Clientset, error) {
 	return clientset, nil
 }
 
-// MakeListOptions returns a ListOptions object for an array of labels.
+// Deprecated: MakeListOptions returns a ListOptions object for an array of labels.
 func MakeListOptions(labels ...string) metav1.ListOptions {
 	return metav1.ListOptions{
 		LabelSelector: strings.Join(labels, ","),
 	}
 }
 
-// WaitForPodsReady function waits (blocks) until the identified pods are running and ready, or until there
+// Deprecated: WaitForPodsReady function waits (blocks) until the identified pods are running and ready, or until there
 // is a timeout or error.
 func WaitForPodsReady(ctx context.Context, c kubernetes.Interface, namespace string, groupIDLabel string, timeout time.Duration) error {
 	opts := metav1.ListOptions{LabelSelector: groupIDLabel}
 	return WaitForMatchPodsCondition(ctx, c, namespace, opts, "Ready", timeout, podRunningAndReady)
 }
 
-// PodCondition is a function type that returns the pod condition or error by the given Kubernetes Pod.
+// Deprecated: PodCondition is a function type that returns the pod condition or error by the given Kubernetes Pod.
 type PodCondition func(ctx context.Context, pod *apiv1.Pod) (bool, error)
 
-// WaitForMatchPodsCondition finds match pods based on the input ListOptions.
+// Deprecated: WaitForMatchPodsCondition finds match pods based on the input ListOptions.
 // Waits and checks if all matched pods are in the given PodCondition
 var WaitForMatchPodsCondition = func(ctx context.Context, c kubernetes.Interface, namespace string,
 	opts metav1.ListOptions, condStr string, timeout time.Duration, condition PodCondition) error {
@@ -109,7 +109,7 @@ var WaitForMatchPodsCondition = func(ctx context.Context, c kubernetes.Interface
 	return errors.Errorf("gave up waiting for matching pods to be '%s' after %v", condStr, timeout)
 }
 
-// podRunningAndReady checks if a pod by name is running. This function is used
+// Deprecated: podRunningAndReady checks if a pod by name is running. This function is used
 // for Wait polls.
 func podRunningAndReady(ctx context.Context, pod *apiv1.Pod) (bool, error) {
 	switch pod.Status.Phase {
@@ -121,14 +121,14 @@ func podRunningAndReady(ctx context.Context, pod *apiv1.Pod) (bool, error) {
 	return false, nil
 }
 
-// WaitForNodesReady function waits (blocks) until the identified nodes are ready, or until there
+// Deprecated: WaitForNodesReady function waits (blocks) until the identified nodes are ready, or until there
 // is a timeout or error.
 func WaitForNodesReady(ctx context.Context, c kubernetes.Interface, namespace string, groupIDLabel string, timeout time.Duration) error {
 	opts := metav1.ListOptions{LabelSelector: groupIDLabel}
 	return WaitForMatchNodesCondition(ctx, c, namespace, opts, timeout)
 }
 
-// WaitForMatchNodesCondition finds match Nodes based on the input ListOptions.
+// Deprecated: WaitForMatchNodesCondition finds match Nodes based on the input ListOptions.
 // Waits and checks if all matched nodes are in the given PodCondition
 func WaitForMatchNodesCondition(ctx context.Context, c kubernetes.Interface, namespace string, opts metav1.ListOptions, timeout time.Duration) error {
 	logger(ctx).Info(fmt.Sprintf("Waiting up to %v for match nodes to be ready", timeout))
@@ -166,7 +166,7 @@ func WaitForMatchNodesCondition(ctx context.Context, c kubernetes.Interface, nam
 	return nil
 }
 
-// isNodeConditionSetAsExpected checks if the given condition is met by a node.
+// Deprecated: isNodeConditionSetAsExpected checks if the given condition is met by a node.
 func isNodeConditionSetAsExpected(ctx context.Context, node *apiv1.Node, conditionType apiv1.NodeConditionType, wantTrue bool) bool {
 	// Check the node readiness condition (logging all).
 	for _, cond := range node.Status.Conditions {
@@ -207,7 +207,7 @@ func isNodeConditionSetAsExpected(ctx context.Context, node *apiv1.Node, conditi
 	return false
 }
 
-// createKubernetesPodExecErrorMsg creates and returns an error message that includes
+// Deprecated: createKubernetesPodExecErrorMsg creates and returns an error message that includes
 // the standard output and standard error of a command executed with KubernetesPodExec
 func createKubernetesPodExecErrorMsg(errorMsg string, options *remotecommand.StreamOptions) string {
 	return fmt.Sprintf("%s\n%s\n%s",
@@ -217,7 +217,7 @@ func createKubernetesPodExecErrorMsg(errorMsg string, options *remotecommand.Str
 	)
 }
 
-// KubernetesPodExec creates a command for a specific kubernetes pod. stdin, stdout and stderr io can be defined
+// Deprecated: KubernetesPodExec creates a command for a specific kubernetes pod. stdin, stdout and stderr io can be defined
 // through the options parameter.
 func KubernetesPodExec(ctx context.Context, kc kubernetes.Interface, namespace string, podName string, container string,
 	command []string, options *remotecommand.StreamOptions) (opts *remotecommand.StreamOptions, err error) {
@@ -280,7 +280,7 @@ func KubernetesPodExec(ctx context.Context, kc kubernetes.Interface, namespace s
 	return options, nil
 }
 
-// KubernetesPodReadFile reads and returns the contents of a file inside a pod.
+// Deprecated: KubernetesPodReadFile reads and returns the contents of a file inside a pod.
 func KubernetesPodReadFile(ctx context.Context, kc kubernetes.Interface, namespace string, podName string,
 	container string, paths ...string) (*bytes.Buffer, error) {
 
@@ -294,7 +294,7 @@ func KubernetesPodReadFile(ctx context.Context, kc kubernetes.Interface, namespa
 	return options.Stdout.(*bytes.Buffer), nil
 }
 
-// KubernetesPodGetLog returns the log of a pod
+// Deprecated: KubernetesPodGetLog returns the log of a pod
 func KubernetesPodGetLog(ctx context.Context, kc kubernetes.Interface, namespace string, podName string,
 	container string, lines int64) (log *string, err error) {
 
@@ -337,7 +337,7 @@ func KubernetesPodGetLog(ctx context.Context, kc kubernetes.Interface, namespace
 	return log, nil
 }
 
-// KubernetesPodSendS3CopyCommand sends a command to a pod to upload a file to S3.
+// Deprecated: KubernetesPodSendS3CopyCommand sends a command to a pod to upload a file to S3.
 // The pod that receives the command must have `aws` and `tar` installed for this to work,
 // and the container running the commands must have AWS env vars configured.
 // If `target` is a directory, its contents are `tar`'d and `gzipped` before being uploaded.
@@ -378,7 +378,7 @@ func KubernetesPodSendS3CopyCommand(ctx context.Context, kc kubernetes.Interface
 	return nil
 }
 
-// KubernetesWeaveRemovePeer removes a node from the list of peers of the weave network.
+// Deprecated: KubernetesWeaveRemovePeer removes a node from the list of peers of the weave network.
 // This step must be done manually before shutdown as per the weave documentation.
 //   https://www.weave.works/docs/net/latest/operational-guide/tasks/#detecting-and-reclaiming-lost-ip-address-space
 // Not doing so will make weave lose unrecoverable addresses to dead nodes.

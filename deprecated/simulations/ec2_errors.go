@@ -19,7 +19,7 @@ var retryableErrors = []string{
 	AWSErrCodeInsufficientInstanceCapacity,
 }
 
-// AWSErrorIsRetryable checks that an error returned by an AWS operation is
+// Deprecated: AWSErrorIsRetryable checks that an error returned by an AWS operation is
 // non-fatal and can be retried. This is related to operations requesting
 // limited resources on AWS.
 func AWSErrorIsRetryable(err awserr.Error) bool {

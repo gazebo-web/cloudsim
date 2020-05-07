@@ -12,15 +12,15 @@ import (
 	"strconv"
 )
 
-// HTTPHandler is used to invoke inner logic based on incoming Http requests.
+// Deprecated: HTTPHandler is used to invoke inner logic based on incoming Http requests.
 type HTTPHandler struct {
 	UserAccessor useracc.UserAccessor
 }
 
-// HTTPHandlerInstance is the default HTTPHandler instance. It is used by routes.go.
+// Deprecated: HTTPHandlerInstance is the default HTTPHandler instance. It is used by routes.go.
 var HTTPHandlerInstance *HTTPHandler
 
-// NewHTTPHandler creates a new HTTPHandler.
+// Deprecated: NewHTTPHandler creates a new HTTPHandler.
 func NewHTTPHandler(ctx context.Context, ua useracc.UserAccessor) (*HTTPHandler, error) {
 	return &HTTPHandler{
 		UserAccessor: ua,
@@ -29,7 +29,7 @@ func NewHTTPHandler(ctx context.Context, ua useracc.UserAccessor) (*HTTPHandler,
 
 type handlerWithUser func(user *users.User, tx *gorm.DB, w http.ResponseWriter, r *http.Request) (interface{}, *ign.ErrMsg)
 
-// WithUser is a middleware that checks for a valid user from the JWT and passes
+// Deprecated: WithUser is a middleware that checks for a valid user from the JWT and passes
 // the user to the handlerWithUser.
 func WithUser(handler handlerWithUser) ign.HandlerWithResult {
 	return func(tx *gorm.DB, w http.ResponseWriter, r *http.Request) (interface{}, *ign.ErrMsg) {
@@ -42,21 +42,21 @@ func WithUser(handler handlerWithUser) ign.HandlerWithResult {
 	}
 }
 
-// getDefaultPlatformName returns the default platform for which to run
+// Deprecated: getDefaultPlatformName returns the default platform for which to run
 // simulations
 func getDefaultApplicationName() string {
 	// HACK This should be changed once more applications become available
 	return applicationSubT
 }
 
-// getDefaultPlatformName returns the default platform on which to run
+// Deprecated: getDefaultPlatformName returns the default platform on which to run
 // simulations
 func getDefaultPlatformName() string {
 	// HACK This should be changed once more platforms become available
 	return platformSubT
 }
 
-// CloudsimSimulationCreate is the main func to launch a new simulation
+// Deprecated: CloudsimSimulationCreate is the main func to launch a new simulation
 // You can request this method with the following cURL request:
 //   curl -k -X POST --url http://localhost:8001/1.0/simulations
 //     --header 'authorization: Bearer <A_VALID_AUTH0_JWT_TOKEN>'
@@ -96,7 +96,7 @@ func CloudsimSimulationCreate(user *users.User, tx *gorm.DB, w http.ResponseWrit
 	return SimServImpl.StartSimulationAsync(r.Context(), tx, &createSim, user)
 }
 
-// CloudsimSimulationDelete finishes all resources associated to a cloudsim simulation.
+// Deprecated: CloudsimSimulationDelete finishes all resources associated to a cloudsim simulation.
 // (eg. Nodes, Hosts, Pods)
 // You can request this method with the following cURL request:
 //   curl -k -X DELETE --url http://localhost:8001/1.0/simulations/{group}
@@ -109,7 +109,7 @@ func CloudsimSimulationDelete(user *users.User, tx *gorm.DB, w http.ResponseWrit
 	return SimServImpl.ShutdownSimulationAsync(r.Context(), tx, groupID, user)
 }
 
-// CloudsimSimulationLaunch launches a held simulation.
+// Deprecated: CloudsimSimulationLaunch launches a held simulation.
 // You can request this method with the following cURL request:
 //   curl -k -X POST --url http://localhost:8001/1.0/simulations/{group}/launch
 //     --header 'authorization: Bearer <A_VALID_AUTH0_JWT_TOKEN>'
@@ -121,7 +121,7 @@ func CloudsimSimulationLaunch(user *users.User, tx *gorm.DB, w http.ResponseWrit
 	return SimServImpl.LaunchSimulationAsync(r.Context(), tx, groupID, user)
 }
 
-// CloudsimSimulationRestart restarts a failed single simulation.
+// Deprecated: CloudsimSimulationRestart restarts a failed single simulation.
 // You can request this method with the following cURL request:
 //   curl -k -X POST --url http://localhost:8001/1.0/simulations/{group}/restart
 //     --header 'authorization: Bearer <A_VALID_AUTH0_JWT_TOKEN>'
@@ -133,7 +133,7 @@ func CloudsimSimulationRestart(user *users.User, tx *gorm.DB, w http.ResponseWri
 	return SimServImpl.RestartSimulationAsync(r.Context(), tx, groupID, user)
 }
 
-// CloudsimSimulationList returns a list with simulation deployments.
+// Deprecated: CloudsimSimulationList returns a list with simulation deployments.
 // You can request this method with the following cURL request:
 //   curl -k -X GET --url http://localhost:8001/1.0/simulations
 //     --header 'authorization: Bearer <A_VALID_AUTH0_JWT_TOKEN>'
@@ -206,7 +206,7 @@ func CloudsimSimulationList(user *users.User, tx *gorm.DB,
 	return sims, nil
 }
 
-// CustomRuleList returns a paginated list of circuit custom rules,
+// Deprecated: CustomRuleList returns a paginated list of circuit custom rules,
 // filtering by circuit, owner or rule. This operation can only be performed by
 // a system or application administrator.
 // GET parameters include: application, circuit, owner and rule_type.
@@ -253,12 +253,12 @@ func CustomRuleList(user *users.User, tx *gorm.DB,
 	return rules, nil
 }
 
-// RemainingSubmissions contains GetRemaingSubmissions response struct
+// Deprecated: RemainingSubmissions contains GetRemaingSubmissions response struct
 type RemainingSubmissions struct {
 	RemainingSubmissions *int `json:"remaining_submissions"`
 }
 
-// GetRemainingSubmissions returns the number of remaining submissions for an
+// Deprecated: GetRemainingSubmissions returns the number of remaining submissions for an
 // owner in a circuit.
 // You can request this method with the following cURL request:
 //   curl -k -X GET --url http://localhost:8000/1.0/{circuit}/remaining_submissions/{owner}
@@ -282,7 +282,7 @@ func GetRemainingSubmissions(user *users.User, tx *gorm.DB, w http.ResponseWrite
 	return RemainingSubmissions{remaining.(*int)}, nil
 }
 
-// SetCustomRule creates or updates a custom rule for an owner in a circuit.
+// Deprecated: SetCustomRule creates or updates a custom rule for an owner in a circuit.
 // You can request this method with the following cURL request:
 //   curl -k -X PUT --url http://localhost:8000/1.0/rules/{circuit}/{owner}/{rule}/{value}
 //     --header 'authorization: Bearer <A_VALID_AUTH0_JWT_TOKEN>'
@@ -312,7 +312,7 @@ func SetCustomRule(user *users.User, tx *gorm.DB, w http.ResponseWriter, r *http
 	return rule, em
 }
 
-// DeleteCustomRule deletes a custom rule for an owner in a circuit.
+// Deprecated: DeleteCustomRule deletes a custom rule for an owner in a circuit.
 // You can request this method with the following cURL request:
 //   curl -k -X DELETE --url http://localhost:8000/1.0/rules/{circuit}/{owner}/{rule}
 //     --header 'authorization: Bearer <A_VALID_AUTH0_JWT_TOKEN>'
@@ -342,7 +342,7 @@ func DeleteCustomRule(user *users.User, tx *gorm.DB, w http.ResponseWriter,
 	return rule, em
 }
 
-// GetCloudsimSimulation returns a single simulation.
+// Deprecated: GetCloudsimSimulation returns a single simulation.
 // You can request this method with the following cURL request:
 //   curl -k -X GET --url http://localhost:8000/1.0/simulations/{group}
 //     --header 'authorization: Bearer <A_VALID_AUTH0_JWT_TOKEN>'
@@ -355,12 +355,12 @@ func GetCloudsimSimulation(user *users.User, tx *gorm.DB, w http.ResponseWriter,
 	return SimServImpl.GetSimulationDeployment(r.Context(), tx, groupID, user)
 }
 
-// GetCompetitionRobots returns an array of robots for the competition.
+// Deprecated: GetCompetitionRobots returns an array of robots for the competition.
 func GetCompetitionRobots(user *users.User, tx *gorm.DB, w http.ResponseWriter, r *http.Request) (interface{}, *ign.ErrMsg) {
 	return SimServImpl.GetCompetitionRobots(getDefaultApplicationName())
 }
 
-// CountPods is a helper handler used to test access to the k8 cluster
+// Deprecated: CountPods is a helper handler used to test access to the k8 cluster
 // You can request this method with the following cURL request:
 //   curl -k -X GET --url http://localhost:8001/1.0/k8/countpods
 //     --header 'authorization: Bearer <A_VALID_AUTH0_JWT_TOKEN>'
@@ -368,7 +368,7 @@ func CountPods(user *users.User, tx *gorm.DB, w http.ResponseWriter, r *http.Req
 	return SimServImpl.(*Service).countPods(r.Context(), user)
 }
 
-// DeleteNodesAndHosts starts the shutdown of all the kubernates nodes
+// Deprecated: DeleteNodesAndHosts starts the shutdown of all the kubernates nodes
 // and associated hosts (instances) of a given Cloudsim Group Id.
 // You can request this method with the following cURL request:
 //   curl -k -X DELETE --url http://localhost:8001/1.0/k8/nodes?group=xxxx
@@ -383,7 +383,7 @@ func DeleteNodesAndHosts(user *users.User, tx *gorm.DB, w http.ResponseWriter, r
 	return SimServImpl.DeleteNodesAndHostsForGroup(r.Context(), tx, dep, user)
 }
 
-// CloudMachineList returns a list with cloud machines (eg. ec2 instances).
+// Deprecated: CloudMachineList returns a list with cloud machines (eg. ec2 instances).
 // You can request this method with the following cURL request:
 //   curl -k -X GET --url http://localhost:8001/1.0/machines
 //     --header 'authorization: Bearer <A_VALID_AUTH0_JWT_TOKEN>'
@@ -428,7 +428,7 @@ func CloudMachineList(user *users.User, tx *gorm.DB,
 	return sims, nil
 }
 
-// SimulationLogGateway returns a URL and a boolean that represent the URL to the proper logs and if it's a file or not.
+// Deprecated: SimulationLogGateway returns a URL and a boolean that represent the URL to the proper logs and if it's a file or not.
 // If the simulation is running, it will return an URL for live logs and the boolean will be false.
 // If the simulation is stopped, it will return an URL for downloadable logs and the boolean will be true.
 // You can request this method with the following curl request:
@@ -460,7 +460,7 @@ func SimulationLogGateway(user *users.User, tx *gorm.DB, w http.ResponseWriter, 
 	return logGateway, nil
 }
 
-// SimulationLogLive returns a log from a running simulation.
+// Deprecated: SimulationLogLive returns a log from a running simulation.
 // If the url query includes `lines=N` as parameter,  and the request is for a single simulation
 // then this handler will return the last N lines of logs from a live simulation.
 // If the url query includes `robot` as parameter with the name of a robot in
@@ -500,7 +500,7 @@ func SimulationLogLive(user *users.User, tx *gorm.DB, w http.ResponseWriter, r *
 	return log, nil
 }
 
-// SimulationLogFileDownload downloads a simulation's logs.
+// Deprecated: SimulationLogFileDownload downloads a simulation's logs.
 // If the url query includes `link=true` as parameter then this handler will
 // return the download URL as a string result instead of doing an http redirect.
 // If the url query includes `robot` as parameter with the name of a robot in
@@ -538,7 +538,7 @@ func SimulationLogFileDownload(user *users.User, tx *gorm.DB, w http.ResponseWri
 	return nil, nil
 }
 
-// QueueGet returns all the simulations from the launch queue
+// Deprecated: QueueGet returns all the simulations from the launch queue
 // If the url query includes `page` and `page_size` as parameters then this handler will
 // return a paginated list of elements given by those values.
 //   curl -k -X GET --url http://localhost:8001/1.0/simulations/queue
@@ -564,14 +564,14 @@ func QueueGet(user *users.User, tx *gorm.DB, w http.ResponseWriter, r *http.Requ
 	return SimServImpl.QueueGetElements(r.Context(), user, page, perPage)
 }
 
-// QueueCount returns the launch queue elements count
+// Deprecated: QueueCount returns the launch queue elements count
 //   curl -k -X GET --url http://localhost:8001/1.0/simulations/queue/count
 //     --header 'authorization: Bearer <A_VALID_AUTH0_JWT_TOKEN>'
 func QueueCount(user *users.User, tx *gorm.DB, w http.ResponseWriter, r *http.Request) (interface{}, *ign.ErrMsg) {
 	return SimServImpl.QueueCount(r.Context(), user)
 }
 
-// QueueSwap swaps elements from position A to position B and vice versa
+// Deprecated: QueueSwap swaps elements from position A to position B and vice versa
 //   curl -k -X PATCH --url http://localhost:8001/1.0/simulations/queue/{groupIDA}/swap/{groupIDB}
 //     --header 'authorization: Bearer <A_VALID_AUTH0_JWT_TOKEN>'
 func QueueSwap(user *users.User, tx *gorm.DB, w http.ResponseWriter, r *http.Request) (interface{}, *ign.ErrMsg) {
@@ -587,7 +587,7 @@ func QueueSwap(user *users.User, tx *gorm.DB, w http.ResponseWriter, r *http.Req
 	return SimServImpl.QueueSwapElements(r.Context(), user, groupIDA, groupIDB)
 }
 
-// QueueMoveToFront moves the element to the front of the queue.
+// Deprecated: QueueMoveToFront moves the element to the front of the queue.
 //   curl -k -X PATCH --url http://localhost:8001/1.0/simulations/queue/{groupID}/move/front
 //     --header 'authorization: Bearer <A_VALID_AUTH0_JWT_TOKEN>'
 func QueueMoveToFront(user *users.User, tx *gorm.DB, w http.ResponseWriter, r *http.Request) (interface{}, *ign.ErrMsg) {
@@ -598,7 +598,7 @@ func QueueMoveToFront(user *users.User, tx *gorm.DB, w http.ResponseWriter, r *h
 	return SimServImpl.QueueMoveElementToFront(r.Context(), user, groupID)
 }
 
-// QueueMoveToBack moves the element to the back of the queue.
+// Deprecated: QueueMoveToBack moves the element to the back of the queue.
 //   curl -k -X PATCH --url http://localhost:8001/1.0/simulations/queue/{groupID}/move/back
 //     --header 'authorization: Bearer <A_VALID_AUTH0_JWT_TOKEN>'
 func QueueMoveToBack(user *users.User, tx *gorm.DB, w http.ResponseWriter, r *http.Request) (interface{}, *ign.ErrMsg) {
@@ -609,7 +609,7 @@ func QueueMoveToBack(user *users.User, tx *gorm.DB, w http.ResponseWriter, r *ht
 	return SimServImpl.QueueMoveElementToBack(r.Context(), user, groupID)
 }
 
-// QueueRemove removes an element from the queue.
+// Deprecated: QueueRemove removes an element from the queue.
 //   curl -k -X DELETE --url http://localhost:8001/1.0/simulations/queue/{groupID}
 //     --header 'authorization: Bearer <A_VALID_AUTH0_JWT_TOKEN>'
 func QueueRemove(user *users.User, tx *gorm.DB, w http.ResponseWriter, r *http.Request) (interface{}, *ign.ErrMsg) {

@@ -7,7 +7,7 @@ import (
 	"encoding/json"
 )
 
-// SendEmail sends an email to a specific recipient. If the recipient is nil,
+// Deprecated: SendEmail sends an email to a specific recipient. If the recipient is nil,
 // then the default recipient defined in the IGN_FLAGS_EMAIL_TO env var will be
 // used.
 func SendEmail(recipient *[]string, sender *string, subject string, templateFilename string,
@@ -40,7 +40,7 @@ func SendEmail(recipient *[]string, sender *string, subject string, templateFile
 	return nil
 }
 
-// SendSimulationSummaryEmail sends a summary email to the user that created the simulation
+// Deprecated: SendSimulationSummaryEmail sends a summary email to the user that created the simulation
 func SendSimulationSummaryEmail(dep *SimulationDeployment, summary AggregatedSubTSimulationValues) *ign.ErrMsg {
 	var marshaledSummary bytes.Buffer
 	b, err := json.MarshalIndent(summary, "", "  ")

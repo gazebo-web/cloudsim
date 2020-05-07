@@ -29,7 +29,7 @@ const (
 	nodeLabelKeySubTRobotName    = "robot_name"
 )
 
-// MaxAWSRetries holds how many retries will be done against AWS. It is a var
+// Deprecated: MaxAWSRetries holds how many retries will be done against AWS. It is a var
 // to allow tests to change this value.
 var MaxAWSRetries int = 8
 
@@ -55,7 +55,7 @@ type ec2Config struct {
 	AvailableEC2Machines int `env:"IGN_EC2_MACHINES_LIMIT" envDefault:"-1"`
 }
 
-// Ec2Client is an implementation of NodeManager interface. It is the client to use
+// Deprecated: Ec2Client is an implementation of NodeManager interface. It is the client to use
 // when creating AWS EC2 instances for k8 cluster nodes.
 type Ec2Client struct {
 	awsCfg  awsConfig
@@ -72,7 +72,7 @@ type Ec2Client struct {
 	availabilityZoneIndex int
 }
 
-// PlatformType is used to tailor an instance that is being created.
+// Deprecated: PlatformType is used to tailor an instance that is being created.
 type PlatformType interface {
 	getPlatformName() string
 	// setupEC2InstanceSpecifics is invoked by the EC2 NodeManager to describe the needed EC2 instance details.
@@ -80,7 +80,7 @@ type PlatformType interface {
 		template *ec2.RunInstancesInput) ([]*ec2.RunInstancesInput, error)
 }
 
-// NewEC2Client creates a new client to interact with EC2 machines.
+// Deprecated: NewEC2Client creates a new client to interact with EC2 machines.
 func NewEC2Client(ctx context.Context, kcli kubernetes.Interface, ec2Svc ec2iface.EC2API) (*Ec2Client, error) {
 	logger(ctx).Info("Creating ec2 Nodes Manager")
 	ec := Ec2Client{}
@@ -112,18 +112,18 @@ func NewEC2Client(ctx context.Context, kcli kubernetes.Interface, ec2Svc ec2ifac
 	return &ec, nil
 }
 
-// Stop stops this EC2 client
+// Deprecated: Stop stops this EC2 client
 func (s *Ec2Client) Stop() {
 	// nothing to do at the moment
 }
 
-// RegisterPlatform registers a new Platform type.
+// Deprecated: RegisterPlatform registers a new Platform type.
 func (s *Ec2Client) RegisterPlatform(ctx context.Context, p PlatformType) {
 	logger(ctx).Info(fmt.Sprintf("EC2 Nodes Manager - Registered new platform [%s]", p.getPlatformName()))
 	s.platforms[p.getPlatformName()] = p
 }
 
-// CloudMachinesList returns a paginated list with all cloud machines.
+// Deprecated: CloudMachinesList returns a paginated list with all cloud machines.
 // @public
 func (s *Ec2Client) CloudMachinesList(ctx context.Context, p *ign.PaginationRequest, tx *gorm.DB,
 	byStatus *MachineStatus, invertStatus bool, groupID *string, application *string) (*MachineInstances, *ign.PaginationResult, *ign.ErrMsg) {
@@ -166,7 +166,7 @@ func (s *Ec2Client) CloudMachinesList(ctx context.Context, p *ign.PaginationRequ
 	return &machines, pagination, nil
 }
 
-// buildUserDataString returns the UserData string to be used when creating a new EC2
+// Deprecated: buildUserDataString returns the UserData string to be used when creating a new EC2
 // instance.
 // @param extraLabels is an array of labels. Each label has the form label=value.
 // @return the userData in base64
@@ -192,7 +192,7 @@ EOF
 	return
 }
 
-// setupInstanceSpecifics finds the platform handler and ask it to describe the needed instance details.
+// Deprecated: setupInstanceSpecifics finds the platform handler and ask it to describe the needed instance details.
 // To do this, it will pass a point to the 'RunInstancesInput' as argument, expecting the
 // specific platform handler to update it with the specific details.
 func (s *Ec2Client) setupInstanceSpecifics(ctx context.Context, tx *gorm.DB, dep *SimulationDeployment,
@@ -202,7 +202,7 @@ func (s *Ec2Client) setupInstanceSpecifics(ctx context.Context, tx *gorm.DB, dep
 	return s.platforms[*dep.Platform].setupEC2InstanceSpecifics(ctx, s, tx, dep, input)
 }
 
-// checkNodeAvailability checks that there are enough available EC2 instances
+// Deprecated: checkNodeAvailability checks that there are enough available EC2 instances
 // to launch a specific group of instances. `inputs` should contain a list of
 // all the instances required for a single simulation.
 func (s *Ec2Client) checkNodeAvailability(ctx context.Context, simDep *SimulationDeployment,
@@ -277,7 +277,7 @@ func (s *Ec2Client) checkNodeAvailability(ctx context.Context, simDep *Simulatio
 	return true, nil
 }
 
-// runInstanceCall requests a single new EC2 instance to AWS.
+// Deprecated: runInstanceCall requests a single new EC2 instance to AWS.
 func (s *Ec2Client) runInstanceCall(ctx context.Context, input *ec2.RunInstancesInput) (runResult *ec2.Reservation,
 	err error) {
 	for try := 1; try <= MaxAWSRetries; try++ {
@@ -316,7 +316,7 @@ func (s *Ec2Client) runInstanceCall(ctx context.Context, input *ec2.RunInstances
 	return
 }
 
-// launchInstances starts a group of EC2 instances. The ids and machine info
+// Deprecated: launchInstances starts a group of EC2 instances. The ids and machine info
 // of new instances are returned to be accessed later during the node launch
 // process.
 func (s *Ec2Client) launchInstances(ctx context.Context, tx *gorm.DB, dep *SimulationDeployment,
@@ -358,7 +358,7 @@ func (s *Ec2Client) launchInstances(ctx context.Context, tx *gorm.DB, dep *Simul
 	return
 }
 
-// terminateInstances terminates a group of EC2 instances.
+// Deprecated: terminateInstances terminates a group of EC2 instances.
 func (s *Ec2Client) terminateInstances(ctx context.Context, machines []*MachineInstance) {
 	terminateIds := make([]*string, 0)
 	for _, machine := range machines {
@@ -379,7 +379,7 @@ func (s *Ec2Client) terminateInstances(ctx context.Context, machines []*MachineI
 	}
 }
 
-// launchNodes will try to launch new EC2 instances, and register them with the k8 master.
+// Deprecated: launchNodes will try to launch new EC2 instances, and register them with the k8 master.
 // @public
 func (s *Ec2Client) launchNodes(ctx context.Context, tx *gorm.DB, dep *SimulationDeployment) (*string, *ign.ErrMsg) {
 	// TODO need to design a rollback mechanism to shutdown created machines/nodes/etc
@@ -556,7 +556,7 @@ func labelAndValue(key, value string) string {
 	return key + "=" + value
 }
 
-// deleteK8Nodes deletes the kubernetes nodes used to run a GroupID.
+// Deprecated: deleteK8Nodes deletes the kubernetes nodes used to run a GroupID.
 // It is expected that if the labeled Nodes cannot be found, then this function should return
 // an ErrorLabeledNodeNotFound.
 // @public
@@ -588,7 +588,7 @@ func (s *Ec2Client) deleteK8Nodes(ctx context.Context, tx *gorm.DB, groupID stri
 	return nodes, nil
 }
 
-// deleteHosts is a helper function that sends a request AWS to terminate
+// Deprecated: deleteHosts is a helper function that sends a request AWS to terminate
 // all the EC2 instances associated to a given GroupID.
 // It also updates the MachineInstance DB records with the status of the terminated instances.
 // @public
@@ -658,7 +658,7 @@ func (s *Ec2Client) deleteHosts(ctx context.Context, tx *gorm.DB,
 	return machines, nil
 }
 
-// countReservedEC2Machines returns the number of reserved EC2 machines that match the cloudsim-simulation-worker tag.
+// Deprecated: countReservedEC2Machines returns the number of reserved EC2 machines that match the cloudsim-simulation-worker tag.
 func (s *Ec2Client) countReservedEC2Machines(ctx context.Context) (instances int) {
 	describeInstancesInput := &ec2.DescribeInstancesInput{
 		MaxResults: aws.Int64(1000),
