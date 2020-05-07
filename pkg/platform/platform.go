@@ -128,7 +128,7 @@ func New(config Config) IPlatform {
 	return &p
 }
 
-// Start starts the platform.
+// Launch starts the platform.
 func (p *Platform) Start(ctx context.Context) error {
 	go func() {
 		for {

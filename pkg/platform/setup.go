@@ -180,7 +180,7 @@ func (p *Platform) setupQueues() *Platform {
 func (p *Platform) setupWorkers() (*Platform, error) {
 	var err error
 
-	p.LaunchPool, err = p.PoolFactory(p.Config.PoolSizeLaunchSim, workers.Start)
+	p.LaunchPool, err = p.PoolFactory(p.Config.PoolSizeLaunchSim, workers.Launch)
 	if err != nil {
 		return nil, err
 	}
