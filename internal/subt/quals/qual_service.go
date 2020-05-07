@@ -14,8 +14,27 @@ type Service struct {
 	repository IRepository
 }
 
+type NewServiceInput struct {
+	UserService users.IService
+	CircuitService circuits.IService
+	Repository IRepository
+}
+
+func NewService(input NewServiceInput) IService {
+	var s IService
+	s = &Service{
+		services:   services{
+			User:    input.UserService,
+			Circuit: input.CircuitService,
+		},
+		repository: input.Repository,
+	}
+	return s
+}
+
+// services represents the imported services used by the Qualification Service.
 type services struct {
-	User *users.Service
+	User users.IService
 	Circuit circuits.IService
 }
 

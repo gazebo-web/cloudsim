@@ -1,7 +1,7 @@
 package subt
 
 import (
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/tasks"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/monitors"
 	"time"
 )
 

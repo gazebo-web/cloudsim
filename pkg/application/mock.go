@@ -2,8 +2,8 @@ package application
 
 import (
 	"context"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/monitors"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/tasks"
 	"gitlab.com/ignitionrobotics/web/ign-go"
 )
 
