@@ -23,6 +23,7 @@ type IService interface {
 	GetAllParentsWithErrors(statusFrom, statusTo Status, errors []ErrorStatus) (*Simulations, error)
 	GetParent(groupID string) (*Simulation, error)
 	Create(ctx context.Context, simulation *SimulationCreate, user *fuel.User) (*Simulation, *ign.ErrMsg)
+	create(sim Simulation) (*Simulation, *ign.ErrMsg)
 	Launch(ctx context.Context, groupID string, user *fuel.User) (*Simulation, *ign.ErrMsg)
 	Restart(ctx context.Context, groupID string, user *fuel.User) (*Simulation, *ign.ErrMsg)
 	Shutdown(ctx context.Context, groupID string, user *fuel.User) (*Simulation, *ign.ErrMsg)
@@ -208,6 +209,10 @@ func (s *Service) Create(ctx context.Context, createSimulation *SimulationCreate
 	validFor := s.config.MaxDuration.String()
 	sim.ValidFor = &validFor
 
+	return s.create(sim)
+}
+
+func (s *Service) create(sim Simulation) (*Simulation, *ign.ErrMsg)  {
 	createdSim, err := s.repository.Create(&sim)
 	if err != nil {
 		return nil, ign.NewErrorMessageWithBase(ign.ErrorDbSave, err)
@@ -215,10 +220,9 @@ func (s *Service) Create(ctx context.Context, createSimulation *SimulationCreate
 
 	// Set read and write permissions to owner (eg, the team) and to the Application
 	// organizing team (eg. subt).
-	if em := s.addPermissionsToOwners(groupID, []per.Action{per.Read, per.Write}, owner, *createdSim.Application); em != nil {
+	if em := s.addPermissionsToOwners(*sim.GroupID, []per.Action{per.Read, per.Write}, *sim.Owner, *createdSim.Application); em != nil {
 		return nil, em
 	}
-
 	return createdSim, nil
 }
 
