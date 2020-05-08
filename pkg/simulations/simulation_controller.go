@@ -15,7 +15,7 @@ import (
 // IController represents a group of methods to expose in the API Rest.
 type IController interface {
 	Start(user *fuel.User, w http.ResponseWriter, r *http.Request) (interface{}, *ign.ErrMsg)
-	LunchHeld(user *fuel.User, w http.ResponseWriter, r *http.Request) (interface{}, *ign.ErrMsg)
+	LaunchHeld(user *fuel.User, w http.ResponseWriter, r *http.Request) (interface{}, *ign.ErrMsg)
 	Restart(user *fuel.User, w http.ResponseWriter, r *http.Request) (interface{}, *ign.ErrMsg)
 	Shutdown(user *fuel.User, w http.ResponseWriter, r *http.Request) (interface{}, *ign.ErrMsg)
 	GetAll(user *fuel.User, w http.ResponseWriter, r *http.Request) (interface{}, *ign.ErrMsg)
@@ -93,8 +93,8 @@ func (c *Controller) Start(user *fuel.User, w http.ResponseWriter, r *http.Reque
 	return c.services.Simulation.Create(r.Context(), &createSim, user)
 }
 
-// LunchHeld is the handler to launch a given held simulation.
-func (c *Controller) LunchHeld(user *fuel.User, w http.ResponseWriter, r *http.Request) (interface{}, *ign.ErrMsg) {
+// LaunchHeld is the handler to launch a given held simulation.
+func (c *Controller) LaunchHeld(user *fuel.User, w http.ResponseWriter, r *http.Request) (interface{}, *ign.ErrMsg) {
 	groupID, ok := mux.Vars(r)["group"]
 	if !ok {
 		return nil, ign.NewErrorMessage(ign.ErrorIDNotInRequest)
