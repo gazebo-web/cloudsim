@@ -11,11 +11,11 @@
 # .
 # ├── db.env                --->    Database enviroment variables used by MySQL container.
 # ├── cloudsim.env          --->    Cloudsim enviroment variables used by Cloudsim container.
-# ├── docker-compose.yml    --->    This file
+# ├── docker-compose.yml    --->    [[THIS FILE]]
 # ├── fuel.env              --->    Fuel server enviroment variables used by Fuel container.
 # ├── ign-data/             --->    MySQL container volume.
-# ├── ign-fuelserver/
-# └── web-cloudsim/
+# ├── fuelserver/           --->    Fuelserver source code.
+# └── cloudsim/             --->    Cloudsim source code.
 #
 # As you can see above, you need to move this file to the upper level in order to properly run the full project.
 #

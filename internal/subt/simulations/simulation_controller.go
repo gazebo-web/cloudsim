@@ -19,20 +19,20 @@ type IController interface {
 
 // Controller is an IController implementation.
 type Controller struct {
-	services services
+	services    services
 	formDecoder *form.Decoder
 	validator   *validator.Validate
 }
 
 type services struct {
 	Simulation IService
-	User users.IService
+	User       users.IService
 }
 
 type NewControllerInput struct {
-	Service IService
-	Decoder *form.Decoder
-	Validator *validator.Validate
+	Service     IService
+	Decoder     *form.Decoder
+	Validator   *validator.Validate
 	Permissions *permissions.Permissions
 	UserService users.IService
 }
@@ -40,11 +40,11 @@ type NewControllerInput struct {
 func NewController(input NewControllerInput) IController {
 	var c IController
 	c = &Controller{
-		formDecoder:  input.Decoder,
-		validator: input.Validator,
-		services:    services{
+		formDecoder: input.Decoder,
+		validator:   input.Validator,
+		services: services{
 			Simulation: input.Service,
-			User: input.UserService,
+			User:       input.UserService,
 		},
 	}
 	return c
@@ -69,9 +69,7 @@ func (c *Controller) Start(user *fuel.User, w http.ResponseWriter, r *http.Reque
 	return c.services.Simulation.Create(r.Context(), &createSim, user)
 }
 
-
-
-func (c *Controller) LunchHeld(user *fuel.User, w http.ResponseWriter, r *http.Request) (interface{}, *ign.ErrMsg) {
+func (c *Controller) LaunchHeld(user *fuel.User, w http.ResponseWriter, r *http.Request) (interface{}, *ign.ErrMsg) {
 	panic("implement me")
 }
 

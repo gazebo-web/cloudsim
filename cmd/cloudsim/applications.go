@@ -40,10 +40,10 @@ func RegisterMonitors(p *platform.Platform, applications map[string]application.
 	}
 }
 
-// ShutdownApplications calls the Shutdown method for all given applications.
+// ShutdownApplications calls the Stop method for all given applications.
 func ShutdownApplications(p *platform.Platform, applications map[string]application.IApplication) {
 	for _, app := range applications {
-		if err := app.Shutdown(p.Context); err != nil {
+		if err := app.Stop(p.Context); err != nil {
 			panic(fmt.Sprintf("Error shutting down an application. Name: %s. Version: %s", app.Name(), app.Version()))
 		}
 	}

@@ -6,8 +6,8 @@ import (
 )
 
 type IService interface {
-	GetAllTypes() (*map[string]Robot, *ign.ErrMsg)
-	GetByType(robotType string) (*Robot, error)
+	GetAllConfigs() (*map[string]RobotConfig, *ign.ErrMsg)
+	GetConfigByType(robotType string) (*RobotConfig, error)
 	IsValidRobotType(fl validator.FieldLevel) bool
 }
 
@@ -21,21 +21,21 @@ func NewService() IService {
 	return s
 }
 
-func (s *Service) GetAllTypes() (*map[string]Robot, *ign.ErrMsg) {
-	mappedRobots, err := s.repository.GetAll()
+func (s *Service) GetAllConfigs() (*map[string]RobotConfig, *ign.ErrMsg) {
+	robotCfgs, err := s.repository.GetAllConfigs()
 	if err != nil {
 		// TODO: Change error type
 		return nil, ign.NewErrorMessageWithBase(ign.ErrorUnexpected, err)
 	}
-	return &mappedRobots, nil
+	return &robotCfgs, nil
 }
 
-func (s *Service) GetByType(robotType string) (*Robot, error) {
-	return s.repository.GetByType(robotType)
+func (s *Service) GetConfigByType(robotType string) (*RobotConfig, error) {
+	return s.repository.GetConfigByType(robotType)
 }
 
 func (s *Service) IsValidRobotType(fl validator.FieldLevel) bool {
-	_, err := s.GetByType(fl.Field().String())
+	_, err := s.GetConfigByType(fl.Field().String())
 	if err != nil {
 		return false
 	}

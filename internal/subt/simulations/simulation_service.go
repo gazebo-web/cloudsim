@@ -41,6 +41,7 @@ func (s *Service) CountByOwnerAndCircuit(owner, circuit string) (*int, error) {
 }
 
 func (s *Service) simulationIsHeld(ctx context.Context, sim *simulations.Simulation) bool {
+	return false
 }
 
 func (s *Service) Create(ctx context.Context, createSimulation *SimulationCreate, user *fuel.User) (*Simulation, *ign.ErrMsg) {

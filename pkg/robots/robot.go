@@ -5,4 +5,5 @@ type Robot struct {
 	Name  string `json:"name"`
 	Owner string `json:"owner"`
 	Type  string `json:"type"`
+	Image string `json:"image"`
 }

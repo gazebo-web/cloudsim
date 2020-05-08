@@ -24,9 +24,19 @@ type IApplication interface {
 	RegisterMonitors(ctx context.Context)
 	RegisterValidators(ctx context.Context)
 	RebuildState(ctx context.Context) error
-	Shutdown(ctx context.Context) error
+	Stop(ctx context.Context) error
+
 	Launch(payload interface{}) (interface{}, *ign.ErrMsg)
 	ValidateLaunch(ctx context.Context, simulation *simulations.Simulation) *ign.ErrMsg
+
+	Shutdown(payload interface{}) (interface{}, *ign.ErrMsg)
+	ValidateShutdown(ctx context.Context, simulation *simulations.Simulation) *ign.ErrMsg
+
+	LaunchHeld(payload interface{}) (interface{}, *ign.ErrMsg)
+	ValidateLaunchHeld(ctx context.Context, simulation *simulations.Simulation) *ign.ErrMsg
+
+	Restart(payload interface{}) (interface{}, *ign.ErrMsg)
+	ValidateRestart(ctx context.Context, simulation *simulations.Simulation) *ign.ErrMsg
 }
 
 // Application is a generic implementation of an application to be extended by a specific application.
@@ -107,8 +117,8 @@ func (app *Application) RegisterValidators(ctx context.Context) {
 	return
 }
 
-// Shutdown executes a set of instructions to turn off the application.
-func (app *Application) Shutdown(ctx context.Context) error {
+// Stop executes a set of instructions to turn off the application.
+func (app *Application) Stop(ctx context.Context) error {
 	app.Updater.Ticker.Stop()
 	app.Cleaner.Ticker.Stop()
 	return nil
@@ -116,13 +126,13 @@ func (app *Application) Shutdown(ctx context.Context) error {
 
 // RebuildState runs a set of instructions to restore the application to the previous state before a restart.
 func (app *Application) RebuildState(ctx context.Context) error {
-	err := app.Platform.Simulator.Recover(ctx, app.getLabel, app.getGazeboConfig)
+	err := app.Platform().Simulator.Recover(ctx, app.getLabel, app.getGazeboConfig)
 	if err != nil {
 		return err
 	}
 
-	app.Platform.Simulator.RLock()
-	defer app.Platform.Simulator.RUnlock()
+	app.Platform().Simulator.RLock()
+	defer app.Platform().Simulator.RUnlock()
 
 	var sims simulations.Simulations
 	// if err := db.Model(&SimulationDeployment{}).Where("error_status IS NULL").Where("multi_sim != ?", multiSimParent).
@@ -134,10 +144,10 @@ func (app *Application) RebuildState(ctx context.Context) error {
 		switch sim.GetStatus() {
 		case simulations.StatusPending:
 			logger.Logger(ctx).Info(fmt.Sprintf("[APP|REBUILDING] Resuming launch process. GroupID: [%s]", *sim.GroupID))
-			app.Platform.RequestLaunch(ctx, *sim.GroupID)
+			app.Platform().RequestLaunch(ctx, *sim.GroupID)
 			continue
 		case simulations.StatusRunning:
-			running := app.Platform.Simulator.GetRunningSimulation(*sim.GroupID)
+			running := app.Platform().Simulator.GetRunningSimulation(*sim.GroupID)
 			if running != nil {
 				logger.Logger(ctx).Info(fmt.Sprintf("[APP|RECOVER] The expected running simulation doesn't have any node running. GroupID: [%s]. Marking with error.", *sim.GroupID))
 				updateSim := simulations.SimulationUpdate{
@@ -192,7 +202,7 @@ func (app *Application) Launch(payload interface{}) (interface{}, *ign.ErrMsg) {
 		if err := app.ValidateLaunch(ctx, &sim); err != nil {
 			return nil, err
 		}
-		app.Platform.RequestLaunch(ctx, *sim.GroupID)
+		app.Platform().RequestLaunch(ctx, *sim.GroupID)
 	}
 
 	return simulation, nil
@@ -202,4 +212,28 @@ func (app *Application) Launch(payload interface{}) (interface{}, *ign.ErrMsg) {
 // ensure that the simulation is good to be launched.
 func (app *Application) ValidateLaunch(ctx context.Context, simulation *simulations.Simulation) *ign.ErrMsg {
 	return nil
+}
+
+func (app *Application) Shutdown(payload interface{}) (interface{}, *ign.ErrMsg) {
+	panic("implement me")
+}
+
+func (app *Application) ValidateShutdown(ctx context.Context, simulation *simulations.Simulation) *ign.ErrMsg {
+	panic("implement me")
+}
+
+func (app *Application) LaunchHeld(payload interface{}) (interface{}, *ign.ErrMsg) {
+	panic("implement me")
+}
+
+func (app *Application) ValidateLaunchHeld(ctx context.Context, simulation *simulations.Simulation) *ign.ErrMsg {
+	panic("implement me")
+}
+
+func (app *Application) Restart(payload interface{}) (interface{}, *ign.ErrMsg) {
+	panic("implement me")
+}
+
+func (app *Application) ValidateRestart(ctx context.Context, simulation *simulations.Simulation) *ign.ErrMsg {
+	panic("implement me")
 }

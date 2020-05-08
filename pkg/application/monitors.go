@@ -9,21 +9,21 @@ import (
 // checkForExpiredSimulations is an internal helper that tests all the runningSimulations
 // to check if they were alive more than expected, and in that case, schedules their termination.
 func (app *Application) checkForExpiredSimulations() error {
-	app.Platform.Simulator.RLock()
-	defer app.Platform.Simulator.RUnlock()
+	app.Platform().Simulator.RLock()
+	defer app.Platform().Simulator.RUnlock()
 
-	runningSims := app.Platform.Simulator.GetRunningSimulations()
+	runningSims := app.Platform().Simulator.GetRunningSimulations()
 
 	for groupID := range runningSims {
 		rs := runningSims[groupID]
 
 		if rs.IsExpired() || rs.Finished {
-			app.Platform.RequestTermination(app.Platform.Context, groupID)
+			app.Platform().RequestTermination(app.Platform().Context, groupID)
 			reason := "expired"
 			if rs.Finished {
 				reason = "finished"
 			}
-			logger.Logger(app.Platform.Context).Info(fmt.Sprintf("Scheduled automatic termination of %s simulation: %s", reason, groupID))
+			logger.Logger(app.Platform().Context).Info(fmt.Sprintf("Scheduled automatic termination of %s simulation: %s", reason, groupID))
 		}
 	}
 	return nil

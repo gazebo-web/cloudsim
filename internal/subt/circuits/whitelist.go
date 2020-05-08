@@ -1,31 +1,33 @@
 package circuits
 
-const (
-	CircuitVirtualStix        string = "Virtual Stix"
-	CircuitTunnelCircuit      string = "Tunnel Circuit"
-	CircuitTunnelPractice1    string = "Tunnel Practice 1"
-	CircuitTunnelPractice2    string = "Tunnel Practice 2"
-	CircuitTunnelPractice3    string = "Tunnel Practice 3"
-	CircuitSimpleTunnel1      string = "Simple Tunnel 1"
-	CircuitSimpleTunnel2      string = "Simple Tunnel 2"
-	CircuitSimpleTunnel3      string = "Simple Tunnel 3"
-	CircuitUrbanQual          string = "Urban Qualification"
-	CircuitUrbanSimple1       string = "Urban Simple 1"
-	CircuitUrbanSimple2       string = "Urban Simple 2"
-	CircuitUrbanSimple3       string = "Urban Simple 3"
-	CircuitUrbanPractice1     string = "Urban Practice 1"
-	CircuitUrbanPractice2     string = "Urban Practice 2"
-	CircuitUrbanPractice3     string = "Urban Practice 3"
-	CircuitUrbanCircuit       string = "Urban Circuit"
-	CircuitUrbanCircuitWorld1 string = "Urban Circuit World 1"
-	CircuitUrbanCircuitWorld2 string = "Urban Circuit World 2"
-	CircuitUrbanCircuitWorld3 string = "Urban Circuit World 3"
-	CircuitUrbanCircuitWorld4 string = "Urban Circuit World 4"
-	CircuitUrbanCircuitWorld5 string = "Urban Circuit World 5"
-	CircuitUrbanCircuitWorld6 string = "Urban Circuit World 6"
-	CircuitUrbanCircuitWorld7 string = "Urban Circuit World 7"
-	CircuitUrbanCircuitWorld8 string = "Urban Circuit World 8"
-	CircuitCaveSimple1        string = "Cave Simple 1"
-	CircuitCaveSimple2        string = "Cave Simple 2"
-	CircuitCaveSimple3        string = "Cave Simple 3"
-)
+func generateWhitelist() map[string]bool {
+	return map[string]bool{
+		"Virtual Stix":          true,
+		"Tunnel Circuit":        true,
+		"Tunnel Practice 1":     true,
+		"Tunnel Practice 2":     true,
+		"Tunnel Practice 3":     true,
+		"Simple Tunnel 1":       true,
+		"Simple Tunnel 2":       true,
+		"Simple Tunnel 3":       true,
+		"Urban Qualification":   true,
+		"Urban Simple 1":        true,
+		"Urban Simple 2":        true,
+		"Urban Simple 3":        true,
+		"Urban Practice 1":      true,
+		"Urban Practice 2":      true,
+		"Urban Practice 3":      true,
+		"Urban Circuit":         true,
+		"Urban Circuit World 1": true,
+		"Urban Circuit World 2": true,
+		"Urban Circuit World 3": true,
+		"Urban Circuit World 4": true,
+		"Urban Circuit World 5": true,
+		"Urban Circuit World 6": true,
+		"Urban Circuit World 7": true,
+		"Urban Circuit World 8": true,
+		"Cave Simple 1":         true,
+		"Cave Simple 2":         true,
+		"Cave Simple 3":         true,
+	}
+}
