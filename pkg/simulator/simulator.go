@@ -14,8 +14,8 @@ import (
 	"time"
 )
 
-// ISimulator
-type ISimulator interface {
+// Simulator
+type Simulator interface {
 	appendRunningSimulation(simulation *RunningSimulation)
 	Recover(ctx context.Context, getApplicationLabel func() *string, getGazeboConfig func(sim *simulations.Simulation) GazeboConfig) error
 	GetRunningSimulation(groupID string) *RunningSimulation
@@ -27,7 +27,7 @@ type ISimulator interface {
 	Unlock()
 }
 
-// Config represents a set of options to configure a Simulator.
+// Config represents a set of options to configure a simulator.
 type Config struct {
 	NamePrefix               string `env:"AWS_INSTANCE_NAME_PREFIX,required"`
 	ShouldTerminateInstances bool   `env:"EC2_NODE_MGR_TERMINATE_INSTANCES" envDefault:"true"`
@@ -36,9 +36,9 @@ type Config struct {
 	AvailableEC2Machines     int    `env:"IGN_EC2_MACHINES_LIMIT" envDefault:"-1"`
 }
 
-// Simulator is the component responsible of creating the nodes
+// simulator is the component responsible of creating the nodes
 // and registering them in the kubernetes master.
-type Simulator struct {
+type simulator struct {
 	orchestrator           orchestrator.Kubernetes
 	cloud                  *cloud.AmazonWS
 	runningSimulations     map[string]*RunningSimulation
@@ -67,13 +67,13 @@ type NewSimulatorInput struct {
 	Db           *gorm.DB
 }
 
-// NewSimulator returns a new Simulator instance.
-func NewSimulator(input NewSimulatorInput) ISimulator {
+// NewSimulator returns a new simulator instance.
+func NewSimulator(input NewSimulatorInput) Simulator {
 	cfg := Config{}
 	if err := env.Parse(cfg); err != nil {
 		// TODO: Throw an error. Logger? Log Fatal?
 	}
-	s := Simulator{
+	s := simulator{
 		orchestrator: input.Orchestrator,
 		cloud:        input.Cloud,
 		repositories: repositories{
@@ -86,17 +86,17 @@ func NewSimulator(input NewSimulatorInput) ISimulator {
 }
 
 // GetRunningSimulation
-func (s *Simulator) GetRunningSimulation(groupID string) *RunningSimulation {
+func (s *simulator) GetRunningSimulation(groupID string) *RunningSimulation {
 	return s.runningSimulations[groupID]
 }
 
 // GetRunningSimulations
-func (s *Simulator) GetRunningSimulations() map[string]*RunningSimulation {
+func (s *simulator) GetRunningSimulations() map[string]*RunningSimulation {
 	return s.runningSimulations
 }
 
 // SetRunningSimulations
-func (s *Simulator) SetRunningSimulations(simulations *map[string]*RunningSimulation) error {
+func (s *simulator) SetRunningSimulations(simulations *map[string]*RunningSimulation) error {
 	if simulations == nil {
 		return errors.New("SetRunningSimulations cannot receive a nil argument")
 	}
@@ -107,7 +107,7 @@ func (s *Simulator) SetRunningSimulations(simulations *map[string]*RunningSimula
 }
 
 // appendRunningSimulation adds a new running simulation to the map of running simulations.
-func (s *Simulator) appendRunningSimulation(simulation *RunningSimulation) {
+func (s *simulator) appendRunningSimulation(simulation *RunningSimulation) {
 	s.Lock()
 	defer s.Unlock()
 	if s.runningSimulations[simulation.GroupID] != nil {
@@ -117,7 +117,7 @@ func (s *Simulator) appendRunningSimulation(simulation *RunningSimulation) {
 }
 
 // RestoreRunningSimulation
-func (s *Simulator) RestoreRunningSimulation(ctx context.Context, simulation *simulations.Simulation, config GazeboConfig) error {
+func (s *simulator) RestoreRunningSimulation(ctx context.Context, simulation *simulations.Simulation, config GazeboConfig) error {
 	validFor, err := time.ParseDuration(*simulation.ValidFor)
 	if err != nil {
 		return err
@@ -139,7 +139,7 @@ func (s *Simulator) RestoreRunningSimulation(ctx context.Context, simulation *si
 }
 
 // Recover
-func (s *Simulator) Recover(ctx context.Context, getApplicationLabel func() *string, getGazeboConfig func(sim *simulations.Simulation) GazeboConfig) error {
+func (s *simulator) Recover(ctx context.Context, getApplicationLabel func() *string, getGazeboConfig func(sim *simulations.Simulation) GazeboConfig) error {
 	label := getApplicationLabel()
 	pods, err := s.orchestrator.GetAllPods(label)
 	if err != nil {
@@ -178,21 +178,21 @@ func (s *Simulator) Recover(ctx context.Context, getApplicationLabel func() *str
 }
 
 // RLock
-func (s *Simulator) RLock() {
+func (s *simulator) RLock() {
 	s.lockRunningSimulations.RLock()
 }
 
 // RUnlock
-func (s *Simulator) RUnlock() {
+func (s *simulator) RUnlock() {
 	s.lockRunningSimulations.RUnlock()
 }
 
 // Lock
-func (s *Simulator) Lock() {
+func (s *simulator) Lock() {
 	s.lockRunningSimulations.Lock()
 }
 
 // Unlock
-func (s *Simulator) Unlock() {
+func (s *simulator) Unlock() {
 	s.lockRunningSimulations.Unlock()
 }

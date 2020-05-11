@@ -30,6 +30,7 @@ type IPlatform interface {
 	RequestTermination(ctx context.Context, groupID string)
 	Logger() ign.Logger
 	Context() context.Context
+	Scheduler() scheduler.TaskScheduler
 }
 
 // Platform represents a set of components to run applications.
@@ -46,14 +47,18 @@ type Platform struct {
 	Permissions      *permissions.Permissions
 	UserService      users.Service
 	Config           Config
-	Simulator        simulator.ISimulator
+	Simulator        simulator.Simulator
 	PoolFactory      pool.Factory
-	Scheduler        scheduler.TaskScheduler
+	scheduler        scheduler.TaskScheduler
 	LaunchQueue      queue.Queue
 	TerminationQueue chan workers.TerminateInput
 	LaunchPool       pool.Pool
 	TerminationPool  pool.Pool
 	Controllers      controllers
+}
+
+func (p *Platform) Scheduler() scheduler.TaskScheduler {
+	return p.scheduler
 }
 
 func (p *Platform) Logger() ign.Logger {
@@ -121,10 +126,10 @@ func New(config Config) IPlatform {
 	p.Logger().Debug("[INIT] Orchestrator initialized: k8s.")
 
 	p.setupSimulator()
-	p.Logger().Debug("[INIT] Simulator initialized. Using: AWS and k8s.")
+	p.Logger().Debug("[INIT] simulator initialized. Using: AWS and k8s.")
 
 	p.setupScheduler()
-	p.Logger().Debug("[INIT] Scheduler initialized.")
+	p.Logger().Debug("[INIT] scheduler initialized.")
 
 	p.setupQueues()
 	p.Logger().Debug("[INIT] RequestLaunch and termination queues have been initialized.")

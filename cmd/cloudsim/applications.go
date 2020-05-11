@@ -61,7 +61,7 @@ func ScheduleTasks(p *platform.Platform, apps map[string]application.IApplicatio
 	for _, app := range apps {
 		tasks := app.RegisterTasks()
 		for _, task := range tasks {
-			p.Scheduler.DoAt(task.Job, task.Date)
+			p.Scheduler().DoAt(task.Job, task.Date)
 		}
 	}
 }

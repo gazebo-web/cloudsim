@@ -149,7 +149,7 @@ func (p *Platform) setupOrchestrator() *Platform {
 	return p
 }
 
-// setupSimulator initializes the Simulator.
+// setupSimulator initializes the simulator.
 func (p *Platform) setupSimulator() *Platform {
 	input := simulator.NewSimulatorInput{}
 	p.Simulator = simulator.NewSimulator(input)
@@ -164,7 +164,7 @@ func (p *Platform) setupPoolFactory() *Platform {
 
 // setupScheduler gets the instance from the scheduler package.
 func (p *Platform) setupScheduler() *Platform {
-	p.Scheduler = scheduler.GetInstance()
+	p.scheduler = scheduler.GetInstance()
 	return p
 }
 
