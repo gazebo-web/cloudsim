@@ -51,14 +51,14 @@ func (p *Platform) setupLogger() *Platform {
 	if err != nil {
 		log.Fatalf("Error parsing environment variables for Logger. %+v\n", err)
 	}
-	p.Logger = l
+	p.logger = l
 	return p
 }
 
 // setupContext initializes the context.
 func (p *Platform) setupContext() *Platform {
 	ctx := ign.NewContextWithLogger(context.Background(), p.Logger)
-	p.Context = ctx
+	p.context = ctx
 	return p
 }
 
@@ -72,7 +72,7 @@ func (p *Platform) setupServer() *Platform {
 	}
 	s, err := server.New(cfg)
 	if err != nil {
-		p.Logger.Critical(err)
+		p.Logger().Critical(err)
 		log.Fatalf("Error while initializing server. %v\n", err)
 	}
 	p.Server = s
@@ -89,7 +89,7 @@ func (p *Platform) setupRouter() *Platform {
 // setupEmail initializes the email service.
 func (p *Platform) setupEmail() *Platform {
 	e := email.New()
-	p.Email = e
+	p.email = e
 	return p
 }
 
@@ -111,7 +111,7 @@ func (p *Platform) setupPermissions() *Platform {
 	per := &permissions.Permissions{}
 	err := per.Init(p.Server.Db, p.Config.SysAdmin)
 	if err != nil {
-		p.Logger.Critical(err)
+		p.Logger().Critical(err)
 		log.Fatalf("Error while initializing server. %v\n", err)
 	}
 	p.Permissions = per
@@ -122,7 +122,7 @@ func (p *Platform) setupPermissions() *Platform {
 func (p *Platform) setupUserService() *Platform {
 	s, err := users.NewService(p.Permissions, p.Config.SysAdmin)
 	if err != nil {
-		p.Logger.Critical(err)
+		p.Logger().Critical(err)
 		log.Fatalf("Error while configuring user service. %v\n", err)
 	}
 	p.UserService = s
@@ -131,9 +131,9 @@ func (p *Platform) setupUserService() *Platform {
 
 // setupDatabase performs migrations, adds default data and adds custom indexes.
 func (p *Platform) setupDatabase() *Platform {
-	db.Migrate(p.Context, p.Server.Db)
-	db.AddDefaultData(p.Context, p.Server.Db)
-	db.AddCustomIndexes(p.Context, p.Server.Db)
+	db.Migrate(p.Context(), p.Server.Db)
+	db.AddDefaultData(p.Context(), p.Server.Db)
+	db.AddCustomIndexes(p.Context(), p.Server.Db)
 	return p
 }
 

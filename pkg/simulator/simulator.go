@@ -39,7 +39,7 @@ type Config struct {
 // Simulator is the component responsible of creating the nodes
 // and registering them in the kubernetes master.
 type Simulator struct {
-	orchestrator           *orchestrator.Kubernetes
+	orchestrator           *orchestrator.k8s
 	cloud                  *cloud.AmazonWS
 	runningSimulations     map[string]*RunningSimulation
 	lockRunningSimulations sync.RWMutex
@@ -62,7 +62,7 @@ type repositories struct {
 
 // NewSimulatorInput
 type NewSimulatorInput struct {
-	Orchestrator *orchestrator.Kubernetes
+	Orchestrator *orchestrator.k8s
 	Cloud        *cloud.AmazonWS
 	Db			 *gorm.DB
 }

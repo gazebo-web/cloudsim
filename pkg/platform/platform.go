@@ -28,18 +28,20 @@ type IPlatform interface {
 	Stop(ctx context.Context) error
 	RequestLaunch(ctx context.Context, groupID string)
 	RequestTermination(ctx context.Context, groupID string)
+	Logger() ign.Logger
+	Context() context.Context
 }
 
 // Platform represents a set of components to run applications.
 type Platform struct {
 	Server           *ign.Server
-	Logger           ign.Logger
-	Context          context.Context
-	Email            *email.Email
+	logger           ign.Logger
+	context          context.Context
+	email            email.Email
 	Validator        *validator.Validate
 	FormDecoder      *form.Decoder
 	Transport        *transport.Transport
-	Orchestrator     *orchestrator.Kubernetes
+	Orchestrator     orchestrator.Kubernetes
 	CloudProvider    *cloud.AmazonWS
 	Permissions      *permissions.Permissions
 	UserService      users.IService
@@ -52,6 +54,18 @@ type Platform struct {
 	LaunchPool       pool.IPool
 	TerminationPool  pool.IPool
 	Controllers      controllers
+}
+
+func (p *Platform) Logger() ign.Logger {
+	return p.logger
+}
+
+func (p *Platform) Context() context.Context {
+	return p.context
+}
+
+func (p *Platform) Email() email.Email {
+	return p.email
 }
 
 // TODO: Add initializer for queue controller.
@@ -70,61 +84,61 @@ func New(config Config) IPlatform {
 	p.Config = config
 
 	p.setupLogger()
-	p.Logger.Debug("[INIT] Logger initialized.")
+	p.Logger().Debug("[INIT] Logger initialized.")
 
 	// TODO: Decide where the score generation should go
 
 	p.setupContext()
-	p.Logger.Debug("[INIT] Context initialized.")
+	p.Logger().Debug("[INIT] Context initialized.")
 
 	p.setupServer()
-	p.Logger.Debug(fmt.Sprintf("[INIT] Server initialized using HTTP port [%s] and SSL port [%s].", p.Server.HTTPPort, p.Server.SSLport))
-	p.Logger.Debug(fmt.Sprintf("[INIT] Database [%s] initialized", p.Server.DbConfig.Name))
+	p.Logger().Debug(fmt.Sprintf("[INIT] Server initialized using HTTP port [%s] and SSL port [%s].", p.Server.HTTPPort, p.Server.SSLport))
+	p.Logger().Debug(fmt.Sprintf("[INIT] Database [%s] initialized", p.Server.DbConfig.Name))
 
 	p.setupRouter()
-	p.Logger.Debug("[INIT] Router initialized.")
+	p.Logger().Debug("[INIT] Router initialized.")
 
 	// TODO: Decide where should the custom validators should go
 	p.setupValidator()
-	p.Logger.Debug("[INIT] Validators initialized.")
+	p.Logger().Debug("[INIT] Validators initialized.")
 
 	p.setupFormDecoder()
-	p.Logger.Debug("[INIT] Form decoder initialized.")
+	p.Logger().Debug("[INIT] Form decoder initialized.")
 
 	p.setupPermissions()
-	p.Logger.Debug("[INIT] Permissions initialized.")
+	p.Logger().Debug("[INIT] Permissions initialized.")
 
 	p.setupUserService()
-	p.Logger.Debug("[INIT] User service initialized")
+	p.Logger().Debug("[INIT] User service initialized")
 
 	p.setupDatabase()
-	p.Logger.Debug("[INIT] Database configured: Migration, default data and custom indexes.")
+	p.Logger().Debug("[INIT] Database configured: Migration, default data and custom indexes.")
 
 	p.setupCloudProvider()
-	p.Logger.Debug("[INIT] Cloud provider initialized: AWS.")
+	p.Logger().Debug("[INIT] Cloud provider initialized: AWS.")
 
 	p.setupOrchestrator()
-	p.Logger.Debug("[INIT] Orchestrator initialized: Kubernetes.")
+	p.Logger().Debug("[INIT] Orchestrator initialized: k8s.")
 
 	p.setupSimulator()
-	p.Logger.Debug("[INIT] Simulator initialized. Using: AWS and Kubernetes.")
+	p.Logger().Debug("[INIT] Simulator initialized. Using: AWS and k8s.")
 
 	p.setupScheduler()
-	p.Logger.Debug("[INIT] Scheduler initialized.")
+	p.Logger().Debug("[INIT] Scheduler initialized.")
 
 	p.setupQueues()
-	p.Logger.Debug("[INIT] RequestLaunch and termination queues have been initialized.")
+	p.Logger().Debug("[INIT] RequestLaunch and termination queues have been initialized.")
 
 	p.setupPoolFactory()
 	if _, err := p.setupWorkers(); err != nil {
-		p.Logger.Critical("[INIT|CRITICAL] Could not initialize workers.")
+		p.Logger().Critical("[INIT|CRITICAL] Could not initialize workers.")
 	}
-	p.Logger.Debug("[INIT] RequestLaunch and termination workers have been initialized.")
+	p.Logger().Debug("[INIT] RequestLaunch and termination workers have been initialized.")
 
 	if _, err := p.setupTransport(); err != nil {
-		p.Logger.Critical("[INIT|CRITICAL] Could not initialize transport.")
+		p.Logger().Critical("[INIT|CRITICAL] Could not initialize transport.")
 	}
-	p.Logger.Debug("[INIT] Transport initialized. Using: IGN Transport.")
+	p.Logger().Debug("[INIT] Transport initialized. Using: IGN Transport.")
 	return &p
 }
 
@@ -143,23 +157,23 @@ func (p *Platform) Start(ctx context.Context) error {
 				continue
 			}
 
-			p.Logger.Info(fmt.Sprintf("[QUEUE|LAUNCH] About to process launch action. Group ID: [%s]", dto.GroupID))
+			p.Logger().Info(fmt.Sprintf("[QUEUE|LAUNCH] About to process launch action. Group ID: [%s]", dto.GroupID))
 			if err := p.LaunchPool.Serve(dto); err != nil {
-				p.Logger.Error(fmt.Sprintf("[QUEUE|LAUNCH] Error while serving launch action. Group ID: [%s]. Error: [%v]", dto.GroupID, err))
+				p.Logger().Error(fmt.Sprintf("[QUEUE|LAUNCH] Error while serving launch action. Group ID: [%s]. Error: [%v]", dto.GroupID, err))
 				continue
 			}
-			p.Logger.Info(fmt.Sprintf("[QUEUE|LAUNCH] The launch action was successfully served to the worker pool. Group ID: [%s]", dto.GroupID))
+			p.Logger().Info(fmt.Sprintf("[QUEUE|LAUNCH] The launch action was successfully served to the worker pool. Group ID: [%s]", dto.GroupID))
 		}
 	}()
 
 	go func() {
 		for dto := range p.TerminationQueue {
-			p.Logger.Info(fmt.Sprintf("[QUEUE|TERMINATE] About to process terminate action. Group ID: [%s]", dto.GroupID))
+			p.Logger().Info(fmt.Sprintf("[QUEUE|TERMINATE] About to process terminate action. Group ID: [%s]", dto.GroupID))
 			if err := p.TerminationPool.Serve(dto); err != nil {
-				p.Logger.Error(fmt.Sprintf("[QUEUE|TERMINATE] Error while serving terminate action. Group ID: [%s]. Error: [%v]", dto.GroupID, err))
+				p.Logger().Error(fmt.Sprintf("[QUEUE|TERMINATE] Error while serving terminate action. Group ID: [%s]. Error: [%v]", dto.GroupID, err))
 				continue
 			}
-			p.Logger.Info(fmt.Sprintf("[QUEUE|TERMINATE] The terminate action was successfully served to the worker pool. Group ID: [%s]", dto.GroupID))
+			p.Logger().Info(fmt.Sprintf("[QUEUE|TERMINATE] The terminate action was successfully served to the worker pool. Group ID: [%s]", dto.GroupID))
 		}
 	}()
 	return nil

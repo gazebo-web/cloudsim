@@ -5,15 +5,19 @@ import (
 	"gitlab.com/ignitionrobotics/web/ign-go"
 )
 
-// Config represents a set of options to configure the Email service.
-type Email struct {
+type Email interface {
+	Send(recipient *[]string, sender *string, subject string, templateFilename string, templateData interface{}) *ign.ErrMsg
+}
+
+// Config represents a set of options to configure the email service.
+type email struct {
 	DefaultEmailRecipients []string `env:"IGN_DEFAULT_EMAIL_RECIPIENT" envSeparator:","`
 	DefaultEmailSender     string `env:"IGN_DEFAULT_EMAIL_SENDER"`
 }
 
-// New returns a new Email service.
-func New() *Email {
-	email := Email{}
+// New returns a new email service.
+func New() Email {
+	email := email{}
 	_ = env.Parse(&email)
 	return &email
 }
@@ -21,7 +25,7 @@ func New() *Email {
 // Send sends an email to a specific recipient. If the recipient is nil,
 // then the default recipient defined in the IGN_FLAGS_EMAIL_TO env var will be
 // used.
-func (e *Email) Send(recipient *[]string, sender *string, subject string, templateFilename string, templateData interface{}) *ign.ErrMsg {
+func (e *email) Send(recipient *[]string, sender *string, subject string, templateFilename string, templateData interface{}) *ign.ErrMsg {
 	if recipient == nil {
 		recipient = &e.DefaultEmailRecipients
 	}

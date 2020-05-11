@@ -5,12 +5,12 @@ import (
 	"k8s.io/client-go/kubernetes/fake"
 )
 
-// KubernetesMock wraps the Kubernetes CLi for testing purposes.
+// KubernetesMock wraps the k8s CLi for testing purposes.
 type KubernetesMock struct {
 	kubernetes.Interface
 }
 
-// NewTest creates a new Kubernetes client for testing purposes.
+// NewTest creates a new k8s client for testing purposes.
 func NewTest() kubernetes.Interface {
 	return &KubernetesMock{Interface: fake.NewSimpleClientset()}
 }
