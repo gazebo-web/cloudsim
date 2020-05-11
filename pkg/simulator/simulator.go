@@ -52,7 +52,7 @@ type Simulator struct {
 // services
 type services struct {
 	simulations simulations.Service
-	simulator	IService
+	simulator   IService
 }
 
 // repositories
@@ -64,7 +64,7 @@ type repositories struct {
 type NewSimulatorInput struct {
 	Orchestrator orchestrator.Kubernetes
 	Cloud        *cloud.AmazonWS
-	Db			 *gorm.DB
+	Db           *gorm.DB
 }
 
 // NewSimulator returns a new Simulator instance.
@@ -77,9 +77,9 @@ func NewSimulator(input NewSimulatorInput) ISimulator {
 		orchestrator: input.Orchestrator,
 		cloud:        input.Cloud,
 		repositories: repositories{
-			node:  nodes.NewRepository(input.Db),
+			node: nodes.NewRepository(input.Db),
 		},
-		config:       cfg,
+		config: cfg,
 	}
 	s.services.simulator = NewSimulatorService(s.repositories.node)
 	return &s
@@ -181,14 +181,17 @@ func (s *Simulator) Recover(ctx context.Context, getApplicationLabel func() *str
 func (s *Simulator) RLock() {
 	s.lockRunningSimulations.RLock()
 }
+
 // RUnlock
 func (s *Simulator) RUnlock() {
 	s.lockRunningSimulations.RUnlock()
 }
+
 // Lock
 func (s *Simulator) Lock() {
 	s.lockRunningSimulations.Lock()
 }
+
 // Unlock
 func (s *Simulator) Unlock() {
 	s.lockRunningSimulations.Unlock()

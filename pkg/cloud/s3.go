@@ -37,6 +37,7 @@ func NewAmazonS3(p client.ConfigProvider, cfgs ...*aws.Config) IAmazonS3 {
 func (s *AmazonS3) GetAddress(bucket string, key string) string {
 	return fmt.Sprintf("s3://%s", filepath.Join(bucket, key))
 }
+
 // Upload receives a bucket, a key and a file, and tries to upload that object to S3.
 // Returns the response from the S3 API PutObject method.
 func (s *AmazonS3) Upload(bucket string, key string, file []byte) (*s3.PutObjectOutput, error) {

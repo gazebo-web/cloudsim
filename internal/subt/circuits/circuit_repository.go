@@ -9,13 +9,13 @@ type IRepository interface {
 }
 
 type Repository struct {
-	Db        *gorm.DB
+	Db *gorm.DB
 }
 
 func NewRepository(db *gorm.DB) IRepository {
 	var r IRepository
 	r = &Repository{
-		Db:        db,
+		Db: db,
 	}
 	return r
 }

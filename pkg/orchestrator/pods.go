@@ -31,7 +31,7 @@ const (
 type Pod struct {
 	apiv1.Pod
 	IsRunning bool
-	GroupID string
+	GroupID   string
 }
 
 type Pods []Pod

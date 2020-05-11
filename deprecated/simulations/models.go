@@ -1,9 +1,9 @@
 package simulations
 
 import (
-	"gitlab.com/ignitionrobotics/web/ign-go"
 	"encoding/json"
 	"github.com/jinzhu/gorm"
+	"gitlab.com/ignitionrobotics/web/ign-go"
 	"strconv"
 	"strings"
 	"time"

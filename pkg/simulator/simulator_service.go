@@ -6,7 +6,6 @@ import (
 
 // IService
 type IService interface {
-
 }
 
 // Service
@@ -17,6 +16,6 @@ type Service struct {
 // NewSimulatorService
 func NewSimulatorService(node nodes.IRepository) *Service {
 	return &Service{
-		nodeRepository:  node,
+		nodeRepository: node,
 	}
 }

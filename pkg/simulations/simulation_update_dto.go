@@ -5,7 +5,7 @@ type SimulationUpdateInput interface {
 }
 
 type SimulationUpdate struct {
-	Held *bool
+	Held        *bool
 	ErrorStatus *string
 }
 

@@ -58,7 +58,7 @@ func NewService(input NewServiceInput) Service {
 	var s Service
 	s = &service{
 		repository: input.Repository,
-		config: input.Config,
+		config:     input.Config,
 	}
 	return s
 }
@@ -205,7 +205,7 @@ func (s *service) Create(ctx context.Context, input SimulationCreateInput, user 
 	return s.create(sim)
 }
 
-func (s *service) create(sim Simulation) (*Simulation, *ign.ErrMsg)  {
+func (s *service) create(sim Simulation) (*Simulation, *ign.ErrMsg) {
 	output, err := s.repository.Create(&sim)
 	if err != nil {
 		return nil, ign.NewErrorMessageWithBase(ign.ErrorDbSave, err)

@@ -1,13 +1,13 @@
 package globals
 
 import (
-	"gitlab.com/ignitionrobotics/web/fuelserver/permissions"
-	"gitlab.com/ignitionrobotics/web/ign-go"
-	igntran "gitlab.com/ignitionrobotics/web/cloudsim/ign-transport"
-	useracc "gitlab.com/ignitionrobotics/web/cloudsim/users"
 	"github.com/aws/aws-sdk-go/service/ec2/ec2iface"
 	"github.com/aws/aws-sdk-go/service/s3/s3iface"
 	"github.com/go-playground/form"
+	igntran "gitlab.com/ignitionrobotics/web/cloudsim/ign-transport"
+	useracc "gitlab.com/ignitionrobotics/web/cloudsim/users"
+	"gitlab.com/ignitionrobotics/web/fuelserver/permissions"
+	"gitlab.com/ignitionrobotics/web/ign-go"
 	"gopkg.in/go-playground/validator.v9"
 	"k8s.io/client-go/kubernetes"
 )

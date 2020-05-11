@@ -1,11 +1,11 @@
 package simulations
 
 import (
-	"gitlab.com/ignitionrobotics/web/ign-go"
 	"bytes"
 	"context"
 	"fmt"
 	"github.com/pkg/errors"
+	"gitlab.com/ignitionrobotics/web/ign-go"
 	"io"
 	apiv1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"

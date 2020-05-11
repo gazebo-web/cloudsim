@@ -33,9 +33,9 @@ type controller struct {
 
 // NewControllerInput is the input needed to create a new Controller implementation.
 type NewControllerInput struct {
-	Services services
-	FormDecoder       *form.Decoder
-	Validator         *validator.Validate
+	Services    services
+	FormDecoder *form.Decoder
+	Validator   *validator.Validate
 }
 
 // NewController receives a NewControllerInput to initialize a new Controller implementation.

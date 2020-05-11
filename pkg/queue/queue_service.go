@@ -27,7 +27,7 @@ type service struct {
 func NewService(queue Queue, userService users.Service) Service {
 	var c Service
 	c = &service{
-		queue: queue,
+		queue:       queue,
 		userService: userService,
 	}
 	return c

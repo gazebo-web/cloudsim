@@ -23,13 +23,11 @@ const (
 // circuit or owner will override this general rule.
 type Rule struct {
 	gorm.Model
-	Owner    *string        `json:"owner"`
-	Circuit  *string        `json:"circuit" validate:"iscircuit"`
-	RuleType RuleType 		`gorm:"not null" json:"rule_type" validate:"isruletype"`
-	Value    string         `gorm:"not null" json:"value"`
+	Owner    *string  `json:"owner"`
+	Circuit  *string  `json:"circuit" validate:"iscircuit"`
+	RuleType RuleType `gorm:"not null" json:"rule_type" validate:"isruletype"`
+	Value    string   `gorm:"not null" json:"value"`
 }
-
 
 // Rules is a slice of Rule
 type Rules []Rule
-

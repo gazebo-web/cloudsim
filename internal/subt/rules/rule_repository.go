@@ -6,5 +6,4 @@ type IRepository interface {
 }
 
 type Repository struct {
-
 }

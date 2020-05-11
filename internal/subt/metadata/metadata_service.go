@@ -1,5 +1,5 @@
 package metadata
 
-type IService interface {}
+type IService interface{}
 
-type Service struct {}
+type Service struct{}

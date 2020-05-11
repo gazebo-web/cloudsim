@@ -54,11 +54,11 @@ type RunningSimulation struct {
 
 // NewRunningSimulationInput
 type NewRunningSimulationInput struct {
-	GroupID string
-	Owner string
-	MaxSeconds int64
-	ValidFor	time.Duration
-	worldStatsTopic string
+	GroupID          string
+	Owner            string
+	MaxSeconds       int64
+	ValidFor         time.Duration
+	worldStatsTopic  string
 	worldWarmupTopic string
 }
 
@@ -103,9 +103,9 @@ func NewRunningSimulation(ctx context.Context, input NewRunningSimulationInput) 
 type gazeboState string
 
 const (
-	GazeboStateUnknown        gazeboState = "unknown"
-	GazeboStateRun            gazeboState = "run"
-	GazeboStatePause          gazeboState = "pause"
+	GazeboStateUnknown  gazeboState = "unknown"
+	GazeboStateRun      gazeboState = "run"
+	GazeboStatePause    gazeboState = "pause"
 	stdoutSkipStatsMsgs             = 100
 )
 

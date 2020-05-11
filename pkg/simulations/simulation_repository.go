@@ -23,14 +23,14 @@ type Repository interface {
 // repository is the Repository implementation
 type repository struct {
 	Application string
-	Db *gorm.DB
+	Db          *gorm.DB
 }
 
 // NewRepository
 func NewRepository(db *gorm.DB, application string) Repository {
 	var r Repository
 	r = &repository{
-		Db: db,
+		Db:          db,
 		Application: application,
 	}
 	return r
@@ -60,8 +60,8 @@ func (r *repository) Update(groupID string, simulation *Simulation) (*Simulation
 
 func (r *repository) Reject(simulation *Simulation) (*Simulation, error) {
 	if err := r.Db.Model(simulation).Update(Simulation{
-		Status: StatusRejected.ToIntPtr(),
-		ErrorStatus:      ErrRejected.ToStringPtr(),
+		Status:      StatusRejected.ToIntPtr(),
+		ErrorStatus: ErrRejected.ToStringPtr(),
 	}).Delete(simulation).Error; err != nil {
 		return nil, err
 	}
@@ -83,18 +83,18 @@ func (r *repository) Get(groupID string) (*Simulation, error) {
 }
 
 type GetAllPaginatedInput struct {
-	PaginationRequest *ign.PaginationRequest
-	ByStatus *Status
-	InvertStatus bool
-	ByErrorStatus *ErrorStatus
-	InvertErrorStatus bool
-	IncludeChildren bool
-	CanPerformWithRole bool
+	PaginationRequest          *ign.PaginationRequest
+	ByStatus                   *Status
+	InvertStatus               bool
+	ByErrorStatus              *ErrorStatus
+	InvertErrorStatus          bool
+	IncludeChildren            bool
+	CanPerformWithRole         bool
 	QueryForResourceVisibility func(q *gorm.DB, owner *string, user *fuel.User) *gorm.DB
-	User *fuel.User
+	User                       *fuel.User
 }
 
-func (r *repository) GetAllPaginated(input GetAllPaginatedInput) (*Simulations, *ign.PaginationResult, error)  {
+func (r *repository) GetAllPaginated(input GetAllPaginatedInput) (*Simulations, *ign.PaginationResult, error) {
 	var sims Simulations
 	q := r.Db.Order("created_at desc, id", true).Where("application = ?", r.Application)
 
@@ -141,7 +141,7 @@ func (r *repository) GetAllByOwner(owner string, statusFrom, statusTo Status) (*
 		Where("owner = ?", owner).
 		Where("status BETWEEN ? AND ?", int(statusFrom), int(statusTo)).
 		Find(&sims).Error; err != nil {
-			return nil, err
+		return nil, err
 	}
 	return &sims, nil
 }

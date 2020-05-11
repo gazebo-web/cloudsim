@@ -1,12 +1,12 @@
 package simulations
 
 import (
-	"gitlab.com/ignitionrobotics/web/fuelserver/bundles/users"
-	"gitlab.com/ignitionrobotics/web/ign-go"
 	"context"
 	"fmt"
 	"github.com/jinzhu/gorm"
 	"github.com/satori/go.uuid"
+	"gitlab.com/ignitionrobotics/web/fuelserver/bundles/users"
+	"gitlab.com/ignitionrobotics/web/ign-go"
 	"net/http"
 )
 

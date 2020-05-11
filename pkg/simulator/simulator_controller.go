@@ -1,7 +1,7 @@
 package simulator
 
 // IController
-type IController interface {}
+type IController interface{}
 
 // Controller
 type Controller struct {

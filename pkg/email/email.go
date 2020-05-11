@@ -12,7 +12,7 @@ type Email interface {
 // Config represents a set of options to configure the email service.
 type email struct {
 	DefaultEmailRecipients []string `env:"IGN_DEFAULT_EMAIL_RECIPIENT" envSeparator:","`
-	DefaultEmailSender     string `env:"IGN_DEFAULT_EMAIL_SENDER"`
+	DefaultEmailSender     string   `env:"IGN_DEFAULT_EMAIL_SENDER"`
 }
 
 // New returns a new email service.

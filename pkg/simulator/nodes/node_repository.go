@@ -6,14 +6,13 @@ import (
 )
 
 // IRepository
-type IRepository interface{
+type IRepository interface {
 	Create(node Node) (*Node, error)
 }
 
 // repository
-type Repository struct{
+type Repository struct {
 	db *gorm.DB
-
 }
 
 // NewRepository

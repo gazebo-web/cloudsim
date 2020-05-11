@@ -1,15 +1,15 @@
 package users
 
 import (
-	"gitlab.com/ignitionrobotics/web/fuelserver/bundles/subt"
-	"gitlab.com/ignitionrobotics/web/fuelserver/bundles/users"
-	per "gitlab.com/ignitionrobotics/web/fuelserver/permissions"
-	"gitlab.com/ignitionrobotics/web/ign-go"
 	"context"
 	"github.com/caarlos0/env"
 	"github.com/casbin/casbin"
 	"github.com/casbin/gorm-adapter"
 	"github.com/jinzhu/gorm"
+	"gitlab.com/ignitionrobotics/web/fuelserver/bundles/subt"
+	"gitlab.com/ignitionrobotics/web/fuelserver/bundles/users"
+	per "gitlab.com/ignitionrobotics/web/fuelserver/permissions"
+	"gitlab.com/ignitionrobotics/web/ign-go"
 	"net/http"
 	"strings"
 	"time"

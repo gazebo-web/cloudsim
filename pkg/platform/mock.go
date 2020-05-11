@@ -3,9 +3,9 @@ package platform
 import "context"
 
 type Mock struct {
-	StartMock func(ctx context.Context) error
-	StopMock func(ctx context.Context) error
-	RequestLaunchMock func(ctx context.Context, groupID string)
+	StartMock              func(ctx context.Context) error
+	StopMock               func(ctx context.Context) error
+	RequestLaunchMock      func(ctx context.Context, groupID string)
 	RequestTerminationMock func(ctx context.Context, groupID string)
 }
 

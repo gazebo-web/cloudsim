@@ -25,21 +25,20 @@ func TestSimulationIntegration(t *testing.T) {
 
 type simulationTestSuite struct {
 	suite.Suite
-	userService *users.ServiceMock
+	userService   *users.ServiceMock
 	adminUsername string
-	admin fuel.User
+	admin         fuel.User
 
 	repository *RepositoryMock
 	service    Service
 	controller Controller
 
-
-	router *mux.Router
+	router   *mux.Router
 	recorder *httptest.ResponseRecorder
 
 	updateSimulation *SimulationUpdate
 	createSimulation *SimulationCreate
-	simulation *Simulation
+	simulation       *Simulation
 }
 
 func (suite *simulationTestSuite) SetupSuite() {
@@ -62,9 +61,9 @@ func (suite *simulationTestSuite) SetupSuite() {
 
 	suite.adminUsername = "root"
 	suite.admin = fuel.User{
-		Name:             tools.Sptr("Admin Root"),
-		Username:         &suite.adminUsername,
-		Email:            tools.Sptr("root@admin.com"),
+		Name:     tools.Sptr("Admin Root"),
+		Username: &suite.adminUsername,
+		Email:    tools.Sptr("root@admin.com"),
 	}
 }
 
@@ -139,8 +138,6 @@ func (suite *simulationTestSuite) TestCreate() {
 	req.Header.Set("Content-Type", formWriter.FormDataContentType())
 
 	suite.router.ServeHTTP(suite.recorder, req)
-
-
 
 	var response Simulation
 	b, err := ioutil.ReadAll(suite.recorder.Body)

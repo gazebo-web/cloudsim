@@ -1,12 +1,12 @@
 package simulations
 
 import (
-	"gitlab.com/ignitionrobotics/web/ign-go"
-	igntran "gitlab.com/ignitionrobotics/web/cloudsim/ign-transport"
-	msgs "gitlab.com/ignitionrobotics/web/cloudsim/ign-transport/proto/ignition/msgs"
 	"context"
 	"fmt"
 	proto "github.com/golang/protobuf/proto"
+	igntran "gitlab.com/ignitionrobotics/web/cloudsim/ign-transport"
+	msgs "gitlab.com/ignitionrobotics/web/cloudsim/ign-transport/proto/ignition/msgs"
+	"gitlab.com/ignitionrobotics/web/ign-go"
 	"sync"
 	"time"
 )

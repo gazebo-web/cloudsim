@@ -1,12 +1,12 @@
 package main
 
 import (
-	"gitlab.com/ignitionrobotics/web/cloudsim/simulations"
 	"fmt"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/aws/aws-sdk-go/service/ec2/ec2iface"
 	uuid "github.com/satori/go.uuid"
+	"gitlab.com/ignitionrobotics/web/cloudsim/simulations"
 )
 
 const (

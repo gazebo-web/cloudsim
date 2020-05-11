@@ -23,7 +23,6 @@ func TestSleep(t *testing.T) {
 
 	waitTime = 5 * time.Millisecond
 
-
 	slept := false
 
 	wg.Add(1)

@@ -104,8 +104,8 @@ func NewService(resourcePermissions *per.Permissions, sysAdmin string) (Service,
 		Db:                  usersDb,
 		resourcePermissions: resourcePermissions,
 		cfg:                 cfg,
-		syncedEnforcer: enforcer,
-		p: p,
+		syncedEnforcer:      enforcer,
+		p:                   p,
 	}
 	return ua, nil
 }

@@ -29,7 +29,7 @@ func (r *Repository) GetConfigByType(robotType string) (*RobotConfig, error) {
 func NewRepository(db *gorm.DB) IRepository {
 	var r IRepository
 	r = &Repository{
-		DB:db,
+		DB: db,
 	}
 	return r
 }

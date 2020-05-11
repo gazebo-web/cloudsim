@@ -181,4 +181,3 @@ func (ec *AmazonEC2) RunInstances(ctx context.Context, inputs []*ec2.RunInstance
 	}
 	return reservations, err
 }
-
