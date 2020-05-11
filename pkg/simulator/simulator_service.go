@@ -10,11 +10,11 @@ type IService interface {
 
 // Service
 type Service struct {
-	nodeRepository nodes.IRepository
+	nodeRepository nodes.Repository
 }
 
 // NewSimulatorService
-func NewSimulatorService(node nodes.IRepository) *Service {
+func NewSimulatorService(node nodes.Repository) *Service {
 	return &Service{
 		nodeRepository: node,
 	}

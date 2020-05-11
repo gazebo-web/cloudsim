@@ -57,7 +57,7 @@ type services struct {
 
 // repositories
 type repositories struct {
-	node nodes.IRepository
+	node nodes.Repository
 }
 
 // NewSimulatorInput
