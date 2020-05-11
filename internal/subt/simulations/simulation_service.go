@@ -22,9 +22,9 @@ type Service struct {
 	repository  IRepository
 }
 
-func NewService(repository IRepository) IService {
+func NewService(repository IRepository, parentRepository simulations.IRepository) IService {
 	var s IService
-	parent := simulations.NewService(repository)
+	parent := simulations.NewService(parentRepository)
 	s = &Service{
 		parent:     parent,
 		repository: repository,
@@ -72,7 +72,7 @@ func (s *Service) Create(ctx context.Context, createSimulation *SimulationCreate
 		s.parent.Reject(ctx, sim)
 		return nil, em
 	}
-	subtSim, err := s.repository.CreateAggregated(sim)
+	subtSim, err := s.repository.Create(sim)
 	if err != nil {
 		return nil, ign.NewErrorMessageWithBase(ign.ErrorDbSave, err)
 	}

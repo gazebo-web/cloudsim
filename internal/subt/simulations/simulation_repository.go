@@ -6,14 +6,13 @@ import (
 )
 
 type Repository struct {
-	*simulations.Repository
+	parent *simulations.Repository
 }
 
 type IRepository interface {
-	simulations.IRepository
 	CountByOwnerAndCircuit(owner, circuit string) (int, error)
-	GetAggregated(groupID string) (*Simulation, error)
-	CreateAggregated(sim *simulations.Simulation) (*Simulation, error)
+	Get(groupID string) (*Simulation, error)
+	Create(sim *simulations.Simulation) (*Simulation, error)
 }
 
 func NewRepository(db *gorm.DB) IRepository {
@@ -21,7 +20,7 @@ func NewRepository(db *gorm.DB) IRepository {
 	parent := simulations.NewRepository(db, "subt")
 	repository := parent.(*simulations.Repository)
 	r = &Repository{
-		Repository: repository,
+		parent: repository,
 	}
 	return r
 }
@@ -30,11 +29,11 @@ func (r *Repository) CountByOwnerAndCircuit(owner, circuit string) (int, error) 
 	panic("Not implemented")
 }
 
-func (r *Repository) GetAggregated(groupID string) (*Simulation, error) {
+func (r *Repository) Get(groupID string) (*Simulation, error) {
 	panic("Not implemented")
 }
 
-func (r *Repository) CreateAggregated(sim *simulations.Simulation) (*Simulation, error) {
+func (r *Repository) Create(sim *simulations.Simulation) (*Simulation, error) {
 	subtSim := &Simulation{
 		Base:                sim,
 		GroupID:             sim.GroupID,
