@@ -27,7 +27,7 @@ func RegisterApplication(applications *map[string]application.IApplication, app 
 // RebuildState calls the RebuildState method for all the given applications.
 func RebuildState(p *platform.Platform, applications map[string]application.IApplication) {
 	for _, app := range applications {
-		if err := app.RebuildState(p.Context); err != nil {
+		if err := app.RebuildState(p.Context()); err != nil {
 			panic(fmt.Sprintf("Error rebuilding state for application. Name: %s. Version: %s", app.Name(), app.Version()))
 		}
 	}
@@ -36,14 +36,14 @@ func RebuildState(p *platform.Platform, applications map[string]application.IApp
 // RegisterMonitors calls the RegisterMonitors method for all the given applications.
 func RegisterMonitors(p *platform.Platform, applications map[string]application.IApplication) {
 	for _, app := range applications {
-		app.RegisterMonitors(p.Context)
+		app.RegisterMonitors(p.Context())
 	}
 }
 
 // ShutdownApplications calls the Stop method for all given applications.
 func ShutdownApplications(p *platform.Platform, applications map[string]application.IApplication) {
 	for _, app := range applications {
-		if err := app.Stop(p.Context); err != nil {
+		if err := app.Stop(p.Context()); err != nil {
 			panic(fmt.Sprintf("Error shutting down an application. Name: %s. Version: %s", app.Name(), app.Version()))
 		}
 	}
@@ -68,6 +68,6 @@ func ScheduleTasks(p *platform.Platform, apps map[string]application.IApplicatio
 
 func RegisterValidators(p *platform.Platform, apps map[string]application.IApplication) {
 	for _, app := range apps {
-		app.RegisterValidators(p.Context)
+		app.RegisterValidators(p.Context())
 	}
 }

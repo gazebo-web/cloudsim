@@ -18,12 +18,12 @@ func (app *Application) checkForExpiredSimulations() error {
 		rs := runningSims[groupID]
 
 		if rs.IsExpired() || rs.Finished {
-			app.Platform().RequestTermination(app.Platform().Context, groupID)
+			app.Platform().RequestTermination(app.Platform().Context(), groupID)
 			reason := "expired"
 			if rs.Finished {
 				reason = "finished"
 			}
-			logger.Logger(app.Platform().Context).Info(fmt.Sprintf("Scheduled automatic termination of %s simulation: %s", reason, groupID))
+			logger.Logger(app.Platform().Context()).Info(fmt.Sprintf("Scheduled automatic termination of %s simulation: %s", reason, groupID))
 		}
 	}
 	return nil

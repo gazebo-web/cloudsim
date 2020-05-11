@@ -50,11 +50,11 @@ type Application struct {
 // Services group a list of services to be used by the Application.
 type Services struct {
 	Simulation simulations.Service
-	User       users.IService
+	User       users.Service
 }
 
 // New creates a new application for the given platform.
-func New(p *platform.Platform, simulationService simulations.Service, userService users.IService) IApplication {
+func New(p *platform.Platform, simulationService simulations.Service, userService users.Service) IApplication {
 	app := &Application{
 		platform: p,
 		Cleaner:  monitors.New("expired-simulations-cleaner", "Expired Simulations Cleaner", 20*time.Second),

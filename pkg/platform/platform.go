@@ -44,7 +44,7 @@ type Platform struct {
 	Orchestrator     orchestrator.Kubernetes
 	CloudProvider    *cloud.AmazonWS
 	Permissions      *permissions.Permissions
-	UserService      users.IService
+	UserService      users.Service
 	Config           Config
 	Simulator        simulator.ISimulator
 	PoolFactory      pool.Factory

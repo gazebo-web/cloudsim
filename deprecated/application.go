@@ -159,7 +159,7 @@ func init() {
 	userAccessor, err := initUserAccessor(logCtx, cfg)
 	if err != nil {
 		// Log and shutdown the app , if there is an error during startup
-		logger.Critical("Critical error trying to create Service", err)
+		logger.Critical("Critical error trying to create service", err)
 		log.Fatalf("%+v\n", err)
 	}
 	globals.UserAccessor = userAccessor
@@ -229,7 +229,7 @@ func init() {
 		log.Fatalf("%+v\n", err)
 	}
 
-	// Create the Simulations Service instance
+	// Create the Simulations service instance
 	// First initialize the Jobs Pool factory, if needed
 	var pFactory sim.PoolFactory
 	if cfg.isGoTest {
@@ -261,7 +261,7 @@ func initIgnTransport(cfg appConfig) {
 func main() {
 	// Launch the server
 	globals.Server.Run()
-	// Destroy Sim Service
+	// Destroy Sim service
 	sim.SimServImpl.Stop(context.Background())
 	if ecNm != nil {
 		ecNm.Stop()

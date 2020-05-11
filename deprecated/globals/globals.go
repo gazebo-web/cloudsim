@@ -60,7 +60,7 @@ var DisableSummaryEmails = false
 // TODO This should probably be placed in the service configuration
 var DisableScoreGeneration = false
 
-// Deprecated: Service holds a reference to the Service. A proxy to ign-fuel's Users library
+// Deprecated: service holds a reference to the service. A proxy to ign-fuel's Users library
 // Dev note: code should not use this from globals. Instead configure your logic with arguments
 // in the constructors.
 var UserAccessor useracc.UserAccessor

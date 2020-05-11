@@ -20,10 +20,10 @@ type IController interface {
 }
 
 type Controller struct {
-	service IService
+	service Service
 }
 
-func NewController(service IService) IController {
+func NewController(service Service) IController {
 	var c IController
 	c = &Controller{service: service}
 	return c

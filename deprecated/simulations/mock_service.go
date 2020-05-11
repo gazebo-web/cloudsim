@@ -20,21 +20,21 @@ type MockService struct {
 // Start starts this simulation service
 func (s *MockService) Start(ctx context.Context) error {
 	// nothing to do
-	logger(ctx).Debug("Mock Sim Service - Start invoked")
+	logger(ctx).Debug("Mock Sim service - Start invoked")
 	return nil
 }
 
 // Stop stops this simulation service
 func (s *MockService) Stop(ctx context.Context) error {
 	// nothing to do
-	logger(ctx).Debug("Mock Sim Service - Stop invoked")
+	logger(ctx).Debug("Mock Sim service - Stop invoked")
 	return nil
 }
 
 // RegisterApplication registers a new application type.
 func (s *MockService) RegisterApplication(ctx context.Context, app ApplicationType) {
 	// nothing to do
-	logger(ctx).Debug(fmt.Sprintf("Mock Sim Service - Registered new Application [%s]", app.getApplicationName()))
+	logger(ctx).Debug(fmt.Sprintf("Mock Sim service - Registered new Application [%s]", app.getApplicationName()))
 }
 
 // StartSimulationAsync is the main func to launch a new simulation

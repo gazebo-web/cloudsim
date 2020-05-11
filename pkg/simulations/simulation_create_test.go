@@ -31,7 +31,7 @@ type simulationTestSuite struct {
 
 	repository *RepositoryMock
 	service    Service
-	controller IController
+	controller Controller
 
 
 	router *mux.Router

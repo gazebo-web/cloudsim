@@ -15,7 +15,7 @@ type Service struct {
 }
 
 type NewServiceInput struct {
-	UserService    users.IService
+	UserService    users.Service
 	CircuitService circuits.IService
 	Repository     IRepository
 }
@@ -32,9 +32,9 @@ func NewService(input NewServiceInput) IService {
 	return s
 }
 
-// services represents the imported services used by the Qualification Service.
+// services represents the imported services used by the Qualification service.
 type services struct {
-	User    users.IService
+	User    users.Service
 	Circuit circuits.IService
 }
 

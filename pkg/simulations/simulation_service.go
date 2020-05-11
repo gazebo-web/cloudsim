@@ -22,7 +22,7 @@ type Service interface {
 	GetAllParents(statusFrom, statusTo Status) (*Simulations, error)
 	GetAllParentsWithErrors(statusFrom, statusTo Status, errors []ErrorStatus) (*Simulations, error)
 	GetParent(groupID string) (*Simulation, error)
-	Create(ctx context.Context, createSimulationInput SimulationCreateInput, user *fuel.User) (*Simulation, *ign.ErrMsg)
+	Create(ctx context.Context, input SimulationCreateInput, user *fuel.User) (SimulationCreateOutput, *ign.ErrMsg)
 	create(sim Simulation) (*Simulation, *ign.ErrMsg)
 	Launch(ctx context.Context, groupID string, user *fuel.User) (*Simulation, *ign.ErrMsg)
 	Restart(ctx context.Context, groupID string, user *fuel.User) (*Simulation, *ign.ErrMsg)
@@ -38,7 +38,7 @@ type Service interface {
 // service
 type service struct {
 	repository  Repository
-	userService users.IService
+	userService users.Service
 	config      ServiceConfig
 }
 
@@ -136,8 +136,8 @@ func (s *service) GetParent(groupID string) (*Simulation, error) {
 	panic("implement me")
 }
 
-func (s *service) Create(ctx context.Context, createSimulationInput SimulationCreateInput, user *fuel.User) (*Simulation, *ign.ErrMsg) {
-	createSimulation := createSimulationInput.Input()
+func (s *service) Create(ctx context.Context, input SimulationCreateInput, user *fuel.User) (SimulationCreateOutput, *ign.ErrMsg) {
+	createSimulation := input.Input()
 
 	if createSimulation.Platform == "" {
 		createSimulation.Platform = s.config.Platform
@@ -206,10 +206,12 @@ func (s *service) Create(ctx context.Context, createSimulationInput SimulationCr
 }
 
 func (s *service) create(sim Simulation) (*Simulation, *ign.ErrMsg)  {
-	createdSim, err := s.repository.Create(&sim)
+	output, err := s.repository.Create(&sim)
 	if err != nil {
 		return nil, ign.NewErrorMessageWithBase(ign.ErrorDbSave, err)
 	}
+
+	createdSim := output.Output()
 
 	// Set read and write permissions to owner (eg, the team) and to the Application
 	// organizing team (eg. subt).

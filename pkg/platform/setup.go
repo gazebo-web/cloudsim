@@ -118,7 +118,7 @@ func (p *Platform) setupPermissions() *Platform {
 	return p
 }
 
-// setupUserService initializes the User Service.
+// setupUserService initializes the User service.
 func (p *Platform) setupUserService() *Platform {
 	s, err := users.NewService(p.Permissions, p.Config.SysAdmin)
 	if err != nil {

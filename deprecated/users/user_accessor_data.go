@@ -40,7 +40,7 @@ import (
 
 // TODO these methods should be part of ign-fuelserver to avoid duplicating this initialization code.
 
-// UserAccessorDataMock allows us to configure the Service with mock data used in tests.
+// UserAccessorDataMock allows us to configure the service with mock data used in tests.
 type UserAccessorDataMock struct {
 	ua              *UserAccessorImpl
 	sysadminIdentiy string

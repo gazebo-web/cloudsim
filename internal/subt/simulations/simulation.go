@@ -22,3 +22,15 @@ type Simulation struct {
 func (Simulation) TableName() string {
 	return "subt_simulations"
 }
+
+func (s *Simulation) Input() *simulations.Simulation {
+	return s.Base
+}
+
+func (s *Simulation) Output() *simulations.Simulation {
+	return s.Base
+}
+
+func (s *Simulation) ChildInput() *Simulation {
+	return s
+}

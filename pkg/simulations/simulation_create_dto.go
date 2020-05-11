@@ -1,7 +1,7 @@
 package simulations
 
 type SimulationCreateInput interface {
-	Input() SimulationCreate
+	Input() *SimulationCreate
 }
 
 type SimulationCreate struct {
@@ -27,10 +27,14 @@ type SimulationCreate struct {
 	Robots *string `form:"-"`
 }
 
-func (sc SimulationCreate) Input() SimulationCreate {
+func (sc *SimulationCreate) Input() *SimulationCreate {
 	return sc
 }
 
+type SimulationCreatePersistentInput interface {
+	Input() *Simulation
+}
+
 type SimulationCreateOutput interface {
-	Output() Simulation
+	Output() *Simulation
 }

@@ -17,13 +17,16 @@ type IService interface {
 
 type Service struct {
 	simulations.Service
-	userService users.IService
+	userService users.Service
 	repository  Repository
 }
 
 func NewService(repository Repository) IService {
 	var s IService
-	parent := simulations.NewService(repository)
+	parent := simulations.NewService(simulations.NewServiceInput{
+		Repository: repository,
+		Config:     simulations.ServiceConfig{},
+	})
 	s = &Service{
 		Service:    parent,
 		repository: repository,
@@ -39,18 +42,17 @@ func (s *Service) simulationIsHeld(ctx context.Context, sim *simulations.Simulat
 	return false
 }
 
-func (s *Service) Create(ctx context.Context, createSimulationInput simulations.SimulationCreateInput, user *fuel.User) (*simulations.Simulation, *ign.ErrMsg) {
-	subtCreateSimulationInput, ok := createSimulationInput.(SimulationCreateInput)
-	if !ok {
-		// TODO: Replace error with generic ErrorCasting
-		return nil, ign.NewErrorMessage(ign.ErrorCastingID)
-	}
+func (s *Service) Create(ctx context.Context, input simulations.SimulationCreateInput, user *fuel.User) (simulations.SimulationCreateOutput, *ign.ErrMsg) {
+	createSim := input.Input()
 
-	var sim *simulations.Simulation
+	var output simulations.SimulationCreateOutput
 	var em *ign.ErrMsg
-	if sim, em = s.Service.Create(ctx, createSimulationInput, user); em != nil {
+
+	if output, em = s.Service.Create(ctx, createSim, user); em != nil {
 		return nil, em
 	}
+
+	sim := output.Output()
 
 	// Set held state if the user is not a sysadmin and the simulations needs to be held
 	if !s.userService.IsSystemAdmin(*user.Username) && s.simulationIsHeld(ctx, sim) {
@@ -72,6 +74,23 @@ func (s *Service) Create(ctx context.Context, createSimulationInput simulations.
 		s.Reject(ctx, sim)
 		return nil, em
 	}
+
+	subtSim := &Simulation{
+		Base:                sim,
+		GroupID:             sim.GroupID,
+		Score:               nil,
+		SimTimeDurationSec:  0,
+		RealTimeDurationSec: 0,
+		ModelCount:          0,
+	}
+
+	var err error
+
+	subtSim, err = s.repository.Aggregate(subtSim)
+	if err != nil {
+		return nil, ign.NewErrorMessageWithBase(ign.ErrorDbSave, err)
+	}
+
 	return subtSim, nil
 }
 

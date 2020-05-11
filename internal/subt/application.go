@@ -34,7 +34,7 @@ type SubT struct {
 }
 
 type controllers struct {
-	Simulation sim.IController
+	Simulation sim.Controller
 }
 
 type services struct {
@@ -46,16 +46,17 @@ type services struct {
 
 // New creates a new SubT application.
 func New(p *platform.Platform) IApplication {
-	parentSimulationRepository := simulations.NewRepository(p.Server.Db, "subt")
 	simulationRepository := sim.NewRepository(p.Server.Db)
-	simulationService := sim.NewService(simulationRepository, parentSimulationRepository)
-	baseApp := application.New(p, simulationService.Parent(), p.UserService)
+	simulationService := sim.NewService(simulationRepository)
+
+	baseApp := application.New(p, simulationService, p.UserService)
+
 	validate := validator.New()
 	subt := &SubT{
 		IApplication: baseApp,
 		Services: services{
 			Services: application.Services{
-				Simulation: simulationService.Parent(),
+				Simulation: simulationService,
 				User:       p.UserService,
 			},
 			Simulation: simulationService,

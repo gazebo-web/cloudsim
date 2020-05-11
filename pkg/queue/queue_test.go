@@ -22,7 +22,7 @@ type queueTestSuite struct {
 	adminUsername string
 	admin         fuel.User
 	queue         Queue
-	service       IService
+	service       Service
 	controller    IController
 	router        *mux.Router
 	recorder      *httptest.ResponseRecorder

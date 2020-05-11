@@ -12,13 +12,13 @@ import (
 	"net/http"
 )
 
-// IController represents a group of methods to expose in the API Rest.
-type IController interface {
-	simulations.IController
+// controller represents a group of methods to expose in the API Rest.
+type Controller interface {
+	simulations.Controller
 }
 
-// Controller is an IController implementation.
-type Controller struct {
+// controller is an controller implementation.
+type controller struct {
 	services    services
 	formDecoder *form.Decoder
 	validator   *validator.Validate
@@ -26,7 +26,7 @@ type Controller struct {
 
 type services struct {
 	Simulation IService
-	User       users.IService
+	User       users.Service
 }
 
 type NewControllerInput struct {
@@ -34,12 +34,12 @@ type NewControllerInput struct {
 	Decoder     *form.Decoder
 	Validator   *validator.Validate
 	Permissions *permissions.Permissions
-	UserService users.IService
+	UserService users.Service
 }
 
-func NewController(input NewControllerInput) IController {
-	var c IController
-	c = &Controller{
+func NewController(input NewControllerInput) Controller {
+	var c Controller
+	c = &controller{
 		formDecoder: input.Decoder,
 		validator:   input.Validator,
 		services: services{
@@ -50,7 +50,7 @@ func NewController(input NewControllerInput) IController {
 	return c
 }
 
-func (c *Controller) Start(user *fuel.User, w http.ResponseWriter, r *http.Request) (interface{}, *ign.ErrMsg) {
+func (c *controller) Start(user *fuel.User, w http.ResponseWriter, r *http.Request) (interface{}, *ign.ErrMsg) {
 	if err := r.ParseMultipartForm(0); err != nil {
 		return nil, ign.NewErrorMessageWithBase(ign.ErrorForm, err)
 	}
@@ -69,30 +69,30 @@ func (c *Controller) Start(user *fuel.User, w http.ResponseWriter, r *http.Reque
 	return c.services.Simulation.Create(r.Context(), &createSim, user)
 }
 
-func (c *Controller) LaunchHeld(user *fuel.User, w http.ResponseWriter, r *http.Request) (interface{}, *ign.ErrMsg) {
+func (c *controller) LaunchHeld(user *fuel.User, w http.ResponseWriter, r *http.Request) (interface{}, *ign.ErrMsg) {
 	panic("implement me")
 }
 
-func (c *Controller) Restart(user *fuel.User, w http.ResponseWriter, r *http.Request) (interface{}, *ign.ErrMsg) {
+func (c *controller) Restart(user *fuel.User, w http.ResponseWriter, r *http.Request) (interface{}, *ign.ErrMsg) {
 	panic("implement me")
 }
 
-func (c *Controller) Shutdown(user *fuel.User, w http.ResponseWriter, r *http.Request) (interface{}, *ign.ErrMsg) {
+func (c *controller) Shutdown(user *fuel.User, w http.ResponseWriter, r *http.Request) (interface{}, *ign.ErrMsg) {
 	panic("implement me")
 }
 
-func (c *Controller) GetAll(user *fuel.User, w http.ResponseWriter, r *http.Request) (interface{}, *ign.ErrMsg) {
+func (c *controller) GetAll(user *fuel.User, w http.ResponseWriter, r *http.Request) (interface{}, *ign.ErrMsg) {
 	panic("implement me")
 }
 
-func (c *Controller) Get(user *fuel.User, w http.ResponseWriter, r *http.Request) (interface{}, *ign.ErrMsg) {
+func (c *controller) Get(user *fuel.User, w http.ResponseWriter, r *http.Request) (interface{}, *ign.ErrMsg) {
 	panic("implement me")
 }
 
-func (c *Controller) GetDownloadableLogs(user *fuel.User, w http.ResponseWriter, r *http.Request) (interface{}, *ign.ErrMsg) {
+func (c *controller) GetDownloadableLogs(user *fuel.User, w http.ResponseWriter, r *http.Request) (interface{}, *ign.ErrMsg) {
 	panic("implement me")
 }
 
-func (c *Controller) GetLiveLogs(user *fuel.User, w http.ResponseWriter, r *http.Request) (interface{}, *ign.ErrMsg) {
+func (c *controller) GetLiveLogs(user *fuel.User, w http.ResponseWriter, r *http.Request) (interface{}, *ign.ErrMsg) {
 	panic("implement me")
 }
