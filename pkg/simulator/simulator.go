@@ -40,7 +40,7 @@ type Config struct {
 // and registering them in the kubernetes master.
 type simulator struct {
 	orchestrator           orchestrator.Kubernetes
-	cloud                  *cloud.AmazonWS
+	cloud                  cloud.AmazonWS
 	runningSimulations     map[string]*RunningSimulation
 	lockRunningSimulations sync.RWMutex
 	config                 Config
@@ -63,7 +63,7 @@ type repositories struct {
 // NewSimulatorInput
 type NewSimulatorInput struct {
 	Orchestrator orchestrator.Kubernetes
-	Cloud        *cloud.AmazonWS
+	Cloud        cloud.AmazonWS
 	Db           *gorm.DB
 }
 

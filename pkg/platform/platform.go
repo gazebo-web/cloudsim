@@ -43,7 +43,7 @@ type Platform struct {
 	FormDecoder      *form.Decoder
 	Transport        *transport.Transport
 	Orchestrator     orchestrator.Kubernetes
-	CloudProvider    *cloud.AmazonWS
+	CloudProvider    cloud.AmazonWS
 	Permissions      *permissions.Permissions
 	UserService      users.Service
 	Config           Config
@@ -75,7 +75,7 @@ func (p *Platform) Email() email.Email {
 
 // TODO: Add initializer for queue controller.
 type controllers struct {
-	Queue queue.IController
+	Queue queue.Controller
 }
 
 // Name returns the platform's name

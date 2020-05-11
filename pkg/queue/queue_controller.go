@@ -10,7 +10,7 @@ import (
 	"strconv"
 )
 
-type IController interface {
+type Controller interface {
 	GetAll(user *fuel.User, w http.ResponseWriter, r *http.Request) (interface{}, *ign.ErrMsg)
 	Count(user *fuel.User, w http.ResponseWriter, r *http.Request) (interface{}, *ign.ErrMsg)
 	Swap(user *fuel.User, w http.ResponseWriter, r *http.Request) (interface{}, *ign.ErrMsg)
@@ -19,17 +19,17 @@ type IController interface {
 	Remove(user *fuel.User, w http.ResponseWriter, r *http.Request) (interface{}, *ign.ErrMsg)
 }
 
-type Controller struct {
+type controller struct {
 	service Service
 }
 
-func NewController(service Service) IController {
-	var c IController
-	c = &Controller{service: service}
+func NewController(service Service) Controller {
+	var c Controller
+	c = &controller{service: service}
 	return c
 }
 
-func (c *Controller) GetAll(user *fuel.User, w http.ResponseWriter, r *http.Request) (interface{}, *ign.ErrMsg) {
+func (c *controller) GetAll(user *fuel.User, w http.ResponseWriter, r *http.Request) (interface{}, *ign.ErrMsg) {
 	var page *int
 	var perPage *int
 	params := r.URL.Query()
@@ -50,11 +50,11 @@ func (c *Controller) GetAll(user *fuel.User, w http.ResponseWriter, r *http.Requ
 	return c.service.GetAll(r.Context(), user, page, perPage)
 }
 
-func (c *Controller) Count(user *fuel.User, w http.ResponseWriter, r *http.Request) (interface{}, *ign.ErrMsg) {
+func (c *controller) Count(user *fuel.User, w http.ResponseWriter, r *http.Request) (interface{}, *ign.ErrMsg) {
 	return c.service.Count(r.Context(), user)
 }
 
-func (c *Controller) Swap(user *fuel.User, w http.ResponseWriter, r *http.Request) (interface{}, *ign.ErrMsg) {
+func (c *controller) Swap(user *fuel.User, w http.ResponseWriter, r *http.Request) (interface{}, *ign.ErrMsg) {
 	groupIDA, ok := mux.Vars(r)["groupIDA"]
 	if !ok {
 		return nil, ign.NewErrorMessage(ign.ErrorIDNotInRequest)
@@ -68,7 +68,7 @@ func (c *Controller) Swap(user *fuel.User, w http.ResponseWriter, r *http.Reques
 	return c.service.Swap(r.Context(), user, groupIDA, groupIDB)
 }
 
-func (c *Controller) MoveToFront(user *fuel.User, w http.ResponseWriter, r *http.Request) (interface{}, *ign.ErrMsg) {
+func (c *controller) MoveToFront(user *fuel.User, w http.ResponseWriter, r *http.Request) (interface{}, *ign.ErrMsg) {
 	groupID, ok := mux.Vars(r)["groupID"]
 	if !ok {
 		return nil, ign.NewErrorMessage(ign.ErrorIDNotInRequest)
@@ -76,7 +76,7 @@ func (c *Controller) MoveToFront(user *fuel.User, w http.ResponseWriter, r *http
 	return c.service.MoveToFront(r.Context(), user, groupID)
 }
 
-func (c *Controller) MoveToBack(user *fuel.User, w http.ResponseWriter, r *http.Request) (interface{}, *ign.ErrMsg) {
+func (c *controller) MoveToBack(user *fuel.User, w http.ResponseWriter, r *http.Request) (interface{}, *ign.ErrMsg) {
 	groupID, ok := mux.Vars(r)["groupID"]
 	if !ok {
 		return nil, ign.NewErrorMessage(ign.ErrorIDNotInRequest)
@@ -84,7 +84,7 @@ func (c *Controller) MoveToBack(user *fuel.User, w http.ResponseWriter, r *http.
 	return c.service.MoveToBack(r.Context(), user, groupID)
 }
 
-func (c *Controller) Remove(user *fuel.User, w http.ResponseWriter, r *http.Request) (interface{}, *ign.ErrMsg) {
+func (c *controller) Remove(user *fuel.User, w http.ResponseWriter, r *http.Request) (interface{}, *ign.ErrMsg) {
 	groupID, ok := mux.Vars(r)["groupID"]
 	if !ok {
 		return nil, ign.NewErrorMessage(ign.ErrorIDNotInRequest)

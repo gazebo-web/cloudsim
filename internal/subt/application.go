@@ -136,10 +136,10 @@ func (app *SubT) UploadSummary(sim *sim.Simulation, score stats.Score) *ign.ErrM
 	}
 
 	fileName := tools.GenerateSummaryFilename(*sim.GroupID)
-	key := path.Join(app.Platform().CloudProvider.S3.GetLogKey(*sim.GroupID, *sim.Base.Owner), fileName)
+	key := path.Join(app.Platform().CloudProvider.S3().GetLogKey(*sim.GroupID, *sim.Base.Owner), fileName)
 
 	// TODO: Add AWS_GZ_LOGS_BUCKET env var.
-	_, err = app.Platform().CloudProvider.S3.Upload("AWS_GZ_LOGS_BUCKET", key, b)
+	_, err = app.Platform().CloudProvider.S3().Upload("AWS_GZ_LOGS_BUCKET", key, b)
 	if err != nil {
 		return ign.NewErrorMessageWithBase(ign.ErrorUnexpected, err)
 	}
