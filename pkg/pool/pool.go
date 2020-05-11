@@ -6,14 +6,14 @@ import "github.com/panjf2000/ants"
 // notifications any time a pool worker "finishes" its job (either with result or error).
 type Event int
 
-// IPool is a pool of workers that can accept jobs to be executed.
+// Pool is a pool of workers that can accept jobs to be executed.
 // For more details see project "github.com/panjf2000/ants".
-type IPool interface {
+type Pool interface {
 	Serve(args interface{}) error
 }
 
 // NewPool is the default implementation of the PoolFactory interface.
 // It creates an ants.PoolWithFunc.
-func NewPool(poolSize int, jobF func(interface{})) (IPool, error) {
+func NewPool(poolSize int, jobF func(interface{})) (Pool, error) {
 	return ants.NewPoolWithFunc(poolSize, jobF)
 }

@@ -41,7 +41,7 @@ func (sp *Synchronic) Serve(args interface{}) error {
 
 // NewSynchronicPool is a Factory function that creates a new Synchronic job using
 // the given arguments.
-func NewSynchronicPool(poolSize int, jobFn func(interface{})) (IPool, error) {
+func NewSynchronicPool(poolSize int, jobFn func(interface{})) (Pool, error) {
 
 	jobWithMultipleArgs := func(payload interface{}) {
 		// This is a wrapper on top of the original job function

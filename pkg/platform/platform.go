@@ -51,8 +51,8 @@ type Platform struct {
 	Scheduler        *scheduler.Scheduler
 	LaunchQueue      queue.Queue
 	TerminationQueue chan workers.TerminateInput
-	LaunchPool       pool.IPool
-	TerminationPool  pool.IPool
+	LaunchPool       pool.Pool
+	TerminationPool  pool.Pool
 	Controllers      controllers
 }
 
