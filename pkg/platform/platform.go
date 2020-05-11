@@ -48,7 +48,7 @@ type Platform struct {
 	Config           Config
 	Simulator        simulator.ISimulator
 	PoolFactory      pool.Factory
-	Scheduler        *scheduler.Scheduler
+	Scheduler        scheduler.TaskScheduler
 	LaunchQueue      queue.Queue
 	TerminationQueue chan workers.TerminateInput
 	LaunchPool       pool.Pool
