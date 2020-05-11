@@ -58,7 +58,7 @@ func (c *Controller) Start(user *fuel.User, w http.ResponseWriter, r *http.Reque
 
 	var createSim SimulationCreate
 	// TODO: Create function for Parse & Validate.
-	if em := tools.ParseFormStruct(&createSim, r, c.formDecoder); em != nil {
+	if em := tools.ParseFormStruct(&createSim.SimulationCreate, r, c.formDecoder); em != nil {
 		return nil, em
 	}
 

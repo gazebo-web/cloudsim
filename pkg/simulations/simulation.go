@@ -80,3 +80,7 @@ func (sim *Simulation) Clone() *Simulation {
 func (sim *Simulation) GetStatus() Status {
 	return Status(*sim.Status)
 }
+
+func (sim *Simulation) Output() Simulation {
+	return *sim
+}

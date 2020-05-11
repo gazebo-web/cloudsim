@@ -57,7 +57,7 @@ func (p *Platform) setupLogger() *Platform {
 
 // setupContext initializes the context.
 func (p *Platform) setupContext() *Platform {
-	ctx := ign.NewContextWithLogger(context.Background(), p.Logger)
+	ctx := ign.NewContextWithLogger(context.Background(), p.logger)
 	p.context = ctx
 	return p
 }

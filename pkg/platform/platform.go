@@ -49,7 +49,7 @@ type Platform struct {
 	Simulator        simulator.ISimulator
 	PoolFactory      pool.Factory
 	Scheduler        *scheduler.Scheduler
-	LaunchQueue      queue.IQueue
+	LaunchQueue      queue.Queue
 	TerminationQueue chan workers.TerminateInput
 	LaunchPool       pool.IPool
 	TerminationPool  pool.IPool

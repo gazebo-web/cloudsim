@@ -5,38 +5,37 @@ import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
 )
 
-type Repository struct {
-	parent *simulations.Repository
+type repository struct {
+	simulations.Repository
 }
 
-type IRepository interface {
+type Repository interface {
+	simulations.Repository
 	CountByOwnerAndCircuit(owner, circuit string) (int, error)
-	Get(groupID string) (*Simulation, error)
-	Create(sim *simulations.Simulation) (*Simulation, error)
 }
 
-func NewRepository(db *gorm.DB) IRepository {
-	var r IRepository
+func NewRepository(db *gorm.DB) Repository {
 	parent := simulations.NewRepository(db, "subt")
-	repository := parent.(*simulations.Repository)
-	r = &Repository{
-		parent: repository,
+	r := parent.(simulations.Repository)
+	return &repository{
+		Repository: r,
 	}
-	return r
 }
 
-func (r *Repository) CountByOwnerAndCircuit(owner, circuit string) (int, error) {
+func (r *repository) CountByOwnerAndCircuit(owner, circuit string) (int, error) {
 	panic("Not implemented")
 }
 
-func (r *Repository) Get(groupID string) (*Simulation, error) {
+func (r *repository) Get(groupID string) (*simulations.Simulation, error) {
 	panic("Not implemented")
 }
 
-func (r *Repository) Create(sim *simulations.Simulation) (*Simulation, error) {
-	subtSim := &Simulation{
-		Base:                sim,
-		GroupID:             sim.GroupID,
+func (r *repository) Create(simulation *simulations.Simulation) (*simulations.Simulation, error) {
+	r.Repository.Create(simulation)
+
+	sim := &Simulation{
+		Base:                simulation,
+		GroupID:             simulation.GroupID,
 		Score:               nil,
 		SimTimeDurationSec:  0,
 		RealTimeDurationSec: 0,

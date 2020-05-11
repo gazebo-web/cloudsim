@@ -51,7 +51,7 @@ type Simulator struct {
 
 // services
 type services struct {
-	simulations simulations.IService
+	simulations simulations.Service
 	simulator	IService
 }
 

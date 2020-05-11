@@ -85,8 +85,8 @@ func (m *Mock) Count() int {
 	return args.Int(0)
 }
 
-func NewMock() IQueue {
-	var q IQueue
+func NewMock() Queue {
+	var q Queue
 	q = &Mock{}
 	return q
 }

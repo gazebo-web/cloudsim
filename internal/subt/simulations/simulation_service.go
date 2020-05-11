@@ -9,31 +9,26 @@ import (
 )
 
 type IService interface {
-	Parent() simulations.IService
-	Create(ctx context.Context, createSimulation *SimulationCreate, user *fuel.User) (*Simulation, *ign.ErrMsg)
+	simulations.Service
 	CountByOwnerAndCircuit(owner, circuit string) (*int, error)
 	simulationIsHeld(ctx context.Context, sim *simulations.Simulation) bool
 	checkValidNumberOfSimulations(ctx context.Context, sim *simulations.Simulation) *ign.ErrMsg
 }
 
 type Service struct {
-	parent      simulations.IService
+	simulations.Service
 	userService users.IService
-	repository  IRepository
+	repository  Repository
 }
 
-func NewService(repository IRepository, parentRepository simulations.IRepository) IService {
+func NewService(repository Repository) IService {
 	var s IService
-	parent := simulations.NewService(parentRepository)
+	parent := simulations.NewService(repository)
 	s = &Service{
-		parent:     parent,
+		Service:    parent,
 		repository: repository,
 	}
 	return s
-}
-
-func (s *Service) Parent() simulations.IService {
-	return s.parent
 }
 
 func (s *Service) CountByOwnerAndCircuit(owner, circuit string) (*int, error) {
@@ -44,11 +39,16 @@ func (s *Service) simulationIsHeld(ctx context.Context, sim *simulations.Simulat
 	return false
 }
 
-func (s *Service) Create(ctx context.Context, createSimulation *SimulationCreate, user *fuel.User) (*Simulation, *ign.ErrMsg) {
+func (s *Service) Create(ctx context.Context, createSimulationInput simulations.SimulationCreateInput, user *fuel.User) (*simulations.Simulation, *ign.ErrMsg) {
+	subtCreateSimulationInput, ok := createSimulationInput.(SimulationCreateInput)
+	if !ok {
+		// TODO: Replace error with generic ErrorCasting
+		return nil, ign.NewErrorMessage(ign.ErrorCastingID)
+	}
+
 	var sim *simulations.Simulation
 	var em *ign.ErrMsg
-
-	if sim, em = s.parent.Create(ctx, &createSimulation.SimulationCreate, user); em != nil {
+	if sim, em = s.Service.Create(ctx, createSimulationInput, user); em != nil {
 		return nil, em
 	}
 
@@ -58,7 +58,7 @@ func (s *Service) Create(ctx context.Context, createSimulation *SimulationCreate
 		simUpdate := simulations.SimulationUpdate{
 			Held: &held,
 		}
-		sim, em = s.parent.Update(ctx, *sim.GroupID, simUpdate)
+		sim, em = s.Update(ctx, *sim.GroupID, simUpdate)
 		if em != nil {
 			return nil, em
 		}
@@ -69,12 +69,8 @@ func (s *Service) Create(ctx context.Context, createSimulation *SimulationCreate
 	// sure that in case of a race condition then both records are added with pending state
 	// and one of those (or both) can be rejected immediately.
 	if em := s.checkValidNumberOfSimulations(ctx, sim); em != nil {
-		s.parent.Reject(ctx, sim)
+		s.Reject(ctx, sim)
 		return nil, em
-	}
-	subtSim, err := s.repository.Create(sim)
-	if err != nil {
-		return nil, ign.NewErrorMessageWithBase(ign.ErrorDbSave, err)
 	}
 	return subtSim, nil
 }

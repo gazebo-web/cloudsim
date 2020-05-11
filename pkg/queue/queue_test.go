@@ -18,14 +18,14 @@ func TestQueueIntegration(t *testing.T) {
 
 type queueTestSuite struct {
 	suite.Suite
-	userService *users.ServiceMock
+	userService   *users.ServiceMock
 	adminUsername string
-	admin fuel.User
-	queue IQueue
-	service IService
-	controller IController
-	router *mux.Router
-	recorder *httptest.ResponseRecorder
+	admin         fuel.User
+	queue         Queue
+	service       IService
+	controller    IController
+	router        *mux.Router
+	recorder      *httptest.ResponseRecorder
 }
 
 func (suite *queueTestSuite) SetupTest() {

@@ -33,7 +33,7 @@ type Controller struct {
 
 // NewControllerInput is the input needed to create a new IController implementation.
 type NewControllerInput struct {
-	SimulationService IService
+	SimulationService Service
 	UserService       users.IService
 	FormDecoder       *form.Decoder
 	Validator         *validator.Validate
@@ -69,7 +69,7 @@ func NewController(input NewControllerInput) IController {
 
 // services represents a set of services used by the Controller.
 type services struct {
-	Simulation IService
+	Simulation Service
 	User       users.IService
 }
 

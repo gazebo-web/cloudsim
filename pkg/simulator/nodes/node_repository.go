@@ -10,7 +10,7 @@ type IRepository interface{
 	Create(node Node) (*Node, error)
 }
 
-// Repository
+// repository
 type Repository struct{
 	db *gorm.DB
 

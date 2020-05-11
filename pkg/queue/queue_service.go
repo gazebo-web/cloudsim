@@ -20,11 +20,11 @@ type IService interface {
 
 // Service is an IService implementation.
 type Service struct {
-	queue IQueue
+	queue       Queue
 	userService users.IService
 }
 
-func NewService(queue IQueue, userService users.IService) IService {
+func NewService(queue Queue, userService users.IService) IService {
 	var c IService
 	c = &Service{
 		queue: queue,

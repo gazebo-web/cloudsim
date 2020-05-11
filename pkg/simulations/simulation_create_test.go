@@ -30,7 +30,7 @@ type simulationTestSuite struct {
 	admin fuel.User
 
 	repository *RepositoryMock
-	service IService
+	service    Service
 	controller IController
 
 
