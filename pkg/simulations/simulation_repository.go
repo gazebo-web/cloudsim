@@ -10,7 +10,7 @@ import (
 type Repository interface {
 	GetDB() *gorm.DB
 	SetDB(db *gorm.DB)
-	Create(simulation SimulationCreatePersistentInput) (SimulationCreateOutput, error)
+	Create(simulation RepositoryCreateInput) (ServiceCreateOutput, error)
 	Get(groupID string) (*Simulation, error)
 	GetAllPaginated(input GetAllPaginatedInput) (*Simulations, *ign.PaginationResult, error)
 	GetAllByOwner(owner string, statusFrom, statusTo Status) (*Simulations, error)
@@ -46,7 +46,7 @@ func (r *repository) SetDB(db *gorm.DB) {
 	r.Db = db
 }
 
-func (r *repository) Create(simulationCreate SimulationCreatePersistentInput) (SimulationCreateOutput, error) {
+func (r *repository) Create(simulationCreate RepositoryCreateInput) (ServiceCreateOutput, error) {
 	simulation := simulationCreate.Input()
 	if err := r.Db.Create(simulation).Error; err != nil {
 		return nil, err

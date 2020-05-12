@@ -42,13 +42,21 @@ func (s *Service) simulationIsHeld(ctx context.Context, sim *simulations.Simulat
 	return false
 }
 
-func (s *Service) Create(ctx context.Context, input simulations.SimulationCreateInput, user *fuel.User) (simulations.SimulationCreateOutput, *ign.ErrMsg) {
+func (s *Service) Create(ctx context.Context, input simulations.ServiceCreateInput, user *fuel.User) (simulations.ServiceCreateOutput, *ign.ErrMsg) {
 	createSim := input.Input()
 
-	var output simulations.SimulationCreateOutput
+	var output simulations.ServiceCreateOutput
 	var em *ign.ErrMsg
 
-	if output, em = s.Service.Create(ctx, createSim, user); em != nil {
+	createSubTSim := &SimulationCreate{
+		SimulationCreate:    createSim,
+		Score:               nil,
+		SimTimeDurationSec:  0,
+		RealTimeDurationSec: 0,
+		ModelCount:          0,
+	}
+
+	if output, em = s.Service.Create(ctx, createSubTSim, user); em != nil {
 		return nil, em
 	}
 
@@ -75,23 +83,7 @@ func (s *Service) Create(ctx context.Context, input simulations.SimulationCreate
 		return nil, em
 	}
 
-	subtSim := &Simulation{
-		Base:                sim,
-		GroupID:             sim.GroupID,
-		Score:               nil,
-		SimTimeDurationSec:  0,
-		RealTimeDurationSec: 0,
-		ModelCount:          0,
-	}
-
-	var err error
-
-	subtSim, err = s.repository.Aggregate(subtSim)
-	if err != nil {
-		return nil, ign.NewErrorMessageWithBase(ign.ErrorDbSave, err)
-	}
-
-	return subtSim, nil
+	return sim, nil
 }
 
 func (s *Service) checkValidNumberOfSimulations(ctx context.Context, sim *simulations.Simulation) *ign.ErrMsg {

@@ -1,6 +1,6 @@
 package simulations
 
-type SimulationCreateInput interface {
+type ServiceCreateInput interface {
 	Input() *SimulationCreate
 }
 
@@ -31,10 +31,10 @@ func (sc *SimulationCreate) Input() *SimulationCreate {
 	return sc
 }
 
-type SimulationCreatePersistentInput interface {
+type RepositoryCreateInput interface {
 	Input() *Simulation
 }
 
-type SimulationCreateOutput interface {
+type ServiceCreateOutput interface {
 	Output() *Simulation
 }

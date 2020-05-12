@@ -1,6 +1,7 @@
 package simulations
 
 import (
+	"errors"
 	"github.com/jinzhu/gorm"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
 )
@@ -21,6 +22,31 @@ func NewRepository(db *gorm.DB) Repository {
 	return &repository{
 		Repository: r,
 	}
+}
+
+func (r *repository) Create(simulation simulations.RepositoryCreateInput) (simulations.ServiceCreateOutput, error) {
+	subtInput, ok := simulation.(RepositoryCreateInput)
+	if !ok {
+		return nil, errors.New("error casting")
+	}
+
+	sim := subtInput.Input()
+
+	output, err := r.Repository.Create(sim)
+	if err != nil {
+		return nil, err
+	}
+
+	subtSim := subtInput.ChildInput()
+
+	subtSim.GroupID = sim.GroupID
+	subtSim.Base = sim
+
+	_, err = r.Aggregate(subtSim)
+	if err != nil {
+		return nil, err
+	}
+	return output, nil
 }
 
 func (r *repository) CountByOwnerAndCircuit(owner, circuit string) (int, error) {

@@ -22,7 +22,7 @@ type Service interface {
 	GetAllParents(statusFrom, statusTo Status) (*Simulations, error)
 	GetAllParentsWithErrors(statusFrom, statusTo Status, errors []ErrorStatus) (*Simulations, error)
 	GetParent(groupID string) (*Simulation, error)
-	Create(ctx context.Context, input SimulationCreateInput, user *fuel.User) (SimulationCreateOutput, *ign.ErrMsg)
+	Create(ctx context.Context, input ServiceCreateInput, user *fuel.User) (ServiceCreateOutput, *ign.ErrMsg)
 	create(sim Simulation) (*Simulation, *ign.ErrMsg)
 	Launch(ctx context.Context, groupID string, user *fuel.User) (*Simulation, *ign.ErrMsg)
 	Restart(ctx context.Context, groupID string, user *fuel.User) (*Simulation, *ign.ErrMsg)
@@ -136,7 +136,7 @@ func (s *service) GetParent(groupID string) (*Simulation, error) {
 	panic("implement me")
 }
 
-func (s *service) Create(ctx context.Context, input SimulationCreateInput, user *fuel.User) (SimulationCreateOutput, *ign.ErrMsg) {
+func (s *service) Create(ctx context.Context, input ServiceCreateInput, user *fuel.User) (ServiceCreateOutput, *ign.ErrMsg) {
 	createSimulation := input.Input()
 
 	if createSimulation.Platform == "" {
