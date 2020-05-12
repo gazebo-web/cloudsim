@@ -76,6 +76,7 @@ func (p *Platform) setupServer() *Platform {
 		log.Fatalf("Error while initializing server. %v\n", err)
 	}
 	p.Server = s
+	p.Server.DbConfig = db.NewConfig()
 	return p
 }
 

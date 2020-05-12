@@ -5,11 +5,15 @@ import (
 	"encoding/json"
 	"github.com/go-playground/form"
 	"github.com/gorilla/mux"
+	"github.com/jinzhu/gorm"
 	"github.com/stretchr/testify/suite"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/db"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/users"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/uuid"
 	"gitlab.com/ignitionrobotics/web/cloudsim/tools"
 	fuel "gitlab.com/ignitionrobotics/web/fuelserver/bundles/users"
 	per "gitlab.com/ignitionrobotics/web/fuelserver/permissions"
+	"gitlab.com/ignitionrobotics/web/ign-go"
 	"gopkg.in/go-playground/validator.v9"
 	"io/ioutil"
 	"mime/multipart"
@@ -25,11 +29,14 @@ func TestSimulationIntegration(t *testing.T) {
 
 type simulationTestSuite struct {
 	suite.Suite
+
+	db *gorm.DB
+
 	userService   *users.ServiceMock
 	adminUsername string
 	admin         fuel.User
 
-	repository *RepositoryMock
+	repository Repository
 	service    Service
 	controller Controller
 
@@ -39,22 +46,35 @@ type simulationTestSuite struct {
 	updateSimulation *SimulationUpdate
 	createSimulation *SimulationCreate
 	simulation       *Simulation
+
+	uuid *uuid.MockUUID
 }
 
 func (suite *simulationTestSuite) SetupSuite() {
 
+	suite.db = db.Must(db.NewDB(db.NewTestConfig()))
+	suite.uuid = uuid.NewTestUUID()
 	suite.userService = users.NewServiceMock()
+	suite.repository = NewRepository(suite.db, "app_test")
+	suite.service = NewService(NewServiceInput{
+		Repository: suite.repository,
+		Config:     ServiceConfig{
+			Platform:    "platform_test",
+			Application: "app_test",
+			MaxDuration: time.Second,
+		},
+		UserService: suite.userService,
+		UUID: suite.uuid,
+	})
 
-	suite.repository = NewRepositoryMock()
-	suite.service = NewService(suite.repository)
-
-	input := NewControllerInput{
-		SimulationService: suite.service,
-		UserService:       suite.userService,
+	suite.controller = NewController(NewControllerInput{
+		Services: services{
+			Simulation: suite.service,
+			User:       suite.userService,
+		},
 		FormDecoder:       form.NewDecoder(),
 		Validator:         validator.New(),
-	}
-	suite.controller = NewController(input)
+	})
 
 	suite.router = mux.NewRouter()
 	suite.recorder = httptest.NewRecorder()
@@ -65,6 +85,14 @@ func (suite *simulationTestSuite) SetupSuite() {
 		Username: &suite.adminUsername,
 		Email:    tools.Sptr("root@admin.com"),
 	}
+}
+
+func (suite *simulationTestSuite) BeforeTest(suiteName, testName string) {
+	suite.db.AutoMigrate(&Simulation{})
+}
+
+func (suite *simulationTestSuite) AfterTest(suiteName, testName string) {
+	suite.db.DropTableIfExists(&Simulation{})
 }
 
 func (suite *simulationTestSuite) TestCreate() {
@@ -83,7 +111,8 @@ func (suite *simulationTestSuite) TestCreate() {
 	}).Methods(http.MethodPost)
 
 	createForm := map[string]string{
-		"name":        "test-1234",
+		"name":        "test1234",
+		"circuit":		"test",
 		"owner":       suite.adminUsername,
 		"robot_name":  "X1",
 		"robot_type":  "X1_SENSOR_CONFIG_1",
@@ -98,38 +127,19 @@ func (suite *simulationTestSuite) TestCreate() {
 	}
 	suite.NoError(formWriter.Close())
 
-	result := Simulation{
-		ID:            1,
-		CreatedAt:     time.Time{},
-		UpdatedAt:     time.Time{},
-		DeletedAt:     nil,
-		StoppedAt:     nil,
-		ValidFor:      tools.Sptr("1m"),
-		Owner:         nil,
-		Creator:       &suite.adminUsername,
-		Private:       nil,
-		StopOnEnd:     nil,
-		Name:          tools.Sptr("test-name"),
-		Image:         tools.Sptr("image-test"),
-		GroupID:       tools.Sptr("aaaa-bbbb-cccc-dddd-eeee"),
-		ParentGroupID: nil,
-		MultiSim:      0,
-		Status:        StatusPending.ToIntPtr(),
-		ErrorStatus:   nil,
-		Platform:      tools.Sptr("cloudsim"),
-		Application:   tools.Sptr("test"),
-		Robots:        nil,
-		Held:          false,
-		Extra:         tools.Sptr("extra-field"),
-		ExtraSelector: tools.Sptr("extra-selector"),
-	}
-
-	suite.userService.On("GetUserFromUsername", *suite.admin.Username).Return(suite.admin, nil)
+	var em *ign.ErrMsg
+	returnedUUID := "aaaa-bbbb-cccc-dddd"
+	suite.uuid.On("Generate").Return(returnedUUID)
+	suite.userService.On("GetUserFromUsername", *suite.admin.Username).Return(suite.admin, em)
 	suite.userService.On("IsSystemAdmin", *suite.admin.Username).Return(true)
-	suite.userService.On("AddResourcePermission", result.GroupID, per.Read).Return(true, nil)
-	suite.userService.On("AddResourcePermission", result.GroupID, per.Write).Return(true, nil)
-	suite.userService.On("VerifyOwner", *suite.admin.Username, suite.adminUsername, per.Read).Return(true, nil)
-	suite.repository.On("Create", &result, nil)
+	// *sim.GroupID, []per.Action{per.Read, per.Write}, *sim.Owner, *createdSim.Application
+
+	suite.userService.On("AddResourcePermission", suite.adminUsername, returnedUUID, per.Read).Return(true, em)
+	suite.userService.On("AddResourcePermission", suite.adminUsername, returnedUUID, per.Write).Return(true, em)
+	suite.userService.On("AddResourcePermission", "app_test", returnedUUID, per.Read).Return(true, em)
+	suite.userService.On("AddResourcePermission", "app_test", returnedUUID, per.Write).Return(true, em)
+
+	suite.userService.On("VerifyOwner", suite.adminUsername, suite.adminUsername, per.Read).Return(true, em)
 
 	req, err := http.NewRequest(http.MethodPost, "/simulation", body)
 	if err != nil {
@@ -144,5 +154,4 @@ func (suite *simulationTestSuite) TestCreate() {
 	suite.NoError(err)
 	suite.NoError(json.Unmarshal(b, &response))
 	suite.Equal(http.StatusOK, suite.recorder.Code)
-	suite.Equal(uint(1), response.ID)
 }

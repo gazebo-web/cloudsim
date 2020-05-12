@@ -2,8 +2,8 @@ package simulations
 
 import (
 	"context"
-	uuid "github.com/satori/go.uuid"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/users"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/uuid"
 	fuel "gitlab.com/ignitionrobotics/web/fuelserver/bundles/users"
 	per "gitlab.com/ignitionrobotics/web/fuelserver/permissions"
 	"gitlab.com/ignitionrobotics/web/ign-go"
@@ -40,11 +40,14 @@ type service struct {
 	repository  Repository
 	userService users.Service
 	config      ServiceConfig
+	uuid 		uuid.UUID
 }
 
 type NewServiceInput struct {
+	UserService users.Service
 	Repository Repository
 	Config     ServiceConfig
+	UUID 	   uuid.UUID
 }
 
 type ServiceConfig struct {
@@ -57,8 +60,10 @@ type ServiceConfig struct {
 func NewService(input NewServiceInput) Service {
 	var s Service
 	s = &service{
+		userService: input.UserService,
 		repository: input.Repository,
 		config:     input.Config,
+		uuid:		input.UUID,
 	}
 	return s
 }
@@ -176,7 +181,7 @@ func (s *service) Create(ctx context.Context, input ServiceCreateInput, user *fu
 	}
 
 	// Create and assign a new GroupID
-	groupID := uuid.NewV4().String()
+	groupID := s.uuid.Generate()
 
 	// Create the SimulationDeployment record in DB. Set initial status.
 	creator := *user.Username
