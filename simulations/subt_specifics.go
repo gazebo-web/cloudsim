@@ -935,6 +935,10 @@ func (sa *SubTApplication) launchApplication(ctx context.Context, s *Service, tx
 							Value: "1",
 						},
 						{
+							Name:  "IGN_RELAY",
+							Value: sa.cfg.IgnIP,
+						},
+						{
 							Name:  "IGN_PARTITION",
 							Value: groupID,
 						},
