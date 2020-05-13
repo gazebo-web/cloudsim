@@ -6,6 +6,8 @@ import (
 )
 
 type Email interface {
+	Sender() string
+	Recipients() []string
 	Send(recipient *[]string, sender *string, subject string, templateFilename string, templateData interface{}) *ign.ErrMsg
 }
 
@@ -13,6 +15,14 @@ type Email interface {
 type email struct {
 	DefaultEmailRecipients []string `env:"IGN_DEFAULT_EMAIL_RECIPIENT" envSeparator:","`
 	DefaultEmailSender     string   `env:"IGN_DEFAULT_EMAIL_SENDER"`
+}
+
+func (e *email) Sender() string {
+	return e.DefaultEmailSender
+}
+
+func (e *email) Recipients() []string {
+	return e.DefaultEmailRecipients
 }
 
 // New returns a new email service.
