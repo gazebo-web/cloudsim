@@ -51,7 +51,6 @@ type simulationTestSuite struct {
 }
 
 func (suite *simulationTestSuite) SetupSuite() {
-
 	suite.db = db.Must(db.NewDB(db.NewTestConfig()))
 	suite.uuid = uuid.NewTestUUID()
 	suite.userService = users.NewServiceMock()
