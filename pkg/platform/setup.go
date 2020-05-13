@@ -5,6 +5,7 @@ import (
 	"github.com/go-playground/form"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/cloud"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/db"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/db/migrations"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/email"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/logger"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator"
@@ -132,9 +133,9 @@ func (p *Platform) setupUserService() *Platform {
 
 // setupDatabase performs migrations, adds default data and adds custom indexes.
 func (p *Platform) setupDatabase() *Platform {
-	db.Migrate(p.Context(), p.Server.Db)
-	db.AddDefaultData(p.Context(), p.Server.Db)
-	db.AddCustomIndexes(p.Context(), p.Server.Db)
+	migrations.Migrate(p.Context(), p.Server.Db)
+	migrations.AddDefaultData(p.Context(), p.Server.Db)
+	migrations.AddCustomIndexes(p.Context(), p.Server.Db)
 	return p
 }
 
