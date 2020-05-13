@@ -29,7 +29,7 @@ func TestNew_SetRecipient(t *testing.T) {
 
 	email := New()
 
-	assert.Equal(t, email, "sender@ignitionrobotics.org")
+	assert.Equal(t, "sender@ignitionrobotics.org", email.Sender())
 	assert.Len(t, email.Sender(), 1)
 	assert.Equal(t, []string{"recipient@ignitionrobotics.org"}, email.Recipients())
 }
@@ -42,5 +42,5 @@ func TestNew_SetRecipients(t *testing.T) {
 
 	assert.Equal(t, email.Sender(), "sender@ignitionrobotics.org")
 	assert.Len(t, email.Recipients(), 3)
-	assert.Equal(t, []string{"recipient@ignitionrobotics.org", "another@ignitionrobotics.org", "example@ignitionrobotics.org"}, email.DefaultEmailRecipients)
+	assert.Equal(t, []string{"recipient@ignitionrobotics.org", "another@ignitionrobotics.org", "example@ignitionrobotics.org"}, email.Recipients())
 }
