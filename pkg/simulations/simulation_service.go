@@ -15,7 +15,7 @@ import (
 type Service interface {
 	GetRepository() Repository
 	SetRepository(repository Repository)
-	Get(groupID string) (*Simulation, error)
+	Get(groupID string, user *fuel.User) (*Simulation, *ign.ErrMsg)
 	GetAll(ctx context.Context, input GetAllInput) (*Simulations, *ign.PaginationResult, *ign.ErrMsg)
 	GetAllByOwner(owner string, statusFrom, statusTo Status) (*Simulations, error)
 	GetChildren(groupID string, statusFrom, statusTo Status) (*Simulations, error)
@@ -79,8 +79,20 @@ func (s *service) SetRepository(repository Repository) {
 }
 
 // Get
-func (s *service) Get(groupID string) (*Simulation, error) {
-	panic("Not implemented")
+func (s *service) Get(groupID string, user *fuel.User) (*Simulation, *ign.ErrMsg) {
+	if ok, em := s.userService.IsAuthorizedForResource(*user.Username, groupID, per.Read); !ok {
+		return nil, em
+	}
+
+	var sim *Simulation
+	var err error
+
+	sim, err = s.repository.Get(groupID)
+	if err != nil {
+		return nil, ign.NewErrorMessageWithBase(ign.ErrorSimGroupNotFound, err)
+	}
+
+	return sim, nil
 }
 
 // GetAll

@@ -184,7 +184,12 @@ func (c *controller) GetAll(user *fuel.User, w http.ResponseWriter, r *http.Requ
 }
 
 func (c *controller) Get(user *fuel.User, w http.ResponseWriter, r *http.Request) (interface{}, *ign.ErrMsg) {
-	panic("Not implemented")
+	groupID, ok := mux.Vars(r)["group"]
+	if !ok {
+		return nil, ign.NewErrorMessage(ign.ErrorIDNotInRequest)
+	}
+
+	return c.services.Simulation.Get(groupID, user)
 }
 
 func (c *controller) GetDownloadableLogs(user *fuel.User, w http.ResponseWriter, r *http.Request) (interface{}, *ign.ErrMsg) {
