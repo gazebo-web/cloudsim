@@ -31,6 +31,7 @@ type IPlatform interface {
 	Logger() ign.Logger
 	Context() context.Context
 	Scheduler() scheduler.TaskScheduler
+	RegisterRoutes() ign.Routes
 }
 
 // Platform represents a set of components to run applications.
@@ -144,6 +145,9 @@ func New(config Config) IPlatform {
 		p.Logger().Critical("[INIT|CRITICAL] Could not initialize transport.")
 	}
 	p.Logger().Debug("[INIT] Transport initialized. Using: IGN Transport.")
+
+	p.setupControllers()
+
 	return &p
 }
 

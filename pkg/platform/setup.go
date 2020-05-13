@@ -204,3 +204,11 @@ func (p *Platform) setupTransport() (*Platform, error) {
 	p.Transport = t
 	return p, nil
 }
+
+func (p *Platform) setupControllers() *Platform {
+	queueService := queue.NewService(p.LaunchQueue, p.UserService)
+	p.Controllers = controllers{
+		Queue: queue.NewController(queueService),
+	}
+	return p
+}
