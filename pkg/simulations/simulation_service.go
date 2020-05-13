@@ -27,7 +27,7 @@ type Service interface {
 	Launch(ctx context.Context, groupID string, user *fuel.User) (*Simulation, *ign.ErrMsg)
 	Restart(ctx context.Context, groupID string, user *fuel.User) (*Simulation, *ign.ErrMsg)
 	Shutdown(ctx context.Context, groupID string, user *fuel.User) (*Simulation, *ign.ErrMsg)
-	Update(ctx context.Context, groupID string, simulationUpdateInput SimulationUpdateInput) (*Simulation, *ign.ErrMsg)
+	Update(ctx context.Context, groupID string, simulationUpdateInput SimulationUpdateInput, user *fuel.User) (*Simulation, *ign.ErrMsg)
 	UpdateParentFromChildren(parent *Simulation) (*Simulation, *ign.ErrMsg)
 	Reject(ctx context.Context, simulation *Simulation) (*Simulation, *ign.ErrMsg)
 	addPermissionsToOwner(resourceID string, permissions []per.Action, owner string) (bool, *ign.ErrMsg)
@@ -251,15 +251,13 @@ func (s *service) Shutdown(ctx context.Context, groupID string, user *fuel.User)
 }
 
 // Update
-func (s *service) Update(ctx context.Context, groupID string, simulationUpdateInput SimulationUpdateInput) (*Simulation, *ign.ErrMsg) {
-	var simulation *Simulation
-	var err error
+func (s *service) Update(ctx context.Context, groupID string, simulationUpdateInput SimulationUpdateInput, user *fuel.User) (*Simulation, *ign.ErrMsg) {
 
 	simulationUpdate := simulationUpdateInput.Input()
 
-	simulation, err = s.Get(groupID)
-	if err != nil {
-		return nil, ign.NewErrorMessageWithBase(ign.ErrorDbSave, err)
+	simulation, em := s.Get(groupID, user)
+	if em != nil {
+		return nil, em
 	}
 
 	if simulationUpdate.Held != nil {
