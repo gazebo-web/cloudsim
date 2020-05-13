@@ -46,7 +46,7 @@ type services struct {
 
 // New creates a new SubT application.
 func New(p *platform.Platform) IApplication {
-	simulationRepository := sim.NewRepository(p.Server.Db)
+	simulationRepository := sim.NewRepository(p.Server.Db, p.Name())
 	simulationService := sim.NewService(simulationRepository)
 
 	baseApp := application.New(p, simulationService, p.UserService)

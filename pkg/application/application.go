@@ -153,7 +153,7 @@ func (app *Application) RebuildState(ctx context.Context) error {
 				updateSim := simulations.SimulationUpdate{
 					ErrorStatus: simulations.ErrServerRestart.ToStringPtr(),
 				}
-				if _, err := app.Services.Simulation.Update(ctx, *sim.GroupID, updateSim); err != nil {
+				if _, err := app.Services.Simulation.Update(ctx, *sim.GroupID, updateSim, nil); err != nil {
 					logger.Logger(ctx).Error(fmt.Sprintf("[APP|REBUILDING] Error while updating simulation. GroupID: [%s]", *sim.GroupID))
 				}
 			}
@@ -163,7 +163,7 @@ func (app *Application) RebuildState(ctx context.Context) error {
 			updateSim := simulations.SimulationUpdate{
 				ErrorStatus: simulations.ErrServerRestart.ToStringPtr(),
 			}
-			if _, err := app.Services.Simulation.Update(ctx, *sim.GroupID, updateSim); err != nil {
+			if _, err := app.Services.Simulation.Update(ctx, *sim.GroupID, updateSim, nil); err != nil {
 				logger.Logger(ctx).Error(fmt.Sprintf("[APP|REBUILDING] Error while updating simulation. GroupID: [%s]", *sim.GroupID))
 			}
 		}

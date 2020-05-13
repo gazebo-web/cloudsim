@@ -40,14 +40,14 @@ type service struct {
 	repository  Repository
 	userService users.Service
 	config      ServiceConfig
-	uuid 		uuid.UUID
+	uuid        uuid.UUID
 }
 
 type NewServiceInput struct {
 	UserService users.Service
-	Repository Repository
-	Config     ServiceConfig
-	UUID 	   uuid.UUID
+	Repository  Repository
+	Config      ServiceConfig
+	UUID        uuid.UUID
 }
 
 type ServiceConfig struct {
@@ -61,9 +61,9 @@ func NewService(input NewServiceInput) Service {
 	var s Service
 	s = &service{
 		userService: input.UserService,
-		repository: input.Repository,
-		config:     input.Config,
-		uuid:		input.UUID,
+		repository:  input.Repository,
+		config:      input.Config,
+		uuid:        input.UUID,
 	}
 	return s
 }
@@ -80,8 +80,10 @@ func (s *service) SetRepository(repository Repository) {
 
 // Get
 func (s *service) Get(groupID string, user *fuel.User) (*Simulation, *ign.ErrMsg) {
-	if ok, em := s.userService.IsAuthorizedForResource(*user.Username, groupID, per.Read); !ok {
-		return nil, em
+	if user != nil {
+		if ok, em := s.userService.IsAuthorizedForResource(*user.Username, groupID, per.Read); !ok {
+			return nil, em
+		}
 	}
 
 	var sim *Simulation

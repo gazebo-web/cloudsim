@@ -69,7 +69,7 @@ func (s *Service) Create(ctx context.Context, input simulations.ServiceCreateInp
 		simUpdate := simulations.SimulationUpdate{
 			Held: &held,
 		}
-		sim, em = s.Update(ctx, *sim.GroupID, simUpdate)
+		sim, em = s.Update(ctx, *sim.GroupID, simUpdate, nil)
 		if em != nil {
 			return nil, em
 		}

@@ -22,15 +22,17 @@ type Repository interface {
 
 // repository is the Repository implementation
 type repository struct {
-	Application string
+	Platform    *string
+	Application *string
 	Db          *gorm.DB
 }
 
 // NewRepository
-func NewRepository(db *gorm.DB, application string) Repository {
+func NewRepository(db *gorm.DB, platform, application *string) Repository {
 	var r Repository
 	r = &repository{
 		Db:          db,
+		Platform:    platform,
 		Application: application,
 	}
 	return r
@@ -74,9 +76,16 @@ func (r *repository) Reject(simulation *Simulation) (*Simulation, error) {
 // Fails if not found.
 func (r *repository) Get(groupID string) (*Simulation, error) {
 	var sim Simulation
-	if err := r.Db.Model(&Simulation{}).
-		Where("group_id = ? AND application = ?", groupID, r.Application).
-		First(&sim).Error; err != nil {
+	q := r.Db.Model(&Simulation{}).Where("group_id = ?", groupID)
+
+	if r.Platform != nil {
+		q = q.Where("platform = ?", *r.Platform)
+	}
+
+	if r.Application != nil {
+		q = q.Where("application = ?", *r.Application)
+	}
+	if err := q.First(&sim).Error; err != nil {
 		return nil, err
 	}
 	return &sim, nil
@@ -96,7 +105,7 @@ type GetAllPaginatedInput struct {
 
 func (r *repository) GetAllPaginated(input GetAllPaginatedInput) (*Simulations, *ign.PaginationResult, error) {
 	var sims Simulations
-	q := r.Db.Order("created_at desc, id", true).Where("application = ?", r.Application)
+	q := r.Db.Order("created_at desc, id", true).Where("platform = ?", r.Platform)
 
 	if !input.IncludeChildren {
 		// TODO: Replace 2 with multisimChild value.
@@ -137,7 +146,7 @@ func (r *repository) GetAllPaginated(input GetAllPaginatedInput) (*Simulations, 
 func (r *repository) GetAllByOwner(owner string, statusFrom, statusTo Status) (*Simulations, error) {
 	var sims Simulations
 	if err := r.Db.Model(&Simulation{}).
-		Where("application = ?", r.Application).
+		Where("platform = ?", r.Platform).
 		Where("owner = ?", owner).
 		Where("status BETWEEN ? AND ?", int(statusFrom), int(statusTo)).
 		Find(&sims).Error; err != nil {
@@ -152,7 +161,7 @@ func (r *repository) GetAllByOwner(owner string, statusFrom, statusTo Status) (*
 func (r *repository) GetChildren(groupID string, statusFrom, statusTo Status) (*Simulations, error) {
 	var sims Simulations
 	if err := r.Db.Model(&Simulation{}).
-		Where("application = ?", r.Application).
+		Where("platform = ?", r.Platform).
 		Where("parent_group_id = ?", groupID).
 		Where("multi_sim = ?", 2). // TODO: Replace 2 with multiSimChild value.
 		Where("error_status IS NULL").
@@ -169,7 +178,7 @@ func (r *repository) GetChildren(groupID string, statusFrom, statusTo Status) (*
 func (r *repository) GetAllParents(statusFrom, statusTo Status, validErrors []ErrorStatus) (*Simulations, error) {
 	var sims Simulations
 	if err := r.Db.Model(&Simulation{}).
-		Where("application = ?", r.Application).
+		Where("platform = ?", r.Platform).
 		Where("multi_sim = ?", 1). // TODO: Replace 1 with multiSimParent value.
 		Where("(error_status IS NULL OR error_status IN (?))", validErrors).
 		Where("deployment_status BETWEEN ? AND ?", int(statusFrom), int(statusTo)).
