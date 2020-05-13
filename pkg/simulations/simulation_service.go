@@ -15,7 +15,7 @@ import (
 type Service interface {
 	GetRepository() Repository
 	SetRepository(repository Repository)
-	Get(groupID string) (*Simulation, error)
+	Get(groupID string) (*Simulation, *ign.ErrMsg)
 	GetAll(ctx context.Context, input GetAllInput) (*Simulations, *ign.PaginationResult, *ign.ErrMsg)
 	GetAllByOwner(owner string, statusFrom, statusTo Status) (*Simulations, error)
 	GetChildren(groupID string, statusFrom, statusTo Status) (*Simulations, error)
@@ -40,14 +40,14 @@ type service struct {
 	repository  Repository
 	userService users.Service
 	config      ServiceConfig
-	uuid 		uuid.UUID
+	uuid        uuid.UUID
 }
 
 type NewServiceInput struct {
 	UserService users.Service
-	Repository Repository
-	Config     ServiceConfig
-	UUID 	   uuid.UUID
+	Repository  Repository
+	Config      ServiceConfig
+	UUID        uuid.UUID
 }
 
 type ServiceConfig struct {
@@ -61,9 +61,9 @@ func NewService(input NewServiceInput) Service {
 	var s Service
 	s = &service{
 		userService: input.UserService,
-		repository: input.Repository,
-		config:     input.Config,
-		uuid:		input.UUID,
+		repository:  input.Repository,
+		config:      input.Config,
+		uuid:        input.UUID,
 	}
 	return s
 }
@@ -79,7 +79,7 @@ func (s *service) SetRepository(repository Repository) {
 }
 
 // Get
-func (s *service) Get(groupID string) (*Simulation, error) {
+func (s *service) Get(groupID string) (*Simulation, *ign.ErrMsg) {
 	panic("Not implemented")
 }
 
@@ -218,7 +218,7 @@ func (s *service) create(sim Simulation) (*Simulation, *ign.ErrMsg) {
 
 	createdSim := output.Output()
 
-	// Set read and write permissions to owner (eg, the team) and to the Application
+	// Set read and write permissions to owner (eg, the team) and to the Platform
 	// organizing team (eg. subt).
 	if em := s.addPermissionsToOwners(*sim.GroupID, []per.Action{per.Read, per.Write}, *sim.Owner, *createdSim.Application); em != nil {
 		return nil, em
@@ -240,14 +240,12 @@ func (s *service) Shutdown(ctx context.Context, groupID string, user *fuel.User)
 
 // Update
 func (s *service) Update(ctx context.Context, groupID string, simulationUpdateInput SimulationUpdateInput) (*Simulation, *ign.ErrMsg) {
-	var simulation *Simulation
-	var err error
 
 	simulationUpdate := simulationUpdateInput.Input()
 
-	simulation, err = s.Get(groupID)
-	if err != nil {
-		return nil, ign.NewErrorMessageWithBase(ign.ErrorDbSave, err)
+	simulation, em := s.Get(groupID)
+	if em != nil {
+		return nil, em
 	}
 
 	if simulationUpdate.Held != nil {

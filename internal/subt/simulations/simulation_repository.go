@@ -4,6 +4,7 @@ import (
 	"errors"
 	"github.com/jinzhu/gorm"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
+	"gitlab.com/ignitionrobotics/web/cloudsim/tools"
 )
 
 type repository struct {
@@ -16,8 +17,8 @@ type Repository interface {
 	Aggregate(simulation *Simulation) (*Simulation, error)
 }
 
-func NewRepository(db *gorm.DB) Repository {
-	parent := simulations.NewRepository(db, "subt")
+func NewRepository(db *gorm.DB, platform string) Repository {
+	parent := simulations.NewRepository(db, &platform, tools.Sptr("subt"))
 	r := parent.(simulations.Repository)
 	return &repository{
 		Repository: r,

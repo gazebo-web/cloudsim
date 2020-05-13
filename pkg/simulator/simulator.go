@@ -51,13 +51,13 @@ type simulator struct {
 
 // services
 type services struct {
-	simulations simulations.Service
-	simulator   IService
+	simulator IService
 }
 
 // repositories
 type repositories struct {
-	node nodes.Repository
+	node       nodes.Repository
+	simulation simulations.Repository
 }
 
 // NewSimulatorInput
@@ -65,6 +65,7 @@ type NewSimulatorInput struct {
 	Orchestrator orchestrator.Kubernetes
 	Cloud        cloud.AmazonWS
 	Db           *gorm.DB
+	Platform     string
 }
 
 // NewSimulator returns a new simulator instance.
@@ -77,7 +78,8 @@ func NewSimulator(input NewSimulatorInput) Simulator {
 		orchestrator: input.Orchestrator,
 		cloud:        input.Cloud,
 		repositories: repositories{
-			node: nodes.NewRepository(input.Db),
+			node:       nodes.NewRepository(input.Db),
+			simulation: simulations.NewRepository(input.Db, &input.Platform, nil),
 		},
 		config: cfg,
 	}
@@ -161,7 +163,7 @@ func (s *simulator) Recover(ctx context.Context, getApplicationLabel func() *str
 			continue
 		}
 
-		sim, err := s.services.simulations.Get(groupID)
+		sim, err := s.repositories.simulation.Get(groupID)
 		if err != nil {
 			return err
 		}
