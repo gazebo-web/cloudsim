@@ -188,7 +188,7 @@ build:
     - *setup_git_credentials
     - *dep_ensure
   script:
-    - go build
+    - go build ./cmd/cloudsim/
   artifacts:
     paths:
       - ${GOPATH}/src/${PKG_NAME}/cloudsim
