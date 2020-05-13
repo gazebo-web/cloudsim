@@ -2,6 +2,7 @@ package simulations
 
 import (
 	"github.com/go-playground/form"
+	"github.com/gorilla/mux"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/users"
 	"gitlab.com/ignitionrobotics/web/cloudsim/tools"
@@ -86,7 +87,12 @@ func (c *controller) GetAll(user *fuel.User, w http.ResponseWriter, r *http.Requ
 }
 
 func (c *controller) Get(user *fuel.User, w http.ResponseWriter, r *http.Request) (interface{}, *ign.ErrMsg) {
-	panic("implement me")
+	groupID, ok := mux.Vars(r)["group"]
+	if !ok {
+		return nil, ign.NewErrorMessage(ign.ErrorIDNotInRequest)
+	}
+
+	return c.services.Simulation.Get(groupID, user)
 }
 
 func (c *controller) GetDownloadableLogs(user *fuel.User, w http.ResponseWriter, r *http.Request) (interface{}, *ign.ErrMsg) {

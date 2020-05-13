@@ -2,6 +2,7 @@ package simulations
 
 import (
 	"context"
+	"gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/metadata"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/users"
 	fuel "gitlab.com/ignitionrobotics/web/fuelserver/bundles/users"
@@ -83,6 +84,30 @@ func (s *Service) Create(ctx context.Context, input simulations.ServiceCreateInp
 		return nil, em
 	}
 
+	return sim, nil
+}
+
+func (s *Service) Get(groupID string, user *fuel.User) (*simulations.Simulation, *ign.ErrMsg) {
+	sim, em := s.Service.Get(groupID, user)
+	if em != nil {
+		return nil, em
+	}
+
+	extra, err := metadata.Read(sim)
+	if err != nil {
+		return nil, ign.NewErrorMessageWithBase(ign.ErrorUnexpected, err)
+	}
+
+	// If the user is not a system admin, remove the RunIndex and WorldIndex fields.
+	if ok := s.userService.IsSystemAdmin(*user.Username); !ok {
+		extra.RunIndex = nil
+		extra.WorldIndex = nil
+	}
+
+	sim.Extra, err = extra.ToJSON()
+	if err != nil {
+		return nil, ign.NewErrorMessageWithBase(ign.ErrorUnexpected, err)
+	}
 	return sim, nil
 }
 
