@@ -5,6 +5,7 @@ import (
 )
 
 type AmazonWS interface {
+	Session() *session.Session
 	EC2() AmazonEC2
 	S3() AmazonS3
 }
@@ -22,11 +23,15 @@ type amazonWS struct {
 	s3      AmazonS3
 }
 
-func (ws amazonWS) EC2() AmazonEC2 {
+func (ws *amazonWS) Session() *session.Session {
+	return ws.session
+}
+
+func (ws *amazonWS) EC2() AmazonEC2 {
 	return ws.ec2
 }
 
-func (ws amazonWS) S3() AmazonS3 {
+func (ws *amazonWS) S3() AmazonS3 {
 	return ws.s3
 }
 
