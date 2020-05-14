@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/robots"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
+	"gitlab.com/ignitionrobotics/web/cloudsim/tools"
 )
 
 type Metadata struct {
@@ -14,13 +15,11 @@ type Metadata struct {
 }
 
 func (m Metadata) ToJSON() (*string, error) {
-	result := new(string)
 	b, err := json.Marshal(m)
 	if err != nil {
 		return nil, err
 	}
-	*result = string(b)
-	return result, nil
+	return tools.Sptr(string(b)), nil
 }
 
 func Read(sim *simulations.Simulation) (*Metadata, error) {
