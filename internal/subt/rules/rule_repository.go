@@ -1,9 +1,9 @@
 package rules
 
-type IRepository interface {
+type Repository interface {
 	GetRuleByCircuitAndOwner(ruleType Type, circuit, owner string) (*Rule, error)
 	GetRemainingSubmissions(owner, circuit string) (*int, error)
 }
 
-type Repository struct {
+type repository struct {
 }
