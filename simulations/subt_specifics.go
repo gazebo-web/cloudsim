@@ -302,6 +302,40 @@ func (sa *SubTApplication) customizeSimulationRequest(ctx context.Context,
 		robotNames = append(robotNames, robot.Name)
 	}
 
+	marsupials := make([]SubTMarsupial, 0)
+	// Process the marsupial parameters.
+	for _, mar := range subtSim.Marsupial {
+		// A marsupial pair is specified as a string of the form "<parent>:<child>"
+		parts := strings.Split(mar, ":")
+
+		// Make sure there is both a parent and a child.
+		if len(parts) != 2 {
+			return NewErrorMessageWithBase(ErrorInvalidMarsupialSpecification, err)
+		}
+
+		// Try to find the parent and child in the set of robots.
+		var foundParent = false
+		var foundChild = false
+		for _, robot := range robots {
+			if robot.Name == parts[0] {
+				foundParent = true
+			}
+			if robot.Name == parts[1] {
+				foundChild = true
+			}
+		}
+		// Make sure both the parent and child were found.
+		if !foundParent || !foundChild {
+			return NewErrorMessageWithBase(ErrorInvalidMarsupialSpecification, err)
+		}
+
+		marsupial := SubTMarsupial{
+			Parent: parts[0],
+			Child:  parts[1],
+		}
+		marsupials = append(marsupials, marsupial)
+	}
+
 	rules, err = GetCircuitRules(tx, subtSim.Circuit)
 	if err != nil {
 		return NewErrorMessageWithBase(ErrorCircuitRuleNotFound, err)
@@ -327,6 +361,7 @@ func (sa *SubTApplication) customizeSimulationRequest(ctx context.Context,
 	extra := &ExtraInfoSubT{
 		Circuit: subtSim.Circuit,
 		Robots:  robots,
+		Marsupials: marsupials,
 	}
 	createSim.ExtraSelector = &subtSim.Circuit
 
@@ -834,6 +869,12 @@ func (sa *SubTApplication) launchApplication(ctx context.Context, s *Service, tx
 	// robotName1:=xxx robotConfig1:=yyy robotName2:=xxx robotConfig2:=yyy (Note the numbers).
 	for i, robot := range extra.Robots {
 		gzRunCommand = append(gzRunCommand, fmt.Sprintf("robotName%d:=%s", i+1, robot.Name), fmt.Sprintf("robotConfig%d:=%s", i+1, robot.Type))
+	}
+
+	// Pass marsupial names to the gzserver Pod.
+	// marsupialN:=<parent>:<child>
+	for i, marsupial := range extra.Marsupials {
+		gzRunCommand = append(gzRunCommand, fmt.Sprintf("marsupial%d:=%s:%s", i+1, marsupial.Parent, marsupial.Child))
 	}
 	logger(ctx).Info(fmt.Sprintf("gzRunCommand to use: %v", gzRunCommand))
 
