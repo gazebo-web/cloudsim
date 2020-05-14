@@ -4,7 +4,6 @@ import "github.com/jinzhu/gorm"
 
 type Repository interface {
 	GetByCircuitAndOwner(ruleType Type, circuit, owner string) (*Rule, error)
-	GetRemainingSubmissions(owner, circuit string) (*int, error)
 }
 
 type repository struct {
@@ -22,10 +21,6 @@ func (r *repository) GetByCircuitAndOwner(ruleType Type, circuit, owner string) 
 		return nil, err
 	}
 	return &rule, nil
-}
-
-func (r *repository) GetRemainingSubmissions(owner, circuit string) (*int, error) {
-	panic("implement me")
 }
 
 func NewRepository(db *gorm.DB) Repository {
