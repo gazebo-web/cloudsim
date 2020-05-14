@@ -5,24 +5,24 @@ import (
 	"time"
 )
 
-type IRepository interface {
+type Repository interface {
 	GetByName(name string) (*Circuit, error)
 	GetPending() ([]Circuit, error)
 }
 
-type Repository struct {
+type repository struct {
 	Db *gorm.DB
 }
 
-func NewRepository(db *gorm.DB) IRepository {
-	var r IRepository
-	r = &Repository{
+func NewRepository(db *gorm.DB) Repository {
+	var r Repository
+	r = &repository{
 		Db: db,
 	}
 	return r
 }
 
-func (r *Repository) GetByName(name string) (*Circuit, error) {
+func (r *repository) GetByName(name string) (*Circuit, error) {
 	var c Circuit
 	err := r.Db.Model(&Circuit{}).Where("circuit = ?", name).First(&c).Error
 	if err != nil {
@@ -31,7 +31,7 @@ func (r *Repository) GetByName(name string) (*Circuit, error) {
 	return &c, nil
 }
 
-func (r *Repository) GetPending() ([]Circuit, error) {
+func (r *repository) GetPending() ([]Circuit, error) {
 	var cs []Circuit
 	err := r.Db.Model(&Circuit{}).Where("competition_date >= ?", time.Now()).Find(&cs).Error
 	if err != nil {

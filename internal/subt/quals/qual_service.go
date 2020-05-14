@@ -15,17 +15,16 @@ type Service struct {
 }
 
 type NewServiceInput struct {
-	UserService    users.Service
-	CircuitService circuits.IService
-	Repository     IRepository
+	Services	services
+	Repository  IRepository
 }
 
 func NewService(input NewServiceInput) IService {
 	var s IService
 	s = &Service{
 		services: services{
-			User:    input.UserService,
-			Circuit: input.CircuitService,
+			User:    input.Services.User,
+			Circuit: input.Services.Circuit,
 		},
 		repository: input.Repository,
 	}
@@ -35,7 +34,7 @@ func NewService(input NewServiceInput) IService {
 // services represents the imported services used by the Qualification service.
 type services struct {
 	User    users.Service
-	Circuit circuits.IService
+	Circuit circuits.Service
 }
 
 // IsQualified returns true if the given owner was qualified for the given circuit.

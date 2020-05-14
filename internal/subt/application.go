@@ -40,7 +40,7 @@ type controllers struct {
 type services struct {
 	application.Services
 	Simulation sim.IService
-	Circuit    circuits.IService
+	Circuit    circuits.Service
 	Robot      robots.IService
 }
 
