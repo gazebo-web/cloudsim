@@ -29,5 +29,9 @@ type Rule struct {
 	Value   string  `gorm:"not null" json:"value"`
 }
 
+func (Rule) TableName() string {
+	return "subt_rules"
+}
+
 // Rules is a slice of Rule
 type Rules []Rule
