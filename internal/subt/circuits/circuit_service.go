@@ -3,12 +3,17 @@ package circuits
 import "gopkg.in/go-playground/validator.v9"
 
 type IService interface {
+	GetPending() ([]Circuit, error)
 	GetByName(name string) (*Circuit, error)
 	IsValidCircuit(fl validator.FieldLevel) bool
 }
 
 type Service struct {
 	repository IRepository
+}
+
+func (s *Service) GetPending() ([]Circuit, error) {
+	return s.repository.GetPending()
 }
 
 func NewService(repository IRepository) IService {
