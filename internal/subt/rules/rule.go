@@ -3,12 +3,12 @@ package rules
 import "github.com/jinzhu/gorm"
 
 // CustomRuleType defines the type for circuit custom rules
-type RuleType string
+type Type string
 
 // List of rule types
 const (
 	// Maximum number of submissions allowed for a specific circuit
-	MaxSubmissions RuleType = "max_submissions"
+	MaxSubmissions Type = "max_submissions"
 )
 
 // Rule holds custom rules for a specific combination of owner
@@ -23,10 +23,10 @@ const (
 // circuit or owner will override this general rule.
 type Rule struct {
 	gorm.Model
-	Owner    *string  `json:"owner"`
-	Circuit  *string  `json:"circuit" validate:"iscircuit"`
-	RuleType RuleType `gorm:"not null" json:"rule_type" validate:"isruletype"`
-	Value    string   `gorm:"not null" json:"value"`
+	Owner   *string `json:"owner"`
+	Circuit *string `json:"circuit" validate:"iscircuit"`
+	Type    Type    `gorm:"not null" json:"rule_type" validate:"isruletype"`
+	Value   string  `gorm:"not null" json:"value"`
 }
 
 // Rules is a slice of Rule
