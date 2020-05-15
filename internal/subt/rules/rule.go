@@ -2,7 +2,7 @@ package rules
 
 import "github.com/jinzhu/gorm"
 
-// CustomRuleType defines the type for circuit custom rules
+// Type defines the type for circuit custom rules
 type Type string
 
 // List of rule types
