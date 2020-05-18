@@ -3,6 +3,7 @@ package simulations
 import (
 	"context"
 	"fmt"
+	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/gorilla/mux"
 	"github.com/jinzhu/gorm"
 	useracc "gitlab.com/ignitionrobotics/web/cloudsim/users"
@@ -618,4 +619,45 @@ func QueueRemove(user *users.User, tx *gorm.DB, w http.ResponseWriter, r *http.R
 		return nil, ign.NewErrorMessage(ign.ErrorIDNotInRequest)
 	}
 	return SimServImpl.QueueRemoveElement(r.Context(), user, groupID)
+}
+
+// Test is a test route.
+func Test(user *users.User, tx *gorm.DB, w http.ResponseWriter, r *http.Request) (interface{}, *ign.ErrMsg) {
+	s := SimServImpl.(*Service)
+	ec2Client := s.hostsSvc.(*Ec2Client)
+
+	instance, ok := mux.Vars(r)["instance"]
+	if instance == "" || !ok {
+		return "Invalid instance", nil
+	}
+
+	check, ok := mux.Vars(r)["sourcedestcheck"]
+	if !ok {
+		return "Did not specify state", nil
+	}
+	state, err := strconv.ParseBool(check)
+	if err != nil {
+		return fmt.Sprintf("Value provided was not 'true' or 'false', but %s", check), nil
+	}
+
+	instances, err := ec2Client.ec2Svc.DescribeInstances(&ec2.DescribeInstancesInput{
+		InstanceIds: []*string{&instance},
+	})
+	if instances == nil || instances.Reservations == nil {
+		return "No instances found", nil
+	}
+	for _, reservation := range instances.Reservations {
+		fmt.Println("Reservation", reservation.ReservationId, "-", len(reservation.Instances), "instances")
+		for _, instance := range reservation.Instances {
+			print("\tInstance", instance.InstanceId)
+			out, err := ec2Client.ec2Svc.ModifyInstanceAttribute(&ec2.ModifyInstanceAttributeInput{
+				InstanceId:      instance.InstanceId,
+				SourceDestCheck: &ec2.AttributeBooleanValue{Value: &state},
+			})
+			print("\t\tOut:", out)
+			print("\t\tErr:", err)
+		}
+	}
+
+	return fmt.Sprintf("Set to %s", check), nil
 }

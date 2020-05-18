@@ -205,7 +205,7 @@ var Routes ign.Routes = ign.Routes{
 				Handlers: ign.FormatHandlers{
 					ign.FormatHandler{
 						Extension: "",
-						Handler: ign.JSONResult(WithUser(SimulationLogGateway)),
+						Handler:   ign.JSONResult(WithUser(SimulationLogGateway)),
 					},
 				},
 			},
@@ -657,6 +657,26 @@ var Routes ign.Routes = ign.Routes{
 					ign.FormatHandler{
 						Extension: "",
 						Handler:   ign.JSONResult(WithUser(QueueRemove)),
+					},
+				},
+			},
+		},
+	},
+
+	ign.Route{
+		Name:        "Test",
+		Description: "Test",
+		URI:         "/test/{instance}/{sourcedestcheck}",
+		Headers:     ign.AuthHeadersRequired,
+		Methods:     ign.Methods{},
+		SecureMethods: ign.SecureMethods{
+			ign.Method{
+				Type:        "GET",
+				Description: "Remove an element from the queue",
+				Handlers: ign.FormatHandlers{
+					ign.FormatHandler{
+						Extension: "",
+						Handler:   ign.JSONResult(WithUser(Test)),
 					},
 				},
 			},
