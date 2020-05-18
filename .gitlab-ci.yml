@@ -197,73 +197,73 @@ build:
 ##########################################################
 # Packaging stage - WIP
 
-#package_default:
-#  stage: packaging
-#  image: docker
-#  services:
-#    - docker:dind
-#  except:
-#    - develop
-#    - master
-#  dependencies:
-#    - build
-#  variables:
-#    DOCKER_HOST: tcp://docker:2375
-#    DOCKER_DRIVER: overlay2
-#  before_script:
-#    - docker version
-#    - docker info
-#    - "docker login -u gitlab-ci-token -p $CI_BUILD_TOKEN $CI_REGISTRY"
-#  script:
-#    - "docker pull $CI_REGISTRY_IMAGE:next || true"
-#    - "docker build --cache-from $CI_REGISTRY_IMAGE:next --tag $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA ."
-#    - "docker push $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA"
-#
-#package_next:
-#  stage: packaging
-#  image: docker
-#  only:
-#    - develop
-#  services:
-#    - docker:dind
-#  dependencies:
-#    - build
-#  variables:
-#    DOCKER_HOST: tcp://docker:2375
-#    DOCKER_DRIVER: overlay2
-#  before_script:
-#    - docker version
-#    - docker info
-#    - "docker login -u gitlab-ci-token -p $CI_BUILD_TOKEN $CI_REGISTRY"
-#  script:
-#    - "docker pull $CI_REGISTRY_IMAGE || true"
-#    - "docker build --cache-from $CI_REGISTRY_IMAGE --tag $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA --tag $CI_REGISTRY_IMAGE:next ."
-#    - "docker push $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA"
-#    - "docker push $CI_REGISTRY_IMAGE:next"
-#
-#package_latest:
-#  stage: packaging
-#  image: docker
-#  only:
-#    - master
-#  services:
-#    - docker:dind
-#  dependencies:
-#    - build
-#  variables:
-#    DOCKER_HOST: tcp://docker:2375
-#    DOCKER_DRIVER: overlay2
-#  before_script:
-#    - docker version
-#    - docker info
-#    - "docker login -u gitlab-ci-token -p $CI_BUILD_TOKEN $CI_REGISTRY"
-#  script:
-#    - "docker pull $CI_REGISTRY_IMAGE || true"
-#    - "docker build --cache-from $CI_REGISTRY_IMAGE --tag $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA --tag $CI_REGISTRY_IMAGE:latest ."
-#    - "docker push $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA"
-#    - "docker push $CI_REGISTRY_IMAGE:latest"
-#  after_script:
-#    - "docker logout ${CI_REGISTRY}"
+package_default:
+  stage: packaging
+  image: docker
+  services:
+    - docker:dind
+  except:
+    - develop
+    - master
+  dependencies:
+    - build
+  variables:
+    DOCKER_HOST: tcp://docker:2375
+    DOCKER_DRIVER: overlay2
+  before_script:
+    - docker version
+    - docker info
+    - "docker login -u gitlab-ci-token -p $CI_BUILD_TOKEN $CI_REGISTRY"
+  script:
+    - "docker pull $CI_REGISTRY_IMAGE:next || true"
+    - "docker build --cache-from $CI_REGISTRY_IMAGE:next --tag $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA ."
+    - "docker push $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA"
+
+package_next:
+  stage: packaging
+  image: docker
+  only:
+    - develop
+  services:
+    - docker:dind
+  dependencies:
+    - build
+  variables:
+    DOCKER_HOST: tcp://docker:2375
+    DOCKER_DRIVER: overlay2
+  before_script:
+    - docker version
+    - docker info
+    - "docker login -u gitlab-ci-token -p $CI_BUILD_TOKEN $CI_REGISTRY"
+  script:
+    - "docker pull $CI_REGISTRY_IMAGE || true"
+    - "docker build --cache-from $CI_REGISTRY_IMAGE --tag $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA --tag $CI_REGISTRY_IMAGE:next ."
+    - "docker push $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA"
+    - "docker push $CI_REGISTRY_IMAGE:next"
+
+package_latest:
+  stage: packaging
+  image: docker
+  only:
+    - master
+  services:
+    - docker:dind
+  dependencies:
+    - build
+  variables:
+    DOCKER_HOST: tcp://docker:2375
+    DOCKER_DRIVER: overlay2
+  before_script:
+    - docker version
+    - docker info
+    - "docker login -u gitlab-ci-token -p $CI_BUILD_TOKEN $CI_REGISTRY"
+  script:
+    - "docker pull $CI_REGISTRY_IMAGE || true"
+    - "docker build --cache-from $CI_REGISTRY_IMAGE --tag $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA --tag $CI_REGISTRY_IMAGE:latest ."
+    - "docker push $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA"
+    - "docker push $CI_REGISTRY_IMAGE:latest"
+  after_script:
+    - "docker logout ${CI_REGISTRY}"
 
 ##########################################################
 # Deploying stage
