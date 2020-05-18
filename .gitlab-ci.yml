@@ -206,6 +206,7 @@ package_default:
     - develop
     - master
   dependencies:
+    - proto
     - build
   variables:
     DOCKER_HOST: tcp://docker:2375
@@ -227,6 +228,7 @@ package_next:
   services:
     - docker:dind
   dependencies:
+    - proto
     - build
   variables:
     DOCKER_HOST: tcp://docker:2375
@@ -249,6 +251,7 @@ package_latest:
   services:
     - docker:dind
   dependencies:
+    - proto
     - build
   variables:
     DOCKER_HOST: tcp://docker:2375
