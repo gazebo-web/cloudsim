@@ -42,10 +42,6 @@ type awsConfig struct {
 	IamInstanceProfile       string `env:"AWS_IAM_INSTANCE_PROFILE_ARN" envDefault:"arn:aws:iam::200670743174:instance-profile/cloudsim-ec2-node"`
 }
 
-type kubeConfig struct {
-	JoinCmd string `env:"KUBEADM_JOIN,required"`
-}
-
 type ec2Config struct {
 	// Subnets is a slice of AWS subnet IDs where to launch simulations (Example: subnet-1270518251)
 	Subnets []string `env:"IGN_EC2_SUBNETS,required" envSeparator:","`
@@ -58,9 +54,8 @@ type ec2Config struct {
 // Ec2Client is an implementation of NodeManager interface. It is the client to use
 // when creating AWS EC2 instances for k8 cluster nodes.
 type Ec2Client struct {
-	awsCfg  awsConfig
-	kubeCfg kubeConfig
-	ec2Cfg  ec2Config
+	awsCfg awsConfig
+	ec2Cfg ec2Config
 	// ec2 clients are safe to use concurrently.
 	ec2Svc ec2iface.EC2API
 	// Mutex to ensure AWS resource availability checks are not invalidated by other workers
@@ -99,11 +94,6 @@ func NewEC2Client(ctx context.Context, kcli kubernetes.Interface, ec2Svc ec2ifac
 
 	if len(ec.ec2Cfg.Subnets) != len(ec.ec2Cfg.AvailabilityZones) {
 		return nil, errors.New("Subnet and AZ list length mismatch")
-	}
-
-	ec.kubeCfg = kubeConfig{}
-	if err := env.Parse(&ec.kubeCfg); err != nil {
-		return nil, err
 	}
 
 	ec.clientset = kcli
@@ -187,7 +177,7 @@ Environment="KUBELET_EXTRA_ARGS=--node-labels=` + nodeGroupLabel + `,` + strings
 EOF
 `
 
-	userData = constLaunchEc2UserData + nodeLabels + s.kubeCfg.JoinCmd
+	userData = constLaunchEc2UserData + nodeLabels
 	base64Data = base64.StdEncoding.EncodeToString([]byte(userData))
 	return
 }
@@ -316,6 +306,16 @@ func (s *Ec2Client) runInstanceCall(ctx context.Context, input *ec2.RunInstances
 	return
 }
 
+func (s *Ec2Client) setSourceDestCheck(instanceID *string, value *bool) error {
+	sourceDestCheckInput := &ec2.ModifyInstanceAttributeInput{
+		InstanceId:      instanceID,
+		SourceDestCheck: &ec2.AttributeBooleanValue{Value: value},
+	}
+	_, err := s.ec2Svc.ModifyInstanceAttribute(sourceDestCheckInput)
+
+	return err
+}
+
 // launchInstances starts a group of EC2 instances. The ids and machine info
 // of new instances are returned to be accessed later during the node launch
 // process.
@@ -339,6 +339,11 @@ func (s *Ec2Client) launchInstances(ctx context.Context, tx *gorm.DB, dep *Simul
 			// Get the created Instance ID(s).
 			iID := *ins.InstanceId
 			instanceIds = append(instanceIds, iID)
+
+			// Disable Source/Dest. checks to allow Calico to properly route non cross subnet traffic.
+			if err = s.setSourceDestCheck(&iID, aws.Bool(false)); err != nil {
+				return
+			}
 
 			// And create a DB record to track the machine instance in case of errors later
 			machine := MachineInstance{
