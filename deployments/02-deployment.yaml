@@ -1,0 +1,28 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cloudsim-deployment
+  namespace: cloudsim
+  labels:
+    role: cloudsim
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      role: cloudsim
+  template:
+    metadata:
+      labels:
+        role: cloudsim
+      annotations:
+        configHash: " "
+    spec:
+      containers:
+        - name: web-cloudsim
+          image: <CONTAINER_IMAGE>
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 3001
+          envFrom:
+            - configMapRef:
+                name: cloudsim-config

@@ -271,3 +271,24 @@ package_latest:
 ##########################################################
 # Deploying stage
 
+integration:
+  stage: deploying
+  dependencies:
+    - package_default
+  before_script:
+    - "docker login -u gitlab-ci-token -p $CI_BUILD_TOKEN $CI_REGISTRY"
+  script:
+    - sed -i "s@<CONTAINER_IMAGE>@$CI_REGISTRY_IMAGE:$CI_COMMIT_SHA@" ./deployments/02-deployment.yaml
+    - kubectl apply -f ./deployments/00-namespace.yaml
+    - kubectl apply -f ./deployments/01-service.yaml
+    - kubectl apply -f ./deployments/02-deployment.yaml
+  after_script:
+    - "docker logout ${CI_REGISTRY}"
+  tags:
+    - kubernetes
+  environment:
+    name: integration
+  except:
+    - master
+    - develop
+  when: manual
