@@ -278,7 +278,6 @@ integration:
   dependencies:
     - package_default
   script:
-    - cp $kube_config .kube/config
     - sed -i "s@<CONTAINER_IMAGE>@$CI_REGISTRY_IMAGE:$CI_COMMIT_SHA@" ./deployments/02-deployment.yaml
     - kubectl apply -f ./deployments/00-namespace.yaml
     - kubectl apply -f ./deployments/01-service.yaml
