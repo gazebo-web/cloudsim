@@ -43,6 +43,8 @@ type awsConfig struct {
 }
 
 type ec2Config struct {
+	// ClusterName contains the name of the cluster EC2 instances will join.
+	ClusterName string `env:"AWS_CLUSTER_NAME,required"`
 	// Subnets is a slice of AWS subnet IDs where to launch simulations (Example: subnet-1270518251)
 	Subnets []string `env:"IGN_EC2_SUBNETS,required" envSeparator:","`
 	// AvailabilityZones is a slice of AWS availability zones where to launch simulations. (Example: us-east-1a)
@@ -180,6 +182,23 @@ EOF
 	userData = constLaunchEc2UserData + nodeLabels
 	base64Data = base64.StdEncoding.EncodeToString([]byte(userData))
 	return
+}
+
+// buildEKSClusterTag returns an EC2 tag required by EKS to mark worker nodes of a cluster.
+// If `value` is `nil` then the default value `"owned"` is used.
+func (s *Ec2Client) buildEKSClusterTag(value *string) *ec2.Tag {
+	// Prepare the key
+	key := fmt.Sprintf("kubernetes.io/cluster/%s", s.ec2Cfg.ClusterName)
+
+	// The value should be owned by default
+	if value == nil {
+		value = sptr("owned")
+	}
+
+	return &ec2.Tag{
+		Key:   &key,
+		Value: value,
+	}
 }
 
 // setupInstanceSpecifics finds the platform handler and ask it to describe the needed instance details.
@@ -432,6 +451,7 @@ func (s *Ec2Client) launchNodes(ctx context.Context, tx *gorm.DB, dep *Simulatio
 					{Key: aws.String("CloudsimGroupID"), Value: aws.String(groupID)},
 					{Key: aws.String("project"), Value: aws.String("cloudsim")},
 					{Key: dep.Platform, Value: aws.String("True")},
+					s.buildEKSClusterTag(nil),
 				},
 			},
 		},
