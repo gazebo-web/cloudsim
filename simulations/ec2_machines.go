@@ -160,7 +160,7 @@ func (s *Ec2Client) CloudMachinesList(ctx context.Context, p *ign.PaginationRequ
 
 // buildUserDataString returns the UserData string to be used when creating a new EC2
 // instance.
-// @param extraLabels is an array of labels. Each label has the form label=value.
+// @param extraLabels is an array of labels to set on the node. Each label has the form label=value.
 // @return the userData in base64
 func (s *Ec2Client) buildUserDataString(groupID string, extraLabels ...string) (base64Data, userData string) {
 
@@ -171,33 +171,45 @@ func (s *Ec2Client) buildUserDataString(groupID string, extraLabels ...string) (
 	date '+%Y-%m-%d %H:%M:%S'
 	`
 
-	nodeGroupLabel := getNodeLabelForGroupID(groupID)
+	// Include a label containing the Group ID
+	extraLabels = append(extraLabels, getNodeLabelForGroupID(groupID))
+
 	// NOTE: this nodeLabels trick helps setting labels to the new Node at creation time.
 	nodeLabels := `cat > /etc/systemd/system/kubelet.service.d/20-labels-taints.conf <<EOF
 [Service]
-Environment="KUBELET_EXTRA_ARGS=--node-labels=` + nodeGroupLabel + `,` + strings.Join(extraLabels, ",") + `,"
+Environment="KUBELET_EXTRA_ARGS=--node-labels=` + strings.Join(extraLabels, ",") + `"
 EOF
 `
 
-	userData = constLaunchEc2UserData + nodeLabels
+	userData = constLaunchEc2UserData + nodeLabels + s.buildClusterJoinCommand()
 	base64Data = base64.StdEncoding.EncodeToString([]byte(userData))
 	return
 }
 
-// buildEKSClusterTag returns an EC2 tag required by EKS to mark worker nodes of a cluster.
-// If `value` is `nil` then the default value `"owned"` is used.
-func (s *Ec2Client) buildEKSClusterTag(value *string) *ec2.Tag {
+// buildClusterJoinCommand prepares the join command used to add an EC2 instance to the associated cluster.
+func (s *Ec2Client) buildClusterJoinCommand() string {
+	// This command runs the EKS cluster's join script. It requires that AWS env vars are configured.
+	// The script can be found here: https://github.com/awslabs/amazon-eks-ami/blob/master/files/bootstrap.sh
+	command := `
+		set -o xtrace
+		/etc/eks/bootstrap.sh %s %s
+	`
+	arguments := []string{
+		// Allow the node to contain unlimited pods
+		"--use-max-pods false",
+	}
+
+	return fmt.Sprintf(command, s.ec2Cfg.ClusterName, strings.Join(arguments, " "))
+}
+
+// buildClusterTag returns an EC2 tag required by clusters to mark worker nodes.
+func (s *Ec2Client) buildClusterTag() *ec2.Tag {
 	// Prepare the key
 	key := fmt.Sprintf("kubernetes.io/cluster/%s", s.ec2Cfg.ClusterName)
 
-	// The value should be owned by default
-	if value == nil {
-		value = sptr("owned")
-	}
-
 	return &ec2.Tag{
 		Key:   &key,
-		Value: value,
+		Value: sptr("owned"),
 	}
 }
 
@@ -451,7 +463,7 @@ func (s *Ec2Client) launchNodes(ctx context.Context, tx *gorm.DB, dep *Simulatio
 					{Key: aws.String("CloudsimGroupID"), Value: aws.String(groupID)},
 					{Key: aws.String("project"), Value: aws.String("cloudsim")},
 					{Key: dep.Platform, Value: aws.String("True")},
-					s.buildEKSClusterTag(nil),
+					s.buildClusterTag(),
 				},
 			},
 		},
