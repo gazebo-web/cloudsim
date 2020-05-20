@@ -65,6 +65,9 @@ proto:
     paths:
       - /builds/ignitionrobotics/web/cloudsim/ign-transport/proto/ignition/msgs/*.go
     expire_in: 1 month
+  tags:
+    - gitlab-org
+    - gitlab-org-docker
 
 dep:
   stage: installing
@@ -74,6 +77,9 @@ dep:
     - *dep_ensure
   after_script:
     - *dep_ensure_post
+  tags:
+    - gitlab-org
+    - gitlab-org-docker
 
 ##########################################################
 # Formatting stage
@@ -85,6 +91,9 @@ format:
     - *setup_git_credentials
   script:
     - go fmt $(go list ./... | grep -v /vendor/)
+  tags:
+    - gitlab-org
+    - gitlab-org-docker
 
 ##########################################################
 # Linting stage
@@ -96,6 +105,9 @@ lint:
     - *setup_git_credentials
   script:
     - golint -set_exit_status $(go list ./... | grep -v /vendor/)
+  tags:
+    - gitlab-org
+    - gitlab-org-docker
 
 ##########################################################
 # Testing stage
@@ -117,6 +129,9 @@ vet:
     - mysql:5.7
   environment:
     name: testing
+  tags:
+    - gitlab-org
+    - gitlab-org-docker
 
 test:
   stage: testing
@@ -135,6 +150,9 @@ test:
     - mysql:5.7
   environment:
     name: testing
+  tags:
+    - gitlab-org
+    - gitlab-org-docker
 
 race:
   stage: testing
@@ -154,6 +172,9 @@ race:
   environment:
     name: testing
   allow_failure: true
+  tags:
+    - gitlab-org
+    - gitlab-org-docker
 
 coverage:
   stage: testing
@@ -174,6 +195,9 @@ coverage:
     - mysql:5.7
   environment:
     name: testing
+  tags:
+    - gitlab-org
+    - gitlab-org-docker
 
 ##########################################################
 # Building stage
@@ -192,6 +216,9 @@ build:
     paths:
       - ${GOPATH}/src/${PKG_NAME}/cloudsim
     expire_in: 1 month
+  tags:
+    - gitlab-org
+    - gitlab-org-docker
 
 
 ##########################################################
@@ -289,6 +316,9 @@ integration:
     - master
     - develop
   when: manual
+  tags:
+    - gitlab-org
+    - gitlab-org-docker
 
 integration_1:
   image: python:3.5
@@ -311,6 +341,9 @@ integration_1:
     - master
     - develop
   when: manual
+  tags:
+    - gitlab-org
+    - gitlab-org-docker
 
 staging:
   image: python:3.5
@@ -333,6 +366,9 @@ staging:
     - "/^release\\/.*$/"
     - develop
   when: manual
+  tags:
+    - gitlab-org
+    - gitlab-org-docker
 
 production:
   image: python:3.5
@@ -354,3 +390,6 @@ production:
   only:
     - master
   when: manual
+  tags:
+    - gitlab-org
+    - gitlab-org-docker
