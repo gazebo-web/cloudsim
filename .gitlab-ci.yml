@@ -67,7 +67,6 @@ proto:
     expire_in: 1 month
   tags:
     - gitlab-org
-    - gitlab-org-docker
 
 dep:
   stage: installing
@@ -79,7 +78,6 @@ dep:
     - *dep_ensure_post
   tags:
     - gitlab-org
-    - gitlab-org-docker
 
 ##########################################################
 # Formatting stage
@@ -93,7 +91,6 @@ format:
     - go fmt $(go list ./... | grep -v /vendor/)
   tags:
     - gitlab-org
-    - gitlab-org-docker
 
 ##########################################################
 # Linting stage
@@ -107,7 +104,6 @@ lint:
     - golint -set_exit_status $(go list ./... | grep -v /vendor/)
   tags:
     - gitlab-org
-    - gitlab-org-docker
 
 ##########################################################
 # Testing stage
@@ -131,7 +127,6 @@ vet:
     name: testing
   tags:
     - gitlab-org
-    - gitlab-org-docker
 
 test:
   stage: testing
@@ -152,7 +147,6 @@ test:
     name: testing
   tags:
     - gitlab-org
-    - gitlab-org-docker
 
 race:
   stage: testing
@@ -174,7 +168,6 @@ race:
   allow_failure: true
   tags:
     - gitlab-org
-    - gitlab-org-docker
 
 coverage:
   stage: testing
@@ -197,7 +190,6 @@ coverage:
     name: testing
   tags:
     - gitlab-org
-    - gitlab-org-docker
 
 ##########################################################
 # Building stage
@@ -218,7 +210,6 @@ build:
     expire_in: 1 month
   tags:
     - gitlab-org
-    - gitlab-org-docker
 
 
 ##########################################################
