@@ -19,7 +19,7 @@ then the simulations will be regenerated but the `ign-transport topics and conne
 
 S3 buckets containing Gz log files should have the following `CORS configuration`:
 
-```xml
+```
 <?xml version="1.0" encoding="UTF-8"?>
 <CORSConfiguration xmlns="http://s3.amazonaws.com/doc/2006-03-01/">
 <CORSRule>
