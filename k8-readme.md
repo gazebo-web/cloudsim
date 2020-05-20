@@ -1,25 +1,116 @@
-# SubT specifics
+<div align="center">
+  <img src="./assets/logo.png" width="200" alt="Ignition Robotics" />
+  <h1>Ignition Robotics</h1>
+  <p>Setting up a new cloudsim environment</p>
+</div>
 
-## Important
-SubT circuits need the DB table `sub_t_circuit_rules` with data to fetch the rules
-to launch SubT circuits. Make sure your server has that table loaded with rules.
+# Amazon Web Services (AWS)
 
-## We are currently using these env variables values
-- env `SUBT_GZSERVER_LOGS_VOLUME_MOUNT_PATH` value `/tmp/ign`
-- env `SIMSVC_NODE_READY_TIMEOUT_SECONDS` value `600`
-- env `SIMSVC_POD_READY_TIMEOUT_SECONDS` value `900`
+## Elastic Kubernetes Service (EKS)
+We use Elastic Kubernetes Service to deploy our Kubernetes clusters. We will describe how to create a new EKS cluster in the following steps.
 
-## Troubleshooting
-- We've noticed that after a Cloudsim server restart, if the server had running simulations,
-then the simulations will be regenerated but the `ign-transport topics and connections`
-(and thus `/stats` messages) will be lost. We suggest Shutting down and restart those simulations too.
+### Cluster
+#### Configuration
+**Name**: `web-cloudsim-[environment]`
+
+**Kubernetes version**: `1.14`
+
+**Cluster Service Role**: `aws-eks-role-cloudsim`
+
+**Tags**:
+
+| Key | Value |
+| ------ | ------ |
+| project | cloudsim |
+| SubT | true |
+| application | subt |
+| enviroment | [environment] |
+| platform | cloudsim |
+| Name | cloudsim-eks-cluster-[environment] |
+
+#### Networking
+
+**VPC**: `vpc-12af6375 - 172.30.0.0/16`
+
+**Subnets**:
+
+| Name | Subnet ID |
+| ------ | ------ |
+| subnet-cloudsim-az-1a | subnet-0e632d68a9032ab9d |
+| subnet-cloudsim-az-1b | subnet-03774a4f37672e4da |
+| subnet-cloudsim-az-1c | subnet-00a9f3acf0ce3785a |
+| subnet-cloudsim-az-1d | subnet-0614ac8a450d5d1d1 |
+| subnet-cloudsim-az-1f | subnet-048c68c81c80a6636 |
+
+**Additional security groups**:
+
+| Name | ID |
+| ------ | ------ |
+| rds-launch-wizard | sg-9d31e8e6 |
+| kubernetes | sg-0c5c791266694a3ca |
+| cloudsim-server-with-weave | sg-047577a416acc18d7 |
 
 
-# Important Notes for GZ LOGs S3 Buckets
+**Cluster endpoint access** set to `Public and private`
 
+#### Logging
+- **API server**: `Enabled`.
+- **Audit**: `Enabled`.
+- **Authenticator**: `Enabled`.
+- **Controller manager**: `Enabled`.
+- **Scheduler**: `Enabled`.
+
+
+<hr />
+
+
+### Workers - Elastic Compute Cloud (EC2)
+After creating the cluster, we need to add a node group in order to have a place where the pods can live. Under the `Compute` tab in the EKS control panel, click the `Add Node Group` button.
+
+#### Group configuration
+**Name**: `web-cloudsim-[environment]-nodes`
+
+**Node IAM Role**: `aws-eks-role-cloudsim-worker`
+
+**Subnets**:
+
+| Name | Subnet ID |
+| ------ | ------ |
+| subnet-cloudsim-az-1a | subnet-0e632d68a9032ab9d |
+| subnet-cloudsim-az-1b | subnet-03774a4f37672e4da |
+| subnet-cloudsim-az-1c | subnet-00a9f3acf0ce3785a |
+| subnet-cloudsim-az-1d | subnet-0614ac8a450d5d1d1 |
+| subnet-cloudsim-az-1f | subnet-048c68c81c80a6636 |
+
+**Allow remote access to nodes** set to `Enabled`.
+
+**SSH key pair**: `ignitionFuel`
+
+**Allow remote access from**: `All`
+
+#### Node compute configuration
+**AMI type**: Amazon Linux 2 (AL2_x86_64)
+
+**Instance type**: `t3.small`
+
+**Disk size**: `20GiB`
+
+#### Group size
+**Minimum size**: `2` nodes
+
+**Maximum size**: `2` nodes
+
+**Desired size**: `2` nodes
+
+### Calico
+
+**TODO**
+This section will be completed in another MR.
+
+## Simple Storage Service (S3)
 S3 buckets containing Gz log files should have the following `CORS configuration`:
 
-```
+```xml
 <?xml version="1.0" encoding="UTF-8"?>
 <CORSConfiguration xmlns="http://s3.amazonaws.com/doc/2006-03-01/">
 <CORSRule>
@@ -33,6 +124,59 @@ S3 buckets containing Gz log files should have the following `CORS configuration
 
 This CORS configuration is needed to download the logs from the Portal web application.
 
+# Subterranean Challenge
+
+## Circuit rules
+SubT circuits need the DB table `sub_t_circuit_rules` with data to fetch the rules
+to launch SubT circuits. Make sure your server has that table loaded with rules.
+
+# Future Work
+- (Readiness Probe) Check if Gz is running: `ign topic -e -t /world/default/stats -n 1 | grep -c "sim_time"`. If the above return 1, then simulation is "Up".
+- Nvidia: "Node ready" -> check for gpu count before launching the pods, to make sure the device pluing worked on the new node(s).
+- install monitoring (read nvidia instructions)
+- install logging system
+- install k8dashboard in master and write instructions
+- launching 2 pods using affinity (to different nodes)
+- Add a systemadmin route to run a query and return "inconsistencies" between DB and AWS/K8. So the admin can then update DB records by hand.
+- (future) investigate about EC2 Spot instances (maybe faster to launch, cheaper)
+- (future) Investigate using autoscaling in AWS
+
+
+## Backlog
+- Consider making use of kubernetes 'namespaces' to separate applications types.
+- Will need to use NodePort service to access a pod port from the outside world.
+- Interesting read about Exposing pods: http://alesnosek.com/blog/2017/02/14/accessing-kubernetes-pods-from-outside-of-the-cluster/
+- Networking
+  - https://www.aquasec.com/wiki/display/containers/Kubernetes+Networking+101
+  - https://github.com/ahmetb/kubernetes-network-policy-recipes
+- Security in containers
+  - https://kubernetes.io/blog/2018/07/18/11-ways-not-to-get-hacked/#8-run-containers-as-a-non-root-user
+  - linux capabilities.
+- Casbin related (authorization):
+  - About Casbin and multithreading: https://casbin.org/docs/en/multi-threading
+  - Casbin tutorial: https://zupzup.org/casbin-http-role-auth/
+  - Casbin as a Service: https://github.com/casbin/casbin-server
+  
+# Tips
+## AWS
+- Running ssh commands remotely: https://docs.aws.amazon.com/systems-manager/latest/userguide/walkthrough-cli.html#walkthrough-cli-example-1
+  - go-sdk version: https://docs.aws.amazon.com/sdk-for-go/api/service/ssm/#SSM.SendCommand
+- Sending user commands at Instance Launch time: https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/user-data.html
+  - these scripts will be run as root user. So no need for using sudo in them.
+  - console output in the instance will be at `/var/log/cloud-init-output.log`
+- How to filter (get) ec2 instances from Go code: https://github.com/aws/aws-sdk-go/blob/master/example/service/ec2/filterInstances/filter_ec2_by_tag.go
+
+<hr />
+
+## We are currently using these env variables values
+- env `SUBT_GZSERVER_LOGS_VOLUME_MOUNT_PATH` value `/tmp/ign`
+- env `SIMSVC_NODE_READY_TIMEOUT_SECONDS` value `600`
+- env `SIMSVC_POD_READY_TIMEOUT_SECONDS` value `900`
+
+## Troubleshooting
+- We've noticed that after a Cloudsim server restart, if the server had running simulations,
+then the simulations will be regenerated but the `ign-transport topics and connections`
+(and thus `/stats` messages) will be lost. We suggest Shutting down and restart those simulations too.
 
 # We are using the following AMIs:
 - Kubernetes GPU (Worker) Nodes: `ami-0884e51dacccc6d23`, name `preyna-ubuntu-18_04-CUDA_10_1-nvidia-docker_2-kubernetes_1_14-v0.2.1`. Used with `g3.4xlarge` instances. Note: in SubT these AMI and g3 instance are used for both gzserver and field-computer nodes.
@@ -476,7 +620,6 @@ The file was created as an attempt to test big gz log files in simulations that 
 - Containers in a Pod share the same IPC namespace and they can also communicate with each other using standard inter-process communications like SystemV semaphores or POSIX shared memory.
   - https://linchpiner.github.io/k8s-multi-container-pods.html
 
-#
 # Next (priorities)
 - (Readiness Probe) Check if Gz is running: `ign topic -e -t /world/default/stats -n 1 | grep -c "sim_time"`. If the above return 1, then simulation is "Up".
 - Nvidia: "Node ready" -> check for gpu count before launching the pods, to make sure the device pluing worked on the new node(s).
