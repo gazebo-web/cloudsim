@@ -309,7 +309,6 @@ integration:
   when: manual
   tags:
     - gitlab-org
-    - gitlab-org-docker
 
 integration_1:
   image: python:3.5
@@ -334,7 +333,6 @@ integration_1:
   when: manual
   tags:
     - gitlab-org
-    - gitlab-org-docker
 
 staging:
   image: python:3.5
@@ -359,7 +357,6 @@ staging:
   when: manual
   tags:
     - gitlab-org
-    - gitlab-org-docker
 
 production:
   image: python:3.5
@@ -383,4 +380,3 @@ production:
   when: manual
   tags:
     - gitlab-org
-    - gitlab-org-docker
