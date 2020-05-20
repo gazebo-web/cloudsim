@@ -39,7 +39,7 @@ type awsConfig struct {
 	// when deleting the nodes. Default value is to Terminate the instances.
 	// You can change this value with env var `EC2_NODE_MGR_TERMINATE_INSTANCES`.
 	ShouldTerminateInstances bool   `env:"EC2_NODE_MGR_TERMINATE_INSTANCES" envDefault:"true"`
-	IamInstanceProfile       string `env:"AWS_IAM_INSTANCE_PROFILE_ARN" envDefault:"arn:aws:iam::200670743174:role/aws-eks-role-cloudsim-worker"`
+	IamInstanceProfile       string `env:"AWS_IAM_INSTANCE_PROFILE_ARN" envDefault:"arn:aws:iam::200670743174:instance-profile/aws-eks-role-cloudsim-worker"`
 }
 
 type ec2Config struct {
@@ -443,7 +443,7 @@ func (s *Ec2Client) launchNodes(ctx context.Context, tx *gorm.DB, dep *Simulatio
 			// This IAM role is assigned to the EC2 instance so it can join the EKS cluster,
 			// write logs to AWS CloudWatch and access ECR.
 			// It can be configured using an env var: AWS_IAM_INSTANCE_PROFILE_ARN.
-			// The default value is: "arn:aws:iam::200670743174:role/aws-eks-role-cloudsim-worker"
+			// The default value is: "arn:aws:iam::200670743174:instance-profile/aws-eks-role-cloudsim-worker"
 			Arn: aws.String(s.awsCfg.IamInstanceProfile),
 		},
 		// IMPORTANT: the 'KeyName' is the name of the ssh key to use to remotely access this instance.
