@@ -5,13 +5,10 @@ COPY . /go/src/gitlab.com/ignitionrobotics/web/cloudsim
 WORKDIR /go/src/gitlab.com/ignitionrobotics/web/cloudsim
 
 # Install the dependencies without checking for go code
-RUN dep ensure -vendor-only
+RUN dep ensure -vendor-only -v
 
 # Build app
 RUN go install
-
-# Copy kube config file to .kube folder
-COPY kube_config /root/.kube/config
 
 ENTRYPOINT [ "./docker-entrypoint.sh" ]
 CMD ["/go/bin/cloudsim"]
