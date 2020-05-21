@@ -238,7 +238,7 @@ package_default:
     - "docker build --cache-from $CI_REGISTRY_IMAGE:next --tag $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA ."
     - "docker push $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA"
   tags:
-    - gitlab-org
+    - gitlab-org-docker
 
 package_next:
   stage: packaging
@@ -263,7 +263,7 @@ package_next:
     - "docker push $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA"
     - "docker push $CI_REGISTRY_IMAGE:next"
   tags:
-    - gitlab-org
+    - gitlab-org-docker
 
 package_latest:
   stage: packaging
@@ -291,7 +291,7 @@ package_latest:
   after_script:
     - "docker logout ${CI_REGISTRY}"
   tags:
-    - gitlab-org
+    - gitlab-org-docker
 
 ##########################################################
 # Deploying stage
