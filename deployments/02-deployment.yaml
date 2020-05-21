@@ -11,11 +11,13 @@ spec:
     type: Recreate
   selector:
     matchLabels:
-      role: $(APPLICATION_NAME)
+      app: $(APPLICATION_NAME)
+      environment: $(CI_ENVIRONMENT_SLUG)
   template:
     metadata:
       labels:
-        role: $(APPLICATION_NAME)
+        app: $(APPLICATION_NAME)
+        environment: $(CI_ENVIRONMENT_SLUG)
       annotations:
         configHash: " "
     spec:

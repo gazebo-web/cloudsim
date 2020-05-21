@@ -11,4 +11,5 @@ spec:
       targetPort: 3001
       name: http
   selector:
-    role: $(APPLICATION_NAME)
+    app: $(APPLICATION_NAME)
+    environment: $(CI_ENVIRONMENT_SLUG)
