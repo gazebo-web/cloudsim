@@ -1,26 +1,26 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: cloudsim-deployment
-  namespace: cloudsim
+  name: $(APPLICATION_NAME)
+  namespace: $(APPLICATION_ENVIRONMENT)
   labels:
-    role: cloudsim
+    role: $(APPLICATION_NAME)
 spec:
   replicas: 1
   strategy:
     type: Recreate
   selector:
     matchLabels:
-      role: cloudsim
+      role: $(APPLICATION_NAME)
   template:
     metadata:
       labels:
-        role: cloudsim
+        role: $(APPLICATION_NAME)
       annotations:
         configHash: " "
     spec:
       containers:
-        - name: web-cloudsim
+        - name: $(APPLICATION_NAME)
           image: <CONTAINER_IMAGE>
           imagePullPolicy: IfNotPresent
           ports:

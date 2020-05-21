@@ -1,8 +1,8 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: cloudsim-lb
-  namespace: cloudsim
+  name: $(APPLICATION_NAME)
+  namespace: $(APPLICATION_ENVIRONMENT)
 spec:
   type: LoadBalancer
   ports:
@@ -11,4 +11,4 @@ spec:
       targetPort: 3001
       name: http
   selector:
-    role: cloudsim
+    role: $(APPLICATION_NAME)
