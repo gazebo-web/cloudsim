@@ -95,6 +95,10 @@ const (
 	CircuitCaveSimple2        string = "Cave Simple 2"
 	CircuitCaveSimple3        string = "Cave Simple 3"
 	CircuitCaveQual           string = "Cave Qualification"
+	CircuitCavePractice1      string = "Cave Practice 1"
+	CircuitCavePractice2      string = "Cave Practice 2"
+	CircuitCavePractice3      string = "Cave Practice 3"
+
 	// Container names
 	GazeboServerContainerName    string = "gzserver-container"
 	CommsBridgeContainerName     string = "comms-bridge"
