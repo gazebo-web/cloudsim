@@ -6,7 +6,9 @@ metadata:
   labels:
     role: cloudsim
 spec:
-  replicas: 2
+  replicas: 1
+  strategy:
+    type: Recreate
   selector:
     matchLabels:
       role: cloudsim
