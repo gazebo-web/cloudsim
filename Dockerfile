@@ -10,9 +10,6 @@ RUN dep ensure -vendor-only
 # Build app
 RUN go install
 
-# Copy kube config file to .kube folder
-COPY kube_config /root/.kube/config
-
 ENTRYPOINT [ "./docker-entrypoint.sh" ]
 CMD ["/go/bin/cloudsim"]
 
