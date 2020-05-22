@@ -1881,10 +1881,13 @@ func (sa *SubTApplication) setupEC2InstanceSpecifics(ctx context.Context, s *Ec2
 		return nil, err
 	}
 
-	// AMI: Amazon EKS-optimized AMI with GPU support
+	// AMI: cloudsim-worker-node-eks-gpu-optimized-1.0.0
+	// Modified version of Amazon EKS-optimized AMI with GPU support
 	// https://docs.aws.amazon.com/eks/latest/userguide/gpu-ami.html
 	// /aws/service/eks/optimized-ami/1.14/amazon-linux-2-gpu/recommended/image_id
-	gzInput.ImageId = aws.String("ami-04ac5ea8ad53f0718")
+	imageID := aws.String("ami-064568e7f6c2610c6")
+
+	gzInput.ImageId = imageID
 	gzInput.InstanceType = aws.String("g3.4xlarge")
 
 	// Add the new Input to the result array
@@ -1901,10 +1904,8 @@ func (sa *SubTApplication) setupEC2InstanceSpecifics(ctx context.Context, s *Ec2
 		if err != nil {
 			return nil, err
 		}
-		// AMI: Amazon EKS-optimized AMI with GPU support
-		// https://docs.aws.amazon.com/eks/latest/userguide/gpu-ami.html
-		// /aws/service/eks/optimized-ami/1.14/amazon-linux-2-gpu/recommended/image_id
-		fcInput.ImageId = aws.String("ami-04ac5ea8ad53f0718")
+
+		fcInput.ImageId = imageID
 		fcInput.InstanceType = aws.String("g3.4xlarge")
 		userData, _ := s.buildUserDataString(*dep.GroupID,
 			labelAndValue(nodeLabelKeyCloudsimNodeType, "field-computer"),
