@@ -65,6 +65,8 @@ proto:
     paths:
       - /builds/ignitionrobotics/web/cloudsim/ign-transport/proto/ignition/msgs/*.go
     expire_in: 1 month
+  tags:
+    - gitlab-org
 
 dep:
   stage: installing
@@ -74,6 +76,8 @@ dep:
     - *dep_ensure
   after_script:
     - *dep_ensure_post
+  tags:
+    - gitlab-org
 
 ##########################################################
 # Formatting stage
@@ -85,6 +89,8 @@ format:
     - *setup_git_credentials
   script:
     - go fmt $(go list ./... | grep -v /vendor/)
+  tags:
+    - gitlab-org
 
 ##########################################################
 # Linting stage
@@ -96,6 +102,8 @@ lint:
     - *setup_git_credentials
   script:
     - golint -set_exit_status $(go list ./... | grep -v /vendor/)
+  tags:
+    - gitlab-org
 
 ##########################################################
 # Testing stage
@@ -117,6 +125,8 @@ vet:
     - mysql:5.7
   environment:
     name: testing
+  tags:
+    - gitlab-org
 
 test:
   stage: testing
@@ -135,6 +145,8 @@ test:
     - mysql:5.7
   environment:
     name: testing
+  tags:
+    - gitlab-org
 
 race:
   stage: testing
@@ -154,6 +166,8 @@ race:
   environment:
     name: testing
   allow_failure: true
+  tags:
+    - gitlab-org
 
 coverage:
   stage: testing
@@ -174,6 +188,8 @@ coverage:
     - mysql:5.7
   environment:
     name: testing
+  tags:
+    - gitlab-org
 
 ##########################################################
 # Building stage
@@ -192,6 +208,8 @@ build:
     paths:
       - ${GOPATH}/src/${PKG_NAME}/cloudsim
     expire_in: 1 month
+  tags:
+    - gitlab-org
 
 
 ##########################################################
@@ -289,6 +307,8 @@ integration:
     - master
     - develop
   when: manual
+  tags:
+    - gitlab-org
 
 integration_1:
   image: python:3.5
@@ -311,6 +331,8 @@ integration_1:
     - master
     - develop
   when: manual
+  tags:
+    - gitlab-org
 
 staging:
   image: python:3.5
@@ -333,6 +355,8 @@ staging:
     - "/^release\\/.*$/"
     - develop
   when: manual
+  tags:
+    - gitlab-org
 
 production:
   image: python:3.5
@@ -354,3 +378,5 @@ production:
   only:
     - master
   when: manual
+  tags:
+    - gitlab-org
