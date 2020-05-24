@@ -274,6 +274,13 @@ func loadSubTRobotTypes(cfg *subTSpecificsConfig) {
 			"COSTAR_HUSKY_SENSOR_CONFIG_1",
 			335,
 		),
+		"TEAMBASE": generateSubTRobotType(
+			cfg,
+			"openrobotics",
+			"TEAMBASE",
+			"TEAMBASE",
+			0,
+		),
 	}
 }
 
@@ -309,7 +316,7 @@ var SubTCircuits = []string{
 
 // isValidRobotType checks if the field value is a valid Robot Type.
 func isValidRobotType(fl validator.FieldLevel) bool {
-	_, ok := SubTRobotTypes[fl.Field().String()]
+	_, ok := SubTRobotTypes[strings.ToUpper(fl.Field().String())]
 	return ok
 }
 
