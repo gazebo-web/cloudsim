@@ -339,17 +339,6 @@ func (sa *SubTApplication) customizeSimulationRequest(ctx context.Context,
 		}
 		marsupials = append(marsupials, marsupial)
 	}
-  // Add a team base as a robot last.
-  if len(subtSim.TeamBaseImage) > 0 {
-    teamBase := SubTRobot{
-      Name: "TeamBase",
-      Type: "TeamBase",
-      Image: subtSim.TeamBaseImage,
-      Credits: 0,
-    }
-    robots = append(robots, teambase)
-    robotNames = append(robotNames, teamBase.Name)
-  }
 
 	rules, err = GetCircuitRules(tx, subtSim.Circuit)
 	if err != nil {
