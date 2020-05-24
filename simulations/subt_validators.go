@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"gopkg.in/go-playground/validator.v9"
 	"html"
-    "strings"
+	"strings"
 )
 
 // InstallSubTCustomValidators extends validator.v9 with custom validation functions
@@ -93,12 +93,33 @@ func loadSubTRobotTypes(cfg *subTSpecificsConfig) {
 			"X1_SENSOR_CONFIG_6",
 			380,
 		),
+		"X1_SENSOR_CONFIG_7": generateSubTRobotType(
+			cfg,
+			"openrobotics",
+			"X1 Config 7",
+			"X1_SENSOR_CONFIG_7",
+			420,
+		),
+		"X1_SENSOR_CONFIG_8": generateSubTRobotType(
+			cfg,
+			"openrobotics",
+			"X1 Config 8",
+			"X1_SENSOR_CONFIG_8",
+			370,
+		),
 		"EXPLORER_X1_SENSOR_CONFIG_1": generateSubTRobotType(
 			cfg,
 			"openrobotics",
 			"EXPLORER_X1_SENSOR_CONFIG_1",
 			"EXPLORER_X1_SENSOR_CONFIG_1",
 			390,
+		),
+		"EXPLORER_X1_SENSOR_CONFIG_2": generateSubTRobotType(
+			cfg,
+			"openrobotics",
+			"EXPLORER_X1_SENSOR_CONFIG_2",
+			"EXPLORER_X1_SENSOR_CONFIG_2",
+			440,
 		),
 		"X2_SENSOR_CONFIG_1": generateSubTRobotType(
 			cfg,
@@ -148,6 +169,20 @@ func loadSubTRobotTypes(cfg *subTSpecificsConfig) {
 			"X2 Config 7",
 			"X2_SENSOR_CONFIG_7",
 			260,
+		),
+		"X2_SENSOR_CONFIG_8": generateSubTRobotType(
+			cfg,
+			"openrobotics",
+			"X2 Config 8",
+			"X2_SENSOR_CONFIG_8",
+			275,
+		),
+		"X2_SENSOR_CONFIG_9": generateSubTRobotType(
+			cfg,
+			"openrobotics",
+			"X2 Config 9",
+			"X2_SENSOR_CONFIG_9",
+			205,
 		),
 		"ROBOTIKA_X2_SENSOR_CONFIG_1": generateSubTRobotType(
 			cfg,
@@ -275,6 +310,13 @@ func loadSubTRobotTypes(cfg *subTSpecificsConfig) {
 			"COSTAR_HUSKY_SENSOR_CONFIG_1",
 			335,
 		),
+		"COSTAR_HUSKY_SENSOR_CONFIG_2": generateSubTRobotType(
+			cfg,
+			"openrobotics",
+			"COSTAR_HUSKY_SENSOR_CONFIG_2",
+			"COSTAR_HUSKY_SENSOR_CONFIG_2",
+			385,
+		),
 		"TEAMBASE": generateSubTRobotType(
 			cfg,
 			"openrobotics",
@@ -313,6 +355,9 @@ var SubTCircuits = []string{
 	CircuitCaveSimple2,
 	CircuitCaveSimple3,
 	CircuitCaveQual,
+	CircuitCavePractice1,
+	CircuitCavePractice2,
+	CircuitCavePractice3,
 }
 
 // isValidRobotType checks if the field value is a valid Robot Type.

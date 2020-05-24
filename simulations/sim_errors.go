@@ -62,6 +62,8 @@ const (
 	// ErrorInvalidRobotImage is triggered when an owner attempts to start a simulation with a robot image that does
 	// not belong to them
 	ErrorInvalidRobotImage SimErrCode = 5520
+	// ErrorInvalidMarsupialSpecification is triggered when an invalid SubT marsupial pair is specified.
+	ErrorInvalidMarsupialSpecification SimErrCode = 5521
 )
 
 // NewErrorMessageWithBase receives an error code and a root error
@@ -166,6 +168,10 @@ func ErrorMessage(err SimErrCode) ign.ErrMsg {
 	case ErrorInvalidRobotImage:
 		em.Msg = "Attempted to use a robot image that does not belong to the owner."
 		em.ErrCode = int(ErrorInvalidRobotImage)
+		em.StatusCode = http.StatusBadRequest
+	case ErrorInvalidMarsupialSpecification:
+		em.Msg = "Invalid marsupial specification. A parent and child must be specified, seperated by a colon."
+		em.ErrCode = int(ErrorInvalidMarsupialSpecification)
 		em.StatusCode = http.StatusBadRequest
 	}
 
