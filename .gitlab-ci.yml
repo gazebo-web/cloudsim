@@ -303,9 +303,12 @@ integration:
     - package_default
   script:
     - sed -i "s@<CONTAINER_IMAGE>@$CI_REGISTRY_IMAGE:$CI_COMMIT_SHA@" ./deployments/02-deployment.yaml
-    - kubectl apply -f ./deployments/00-namespace.yaml
-    - kubectl apply -f ./deployments/01-service.yaml
-    - kubectl apply -f ./deployments/02-deployment.yaml
+    - envsubst < "./deployments/00-namespace.yaml" > "00-namespace.yaml"
+    - envsubst < "./deployments/01-service.yaml" > "01-service.yaml"
+    - envsubst < "./deployments/02-deployment.yaml" > "02-deployment.yaml"
+    - kubectl apply -f 00-namespace.yaml
+    - kubectl apply -f 01-service.yaml
+    - kubectl apply -f 02-deployment.yaml
   tags:
     - testing
     - kubernetes
@@ -323,9 +326,12 @@ integration_1:
     - package_default
   script:
     - sed -i "s@<CONTAINER_IMAGE>@$CI_REGISTRY_IMAGE:$CI_COMMIT_SHA@" ./deployments/02-deployment.yaml
-    - kubectl apply -f ./deployments/00-namespace.yaml
-    - kubectl apply -f ./deployments/01-service.yaml
-    - kubectl apply -f ./deployments/02-deployment.yaml
+    - envsubst < "./deployments/00-namespace.yaml" > "00-namespace.yaml"
+    - envsubst < "./deployments/01-service.yaml" > "01-service.yaml"
+    - envsubst < "./deployments/02-deployment.yaml" > "02-deployment.yaml"
+    - kubectl apply -f 00-namespace.yaml
+    - kubectl apply -f 01-service.yaml
+    - kubectl apply -f 02-deployment.yaml
   tags:
     - testing
     - kubernetes
@@ -342,10 +348,13 @@ staging:
   dependencies:
     - package_next
   script:
-    - sed -i "s@<CONTAINER_IMAGE>@$CI_REGISTRY_IMAGE:next@" ./deployments/02-deployment.yaml
-    - kubectl apply -f ./deployments/00-namespace.yaml
-    - kubectl apply -f ./deployments/01-service.yaml
-    - kubectl apply -f ./deployments/02-deployment.yaml
+    - sed -i "s@<CONTAINER_IMAGE>@$CI_REGISTRY_IMAGE:$CI_COMMIT_SHA@" ./deployments/02-deployment.yaml
+    - envsubst < "./deployments/00-namespace.yaml" > "00-namespace.yaml"
+    - envsubst < "./deployments/01-service.yaml" > "01-service.yaml"
+    - envsubst < "./deployments/02-deployment.yaml" > "02-deployment.yaml"
+    - kubectl apply -f 00-namespace.yaml
+    - kubectl apply -f 01-service.yaml
+    - kubectl apply -f 02-deployment.yaml
   tags:
     - testing
     - kubernetes
@@ -361,10 +370,13 @@ production:
   dependencies:
     - package_latest
   script:
-    - sed -i "s@<CONTAINER_IMAGE>@$CI_REGISTRY_IMAGE:latest@" ./deployments/02-deployment.yaml
-    - kubectl apply -f ./deployments/00-namespace.yaml
-    - kubectl apply -f ./deployments/01-service.yaml
-    - kubectl apply -f ./deployments/02-deployment.yaml
+    - sed -i "s@<CONTAINER_IMAGE>@$CI_REGISTRY_IMAGE:$CI_COMMIT_SHA@" ./deployments/02-deployment.yaml
+    - envsubst < "./deployments/00-namespace.yaml" > "00-namespace.yaml"
+    - envsubst < "./deployments/01-service.yaml" > "01-service.yaml"
+    - envsubst < "./deployments/02-deployment.yaml" > "02-deployment.yaml"
+    - kubectl apply -f 00-namespace.yaml
+    - kubectl apply -f 01-service.yaml
+    - kubectl apply -f 02-deployment.yaml
   tags:
     - kubernetes
   environment:
