@@ -205,7 +205,7 @@ var Routes ign.Routes = ign.Routes{
 				Handlers: ign.FormatHandlers{
 					ign.FormatHandler{
 						Extension: "",
-						Handler: ign.JSONResult(WithUser(SimulationLogGateway)),
+						Handler:   ign.JSONResult(WithUser(SimulationLogGateway)),
 					},
 				},
 			},

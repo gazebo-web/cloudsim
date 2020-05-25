@@ -39,14 +39,12 @@ type awsConfig struct {
 	// when deleting the nodes. Default value is to Terminate the instances.
 	// You can change this value with env var `EC2_NODE_MGR_TERMINATE_INSTANCES`.
 	ShouldTerminateInstances bool   `env:"EC2_NODE_MGR_TERMINATE_INSTANCES" envDefault:"true"`
-	IamInstanceProfile       string `env:"AWS_IAM_INSTANCE_PROFILE_ARN" envDefault:"arn:aws:iam::200670743174:instance-profile/cloudsim-ec2-node"`
-}
-
-type kubeConfig struct {
-	JoinCmd string `env:"KUBEADM_JOIN,required"`
+	IamInstanceProfile       string `env:"AWS_IAM_INSTANCE_PROFILE_ARN" envDefault:"arn:aws:iam::200670743174:instance-profile/aws-eks-role-cloudsim-worker"`
 }
 
 type ec2Config struct {
+	// ClusterName contains the name of the cluster EC2 instances will join.
+	ClusterName string `env:"AWS_CLUSTER_NAME,required"`
 	// Subnets is a slice of AWS subnet IDs where to launch simulations (Example: subnet-1270518251)
 	Subnets []string `env:"IGN_EC2_SUBNETS,required" envSeparator:","`
 	// AvailabilityZones is a slice of AWS availability zones where to launch simulations. (Example: us-east-1a)
@@ -58,9 +56,8 @@ type ec2Config struct {
 // Ec2Client is an implementation of NodeManager interface. It is the client to use
 // when creating AWS EC2 instances for k8 cluster nodes.
 type Ec2Client struct {
-	awsCfg  awsConfig
-	kubeCfg kubeConfig
-	ec2Cfg  ec2Config
+	awsCfg awsConfig
+	ec2Cfg ec2Config
 	// ec2 clients are safe to use concurrently.
 	ec2Svc ec2iface.EC2API
 	// Mutex to ensure AWS resource availability checks are not invalidated by other workers
@@ -99,11 +96,6 @@ func NewEC2Client(ctx context.Context, kcli kubernetes.Interface, ec2Svc ec2ifac
 
 	if len(ec.ec2Cfg.Subnets) != len(ec.ec2Cfg.AvailabilityZones) {
 		return nil, errors.New("Subnet and AZ list length mismatch")
-	}
-
-	ec.kubeCfg = kubeConfig{}
-	if err := env.Parse(&ec.kubeCfg); err != nil {
-		return nil, err
 	}
 
 	ec.clientset = kcli
@@ -168,7 +160,7 @@ func (s *Ec2Client) CloudMachinesList(ctx context.Context, p *ign.PaginationRequ
 
 // buildUserDataString returns the UserData string to be used when creating a new EC2
 // instance.
-// @param extraLabels is an array of labels. Each label has the form label=value.
+// @param extraLabels is an array of labels to set on the node. Each label has the form label=value.
 // @return the userData in base64
 func (s *Ec2Client) buildUserDataString(groupID string, extraLabels ...string) (base64Data, userData string) {
 
@@ -179,17 +171,46 @@ func (s *Ec2Client) buildUserDataString(groupID string, extraLabels ...string) (
 	date '+%Y-%m-%d %H:%M:%S'
 	`
 
-	nodeGroupLabel := getNodeLabelForGroupID(groupID)
+	// Include a label containing the Group ID
+	extraLabels = append(extraLabels, getNodeLabelForGroupID(groupID))
+
 	// NOTE: this nodeLabels trick helps setting labels to the new Node at creation time.
 	nodeLabels := `cat > /etc/systemd/system/kubelet.service.d/20-labels-taints.conf <<EOF
 [Service]
-Environment="KUBELET_EXTRA_ARGS=--node-labels=` + nodeGroupLabel + `,` + strings.Join(extraLabels, ",") + `,"
+Environment="KUBELET_EXTRA_ARGS=--node-labels=` + strings.Join(extraLabels, ",") + `"
 EOF
 `
 
-	userData = constLaunchEc2UserData + nodeLabels + s.kubeCfg.JoinCmd
+	userData = constLaunchEc2UserData + nodeLabels + s.buildClusterJoinCommand()
 	base64Data = base64.StdEncoding.EncodeToString([]byte(userData))
 	return
+}
+
+// buildClusterJoinCommand prepares the join command used to add an EC2 instance to the associated cluster.
+func (s *Ec2Client) buildClusterJoinCommand() string {
+	// This command runs the EKS cluster's join script. It requires that AWS env vars are configured.
+	// The script can be found here: https://github.com/awslabs/amazon-eks-ami/blob/master/files/bootstrap.sh
+	command := `
+		set -o xtrace
+		/etc/eks/bootstrap.sh %s %s
+	`
+	arguments := []string{
+		// Allow the node to contain unlimited pods
+		"--use-max-pods false",
+	}
+
+	return fmt.Sprintf(command, s.ec2Cfg.ClusterName, strings.Join(arguments, " "))
+}
+
+// buildClusterTag returns an EC2 tag required by clusters to mark worker nodes.
+func (s *Ec2Client) buildClusterTag() *ec2.Tag {
+	// Prepare the key
+	key := fmt.Sprintf("kubernetes.io/cluster/%s", s.ec2Cfg.ClusterName)
+
+	return &ec2.Tag{
+		Key:   &key,
+		Value: sptr("owned"),
+	}
 }
 
 // setupInstanceSpecifics finds the platform handler and ask it to describe the needed instance details.
@@ -316,6 +337,20 @@ func (s *Ec2Client) runInstanceCall(ctx context.Context, input *ec2.RunInstances
 	return
 }
 
+// setSourceDestCheck sets the Source/Dest. check of an EC2 instance to a specific value.
+// The source/dest. check ensures that in instance is the source or destination of any traffic it sends or receives.
+// There are some cases where this check prevents things from working. Examples include a group of clients behind a NAT
+// or encapsulation of network traffic in an overlay network/
+func (s *Ec2Client) setSourceDestCheck(instanceID *string, value *bool) error {
+	sourceDestCheckInput := &ec2.ModifyInstanceAttributeInput{
+		InstanceId:      instanceID,
+		SourceDestCheck: &ec2.AttributeBooleanValue{Value: value},
+	}
+	_, err := s.ec2Svc.ModifyInstanceAttribute(sourceDestCheckInput)
+
+	return err
+}
+
 // launchInstances starts a group of EC2 instances. The ids and machine info
 // of new instances are returned to be accessed later during the node launch
 // process.
@@ -339,6 +374,11 @@ func (s *Ec2Client) launchInstances(ctx context.Context, tx *gorm.DB, dep *Simul
 			// Get the created Instance ID(s).
 			iID := *ins.InstanceId
 			instanceIds = append(instanceIds, iID)
+
+			// Disable Source/Dest. checks to allow Calico to properly route non cross subnet traffic.
+			if err = s.setSourceDestCheck(&iID, aws.Bool(false)); err != nil {
+				return
+			}
 
 			// And create a DB record to track the machine instance in case of errors later
 			machine := MachineInstance{
@@ -404,9 +444,10 @@ func (s *Ec2Client) launchNodes(ctx context.Context, tx *gorm.DB, dep *Simulatio
 	instanceTemplate := &ec2.RunInstancesInput{
 		DryRun: aws.Bool(true),
 		IamInstanceProfile: &ec2.IamInstanceProfileSpecification{
-			// This IAM role is assigned to the EC2 instance so it can write logs to AWS CloudWatch
-			// and access ECR. It can be configured using an env var: AWS_IAM_INSTANCE_PROFILE_ARN.
-			// The default value is: "arn:aws:iam::200670743174:instance-profile/cloudsim-ec2-node"
+			// This IAM role is assigned to the EC2 instance so it can join the EKS cluster,
+			// write logs to AWS CloudWatch and access ECR.
+			// It can be configured using an env var: AWS_IAM_INSTANCE_PROFILE_ARN.
+			// The default value is: "arn:aws:iam::200670743174:instance-profile/aws-eks-role-cloudsim-worker"
 			Arn: aws.String(s.awsCfg.IamInstanceProfile),
 		},
 		// IMPORTANT: the 'KeyName' is the name of the ssh key to use to remotely access this instance.
@@ -426,6 +467,7 @@ func (s *Ec2Client) launchNodes(ctx context.Context, tx *gorm.DB, dep *Simulatio
 					{Key: aws.String("CloudsimGroupID"), Value: aws.String(groupID)},
 					{Key: aws.String("project"), Value: aws.String("cloudsim")},
 					{Key: dep.Platform, Value: aws.String("True")},
+					s.buildClusterTag(),
 				},
 			},
 		},
