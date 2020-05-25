@@ -48,7 +48,7 @@ We use Elastic Kubernetes Service to deploy our Kubernetes clusters. We will des
 | ------ | ------ |
 | rds-launch-wizard | sg-9d31e8e6 |
 | kubernetes | sg-0c5c791266694a3ca |
-| cloudsim-server-with-weave | sg-047577a416acc18d7 |
+| cloudsim-server | sg-023c19380b48dcabb |
 
 
 **Cluster endpoint access** set to `Public and private`
