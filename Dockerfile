@@ -1,4 +1,4 @@
-FROM ignitionrobotics/web-cloudsim-base
+FROM registry.gitlab.com/ignitionrobotics/web/images/cloudsim-base
 
 RUN mkdir -p /go/src/gitlab.com/ignitionrobotics/web/cloudsim
 COPY . /go/src/gitlab.com/ignitionrobotics/web/cloudsim
