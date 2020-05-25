@@ -46,7 +46,6 @@ cache:
 stages:
   - installing
   - formatting
-  - linting
   - testing
   - building
   - packaging
@@ -92,11 +91,8 @@ format:
   tags:
     - gitlab-org
 
-##########################################################
-# Linting stage
-
 lint:
-  stage: linting
+  stage: formating
   before_script:
     - *setup_project
     - *setup_git_credentials
