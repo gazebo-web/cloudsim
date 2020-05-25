@@ -337,6 +337,10 @@ func (s *Ec2Client) runInstanceCall(ctx context.Context, input *ec2.RunInstances
 	return
 }
 
+// setSourceDestCheck sets the Source/Dest. check of an EC2 instance to a specific value.
+// The source/dest. check ensures that in instance is the source or destination of any traffic it sends or receives.
+// There are some cases where this check prevents things from working. Examples include a group of clients behind a NAT
+// or encapsulation of network traffic in an overlay network/
 func (s *Ec2Client) setSourceDestCheck(instanceID *string, value *bool) error {
 	sourceDestCheckInput := &ec2.ModifyInstanceAttributeInput{
 		InstanceId:      instanceID,
