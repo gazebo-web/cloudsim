@@ -297,7 +297,7 @@ package_latest:
 # Deploying stage
 
 integration:
-  image: registry.gitlab.com/ignitionrobotics/web/images/kubernetes-deploy:integration
+  image: registry.gitlab.com/ignitionrobotics/web/images/kubectl:latest
   stage: deploying
   dependencies:
     - package_default
