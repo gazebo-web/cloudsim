@@ -5,8 +5,7 @@ COPY . /go/src/gitlab.com/ignitionrobotics/web/cloudsim
 WORKDIR /go/src/gitlab.com/ignitionrobotics/web/cloudsim
 
 # Install the dependencies without checking for go code
-#RUN dep ensure -vendor-only -v
-COPY vendor .
+RUN dep ensure -vendor-only -v
 
 # Build app
 RUN go install
