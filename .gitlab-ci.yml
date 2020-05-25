@@ -307,6 +307,7 @@ integration:
     - kubectl apply -f ./deployments/01-service.yaml
     - kubectl apply -f ./deployments/02-deployment.yaml
   tags:
+    - testing
     - kubernetes
   environment:
     name: integration
@@ -326,6 +327,7 @@ integration_1:
     - kubectl apply -f ./deployments/01-service.yaml
     - kubectl apply -f ./deployments/02-deployment.yaml
   tags:
+    - testing
     - kubernetes
   environment:
     name: integration_1
@@ -345,6 +347,7 @@ staging:
     - kubectl apply -f ./deployments/01-service.yaml
     - kubectl apply -f ./deployments/02-deployment.yaml
   tags:
+    - testing
     - kubernetes
   environment:
     name: staging
