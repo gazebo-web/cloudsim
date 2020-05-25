@@ -1885,7 +1885,7 @@ func (sa *SubTApplication) setupEC2InstanceSpecifics(ctx context.Context, s *Ec2
 	// Modified version of Amazon EKS-optimized AMI with GPU support
 	// https://docs.aws.amazon.com/eks/latest/userguide/gpu-ami.html
 	// /aws/service/eks/optimized-ami/1.14/amazon-linux-2-gpu/recommended/image_id
-	imageID := aws.String("ami-064568e7f6c2610c6")
+	imageID := aws.String("ami-08861f7e7b409ed0c")
 
 	gzInput.ImageId = imageID
 	gzInput.InstanceType = aws.String("g3.4xlarge")
