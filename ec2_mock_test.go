@@ -24,7 +24,6 @@ type EC2Mock struct {
 	StopInstancesFunc             func(*ec2.StopInstancesInput) (*ec2.StopInstancesOutput, error)
 	TerminateInstancesFunc        func(*ec2.TerminateInstancesInput) (*ec2.TerminateInstancesOutput, error)
 	WaitUntilInstanceStatusOkFunc func(*ec2.DescribeInstanceStatusInput) error
-	ModifyInstanceAttributeFunc   func(*ec2.ModifyInstanceAttributeInput) (*ec2.ModifyInstanceAttributeOutput, error)
 }
 
 // NewEC2Mock creates a new EC2Mock.
@@ -175,25 +174,10 @@ func (m *EC2Mock) WaitUntilInstanceStatusOk(input *ec2.DescribeInstanceStatusInp
 	return nil
 }
 
-// ModifyInstanceAttribute mocks the EC2 API operation.
+// ModifyInstanceAttribute mocks the EC2 API operation to return successfully.
+// Mocking return values for this method is not currently supported.
 // Modifies an EC2 instance attribute.
 func (m *EC2Mock) ModifyInstanceAttribute(input *ec2.ModifyInstanceAttributeInput) (*ec2.ModifyInstanceAttributeOutput,
 	error) {
-	if m.WaitUntilInstanceStatusOkFunc != nil {
-		return m.ModifyInstanceAttributeFunc(input)
-	}
-
-	defer m.InvokeCallback(Ec2OpWaitUntilInstanceStatusOk, input)
-
-	result := m.GetMockResult(Ec2OpWaitUntilInstanceStatusOk)
-	// PassThrough is a special value that indicates the non-mocked version of
-	// this function should be called
-	if result == PassThrough {
-		return m.EC2API.ModifyInstanceAttribute(input)
-	}
-	// If the mock result is an error, return that error
-	if err, ok := result.(error); ok {
-		return nil, err
-	}
 	return nil, nil
 }
