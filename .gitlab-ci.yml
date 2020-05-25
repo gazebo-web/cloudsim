@@ -4,6 +4,8 @@ variables:
   PKG_NAME: gitlab.com/ignitionrobotics/web/cloudsim
   MYSQL_DATABASE: "cloudsim_test"
   MYSQL_ROOT_PASSWORD: "root"
+  KUBERNETES_NAMESPACE_OVERWRITE: gitlab-ci-${CI_COMMIT_REF_SLUG}
+  KUBERNETES_POLL_TIMEOUT: 540
 
 ##########################################################
 # Aliases
@@ -46,7 +48,6 @@ cache:
 stages:
   - installing
   - formatting
-  - linting
   - testing
   - building
   - packaging
@@ -92,11 +93,8 @@ format:
   tags:
     - gitlab-org
 
-##########################################################
-# Linting stage
-
 lint:
-  stage: linting
+  stage: formatting
   before_script:
     - *setup_project
     - *setup_git_credentials
@@ -213,7 +211,7 @@ build:
 
 
 ##########################################################
-# Packaging stage - WIP
+# Packaging stage
 
 package_default:
   stage: packaging
@@ -237,6 +235,8 @@ package_default:
     - "docker pull $CI_REGISTRY_IMAGE:next || true"
     - "docker build --cache-from $CI_REGISTRY_IMAGE:next --tag $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA ."
     - "docker push $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA"
+  after_script:
+    - "docker logout ${CI_REGISTRY}"
   tags:
     - gitlab-org-docker
 
@@ -262,6 +262,8 @@ package_next:
     - "docker build --cache-from $CI_REGISTRY_IMAGE --tag $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA --tag $CI_REGISTRY_IMAGE:next ."
     - "docker push $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA"
     - "docker push $CI_REGISTRY_IMAGE:next"
+  after_script:
+    - "docker logout ${CI_REGISTRY}"
   tags:
     - gitlab-org-docker
 
@@ -297,20 +299,91 @@ package_latest:
 # Deploying stage
 
 integration:
-  image: registry.gitlab.com/ignitionrobotics/web/images/kubernetes-deploy:integration
+  image: registry.gitlab.com/ignitionrobotics/web/images/kubectl:latest
   stage: deploying
   dependencies:
     - package_default
   script:
     - sed -i "s@<CONTAINER_IMAGE>@$CI_REGISTRY_IMAGE:$CI_COMMIT_SHA@" ./deployments/02-deployment.yaml
-    - kubectl apply -f ./deployments/00-namespace.yaml
-    - kubectl apply -f ./deployments/01-service.yaml
-    - kubectl apply -f ./deployments/02-deployment.yaml
+    - envsubst < "./deployments/00-namespace.yaml" > "00-namespace.yaml"
+    - envsubst < "./deployments/01-service.yaml" > "01-service.yaml"
+    - envsubst < "./deployments/02-deployment.yaml" > "02-deployment.yaml"
+    - kubectl apply -f 00-namespace.yaml
+    - kubectl apply -f 01-service.yaml
+    - kubectl apply -f 02-deployment.yaml
   tags:
+    - testing
     - kubernetes
   environment:
     name: integration
   except:
     - master
     - develop
+  when: manual
+
+integration_1:
+  image: registry.gitlab.com/ignitionrobotics/web/images/kubectl:latest
+  stage: deploying
+  dependencies:
+    - package_default
+  script:
+    - sed -i "s@<CONTAINER_IMAGE>@$CI_REGISTRY_IMAGE:$CI_COMMIT_SHA@" ./deployments/02-deployment.yaml
+    - envsubst < "./deployments/00-namespace.yaml" > "00-namespace.yaml"
+    - envsubst < "./deployments/01-service.yaml" > "01-service.yaml"
+    - envsubst < "./deployments/02-deployment.yaml" > "02-deployment.yaml"
+    - kubectl apply -f 00-namespace.yaml
+    - kubectl apply -f 01-service.yaml
+    - kubectl apply -f 02-deployment.yaml
+  tags:
+    - testing
+    - kubernetes
+  environment:
+    name: integration_1
+  except:
+    - master
+    - develop
+  when: manual
+
+staging:
+  image: registry.gitlab.com/ignitionrobotics/web/images/kubectl:latest
+  stage: deploying
+  dependencies:
+    - package_next
+  script:
+    - sed -i "s@<CONTAINER_IMAGE>@$CI_REGISTRY_IMAGE:$CI_COMMIT_SHA@" ./deployments/02-deployment.yaml
+    - envsubst < "./deployments/00-namespace.yaml" > "00-namespace.yaml"
+    - envsubst < "./deployments/01-service.yaml" > "01-service.yaml"
+    - envsubst < "./deployments/02-deployment.yaml" > "02-deployment.yaml"
+    - kubectl apply -f 00-namespace.yaml
+    - kubectl apply -f 01-service.yaml
+    - kubectl apply -f 02-deployment.yaml
+  tags:
+    - testing
+    - kubernetes
+  environment:
+    name: staging
+  only:
+    - develop
+  when: manual
+
+production:
+  image: registry.gitlab.com/ignitionrobotics/web/images/kubectl:latest
+  stage: deploying
+
+  dependencies:
+    - package_latest
+  script:
+    - sed -i "s@<CONTAINER_IMAGE>@$CI_REGISTRY_IMAGE:$CI_COMMIT_SHA@" ./deployments/02-deployment.yaml
+    - envsubst < "./deployments/00-namespace.yaml" > "00-namespace.yaml"
+    - envsubst < "./deployments/01-service.yaml" > "01-service.yaml"
+    - envsubst < "./deployments/02-deployment.yaml" > "02-deployment.yaml"
+    - kubectl apply -f 00-namespace.yaml
+    - kubectl apply -f 01-service.yaml
+    - kubectl apply -f 02-deployment.yaml
+  tags:
+    - kubernetes
+  environment:
+    name: production
+  only:
+    - master
   when: manual

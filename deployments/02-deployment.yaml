@@ -1,28 +1,28 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: $(APPLICATION_NAME)
-  namespace: $(APPLICATION_ENVIRONMENT)
+  name: $APPLICATION_NAME
+  namespace: $APPLICATION_ENVIRONMENT
   labels:
-    role: $(APPLICATION_NAME)
+    role: $APPLICATION_NAME
 spec:
   replicas: 1
   strategy:
     type: Recreate
   selector:
     matchLabels:
-      app: $(APPLICATION_NAME)
-      environment: $(CI_ENVIRONMENT_SLUG)
+      app: $APPLICATION_NAME
+      environment: $CI_ENVIRONMENT_SLUG
   template:
     metadata:
       labels:
-        app: $(APPLICATION_NAME)
-        environment: $(CI_ENVIRONMENT_SLUG)
+        app: $APPLICATION_NAME
+        environment: $CI_ENVIRONMENT_SLUG
       annotations:
         configHash: " "
     spec:
       containers:
-        - name: $(APPLICATION_NAME)
+        - name: $APPLICATION_NAME
           image: <CONTAINER_IMAGE>
           imagePullPolicy: IfNotPresent
           ports:
