@@ -92,7 +92,7 @@ format:
     - gitlab-org
 
 lint:
-  stage: formating
+  stage: formatting
   before_script:
     - *setup_project
     - *setup_git_credentials
