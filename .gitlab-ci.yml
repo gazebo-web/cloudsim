@@ -338,7 +338,7 @@ integration_1:
     - testing
     - kubernetes
   environment:
-    name: integration_1
+    name: integration-1
   except:
     - master
     - develop
