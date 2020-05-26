@@ -27,7 +27,7 @@ spec:
           image: <CONTAINER_IMAGE>
           imagePullPolicy: IfNotPresent
           ports:
-            - containerPort: 8000
+            - containerPort: 8001
           envFrom:
             - configMapRef:
                 name: cloudsim-config
