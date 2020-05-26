@@ -363,8 +363,8 @@ func (sa *SubTApplication) customizeSimulationRequest(ctx context.Context,
 	}
 
 	extra := &ExtraInfoSubT{
-		Circuit: subtSim.Circuit,
-		Robots:  robots,
+		Circuit:    subtSim.Circuit,
+		Robots:     robots,
 		Marsupials: marsupials,
 	}
 	createSim.ExtraSelector = &subtSim.Circuit
@@ -1881,8 +1881,13 @@ func (sa *SubTApplication) setupEC2InstanceSpecifics(ctx context.Context, s *Ec2
 		return nil, err
 	}
 
-	// AMI name: cloudsim-ubuntu-18_04-CUDA_10_1-nvidia-docker_2-kubernetes_1_14.10-v0.2.2
-	gzInput.ImageId = aws.String("ami-063fd908b66e4c2fd")
+	// AMI: cloudsim-worker-node-eks-gpu-optimized-1.0.0
+	// Modified version of Amazon EKS-optimized AMI with GPU support
+	// https://docs.aws.amazon.com/eks/latest/userguide/gpu-ami.html
+	// /aws/service/eks/optimized-ami/1.14/amazon-linux-2-gpu/recommended/image_id
+	imageID := aws.String("ami-08861f7e7b409ed0c")
+
+	gzInput.ImageId = imageID
 	gzInput.InstanceType = aws.String("g3.4xlarge")
 
 	// Add the new Input to the result array
@@ -1899,8 +1904,8 @@ func (sa *SubTApplication) setupEC2InstanceSpecifics(ctx context.Context, s *Ec2
 		if err != nil {
 			return nil, err
 		}
-		// AMI name: cloudsim-ubuntu-18_04-CUDA_10_1-nvidia-docker_2-kubernetes_1_14.10-v0.2.2
-		fcInput.ImageId = aws.String("ami-063fd908b66e4c2fd")
+
+		fcInput.ImageId = imageID
 		fcInput.InstanceType = aws.String("g3.4xlarge")
 		userData, _ := s.buildUserDataString(*dep.GroupID,
 			labelAndValue(nodeLabelKeyCloudsimNodeType, "field-computer"),
