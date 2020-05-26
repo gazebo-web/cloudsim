@@ -4,7 +4,8 @@ metadata:
   name: $APPLICATION_NAME
   namespace: $APPLICATION_ENVIRONMENT
   labels:
-    role: $APPLICATION_NAME
+    app: $APPLICATION_NAME
+    environment: $CI_ENVIRONMENT_SLUG
 spec:
   replicas: 1
   strategy:
