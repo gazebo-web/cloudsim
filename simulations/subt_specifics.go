@@ -29,6 +29,7 @@ import (
 	"k8s.io/kubernetes/pkg/client/conditions"
 	"net/http"
 	"net/url"
+	"os"
 	"path"
 	"path/filepath"
 	"strconv"
@@ -170,6 +171,7 @@ func NewSubTApplication(ctx context.Context, s3Svc s3iface.S3API) (*SubTApplicat
 
 	s.cfg = subTSpecificsConfig{}
 	// Read configuration from environment
+	logger(ctx).Info("Parsing Subt config")
 	if err := env.Parse(&s.cfg); err != nil {
 		return nil, err
 	}
@@ -179,10 +181,12 @@ func NewSubTApplication(ctx context.Context, s3Svc s3iface.S3API) (*SubTApplicat
 	// We allow the user to define the desired IP using the IGN_IP env var. Otherwise,
 	// we use one of the IP addresses of this host.
 	if s.cfg.IgnIP == "" {
+		logger(ctx).Warning(fmt.Print("No IGN_IP config found. Env var value:", os.Getenv("IGN_IP")))
 		if s.cfg.IgnIP, err = getLocalIPAddressString(); err != nil {
 			return nil, err
 		}
 	}
+	logger(ctx).Warning(fmt.Println("Using IGN_IP value", s.cfg.IgnIP))
 
 	s.s3Svc = s3Svc
 
