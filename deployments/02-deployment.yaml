@@ -24,8 +24,8 @@ spec:
     spec:
       containers:
         - name: $APPLICATION_NAME
-          image: <CONTAINER_IMAGE>
-          imagePullPolicy: IfNotPresent
+          image: $CONTAINER_IMAGE
+          imagePullPolicy: Always
           ports:
             - containerPort: 8001
           env:
