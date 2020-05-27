@@ -1531,7 +1531,7 @@ func (sa *SubTApplication) createNetworkPolicy(ctx context.Context, npName strin
 				MatchLabels: matchingPodLabels,
 			},
 			Ingress: []networkingv1.NetworkPolicyIngressRule{
-				// Dev note: Important -- the IP addresses listed here should be from Weave network.
+				// Dev note: Important -- the IP addresses listed here should be the IP of the Cloudsim pod.
 				{
 					From: []networkingv1.NetworkPolicyPeer{
 						{
@@ -1544,7 +1544,7 @@ func (sa *SubTApplication) createNetworkPolicy(ctx context.Context, npName strin
 				},
 			},
 			Egress: []networkingv1.NetworkPolicyEgressRule{
-				// Dev note: Important -- the IP addresses listed here should be from Weave network.
+				// Dev note: Important -- the IP addresses listed here should be the IP of the Cloudsim pod.
 				{
 					To: []networkingv1.NetworkPolicyPeer{
 						{

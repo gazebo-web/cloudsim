@@ -612,12 +612,6 @@ func (s *Ec2Client) deleteK8Nodes(ctx context.Context, tx *gorm.DB, groupID stri
 		return nil, NewErrorMessageWithBase(ErrorLabeledNodeNotFound, err)
 	}
 	for _, n := range nodes.Items {
-		// Remove the node from the weave network
-		// If there is a error removing the node from the weave network,
-		// keep going with the node deletion process so that the EC2 instance
-		// can be stopped/deleted.
-		_ = KubernetesWeaveRemovePeer(ctx, s.clientset, &n)
-
 		// Delete the node
 		err = nodesInterface.Delete(n.Name, &metav1.DeleteOptions{})
 		if err != nil {
