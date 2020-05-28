@@ -304,7 +304,7 @@ integration:
   dependencies:
     - package_default
   script:
-    - sed -i "s@<CONTAINER_IMAGE>@$CI_REGISTRY_IMAGE:$CI_COMMIT_SHA@" ./deployments/02-deployment.yaml
+    - export CONTAINER_IMAGE="$CI_REGISTRY_IMAGE:$CI_COMMIT_SHA"
     - envsubst < "./deployments/00-namespace.yaml" > "00-namespace.yaml"
     - envsubst < "./deployments/01-service.yaml" > "01-service.yaml"
     - envsubst < "./deployments/02-deployment.yaml" > "02-deployment.yaml"
