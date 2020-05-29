@@ -382,6 +382,7 @@ production:
     - kubectl apply -f 02-deployment.yaml
   tags:
     - kubernetes
+    - production
   environment:
     name: production
   only:
