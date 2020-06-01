@@ -36,3 +36,5 @@ spec:
           envFrom:
             - configMapRef:
                 name: cloudsim-config
+      nodeSelector:
+        server: "true"
