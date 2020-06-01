@@ -1,8 +1,8 @@
-FROM registry.gitlab.com/ignitionrobotics/web/images/cloudsim-base
+# Builder
+FROM registry.gitlab.com/ignitionrobotics/web/images/cloudsim-base AS builder
 
-RUN mkdir -p /go/src/gitlab.com/ignitionrobotics/web/cloudsim
-COPY . /go/src/gitlab.com/ignitionrobotics/web/cloudsim
 WORKDIR /go/src/gitlab.com/ignitionrobotics/web/cloudsim
+COPY . /go/src/gitlab.com/ignitionrobotics/web/cloudsim
 
 # Install the dependencies without checking for go code
 RUN dep ensure -vendor-only -v
@@ -10,7 +10,15 @@ RUN dep ensure -vendor-only -v
 # Build app
 RUN go install
 
+
+# Runner
+FROM registry.gitlab.com/ignitionrobotics/web/images/cloudsim-base
+
+WORKDIR /app
+COPY --from=builder /go/bin/cloudsim .
+COPY . .
+
 ENTRYPOINT [ "./docker-entrypoint.sh" ]
-CMD ["/go/bin/cloudsim"]
+CMD ["./cloudsim"]
 
 EXPOSE 8001
