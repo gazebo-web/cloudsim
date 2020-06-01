@@ -102,6 +102,13 @@ After creating the cluster, we need to add a node group in order to have a place
 
 **Desired size**: `2` nodes
 
+#### Labels
+
+| Key | Value | Description |
+| ------ | ------ | ------ |
+| gitlab | true | Allow the gitlab runner to run job pods on this node group |
+| server | true | Allow the cloudsim deployment to launch pods on this node group |
+
 ### Calico
 
 **TODO**
