@@ -4,7 +4,6 @@ variables:
   PKG_NAME: gitlab.com/ignitionrobotics/web/cloudsim
   MYSQL_DATABASE: "cloudsim_test"
   MYSQL_ROOT_PASSWORD: "root"
-  KUBERNETES_NAMESPACE_OVERWRITE: gitlab-ci-${CI_COMMIT_REF_SLUG}
   KUBERNETES_POLL_TIMEOUT: 540
 
 ##########################################################
@@ -31,6 +30,15 @@ variables:
 .setup_db: &setup_db
   - mysql -u root -proot -h mysql -e "CREATE DATABASE usersdb_test"
 
+.deploy_kubernetes: &deploy_kubernetes
+  - export CONTAINER_IMAGE="$CI_REGISTRY_IMAGE:$CI_COMMIT_SHA"
+  - envsubst < "./deployments/00-namespace.yaml" > "00-namespace.yaml"
+  - envsubst < "./deployments/01-service.yaml" > "01-service.yaml"
+  - envsubst < "./deployments/02-deployment.yaml" > "02-deployment.yaml"
+  - kubectl apply -f 00-namespace.yaml
+  - kubectl apply -f 01-service.yaml
+  - kubectl apply -f 02-deployment.yaml
+
 ##########################################################
 # Cache configuration
 
@@ -38,7 +46,6 @@ cache:
   untracked: true
   key: ${CI_COMMIT_REF_SLUG}
   paths:
-    - vendor/
     - /builds/ignitionrobotics/web/cloudsim/vendor/
     - /go/src/gitlab.com/ignitionrobotics/web/cloudsim/vendor/
 
@@ -46,18 +53,17 @@ cache:
 # Stages
 
 stages:
-  - installing
-  - formatting
-  - testing
-  - building
-  - packaging
-  - deploying
+  - install
+  - format
+  - test
+  - package
+  - deploy
 
 ##########################################################
 # Installing stage
 
 proto:
-  stage: installing
+  stage: install
   before_script:
     - cd ./ign-transport/proto/
   script:
@@ -70,12 +76,11 @@ proto:
     - gitlab-org
 
 dep:
-  stage: installing
+  stage: install
   before_script:
     - *setup_project
   script:
     - *dep_ensure
-  after_script:
     - *dep_ensure_post
   tags:
     - gitlab-org
@@ -83,8 +88,8 @@ dep:
 ##########################################################
 # Formatting stage
 
-format:
-  stage: formatting
+fmt:
+  stage: format
   before_script:
     - *setup_project
     - *setup_git_credentials
@@ -94,7 +99,7 @@ format:
     - gitlab-org
 
 lint:
-  stage: formatting
+  stage: format
   before_script:
     - *setup_project
     - *setup_git_credentials
@@ -107,7 +112,7 @@ lint:
 # Testing stage
 
 vet:
-  stage: testing
+  stage: test
   dependencies:
     - proto
   before_script:
@@ -117,8 +122,6 @@ vet:
     - *setup_db
   script:
     - go vet $(go list ./... | grep -v /vendor/)
-  after_script:
-    - *dep_ensure_post
   services:
     - mysql:5.7
   environment:
@@ -127,7 +130,7 @@ vet:
     - gitlab-org
 
 test:
-  stage: testing
+  stage: test
   dependencies:
     - proto
   before_script:
@@ -137,8 +140,6 @@ test:
     - *setup_db
   script:
     - go test $(go list ./... | grep -v /vendor/)
-  after_script:
-    - *dep_ensure_post
   services:
     - mysql:5.7
   environment:
@@ -147,7 +148,7 @@ test:
     - gitlab-org
 
 race:
-  stage: testing
+  stage: test
   dependencies:
     - proto
   before_script:
@@ -157,8 +158,6 @@ race:
     - *setup_db
   script:
     - go test -race $(go list ./... | grep -v /vendor/)
-  after_script:
-    - *dep_ensure_post
   services:
     - mysql:5.7
   environment:
@@ -168,7 +167,7 @@ race:
     - gitlab-org
 
 coverage:
-  stage: testing
+  stage: test
   dependencies:
     - proto
   before_script:
@@ -180,8 +179,6 @@ coverage:
     - go test -covermode=atomic -coverprofile=coverage.tx
     - go tool cover -func=coverage.tx
     - bash <(curl -s https://codecov.io/bash)
-  after_script:
-    - *dep_ensure_post
   services:
     - mysql:5.7
   environment:
@@ -190,31 +187,10 @@ coverage:
     - gitlab-org
 
 ##########################################################
-# Building stage
-
-build:
-  stage: building
-  dependencies:
-    - proto
-  before_script:
-    - *setup_project
-    - *setup_git_credentials
-    - *dep_ensure
-  script:
-    - go build
-  artifacts:
-    paths:
-      - ${GOPATH}/src/${PKG_NAME}/cloudsim
-    expire_in: 1 month
-  tags:
-    - gitlab-org
-
-
-##########################################################
 # Packaging stage
 
-package_default:
-  stage: packaging
+docker:
+  stage: package
   image: docker
   services:
     - docker:dind
@@ -223,7 +199,6 @@ package_default:
     - master
   dependencies:
     - proto
-    - build
   variables:
     DOCKER_HOST: tcp://docker:2375
     DOCKER_DRIVER: overlay2
@@ -240,8 +215,8 @@ package_default:
   tags:
     - gitlab-org-docker
 
-package_next:
-  stage: packaging
+docker:next:
+  stage: package
   image: docker
   only:
     - develop
@@ -249,7 +224,6 @@ package_next:
     - docker:dind
   dependencies:
     - proto
-    - build
   variables:
     DOCKER_HOST: tcp://docker:2375
     DOCKER_DRIVER: overlay2
@@ -267,8 +241,8 @@ package_next:
   tags:
     - gitlab-org-docker
 
-package_latest:
-  stage: packaging
+docker:latest:
+  stage: package
   image: docker
   only:
     - master
@@ -276,7 +250,6 @@ package_latest:
     - docker:dind
   dependencies:
     - proto
-    - build
   variables:
     DOCKER_HOST: tcp://docker:2375
     DOCKER_DRIVER: overlay2
@@ -300,17 +273,11 @@ package_latest:
 
 integration:
   image: registry.gitlab.com/ignitionrobotics/web/images/kubectl:latest
-  stage: deploying
+  stage: deploy
   dependencies:
-    - package_default
+    - docker
   script:
-    - export CONTAINER_IMAGE="$CI_REGISTRY_IMAGE:$CI_COMMIT_SHA"
-    - envsubst < "./deployments/00-namespace.yaml" > "00-namespace.yaml"
-    - envsubst < "./deployments/01-service.yaml" > "01-service.yaml"
-    - envsubst < "./deployments/02-deployment.yaml" > "02-deployment.yaml"
-    - kubectl apply -f 00-namespace.yaml
-    - kubectl apply -f 01-service.yaml
-    - kubectl apply -f 02-deployment.yaml
+    - *deploy_kubernetes
   tags:
     - testing
     - kubernetes
@@ -323,17 +290,11 @@ integration:
 
 integration_1:
   image: registry.gitlab.com/ignitionrobotics/web/images/kubectl:latest
-  stage: deploying
+  stage: deploy
   dependencies:
-    - package_default
+    - docker
   script:
-    - sed -i "s@<CONTAINER_IMAGE>@$CI_REGISTRY_IMAGE:$CI_COMMIT_SHA@" ./deployments/02-deployment.yaml
-    - envsubst < "./deployments/00-namespace.yaml" > "00-namespace.yaml"
-    - envsubst < "./deployments/01-service.yaml" > "01-service.yaml"
-    - envsubst < "./deployments/02-deployment.yaml" > "02-deployment.yaml"
-    - kubectl apply -f 00-namespace.yaml
-    - kubectl apply -f 01-service.yaml
-    - kubectl apply -f 02-deployment.yaml
+    - *deploy_kubernetes
   tags:
     - testing
     - kubernetes
@@ -346,17 +307,11 @@ integration_1:
 
 staging:
   image: registry.gitlab.com/ignitionrobotics/web/images/kubectl:latest
-  stage: deploying
+  stage: deploy
   dependencies:
-    - package_next
+    - docker:next
   script:
-    - sed -i "s@<CONTAINER_IMAGE>@$CI_REGISTRY_IMAGE:$CI_COMMIT_SHA@" ./deployments/02-deployment.yaml
-    - envsubst < "./deployments/00-namespace.yaml" > "00-namespace.yaml"
-    - envsubst < "./deployments/01-service.yaml" > "01-service.yaml"
-    - envsubst < "./deployments/02-deployment.yaml" > "02-deployment.yaml"
-    - kubectl apply -f 00-namespace.yaml
-    - kubectl apply -f 01-service.yaml
-    - kubectl apply -f 02-deployment.yaml
+    - *deploy_kubernetes
   tags:
     - testing
     - kubernetes
@@ -368,18 +323,11 @@ staging:
 
 production:
   image: registry.gitlab.com/ignitionrobotics/web/images/kubectl:latest
-  stage: deploying
-
+  stage: deploy
   dependencies:
-    - package_latest
+    - docker:latest
   script:
-    - sed -i "s@<CONTAINER_IMAGE>@$CI_REGISTRY_IMAGE:$CI_COMMIT_SHA@" ./deployments/02-deployment.yaml
-    - envsubst < "./deployments/00-namespace.yaml" > "00-namespace.yaml"
-    - envsubst < "./deployments/01-service.yaml" > "01-service.yaml"
-    - envsubst < "./deployments/02-deployment.yaml" > "02-deployment.yaml"
-    - kubectl apply -f 00-namespace.yaml
-    - kubectl apply -f 01-service.yaml
-    - kubectl apply -f 02-deployment.yaml
+    - *deploy_kubernetes
   tags:
     - kubernetes
     - production
