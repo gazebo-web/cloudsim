@@ -1,6 +1,7 @@
 package simulations
 
 import (
+	"errors"
 	"gitlab.com/ignitionrobotics/web/ign-go"
 	"gitlab.com/ignitionrobotics/web/cloudsim/globals"
 	"bytes"
@@ -42,6 +43,11 @@ func SendEmail(recipient *[]string, sender *string, subject string, templateFile
 
 // SendSimulationSummaryEmail sends a summary email to the user that created the simulation
 func SendSimulationSummaryEmail(dep *SimulationDeployment, summary AggregatedSubTSimulationValues) *ign.ErrMsg {
+
+	if dep.SummarySent {
+		return ign.NewErrorMessageWithBase(ign.ErrorUnexpected, errors.New("summary has already been sent"))
+	}
+
 	var marshaledSummary bytes.Buffer
 	b, err := json.MarshalIndent(summary, "", "  ")
 	if err != nil {

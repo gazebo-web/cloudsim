@@ -1780,6 +1780,9 @@ func (sa *SubTApplication) processSimulationResults(ctx context.Context, s *Serv
 				ModelCountStdDev:       0,
 			}
 			SendSimulationSummaryEmail(dep, summary)
+			if !dep.SummarySent {
+				dep.UpdateSummarySent(tx, true)
+			}
 		}
 	}
 
@@ -2105,8 +2108,11 @@ func (sa *SubTApplication) updateMultiSimStatuses(ctx context.Context, tx *gorm.
 	}
 
 	// Send an email with the summary to the competitor
-	if !globals.DisableSummaryEmails || !simDep.SummarySent {
+	if !globals.DisableSummaryEmails {
 		SendSimulationSummaryEmail(simDep, *summary)
+		if !simDep.SummarySent {
+			simDep.UpdateSummarySent(tx, true)
+		}
 	}
 
 	return nil
