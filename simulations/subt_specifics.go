@@ -1705,6 +1705,10 @@ func (sa *SubTApplication) createS3CopyPod(ctx context.Context, s *Service, dep 
 func (sa *SubTApplication) processSimulationResults(ctx context.Context, s *Service, tx *gorm.DB,
 	dep *SimulationDeployment) *ign.ErrMsg {
 
+	if dep.SummaryProcessed {
+		return nil
+	}
+
 	values := SimulationDeploymentsSubTValue{
 		SimulationDeployment: dep,
 		GroupID:              dep.GroupID,
@@ -1780,10 +1784,11 @@ func (sa *SubTApplication) processSimulationResults(ctx context.Context, s *Serv
 				ModelCountStdDev:       0,
 			}
 			SendSimulationSummaryEmail(dep, summary)
-			if !dep.SummaryProcessed {
-				dep.UpdateSummaryProcessed(tx, true)
-			}
 		}
+	}
+
+	if !dep.SummaryProcessed {
+		dep.UpdateSummaryProcessed(tx, true)
 	}
 
 	return nil
