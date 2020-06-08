@@ -70,6 +70,7 @@ type SimulationDeployment struct {
 	// TODO: This is a field specific to SubT. This is a temporary field that should be
 	//  extracted from the SimulationDeployment struct.
 	Held bool `json:"held"`
+	SummarySent bool `json:"-"`
 }
 
 // GetSimulationDeployment gets a simulation deployment record by its GroupID
