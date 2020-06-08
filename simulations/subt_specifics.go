@@ -1780,8 +1780,8 @@ func (sa *SubTApplication) processSimulationResults(ctx context.Context, s *Serv
 				ModelCountStdDev:       0,
 			}
 			SendSimulationSummaryEmail(dep, summary)
-			if !dep.SummarySent {
-				dep.UpdateSummarySent(tx, true)
+			if !dep.SummaryProcessed {
+				dep.UpdateSummaryProcessed(tx, true)
 			}
 		}
 	}
@@ -2061,7 +2061,7 @@ func (sa *SubTApplication) updateMultiSimStatuses(ctx context.Context, tx *gorm.
 	// Note: simDep is a Parent in a multi-sim
 
 	// Only proceed if the simulation terminated successfully. Get the aggregated values from all children
-	if simDep.IsRunning() || simDep.ErrorStatus != nil {
+	if simDep.IsRunning() || simDep.ErrorStatus != nil || simDep.SummaryProcessed {
 		return nil
 	}
 
@@ -2110,8 +2110,8 @@ func (sa *SubTApplication) updateMultiSimStatuses(ctx context.Context, tx *gorm.
 	// Send an email with the summary to the competitor
 	if !globals.DisableSummaryEmails {
 		SendSimulationSummaryEmail(simDep, *summary)
-		if !simDep.SummarySent {
-			simDep.UpdateSummarySent(tx, true)
+		if !simDep.SummaryProcessed {
+			simDep.UpdateSummaryProcessed(tx, true)
 		}
 	}
 
