@@ -237,105 +237,106 @@ To make the instance join the cluster, run the following inside the instance
 Where `<cluster_name` is the name of the EKS cluster.
 
 
-# TODO Needs rewrite
 # Creating everything from scratch
 In case you need to re-do everything...
 
 ## Creating the AWS Security Group
-- created security group for our current VPC:
+Created security group for our current VPC:
+
 ```
 aws ec2 create-security-group --group-name kubernetes --description "Kubernetes Security Group" --vpc-id vpc-12af6375
 ```
-After creating the Security Group we got its ID, and use it to add inbound rules to it.
+
+After creating the Security Group we got its ID, and use it to add rules to it.
 
 ```
+# Allow SSH connections from all sources
 aws ec2 authorize-security-group-ingress --group-id sg-0c5c791266694a3ca --protocol tcp --port 22 --cidr 0.0.0.0/0
+# Allow HTTP traffic from all sources
 aws ec2 authorize-security-group-ingress --group-id sg-0c5c791266694a3ca --protocol tcp --port 80 --cidr 0.0.0.0/0
+# Allow traffic from the secure kube api port from all sources 
 aws ec2 authorize-security-group-ingress --group-id sg-0c5c791266694a3ca --protocol tcp --port 6443 --cidr 0.0.0.0/0
+# Allow all traffic from instances with the `kubernetes` security group
 aws ec2 authorize-security-group-ingress --group-id sg-0c5c791266694a3ca --source-group sg-0c5c791266694a3ca --protocol all
-aws ec2 authorize-security-group-ingress --group-id sg-0c5c791266694a3ca --protocol udp --port 6783-6784 --cidr 172.30.0.0/32
-aws ec2 authorize-security-group-ingress --group-id sg-0c5c791266694a3ca --protocol tcp --port 6783 --cidr 172.30.0.0/32
+# Allow all traffic from instances with the `cloudsim-server` security group
+aws ec2 authorize-security-group-ingress --group-id sg-0c5c791266694a3ca --source-group sg-023c19380b48dcabb --protocol all
+# Allow all outbound traffic
+aws ec2 authorize-security-group-egress --group-id sg-0c5c791266694a3ca --protocol all --cidr 0.0.0.0/0
 ```
-Where `172.30.0.0/32` is the CIDR that both the cloudsim EBS instance and the Kubernetes EC2 instances share.
 
-## Security Group for the EBS instance
-The EBS instance (elasticbeanstalk) that will run the Cloudsim server will need to access the Weave network.
-For this we need to open ports (inbound):
-- Weave ports: You must permit traffic to flow through `TCP 6783` and `UDP 6783/6784`, which are Weave’s control and data ports.
-- Note: The Weave Net daemon listens on localhost (127.0.0.1) TCP port 6784 for commands from other Weave Net components. This port should not be opened to other hosts.
+## Security Group for EKS cluster instances
+EKS cluster instances that will run Cloudsim servers will need to allow traffic from simulation instances.
 
+```
+aws ec2 create-security-group --group-name cloudsim-server --description "Cloudsim Server Security Group" --vpc-id vpc-12af6375
+```
 
-## Steps to create a new kubernetes Master Node (and save its AMI), with Weave support and Ign-gazebo.
-- Created an EC2 `t2.medium` instance with 128Gb disk, and:
-  - using AMI: `ubuntu/images/hvm-ssd/ubuntu-bionic-18.04-amd64-server-20190212.1` (ami-0a313d6098716f372)
-  - using with "Kubernetes Security Group" using base AMI "Ubuntu 18 + HVM".
-  - Choose `ignitionFuel.pem` as ssh key.
-- SSH into the instance.
-- Installed `docker 18.09.6` following default instructions from here: https://docs.docker.com/install/linux/docker-ce/ubuntu/
-- installed mercurial and git
-- Run `swapoff -a` (before installing kubernetes)
-- Run `sudo su -`
-- Installed Kubernetes and Kubeadm `1.14.2` following this: https://kubernetes.io/docs/setup/independent/install-kubeadm/
-- Then marked package with `apt-mark hold`, to avoid unexpected updates (`apt-mark hold kubelet kubeadm kubectl`).
-- (At this point you may want to create an AMI, before launching the master. You can reuse the AMI for other masters or workers).
-- We've created the AMI `cloudsim-ubuntu-bionic-18.04-docker_2_18.09.6-kubernetes_1_14-master-v0.2` (`ami-05cc5ecb0a82d6c3d`)
+After creating the security group, use the ID from the previous command to open the following ports:
 
-
-## Launching a new Master node
-- After following instructions from above...OR after launching a new ec2 instance based on the Master Node AMI...ssh into the ec2 machine and:
-- Launch the master and init the cluster with `sudo kubeadm init --ignore-preflight-errors=all --node-name master --token-ttl 0`. 
-  - Follow the instructions from the command output, to configure `.kube/config`.
-  - Also write down the `kubeadm join xxx.xx.x.xxx:6443 --token xxxxxxxxxxx --discovery-token-ca-cert-hash yyyyyyyyyyyyyyyyyyy`. You will use it to join nodes.
-- Then `sudo sysctl net.bridge.bridge-nf-call-iptables=1` to pass bridged IPv4 traffic to iptables’ chains. This is a requirement for some CNI plugins to work.
-- Apply the Weave pod network: `kubectl apply -f "https://cloud.weave.works/k8s/net?k8s-version=$(kubectl version | base64 | tr -d '\n')"`. We're using Weave Net, as it has support for multicast and attaching EC2 instances that are not part of the kubernetes cluster.
-- Once the Pod network has been installed, you can confirm that it is working by checking that the CoreDNS pod is Running in the output of `kubectl get pods --all-namespaces`. And once the CoreDNS pod is up and running, you can continue by joining your nodes.
-- Install latest version of NVIDIA Device Plugin: `kubectl create -f https://raw.githubusercontent.com/NVIDIA/k8s-device-plugin/v1.12/nvidia-device-plugin.yml`.
-It is installed as a DaemonSet. You can check it was installed by: `kubectl get ds --all-namespaces`.
-This plugin helps the Master to detect and use GPU based Worker nodes.
-  - Other details and ideas for troubleshooting, here: https://github.com/kubernetes/kops/tree/master/hooks/nvidia-device-plugin
-  - Official doc: https://github.com/NVIDIA/k8s-device-plugin
-  - Tip: in the future, to check that nodes are detected to have GPUs: `kubectl describe nodes|grep -E 'gpu:\s.*[1-9]'`
-- Create the `aws-secrets` from the web-cloudsim's `create-secrets.sh` script. Note that this script will need several AWS_* env
-variables to be exported in the invoking bash terminal. After using the script, remember to remove the exported AWS
-variables from the system (if needed).
-  - You can check it was created by running `kubectl get secrets`. You should see a `aws-secrets` Secret.
-- Install the `ecr-cred-updater.yaml`, to install a cronjob and its associated service-account, role and role binding to read AWS ECR tokens and
-enable the kubernetes cluster to access private images from ECR repositories. See section "Instructions to setup
-the ECR Credentials Updater in AWS Cluster" on this doc.
-- Install the default Network Policy to block "ingress" and "egress" of all Cloudsim Pods by default. To do this run: `kubectl create -f default_deny_cloudsim.yaml`
-from the `aws-k8/network_policies` folder. This policy will block connections to/from any Pod and to/from the external world
-unless allowed by other policy.
-
-- PENDING here: install addons for monitoring and centralized logging
+```
+# Allow SSH connections from all sources
+aws ec2 authorize-security-group-ingress --group-id sg-023c19380b48dcabb --protocol tcp --port 22 --cidr 0.0.0.0/0
+# Allow all traffic from instances with the `kubernetes` security group
+aws ec2 authorize-security-group-ingress --group-id sg-023c19380b48dcabb --source-group sg-0c5c791266694a3ca --protocol all
+# Allow all outbound traffic
+aws ec2 authorize-security-group-egress --group-id sg-023c19380b48dcabb --protocol all --cidr 0.0.0.0/0
+```
 
 
 ## Instructions to create the Worker Nodes AMI (with NVIDIA)
 (Note: no need to follow these steps if you are using the AMIs that we've already created)
 
 - Note: This was done to create the cloudsim K8 Node AMI (ie. The Worker Nodes with GPU).
-- Using instance type `g3.4xlarge` (with 1 GPU Testla M60).
+- Using instance type `g3.4xlarge` (with 1 GPU Tesla M60).
   - Used the Kubernetes Security Group (sg-0c5c791266694a3ca)
   - Used 128 GB disk (General Purpose SSD -- gp2)
-- Using base community AMI: `ubuntu-18_04-CUDA_10_1-nvidia-docker_2 (ami-0891f5dcc59fc5285)`. It comes with Go 1.10.8, CUDA 10,
-nvidia-docker 2, and Nvidia as docker runtime by default.
-- Then followed instructions from `optimize GPU`: https://docs.amazonaws.cn/en_us/AWSEC2/latest/UserGuide/optimize_gpu.html
-- Installed mercurial, nano, git.
-- Run `swapoff -a` (before installing kubernetes)
-- Installed Kubernetes and Kubeadm 1.14.1 following this: https://kubernetes.io/docs/setup/independent/install-kubeadm/
-- Then marked package with `apt-mark hold`, to avoid unexpected updates (`apt-mark hold kubelet kubeadm kubectl`).
-- Important: Make sure to update `/etc/docker/daemon.json` to make nvidia the docker default runtime. See: https://github.com/NVIDIA/k8s-device-plugin#preparing-your-gpu-nodes.
-- Created the new AMI (latest, `cloudsim-ubuntu-18_04-CUDA_10_1-nvidia-docker_2-kubernetes_1_14.10-v0.2.2`). This AMI is expected to be used with `G3` EC2 instances.
+- Using AWS EKS Amazon Linux 2 GPU-optimized AMI: [`ami-08dc081250e6c9d58`](https://console.aws.amazon.com/systems-manager/parameters/%252Faws%252Fservice%252Feks%252Foptimized-ami%252F1.14%252Famazon-linux-2-gpu%252Frecommended%252Fimage_id/description?region=us-east-1#). 
+  It comes with Kubernetes 1.14, CUDA 10, nvidia-docker 2, and Nvidia as docker runtime by default.
+- Added an X server configuration specific to G3 instance GPUs
+
+```
+cat > /etc/X11/xorg.conf.d/nvidia.conf <<-EOF
+Section "Device"
+    Identifier     "NVIDIA"
+    Driver         "nvidia"
+    BusID          "0:30:0"
+EndSection
+EOF
+``` 
+
+- Created a simple X server systemd service.
+
+```
+cat > /etc/systemd/system/xorg.service <<-EOF
+[Unit]
+Description=Xorg server
+
+[Service]
+Type=simple
+SuccessExitStatus=0 1
+
+ExecStart=/usr/bin/Xorg
+ExecStop=/usr/bin/kill `pidof Xorg`
+
+[Install]
+WantedBy=default.target
+EOF
+``` 
+
+- Enabled the systemd service.
+
+```
+sudo systemctl enable xorg
+```
+
+- Created the new AMI (latest, `cloudsim-worker-node-eks-gpu-optimized-1.0.0`). This AMI is expected to be used with `G3` EC2 instances.
 
 #
 # Some Tips for Kubernetes
 
-- The Node's client config is at `sudo cat /etc/kubernetes/kubelet.conf`
-- To remove a node from cluster
-    - 0) (at master) `kubectl drain <node-name> --delete-local-data --force --ignore-daemonsets`
-    - 1) (at node) `sudo kubeadm reset`.
-    - 2) (at master) `kubectl delete node <node-name>`.
+- The `kubelet` config (node client) can be found in `/etc/kubernetes/kubelet.conf`.
 - Use node affinity to send pods to specific node instance groups: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/
-- shutdown idle pods: https://carlosbecker.com/posts/k8s-sandbox-costs/
+- Shutdown idle pods: https://carlosbecker.com/posts/k8s-sandbox-costs/
 - Long polling in Go: https://lucasroesler.com/2018/07/golang-long-polling-a-tale-of-server-timeouts/
 
 
@@ -355,10 +356,7 @@ Then you need to re-copy the kunernetes/config (with cert data) to clients.
 - Doc: https://kubernetes.io/docs/concepts/services-networking/network-policies/ 
 
 
-
-#
 # Local development
-#
 
 ## Install Dind-Cluster to have a local Kubernetes with 1 master and 2 slave nodes
 
@@ -377,49 +375,14 @@ $ sudo CNI_PLUGIN="weave" ./dind-cluster.sh up
   1. Enable node 1: `kubectl label nodes kube-node-1 cloudsim_free_node=true` and then `kubectl label nodes kube-node-1 cloudsim_groupid=`
   1. Enable node 2: `kubectl label nodes kube-node-2 cloudsim_free_node=true` and then `kubectl label nodes kube-node-2 cloudsim_groupid=`
 
-
-## Deploying local development changes to elasticbeanstalk server
-
-If you want to deploy a local development version to `staging` (just as an example), you can have these 2 scripts in your
-local web-cloudsim root folder:
-
-1. A modified version of `beanstalk_deploy.py` that includes this line:
-```
- BUCKET_KEY = os.getenv('APPLICATION_NAME') + '/' + VERSION_LABEL + \
-     '-preyna_local_builds.zip'
-```
-Note the "-preyna_local_builds.zip". Let's call this new file `local_beanstalk_deploy.py` just for this example (see script below).
-1. Also a new `deploy-staging.sh` script with contents:
-```
-set -e
-set -v
-rm -f /tmp/artifact.zip
-zip -r /tmp/artifact.zip * .ebextensions -x vendor/\* -x .env
-
-export S3_BUCKET="web-cloudsim-deploy"
-export APPLICATION_NAME="web-cloudsim"
-export APPLICATION_ENVIRONMENT="web-cloudsim-staging"
-export AWS_REGION=us-east-1
-export AWS_ACCESS_KEY_ID=your key here
-export AWS_SECRET_ACCESS_KEY= your secret here
-python local_beanstalk_deploy.py
-```
-
-With the above scripts you just need to run `deploy-staging.sh` and your current branch will be deployed to the
-staging server.
-
-
 ## Running Gazebo from its docker image
 - In your local dev machine: `sudo IGN_VERBOSE=1 docker run -it -e DISPLAY -e QT_X11_NO_MITSHM=1 -e XAUTHORITY=$XAUTH -e IGN_PARTITION -v "$XAUTH:$XAUTH" -v "/tmp/.X11-unix:/tmp/.X11-unix" -v "/etc/localtime:/etc/localtime:ro" -v "/dev/input:/dev/input" --security-opt seccomp=unconfined nkoenig/ign-gazebo:nightly ign-gazebo-server -v 4`.
 - Shorter gzserver version: `sudo IGN_VERBOSE=1 docker run -it nkoenig/ign-gazebo:nightly ign-gazebo-server -v 4`.
-
 
 ## Some useful Gazebo commands
 - To see a topic in the command line: `IGN_VERBOSE=0 ign topic -e -t /world/default/stats`
 - To resume a simulation: `IGN_VERBOSE=0 ign service -s /world/default/control --reqtype ignition.msgs.WorldControl --reptype ignition.msgs.Boolean --timeout 2000 --req 'pause:false'`. Use `pause:true` if you to pause the simulation.
 
-
-# 
 ## Notes about local testing using ign_transport running inside Kubernetes (local machine using Docker-in-Docker):
 
 I was able to successfully run ign-transport's examples `publisher_c` and `subscriber_c` inside a `dind-cluster` (local machine).
@@ -440,49 +403,11 @@ $ sudo CNI_PLUGIN="weave" ./dind-cluster.sh up
   - `kubectl run testsub --image=transport_examples --env IGN_PARTITION=foo --env IGN_VERBOSE=1 --image-pull-policy=Never --command -- /osrf/ign-transport/example/build/subscriber_c`
   - `kubectl run testpub --image=transport_examples --env IGN_PARTITION=foo --env IGN_VERBOSE=1 --image-pull-policy=Never --command -- /osrf/ign-transport/example/build/publisher_c`
 
-
-# Related to ign-transport multicast and the required Weave Net plugin
-
-## To manually join a node (eg. ec2 machine) to the k8 cluster and participate in the Weave network:
-
-1. To manually add an external ec2 machine to the Weave's Network:
-    - "External" refers to adding a new EC2 machine to an existing Weave Network, where the Weave Network is running inside a Kubernetes
-    cluster, and the new EC2 machine won't participate of that cluster. As a concrete example, think of the Web-Cloudsim backend server
-    (it doesn't belong to the kubernetes cluster but it has read ign-transport messages sent within the cluster).
-    - First, at the new  EC2, install Weave command (https://www.weave.works/docs/net/latest/install/installing-weave/) and then run `sudo weave launch`. Also `ip route` or `ifconfig` to get the main IP address of the EC2 instance (eg. 172.30.0.170).
-1. Then, there are some alternatives to join the new EC2 node to the Weave Network:
-    - From the k8 master node `kubectl exec -n kube-system <weave-net-xxxxx> -c weave -- /home/weave/weave --local connect 172.30.0.170` (this is done to manually add an extra node to the Weave Network from inside the cluster). With that done, the machines will define new routes among them.
-    - As an alternative, you can install the Weave command in the k8 master and perform the `weave connect <New_host_IP>` from there.
-    - The best approach (to me): from the New_host run `sudo weave launch --ipalloc-init observer 172.30.0.186`, where the IP is the k8 master's IP (or another existing Weave host).
-1. Once the extra host was added to the Weave cluster, if you want a child docker container to also participate in the Weave cluster, then from the host run `sudo weave attach <container>`. This command will give the containera a Weave's IP. You can see that by doing `ip route` within the container.
-    - Another way to have a docker container automatically join an existing Weave network is to launch it using: `docker $(weave config) run ...`.
-1. (For local dev only) If you want to make the software running in the "Host" (and not in a docker container) participate and use an IP from Weave, then after adding the Node to the Weave Network, run `sudo weave expose` in the host.
-1. Note: To make the `ign-transport broadcast` work, it is important to set the `IGN_IP` environmnent variable to the current Weave's IP (usually the result of running `weave attach <container>`). Also to run it with `IGN_PARTITION=foo`.
-
-
-## Automatic approach (using elasticbeanstalk):
-
-- We've updated Cloudsim server's Dockerfile to detect the Weave's IP. This is done with the Entrypoint `docker-entrypoint.sh` script.
-- We've also updated `.elasticbeanstalk` scripts to install the Weave command and automatically join the kubernetes/Weave network. For this, the EBS
-instance expects the following environment variables to be set:
-  - `export IGN_TRANSPORT_IP_INTERFACE=ethwe`. Setting the `IGN_TRANSPORT_IP_INTERFACE` env var with `ethwe` value will make the
-  cloudsim server docker container to use the Weave IP for `IGN_IP` (needed by ign-transport process).
-  - `export KUBE_MASTER_IP=<ip>`. The `KUBE_MASTER_IP` is used to automatically join the Weave Network at elasticbeanstalk startup (even
-  before the cloudsim docker container is run).
-
-
-## Weave Tips:
-
-1. To debug Weave connections: `kubectl exec -n kube-system weave-net-xxxx -c weave -- /home/weave/weave --local status connections`
-1. To remove a host from the Weave network: `weave forget IP` (eg. from the master).
-
-
-
-#
 # Connecting from Go code
 - The client machine needs to have a `~/.kube/config` file. The cloudsim server will look for that file to connect.
-- You can get it by copying the master's admin.conf file from the "Start the cluster" (ie. /etc/kubernetes/admin.conf) to the Go client machine.
-  - Note: security configuration and authentication should be managed by the configuration file. The Go code should just 'use that config'.
+- This is obtained automatically when launching the Cloudsim container. It require the `AWS_CLUSTER_NAME` environment
+  variable to be set to the EKS cluster name.
+- Note: security configuration and authentication should be managed by the configuration file. The Go code should just 'use that config'.
 - There should be an open port to connect to. By default we use the secure port 6443.
   - During development, to avoid Certificates Error, you can add `insecure-skip-tls-verify: true` to the config file in the client machine.
 - Tips to configure authentication in the cluster: https://kubernetes.io/docs/tasks/access-application-cluster/configure-access-multiple-clusters/
@@ -515,36 +440,17 @@ More info:
 - https://stackoverflow.com/questions/46664104/how-to-sign-in-kubernetes-dashboard
 - https://github.com/kubernetes/dashboard/wiki/Access-control#bearer-token
 
-
-#
-# Connecting to an existing Kubernetes cluster from Staging and Production servers
-- It is important to set `IGN_CLOUDSIM_K8_CONFIG_FILENAME` environment variable (in `staging` and `production` servers)
-with the filename of a kubernetes config file. That file will be later used by the Golang cloudsim server to connect to
-the kubernetes cluster.
-- The EBS deployment process will use the filename listed in `IGN_CLOUDSIM_K8_CONFIG_FILENAME` to download a kubernetes config file from the following
-S3 bucket, `s3://web-cloudsim-keys/$IGN_CLOUDSIM_K8_CONFIG_FILENAME`.
-- When the server is deployed in EBS, that config file will be automatically downloaded and injected into the created docker container.
-- For more information, see project files `.ebextensions/01_files.config` and `Dockerfile`.
-
-
-# 
 # Notes about copying Gazebo log files to S3 buckets
-- We are using a side container approach, using a shared `volume` between the `gzserver` container and the `copy-to-s3` container.
-The type of the shared volume is `EmptyDir`.
-- The `copy-to-s3` container has a `preStop` lifecycle hook that will run the following command: `aws s3 cp <logfile> s3://<route>`.
+- We are using an additional copy pod to upload simulation logs to S3. Copy pods share data with their target pods by
+ using a Kubernetes shared `volume`.
 - The GZ logs are copied into the S3 bucket identified by this `AWS_GZ_LOGS_BUCKET` env var, and under a folder named after the Team's name.
 Eg. `s3://web-cloudsim-logs/my-cool-team/xxxxx.log`.
-- Details about `copy-to-s3` container:
-  - It is based on `infrastructureascode/aws-cli` dockerhub image.
-  - Needs the `AWS_SECRET_ACCESS_KEY` and `AWS_ACCESS_KEY_ID` environment variables set.
 
 Tip: You can use this docker image `preyna/tests:bigfile` as the `SUBT_GZSERVER_IMAGE` simulation image.
 This docker image will start by creating a log file of 1 GB at `/tmp/ign/log/` and later will keep running forever in
 a for loop, appending 1 extra MB each 2 seconds to the log file.
 The file was created as an attempt to test big gz log files in simulations that are left there until they expire.
 
-
-#
 # AWS Tips
 - Running ssh commands remotely: https://docs.aws.amazon.com/systems-manager/latest/userguide/walkthrough-cli.html#walkthrough-cli-example-1
   - go-sdk version: https://docs.aws.amazon.com/sdk-for-go/api/service/ssm/#SSM.SendCommand
