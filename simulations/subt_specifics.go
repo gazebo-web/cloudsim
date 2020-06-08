@@ -2105,7 +2105,7 @@ func (sa *SubTApplication) updateMultiSimStatuses(ctx context.Context, tx *gorm.
 	}
 
 	// Send an email with the summary to the competitor
-	if !globals.DisableSummaryEmails {
+	if !globals.DisableSummaryEmails || !simDep.SummarySent {
 		SendSimulationSummaryEmail(simDep, *summary)
 	}
 
