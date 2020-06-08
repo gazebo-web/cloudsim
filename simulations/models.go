@@ -197,6 +197,16 @@ func (dep *SimulationDeployment) UpdateHeldStatus(tx *gorm.DB, state bool) error
 	return nil
 }
 
+// UpdateSummarySent sets the given state in the SummarySent value.
+// Returns an error if the SimulationDeployment SummarySent field failed to update.
+func (dep *SimulationDeployment) UpdateSummarySent(tx *gorm.DB, state bool) error {
+	dep.SummarySent = state
+	if err := tx.Save(&dep).Error; err != nil {
+		return err
+	}
+	return nil
+}
+
 // IsRunning returns true if the SimulationDeployment can be considered "running".
 // Running goes from the moment a simulation is scheduled to run (ie. Pending state) up to until
 // its termination is requested (ie. 'terminate requested' state).
