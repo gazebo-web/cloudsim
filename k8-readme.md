@@ -48,7 +48,7 @@ We use Elastic Kubernetes Service to deploy our Kubernetes clusters. We will des
 | ------ | ------ |
 | rds-launch-wizard | sg-9d31e8e6 |
 | kubernetes | sg-0c5c791266694a3ca |
-| cloudsim-server-with-weave | sg-047577a416acc18d7 |
+| cloudsim-server | sg-023c19380b48dcabb |
 
 
 **Cluster endpoint access** set to `Public and private`
@@ -101,6 +101,13 @@ After creating the cluster, we need to add a node group in order to have a place
 **Maximum size**: `2` nodes
 
 **Desired size**: `2` nodes
+
+#### Labels
+
+| Key | Value | Description |
+| ------ | ------ | ------ |
+| gitlab | true | Allow the gitlab runner to run job pods on this node group |
+| server | true | Allow the cloudsim deployment to launch pods on this node group |
 
 ### Calico
 
@@ -168,139 +175,69 @@ to launch SubT circuits. Make sure your server has that table loaded with rules.
 
 <hr />
 
-## We are currently using these env variables values
-- env `SUBT_GZSERVER_LOGS_VOLUME_MOUNT_PATH` value `/tmp/ign`
-- env `SIMSVC_NODE_READY_TIMEOUT_SECONDS` value `600`
-- env `SIMSVC_POD_READY_TIMEOUT_SECONDS` value `900`
+## We are currently using these env variables
+- env `SUBT_GZSERVER_LOGS_VOLUME_MOUNT_PATH` with default value `/tmp/ign`
+- env `SIMSVC_NODE_READY_TIMEOUT_SECONDS` with default value `300`
+- env `SIMSVC_POD_READY_TIMEOUT_SECONDS` with default value `300`
+
 
 ## Troubleshooting
+<!--
+### TODO CHECK IF THIS IS STILL TRUE
 - We've noticed that after a Cloudsim server restart, if the server had running simulations,
 then the simulations will be regenerated but the `ign-transport topics and connections`
 (and thus `/stats` messages) will be lost. We suggest Shutting down and restart those simulations too.
+-->
 
 # We are using the following AMIs:
-- Kubernetes GPU (Worker) Nodes: `ami-0884e51dacccc6d23`, name `preyna-ubuntu-18_04-CUDA_10_1-nvidia-docker_2-kubernetes_1_14-v0.2.1`. Used with `g3.4xlarge` instances. Note: in SubT these AMI and g3 instance are used for both gzserver and field-computer nodes.
-- Kubernetes Master Node: `ami-05cc5ecb0a82d6c3d`, name: `cloudsim-ubuntu-bionic-18.04-docker_2_18.09.6-kubernetes_1_14-master-v0.2`. Used with `t2.medium` instance.
+- Kubernetes GPU (Worker) Nodes: `ami-08861f7e7b409ed0c`, name `cloudsim-worker-node-eks-gpu-optimized-1.0.0`. 
+Used with `g3.4xlarge` instances. Note: in SubT these AMI and g3 instance are used for both gzserver and field-computer nodes.
 - VPC ID: `vpc-12af6375`
-- Subnet ID: `subnet-0e632d68a9032ab9d`
-- Security Group ID: `sg-0c5c791266694a3ca` (name: `kubernetes`)
-- IMPORTANT: All EC2 instances (master and nodes) have the IAM Role: `arn:aws:iam::200670743174:instance-profile/cloudsim-ec2-node`. This IAM Role has attached
-policies to access ECR and CloudWatch Logs.
+- Subnets:
+ 
+| Name | Subnet ID |
+| ------ | ------ |
+| subnet-cloudsim-az-1a | subnet-0e632d68a9032ab9d |
+| subnet-cloudsim-az-1b | subnet-03774a4f37672e4da |
+| subnet-cloudsim-az-1c | subnet-00a9f3acf0ce3785a |
+| subnet-cloudsim-az-1d | subnet-0614ac8a450d5d1d1 |
+| subnet-cloudsim-az-1f | subnet-048c68c81c80a6636 |
+
+- Security Groups: 
+
+| Name | ID |
+| ------ | ------ |
+| kubernetes | sg-0c5c791266694a3ca |
+
+- IMPORTANT: All EC2 instances (master and nodes) have the IAM Role: 
+`arn:aws:iam::200670743174:instance-profile/aws-eks-role-cloudsim-worker`. This IAM Role has attached policies to
+ access ECR and CloudWatch Logs.
 - Using `ignitionFuel.pem` as ssh key.
 
-# Elastic Beanstalk configuration (ie. for the Cloudsim server)
-- `t2.small` instances with AMI `ami-038a24558e3a38586`.
-- VPC: `vpc-12af6375`
-- Region: `us-east-1`
-- We are enabling Logging to CloudWatch Logs.
-- Service Role (Security): `aws-elasticbeanstalk-service-role`.
-- Use this AIM Instance Profile: `aws-elasticbeanstalk-ec2-role-cloudsim-server`
-  - Taken from here: https://stackoverflow.com/questions/21653176/grant-s3-access-to-elastic-beanstalk-instances
-  - How to add ElasticBeantalk hooks to run before the docker build:
-    - https://blog.eq8.eu/article/aws-elasticbeanstalk-hooks.html
-    - https://stackoverflow.com/questions/32449701/how-can-i-set-a-per-instance-env-variable-for-an-elastic-beanstalk-docker-contai
-- Enabled Security Groups:
-  - `sg-08a042dfd1e4a105d` (name: `awseb-e-hhjidw3spq-stack-AWSEBSecurityGroup-1JJDHJPRN3LVZ`). Still not sure if this one is needed (it was enabled when I looked)
-  - `sg-047577a416acc18d7` (name: `cloudsim-server-with-weave`). Note: this one
-  is needed to support Weave Network between Kubernetes nodes and this EBS server.
-  This security group is tightly coupled with the `Kubernetes security group`.
-  - `sg-9d31e8e6`  (name: `rds-launch-wizard`). Still not sure if this one is needed (it was enabled when I looked)
-- Upload the `kube/config` needed by kubectl to connect to the master to the following S3 bucket,
-`s3://web-cloudsim-keys/$IGN_CLOUDSIM_K8_CONFIG_FILENAME`. The EBS deployment process will use the filename listed
-in `IGN_CLOUDSIM_K8_CONFIG_FILENAME` to download the kubernetes config file.
+# Cloudsim server: how to switch to a different Kubernetes cluster?
 
-#
-# Cloudsim server (Elasticbeanstalk): how to switch to a different kubernetes master?
-- Upload the `kube config` file needed by kubectl to connect to the new master to the,
-`s3://web-cloudsim-keys/$IGN_CLOUDSIM_K8_CONFIG_FILENAME` S3 bucket.
-- Update the cloudsim server's `IGN_CLOUDSIM_K8_CONFIG_FILENAME` env var with the kube config file name.
-- Update `KUBE_MASTER_IP` env var with the new master's amazon internal IP address.
-- Update `KUBEADM_JOIN` env var with the new "kubeadm join" command needed to join Nodes to the new master.
-
-
-# Instructions to setup the Kubernetes' "ECR Credentials Updater" in AWS Cluster
-
-Using ECR to host private docker images require extra configuration steps in the Cluster.
-By default `docker pull` done by kubernetes won't work with ECR. To make that work
-we need to create a kubernetes `Secret` with valid tokens to access ECR.
-For this, we deploy a kubernetes cronjob in the cluster that will get and refresh the
-tokens periodically and will update the Kubernetes Secret so any Pod can use it.
-
-There is a `ecr-cred-updater.yaml` in the web-cloudsim's `aws-k8/ecr` folder.
-That yaml file will deploy a cronjob, a serviceaccount, a role and a rolebinding.
-
-Note: this is only needed once per cluster.
-
-Required steps:
-
-1. Make sure the Secret `aws-secrets` is already present in the cluster. If not, create it
-using the `create-secrets.sh` script from web-cloudsim.
-
-1. Also make sure the ec2 instance have the correct IAM Role set (eg. `arn:aws:iam::200670743174:instance-profile/cloudsim-ec2-node`).
-
-1. Then run `kubectl create -f ecr-cred-updater.yaml`. The output should be like:
-
-```
-role.rbac.authorization.k8s.io/ecr-cred-updater created
-serviceaccount/ecr-cred-updater created
-rolebinding.rbac.authorization.k8s.io/ecr-cred-updater created
-cronjob.batch/ecr-cred-updater created
-```
-
-The above command created a cronjob that will refresh the ECR credentials each
-8hrs(Credentials expire after ~12 hours).
-
-Important: after setting up the cronjob , we need to manually run it once (ie. the first time),
-to create get the initial ECR credentials and initialize the Secret that will be used
-by kubernetes. To do this, run:
-
-`kubectl create job --from=cronjob/ecr-cred-updater ecr-cred-first-launch-manual`
-
-To verify that the credentials were successfully created, you can run:
-
-1. `kubectl get secrets --all-namespaces`. There should be `aws-secrets` and a `aws-registry`.
-
-1. `kubectl describe sa`. The serviceAccount with name `default` should list
-`Image pull secrets:  aws-registry`.
-
-1. `kubectl get cronjobs` . You should see a cronjob named `ecr-cred-updater`.
-
-## If you want to update the ecr-cred-updater schedule
-
-You can change the frequency at which ECR credentials are updated by patching 
-the cronjob schedule:
-
-- Once per minute: `kubectl patch cronjob/ecr-cred-updater -p '{"spec":{"schedule": "* * * * *"}}'`
-- Once per hour: `kubectl patch cronjob/ecr-cred-updater -p '{"spec":{"schedule": "0 * * * *"}}'`
-- Once every 8 hours: `kubectl patch cronjob/ecr-cred-updater -p '{"spec":{"schedule": "0 */8 * * *"}}'`
-
-Note that this will not run the cronjob. The job must be run manually if you 
-wish to update the `aws-registry` secret.
-
-## If you want to delete the ecr-cred-updater
-
-You will need to undo all the steps from above. Specifically:
-
-- `kubectl delete job ecr-cred-first-launch-manual`
-- `kubectl delete cronjob ecr-cred-updater`
-- `kubectl delete rolebinding.rbac.authorization.k8s.io ecr-cred-updater`
-- `kubectl delete serviceaccount ecr-cred-updater`
-- `kubectl delete role.rbac.authorization.k8s.io ecr-cred-updater`
-- `kubectl patch serviceaccount default -p '{"imagePullSecrets":[]}'`
+On startup, Cloudsim gets or updates the configuration file used by `kubectl` to access its cluster. For this
+ configuration to work, an EKS cluster must be up and running and the `AWS_CLUSTER_NAME` environment variable must be
+ set to the EKS cluster name. Running or restarting the Cloudsim container will fetch the configuration if it
+ does not exist or update it if it already exists. 
 
 # Manually Join a Node to the cluster:
-- From a node:
-`sudo kubeadm join <ip>:6443 --token <token> --discovery-token-ca-cert-hash <hash>`
-- Tip: if you don't know the data to use, you can run this line on the master node:
-`sudo kubeadm token create --print-join-command`. It will create a new token and print the join command to use by new nodes.
-Tokens will be valid for 24hr by default. To change the token validity use the `--ttl 0` argument.
-Eg. `sudo kubeadm token create --ttl 0 --print-join-command` will create tokens that will not expire.
-- Specify node label on node join (discussion): https://github.com/kubernetes/kubeadm/issues/202
-- More info on joining nodes: https://kubernetes.io/docs/reference/setup-tools/kubeadm/kubeadm-join/
-- More info on creating tokens in the master node: https://kubernetes.io/docs/reference/setup-tools/kubeadm/kubeadm-token/
+
+To join instances to an EKS cluster, instances must be running an EKS optimized AMI. These images contain a special
+ `bootstrap.sh` script that adds the instance to a cluster. There is a custom EKS Cloudsim AMI prepared for nodes. Its
+ id is specified in the "We are using the following AMIs" section. Always use the Cloudsim AMI, unless you explicitly
+ want to create a node using base EKS AMI.
+ 
+To make the instance join the cluster, run the following inside the instance
+
+```
+/etc/eks/bootstrap.sh <cluster_name>
+```
+
+Where `<cluster_name` is the name of the EKS cluster.
 
 
-
+# TODO Needs rewrite
 # Creating everything from scratch
 In case you need to re-do everything...
 

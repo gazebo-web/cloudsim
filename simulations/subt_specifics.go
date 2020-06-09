@@ -29,6 +29,7 @@ import (
 	"k8s.io/kubernetes/pkg/client/conditions"
 	"net/http"
 	"net/url"
+	"os"
 	"path"
 	"path/filepath"
 	"strconv"
@@ -170,6 +171,7 @@ func NewSubTApplication(ctx context.Context, s3Svc s3iface.S3API) (*SubTApplicat
 
 	s.cfg = subTSpecificsConfig{}
 	// Read configuration from environment
+	logger(ctx).Info("Parsing Subt config")
 	if err := env.Parse(&s.cfg); err != nil {
 		return nil, err
 	}
@@ -179,10 +181,12 @@ func NewSubTApplication(ctx context.Context, s3Svc s3iface.S3API) (*SubTApplicat
 	// We allow the user to define the desired IP using the IGN_IP env var. Otherwise,
 	// we use one of the IP addresses of this host.
 	if s.cfg.IgnIP == "" {
+		logger(ctx).Warning(fmt.Print("No IGN_IP config found. Env var value:", os.Getenv("IGN_IP")))
 		if s.cfg.IgnIP, err = getLocalIPAddressString(); err != nil {
 			return nil, err
 		}
 	}
+	logger(ctx).Warning(fmt.Println("Using IGN_IP value", s.cfg.IgnIP))
 
 	s.s3Svc = s3Svc
 
@@ -363,8 +367,8 @@ func (sa *SubTApplication) customizeSimulationRequest(ctx context.Context,
 	}
 
 	extra := &ExtraInfoSubT{
-		Circuit: subtSim.Circuit,
-		Robots:  robots,
+		Circuit:    subtSim.Circuit,
+		Robots:     robots,
 		Marsupials: marsupials,
 	}
 	createSim.ExtraSelector = &subtSim.Circuit
@@ -1527,7 +1531,7 @@ func (sa *SubTApplication) createNetworkPolicy(ctx context.Context, npName strin
 				MatchLabels: matchingPodLabels,
 			},
 			Ingress: []networkingv1.NetworkPolicyIngressRule{
-				// Dev note: Important -- the IP addresses listed here should be from Weave network.
+				// Dev note: Important -- the IP addresses listed here should be the IP of the Cloudsim pod.
 				{
 					From: []networkingv1.NetworkPolicyPeer{
 						{
@@ -1540,7 +1544,7 @@ func (sa *SubTApplication) createNetworkPolicy(ctx context.Context, npName strin
 				},
 			},
 			Egress: []networkingv1.NetworkPolicyEgressRule{
-				// Dev note: Important -- the IP addresses listed here should be from Weave network.
+				// Dev note: Important -- the IP addresses listed here should be the IP of the Cloudsim pod.
 				{
 					To: []networkingv1.NetworkPolicyPeer{
 						{
@@ -1889,8 +1893,13 @@ func (sa *SubTApplication) setupEC2InstanceSpecifics(ctx context.Context, s *Ec2
 		return nil, err
 	}
 
-	// AMI name: cloudsim-ubuntu-18_04-CUDA_10_1-nvidia-docker_2-kubernetes_1_14.10-v0.2.2
-	gzInput.ImageId = aws.String("ami-063fd908b66e4c2fd")
+	// AMI: cloudsim-worker-node-eks-gpu-optimized-1.0.0
+	// Modified version of Amazon EKS-optimized AMI with GPU support
+	// https://docs.aws.amazon.com/eks/latest/userguide/gpu-ami.html
+	// /aws/service/eks/optimized-ami/1.14/amazon-linux-2-gpu/recommended/image_id
+	imageID := aws.String("ami-08861f7e7b409ed0c")
+
+	gzInput.ImageId = imageID
 	gzInput.InstanceType = aws.String("g3.4xlarge")
 
 	// Add the new Input to the result array
@@ -1907,8 +1916,8 @@ func (sa *SubTApplication) setupEC2InstanceSpecifics(ctx context.Context, s *Ec2
 		if err != nil {
 			return nil, err
 		}
-		// AMI name: cloudsim-ubuntu-18_04-CUDA_10_1-nvidia-docker_2-kubernetes_1_14.10-v0.2.2
-		fcInput.ImageId = aws.String("ami-063fd908b66e4c2fd")
+
+		fcInput.ImageId = imageID
 		fcInput.InstanceType = aws.String("g3.4xlarge")
 		userData, _ := s.buildUserDataString(*dep.GroupID,
 			labelAndValue(nodeLabelKeyCloudsimNodeType, "field-computer"),
