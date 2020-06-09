@@ -70,7 +70,7 @@ type SimulationDeployment struct {
 	// TODO: This is a field specific to SubT. This is a temporary field that should be
 	//  extracted from the SimulationDeployment struct.
 	Held bool `json:"held"`
-	SummaryProcessed bool `json:"-"`
+	Processed bool `json:"-"`
 }
 
 // GetSimulationDeployment gets a simulation deployment record by its GroupID
@@ -197,10 +197,10 @@ func (dep *SimulationDeployment) UpdateHeldStatus(tx *gorm.DB, state bool) error
 	return nil
 }
 
-// UpdateSummaryProcessed sets the given state in the SummaryProcessed value.
-// Returns an error if the SimulationDeployment SummaryProcessed field failed to update.
-func (dep *SimulationDeployment) UpdateSummaryProcessed(tx *gorm.DB, state bool) error {
-	dep.SummaryProcessed = state
+// UpdateProcessed sets the given state in the Processed value.
+// Returns an error if the SimulationDeployment Processed field failed to update.
+func (dep *SimulationDeployment) UpdateProcessed(tx *gorm.DB, state bool) error {
+	dep.Processed = state
 	if err := tx.Save(&dep).Error; err != nil {
 		return err
 	}

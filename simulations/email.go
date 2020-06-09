@@ -44,7 +44,7 @@ func SendEmail(recipient *[]string, sender *string, subject string, templateFile
 // SendSimulationSummaryEmail sends a summary email to the user that created the simulation
 func SendSimulationSummaryEmail(dep *SimulationDeployment, summary AggregatedSubTSimulationValues) *ign.ErrMsg {
 
-	if dep.SummaryProcessed {
+	if dep.Processed {
 		return ign.NewErrorMessageWithBase(ign.ErrorUnexpected, errors.New("summary has already been processed"))
 	}
 

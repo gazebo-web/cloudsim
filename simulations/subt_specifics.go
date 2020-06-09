@@ -1705,7 +1705,7 @@ func (sa *SubTApplication) createS3CopyPod(ctx context.Context, s *Service, dep 
 func (sa *SubTApplication) processSimulationResults(ctx context.Context, s *Service, tx *gorm.DB,
 	dep *SimulationDeployment) *ign.ErrMsg {
 
-	if dep.SummaryProcessed {
+	if dep.Processed {
 		return nil
 	}
 
@@ -1787,8 +1787,8 @@ func (sa *SubTApplication) processSimulationResults(ctx context.Context, s *Serv
 		}
 	}
 
-	if !dep.SummaryProcessed {
-		dep.UpdateSummaryProcessed(tx, true)
+	if !dep.Processed {
+		dep.UpdateProcessed(tx, true)
 	}
 
 	return nil
@@ -2066,7 +2066,7 @@ func (sa *SubTApplication) updateMultiSimStatuses(ctx context.Context, tx *gorm.
 	// Note: simDep is a Parent in a multi-sim
 
 	// Only proceed if the simulation terminated successfully. Get the aggregated values from all children
-	if simDep.IsRunning() || simDep.ErrorStatus != nil || simDep.SummaryProcessed {
+	if simDep.IsRunning() || simDep.ErrorStatus != nil || simDep.Processed {
 		return nil
 	}
 
@@ -2117,8 +2117,8 @@ func (sa *SubTApplication) updateMultiSimStatuses(ctx context.Context, tx *gorm.
 		SendSimulationSummaryEmail(simDep, *summary)
 	}
 
-	if !simDep.SummaryProcessed {
-		simDep.UpdateSummaryProcessed(tx, true)
+	if !simDep.Processed {
+		simDep.UpdateProcessed(tx, true)
 	}
 
 	return nil
