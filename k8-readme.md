@@ -237,6 +237,7 @@ To make the instance join the cluster, run the following inside the instance
 Where `<cluster_name` is the name of the EKS cluster.
 
 
+# TODO Needs rewrite
 # Creating everything from scratch
 In case you need to re-do everything...
 
