@@ -173,3 +173,11 @@ func (m *EC2Mock) WaitUntilInstanceStatusOk(input *ec2.DescribeInstanceStatusInp
 	}
 	return nil
 }
+
+// ModifyInstanceAttribute mocks the EC2 API operation to return successfully.
+// Mocking return values for this method is not currently supported.
+// Modifies an EC2 instance attribute.
+func (m *EC2Mock) ModifyInstanceAttribute(input *ec2.ModifyInstanceAttributeInput) (*ec2.ModifyInstanceAttributeOutput,
+	error) {
+	return nil, nil
+}
