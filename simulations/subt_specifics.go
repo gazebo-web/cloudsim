@@ -881,6 +881,12 @@ func (sa *SubTApplication) launchApplication(ctx context.Context, s *Service, tx
 		return nil, ign.NewErrorMessageWithBase(ign.ErrorUnexpected, errors.New("World name not found"))
 	}
 
+	// Set the authorization token if it exists
+	// TODO: Confirm parameter name
+	if dep.AuthorizationToken != nil {
+		gzRunCommand = append(gzRunCommand, fmt.Sprintf("key:=%s", *dep.AuthorizationToken))
+	}
+
 	// Pass Robot names and types to the gzserver Pod.
 	// robotName1:=xxx robotConfig1:=yyy robotName2:=xxx robotConfig2:=yyy (Note the numbers).
 	for i, robot := range extra.Robots {
