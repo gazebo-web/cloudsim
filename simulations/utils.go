@@ -1,12 +1,13 @@
 package simulations
 
 import (
-	"gitlab.com/ignitionrobotics/web/ign-go"
-	"gitlab.com/ignitionrobotics/web/cloudsim/globals"
 	"context"
+	"crypto/rand"
 	"encoding/json"
 	"fmt"
 	"github.com/go-playground/form"
+	"gitlab.com/ignitionrobotics/web/cloudsim/globals"
+	"gitlab.com/ignitionrobotics/web/ign-go"
 	"gopkg.in/go-playground/validator.v9"
 	"net"
 	"net/http"
@@ -200,4 +201,20 @@ func Max(x, y int) int {
 		return x
 	}
 	return y
+}
+
+// generateToken returns a random hexadecimal token of the specified length.
+// `size` is the length of the token in bytes. Defaults to 32 bytes.
+func generateToken(size *int) (string, error) {
+	// Set size default value
+	if size == nil {
+		size = intptr(32)
+	}
+
+	b := make([]byte, *size)
+	if _, err := rand.Read(b); err != nil {
+		return "", err
+	}
+
+	return fmt.Sprintf("%x", b), nil
 }

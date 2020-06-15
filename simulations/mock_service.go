@@ -1,12 +1,12 @@
 package simulations
 
 import (
-	"gitlab.com/ignitionrobotics/web/fuelserver/bundles/users"
-	"gitlab.com/ignitionrobotics/web/ign-go"
 	"context"
 	"fmt"
 	"github.com/jinzhu/gorm"
 	"github.com/satori/go.uuid"
+	"gitlab.com/ignitionrobotics/web/fuelserver/bundles/users"
+	"gitlab.com/ignitionrobotics/web/ign-go"
 	"net/http"
 )
 
@@ -49,14 +49,17 @@ func (s *MockService) StartSimulationAsync(ctx context.Context,
 	}
 
 	// Create the SimulationDeployment record in DB. Set initial status.
-	simDep := SimulationDeployment{
-		Owner:            &createSim.Owner,
-		Creator:          user.Username,
-		Private:          &private,
-		Platform:         &createSim.Platform,
-		Application:      &createSim.Application,
-		GroupID:          &groupID,
-		DeploymentStatus: simPending.ToPtr()}
+	simDep, err := NewSimulationDeployment()
+	if err != nil {
+		return nil, ign.NewErrorMessageWithBase(ign.ErrorUnexpected, err)
+	}
+	simDep.Owner = &createSim.Owner
+	simDep.Creator = user.Username
+	simDep.Private = &private
+	simDep.Platform = &createSim.Platform
+	simDep.Application = &createSim.Application
+	simDep.GroupID = &groupID
+	simDep.DeploymentStatus = simPending.ToPtr()
 
 	if err := tx.Create(&simDep).Error; err != nil {
 		return nil, ign.NewErrorMessageWithBase(ign.ErrorDbSave, err)

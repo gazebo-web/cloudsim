@@ -943,22 +943,24 @@ func (s *Service) StartSimulationAsync(ctx context.Context,
 	// Create the SimulationDeployment record in DB. Set initial status.
 	creator := *user.Username
 	imageStr := SliceToStr(createSim.Image)
-	simDep := &SimulationDeployment{
-		Owner:            &owner,
-		Name:             &createSim.Name,
-		Creator:          &creator,
-		Private:          &private,
-		StopOnEnd:        &stopOnEnd,
-		Platform:         &createSim.Platform,
-		Application:      &createSim.Application,
-		Image:            &imageStr,
-		GroupID:          &groupID,
-		DeploymentStatus: simPending.ToPtr(),
-		Extra:            createSim.Extra,
-		ExtraSelector:    createSim.ExtraSelector,
-		Robots:           createSim.Robots,
-		Held:             false,
+	simDep, err := NewSimulationDeployment()
+	if err != nil {
+		return nil, ign.NewErrorMessageWithBase(ign.ErrorUnexpected, err)
 	}
+	simDep.Owner = &owner
+	simDep.Name = &createSim.Name
+	simDep.Creator = &creator
+	simDep.Private = &private
+	simDep.StopOnEnd = &stopOnEnd
+	simDep.Platform = &createSim.Platform
+	simDep.Application = &createSim.Application
+	simDep.Image = &imageStr
+	simDep.GroupID = &groupID
+	simDep.DeploymentStatus = simPending.ToPtr()
+	simDep.Extra = createSim.Extra
+	simDep.ExtraSelector = createSim.ExtraSelector
+	simDep.Robots = createSim.Robots
+	simDep.Held = false
 
 	// Set the maximum simulation expiration time.
 	validFor := s.getMaxDurationForSimulation(ctx, tx, simDep)
@@ -1001,9 +1003,9 @@ func (s *Service) StartSimulationAsync(ctx context.Context,
 	// But we also allow specific ApplicationTypes (eg. SubT) to spawn multiple simulations
 	// from a single request. When that happens, we call those "child simulations"
 	// and they will be grouped by the same parent simulation's groupID.
-	simsToLaunch, err := s.prepareSimulations(ctx, tx, simDep)
-	if err != nil {
-		return nil, err
+	simsToLaunch, em := s.prepareSimulations(ctx, tx, simDep)
+	if em != nil {
+		return nil, em
 	}
 
 	// Add a 'launch simulation' request to the Launcher Jobs-Pool

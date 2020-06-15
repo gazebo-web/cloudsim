@@ -433,6 +433,14 @@ func (sa *SubTApplication) spawnChildSimulationDeployments(ctx context.Context, 
 				childIdx++
 				childSim := dep.Clone()
 				childSim.GroupID = sptr(fmt.Sprintf("%s-c-%d", *dep.GroupID, childIdx))
+
+				// Set new auth token to authorize external services
+				token, err := generateToken(nil)
+				if err != nil {
+					return nil, ign.NewErrorMessageWithBase(ign.ErrorUnexpected, err)
+				}
+				childSim.AuthorizationToken = &token
+
 				// Create a clone of the parent's extra info and set it to the child sim.
 				newExtra := *extra
 				newExtra.WorldIndex = &worldIdx
