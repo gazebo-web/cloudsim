@@ -628,6 +628,11 @@ type MachineInstance struct {
 	GroupID *string `json:"group_id"`
 	// Applicaton to which this machine belongs to
 	Application *string `json:"application,omitempty"`
+	// Role defines the roles this instance plays in an instance group.
+	// Roles are application speficic.
+	Role *string `json:"-,omitempty"`
+	// PublicIP contains the public IP of the instance
+	PublicIP *string `json:"-,omitempty"`
 }
 
 // updateMachineStatus updates the status in DB of a given machine

@@ -79,7 +79,7 @@ func (s *MockService) StartSimulationAsync(ctx context.Context,
 
 	iID := "i-" + uuid.NewV4().String()
 	status := "Running"
-	// Create a DB record for a  single machine instance
+	// Create a DB record for a single machine instance
 	machine := MachineInstance{
 		InstanceID:      &iID,
 		LastKnownStatus: &status,

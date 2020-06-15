@@ -24,6 +24,7 @@ import (
 	networkingv1 "k8s.io/api/networking/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/client-go/kubernetes"
 	podutil "k8s.io/kubernetes/pkg/api/v1/pod"
 	"k8s.io/kubernetes/pkg/client/conditions"
@@ -65,6 +66,13 @@ const (
 	// A predefined const to refer to the SubT Platform type.
 	// This will be used to provision the Nodes (Nvidia, CPU, etc)
 	platformSubT string = "subt"
+
+	// SubT resource type identifiers
+	// These identifiers are used to tag AWS and Kubernetes resources related to each type of entity
+	subtTypeGazebo        = "gzserver"
+	subtTypeCommsBridge   = "comms-bridge"
+	subtTypeFieldComputer = "field-computer"
+
 	// A predefined const to refer to the SubT Application type
 	// This will be used to know which Pods and services launch.
 	applicationSubT           string = "subt"
@@ -225,6 +233,11 @@ func (sa *SubTApplication) getFieldComputerPodName(podNamePrefix string, robotId
 
 func (sa *SubTApplication) getCopyPodName(targetPodName string) string {
 	return fmt.Sprintf("%s-copy", targetPodName)
+}
+
+// getGazeboPodName returns the name of the Gazebo pod for a simulation.
+func (sa *SubTApplication) getWebsocketServiceName(podNamePrefix string) string {
+	return fmt.Sprintf("%s-websocket", podNamePrefix)
 }
 
 ////////////////////////////////////////////////////////////////////////////
@@ -809,13 +822,13 @@ func (sa *SubTApplication) launchApplication(ctx context.Context, s *Service, tx
 	baseLabels[subtTagKey] = "true"
 
 	gzserverLabels := cloneStringsMap(baseLabels)
-	gzserverLabels["gzserver"] = "true"
+	gzserverLabels[subtTypeGazebo] = "true"
 
 	bridgeLabels := cloneStringsMap(baseLabels)
-	bridgeLabels["comms-bridge"] = "true"
+	bridgeLabels[subtTypeCommsBridge] = "true"
 
 	fcLabels := cloneStringsMap(baseLabels)
-	fcLabels["field-computer"] = "true"
+	fcLabels[subtTypeFieldComputer] = "true"
 
 	// Parse the SubT extra info required for this Simulation
 	extra, err := ReadExtraInfoSubT(dep)
@@ -1072,13 +1085,13 @@ func (sa *SubTApplication) launchApplication(ctx context.Context, s *Service, tx
 	}
 
 	// Wait until the gazebo server pod has an IP address before continuing.
-	// We need to get its IP address, to share it with the other pods.
+	// We need to get its IP address to share it with the other pods.
 	// This call will block.
 	ptrIP, err := waitForPodIPAndGetIP(ctx, s, gzserverLabels)
 	if err != nil {
 		return nil, ign.NewErrorMessageWithBase(ign.ErrorK8Create, err)
 	}
-	gzserverIP := (*ptrIP)[gazeboPodName]
+	gzserverPodIP := (*ptrIP)[gazeboPodName]
 
 	// If S3 log backup is enabled then add an additional copy pod to upload
 	// logs at the end of the simulation.
@@ -1096,6 +1109,16 @@ func (sa *SubTApplication) launchApplication(ctx context.Context, s *Service, tx
 		)
 		// Launch the copy pod
 		_, err := s.clientset.CoreV1().Pods(corev1.NamespaceDefault).Create(copyPod)
+		if err != nil {
+			return nil, ign.NewErrorMessageWithBase(ign.ErrorK8Create, err)
+		}
+	}
+
+	// Expose the Gazebo websocket server if an auth key is available
+	if dep.AuthorizationToken != nil {
+		websocketService := sa.createWebsocketService(ctx, dep, podNamePrefix, baseLabels, gzserverLabels)
+		// Launch the service
+		_, err := s.clientset.CoreV1().Services(corev1.NamespaceDefault).Create(websocketService)
 		if err != nil {
 			return nil, ign.NewErrorMessageWithBase(ign.ErrorK8Create, err)
 		}
@@ -1143,7 +1166,7 @@ func (sa *SubTApplication) launchApplication(ctx context.Context, s *Service, tx
 			dep,
 			bridgePodName,
 			specificBridgeLabels,
-			gzserverIP,
+			gzserverPodIP,
 			hostPath,
 			"robot-logs",
 			robotNumber+1,
@@ -1252,7 +1275,7 @@ func subtPodRunningAndReady(ctx context.Context, pod *corev1.Pod) (bool, error) 
 	case corev1.PodRunning:
 		return podutil.IsPodReady(pod), nil
 	case corev1.PodSucceeded:
-		_, isFC := pod.Labels["field-computer"]
+		_, isFC := pod.Labels[subtTypeFieldComputer]
 		if isFC {
 			logger(ctx).Warning(fmt.Sprintf("FC pod %s status is Succeeded. Considering it Ready.", pod.Name))
 		}
@@ -1342,10 +1365,41 @@ func (sa *SubTApplication) addSharedVolumeConfigurationContainer(pod *corev1.Pod
 	}
 }
 
+// createWebsocketService creates a Kubernetes Service that exposes the websocket server to the Internet.
+// A NodePort type Kubernetes Service is created that opens a port on the EC2 instance that runs the Gazebo server of
+// the deployment.
+func (sa *SubTApplication) createWebsocketService(ctx context.Context, dep *SimulationDeployment,
+	podNamePrefix string, serviceLabels map[string]string, targetLabels map[string]string) *corev1.Service {
+
+	service := &corev1.Service{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:   sa.getWebsocketServiceName(podNamePrefix),
+			Labels: serviceLabels,
+		},
+		Spec: corev1.ServiceSpec{
+			Type:     "NodePort",
+			Selector: targetLabels,
+			Ports: []corev1.ServicePort{
+				{
+					Name: "WSS",
+					Port: 9002,
+					TargetPort: intstr.IntOrString{
+						Type:   intstr.Int,
+						IntVal: 9002,
+					},
+					NodePort: 30002,
+				},
+			},
+		},
+	}
+
+	return service
+}
+
 // createCommsBridgePod creates a basic comms-bridge pod. Callers should then
 // change the Pod's Image, Command and Args fields.
 func (sa *SubTApplication) createCommsBridgePod(ctx context.Context, dep *SimulationDeployment,
-	podName string, labels map[string]string, gzserverIP string, hostPath string, logDirectory string,
+	podName string, labels map[string]string, gzserverPodIP string, hostPath string, logDirectory string,
 	robotNumber int, robot SubTRobot, bridgeImage string, worldNameParam string) *corev1.Pod {
 
 	logMountPath := path.Join(hostPath, logDirectory)
@@ -1361,7 +1415,7 @@ func (sa *SubTApplication) createCommsBridgePod(ctx context.Context, dep *Simula
 			NodeSelector: map[string]string{
 				// Needed to force this pod to run on specific nodes
 				nodeLabelKeyGroupID:          *dep.GroupID,
-				nodeLabelKeyCloudsimNodeType: "field-computer",
+				nodeLabelKeyCloudsimNodeType: subtTypeFieldComputer,
 				nodeLabelKeySubTRobotName:    strings.ToLower(robot.Name),
 			},
 			Containers: []corev1.Container{
@@ -1399,7 +1453,7 @@ func (sa *SubTApplication) createCommsBridgePod(ctx context.Context, dep *Simula
 						{
 							// IGN_RELAY should contain the IP of the publisher (the gzserver)
 							Name:  "IGN_RELAY",
-							Value: gzserverIP,
+							Value: gzserverPodIP,
 						},
 						{
 							Name:  "IGN_VERBOSE",
@@ -1477,7 +1531,7 @@ func (sa *SubTApplication) createFieldComputerPod(ctx context.Context, dep *Simu
 			NodeSelector: map[string]string{
 				// Needed to force this pod to run on specific nodes
 				nodeLabelKeyGroupID:          groupID,
-				nodeLabelKeyCloudsimNodeType: "field-computer",
+				nodeLabelKeyCloudsimNodeType: subtTypeFieldComputer,
 				nodeLabelKeySubTRobotName:    strings.ToLower(robot.Name),
 			},
 			Containers: []corev1.Container{
@@ -1814,7 +1868,7 @@ func (sa *SubTApplication) processSimulationResults(ctx context.Context, s *Serv
 
 func isTeamSolutionPod(pod corev1.Pod) bool {
 	// field-computer pods (ie. team solutions) have the "field-computer" label set to "true"
-	flag, ok := pod.Labels["field-computer"]
+	flag, ok := pod.Labels[subtTypeFieldComputer]
 	return ok && (flag == "true")
 }
 
@@ -1915,6 +1969,7 @@ func (sa *SubTApplication) setupEC2InstanceSpecifics(ctx context.Context, s *Ec2
 
 	gzInput.ImageId = imageID
 	gzInput.InstanceType = aws.String("g3.4xlarge")
+	setRunInstancesNodeTypeTag(gzInput, subtTypeGazebo)
 
 	// Add the new Input to the result array
 	inputs = append(inputs, gzInput)
@@ -1933,8 +1988,9 @@ func (sa *SubTApplication) setupEC2InstanceSpecifics(ctx context.Context, s *Ec2
 
 		fcInput.ImageId = imageID
 		fcInput.InstanceType = aws.String("g3.4xlarge")
+		setRunInstancesNodeTypeTag(gzInput, subtTypeFieldComputer)
 		userData, _ := s.buildUserDataString(*dep.GroupID,
-			labelAndValue(nodeLabelKeyCloudsimNodeType, "field-computer"),
+			labelAndValue(nodeLabelKeyCloudsimNodeType, subtTypeFieldComputer),
 			labelAndValue(nodeLabelKeySubTRobotName, strings.ToLower(r.Name)),
 		)
 		// logger(ctx).Debug("user data to send:\n" + plain)
@@ -1944,6 +2000,14 @@ func (sa *SubTApplication) setupEC2InstanceSpecifics(ctx context.Context, s *Ec2
 	}
 
 	return inputs, nil
+}
+
+func setRunInstancesNodeTypeTag(input *ec2.RunInstancesInput, instanceType string) {
+	nodeTypeTag := &ec2.Tag{
+		Key:   aws.String(nodeLabelKeyCloudsimNodeType),
+		Value: aws.String(instanceType),
+	}
+	appendTags(input, nodeTypeTag)
 }
 
 func cloneRunInstancesInput(src *ec2.RunInstancesInput) (*ec2.RunInstancesInput, error) {
@@ -2001,7 +2065,7 @@ func (sa *SubTApplication) uploadSimulationLogs(ctx context.Context, s *Service,
 	// Upload Gazebo logs
 	opts := MakeListOptions(
 		getPodLabelSelectorForSearches(groupID),
-		labelAndValue("gzserver", "true"),
+		labelAndValue(subtTypeGazebo, "true"),
 	)
 	pods, err := s.clientset.CoreV1().Pods(corev1.NamespaceDefault).List(opts)
 	if err != nil {
@@ -2029,7 +2093,7 @@ func (sa *SubTApplication) uploadSimulationLogs(ctx context.Context, s *Service,
 	//Upload ROS logs
 	opts = MakeListOptions(
 		getPodLabelSelectorForSearches(groupID),
-		labelAndValue("comms-bridge", "true"),
+		labelAndValue(subtTypeCommsBridge, "true"),
 	)
 	pods, err = s.clientset.CoreV1().Pods(corev1.NamespaceDefault).List(opts)
 	if err != nil {
