@@ -1906,13 +1906,37 @@ func (sa *SubTApplication) deleteApplication(ctx context.Context, s *Service, tx
 			// Otherwise, if the failed Pod is the gzserver or the comms-bridge we mark
 			// the simulation as failed, as this is an unexpected scenario.
 			em := ign.NewErrorMessageWithBase(ign.ErrorK8Delete, err)
-			logger(ctx).Error("Error while invoking k8 Delete Pod. Make sure a sysadmin deletes the Pod manually", em)
+			logger(ctx).Error("Error while invoking k8 Delete Pod. Make sure a sysadmin deletes the Pod manually.", em)
 			if !isTeamSolutionPod(p) {
 				return em
 			}
 		}
 	}
-	logger(ctx).Info("Successfully requested to delete pods and services for groupID: " + groupID)
+	logger(ctx).Info("Successfully deleted pods for groupID: " + groupID)
+
+	// Find and delete all Services associated to the groupID.
+	serviceInterface := s.clientset.CoreV1().Services(corev1.NamespaceDefault)
+	services, err := serviceInterface.List(metav1.ListOptions{LabelSelector: groupIDLabel})
+	if err != nil || len(services.Items) == 0 {
+		// Services for this groupID not found. Continue or fail?
+		logger(ctx).Warning("Services not found for the groupID: "+groupID, err)
+		if !sa.cfg.AllowNotFoundDuringShutdown {
+			err = errors.Wrap(err, "Services not found for the groupID: "+groupID)
+			return ign.NewErrorMessageWithBase(ign.ErrorSimGroupNotFound, err)
+		}
+	}
+	for _, service := range services.Items {
+		err = serviceInterface.Delete(service.Name, &metav1.DeleteOptions{})
+		if err != nil {
+			// There was an unexpected error deleting the Service and the simulation will be marked as failed, as this
+			// is an unexpected scenario.
+			em := ign.NewErrorMessageWithBase(ign.ErrorK8Delete, err)
+			errMsg := "Error while invoking k8 Delete Service. Make sure a sysadmin deletes the Service manually."
+			logger(ctx).Error(errMsg, em)
+			return em
+		}
+	}
+	logger(ctx).Info("Successfully requested services for groupID: " + groupID)
 
 	// Find and delete all the network policies associated to the groupID.
 	// Dev note: it is important to remove the network policies AFTER the gzlogs are
