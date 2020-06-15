@@ -1353,13 +1353,9 @@ func (s *Service) getMaxDurationForSimulation(ctx context.Context, tx *gorm.DB,
 // pool worker will send the simulation again to the Pending queue.
 func (s *Service) startSimulation(ctx context.Context, tx *gorm.DB,
 	simDep *SimulationDeployment) (interface{}, *ign.ErrMsg) {
+
 	groupID := *simDep.GroupID
 	logger(ctx).Info("startSimulation running for groupID: " + groupID)
-	simDep, err := GetSimulationDeployment(tx, groupID)
-	if err != nil {
-		logger(ctx).Error(fmt.Sprintf("startSimulation - %v", err))
-		return nil, ign.NewErrorMessageWithBase(ign.ErrorSimGroupNotFound, err)
-	}
 
 	// Sanity checks
 
