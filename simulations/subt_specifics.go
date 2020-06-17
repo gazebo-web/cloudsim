@@ -898,6 +898,7 @@ func (sa *SubTApplication) launchApplication(ctx context.Context, s *Service, tx
 	// TODO: Confirm parameter name
 	if dep.AuthorizationToken != nil {
 		gzRunCommand = append(gzRunCommand, fmt.Sprintf("websocketAuthKey:=%s", *dep.AuthorizationToken))
+		gzRunCommand = append(gzRunCommand, fmt.Sprintf("websocketAdminAuthKey:=%s", *dep.AuthorizationToken))
 	}
 
 	// Pass Robot names and types to the gzserver Pod.
