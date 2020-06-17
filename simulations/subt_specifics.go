@@ -1381,7 +1381,7 @@ func (sa *SubTApplication) createWebsocketService(ctx context.Context, dep *Simu
 			Selector: targetLabels,
 			Ports: []corev1.ServicePort{
 				{
-					Name: "WSS",
+					Name: "websockets",
 					Port: 9002,
 					TargetPort: intstr.IntOrString{
 						Type:   intstr.Int,
@@ -1606,6 +1606,17 @@ func (sa *SubTApplication) createNetworkPolicy(ctx context.Context, npName strin
 							IPBlock: &networkingv1.IPBlock{
 								// We always allow traffic coming from the Cloudsim host.
 								CIDR: sa.cfg.IgnIP + "/32",
+							},
+						},
+					},
+				},
+				// Allow traffic to websocket server
+				{
+					Ports: []networkingv1.NetworkPolicyPort{
+						{
+							Port: &intstr.IntOrString{
+								Type:   intstr.Int,
+								IntVal: 9002,
 							},
 						},
 					},
@@ -1977,8 +1988,8 @@ func (sa *SubTApplication) setupEC2InstanceSpecifics(ctx context.Context, s *Ec2
 	subTTag := ec2.Tag{Key: aws.String(subtTagKey), Value: aws.String("true")}
 	subTTag2 := ec2.Tag{Key: aws.String("cloudsim-application"), Value: aws.String(subtTagKey)}
 	subTTag3 := ec2.Tag{Key: aws.String("cloudsim-simulation-worker"), Value: aws.String(s.awsCfg.NamePrefix)}
-	appendTags(template, &subTTag, &subTTag2, &subTTag3)
-
+	subTTag4 := ec2.Tag{Key: aws.String(nodeLabelKeyCloudsimNodeType), Value: aws.String(subtTypeGazebo)}
+	appendTags(template, &subTTag, &subTTag2, &subTTag3, &subTTag4)
 	inputs := make([]*ec2.RunInstancesInput, 0)
 	gzInput, err := cloneRunInstancesInput(template)
 	if err != nil {
@@ -1993,7 +2004,6 @@ func (sa *SubTApplication) setupEC2InstanceSpecifics(ctx context.Context, s *Ec2
 
 	gzInput.ImageId = imageID
 	gzInput.InstanceType = aws.String("g3.4xlarge")
-	setRunInstancesNodeTypeTag(gzInput, subtTypeGazebo)
 
 	// Add the new Input to the result array
 	inputs = append(inputs, gzInput)
@@ -2012,26 +2022,21 @@ func (sa *SubTApplication) setupEC2InstanceSpecifics(ctx context.Context, s *Ec2
 
 		fcInput.ImageId = imageID
 		fcInput.InstanceType = aws.String("g3.4xlarge")
-		setRunInstancesNodeTypeTag(gzInput, subtTypeFieldComputer)
+		// Replace the node type tag
+		replaceTag(fcInput, &ec2.Tag{
+			Key:   sptr(nodeLabelKeyCloudsimNodeType),
+			Value: sptr(subtTypeFieldComputer),
+		})
 		userData, _ := s.buildUserDataString(*dep.GroupID,
 			labelAndValue(nodeLabelKeyCloudsimNodeType, subtTypeFieldComputer),
 			labelAndValue(nodeLabelKeySubTRobotName, strings.ToLower(r.Name)),
 		)
-		// logger(ctx).Debug("user data to send:\n" + plain)
 		fcInput.UserData = aws.String(userData)
 		replaceInstanceNameTag(fcInput, s.getInstanceNameFor(*dep.GroupID, "fc-"+r.Name))
 		inputs = append(inputs, fcInput)
 	}
 
 	return inputs, nil
-}
-
-func setRunInstancesNodeTypeTag(input *ec2.RunInstancesInput, instanceType string) {
-	nodeTypeTag := &ec2.Tag{
-		Key:   aws.String(nodeLabelKeyCloudsimNodeType),
-		Value: aws.String(instanceType),
-	}
-	appendTags(input, nodeTypeTag)
 }
 
 func cloneRunInstancesInput(src *ec2.RunInstancesInput) (*ec2.RunInstancesInput, error) {
