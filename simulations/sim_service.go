@@ -1803,8 +1803,8 @@ func getSimulationPodNamePrefix(groupID string) string {
 
 // launchGazeboServerInGroup launches a set of gzserver pods and associated services in the
 // given group.
-func (s *Service) launchGazeboServerInGroup(ctx context.Context, tx *gorm.DB,
-	groupID string, dep *SimulationDeployment) (interface{}, *ign.ErrMsg) {
+func (s *Service) launchGazeboServerInGroup(ctx context.Context, tx *gorm.DB, groupID string,
+	dep *SimulationDeployment) (interface{}, *ign.ErrMsg) {
 
 	// It is quite important that application's specific launchers do add the following
 	// labels to the created Pods / Services.

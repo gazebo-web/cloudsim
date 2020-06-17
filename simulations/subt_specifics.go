@@ -897,7 +897,7 @@ func (sa *SubTApplication) launchApplication(ctx context.Context, s *Service, tx
 	// Set the authorization token if it exists
 	// TODO: Confirm parameter name
 	if dep.AuthorizationToken != nil {
-		gzRunCommand = append(gzRunCommand, fmt.Sprintf("key:=%s", *dep.AuthorizationToken))
+		gzRunCommand = append(gzRunCommand, fmt.Sprintf("websocketAuthKey:=%s", *dep.AuthorizationToken))
 	}
 
 	// Pass Robot names and types to the gzserver Pod.
@@ -952,7 +952,7 @@ func (sa *SubTApplication) launchApplication(ctx context.Context, s *Service, tx
 			NodeSelector: map[string]string{
 				// Force this pod to run on the same node as the target pod
 				nodeLabelKeyGroupID:          *dep.GroupID,
-				nodeLabelKeyCloudsimNodeType: "gazebo",
+				nodeLabelKeyCloudsimNodeType: subtTypeGazebo,
 			},
 			Containers: []corev1.Container{
 				{
@@ -1976,8 +1976,8 @@ func (sa *SubTApplication) setupEC2InstanceSpecifics(ctx context.Context, s *Ec2
 	// Create some Tags that all instances will share
 	subTTag := ec2.Tag{Key: aws.String(subtTagKey), Value: aws.String("true")}
 	subTTag2 := ec2.Tag{Key: aws.String("cloudsim-application"), Value: aws.String(subtTagKey)}
-	SubTTag3 := ec2.Tag{Key: aws.String("cloudsim-simulation-worker"), Value: aws.String(s.awsCfg.NamePrefix)}
-	appendTags(template, &subTTag, &subTTag2, &SubTTag3)
+	subTTag3 := ec2.Tag{Key: aws.String("cloudsim-simulation-worker"), Value: aws.String(s.awsCfg.NamePrefix)}
+	appendTags(template, &subTTag, &subTTag2, &subTTag3)
 
 	inputs := make([]*ec2.RunInstancesInput, 0)
 	gzInput, err := cloneRunInstancesInput(template)

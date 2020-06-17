@@ -448,8 +448,8 @@ func (s *Ec2Client) launchNodes(ctx context.Context, tx *gorm.DB, dep *Simulatio
 
 	// This will be the return value if everything is ok
 	nodeSelectorGroupID := getNodeLabelForGroupID(groupID)
-	instanceName := s.getInstanceNameFor(groupID, "gazebo")
-	userData, _ := s.buildUserDataString(groupID, labelAndValue(nodeLabelKeyCloudsimNodeType, "gazebo"))
+	instanceName := s.getInstanceNameFor(groupID, subtTypeGazebo)
+	userData, _ := s.buildUserDataString(groupID, labelAndValue(nodeLabelKeyCloudsimNodeType, subtTypeGazebo))
 
 	ignlog := logger(ctx)
 
@@ -596,9 +596,22 @@ func (s *Ec2Client) getInstanceNameFor(groupID, suffix string) string {
 	return fmt.Sprintf("%s-node-group-%s-%s", s.awsCfg.NamePrefix, groupID, suffix)
 }
 
+// appendTags adds new tags to a RunInstancesInput.
 func appendTags(input *ec2.RunInstancesInput, tags ...*ec2.Tag) {
 	// Tag with SubT (hack: we are assuming the base Tags structure)
 	input.TagSpecifications[0].Tags = append(input.TagSpecifications[0].Tags, tags...)
+}
+
+// replaceTag replaces the specified tag values. If a tag is not found no changes are performed.
+func replaceTag(input *ec2.RunInstancesInput, tags ...*ec2.Tag) {
+	for _, tag := range input.TagSpecifications[0].Tags {
+		for _, newTag := range tags {
+			if *tag.Key == *newTag.Key {
+				*tag.Value = *newTag.Value
+				break
+			}
+		}
+	}
 }
 
 func replaceInstanceNameTag(input *ec2.RunInstancesInput, name string) {

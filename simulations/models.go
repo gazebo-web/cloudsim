@@ -79,6 +79,7 @@ type SimulationDeployment struct {
 }
 
 // NewSimulationDeployment creates and initializes a simulation deployment struct.
+// TODO: Receive a DTO struct as a parameter
 func NewSimulationDeployment() (*SimulationDeployment, error) {
 	// Generate an auth token
 	authToken, err := generateToken(nil)
