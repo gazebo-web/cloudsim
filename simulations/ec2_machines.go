@@ -380,29 +380,12 @@ func (s *Ec2Client) launchInstances(ctx context.Context, tx *gorm.DB, dep *Simul
 				return
 			}
 
-			// Get the node type tag
-			var nodeType *string
-			for _, tag := range ins.Tags {
-				if tag.Key != nil && *tag.Key == nodeLabelKeyCloudsimNodeType {
-					nodeType = tag.Value
-					break
-				}
-			}
-			if nodeType == nil {
-				errMsg := fmt.Sprintf("Instance %s does not have a nodeType tag.", *ins.InstanceId)
-				logger(ctx).Error(errMsg)
-				err = errors.New(errMsg)
-				return
-			}
-
 			// And create a DB record to track the machine instance in case of errors later
 			machine := MachineInstance{
 				InstanceID:      &iID,
 				LastKnownStatus: macInitializing.ToStringPtr(),
 				GroupID:         dep.GroupID,
 				Application:     dep.Application,
-				Role:            nodeType,
-				PublicIP:        ins.PublicIpAddress,
 			}
 			err = tx.Create(&machine).Error
 			if err != nil {
