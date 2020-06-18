@@ -207,8 +207,8 @@ func (p *platform) setupTransport() (Platform, error) {
 
 func (p *platform) setupControllers() Platform {
 	queueService := queue.NewService(p.LaunchQueue, p.Services().User())
-	p.Controllers = controllers{
-		Queue: queue.NewController(queueService),
+	p.controllers = &controllers{
+		queue: queue.NewController(queueService),
 	}
 	return p
 }

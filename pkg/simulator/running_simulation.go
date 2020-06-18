@@ -6,7 +6,8 @@ import (
 	"github.com/golang/protobuf/proto"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/logger"
 	igntransport "gitlab.com/ignitionrobotics/web/cloudsim/third_party/ign-transport"
-	msgs "gitlab.com/ignitionrobotics/web/cloudsim/third_party/ign-transport/proto/ignition/msgs"
+	"gitlab.com/ignitionrobotics/web/cloudsim/third_party/ign-transport/proto/ignition/msgs"
+	"gitlab.com/ignitionrobotics/web/ign-go"
 	"sync"
 	"time"
 )
@@ -80,13 +81,10 @@ func NewRunningSimulation(ctx context.Context, input NewRunningSimulationInput) 
 		return nil, err
 	}
 
-	// TODO: Create a new logger from context
-
 	// 	create a new specific logger for this running simulation
-	//	reqID := fmt.Sprintf("RunningSimulation-sim-%s", groupID)
-	//	newLogger := logger(ctx).Clone(reqID)
-	//	Override logger
-	//	ctx = ign.NewContextWithLogger(ctx, newLogger)
+	reqID := fmt.Sprintf("RunningSimulation-sim-%s", input.GroupID)
+	newLogger := logger.Logger(ctx).Clone(reqID)
+	ctx = ign.NewContextWithLogger(ctx, newLogger)
 
 	_ = s.ignTransportNode.IgnTransportSubscribe(input.worldStatsTopic, func(msg []byte, msgType string) {
 		s.callbackWorldStats(ctx, msg, msgType)
