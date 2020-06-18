@@ -17,12 +17,10 @@ import (
 )
 
 func main() {
-	var cloudsim *platform.platform
 	var applications map[string]application.Application
 
 	config := platform.NewConfig()
-	p := platform.New(config)
-	cloudsim = p.(*platform.platform)
+	cloudsim := platform.New(config)
 
 	RegisterApplications(cloudsim, &applications)
 
@@ -39,7 +37,7 @@ func main() {
 	ScheduleTasks(cloudsim, applications)
 	RebuildState(cloudsim, applications)
 
-	cloudsim.Server.Run()
+	cloudsim.Server().Run()
 
 	ShutdownApplications(cloudsim, applications)
 
@@ -47,5 +45,5 @@ func main() {
 	if err != nil {
 		cloudsim.Logger().Critical(fmt.Sprintf("[CLOUDSIM|CRITICAL] Error on shutdown\n%v", err))
 	}
-	cloudsim.Transport.Stop()
+	cloudsim.Transport().Stop()
 }

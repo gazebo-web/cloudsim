@@ -76,15 +76,15 @@ func (p *platform) setupServer() Platform {
 		p.Logger().Critical(err)
 		log.Fatalf("Error while initializing server. %v\n", err)
 	}
-	p.Server = s
-	p.Server.DbConfig = db.NewConfig()
+	p.server = s
+	p.Server().DbConfig = db.NewConfig()
 	return p
 }
 
 // setupRouter initializes the server's router.
 func (p *platform) setupRouter() Platform {
 	r := router.New()
-	p.Server.SetRouter(r)
+	p.Server().SetRouter(r)
 	return p
 }
 
@@ -111,7 +111,7 @@ func (p *platform) setupFormDecoder() Platform {
 // setupPermissions initializes the platform permissions.
 func (p *platform) setupPermissions() Platform {
 	per := &permissions.Permissions{}
-	err := per.Init(p.Server.Db, p.Config.SysAdmin)
+	err := per.Init(p.Database(), p.Config.SysAdmin)
 	if err != nil {
 		p.Logger().Critical(err)
 		log.Fatalf("Error while initializing server. %v\n", err)
@@ -127,15 +127,15 @@ func (p *platform) setupUserService() Platform {
 		p.Logger().Critical(err)
 		log.Fatalf("Error while configuring user service. %v\n", err)
 	}
-	p.UserService = s
+	p.services.user = s
 	return p
 }
 
 // setupDatabase performs migrations, adds default data and adds custom indexes.
 func (p *platform) setupDatabase() Platform {
-	migrations.Migrate(p.Context(), p.Server.Db)
-	migrations.AddDefaultData(p.Context(), p.Server.Db)
-	migrations.AddCustomIndexes(p.Context(), p.Server.Db)
+	migrations.Migrate(p.Context(), p.Database())
+	migrations.AddDefaultData(p.Context(), p.Database())
+	migrations.AddCustomIndexes(p.Context(), p.Database())
 	return p
 }
 
@@ -206,7 +206,7 @@ func (p *platform) setupTransport() (Platform, error) {
 }
 
 func (p *platform) setupControllers() Platform {
-	queueService := queue.NewService(p.LaunchQueue, p.UserService)
+	queueService := queue.NewService(p.LaunchQueue, p.Services().User())
 	p.Controllers = controllers{
 		Queue: queue.NewController(queueService),
 	}

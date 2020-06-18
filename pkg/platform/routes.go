@@ -21,7 +21,7 @@ func (p *platform) RegisterRoutes() ign.Routes {
 					Handlers: ign.FormatHandlers{
 						ign.FormatHandler{
 							Extension: "",
-							Handler:   ign.JSONResultNoTx(handlers.WithUser(p.UserService, p.Controllers.Queue.GetAll)),
+							Handler:   ign.JSONResultNoTx(handlers.WithUser(p.Services().User(), p.Controllers().Queue().GetAll)),
 						},
 					},
 				},
@@ -41,7 +41,7 @@ func (p *platform) RegisterRoutes() ign.Routes {
 					Handlers: ign.FormatHandlers{
 						ign.FormatHandler{
 							Extension: "",
-							Handler:   ign.JSONResultNoTx(handlers.WithUser(p.UserService, p.Controllers.Queue.Count)),
+							Handler:   ign.JSONResultNoTx(handlers.WithUser(p.Services().User(), p.Controllers().Queue().Count)),
 						},
 					},
 				},
@@ -61,7 +61,7 @@ func (p *platform) RegisterRoutes() ign.Routes {
 					Handlers: ign.FormatHandlers{
 						ign.FormatHandler{
 							Extension: "",
-							Handler:   ign.JSONResultNoTx(handlers.WithUser(p.UserService, p.Controllers.Queue.Swap)),
+							Handler:   ign.JSONResultNoTx(handlers.WithUser(p.Services().User(), p.Controllers().Queue().Swap)),
 						},
 					},
 				},
@@ -81,7 +81,7 @@ func (p *platform) RegisterRoutes() ign.Routes {
 					Handlers: ign.FormatHandlers{
 						ign.FormatHandler{
 							Extension: "",
-							Handler:   ign.JSONResultNoTx(handlers.WithUser(p.UserService, p.Controllers.Queue.MoveToFront)),
+							Handler:   ign.JSONResultNoTx(handlers.WithUser(p.Services().User(), p.Controllers().Queue().MoveToFront)),
 						},
 					},
 				},
@@ -101,7 +101,7 @@ func (p *platform) RegisterRoutes() ign.Routes {
 					Handlers: ign.FormatHandlers{
 						ign.FormatHandler{
 							Extension: "",
-							Handler:   ign.JSONResultNoTx(handlers.WithUser(p.UserService, p.Controllers.Queue.MoveToBack)),
+							Handler:   ign.JSONResultNoTx(handlers.WithUser(p.Services().User(), p.Controllers().Queue().MoveToBack)),
 						},
 					},
 				},
@@ -121,7 +121,7 @@ func (p *platform) RegisterRoutes() ign.Routes {
 					Handlers: ign.FormatHandlers{
 						ign.FormatHandler{
 							Extension: "",
-							Handler:   ign.JSONResultNoTx(handlers.WithUser(p.UserService, p.Controllers.Queue.Remove)),
+							Handler:   ign.JSONResultNoTx(handlers.WithUser(p.Services().User(), p.Controllers().Queue().Remove)),
 						},
 					},
 				},

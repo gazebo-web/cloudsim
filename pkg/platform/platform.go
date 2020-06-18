@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/go-playground/form"
+	"github.com/jinzhu/gorm"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/cloud"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/email"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/handlers"
@@ -30,6 +31,8 @@ type Platform interface {
 	Components
 	RegisterRoutes() ign.Routes
 	Setup
+	Services() Services
+	Controllers() Controllers
 }
 
 // Metadata groups the methods to represent the Platform metadata.
@@ -63,11 +66,13 @@ type Components interface {
 	FormDecoder() *form.Decoder
 	Transport() *transport.Transport
 	Simulator() simulator.Simulator
+	Database() *gorm.DB
+	Server() *ign.Server
 }
 
 // platform represents a set of components to run applications.
 type platform struct {
-	Server           *ign.Server
+	server           *ign.Server
 	logger           ign.Logger
 	context          context.Context
 	email            email.Email
@@ -77,7 +82,7 @@ type platform struct {
 	Orchestrator     orchestrator.Kubernetes
 	CloudProvider    cloud.AmazonWS
 	Permissions      *permissions.Permissions
-	UserService      users.Service
+	services         *services
 	Config           Config
 	simulator        simulator.Simulator
 	PoolFactory      pool.Factory
@@ -86,7 +91,23 @@ type platform struct {
 	TerminationQueue chan workers.TerminateInput
 	LaunchPool       pool.Pool
 	TerminationPool  pool.Pool
-	Controllers      controllers
+	controllers      *controllers
+}
+
+func (p *platform) Services() Services {
+	return p.services
+}
+
+func (p *platform) Controllers() Controllers {
+	return p.controllers
+}
+
+func (p *platform) Database() *gorm.DB {
+	return p.server.Db
+}
+
+func (p *platform) Server() *ign.Server {
+	return p.server
 }
 
 func (p *platform) Validator() *validator.Validate {
@@ -121,9 +142,34 @@ func (p *platform) Email() email.Email {
 	return p.email
 }
 
+// Controllers group the methods to return the platform controllers
+type Controllers interface {
+	Queue() queue.Controller
+}
+
 // TODO: Add initializer for queue controller.
 type controllers struct {
-	Queue queue.Controller
+	queue queue.Controller
+}
+
+// Queue returns the queue controller
+func (c *controllers) Queue() queue.Controller {
+	return c.queue
+}
+
+// Services groups the methods to return the platform services.
+type Services interface {
+	User() users.Service
+}
+
+// services is the Services interface implementation.
+type services struct {
+	user users.Service
+}
+
+// User returns the User service
+func (s *services) User() users.Service {
+	return s.user
 }
 
 // Name returns the platform's name
@@ -135,6 +181,7 @@ func (p *platform) Name() string {
 func New(config Config) Platform {
 	p := platform{}
 	p.Config = config
+	p.services = new(services)
 
 	p.setupLogger()
 	p.Logger().Debug("[INIT] Logger initialized.")
@@ -145,8 +192,8 @@ func New(config Config) Platform {
 	p.Logger().Debug("[INIT] Context initialized.")
 
 	p.setupServer()
-	p.Logger().Debug(fmt.Sprintf("[INIT] Server initialized using HTTP port [%s] and SSL port [%s].", p.Server.HTTPPort, p.Server.SSLport))
-	p.Logger().Debug(fmt.Sprintf("[INIT] Database [%s] initialized", p.Server.DbConfig.Name))
+	p.Logger().Debug(fmt.Sprintf("[INIT] Server initialized using HTTP port [%s] and SSL port [%s].", p.Server().HTTPPort, p.Server().SSLport))
+	p.Logger().Debug(fmt.Sprintf("[INIT] Database [%s] initialized", p.Server().DbConfig.Name))
 
 	p.setupRouter()
 	p.Logger().Debug("[INIT] Router initialized.")
@@ -259,10 +306,12 @@ func (p *platform) RequestTermination(ctx context.Context, groupID string) {
 	p.TerminationQueue <- job
 }
 
+// registerRoutes register the routes provided by the platform into the web server.
 func (p *platform) registerRoutes() {
-	router.ConfigureRoutes(p.Server, "2.0", "", p.getLaunchQueueRoutes())
+	router.ConfigureRoutes(p.Server(), "2.0", "", p.getLaunchQueueRoutes())
 }
 
+// getLaunchQueueRoutes returns the queue routes.
 func (p *platform) getLaunchQueueRoutes() ign.Routes {
 	return ign.Routes{
 		ign.Route{
@@ -278,7 +327,7 @@ func (p *platform) getLaunchQueueRoutes() ign.Routes {
 					Handlers: ign.FormatHandlers{
 						ign.FormatHandler{
 							Extension: "",
-							Handler:   ign.JSONResult(handlers.WithUser(p.UserService, p.Controllers.Queue.GetAll)),
+							Handler:   ign.JSONResult(handlers.WithUser(p.Services().User(), p.Controllers().Queue().GetAll)),
 						},
 					},
 				},
@@ -298,7 +347,7 @@ func (p *platform) getLaunchQueueRoutes() ign.Routes {
 					Handlers: ign.FormatHandlers{
 						ign.FormatHandler{
 							Extension: "",
-							Handler:   ign.JSONResult(handlers.WithUser(p.UserService, p.Controllers.Queue.Count)),
+							Handler:   ign.JSONResult(handlers.WithUser(p.Services().User(), p.Controllers().Queue().Count)),
 						},
 					},
 				},
@@ -318,7 +367,7 @@ func (p *platform) getLaunchQueueRoutes() ign.Routes {
 					Handlers: ign.FormatHandlers{
 						ign.FormatHandler{
 							Extension: "",
-							Handler:   ign.JSONResult(handlers.WithUser(p.UserService, p.Controllers.Queue.Swap)),
+							Handler:   ign.JSONResult(handlers.WithUser(p.Services().User(), p.Controllers().Queue().Swap)),
 						},
 					},
 				},
@@ -338,7 +387,7 @@ func (p *platform) getLaunchQueueRoutes() ign.Routes {
 					Handlers: ign.FormatHandlers{
 						ign.FormatHandler{
 							Extension: "",
-							Handler:   ign.JSONResult(handlers.WithUser(p.UserService, p.Controllers.Queue.MoveToFront)),
+							Handler:   ign.JSONResult(handlers.WithUser(p.Services().User(), p.Controllers().Queue().MoveToFront)),
 						},
 					},
 				},
@@ -358,7 +407,7 @@ func (p *platform) getLaunchQueueRoutes() ign.Routes {
 					Handlers: ign.FormatHandlers{
 						ign.FormatHandler{
 							Extension: "",
-							Handler:   ign.JSONResult(handlers.WithUser(p.UserService, p.Controllers.Queue.MoveToBack)),
+							Handler:   ign.JSONResult(handlers.WithUser(p.Services().User(), p.Controllers().Queue().MoveToBack)),
 						},
 					},
 				},
@@ -378,7 +427,7 @@ func (p *platform) getLaunchQueueRoutes() ign.Routes {
 					Handlers: ign.FormatHandlers{
 						ign.FormatHandler{
 							Extension: "",
-							Handler:   ign.JSONResult(handlers.WithUser(p.UserService, p.Controllers.Queue.Remove)),
+							Handler:   ign.JSONResult(handlers.WithUser(p.Services().User(), p.Controllers().Queue().Remove)),
 						},
 					},
 				},

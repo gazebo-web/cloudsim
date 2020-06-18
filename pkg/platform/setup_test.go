@@ -43,7 +43,7 @@ func TestInitializers_Router(t *testing.T) {
 	p.setupContext()
 	p.setupServer()
 	p.setupRouter()
-	assert.NotNil(t, p.Server.Router)
+	assert.NotNil(t, p.Server().Router)
 }
 
 func TestInitializers_Email(t *testing.T) {

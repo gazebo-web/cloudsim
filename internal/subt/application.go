@@ -45,11 +45,11 @@ type services struct {
 }
 
 // New creates a new SubT application.
-func New(p *platform.platform) IApplication {
-	simulationRepository := sim.NewRepository(p.Server.Db, p.Name())
+func New(p platform.Platform) IApplication {
+	simulationRepository := sim.NewRepository(p.Database(), p.Name())
 	simulationService := sim.NewService(simulationRepository)
 
-	baseApp := application.New(p, simulationService, p.UserService)
+	baseApp := application.New(p, simulationService, p.Services().User())
 
 	validate := validator.New()
 	subt := &SubT{
@@ -57,7 +57,7 @@ func New(p *platform.platform) IApplication {
 		Services: services{
 			Services: application.Services{
 				Simulation: simulationService,
-				User:       p.UserService,
+				User:       p.Services().User(),
 			},
 			Simulation: simulationService,
 		},
@@ -67,7 +67,7 @@ func New(p *platform.platform) IApplication {
 				Decoder:     p.FormDecoder,
 				Validator:   validate,
 				Permissions: p.Permissions,
-				UserService: p.UserService,
+				UserService: p.Services().User(),
 			}),
 		},
 		Validator: validate,
@@ -119,7 +119,7 @@ func (app *SubT) isSimulationHeld(ctx context.Context, simulation *simulations.S
 }
 
 // Register runs a set of instructions to initialize an application for the given platform.
-func Register(p *platform.platform) application.Application {
+func Register(p platform.Platform) application.Application {
 	subt := New(p)
 	return subt
 }
