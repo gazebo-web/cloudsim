@@ -18,9 +18,17 @@ import (
 type Simulator interface {
 	appendRunningSimulation(simulation *RunningSimulation)
 	Recover(ctx context.Context, getApplicationLabel func() *string, getGazeboConfig func(sim *simulations.Simulation) GazeboConfig) error
+	RunningSimulations
+	Lock
+}
+
+type RunningSimulations interface {
 	GetRunningSimulation(groupID string) *RunningSimulation
 	GetRunningSimulations() map[string]*RunningSimulation
 	SetRunningSimulations(simulations *map[string]*RunningSimulation) error
+}
+
+type Lock interface {
 	RLock()
 	RUnlock()
 	Lock()
@@ -46,7 +54,7 @@ type simulator struct {
 	config                 Config
 	repositories           repositories
 	services               services
-	Controller             IController
+	Controller             Controller
 }
 
 // services
