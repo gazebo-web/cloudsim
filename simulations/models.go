@@ -1,9 +1,9 @@
 package simulations
 
 import (
-	"gitlab.com/ignitionrobotics/web/ign-go"
 	"encoding/json"
 	"github.com/jinzhu/gorm"
+	"gitlab.com/ignitionrobotics/web/ign-go"
 	"strconv"
 	"strings"
 	"time"
@@ -70,6 +70,8 @@ type SimulationDeployment struct {
 	// TODO: This is a field specific to SubT. This is a temporary field that should be
 	//  extracted from the SimulationDeployment struct.
 	Held bool `json:"held"`
+	// Processed indicates that this simulation has been post-processed.
+	// Used to avoid post-processing simulations more than once.
 	Processed bool `json:"-"`
 }
 

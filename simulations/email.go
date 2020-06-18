@@ -1,11 +1,11 @@
 package simulations
 
 import (
-	"errors"
-	"gitlab.com/ignitionrobotics/web/ign-go"
-	"gitlab.com/ignitionrobotics/web/cloudsim/globals"
 	"bytes"
 	"encoding/json"
+	"errors"
+	"gitlab.com/ignitionrobotics/web/cloudsim/globals"
+	"gitlab.com/ignitionrobotics/web/ign-go"
 )
 
 // SendEmail sends an email to a specific recipient. If the recipient is nil,
@@ -43,7 +43,7 @@ func SendEmail(recipient *[]string, sender *string, subject string, templateFile
 
 // SendSimulationSummaryEmail sends a summary email to the user that created the simulation
 func SendSimulationSummaryEmail(dep *SimulationDeployment, summary AggregatedSubTSimulationValues) *ign.ErrMsg {
-
+	// Do not send emails for simulations that have already been processed
 	if dep.Processed {
 		return ign.NewErrorMessageWithBase(ign.ErrorUnexpected, errors.New("simulation has already been processed"))
 	}
