@@ -3,7 +3,6 @@ package orchestrator
 import (
 	"context"
 	"gitlab.com/ignitionrobotics/web/cloudsim/tools"
-	apiv1 "k8s.io/api/core/v1"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
@@ -21,15 +20,22 @@ type Kubernetes interface {
 	kubernetes.Interface
 	SetClientset(cli kubernetes.Interface)
 	Namespace() string
+	KubernetesNodes
+	KubernetesPods
+}
+
+type KubernetesNodes interface {
 	NodeWaitForReady(ctx context.Context, namespace string, groupIDLabel string, timeout time.Duration) error
 	NodeWaitToMatchCondition(ctx context.Context, namespace string, opts metav1.ListOptions, timeout time.Duration) error
+}
+
+type KubernetesPods interface {
 	PodExec(ctx context.Context, namespace string, podName string, container string, command []string, options *remotecommand.StreamOptions) (opts *remotecommand.StreamOptions, err error)
 	PodGetLog(ctx context.Context, namespace string, podName string, container string, lines int64) (log *string, err error)
 	GetAllPods(label *string) (Pods, error)
 	PodCreateExecErrorMessage(errorMsg string, options *remotecommand.StreamOptions) string
 	PodWaitForReadyCondition(ctx context.Context, c kubernetes.Interface, namespace string, groupIDLabel string, timeout time.Duration) error
 	PodWaitToMatchCondition(ctx context.Context, namespace string, opts metav1.ListOptions, condStr string, timeout time.Duration, condition PodCondition) error
-	WeaveRemovePeer(ctx context.Context, node *apiv1.Node) error
 }
 
 // k8s wraps the k8s CLI.
