@@ -14,7 +14,7 @@ import (
 	"time"
 )
 
-// Simulator
+// simulator
 type Simulator interface {
 	appendRunningSimulation(simulation *RunningSimulation)
 	Recover(ctx context.Context, getApplicationLabel func() *string, getGazeboConfig func(sim *simulations.Simulation) GazeboConfig) error

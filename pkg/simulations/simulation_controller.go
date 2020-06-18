@@ -49,10 +49,10 @@ func NewController(input NewControllerInput) Controller {
 		panic("UserService should not be nil")
 	}
 	if input.FormDecoder == nil {
-		panic("FormDecoder should not be nil")
+		panic("formDecoder should not be nil")
 	}
 	if input.Validator == nil {
-		panic("Validator should not be nil")
+		panic("validator should not be nil")
 	}
 
 	c = &controller{

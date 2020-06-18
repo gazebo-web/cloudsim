@@ -33,7 +33,7 @@ var APIVersion = "1.0"
 // We use a single instance of validator, as it caches struct info
 var Validate *validator.Validate
 
-// Deprecated: FormDecoder holds a reference to the global Form Decoder.
+// Deprecated: formDecoder holds a reference to the global Form Decoder.
 // See https://github.com/go-playground/form.
 // We use a single instance of Decoder, as it caches struct info
 var FormDecoder *form.Decoder

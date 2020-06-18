@@ -115,7 +115,7 @@ func FixedValues(res ...interface{}) (MockFunction, MockFunctionValidator) {
 		return value
 	}
 
-	// Validator: If strict, require that all fixed values are returned
+	// validator: If strict, require that all fixed values are returned
 	mockFunctionValidator := func() error {
 		result := !strict || count == len(res)
 		if !result {

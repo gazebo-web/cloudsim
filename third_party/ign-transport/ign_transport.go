@@ -21,10 +21,10 @@ static void _ign_subscribe(IgnTransportNode *n, char *_topic, void *cb_struct) {
 */
 import "C"
 import (
-	proto "github.com/golang/protobuf/proto"
+	"github.com/golang/protobuf/proto"
 	"github.com/mattn/go-pointer"
 	"github.com/pkg/errors"
-	msgs "gitlab.com/ignitionrobotics/web/cloudsim/third_party/ign-transport/proto/ignition/msgs"
+	"gitlab.com/ignitionrobotics/web/cloudsim/third_party/ign-transport/proto/ignition/msgs"
 	"gitlab.com/ignitionrobotics/web/ign-go"
 	"sync"
 	"time"
@@ -53,7 +53,7 @@ Note: to compile protos, from the proto folder do: protoc --proto_path=. --go_ou
 // GoIgnTransportNode is the Go type we use to interact with our C api. It
 // represents an ign-transport node.
 type GoIgnTransportNode struct {
-	// n is a pointer to an Ignition Transport Node.
+	// n is a pointer to an Ignition transport Node.
 	n *C.IgnTransportNode
 	// partition is the ign_partition to which the ign-transport node will belong
 	partition *string

@@ -25,7 +25,7 @@ import (
 )
 
 // IPlatformSetup represent a set of methods to initialize the platform.
-type IPlatformSetup interface {
+type Setup interface {
 	setupLogger() Platform
 	setupContext() Platform
 	setupServer() Platform
@@ -98,13 +98,13 @@ func (p *platform) setupEmail() Platform {
 // setupValidator initializes the validator.
 func (p *platform) setupValidator() Platform {
 	validate := validator.New()
-	p.Validator = validate
+	p.validator = validate
 	return p
 }
 
 // setupFormDecoder initializes the form decoder.
 func (p *platform) setupFormDecoder() Platform {
-	p.FormDecoder = form.NewDecoder()
+	p.formDecoder = form.NewDecoder()
 	return p
 }
 
@@ -154,7 +154,7 @@ func (p *platform) setupOrchestrator() Platform {
 // setupSimulator initializes the simulator.
 func (p *platform) setupSimulator() Platform {
 	input := simulator.NewSimulatorInput{}
-	p.Simulator = simulator.NewSimulator(input)
+	p.simulator = simulator.NewSimulator(input)
 	return p
 }
 
@@ -195,13 +195,13 @@ func (p *platform) setupWorkers() (Platform, error) {
 	return p, nil
 }
 
-// setupTransport initializes Ignition Transport.
+// setupTransport initializes Ignition transport.
 func (p *platform) setupTransport() (Platform, error) {
 	t, err := transport.New()
 	if err != nil {
 		return nil, err
 	}
-	p.Transport = t
+	p.transport = t
 	return p, nil
 }
 

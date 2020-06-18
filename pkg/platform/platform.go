@@ -29,6 +29,7 @@ type Platform interface {
 	Terminator
 	Components
 	RegisterRoutes() ign.Routes
+	Setup
 }
 
 // Metadata groups the methods to represent the Platform metadata.
@@ -61,7 +62,7 @@ type Components interface {
 	Validator() *validator.Validate
 	FormDecoder() *form.Decoder
 	Transport() *transport.Transport
-	Simulator()        simulator.Simulator
+	Simulator() simulator.Simulator
 }
 
 // platform represents a set of components to run applications.
@@ -70,15 +71,15 @@ type platform struct {
 	logger           ign.Logger
 	context          context.Context
 	email            email.Email
-	Validator        *validator.Validate
-	FormDecoder      *form.Decoder
-	Transport        *transport.Transport
+	validator        *validator.Validate
+	formDecoder      *form.Decoder
+	transport        *transport.Transport
 	Orchestrator     orchestrator.Kubernetes
 	CloudProvider    cloud.AmazonWS
 	Permissions      *permissions.Permissions
 	UserService      users.Service
 	Config           Config
-	Simulator        simulator.Simulator
+	simulator        simulator.Simulator
 	PoolFactory      pool.Factory
 	scheduler        scheduler.TaskScheduler
 	LaunchQueue      queue.Queue
@@ -86,6 +87,22 @@ type platform struct {
 	LaunchPool       pool.Pool
 	TerminationPool  pool.Pool
 	Controllers      controllers
+}
+
+func (p *platform) Validator() *validator.Validate {
+	return p.validator
+}
+
+func (p *platform) FormDecoder() *form.Decoder {
+	return p.formDecoder
+}
+
+func (p *platform) Transport() *transport.Transport {
+	return p.transport
+}
+
+func (p *platform) Simulator() simulator.Simulator {
+	return p.simulator
 }
 
 func (p *platform) Scheduler() scheduler.TaskScheduler {
@@ -174,7 +191,7 @@ func New(config Config) Platform {
 	if _, err := p.setupTransport(); err != nil {
 		p.Logger().Critical("[INIT|CRITICAL] Could not initialize transport.")
 	}
-	p.Logger().Debug("[INIT] Transport initialized. Using: IGN Transport.")
+	p.Logger().Debug("[INIT] transport initialized. Using: IGN transport.")
 
 	p.setupControllers()
 
