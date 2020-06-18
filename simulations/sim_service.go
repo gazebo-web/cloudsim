@@ -1072,12 +1072,6 @@ func (s *Service) RestartSimulationAsync(ctx context.Context, tx *gorm.DB,
 		return nil, ign.NewErrorMessageWithBase(ign.ErrorSimGroupNotFound, err)
 	}
 
-	// Make sure simulation has an error status. Otherwise, no need to restart it.
-	if mainDep.ErrorStatus == nil {
-		err := errors.New("Cannot restart a simulation that ended OK. No need to restart it")
-		return nil, ign.NewErrorMessageWithBase(ign.ErrorSimGroupNotFound, err)
-	}
-
 	// Create a clone of the original child simulation and mark it as Pending
 	clone := mainDep.Clone()
 	clone.DeploymentStatus = simPending.ToPtr()
