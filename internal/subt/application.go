@@ -45,7 +45,7 @@ type services struct {
 }
 
 // New creates a new SubT application.
-func New(p *platform.Platform) IApplication {
+func New(p *platform.platform) IApplication {
 	simulationRepository := sim.NewRepository(p.Server.Db, p.Name())
 	simulationService := sim.NewService(simulationRepository)
 
@@ -119,7 +119,7 @@ func (app *SubT) isSimulationHeld(ctx context.Context, simulation *simulations.S
 }
 
 // Register runs a set of instructions to initialize an application for the given platform.
-func Register(p *platform.Platform) application.Application {
+func Register(p *platform.platform) application.Application {
 	subt := New(p)
 	return subt
 }

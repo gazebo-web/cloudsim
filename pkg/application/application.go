@@ -18,7 +18,7 @@ import (
 type Application interface {
 	Name() string
 	Version() string
-	Platform() *platform.Platform
+	Platform() platform.Platform
 	RegisterRoutes() ign.Routes
 	RegisterTasks() []monitors.Task
 	RegisterMonitors(ctx context.Context)
@@ -41,7 +41,7 @@ type Application interface {
 
 // application is a generic implementation of an application to be extended by a specific application.
 type application struct {
-	platform *platform.Platform
+	platform platform.Platform
 	Services Services
 	Cleaner  *monitors.Monitor
 	Updater  *monitors.Monitor
@@ -54,7 +54,7 @@ type Services struct {
 }
 
 // New creates a new application for the given platform.
-func New(p *platform.Platform, simulationService simulations.Service, userService users.Service) Application {
+func New(p platform.Platform, simulationService simulations.Service, userService users.Service) Application {
 	app := &application{
 		platform: p,
 		Cleaner:  monitors.New("expired-simulations-cleaner", "Expired Simulations Cleaner", 20*time.Second),
@@ -79,8 +79,8 @@ func (app *application) Version() string {
 	return "1.0"
 }
 
-// Platform returns the reference the application's platform.
-func (app *application) Platform() *platform.Platform {
+// platform returns the reference the application's platform.
+func (app *application) Platform() platform.Platform {
 	return app.platform
 }
 

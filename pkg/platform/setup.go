@@ -26,28 +26,28 @@ import (
 
 // IPlatformSetup represent a set of methods to initialize the platform.
 type IPlatformSetup interface {
-	setupLogger() *Platform
-	setupContext() *Platform
-	setupServer() *Platform
-	setupRouter() *Platform
-	setupEmail() *Platform
-	setupValidator() *Platform
-	setupFormDecoder() *Platform
-	setupPermissions() *Platform
-	setupUserService() *Platform
-	setupDatabase() *Platform
-	setupCloudProvider() *Platform
-	setupOrchestrator() *Platform
-	setupSimulator() *Platform
-	setupPoolFactory() *Platform
-	setupScheduler() *Platform
-	setupQueues() *Platform
-	setupWorkers() (*Platform, error)
-	setupTransport() (*Platform, error)
+	setupLogger() Platform
+	setupContext() Platform
+	setupServer() Platform
+	setupRouter() Platform
+	setupEmail() Platform
+	setupValidator() Platform
+	setupFormDecoder() Platform
+	setupPermissions() Platform
+	setupUserService() Platform
+	setupDatabase() Platform
+	setupCloudProvider() Platform
+	setupOrchestrator() Platform
+	setupSimulator() Platform
+	setupPoolFactory() Platform
+	setupScheduler() Platform
+	setupQueues() Platform
+	setupWorkers() (Platform, error)
+	setupTransport() (Platform, error)
 }
 
 // setupLogger initializes the logger.
-func (p *Platform) setupLogger() *Platform {
+func (p *platform) setupLogger() Platform {
 	l, err := logger.New()
 	if err != nil {
 		log.Fatalf("Error parsing environment variables for Logger. %+v\n", err)
@@ -57,7 +57,7 @@ func (p *Platform) setupLogger() *Platform {
 }
 
 // setupContext initializes the context.
-func (p *Platform) setupContext() *Platform {
+func (p *platform) setupContext() Platform {
 	ctx := ign.NewContextWithLogger(context.Background(), p.logger)
 	p.context = ctx
 	return p
@@ -65,7 +65,7 @@ func (p *Platform) setupContext() *Platform {
 
 // setupServer initializes the HTTP server.
 // If there is an error, it will panic.
-func (p *Platform) setupServer() *Platform {
+func (p *platform) setupServer() Platform {
 	cfg := server.Config{
 		Auth0:    p.Config.Auth0,
 		HTTPport: p.Config.HTTPport,
@@ -82,34 +82,34 @@ func (p *Platform) setupServer() *Platform {
 }
 
 // setupRouter initializes the server's router.
-func (p *Platform) setupRouter() *Platform {
+func (p *platform) setupRouter() Platform {
 	r := router.New()
 	p.Server.SetRouter(r)
 	return p
 }
 
 // setupEmail initializes the email service.
-func (p *Platform) setupEmail() *Platform {
+func (p *platform) setupEmail() Platform {
 	e := email.New()
 	p.email = e
 	return p
 }
 
 // setupValidator initializes the validator.
-func (p *Platform) setupValidator() *Platform {
+func (p *platform) setupValidator() Platform {
 	validate := validator.New()
 	p.Validator = validate
 	return p
 }
 
 // setupFormDecoder initializes the form decoder.
-func (p *Platform) setupFormDecoder() *Platform {
+func (p *platform) setupFormDecoder() Platform {
 	p.FormDecoder = form.NewDecoder()
 	return p
 }
 
 // setupPermissions initializes the platform permissions.
-func (p *Platform) setupPermissions() *Platform {
+func (p *platform) setupPermissions() Platform {
 	per := &permissions.Permissions{}
 	err := per.Init(p.Server.Db, p.Config.SysAdmin)
 	if err != nil {
@@ -121,7 +121,7 @@ func (p *Platform) setupPermissions() *Platform {
 }
 
 // setupUserService initializes the User service.
-func (p *Platform) setupUserService() *Platform {
+func (p *platform) setupUserService() Platform {
 	s, err := users.NewService(p.Permissions, p.Config.SysAdmin)
 	if err != nil {
 		p.Logger().Critical(err)
@@ -132,7 +132,7 @@ func (p *Platform) setupUserService() *Platform {
 }
 
 // setupDatabase performs migrations, adds default data and adds custom indexes.
-func (p *Platform) setupDatabase() *Platform {
+func (p *platform) setupDatabase() Platform {
 	migrations.Migrate(p.Context(), p.Server.Db)
 	migrations.AddDefaultData(p.Context(), p.Server.Db)
 	migrations.AddCustomIndexes(p.Context(), p.Server.Db)
@@ -140,38 +140,38 @@ func (p *Platform) setupDatabase() *Platform {
 }
 
 // setupCloudProvider initializes the Cloud Provider.
-func (p *Platform) setupCloudProvider() *Platform {
+func (p *platform) setupCloudProvider() Platform {
 	p.CloudProvider = cloud.New()
 	return p
 }
 
 // setupOrchestrator initializes the container Orchestrator.
-func (p *Platform) setupOrchestrator() *Platform {
+func (p *platform) setupOrchestrator() Platform {
 	p.Orchestrator = orchestrator.New()
 	return p
 }
 
 // setupSimulator initializes the simulator.
-func (p *Platform) setupSimulator() *Platform {
+func (p *platform) setupSimulator() Platform {
 	input := simulator.NewSimulatorInput{}
 	p.Simulator = simulator.NewSimulator(input)
 	return p
 }
 
 // setupPoolFactory initializes the Default Pool Factory.
-func (p *Platform) setupPoolFactory() *Platform {
+func (p *platform) setupPoolFactory() Platform {
 	p.PoolFactory = pool.NewPool
 	return p
 }
 
 // setupScheduler gets the instance from the scheduler package.
-func (p *Platform) setupScheduler() *Platform {
+func (p *platform) setupScheduler() Platform {
 	p.scheduler = scheduler.GetInstance()
 	return p
 }
 
 // setupQueues initializes the RequestLaunch and Termination queues.
-func (p *Platform) setupQueues() *Platform {
+func (p *platform) setupQueues() Platform {
 	p.LaunchQueue = queue.NewQueue()
 	p.TerminationQueue = make(chan workers.TerminateInput, 1000)
 	return p
@@ -179,7 +179,7 @@ func (p *Platform) setupQueues() *Platform {
 
 // setupWorkers configures the RequestLaunch and the Termination Pool
 // If there is an error during the PoolFactory execution, it returns an error.
-func (p *Platform) setupWorkers() (*Platform, error) {
+func (p *platform) setupWorkers() (Platform, error) {
 	var err error
 
 	p.LaunchPool, err = p.PoolFactory(p.Config.PoolSizeLaunchSim, workers.Launch)
@@ -196,7 +196,7 @@ func (p *Platform) setupWorkers() (*Platform, error) {
 }
 
 // setupTransport initializes Ignition Transport.
-func (p *Platform) setupTransport() (*Platform, error) {
+func (p *platform) setupTransport() (Platform, error) {
 	t, err := transport.New()
 	if err != nil {
 		return nil, err
@@ -205,7 +205,7 @@ func (p *Platform) setupTransport() (*Platform, error) {
 	return p, nil
 }
 
-func (p *Platform) setupControllers() *Platform {
+func (p *platform) setupControllers() Platform {
 	queueService := queue.NewService(p.LaunchQueue, p.UserService)
 	p.Controllers = controllers{
 		Queue: queue.NewController(queueService),

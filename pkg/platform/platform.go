@@ -21,8 +21,8 @@ import (
 	"gopkg.in/go-playground/validator.v9"
 )
 
-// IPlatform defines the set of methods of a platform.
-type IPlatform interface {
+// Platform defines the set of methods of a platform.
+type Platform interface {
 	Name() string
 	Start(ctx context.Context) error
 	Stop(ctx context.Context) error
@@ -34,8 +34,8 @@ type IPlatform interface {
 	RegisterRoutes() ign.Routes
 }
 
-// Platform represents a set of components to run applications.
-type Platform struct {
+// platform represents a set of components to run applications.
+type platform struct {
 	Server           *ign.Server
 	logger           ign.Logger
 	context          context.Context
@@ -58,19 +58,19 @@ type Platform struct {
 	Controllers      controllers
 }
 
-func (p *Platform) Scheduler() scheduler.TaskScheduler {
+func (p *platform) Scheduler() scheduler.TaskScheduler {
 	return p.scheduler
 }
 
-func (p *Platform) Logger() ign.Logger {
+func (p *platform) Logger() ign.Logger {
 	return p.logger
 }
 
-func (p *Platform) Context() context.Context {
+func (p *platform) Context() context.Context {
 	return p.context
 }
 
-func (p *Platform) Email() email.Email {
+func (p *platform) Email() email.Email {
 	return p.email
 }
 
@@ -80,13 +80,13 @@ type controllers struct {
 }
 
 // Name returns the platform's name
-func (p *Platform) Name() string {
+func (p *platform) Name() string {
 	return "cloudsim"
 }
 
 // NewSimulator returns a new platform from the given configuration.
-func New(config Config) IPlatform {
-	p := Platform{}
+func New(config Config) Platform {
+	p := platform{}
 	p.Config = config
 
 	p.setupLogger()
@@ -152,7 +152,7 @@ func New(config Config) IPlatform {
 }
 
 // Launch starts the platform.
-func (p *Platform) Start(ctx context.Context) error {
+func (p *platform) Start(ctx context.Context) error {
 	go func() {
 		for {
 			var element interface{}
@@ -189,13 +189,13 @@ func (p *Platform) Start(ctx context.Context) error {
 }
 
 // Stop stops the platform.
-func (p *Platform) Stop(ctx context.Context) error {
+func (p *platform) Stop(ctx context.Context) error {
 	close(p.TerminationQueue)
 	return nil
 }
 
 // RequestLaunch enqueues a launch action to launch a simulation from the given Group ID.
-func (p *Platform) RequestLaunch(ctx context.Context, groupID string) {
+func (p *platform) RequestLaunch(ctx context.Context, groupID string) {
 	job := workers.LaunchInput{
 		GroupID: groupID,
 		Action:  nil,
@@ -204,7 +204,7 @@ func (p *Platform) RequestLaunch(ctx context.Context, groupID string) {
 }
 
 // RequestTermination enqueues a termination action to terminate a simulation from the given Group ID.
-func (p *Platform) RequestTermination(ctx context.Context, groupID string) {
+func (p *platform) RequestTermination(ctx context.Context, groupID string) {
 	job := workers.TerminateInput{
 		GroupID: groupID,
 		Action:  nil,
@@ -212,11 +212,11 @@ func (p *Platform) RequestTermination(ctx context.Context, groupID string) {
 	p.TerminationQueue <- job
 }
 
-func (p *Platform) registerRoutes() {
+func (p *platform) registerRoutes() {
 	router.ConfigureRoutes(p.Server, "2.0", "", p.getLaunchQueueRoutes())
 }
 
-func (p *Platform) getLaunchQueueRoutes() ign.Routes {
+func (p *platform) getLaunchQueueRoutes() ign.Routes {
 	return ign.Routes{
 		ign.Route{
 			Name:        "Get all elements from queue",

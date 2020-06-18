@@ -17,12 +17,12 @@ import (
 )
 
 func main() {
-	var cloudsim *platform.Platform
+	var cloudsim *platform.platform
 	var applications map[string]application.Application
 
 	config := platform.NewConfig()
 	p := platform.New(config)
-	cloudsim = p.(*platform.Platform)
+	cloudsim = p.(*platform.platform)
 
 	RegisterApplications(cloudsim, &applications)
 

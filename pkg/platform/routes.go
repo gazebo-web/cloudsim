@@ -5,7 +5,7 @@ import (
 	"gitlab.com/ignitionrobotics/web/ign-go"
 )
 
-func (p *Platform) RegisterRoutes() ign.Routes {
+func (p *platform) RegisterRoutes() ign.Routes {
 	return ign.Routes{
 		// Launch queue - Get all elements
 		ign.Route{
