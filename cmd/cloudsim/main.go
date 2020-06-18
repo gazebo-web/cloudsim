@@ -18,7 +18,7 @@ import (
 
 func main() {
 	var cloudsim *platform.Platform
-	var applications map[string]application.IApplication
+	var applications map[string]application.Application
 
 	config := platform.NewConfig()
 	p := platform.New(config)

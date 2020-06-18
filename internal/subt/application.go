@@ -20,14 +20,14 @@ import (
 )
 
 type IApplication interface {
-	application.IApplication
+	application.Application
 	isSimulationHeld(ctx context.Context, simulation *simulations.Simulation) *ign.ErrMsg
 	UploadSummary(sim *sim.Simulation, score stats.Score) *ign.ErrMsg
 }
 
-// SubT is an IApplication implementation
+// SubT is an Application implementation
 type SubT struct {
-	application.IApplication
+	application.Application
 	Services    services
 	Controllers controllers
 	Validator   *validator.Validate
@@ -53,7 +53,7 @@ func New(p *platform.Platform) IApplication {
 
 	validate := validator.New()
 	subt := &SubT{
-		IApplication: baseApp,
+		Application: baseApp,
 		Services: services{
 			Services: application.Services{
 				Simulation: simulationService,
@@ -97,7 +97,7 @@ func (app *SubT) getGazeboConfig(sim *simulations.Simulation) simulator.GazeboCo
 
 // ValidateLaunch runs a set of checks before launching a simulation. It will return an error if one of those checks fail.
 func (app *SubT) ValidateLaunch(ctx context.Context, simulation *simulations.Simulation) *ign.ErrMsg {
-	if err := app.IApplication.ValidateLaunch(ctx, simulation); err != nil {
+	if err := app.Application.ValidateLaunch(ctx, simulation); err != nil {
 		return err
 	}
 
@@ -119,7 +119,7 @@ func (app *SubT) isSimulationHeld(ctx context.Context, simulation *simulations.S
 }
 
 // Register runs a set of instructions to initialize an application for the given platform.
-func Register(p *platform.Platform) application.IApplication {
+func Register(p *platform.Platform) application.Application {
 	subt := New(p)
 	return subt
 }

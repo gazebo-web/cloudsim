@@ -14,8 +14,8 @@ import (
 	"time"
 )
 
-// IApplication describes a set of methods for an Application.
-type IApplication interface {
+// Application describes a set of methods for an application.
+type Application interface {
 	Name() string
 	Version() string
 	Platform() *platform.Platform
@@ -39,23 +39,23 @@ type IApplication interface {
 	ValidateRestart(ctx context.Context, simulation *simulations.Simulation) *ign.ErrMsg
 }
 
-// Application is a generic implementation of an application to be extended by a specific application.
-type Application struct {
+// application is a generic implementation of an application to be extended by a specific application.
+type application struct {
 	platform *platform.Platform
 	Services Services
 	Cleaner  *monitors.Monitor
 	Updater  *monitors.Monitor
 }
 
-// Services group a list of services to be used by the Application.
+// Services group a list of services to be used by the application.
 type Services struct {
 	Simulation simulations.Service
 	User       users.Service
 }
 
 // New creates a new application for the given platform.
-func New(p *platform.Platform, simulationService simulations.Service, userService users.Service) IApplication {
-	app := &Application{
+func New(p *platform.Platform, simulationService simulations.Service, userService users.Service) Application {
+	app := &application{
 		platform: p,
 		Cleaner:  monitors.New("expired-simulations-cleaner", "Expired Simulations Cleaner", 20*time.Second),
 		Updater:  monitors.New("multisim-status-updater", "MultiSim Parent Status Updater", time.Minute),
@@ -69,35 +69,35 @@ func New(p *platform.Platform, simulationService simulations.Service, userServic
 
 // Name returns the application's name.
 // Needs to be implemented by the specific application.
-func (app *Application) Name() string {
+func (app *application) Name() string {
 	panic("Name should be implemented by the application")
 }
 
 // Version returns the application's version.
 // If the specific application doesn't implement this method, it will return 1.0.
-func (app *Application) Version() string {
+func (app *application) Version() string {
 	return "1.0"
 }
 
 // Platform returns the reference the application's platform.
-func (app *Application) Platform() *platform.Platform {
+func (app *application) Platform() *platform.Platform {
 	return app.platform
 }
 
 // RegisterRoutes returns the slice of the application's routes.
 // Needs to be implemented by the specific application.
-func (app *Application) RegisterRoutes() ign.Routes {
+func (app *application) RegisterRoutes() ign.Routes {
 	panic("RegisterRoutes should be implemented by the application")
 }
 
 // RegisterTasks returns an array of the tasks that need to be executed by the scheduler.
 // If the specific application doesn't implement this method, it will return an empty slice.
-func (app *Application) RegisterTasks() []monitors.Task {
+func (app *application) RegisterTasks() []monitors.Task {
 	return []monitors.Task{}
 }
 
 // RegisterMonitors runs the Cleaner Job and the Updater job.
-func (app *Application) RegisterMonitors(ctx context.Context) {
+func (app *application) RegisterMonitors(ctx context.Context) {
 	cleanerRunner := monitors.NewRunner(
 		ctx,
 		app.Cleaner,
@@ -113,19 +113,19 @@ func (app *Application) RegisterMonitors(ctx context.Context) {
 	go updaterRunner()
 }
 
-func (app *Application) RegisterValidators(ctx context.Context) {
+func (app *application) RegisterValidators(ctx context.Context) {
 	return
 }
 
 // Stop executes a set of instructions to turn off the application.
-func (app *Application) Stop(ctx context.Context) error {
+func (app *application) Stop(ctx context.Context) error {
 	app.Updater.Ticker.Stop()
 	app.Cleaner.Ticker.Stop()
 	return nil
 }
 
 // RebuildState runs a set of instructions to restore the application to the previous state before a restart.
-func (app *Application) RebuildState(ctx context.Context) error {
+func (app *application) RebuildState(ctx context.Context) error {
 	err := app.Platform().Simulator.Recover(ctx, app.getLabel, app.getGazeboConfig)
 	if err != nil {
 		return err
@@ -172,17 +172,17 @@ func (app *Application) RebuildState(ctx context.Context) error {
 }
 
 // getLabel returns the label that's being used to identify the application's running simulations.
-func (app *Application) getLabel() *string {
+func (app *application) getLabel() *string {
 	return nil
 }
 
 // getGazeboConfig returns a GazeboConfig for the application.
-func (app *Application) getGazeboConfig(sim *simulations.Simulation) simulator.GazeboConfig {
+func (app *application) getGazeboConfig(sim *simulations.Simulation) simulator.GazeboConfig {
 	panic("getGazeboConfig should be implemented by the application.")
 }
 
 // LaunchSimulation receives a Simulation and requests a Launch to the platform.
-func (app *Application) Launch(payload interface{}) (interface{}, *ign.ErrMsg) {
+func (app *application) Launch(payload interface{}) (interface{}, *ign.ErrMsg) {
 	simulation := payload.(*simulations.Simulation)
 	ctx := context.Background()
 
@@ -210,30 +210,30 @@ func (app *Application) Launch(payload interface{}) (interface{}, *ign.ErrMsg) {
 
 // ValidateLaunch receives a simulation and performs a set of checks to
 // ensure that the simulation is good to be launched.
-func (app *Application) ValidateLaunch(ctx context.Context, simulation *simulations.Simulation) *ign.ErrMsg {
+func (app *application) ValidateLaunch(ctx context.Context, simulation *simulations.Simulation) *ign.ErrMsg {
 	return nil
 }
 
-func (app *Application) Shutdown(payload interface{}) (interface{}, *ign.ErrMsg) {
+func (app *application) Shutdown(payload interface{}) (interface{}, *ign.ErrMsg) {
 	panic("implement me")
 }
 
-func (app *Application) ValidateShutdown(ctx context.Context, simulation *simulations.Simulation) *ign.ErrMsg {
+func (app *application) ValidateShutdown(ctx context.Context, simulation *simulations.Simulation) *ign.ErrMsg {
 	panic("implement me")
 }
 
-func (app *Application) LaunchHeld(payload interface{}) (interface{}, *ign.ErrMsg) {
+func (app *application) LaunchHeld(payload interface{}) (interface{}, *ign.ErrMsg) {
 	panic("implement me")
 }
 
-func (app *Application) ValidateLaunchHeld(ctx context.Context, simulation *simulations.Simulation) *ign.ErrMsg {
+func (app *application) ValidateLaunchHeld(ctx context.Context, simulation *simulations.Simulation) *ign.ErrMsg {
 	panic("implement me")
 }
 
-func (app *Application) Restart(payload interface{}) (interface{}, *ign.ErrMsg) {
+func (app *application) Restart(payload interface{}) (interface{}, *ign.ErrMsg) {
 	panic("implement me")
 }
 
-func (app *Application) ValidateRestart(ctx context.Context, simulation *simulations.Simulation) *ign.ErrMsg {
+func (app *application) ValidateRestart(ctx context.Context, simulation *simulations.Simulation) *ign.ErrMsg {
 	panic("implement me")
 }

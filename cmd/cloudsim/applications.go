@@ -10,13 +10,13 @@ import (
 
 // RegisterApplications registers the given applications by calling their Register method.
 // The platform is passed to each application in order to allow the application have a reference to the platform.
-func RegisterApplications(p *platform.Platform, apps *map[string]application.IApplication) {
+func RegisterApplications(p *platform.Platform, apps *map[string]application.Application) {
 	RegisterApplication(apps, subt.Register(p))
 	// RegisterApplication(p.Applications, app.Register(p))
 }
 
 // RegisterApplication sets the given application on the map of applications.
-func RegisterApplication(applications *map[string]application.IApplication, app application.IApplication) {
+func RegisterApplication(applications *map[string]application.Application, app application.Application) {
 	if app == nil || applications == nil {
 		panic("Invalid application")
 	}
@@ -25,7 +25,7 @@ func RegisterApplication(applications *map[string]application.IApplication, app 
 }
 
 // RebuildState calls the RebuildState method for all the given applications.
-func RebuildState(p *platform.Platform, applications map[string]application.IApplication) {
+func RebuildState(p *platform.Platform, applications map[string]application.Application) {
 	for _, app := range applications {
 		if err := app.RebuildState(p.Context()); err != nil {
 			panic(fmt.Sprintf("Error rebuilding state for application. Name: %s. Version: %s", app.Name(), app.Version()))
@@ -34,14 +34,14 @@ func RebuildState(p *platform.Platform, applications map[string]application.IApp
 }
 
 // RegisterMonitors calls the RegisterMonitors method for all the given applications.
-func RegisterMonitors(p *platform.Platform, applications map[string]application.IApplication) {
+func RegisterMonitors(p *platform.Platform, applications map[string]application.Application) {
 	for _, app := range applications {
 		app.RegisterMonitors(p.Context())
 	}
 }
 
 // ShutdownApplications calls the Stop method for all given applications.
-func ShutdownApplications(p *platform.Platform, applications map[string]application.IApplication) {
+func ShutdownApplications(p *platform.Platform, applications map[string]application.Application) {
 	for _, app := range applications {
 		if err := app.Stop(p.Context()); err != nil {
 			panic(fmt.Sprintf("Error shutting down an application. Name: %s. Version: %s", app.Name(), app.Version()))
@@ -50,14 +50,14 @@ func ShutdownApplications(p *platform.Platform, applications map[string]applicat
 }
 
 // RegisterRoutes appends an slice of routes by the given applications to the platform's router.
-func RegisterRoutes(p *platform.Platform, apps map[string]application.IApplication) {
+func RegisterRoutes(p *platform.Platform, apps map[string]application.Application) {
 	for _, app := range apps {
 		router.ConfigureRoutes(p.Server, app.Version(), app.Name(), app.RegisterRoutes())
 	}
 }
 
 // ScheduleTasks gets all the tasks from each application and add them to the platform's scheduler.
-func ScheduleTasks(p *platform.Platform, apps map[string]application.IApplication) {
+func ScheduleTasks(p *platform.Platform, apps map[string]application.Application) {
 	for _, app := range apps {
 		tasks := app.RegisterTasks()
 		for _, task := range tasks {
@@ -66,7 +66,7 @@ func ScheduleTasks(p *platform.Platform, apps map[string]application.IApplicatio
 	}
 }
 
-func RegisterValidators(p *platform.Platform, apps map[string]application.IApplication) {
+func RegisterValidators(p *platform.Platform, apps map[string]application.Application) {
 	for _, app := range apps {
 		app.RegisterValidators(p.Context())
 	}

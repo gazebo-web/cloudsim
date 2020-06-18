@@ -6,11 +6,11 @@ import (
 )
 
 type mockApp struct {
-	Application
+	application
 }
 
 type mockApp2 struct {
-	Application
+	application
 }
 
 func (mockApp2) Name() string {
