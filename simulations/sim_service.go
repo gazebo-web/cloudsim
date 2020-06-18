@@ -57,8 +57,10 @@ type SimService interface {
 		tx *gorm.DB, byStatus *MachineStatus, invertStatus bool, groupID *string, user *users.User, application *string) (*MachineInstances, *ign.PaginationResult, *ign.ErrMsg)
 	DeleteNodesAndHostsForGroup(ctx context.Context, tx *gorm.DB,
 		dep *SimulationDeployment, user *users.User) (interface{}, *ign.ErrMsg)
-	GetSimulationDeployment(ctx context.Context, tx *gorm.DB,
-		groupID string, user *users.User) (interface{}, *ign.ErrMsg)
+	GetSimulationDeployment(ctx context.Context, tx *gorm.DB, groupID string,
+		user *users.User) (interface{}, *ign.ErrMsg)
+	GetSimulationWebsocketAddress(ctx context.Context, tx *gorm.DB, user *users.User,
+		groupID string) (interface{}, *ign.ErrMsg)
 	GetSimulationLiveLogs(ctx context.Context, tx *gorm.DB, user *users.User, groupID string,
 		robotName *string, lines *int64) (interface{}, *ign.ErrMsg)
 	GetSimulationLogsForDownload(ctx context.Context, tx *gorm.DB, user *users.User, groupID string,
@@ -198,6 +200,8 @@ type ApplicationType interface {
 	getMaxDurationForSimulation(ctx context.Context, tx *gorm.DB, dep *SimulationDeployment) time.Duration
 	getGazeboWorldStatsTopicAndLimit(ctx context.Context, tx *gorm.DB, dep *SimulationDeployment) (string, int, error)
 	getGazeboWorldWarmupTopic(ctx context.Context, tx *gorm.DB, dep *SimulationDeployment) (string, error)
+	getSimulationWebsocketAddress(ctx context.Context, s *Service, tx *gorm.DB,
+		dep *SimulationDeployment) (interface{}, *ign.ErrMsg)
 	getSimulationLogsForDownload(ctx context.Context, tx *gorm.DB, dep *SimulationDeployment,
 		robotName *string) (*string, *ign.ErrMsg)
 	getSimulationLiveLogs(ctx context.Context, s *Service, tx *gorm.DB, dep *SimulationDeployment,
@@ -786,7 +790,7 @@ func (s *Service) countPods(ctx context.Context, user *users.User) (interface{},
 		return nil, ign.NewErrorMessage(ign.ErrorUnauthorized)
 	}
 
-	pods, err := s.clientset.CoreV1().Pods("").List(metav1.ListOptions{})
+	pods, err := s.clientset.CoreV1().Pods(metav1.NamespaceDefault).List(metav1.ListOptions{})
 	if err != nil {
 		return nil, ign.NewErrorMessageWithBase(ign.ErrorUnexpected, err)
 	}
@@ -1978,6 +1982,34 @@ func (s *Service) GetSimulationDeployment(ctx context.Context, tx *gorm.DB,
 // ///////////////////////////////////////////////////////////////////////
 // ///////////////////////////////////////////////////////////////////////
 
+// GetSimulationWebsocketAddress returns a live simulation's websocket server address and authorization token.
+// If the simulation is not running, an error is returned.
+func (s *Service) GetSimulationWebsocketAddress(ctx context.Context, tx *gorm.DB, user *users.User,
+	groupID string) (interface{}, *ign.ErrMsg) {
+
+	dep, err := GetSimulationDeployment(tx, groupID)
+	if err != nil {
+		return nil, ign.NewErrorMessageWithBase(ign.ErrorSimGroupNotFound, err)
+	}
+
+	// Check that the requesting user has the correct permissions
+	username := *user.Username
+	// Multisim child simulations can only be accessed by admins
+	if dep.isMultiSimChild() && !s.userAccessor.IsSystemAdmin(username) {
+		return nil, ign.NewErrorMessage(ign.ErrorUnauthorized)
+	}
+	// Check access permissions
+	if ok, em := s.userAccessor.IsAuthorizedForResource(username, groupID, per.Read); !ok {
+		return nil, em
+	}
+
+	// Find the specific Application handler and ask for the live logs
+	return s.applications[*dep.Application].getSimulationWebsocketAddress(ctx, s, tx, dep)
+}
+
+// ///////////////////////////////////////////////////////////////////////
+// ///////////////////////////////////////////////////////////////////////
+
 // GetSimulationLogsForDownload returns the generated logs from a simulation.
 func (s *Service) GetSimulationLogsForDownload(ctx context.Context, tx *gorm.DB,
 	user *users.User, groupID string, robotName *string) (*string, *ign.ErrMsg) {
@@ -2000,7 +2032,8 @@ func (s *Service) GetSimulationLogsForDownload(ctx context.Context, tx *gorm.DB,
 // ///////////////////////////////////////////////////////////////////////
 
 // GetSimulationLiveLogs returns the live logs from a simulation.
-func (s *Service) GetSimulationLiveLogs(ctx context.Context, tx *gorm.DB, user *users.User, groupID string, robotName *string, lines *int64) (interface{}, *ign.ErrMsg) {
+func (s *Service) GetSimulationLiveLogs(ctx context.Context, tx *gorm.DB, user *users.User, groupID string,
+	robotName *string, lines *int64) (interface{}, *ign.ErrMsg) {
 
 	dep, err := GetSimulationDeployment(tx, groupID)
 

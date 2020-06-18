@@ -659,6 +659,26 @@ func (sa *SubTApplication) getGazeboWorldWarmupTopic(ctx context.Context, tx *go
 ////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////
 
+// getSimulationWebsocketAddress returns a simulation's websocket server address as well a.
+// In case the simulation is a multisim, this method will return an *AggregatedSubTSimulationValues
+// If the simulation a single simulation, it will return a PodLog directly from Kubernetes.
+func (sa *SubTApplication) getSimulationWebsocketAddress(ctx context.Context, s *Service, tx *gorm.DB,
+	dep *SimulationDeployment) (interface{}, *ign.ErrMsg) {
+
+	// The simulation must be running to be able to connect to the websocket server
+	if !dep.IsRunning() {
+		return nil, ign.NewErrorMessage(ign.ErrorInvalidSimulationStatus)
+	}
+
+	// TODO: Waiting until the Ingress server is available
+
+	return nil, nil
+}
+
+////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////
+
 // getSimulationLogsForDownload returns a link to the GZ logs that were saved in S3.
 func (sa *SubTApplication) getSimulationLogsForDownload(ctx context.Context, tx *gorm.DB,
 	dep *SimulationDeployment, robotName *string) (*string, *ign.ErrMsg) {
