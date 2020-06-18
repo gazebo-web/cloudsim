@@ -23,15 +23,45 @@ import (
 
 // Platform defines the set of methods of a platform.
 type Platform interface {
+	Metadata
+	Control
+	Launcher
+	Terminator
+	Components
+	RegisterRoutes() ign.Routes
+}
+
+// Metadata groups the methods to represent the Platform metadata.
+type Metadata interface {
 	Name() string
+}
+
+// Control groups the methods to start and stop the platform's execution.
+type Control interface {
 	Start(ctx context.Context) error
 	Stop(ctx context.Context) error
+}
+
+// Launcher groups the methods to request a simulation to be launched.
+type Launcher interface {
 	RequestLaunch(ctx context.Context, groupID string)
+}
+
+// Terminator groups the methods to request a simulation to be terminated.
+type Terminator interface {
 	RequestTermination(ctx context.Context, groupID string)
+}
+
+// Components groups the methods to return the components that are registered in the platform.
+type Components interface {
 	Logger() ign.Logger
 	Context() context.Context
 	Scheduler() scheduler.TaskScheduler
-	RegisterRoutes() ign.Routes
+	Email() email.Email
+	Validator() *validator.Validate
+	FormDecoder() *form.Decoder
+	Transport() *transport.Transport
+	Simulator()        simulator.Simulator
 }
 
 // platform represents a set of components to run applications.
