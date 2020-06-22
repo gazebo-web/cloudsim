@@ -104,7 +104,7 @@ lint:
     - *setup_project
     - *setup_git_credentials
   script:
-    - golint -set_exit_status $(go list ./... | grep -v /vendor/ | grep -v /deprecated)
+    - golint -set_exit_status $(go list ./... | grep -v /vendor/ | grep -v /deprecated/)
   allow_failure: true
   tags:
     - gitlab-org
