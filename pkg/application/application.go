@@ -16,25 +16,45 @@ import (
 
 // Application describes a set of methods for an application.
 type Application interface {
+	Metadata
+	Platform() platform.Platform
+	Registry
+	RebuildState(ctx context.Context) error
+	Stop(ctx context.Context) error
+	LaunchRequester
+	ShutdownRequester
+	LaunchHeldRequester
+	RestartRequester
+}
+
+type Metadata interface {
 	Name() string
 	Version() string
-	Platform() platform.Platform
+}
+
+type Registry interface {
 	RegisterRoutes() ign.Routes
 	RegisterTasks() []monitors.Task
 	RegisterMonitors(ctx context.Context)
 	RegisterValidators(ctx context.Context)
-	RebuildState(ctx context.Context) error
-	Stop(ctx context.Context) error
+}
 
+type LaunchRequester interface {
 	Launch(payload interface{}) (interface{}, *ign.ErrMsg)
 	ValidateLaunch(ctx context.Context, simulation *simulations.Simulation) *ign.ErrMsg
+}
 
+type ShutdownRequester interface {
 	Shutdown(payload interface{}) (interface{}, *ign.ErrMsg)
 	ValidateShutdown(ctx context.Context, simulation *simulations.Simulation) *ign.ErrMsg
+}
 
+type LaunchHeldRequester interface {
 	LaunchHeld(payload interface{}) (interface{}, *ign.ErrMsg)
 	ValidateLaunchHeld(ctx context.Context, simulation *simulations.Simulation) *ign.ErrMsg
+}
 
+type RestartRequester interface {
 	Restart(payload interface{}) (interface{}, *ign.ErrMsg)
 	ValidateRestart(ctx context.Context, simulation *simulations.Simulation) *ign.ErrMsg
 }

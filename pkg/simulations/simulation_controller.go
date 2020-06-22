@@ -24,7 +24,7 @@ type Controller interface {
 	GetLiveLogs(user *fuel.User, w http.ResponseWriter, r *http.Request) (interface{}, *ign.ErrMsg)
 }
 
-// controller is an Controller implementation.
+// controller is an Controller implementation. This implementation serves as an example for the different applications.
 type controller struct {
 	services    services
 	formDecoder *form.Decoder
