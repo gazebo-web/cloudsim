@@ -324,6 +324,55 @@ func loadSubTRobotTypes(cfg *subTSpecificsConfig) {
 			"TEAMBASE",
 			0,
 		),
+		"CERBERUS_ANYMAL_B_SENSOR_CONFIG_1": generateSubTRobotType(
+			cfg,
+			"openrobotics",
+			"CERBERUS_ANYMAL_B_SENSOR_CONFIG_1",
+			"CERBERUS_ANYMAL_B_SENSOR_CONFIG_1",
+			435,
+		),
+		"CERBERUS_M100_SENSOR_CONFIG_1": generateSubTRobotType(
+			cfg,
+			"openrobotics",
+			"CERBERUS_M100_SENSOR_CONFIG_1",
+			"CERBERUS_M100_SENSOR_CONFIG_1",
+			195,
+		),
+		"ROBOTIKA_FREYJA_SENSOR_CONFIG_1": generateSubTRobotType(
+			cfg,
+			"openrobotics",
+			"ROBOTIKA_FREYJA_SENSOR_CONFIG_1",
+			"ROBOTIKA_FREYJA_SENSOR_CONFIG_1",
+			315,
+		),
+		"ROBOTIKA_KLOUBAK_SENSOR_CONFIG_1": generateSubTRobotType(
+			cfg,
+			"openrobotics",
+			"ROBOTIKA_KLOUBAK_SENSOR_CONFIG_1",
+			"ROBOTIKA_KLOUBAK_SENSOR_CONFIG_1",
+			290,
+		),
+		"MARBLE_HUSKY_SENSOR_CONFIG_1": generateSubTRobotType(
+			cfg,
+			"openrobotics",
+			"MARBLE_HUSKY_SENSOR_CONFIG_1",
+			"MARBLE_HUSKY_SENSOR_CONFIG_1",
+			445,
+		),
+		"MARBLE_HD2_SENSOR_CONFIG_1": generateSubTRobotType(
+			cfg,
+			"openrobotics",
+			"MARBLE_HD2_SENSOR_CONFIG_1",
+			"MARBLE_HD2_SENSOR_CONFIG_1",
+			315,
+		),
+		"MARBLE_QAV500_SENSOR_CONFIG_1": generateSubTRobotType(
+			cfg,
+			"openrobotics",
+			"MARBLE_QAV500_SENSOR_CONFIG_1",
+			"MARBLE_QAV500_SENSOR_CONFIG_1",
+			200,
+		),
 	}
 }
 
