@@ -1,11 +1,11 @@
 package simulations
 
 import (
-	"errors"
-	"gitlab.com/ignitionrobotics/web/ign-go"
-	"gitlab.com/ignitionrobotics/web/cloudsim/globals"
 	"bytes"
 	"encoding/json"
+	"errors"
+	"gitlab.com/ignitionrobotics/web/cloudsim/globals"
+	"gitlab.com/ignitionrobotics/web/ign-go"
 )
 
 // Deprecated: SendEmail sends an email to a specific recipient. If the recipient is nil,

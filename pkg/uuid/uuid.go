@@ -13,7 +13,7 @@ func NewUUID() UUID {
 	return &generator{}
 }
 
-type generator struct {}
+type generator struct{}
 
 func (*generator) Generate() string {
 	return uuid.NewV4().String()

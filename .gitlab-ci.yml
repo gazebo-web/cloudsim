@@ -94,7 +94,7 @@ fmt:
     - *setup_project
     - *setup_git_credentials
   script:
-    - go fmt $(go list ./... | grep -v /vendor/)
+    - go fmt $(go list ./... | grep -v /vendor/ | grep -v /deprecated/)
   tags:
     - gitlab-org
 

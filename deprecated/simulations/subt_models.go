@@ -70,9 +70,9 @@ type metadataSubT struct {
 // SimulationDeployments DB records. If new internal fields are added, they should
 // be removed inside GetSimulationDeployment() method.
 type ExtraInfoSubT struct {
-	Circuit    string      `json:"circuit,omitempty"`
-	WorldIndex *int        `json:"world_index,omitempty"`
-	Robots     []SubTRobot `json:"robots,omitempty"`
+	Circuit    string          `json:"circuit,omitempty"`
+	WorldIndex *int            `json:"world_index,omitempty"`
+	Robots     []SubTRobot     `json:"robots,omitempty"`
 	Marsupials []SubTMarsupial `json:"marsupials,omitempty"`
 	// Which "simulation run" number is this? It is computed based on the number of worlds in the circuit and
 	// how many time to run them. For multiSims, the RunIndex can be seen as the child index.

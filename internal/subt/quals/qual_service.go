@@ -15,8 +15,8 @@ type Service struct {
 }
 
 type NewServiceInput struct {
-	Services	services
-	Repository  IRepository
+	Services   services
+	Repository IRepository
 }
 
 func NewService(input NewServiceInput) IService {

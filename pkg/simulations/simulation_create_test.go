@@ -32,9 +32,9 @@ type simulationTestSuite struct {
 
 	db *gorm.DB
 
-	userService   *users.ServiceMock
-	admin         fuel.User
-	user         fuel.User
+	userService *users.ServiceMock
+	admin       fuel.User
+	user        fuel.User
 
 	repository Repository
 	service    Service
@@ -57,13 +57,13 @@ func (suite *simulationTestSuite) SetupSuite() {
 	suite.repository = NewRepository(suite.db, tools.Sptr("platform_test"), tools.Sptr("app_test"))
 	suite.service = NewService(NewServiceInput{
 		Repository: suite.repository,
-		Config:     ServiceConfig{
+		Config: ServiceConfig{
 			Platform:    "platform_test",
 			Application: "app_test",
 			MaxDuration: time.Second,
 		},
 		UserService: suite.userService,
-		UUID: suite.uuid,
+		UUID:        suite.uuid,
 	})
 
 	suite.controller = NewController(NewControllerInput{
@@ -71,8 +71,8 @@ func (suite *simulationTestSuite) SetupSuite() {
 			Simulation: suite.service,
 			User:       suite.userService,
 		},
-		FormDecoder:       form.NewDecoder(),
-		Validator:         validator.New(),
+		FormDecoder: form.NewDecoder(),
+		Validator:   validator.New(),
 	})
 
 	suite.router = mux.NewRouter()
@@ -117,7 +117,7 @@ func (suite *simulationTestSuite) TestCreate() {
 
 	createForm := map[string]string{
 		"name":        "test1234",
-		"circuit":		"test",
+		"circuit":     "test",
 		"owner":       *suite.user.Username,
 		"robot_name":  "X1",
 		"robot_type":  "X1_SENSOR_CONFIG_1",
@@ -177,7 +177,7 @@ func (suite *simulationTestSuite) TestCreateAdmin() {
 
 	createForm := map[string]string{
 		"name":        "test1234",
-		"circuit":		"test",
+		"circuit":     "test",
 		"robot_name":  "X1",
 		"robot_type":  "X1_SENSOR_CONFIG_1",
 		"robot_image": "infrastructureascode/aws-cli:latest",

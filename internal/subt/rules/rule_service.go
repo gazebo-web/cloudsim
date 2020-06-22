@@ -17,7 +17,7 @@ type Service interface {
 
 type service struct {
 	repository Repository
-	users users.Service
+	users      users.Service
 	simulation simulations.IService
 }
 
@@ -56,7 +56,7 @@ func (s *service) GetRemainingSubmissions(owner, circuit string, user fuel.User)
 		return nil, ign.NewErrorMessageWithBase(ign.ErrorUnexpected, err)
 	}
 
-	remaining := tools.Max(0, limit - *count)
+	remaining := tools.Max(0, limit-*count)
 
 	return &remaining, nil
 }
@@ -64,6 +64,6 @@ func (s *service) GetRemainingSubmissions(owner, circuit string, user fuel.User)
 func NewService(repository Repository, user users.Service) Service {
 	return &service{
 		repository: repository,
-		users: user,
+		users:      user,
 	}
 }

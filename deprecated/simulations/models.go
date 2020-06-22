@@ -69,7 +69,7 @@ type SimulationDeployment struct {
 	Robots *string `gorm:"size:1000" json:"robots"`
 	// TODO: This is a field specific to SubT. This is a temporary field that should be
 	//  extracted from the SimulationDeployment struct.
-	Held bool `json:"held"`
+	Held      bool `json:"held"`
 	Processed bool `json:"-"`
 }
 
