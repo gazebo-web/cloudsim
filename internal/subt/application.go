@@ -19,7 +19,7 @@ import (
 	"path"
 )
 
-type IApplication interface {
+type Application interface {
 	application.Application
 	isSimulationHeld(ctx context.Context, simulation *simulations.Simulation) *ign.ErrMsg
 	UploadSummary(sim *sim.Simulation, score stats.Score) *ign.ErrMsg
@@ -45,7 +45,7 @@ type services struct {
 }
 
 // New creates a new SubT application.
-func New(p platform.Platform) IApplication {
+func New(p platform.Platform) Application {
 	simulationRepository := sim.NewRepository(p.Database(), p.Name())
 	simulationService := sim.NewService(simulationRepository)
 
@@ -64,9 +64,9 @@ func New(p platform.Platform) IApplication {
 		Controllers: controllers{
 			Simulation: sim.NewController(sim.NewControllerInput{
 				Service:     simulationService,
-				Decoder:     p.FormDecoder,
+				Decoder:     p.FormDecoder(),
 				Validator:   validate,
-				Permissions: p.Permissions,
+				Permissions: p.Permissions(),
 				UserService: p.Services().User(),
 			}),
 		},
@@ -136,10 +136,10 @@ func (app *SubT) UploadSummary(sim *sim.Simulation, score stats.Score) *ign.ErrM
 	}
 
 	fileName := tools.GenerateSummaryFilename(*sim.GroupID)
-	key := path.Join(app.Platform().CloudProvider.S3().GetLogKey(*sim.GroupID, *sim.Base.Owner), fileName)
+	key := path.Join(app.Platform().AWS().S3().GetLogKey(*sim.GroupID, *sim.Base.Owner), fileName)
 
 	// TODO: Add AWS_GZ_LOGS_BUCKET env var.
-	_, err = app.Platform().CloudProvider.S3().Upload("AWS_GZ_LOGS_BUCKET", key, b)
+	_, err = app.Platform().AWS().S3().Upload("AWS_GZ_LOGS_BUCKET", key, b)
 	if err != nil {
 		return ign.NewErrorMessageWithBase(ign.ErrorUnexpected, err)
 	}

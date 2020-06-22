@@ -68,6 +68,9 @@ type Components interface {
 	Simulator() simulator.Simulator
 	Database() *gorm.DB
 	Server() *ign.Server
+	Permissions() *permissions.Permissions
+	AWS() cloud.AmazonWS
+	K8S() orchestrator.Kubernetes
 }
 
 // platform represents a set of components to run applications.
@@ -79,9 +82,9 @@ type platform struct {
 	validator        *validator.Validate
 	formDecoder      *form.Decoder
 	transport        *transport.Transport
-	Orchestrator     orchestrator.Kubernetes
-	CloudProvider    cloud.AmazonWS
-	Permissions      *permissions.Permissions
+	k8s              orchestrator.Kubernetes
+	aws              cloud.AmazonWS
+	permissions      *permissions.Permissions
 	services         *services
 	Config           Config
 	simulator        simulator.Simulator
@@ -140,6 +143,18 @@ func (p *platform) Context() context.Context {
 
 func (p *platform) Email() email.Email {
 	return p.email
+}
+
+func (p *platform) K8S() orchestrator.Kubernetes {
+	return p.k8s
+}
+
+func (p *platform) Permissions() *permissions.Permissions {
+	return p.permissions
+}
+
+func (p *platform) AWS() cloud.AmazonWS {
+	return p.aws
 }
 
 // Controllers group the methods to return the platform controllers
@@ -218,7 +233,7 @@ func New(config Config) Platform {
 	p.Logger().Debug("[INIT] Cloud provider initialized: AWS.")
 
 	p.setupOrchestrator()
-	p.Logger().Debug("[INIT] Orchestrator initialized: k8s.")
+	p.Logger().Debug("[INIT] k8s initialized: k8s.")
 
 	p.setupSimulator()
 	p.Logger().Debug("[INIT] simulator initialized. Using: AWS and k8s.")

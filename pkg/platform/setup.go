@@ -24,7 +24,7 @@ import (
 	"log"
 )
 
-// IPlatformSetup represent a set of methods to initialize the platform.
+// Setup represent a set of methods to initialize the platform.
 type Setup interface {
 	setupLogger() Platform
 	setupContext() Platform
@@ -141,13 +141,13 @@ func (p *platform) setupDatabase() Platform {
 
 // setupCloudProvider initializes the Cloud Provider.
 func (p *platform) setupCloudProvider() Platform {
-	p.CloudProvider = cloud.New()
+	p.aws = cloud.New()
 	return p
 }
 
-// setupOrchestrator initializes the container Orchestrator.
+// setupOrchestrator initializes the container k8s.
 func (p *platform) setupOrchestrator() Platform {
-	p.Orchestrator = orchestrator.New()
+	p.k8s = orchestrator.New()
 	return p
 }
 
