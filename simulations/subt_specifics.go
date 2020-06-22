@@ -21,6 +21,7 @@ import (
 	"gitlab.com/ignitionrobotics/web/ign-go"
 	"gopkg.in/yaml.v2"
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/api/extensions/v1beta1"
 	networkingv1 "k8s.io/api/networking/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -146,6 +147,12 @@ type subTSpecificsConfig struct {
 	// FuelURL contains the URL to a Fuel environment. This base URL is used to generate
 	// URLs for users to access specific assets within Fuel.
 	FuelURL string `env:"IGN_FUEL_URL" envDefault:"https://fuel.ignitionrobotics.org/1.0"`
+	// WebsocketHost contains the address of the host used to route incoming websocket connections.
+	WebsocketHost string `env:"SUBT_WEBSOCKET_HOST"`
+	// IngressName is the name of the Kubernetes Ingress used to route client requests from the Internet to
+	// different internal services.
+	// This configuration is required to enable websocket connections to simulations.
+	IngressName string `env:"SUBT_INGRESS_NAME" envDefault:"web-cloudsim"`
 }
 
 // SubTApplication represents an application used to tailor SubT simulation requests.
@@ -238,6 +245,15 @@ func (sa *SubTApplication) getCopyPodName(targetPodName string) string {
 // getGazeboPodName returns the name of the Gazebo pod for a simulation.
 func (sa *SubTApplication) getWebsocketServiceName(podNamePrefix string) string {
 	return fmt.Sprintf("%s-websocket", podNamePrefix)
+}
+
+////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////
+
+// getGazeboPodName returns the name of the Gazebo pod for a simulation.
+func (sa *SubTApplication) getSimulationIngressPath(groupID string) string {
+	return fmt.Sprintf("/simulations/%s", groupID)
 }
 
 ////////////////////////////////////////////////////////////////////////////
@@ -831,6 +847,135 @@ func (sa *SubTApplication) getSimulationStatistics(ctx context.Context, s *Servi
 ////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////
 
+// getIngress retrieves an Ingress from the cluster.
+func getIngress(ctx context.Context, kc kubernetes.Interface, namespace string,
+	ingressName string) (*v1beta1.Ingress, error) {
+	return kc.ExtensionsV1beta1().Ingresses(namespace).Get(ingressName, metav1.GetOptions{})
+}
+
+// updateIngress updates an Ingress resource in the cluster.
+func updateIngress(ctx context.Context, kc kubernetes.Interface, namespace string,
+	ingress *v1beta1.Ingress) (*v1beta1.Ingress, error) {
+
+	ingress, err := kc.ExtensionsV1beta1().Ingresses(namespace).Update(ingress)
+	if err != nil {
+		errMsg := "failed to update ingress"
+		logger(ctx).Error(errMsg, err)
+		return nil, errors.New(errMsg)
+	}
+
+	return ingress, nil
+}
+
+// getIngressRule gets a host's rule from an Ingress resource.
+// The `host` parameter is used to select the rule from which to remove paths.
+// If there is more than one rule for a host, only the first rule will be returned.
+// If `host` is nil, the first rule with an empty host field will be returned.
+func getIngressRule(ctx context.Context, ingress *v1beta1.Ingress,
+	host *string) (*v1beta1.HTTPIngressRuleValue, error) {
+	// Set host default value if nil
+	noHost := sptr("")
+	if host == nil {
+		host = noHost
+	}
+
+	// Find the target rule
+	var rule *v1beta1.HTTPIngressRuleValue
+	for _, ingressRule := range ingress.Spec.Rules {
+		if ingressRule.Host == *host {
+			rule = ingressRule.IngressRuleValue.HTTP
+			return rule, nil
+		}
+	}
+	// If no rule was found return an error
+	if host == noHost {
+		host = sptr("nil")
+	}
+	return nil, fmt.Errorf("ingress rule for host %s was not found", *host)
+}
+
+// upsertIngressRule inserts or updates a set of paths into an Ingress rule.
+// The `host` parameter is used to select the rule from which to remove paths. If there is more than one rule for a
+// host, only the first rule will be modified. If `host` is nil, a rule with no host will be modified.
+func upsertIngressRule(ctx context.Context, kc kubernetes.Interface, namespace string, ingressName string,
+	host *string, paths ...*v1beta1.HTTPIngressPath) (*v1beta1.Ingress, error) {
+
+	// Get the ingress from the cluster
+	ingress, err := getIngress(ctx, kc, namespace, ingressName)
+	if err != nil {
+		return nil, err
+	}
+
+	// Extract the host rule from the ingress resource
+	rule, err := getIngressRule(ctx, ingress, host)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, path := range paths {
+		// Try to find and update the path
+		updated := false
+		for i, rulePath := range rule.Paths {
+			if rulePath.Path == path.Path {
+				updated = true
+				if path != nil {
+					rule.Paths[i] = *path
+				}
+				break
+			}
+		}
+		// No path was updated, create a new one
+		if !updated && path != nil {
+			rule.Paths = append(rule.Paths, *path)
+		}
+	}
+
+	// Apply updated rule
+	return updateIngress(ctx, kc, namespace, ingress)
+}
+
+// removeIngressRule removes a set of paths from an Ingress rule.
+// Note that the Kubernetes spec requires ingress rules to have at least one path. Attempting to remove a rule's only
+// path will fail.
+// The `host` parameter is used to select the rule from which to remove paths. If there is more than one rule for a
+// host, only the first rule will be modified. If `host` is nil, a rule with no host will be modified.
+func removeIngressRule(ctx context.Context, kc kubernetes.Interface, namespace string,
+	ingressName string, host *string, paths ...string) (*v1beta1.Ingress, error) {
+
+	// Get the ingress from the cluster
+	ingress, err := getIngress(ctx, kc, namespace, ingressName)
+	if err != nil {
+		return nil, err
+	}
+
+	// Extract the host rule from the ingress resource
+	rule, err := getIngressRule(ctx, ingress, host)
+	if err != nil {
+		return nil, err
+	}
+
+	// Remove paths
+	for _, path := range paths {
+		for i, rulePath := range rule.Paths {
+			if rulePath.Path == path {
+				pathsLen := len(rule.Paths)
+				if pathsLen > 1 {
+					rule.Paths[i] = rule.Paths[pathsLen-1]
+				}
+				rule.Paths = rule.Paths[:pathsLen-1]
+				break
+			}
+		}
+	}
+
+	// Apply updated rule
+	return updateIngress(ctx, kc, namespace, ingress)
+}
+
+////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////
+
 // launchApplication is a SubT specific function responsible of launching all the
 // pods and services needed for a SubT simulation.
 func (sa *SubTApplication) launchApplication(ctx context.Context, s *Service, tx *gorm.DB,
@@ -1136,10 +1281,14 @@ func (sa *SubTApplication) launchApplication(ctx context.Context, s *Service, tx
 	}
 
 	// Expose the Gazebo websocket server if an auth key is available
-	if dep.AuthorizationToken != nil {
-		websocketService := sa.createWebsocketService(ctx, dep, podNamePrefix, baseLabels, gzserverLabels)
-		// Launch the service
-		_, err := s.clientset.CoreV1().Services(corev1.NamespaceDefault).Create(websocketService)
+	if dep.AuthorizationToken != nil && len(sa.cfg.IngressName) > 0 {
+		// Create and launch a service to expose the websocket server to the cluster
+		service, err := sa.createWebsocketService(ctx, s.clientset, dep, podNamePrefix, baseLabels, gzserverLabels)
+		if err != nil {
+			return nil, ign.NewErrorMessageWithBase(ign.ErrorK8Create, err)
+		}
+		// Create an ingress rule to allow traffic to the websocket service from the Internet
+		_, err = sa.createWebsocketIngress(ctx, s.clientset, dep, service)
 		if err != nil {
 			return nil, ign.NewErrorMessageWithBase(ign.ErrorK8Create, err)
 		}
@@ -1386,35 +1535,67 @@ func (sa *SubTApplication) addSharedVolumeConfigurationContainer(pod *corev1.Pod
 	}
 }
 
-// createWebsocketService creates a Kubernetes Service that exposes the websocket server to the Internet.
-// A NodePort type Kubernetes Service is created that opens a port on the EC2 instance that runs the Gazebo server of
-// the deployment.
-func (sa *SubTApplication) createWebsocketService(ctx context.Context, dep *SimulationDeployment,
-	podNamePrefix string, serviceLabels map[string]string, targetLabels map[string]string) *corev1.Service {
+// createWebsocketService creates a Kubernetes Service that exposes the websocket server to the cluster.
+// This server can then be exposed to the Internet by using a load balancer.
+func (sa *SubTApplication) createWebsocketService(ctx context.Context, kc kubernetes.Interface,
+	dep *SimulationDeployment, podNamePrefix string, serviceLabels map[string]string,
+	targetLabels map[string]string) (*corev1.Service, error) {
 
+	// Prepare the service
 	service := &corev1.Service{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:   sa.getWebsocketServiceName(podNamePrefix),
 			Labels: serviceLabels,
 		},
 		Spec: corev1.ServiceSpec{
-			Type:     "NodePort",
+			Type:     "ClusterIP",
 			Selector: targetLabels,
 			Ports: []corev1.ServicePort{
 				{
 					Name: "websockets",
 					Port: 9002,
-					TargetPort: intstr.IntOrString{
-						Type:   intstr.Int,
-						IntVal: 9002,
-					},
-					NodePort: 30002,
 				},
 			},
 		},
 	}
 
-	return service
+	// Launch the service
+	_, err := kc.CoreV1().Services(corev1.NamespaceDefault).Create(service)
+	if err != nil {
+		return nil, err
+	}
+
+	return service, nil
+}
+
+func (sa *SubTApplication) createWebsocketIngress(ctx context.Context, kc kubernetes.Interface,
+	dep *SimulationDeployment, service *corev1.Service) (*v1beta1.Ingress, error) {
+
+	// Prepare the rule path
+	rulePath := &v1beta1.HTTPIngressPath{
+		Path: sa.getSimulationIngressPath(*dep.GroupID),
+		Backend: v1beta1.IngressBackend{
+			ServiceName: service.Name,
+			ServicePort: intstr.IntOrString{
+				Type:   intstr.Int,
+				IntVal: service.Spec.Ports[0].Port,
+			},
+		},
+	}
+
+	var host *string
+	if len(sa.cfg.WebsocketHost) > 0 {
+		host = &sa.cfg.WebsocketHost
+	}
+
+	return upsertIngressRule(
+		ctx,
+		kc,
+		corev1.NamespaceDefault,
+		sa.cfg.IngressName,
+		host,
+		rulePath,
+	)
 }
 
 // createCommsBridgePod creates a basic comms-bridge pod. Callers should then
@@ -1968,7 +2149,35 @@ func (sa *SubTApplication) deleteApplication(ctx context.Context, s *Service, tx
 			return em
 		}
 	}
-	logger(ctx).Info("Successfully requested services for groupID: " + groupID)
+	logger(ctx).Info("Successfully deleted services for groupID: " + groupID)
+
+	// Delete Ingress rules associated to the groupID.
+	if len(sa.cfg.IngressName) > 0 {
+		var host *string
+		if len(sa.cfg.WebsocketHost) > 0 {
+			host = &sa.cfg.WebsocketHost
+		}
+
+		_, err := removeIngressRule(
+			ctx,
+			s.clientset,
+			corev1.NamespaceDefault,
+			sa.cfg.IngressName,
+			host,
+			sa.getSimulationIngressPath(groupID),
+		)
+
+		if err != nil {
+			// There was an unexpected error deleting the Ingress rule and the simulation will be marked as failed,
+			// as this is an unexpected scenario.
+			em := ign.NewErrorMessageWithBase(ign.ErrorK8Delete, err)
+			errMsg := "Error while removing k8 Ingress rule. Make sure a sysadmin deletes the ingress rule manually."
+			logger(ctx).Error(errMsg, em)
+			return em
+		}
+
+		logger(ctx).Info("Successfully deleted ingress rules for groupID: " + groupID)
+	}
 
 	// Find and delete all the network policies associated to the groupID.
 	// Dev note: it is important to remove the network policies AFTER the gzlogs are
