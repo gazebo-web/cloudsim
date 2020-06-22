@@ -218,3 +218,23 @@ func generateToken(size *int) (string, error) {
 
 	return fmt.Sprintf("%x", b), nil
 }
+
+// IsWebsocketAddress checks that the given address is a valid websocket address for cloudsim.
+// If a groupd is provided, it will check that the given address includes a group ID.
+func IsWebsocketAddress(addr string, groupID *string) bool {
+	if !strings.Contains(addr, "cloudsim-ws.ignitionrobotics.org") {
+		return false
+	}
+
+	if !strings.Contains(addr, "/simulations/") {
+		return false
+	}
+
+	if groupID != nil {
+		if !strings.Contains(addr, *groupID) {
+			return false
+		}
+	}
+
+	return true
+}
