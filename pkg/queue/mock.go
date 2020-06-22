@@ -5,6 +5,8 @@ import (
 	"gitlab.com/ignitionrobotics/web/ign-go"
 )
 
+// Mock is a Queue implementation.
+// It should only be used for testing purposes.
 type Mock struct {
 	mock.Mock
 }
