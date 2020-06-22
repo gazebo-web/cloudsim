@@ -676,8 +676,6 @@ func (sa *SubTApplication) getGazeboWorldWarmupTopic(ctx context.Context, tx *go
 ////////////////////////////////////////////////////////////////////////////
 
 // getSimulationWebsocketAddress returns a simulation's websocket server address as well a.
-// In case the simulation is a multisim, this method will return an *AggregatedSubTSimulationValues
-// If the simulation a single simulation, it will return a PodLog directly from Kubernetes.
 func (sa *SubTApplication) getSimulationWebsocketAddress(ctx context.Context, s *Service, tx *gorm.DB,
 	dep *SimulationDeployment) (interface{}, *ign.ErrMsg) {
 
@@ -686,9 +684,7 @@ func (sa *SubTApplication) getSimulationWebsocketAddress(ctx context.Context, s 
 		return nil, ign.NewErrorMessage(ign.ErrorInvalidSimulationStatus)
 	}
 
-	// TODO: Waiting until the Ingress server is available
-
-	return nil, nil
+	return fmt.Sprintf("%s/simulations/%s", sa.cfg.WebsocketHost, *dep.GroupID), nil
 }
 
 ////////////////////////////////////////////////////////////////////////////
