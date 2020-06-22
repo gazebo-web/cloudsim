@@ -116,13 +116,13 @@ func (p *platform) setupPermissions() Platform {
 		p.Logger().Critical(err)
 		log.Fatalf("Error while initializing server. %v\n", err)
 	}
-	p.Permissions = per
+	p.permissions = per
 	return p
 }
 
 // setupUserService initializes the User service.
 func (p *platform) setupUserService() Platform {
-	s, err := users.NewService(p.Permissions, p.Config.SysAdmin)
+	s, err := users.NewService(p.Permissions(), p.Config.SysAdmin)
 	if err != nil {
 		p.Logger().Critical(err)
 		log.Fatalf("Error while configuring user service. %v\n", err)
