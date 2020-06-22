@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 	sim "gitlab.com/ignitionrobotics/web/cloudsim/simulations"
 	"gitlab.com/ignitionrobotics/web/ign-go"
 	igntest "gitlab.com/ignitionrobotics/web/ign-go/testhelpers"
@@ -43,7 +42,7 @@ func TestWebsocketAddressUser(t *testing.T) {
 		createSubtForm,
 		func(bslice *[]byte, resp *igntest.AssertResponse) {
 			var dep sim.SimulationDeployment
-			json.Unmarshal(*bslice, &dep)
+			assert.NoError(t, json.Unmarshal(*bslice, &dep))
 			groupID = *dep.GroupID
 			assert.True(t, dep.Held)
 		},
@@ -51,11 +50,11 @@ func TestWebsocketAddressUser(t *testing.T) {
 
 	websocketAddr := "/1.0/simulations/%s/websocket"
 	testA := uriTest{
-		testDesc:          "WebSocket Address Test -- User TeamA should get websocket address",
-		URL:               fmt.Sprintf(websocketAddr, groupID),
-		jwtGen:            teamAUser1,
-		expErrMsg:         nil,
-		ignoreErrorBody:   false,
+		testDesc:        "WebSocket Address Test -- User TeamA should get websocket address",
+		URL:             fmt.Sprintf(websocketAddr, groupID),
+		jwtGen:          teamAUser1,
+		expErrMsg:       nil,
+		ignoreErrorBody: false,
 	}
 
 	t.Run(testA.testDesc, func(t *testing.T) {
@@ -67,11 +66,11 @@ func TestWebsocketAddressUser(t *testing.T) {
 	})
 
 	testB := uriTest{
-		testDesc:          "WebSocket Address Test -- User TeamB shouldn't get websocket address from TeamA",
-		URL:               fmt.Sprintf(websocketAddr, groupID),
-		jwtGen:            teamBUser1,
-		expErrMsg:         ign.NewErrorMessage(ign.ErrorUnauthorized),
-		ignoreErrorBody:   false,
+		testDesc:        "WebSocket Address Test -- User TeamB shouldn't get websocket address from TeamA",
+		URL:             fmt.Sprintf(websocketAddr, groupID),
+		jwtGen:          teamBUser1,
+		expErrMsg:       ign.NewErrorMessage(ign.ErrorUnauthorized),
+		ignoreErrorBody: false,
 	}
 
 	t.Run(testB.testDesc, func(t *testing.T) {
@@ -114,7 +113,7 @@ func TestWebsocketAddressAdmin(t *testing.T) {
 		createSubtForm,
 		func(bslice *[]byte, resp *igntest.AssertResponse) {
 			var dep sim.SimulationDeployment
-			json.Unmarshal(*bslice, &dep)
+			assert.NoError(t, json.Unmarshal(*bslice, &dep))
 			groupID = *dep.GroupID
 			assert.True(t, dep.Held)
 		},
@@ -122,11 +121,11 @@ func TestWebsocketAddressAdmin(t *testing.T) {
 
 	websocketAddr := "/1.0/simulations/%s/websocket"
 	testA := uriTest{
-		testDesc:          "WebSocket Address Test -- Admin should get websocket address for every simulation",
-		URL:               fmt.Sprintf(websocketAddr, groupID),
-		jwtGen:            sysAdmin,
-		expErrMsg:         nil,
-		ignoreErrorBody:   false,
+		testDesc:        "WebSocket Address Test -- Admin should get websocket address for every simulation",
+		URL:             fmt.Sprintf(websocketAddr, groupID),
+		jwtGen:          sysAdmin,
+		expErrMsg:       nil,
+		ignoreErrorBody: false,
 	}
 
 	t.Run(testA.testDesc, func(t *testing.T) {
