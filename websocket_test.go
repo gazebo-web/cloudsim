@@ -62,6 +62,7 @@ func TestWebsocketAddressUser(t *testing.T) {
 			var wsResp sim.WebsocketAddressResponse
 			assert.NoError(t, json.Unmarshal(*bslice, &wsResp))
 			assert.True(t, sim.IsWebsocketAddress(wsResp.Address, &groupID))
+			assert.NotEmpty(t, wsResp.Token)
 		})
 	})
 
@@ -74,11 +75,7 @@ func TestWebsocketAddressUser(t *testing.T) {
 	}
 
 	t.Run(testB.testDesc, func(t *testing.T) {
-		invokeURITest(t, testB, func(bslice *[]byte, resp *igntest.AssertResponse) {
-			var wsResp sim.WebsocketAddressResponse
-			assert.NoError(t, json.Unmarshal(*bslice, &wsResp))
-			assert.NotEmpty(t, wsResp.Token)
-		})
+		invokeURITest(t, testB, func(bslice *[]byte, resp *igntest.AssertResponse) {})
 	})
 }
 
@@ -121,7 +118,7 @@ func TestWebsocketAddressAdmin(t *testing.T) {
 	)
 
 	websocketAddr := "/1.0/simulations/%s/websocket"
-	testA := uriTest{
+	testAdmin := uriTest{
 		testDesc:        "WebSocket Address Test -- Admin should get websocket address for every simulation",
 		URL:             fmt.Sprintf(websocketAddr, groupID),
 		jwtGen:          sysAdmin,
@@ -129,8 +126,78 @@ func TestWebsocketAddressAdmin(t *testing.T) {
 		ignoreErrorBody: false,
 	}
 
+	t.Run(testAdmin.testDesc, func(t *testing.T) {
+		invokeURITest(t, testAdmin, func(bslice *[]byte, resp *igntest.AssertResponse) {
+			var wsResp sim.WebsocketAddressResponse
+			assert.NoError(t, json.Unmarshal(*bslice, &wsResp))
+			assert.True(t, sim.IsWebsocketAddress(wsResp.Address, &groupID))
+			assert.NotEmpty(t, wsResp.Token)
+		})
+	})
+}
+
+func TestWebsocketAddressChildSimulations(t *testing.T) {
+	// General test setup
+	setup()
+
+	circuit := "Urban Circuit"
+	createSimURI := "/1.0/simulations"
+	teamAUser1 := newJWT(createJWTForIdentity(t, "TeamAUser1"))
+	sysAdmin := getDefaultTestJWT()
+
+	createSubtForm := map[string]string{
+		"name":        "sim1",
+		"owner":       "TeamA",
+		"circuit":     circuit,
+		"robot_name":  "X1",
+		"robot_type":  "X1_SENSOR_CONFIG_1",
+		"robot_image": "infrastructureascode/aws-cli:latest",
+	}
+
+	var groupID string
+	invokeURITestMultipartPOST(
+		t,
+		uriTest{
+			testDesc:          "WebSocket Address Test -- Creating simulation deployment",
+			URL:               createSimURI,
+			jwtGen:            teamAUser1,
+			expErrMsg:         nil,
+			ignoreErrorBody:   false,
+			ignoreOptionsCall: false,
+		},
+		createSubtForm,
+		func(bslice *[]byte, resp *igntest.AssertResponse) {
+			var dep sim.SimulationDeployment
+			assert.NoError(t, json.Unmarshal(*bslice, &dep))
+			groupID = *dep.GroupID
+			assert.True(t, dep.Held)
+		},
+	)
+
+	websocketAddr := "/1.0/simulations/%s-c-1/websocket"
+
+	testA := uriTest{
+		testDesc:        "WebSocket Address Test -- User TeamA should not get websocket address for child simulations",
+		URL:             fmt.Sprintf(websocketAddr, groupID),
+		jwtGen:          teamAUser1,
+		expErrMsg:       ign.NewErrorMessage(ign.ErrorUnauthorized),
+		ignoreErrorBody: false,
+	}
+
 	t.Run(testA.testDesc, func(t *testing.T) {
-		invokeURITest(t, testA, func(bslice *[]byte, resp *igntest.AssertResponse) {
+		invokeURITest(t, testA, func(bslice *[]byte, resp *igntest.AssertResponse) {})
+	})
+
+	testAdmin := uriTest{
+		testDesc:        "WebSocket Address Test -- Admin should get websocket address for child simulations",
+		URL:             fmt.Sprintf(websocketAddr, groupID),
+		jwtGen:          sysAdmin,
+		expErrMsg:       nil,
+		ignoreErrorBody: false,
+	}
+
+	t.Run(testAdmin.testDesc, func(t *testing.T) {
+		invokeURITest(t, testAdmin, func(bslice *[]byte, resp *igntest.AssertResponse) {
 			var wsResp sim.WebsocketAddressResponse
 			assert.NoError(t, json.Unmarshal(*bslice, &wsResp))
 			assert.True(t, sim.IsWebsocketAddress(wsResp.Address, &groupID))
