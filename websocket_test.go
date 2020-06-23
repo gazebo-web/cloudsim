@@ -77,6 +77,7 @@ func TestWebsocketAddressUser(t *testing.T) {
 		invokeURITest(t, testB, func(bslice *[]byte, resp *igntest.AssertResponse) {
 			var wsResp sim.WebsocketAddressResponse
 			assert.NoError(t, json.Unmarshal(*bslice, &wsResp))
+			assert.NotEmpty(t, wsResp.Token)
 		})
 	})
 }
@@ -133,6 +134,7 @@ func TestWebsocketAddressAdmin(t *testing.T) {
 			var wsResp sim.WebsocketAddressResponse
 			assert.NoError(t, json.Unmarshal(*bslice, &wsResp))
 			assert.True(t, sim.IsWebsocketAddress(wsResp.Address, &groupID))
+			assert.NotEmpty(t, wsResp.Token)
 		})
 	})
 }
