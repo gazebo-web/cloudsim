@@ -59,9 +59,9 @@ func TestWebsocketAddressUser(t *testing.T) {
 
 	t.Run(testA.testDesc, func(t *testing.T) {
 		invokeURITest(t, testA, func(bslice *[]byte, resp *igntest.AssertResponse) {
-			var addr string
-			assert.NoError(t, json.Unmarshal(*bslice, &addr))
-			assert.True(t, sim.IsWebsocketAddress(addr, &groupID))
+			var wsResp sim.WebsocketAddressResponse
+			assert.NoError(t, json.Unmarshal(*bslice, &wsResp))
+			assert.True(t, sim.IsWebsocketAddress(wsResp.Address, &groupID))
 		})
 	})
 
@@ -75,8 +75,8 @@ func TestWebsocketAddressUser(t *testing.T) {
 
 	t.Run(testB.testDesc, func(t *testing.T) {
 		invokeURITest(t, testB, func(bslice *[]byte, resp *igntest.AssertResponse) {
-			var addr string
-			assert.NoError(t, json.Unmarshal(*bslice, &addr))
+			var wsResp sim.WebsocketAddressResponse
+			assert.NoError(t, json.Unmarshal(*bslice, &wsResp))
 		})
 	})
 }
@@ -130,9 +130,9 @@ func TestWebsocketAddressAdmin(t *testing.T) {
 
 	t.Run(testA.testDesc, func(t *testing.T) {
 		invokeURITest(t, testA, func(bslice *[]byte, resp *igntest.AssertResponse) {
-			var addr string
-			assert.NoError(t, json.Unmarshal(*bslice, &addr))
-			assert.True(t, sim.IsWebsocketAddress(addr, &groupID))
+			var wsResp sim.WebsocketAddressResponse
+			assert.NoError(t, json.Unmarshal(*bslice, &wsResp))
+			assert.True(t, sim.IsWebsocketAddress(wsResp.Address, &groupID))
 		})
 	})
 }
