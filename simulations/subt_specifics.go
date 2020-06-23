@@ -675,7 +675,7 @@ func (sa *SubTApplication) getGazeboWorldWarmupTopic(ctx context.Context, tx *go
 ////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////
 
-// getSimulationWebsocketAddress returns a simulation's websocket server address as well a.
+// getSimulationWebsocketAddress returns a simulation's websocket server address as well a the authorization token.
 func (sa *SubTApplication) getSimulationWebsocketAddress(ctx context.Context, s *Service, tx *gorm.DB,
 	dep *SimulationDeployment) (interface{}, *ign.ErrMsg) {
 
@@ -684,7 +684,10 @@ func (sa *SubTApplication) getSimulationWebsocketAddress(ctx context.Context, s 
 		return nil, ign.NewErrorMessage(ign.ErrorInvalidSimulationStatus)
 	}
 
-	return fmt.Sprintf("%s/simulations/%s", sa.cfg.WebsocketHost, *dep.GroupID), nil
+	return &WebsocketAddressResponse{
+		Token:   *dep.AuthorizationToken,
+		Address: fmt.Sprintf("%s/simulations/%s", sa.cfg.WebsocketHost, *dep.GroupID),
+	}, nil
 }
 
 ////////////////////////////////////////////////////////////////////////////

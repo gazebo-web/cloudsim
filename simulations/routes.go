@@ -271,7 +271,7 @@ var Routes ign.Routes = ign.Routes{
 		},
 	},
 
-	// Route to get the address of a simulation's websocket server
+	// Route to get the address of a simulation's websocket server and authorization token
 	ign.Route{
 		Name:        "Gets a simulation's websocket server address",
 		Description: "Gets a simulation's websocket server address",
@@ -281,9 +281,9 @@ var Routes ign.Routes = ign.Routes{
 		SecureMethods: ign.SecureMethods{
 			// swagger:route GET /simulations/{group}/websocket simulations websocket
 			//
-			// Gets a simulation's websocket server address
+			// Gets a simulation's websocket server address and authorization token
 			//
-			// Gets a simulation's websocket server address
+			// Gets a simulation's websocket server address and authorization token
 			//
 			//   Schemes: https
 			//
@@ -292,7 +292,7 @@ var Routes ign.Routes = ign.Routes{
 			//     503: Error
 			ign.Method{
 				Type:        "GET",
-				Description: "Get a simulation's websocket server address",
+				Description: "Get a simulation's websocket server address and authorization token",
 				Handlers: ign.FormatHandlers{
 					ign.FormatHandler{Handler: ign.JSONResultNoTx(WithUser(SimulationWebsocketAddress))},
 				},
