@@ -428,6 +428,29 @@ func CloudMachineList(user *users.User, tx *gorm.DB,
 	return sims, nil
 }
 
+// SimulationWebsocketAddress returns the address of the websocket server and authorization token for the specified
+// running simulation. This address and token are meant to be used by the client to establish a websocket connection
+// with the simulation to get real-time simulation information.
+// A simulation's websocket server is only available while a simulation is running. If a simulation is not running,
+// an error will be returned as the websocket server will no longer be available.
+// You can request this method with the following curl request:
+//   curl -k -X GET --url http://localhost:8001/1.0/simulations/{group}/websocket
+//     --header 'authorization: Bearer <A_VALID_AUTH0_JWT_TOKEN>'
+func SimulationWebsocketAddress(user *users.User, tx *gorm.DB, w http.ResponseWriter,
+	r *http.Request) (interface{}, *ign.ErrMsg) {
+	groupID, ok := mux.Vars(r)["group"]
+	if !ok {
+		return nil, ign.NewErrorMessage(ign.ErrorIDNotInRequest)
+	}
+
+	address, em := SimServImpl.GetSimulationWebsocketAddress(r.Context(), tx, user, groupID)
+	if em != nil {
+		return nil, em
+	}
+
+	return address, nil
+}
+
 // SimulationLogGateway returns a URL and a boolean that represent the URL to the proper logs and if it's a file or not.
 // If the simulation is running, it will return an URL for live logs and the boolean will be false.
 // If the simulation is stopped, it will return an URL for downloadable logs and the boolean will be true.

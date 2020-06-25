@@ -248,3 +248,9 @@ func GetAggregatedSubTSimulationValues(tx *gorm.DB, simDep *SimulationDeployment
 
 	return &values, nil
 }
+
+// WebsocketAddressResponse represents a response from the get websocket's server address route.
+type WebsocketAddressResponse struct {
+	Token string `json:"authorization_token"`
+	Address string `json:"websocket_address"`
+}

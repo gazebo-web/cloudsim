@@ -27,7 +27,7 @@ func (f *K8Factory) NewK8(ctx context.Context) kubernetes.Interface {
 	if f.isGoTest {
 		return &MockableClientset{Interface: fake.NewSimpleClientset()}
 	} else if f.connectToCloudServices {
-		kcli, err := GetKubernetesClient()
+		kcli, err := GetKubernetesClient(nil)
 		if err != nil {
 			logger(ctx).Critical("Critical error trying to create a client to kubernetes", err)
 			log.Fatalf("%+v\n", err)

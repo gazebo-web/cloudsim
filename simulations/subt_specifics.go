@@ -21,9 +21,11 @@ import (
 	"gitlab.com/ignitionrobotics/web/ign-go"
 	"gopkg.in/yaml.v2"
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/api/extensions/v1beta1"
 	networkingv1 "k8s.io/api/networking/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/client-go/kubernetes"
 	podutil "k8s.io/kubernetes/pkg/api/v1/pod"
 	"k8s.io/kubernetes/pkg/client/conditions"
@@ -65,6 +67,13 @@ const (
 	// A predefined const to refer to the SubT Platform type.
 	// This will be used to provision the Nodes (Nvidia, CPU, etc)
 	platformSubT string = "subt"
+
+	// SubT resource type identifiers
+	// These identifiers are used to tag AWS and Kubernetes resources related to each type of entity
+	subtTypeGazebo        = "gzserver"
+	subtTypeCommsBridge   = "comms-bridge"
+	subtTypeFieldComputer = "field-computer"
+
 	// A predefined const to refer to the SubT Application type
 	// This will be used to know which Pods and services launch.
 	applicationSubT           string = "subt"
@@ -138,6 +147,15 @@ type subTSpecificsConfig struct {
 	// FuelURL contains the URL to a Fuel environment. This base URL is used to generate
 	// URLs for users to access specific assets within Fuel.
 	FuelURL string `env:"IGN_FUEL_URL" envDefault:"https://fuel.ignitionrobotics.org/1.0"`
+	// IngressName is the name of the Kubernetes Ingress used to route client requests from the Internet to
+	// different internal services.
+	// This configuration is required to enable websocket connections to simulations.
+	IngressName string `env:"SUBT_INGRESS_NAME"`
+	// WebsocketHost contains the address of the host used to route incoming websocket connections.
+	// It is used to select a specific rule to modify in an ingress.
+	// The ingress resource referenced by the `IngressName` configuration must contain at least one rule with a host
+	// value matching this configuration.
+	WebsocketHost string `env:"SUBT_WEBSOCKET_HOST"`
 }
 
 // SubTApplication represents an application used to tailor SubT simulation requests.
@@ -225,6 +243,20 @@ func (sa *SubTApplication) getFieldComputerPodName(podNamePrefix string, robotId
 
 func (sa *SubTApplication) getCopyPodName(targetPodName string) string {
 	return fmt.Sprintf("%s-copy", targetPodName)
+}
+
+// getGazeboPodName returns the name of the Gazebo pod for a simulation.
+func (sa *SubTApplication) getWebsocketServiceName(podNamePrefix string) string {
+	return fmt.Sprintf("%s-websocket", podNamePrefix)
+}
+
+////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////
+
+// getGazeboPodName returns the name of the Gazebo pod for a simulation.
+func (sa *SubTApplication) getSimulationIngressPath(groupID string) string {
+	return fmt.Sprintf("/simulations/%s", groupID)
 }
 
 ////////////////////////////////////////////////////////////////////////////
@@ -433,6 +465,14 @@ func (sa *SubTApplication) spawnChildSimulationDeployments(ctx context.Context, 
 				childIdx++
 				childSim := dep.Clone()
 				childSim.GroupID = sptr(fmt.Sprintf("%s-c-%d", *dep.GroupID, childIdx))
+
+				// Set new auth token to authorize external services
+				token, err := generateToken(nil)
+				if err != nil {
+					return nil, ign.NewErrorMessageWithBase(ign.ErrorUnexpected, err)
+				}
+				childSim.AuthorizationToken = &token
+
 				// Create a clone of the parent's extra info and set it to the child sim.
 				newExtra := *extra
 				newExtra.WorldIndex = &worldIdx
@@ -638,6 +678,25 @@ func (sa *SubTApplication) getGazeboWorldWarmupTopic(ctx context.Context, tx *go
 ////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////
 
+// getSimulationWebsocketAddress returns a simulation's websocket server address as well a the authorization token.
+func (sa *SubTApplication) getSimulationWebsocketAddress(ctx context.Context, s *Service, tx *gorm.DB,
+	dep *SimulationDeployment) (interface{}, *ign.ErrMsg) {
+
+	// The simulation must be running to be able to connect to the websocket server
+	if !dep.IsRunning() {
+		return nil, ign.NewErrorMessage(ign.ErrorInvalidSimulationStatus)
+	}
+
+	return &WebsocketAddressResponse{
+		Token:   *dep.AuthorizationToken,
+		Address: fmt.Sprintf("%s/simulations/%s", sa.cfg.WebsocketHost, *dep.GroupID),
+	}, nil
+}
+
+////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////
+
 // getSimulationLogsForDownload returns a link to the GZ logs that were saved in S3.
 func (sa *SubTApplication) getSimulationLogsForDownload(ctx context.Context, tx *gorm.DB,
 	dep *SimulationDeployment, robotName *string) (*string, *ign.ErrMsg) {
@@ -790,6 +849,135 @@ func (sa *SubTApplication) getSimulationStatistics(ctx context.Context, s *Servi
 ////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////
 
+// getIngress retrieves an Ingress from the cluster.
+func getIngress(ctx context.Context, kc kubernetes.Interface, namespace string,
+	ingressName string) (*v1beta1.Ingress, error) {
+	return kc.ExtensionsV1beta1().Ingresses(namespace).Get(ingressName, metav1.GetOptions{})
+}
+
+// updateIngress updates an Ingress resource in the cluster.
+func updateIngress(ctx context.Context, kc kubernetes.Interface, namespace string,
+	ingress *v1beta1.Ingress) (*v1beta1.Ingress, error) {
+
+	ingress, err := kc.ExtensionsV1beta1().Ingresses(namespace).Update(ingress)
+	if err != nil {
+		errMsg := "failed to update ingress"
+		logger(ctx).Error(errMsg, err)
+		return nil, errors.New(errMsg)
+	}
+
+	return ingress, nil
+}
+
+// getIngressRule gets a host's rule from an Ingress resource.
+// The `host` parameter is used to select the rule from which to remove paths.
+// If there is more than one rule for a host, only the first rule will be returned.
+// If `host` is nil, the first rule with an empty host field will be returned.
+func getIngressRule(ctx context.Context, ingress *v1beta1.Ingress,
+	host *string) (*v1beta1.HTTPIngressRuleValue, error) {
+	// Set host default value if nil
+	noHost := sptr("")
+	if host == nil {
+		host = noHost
+	}
+
+	// Find the target rule
+	var rule *v1beta1.HTTPIngressRuleValue
+	for _, ingressRule := range ingress.Spec.Rules {
+		if ingressRule.Host == *host {
+			rule = ingressRule.IngressRuleValue.HTTP
+			return rule, nil
+		}
+	}
+	// If no rule was found return an error
+	if host == noHost {
+		host = sptr("nil")
+	}
+	return nil, fmt.Errorf("ingress rule for host %s was not found", *host)
+}
+
+// upsertIngressRule inserts or updates a set of paths into an Ingress rule.
+// The `host` parameter is used to select the rule from which to remove paths. If there is more than one rule for a
+// host, only the first rule will be modified. If `host` is nil, a rule with no host will be modified.
+func upsertIngressRule(ctx context.Context, kc kubernetes.Interface, namespace string, ingressName string,
+	host *string, paths ...*v1beta1.HTTPIngressPath) (*v1beta1.Ingress, error) {
+
+	// Get the ingress from the cluster
+	ingress, err := getIngress(ctx, kc, namespace, ingressName)
+	if err != nil {
+		return nil, err
+	}
+
+	// Extract the host rule from the ingress resource
+	rule, err := getIngressRule(ctx, ingress, host)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, path := range paths {
+		// Try to find and update the path
+		updated := false
+		for i, rulePath := range rule.Paths {
+			if rulePath.Path == path.Path {
+				updated = true
+				if path != nil {
+					rule.Paths[i] = *path
+				}
+				break
+			}
+		}
+		// No path was updated, create a new one
+		if !updated && path != nil {
+			rule.Paths = append(rule.Paths, *path)
+		}
+	}
+
+	// Apply updated rule
+	return updateIngress(ctx, kc, namespace, ingress)
+}
+
+// removeIngressRule removes a set of paths from an Ingress rule.
+// Note that the Kubernetes spec requires ingress rules to have at least one path. Attempting to remove a rule's only
+// path will fail.
+// The `host` parameter is used to select the rule from which to remove paths. If there is more than one rule for a
+// host, only the first rule will be modified. If `host` is nil, a rule with no host will be modified.
+func removeIngressRule(ctx context.Context, kc kubernetes.Interface, namespace string,
+	ingressName string, host *string, paths ...string) (*v1beta1.Ingress, error) {
+
+	// Get the ingress from the cluster
+	ingress, err := getIngress(ctx, kc, namespace, ingressName)
+	if err != nil {
+		return nil, err
+	}
+
+	// Extract the host rule from the ingress resource
+	rule, err := getIngressRule(ctx, ingress, host)
+	if err != nil {
+		return nil, err
+	}
+
+	// Remove paths
+	for _, path := range paths {
+		for i, rulePath := range rule.Paths {
+			if rulePath.Path == path {
+				pathsLen := len(rule.Paths)
+				if pathsLen > 1 {
+					rule.Paths[i] = rule.Paths[pathsLen-1]
+				}
+				rule.Paths = rule.Paths[:pathsLen-1]
+				break
+			}
+		}
+	}
+
+	// Apply updated rule
+	return updateIngress(ctx, kc, namespace, ingress)
+}
+
+////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////
+
 // launchApplication is a SubT specific function responsible of launching all the
 // pods and services needed for a SubT simulation.
 func (sa *SubTApplication) launchApplication(ctx context.Context, s *Service, tx *gorm.DB,
@@ -801,13 +989,13 @@ func (sa *SubTApplication) launchApplication(ctx context.Context, s *Service, tx
 	baseLabels[subtTagKey] = "true"
 
 	gzserverLabels := cloneStringsMap(baseLabels)
-	gzserverLabels["gzserver"] = "true"
+	gzserverLabels[subtTypeGazebo] = "true"
 
 	bridgeLabels := cloneStringsMap(baseLabels)
-	bridgeLabels["comms-bridge"] = "true"
+	bridgeLabels[subtTypeCommsBridge] = "true"
 
 	fcLabels := cloneStringsMap(baseLabels)
-	fcLabels["field-computer"] = "true"
+	fcLabels[subtTypeFieldComputer] = "true"
 
 	// Parse the SubT extra info required for this Simulation
 	extra, err := ReadExtraInfoSubT(dep)
@@ -873,6 +1061,13 @@ func (sa *SubTApplication) launchApplication(ctx context.Context, s *Service, tx
 		return nil, ign.NewErrorMessageWithBase(ign.ErrorUnexpected, errors.New("World name not found"))
 	}
 
+	// Set the authorization token if it exists
+	// TODO: Confirm parameter name
+	if dep.AuthorizationToken != nil {
+		gzRunCommand = append(gzRunCommand, fmt.Sprintf("websocketAuthKey:=%s", *dep.AuthorizationToken))
+		gzRunCommand = append(gzRunCommand, fmt.Sprintf("websocketAdminAuthKey:=%s", *dep.AuthorizationToken))
+	}
+
 	// Pass Robot names and types to the gzserver Pod.
 	// robotName1:=xxx robotConfig1:=yyy robotName2:=xxx robotConfig2:=yyy (Note the numbers).
 	for i, robot := range extra.Robots {
@@ -925,7 +1120,7 @@ func (sa *SubTApplication) launchApplication(ctx context.Context, s *Service, tx
 			NodeSelector: map[string]string{
 				// Force this pod to run on the same node as the target pod
 				nodeLabelKeyGroupID:          *dep.GroupID,
-				nodeLabelKeyCloudsimNodeType: "gazebo",
+				nodeLabelKeyCloudsimNodeType: subtTypeGazebo,
 			},
 			Containers: []corev1.Container{
 				{
@@ -1058,13 +1253,13 @@ func (sa *SubTApplication) launchApplication(ctx context.Context, s *Service, tx
 	}
 
 	// Wait until the gazebo server pod has an IP address before continuing.
-	// We need to get its IP address, to share it with the other pods.
+	// We need to get its IP address to share it with the other pods.
 	// This call will block.
 	ptrIP, err := waitForPodIPAndGetIP(ctx, s, gzserverLabels)
 	if err != nil {
 		return nil, ign.NewErrorMessageWithBase(ign.ErrorK8Create, err)
 	}
-	gzserverIP := (*ptrIP)[gazeboPodName]
+	gzserverPodIP := (*ptrIP)[gazeboPodName]
 
 	// If S3 log backup is enabled then add an additional copy pod to upload
 	// logs at the end of the simulation.
@@ -1082,6 +1277,20 @@ func (sa *SubTApplication) launchApplication(ctx context.Context, s *Service, tx
 		)
 		// Launch the copy pod
 		_, err := s.clientset.CoreV1().Pods(corev1.NamespaceDefault).Create(copyPod)
+		if err != nil {
+			return nil, ign.NewErrorMessageWithBase(ign.ErrorK8Create, err)
+		}
+	}
+
+	// Expose the Gazebo websocket server if an auth key is available
+	if dep.AuthorizationToken != nil && len(sa.cfg.IngressName) > 0 {
+		// Create and launch a service to expose the websocket server to the cluster
+		service, err := sa.createWebsocketService(ctx, s.clientset, dep, podNamePrefix, baseLabels, gzserverLabels)
+		if err != nil {
+			return nil, ign.NewErrorMessageWithBase(ign.ErrorK8Create, err)
+		}
+		// Create an ingress rule to allow traffic to the websocket service from the Internet
+		_, err = sa.createWebsocketIngress(ctx, s.clientset, dep, service)
 		if err != nil {
 			return nil, ign.NewErrorMessageWithBase(ign.ErrorK8Create, err)
 		}
@@ -1129,7 +1338,7 @@ func (sa *SubTApplication) launchApplication(ctx context.Context, s *Service, tx
 			dep,
 			bridgePodName,
 			specificBridgeLabels,
-			gzserverIP,
+			gzserverPodIP,
 			hostPath,
 			"robot-logs",
 			robotNumber+1,
@@ -1238,7 +1447,7 @@ func subtPodRunningAndReady(ctx context.Context, pod *corev1.Pod) (bool, error) 
 	case corev1.PodRunning:
 		return podutil.IsPodReady(pod), nil
 	case corev1.PodSucceeded:
-		_, isFC := pod.Labels["field-computer"]
+		_, isFC := pod.Labels[subtTypeFieldComputer]
 		if isFC {
 			logger(ctx).Warning(fmt.Sprintf("FC pod %s status is Succeeded. Considering it Ready.", pod.Name))
 		}
@@ -1328,10 +1537,73 @@ func (sa *SubTApplication) addSharedVolumeConfigurationContainer(pod *corev1.Pod
 	}
 }
 
+// createWebsocketService creates a Kubernetes Service that exposes the websocket server to the cluster.
+// This server can then be exposed to the Internet by using a load balancer.
+func (sa *SubTApplication) createWebsocketService(ctx context.Context, kc kubernetes.Interface,
+	dep *SimulationDeployment, podNamePrefix string, serviceLabels map[string]string,
+	targetLabels map[string]string) (*corev1.Service, error) {
+
+	// Prepare the service
+	service := &corev1.Service{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:   sa.getWebsocketServiceName(podNamePrefix),
+			Labels: serviceLabels,
+		},
+		Spec: corev1.ServiceSpec{
+			Type:     "ClusterIP",
+			Selector: targetLabels,
+			Ports: []corev1.ServicePort{
+				{
+					Name: "websockets",
+					Port: 9002,
+				},
+			},
+		},
+	}
+
+	// Launch the service
+	_, err := kc.CoreV1().Services(corev1.NamespaceDefault).Create(service)
+	if err != nil {
+		return nil, err
+	}
+
+	return service, nil
+}
+
+func (sa *SubTApplication) createWebsocketIngress(ctx context.Context, kc kubernetes.Interface,
+	dep *SimulationDeployment, service *corev1.Service) (*v1beta1.Ingress, error) {
+
+	// Prepare the rule path
+	rulePath := &v1beta1.HTTPIngressPath{
+		Path: sa.getSimulationIngressPath(*dep.GroupID),
+		Backend: v1beta1.IngressBackend{
+			ServiceName: service.Name,
+			ServicePort: intstr.IntOrString{
+				Type:   intstr.Int,
+				IntVal: service.Spec.Ports[0].Port,
+			},
+		},
+	}
+
+	var host *string
+	if len(sa.cfg.WebsocketHost) > 0 {
+		host = &sa.cfg.WebsocketHost
+	}
+
+	return upsertIngressRule(
+		ctx,
+		kc,
+		corev1.NamespaceDefault,
+		sa.cfg.IngressName,
+		host,
+		rulePath,
+	)
+}
+
 // createCommsBridgePod creates a basic comms-bridge pod. Callers should then
 // change the Pod's Image, Command and Args fields.
 func (sa *SubTApplication) createCommsBridgePod(ctx context.Context, dep *SimulationDeployment,
-	podName string, labels map[string]string, gzserverIP string, hostPath string, logDirectory string,
+	podName string, labels map[string]string, gzserverPodIP string, hostPath string, logDirectory string,
 	robotNumber int, robot SubTRobot, bridgeImage string, worldNameParam string) *corev1.Pod {
 
 	logMountPath := path.Join(hostPath, logDirectory)
@@ -1347,7 +1619,7 @@ func (sa *SubTApplication) createCommsBridgePod(ctx context.Context, dep *Simula
 			NodeSelector: map[string]string{
 				// Needed to force this pod to run on specific nodes
 				nodeLabelKeyGroupID:          *dep.GroupID,
-				nodeLabelKeyCloudsimNodeType: "field-computer",
+				nodeLabelKeyCloudsimNodeType: subtTypeFieldComputer,
 				nodeLabelKeySubTRobotName:    strings.ToLower(robot.Name),
 			},
 			Containers: []corev1.Container{
@@ -1385,7 +1657,7 @@ func (sa *SubTApplication) createCommsBridgePod(ctx context.Context, dep *Simula
 						{
 							// IGN_RELAY should contain the IP of the publisher (the gzserver)
 							Name:  "IGN_RELAY",
-							Value: gzserverIP,
+							Value: gzserverPodIP,
 						},
 						{
 							Name:  "IGN_VERBOSE",
@@ -1463,7 +1735,7 @@ func (sa *SubTApplication) createFieldComputerPod(ctx context.Context, dep *Simu
 			NodeSelector: map[string]string{
 				// Needed to force this pod to run on specific nodes
 				nodeLabelKeyGroupID:          groupID,
-				nodeLabelKeyCloudsimNodeType: "field-computer",
+				nodeLabelKeyCloudsimNodeType: subtTypeFieldComputer,
 				nodeLabelKeySubTRobotName:    strings.ToLower(robot.Name),
 			},
 			Containers: []corev1.Container{
@@ -1538,6 +1810,17 @@ func (sa *SubTApplication) createNetworkPolicy(ctx context.Context, npName strin
 							IPBlock: &networkingv1.IPBlock{
 								// We always allow traffic coming from the Cloudsim host.
 								CIDR: sa.cfg.IgnIP + "/32",
+							},
+						},
+					},
+				},
+				// Allow traffic to websocket server
+				{
+					Ports: []networkingv1.NetworkPolicyPort{
+						{
+							Port: &intstr.IntOrString{
+								Type:   intstr.Int,
+								IntVal: 9002,
 							},
 						},
 					},
@@ -1800,7 +2083,7 @@ func (sa *SubTApplication) processSimulationResults(ctx context.Context, s *Serv
 
 func isTeamSolutionPod(pod corev1.Pod) bool {
 	// field-computer pods (ie. team solutions) have the "field-computer" label set to "true"
-	flag, ok := pod.Labels["field-computer"]
+	flag, ok := pod.Labels[subtTypeFieldComputer]
 	return ok && (flag == "true")
 }
 
@@ -1838,13 +2121,65 @@ func (sa *SubTApplication) deleteApplication(ctx context.Context, s *Service, tx
 			// Otherwise, if the failed Pod is the gzserver or the comms-bridge we mark
 			// the simulation as failed, as this is an unexpected scenario.
 			em := ign.NewErrorMessageWithBase(ign.ErrorK8Delete, err)
-			logger(ctx).Error("Error while invoking k8 Delete Pod. Make sure a sysadmin deletes the Pod manually", em)
+			logger(ctx).Error("Error while invoking k8 Delete Pod. Make sure a sysadmin deletes the Pod manually.", em)
 			if !isTeamSolutionPod(p) {
 				return em
 			}
 		}
 	}
-	logger(ctx).Info("Successfully requested to delete pods and services for groupID: " + groupID)
+	logger(ctx).Info("Successfully deleted pods for groupID: " + groupID)
+
+	// Find and delete all Services associated to the groupID.
+	serviceInterface := s.clientset.CoreV1().Services(corev1.NamespaceDefault)
+	services, err := serviceInterface.List(metav1.ListOptions{LabelSelector: groupIDLabel})
+	if err != nil || len(services.Items) == 0 {
+		// Services for this groupID not found. Continue or fail?
+		logger(ctx).Warning("Services not found for the groupID: "+groupID, err)
+		if !sa.cfg.AllowNotFoundDuringShutdown {
+			err = errors.Wrap(err, "Services not found for the groupID: "+groupID)
+			return ign.NewErrorMessageWithBase(ign.ErrorSimGroupNotFound, err)
+		}
+	}
+	for _, service := range services.Items {
+		err = serviceInterface.Delete(service.Name, &metav1.DeleteOptions{})
+		if err != nil {
+			// There was an unexpected error deleting the Service and the simulation will be marked as failed, as this
+			// is an unexpected scenario.
+			em := ign.NewErrorMessageWithBase(ign.ErrorK8Delete, err)
+			errMsg := "Error while invoking k8 Delete Service. Make sure a sysadmin deletes the Service manually."
+			logger(ctx).Error(errMsg, em)
+			return em
+		}
+	}
+	logger(ctx).Info("Successfully deleted services for groupID: " + groupID)
+
+	// Delete Ingress rules associated to the groupID.
+	if len(sa.cfg.IngressName) > 0 {
+		var host *string
+		if len(sa.cfg.WebsocketHost) > 0 {
+			host = &sa.cfg.WebsocketHost
+		}
+
+		_, err := removeIngressRule(
+			ctx,
+			s.clientset,
+			corev1.NamespaceDefault,
+			sa.cfg.IngressName,
+			host,
+			sa.getSimulationIngressPath(groupID),
+		)
+
+		if err != nil {
+			// There was an unexpected error deleting the Ingress rule and the simulation will be marked as failed,
+			// as this is an unexpected scenario.
+			em := ign.NewErrorMessageWithBase(ign.ErrorK8Delete, err)
+			errMsg := "Error while removing k8 Ingress rule. Make sure a sysadmin deletes the ingress rule manually."
+			logger(ctx).Error(errMsg, em)
+			return em
+		}
+
+		logger(ctx).Info("Successfully deleted ingress rules for groupID: " + groupID)
+	}
 
 	// Find and delete all the network policies associated to the groupID.
 	// Dev note: it is important to remove the network policies AFTER the gzlogs are
@@ -1884,9 +2219,9 @@ func (sa *SubTApplication) setupEC2InstanceSpecifics(ctx context.Context, s *Ec2
 	// Create some Tags that all instances will share
 	subTTag := ec2.Tag{Key: aws.String(subtTagKey), Value: aws.String("true")}
 	subTTag2 := ec2.Tag{Key: aws.String("cloudsim-application"), Value: aws.String(subtTagKey)}
-	SubTTag3 := ec2.Tag{Key: aws.String("cloudsim-simulation-worker"), Value: aws.String(s.awsCfg.NamePrefix)}
-	appendTags(template, &subTTag, &subTTag2, &SubTTag3)
-
+	subTTag3 := ec2.Tag{Key: aws.String("cloudsim-simulation-worker"), Value: aws.String(s.awsCfg.NamePrefix)}
+	subTTag4 := ec2.Tag{Key: aws.String(nodeLabelKeyCloudsimNodeType), Value: aws.String(subtTypeGazebo)}
+	appendTags(template, &subTTag, &subTTag2, &subTTag3, &subTTag4)
 	inputs := make([]*ec2.RunInstancesInput, 0)
 	gzInput, err := cloneRunInstancesInput(template)
 	if err != nil {
@@ -1919,11 +2254,15 @@ func (sa *SubTApplication) setupEC2InstanceSpecifics(ctx context.Context, s *Ec2
 
 		fcInput.ImageId = imageID
 		fcInput.InstanceType = aws.String("g3.4xlarge")
+		// Replace the node type tag
+		replaceTag(fcInput, &ec2.Tag{
+			Key:   sptr(nodeLabelKeyCloudsimNodeType),
+			Value: sptr(subtTypeFieldComputer),
+		})
 		userData, _ := s.buildUserDataString(*dep.GroupID,
-			labelAndValue(nodeLabelKeyCloudsimNodeType, "field-computer"),
+			labelAndValue(nodeLabelKeyCloudsimNodeType, subtTypeFieldComputer),
 			labelAndValue(nodeLabelKeySubTRobotName, strings.ToLower(r.Name)),
 		)
-		// logger(ctx).Debug("user data to send:\n" + plain)
 		fcInput.UserData = aws.String(userData)
 		replaceInstanceNameTag(fcInput, s.getInstanceNameFor(*dep.GroupID, "fc-"+r.Name))
 		inputs = append(inputs, fcInput)
@@ -1987,7 +2326,7 @@ func (sa *SubTApplication) uploadSimulationLogs(ctx context.Context, s *Service,
 	// Upload Gazebo logs
 	opts := MakeListOptions(
 		getPodLabelSelectorForSearches(groupID),
-		labelAndValue("gzserver", "true"),
+		labelAndValue(subtTypeGazebo, "true"),
 	)
 	pods, err := s.clientset.CoreV1().Pods(corev1.NamespaceDefault).List(opts)
 	if err != nil {
@@ -2015,7 +2354,7 @@ func (sa *SubTApplication) uploadSimulationLogs(ctx context.Context, s *Service,
 	//Upload ROS logs
 	opts = MakeListOptions(
 		getPodLabelSelectorForSearches(groupID),
-		labelAndValue("comms-bridge", "true"),
+		labelAndValue(subtTypeCommsBridge, "true"),
 	)
 	pods, err = s.clientset.CoreV1().Pods(corev1.NamespaceDefault).List(opts)
 	if err != nil {

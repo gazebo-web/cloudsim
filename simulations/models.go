@@ -2,6 +2,7 @@ package simulations
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/jinzhu/gorm"
 	"gitlab.com/ignitionrobotics/web/ign-go"
 	"strconv"
@@ -73,6 +74,27 @@ type SimulationDeployment struct {
 	// Processed indicates that this simulation has been post-processed.
 	// Used to avoid post-processing simulations more than once.
 	Processed bool `json:"-"`
+	// AuthorizationToken contains a security token used to let external services authorize requests related to this
+	// simulation.
+	// This token is currently used to establish connections with the simulation's websocket server.
+	AuthorizationToken *string `json:"-"`
+}
+
+// NewSimulationDeployment creates and initializes a simulation deployment struct.
+// TODO: Receive a DTO struct as a parameter
+func NewSimulationDeployment() (*SimulationDeployment, error) {
+	// Generate an auth token
+	authToken, err := generateToken(nil)
+	if err != nil {
+		return nil, fmt.Errorf("failed to generate authorization token: %s", err.Error())
+	}
+
+	// Initialize the deployment
+	dep := &SimulationDeployment{
+		AuthorizationToken: &authToken,
+	}
+
+	return dep, nil
 }
 
 // GetSimulationDeployment gets a simulation deployment record by its GroupID

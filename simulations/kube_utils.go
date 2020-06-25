@@ -50,8 +50,8 @@ func GetKubernetesConfig(kubeconfig *string) (*restclient.Config, error) {
 // Note that this kube client assumes there is a kubernetes configuration in the
 // server's ~/.kube/config file. That config is used to connect to the kubernetes
 // master.
-func GetKubernetesClient() (*kubernetes.Clientset, error) {
-	config, err := GetKubernetesConfig(nil)
+func GetKubernetesClient(kubeconfig *string) (*kubernetes.Clientset, error) {
+	config, err := GetKubernetesConfig(kubeconfig)
 	if err != nil {
 		return nil, err
 	}
