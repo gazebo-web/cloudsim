@@ -1,15 +1,17 @@
 package simulations
 
 import (
-	"gitlab.com/ignitionrobotics/web/ign-go"
-	"gitlab.com/ignitionrobotics/web/cloudsim/globals"
 	"context"
+	"crypto/rand"
 	"encoding/json"
 	"fmt"
 	"github.com/go-playground/form"
+	"gitlab.com/ignitionrobotics/web/cloudsim/globals"
+	"gitlab.com/ignitionrobotics/web/ign-go"
 	"gopkg.in/go-playground/validator.v9"
 	"net"
 	"net/http"
+	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -200,4 +202,41 @@ func Max(x, y int) int {
 		return x
 	}
 	return y
+}
+
+// generateToken returns a random hexadecimal token of the specified length.
+// `size` is the length of the token in bytes. Defaults to 32 bytes.
+func generateToken(size *int) (string, error) {
+	// Set size default value
+	if size == nil {
+		size = intptr(32)
+	}
+
+	b := make([]byte, *size)
+	if _, err := rand.Read(b); err != nil {
+		return "", err
+	}
+
+	return fmt.Sprintf("%x", b), nil
+}
+
+// IsWebsocketAddress checks that the given address is a valid websocket address for cloudsim.
+// If a groupID is provided, it will check that the given address includes a group ID.
+func IsWebsocketAddress(addr string, groupID *string) bool {
+	// TODO: This address may change in the future, and it would be best to have this be something configurable instead of something static.
+	if !strings.Contains(addr, os.Getenv("SUBT_WEBSOCKET_HOST")) {
+		return false
+	}
+
+	if !strings.Contains(addr, "/simulations/") {
+		return false
+	}
+
+	if groupID != nil {
+		if !strings.Contains(addr, *groupID) {
+			return false
+		}
+	}
+
+	return true
 }

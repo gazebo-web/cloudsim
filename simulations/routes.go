@@ -129,6 +129,7 @@ var Routes ign.Routes = ign.Routes{
 			},
 		},
 	},
+
 	// Launch a simulation by the given GroupID that is currently being held by Cloudsim.
 	// This route will launch all child simulations for a multisim.
 	ign.Route{
@@ -205,7 +206,7 @@ var Routes ign.Routes = ign.Routes{
 				Handlers: ign.FormatHandlers{
 					ign.FormatHandler{
 						Extension: "",
-						Handler: ign.JSONResult(WithUser(SimulationLogGateway)),
+						Handler:   ign.JSONResult(WithUser(SimulationLogGateway)),
 					},
 				},
 			},
@@ -265,6 +266,35 @@ var Routes ign.Routes = ign.Routes{
 				Description: "Get a log file",
 				Handlers: ign.FormatHandlers{
 					ign.FormatHandler{Handler: ign.JSONResultNoTx(WithUser(SimulationLogFileDownload))},
+				},
+			},
+		},
+	},
+
+	// Route to get the address of a simulation's websocket server and authorization token
+	ign.Route{
+		Name:        "Gets a simulation's websocket server address",
+		Description: "Gets a simulation's websocket server address",
+		URI:         "/simulations/{group}/websocket",
+		Headers:     ign.AuthHeadersRequired,
+		Methods:     ign.Methods{},
+		SecureMethods: ign.SecureMethods{
+			// swagger:route GET /simulations/{group}/websocket simulations websocket
+			//
+			// Gets a simulation's websocket server address and authorization token
+			//
+			// Gets a simulation's websocket server address and authorization token
+			//
+			//   Schemes: https
+			//
+			//   Responses:
+			//     200: json
+			//     503: Error
+			ign.Method{
+				Type:        "GET",
+				Description: "Get a simulation's websocket server address and authorization token",
+				Handlers: ign.FormatHandlers{
+					ign.FormatHandler{Handler: ign.JSONResultNoTx(WithUser(SimulationWebsocketAddress))},
 				},
 			},
 		},
