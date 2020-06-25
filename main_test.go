@@ -196,8 +196,8 @@ func createDBTablesAndData(ctx context.Context) {
 		},
 		{
 			Circuit:            sptr("Urban Practice 3"),
-			Worlds:             sptr("worldName:=urban_circuit"),
-			Times:              sptr("1"),
+			Worlds:             sptr("worldName:=urban_circuit, worldName:=urban_circuit"),
+			Times:              sptr("3, 3"),
 			Image:              sptr("infrastructureascode/aws-cli:latest"),
 			BridgeImage:        sptr("infrastructureascode/aws-cli:latest"),
 			WorldStatsTopics:   sptr("/world/default/stat"),

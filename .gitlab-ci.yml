@@ -4,6 +4,7 @@ variables:
   PKG_NAME: gitlab.com/ignitionrobotics/web/cloudsim
   MYSQL_DATABASE: "cloudsim_test"
   MYSQL_ROOT_PASSWORD: "root"
+  KUBERNETES_POLL_TIMEOUT: 540
 
 ##########################################################
 # Aliases
@@ -29,6 +30,15 @@ variables:
 .setup_db: &setup_db
   - mysql -u root -proot -h mysql -e "CREATE DATABASE usersdb_test"
 
+.deploy_kubernetes: &deploy_kubernetes
+  - export CONTAINER_IMAGE="$CI_REGISTRY_IMAGE:$CI_COMMIT_SHA"
+  - envsubst < "./deployments/00-namespace.yaml" > "00-namespace.yaml"
+  - envsubst < "./deployments/01-service.yaml" > "01-service.yaml"
+  - envsubst < "./deployments/02-deployment.yaml" > "02-deployment.yaml"
+  - kubectl apply -f 00-namespace.yaml
+  - kubectl apply -f 01-service.yaml
+  - kubectl apply -f 02-deployment.yaml
+
 ##########################################################
 # Cache configuration
 
@@ -36,7 +46,6 @@ cache:
   untracked: true
   key: ${CI_COMMIT_REF_SLUG}
   paths:
-    - vendor/
     - /builds/ignitionrobotics/web/cloudsim/vendor/
     - /go/src/gitlab.com/ignitionrobotics/web/cloudsim/vendor/
 
@@ -44,19 +53,17 @@ cache:
 # Stages
 
 stages:
-  - installing
-  - formatting
-  - linting
-  - testing
-  - building
-  - packaging
-  - deploying
+  - install
+  - format
+  - test
+  - package
+  - deploy
 
 ##########################################################
 # Installing stage
 
 proto:
-  stage: installing
+  stage: install
   before_script:
     - cd ./ign-transport/proto/
   script:
@@ -69,12 +76,11 @@ proto:
     - gitlab-org
 
 dep:
-  stage: installing
+  stage: install
   before_script:
     - *setup_project
   script:
     - *dep_ensure
-  after_script:
     - *dep_ensure_post
   tags:
     - gitlab-org
@@ -82,8 +88,8 @@ dep:
 ##########################################################
 # Formatting stage
 
-format:
-  stage: formatting
+fmt:
+  stage: format
   before_script:
     - *setup_project
     - *setup_git_credentials
@@ -92,11 +98,8 @@ format:
   tags:
     - gitlab-org
 
-##########################################################
-# Linting stage
-
 lint:
-  stage: linting
+  stage: format
   before_script:
     - *setup_project
     - *setup_git_credentials
@@ -109,7 +112,7 @@ lint:
 # Testing stage
 
 vet:
-  stage: testing
+  stage: test
   dependencies:
     - proto
   before_script:
@@ -119,8 +122,6 @@ vet:
     - *setup_db
   script:
     - go vet $(go list ./... | grep -v /vendor/)
-  after_script:
-    - *dep_ensure_post
   services:
     - mysql:5.7
   environment:
@@ -129,7 +130,7 @@ vet:
     - gitlab-org
 
 test:
-  stage: testing
+  stage: test
   dependencies:
     - proto
   before_script:
@@ -139,8 +140,6 @@ test:
     - *setup_db
   script:
     - go test $(go list ./... | grep -v /vendor/)
-  after_script:
-    - *dep_ensure_post
   services:
     - mysql:5.7
   environment:
@@ -149,7 +148,7 @@ test:
     - gitlab-org
 
 race:
-  stage: testing
+  stage: test
   dependencies:
     - proto
   before_script:
@@ -159,8 +158,6 @@ race:
     - *setup_db
   script:
     - go test -race $(go list ./... | grep -v /vendor/)
-  after_script:
-    - *dep_ensure_post
   services:
     - mysql:5.7
   environment:
@@ -170,7 +167,7 @@ race:
     - gitlab-org
 
 coverage:
-  stage: testing
+  stage: test
   dependencies:
     - proto
   before_script:
@@ -182,8 +179,6 @@ coverage:
     - go test -covermode=atomic -coverprofile=coverage.tx
     - go tool cover -func=coverage.tx
     - bash <(curl -s https://codecov.io/bash)
-  after_script:
-    - *dep_ensure_post
   services:
     - mysql:5.7
   environment:
@@ -192,191 +187,152 @@ coverage:
     - gitlab-org
 
 ##########################################################
-# Building stage
+# Packaging stage
 
-build:
-  stage: building
+docker:
+  stage: package
+  image: docker
+  services:
+    - docker:dind
+  except:
+    - develop
+    - master
   dependencies:
     - proto
+  variables:
+    DOCKER_HOST: tcp://docker:2375
+    DOCKER_DRIVER: overlay2
   before_script:
-    - *setup_project
-    - *setup_git_credentials
-    - *dep_ensure
+    - docker version
+    - docker info
+    - "docker login -u gitlab-ci-token -p $CI_BUILD_TOKEN $CI_REGISTRY"
   script:
-    - go build
-  artifacts:
-    paths:
-      - ${GOPATH}/src/${PKG_NAME}/cloudsim
-    expire_in: 1 month
+    - "docker pull $CI_REGISTRY_IMAGE:next || true"
+    - "docker build --cache-from $CI_REGISTRY_IMAGE:next --tag $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA ."
+    - "docker push $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA"
+  after_script:
+    - "docker logout ${CI_REGISTRY}"
   tags:
-    - gitlab-org
+    - gitlab-org-docker
 
+docker:next:
+  stage: package
+  image: docker
+  only:
+    - develop
+  services:
+    - docker:dind
+  dependencies:
+    - proto
+  variables:
+    DOCKER_HOST: tcp://docker:2375
+    DOCKER_DRIVER: overlay2
+  before_script:
+    - docker version
+    - docker info
+    - "docker login -u gitlab-ci-token -p $CI_BUILD_TOKEN $CI_REGISTRY"
+  script:
+    - "docker pull $CI_REGISTRY_IMAGE || true"
+    - "docker build --cache-from $CI_REGISTRY_IMAGE --tag $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA --tag $CI_REGISTRY_IMAGE:next ."
+    - "docker push $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA"
+    - "docker push $CI_REGISTRY_IMAGE:next"
+  after_script:
+    - "docker logout ${CI_REGISTRY}"
+  tags:
+    - gitlab-org-docker
 
-##########################################################
-# Packaging stage - WIP
-
-#package_default:
-#  stage: packaging
-#  image: docker
-#  services:
-#    - docker:dind
-#  except:
-#    - develop
-#    - master
-#  dependencies:
-#    - build
-#  variables:
-#    DOCKER_HOST: tcp://docker:2375
-#    DOCKER_DRIVER: overlay2
-#  before_script:
-#    - docker version
-#    - docker info
-#    - "docker login -u gitlab-ci-token -p $CI_BUILD_TOKEN $CI_REGISTRY"
-#  script:
-#    - "docker pull $CI_REGISTRY_IMAGE:next || true"
-#    - "docker build --cache-from $CI_REGISTRY_IMAGE:next --tag $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA ."
-#    - "docker push $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA"
-#
-#package_next:
-#  stage: packaging
-#  image: docker
-#  only:
-#    - develop
-#  services:
-#    - docker:dind
-#  dependencies:
-#    - build
-#  variables:
-#    DOCKER_HOST: tcp://docker:2375
-#    DOCKER_DRIVER: overlay2
-#  before_script:
-#    - docker version
-#    - docker info
-#    - "docker login -u gitlab-ci-token -p $CI_BUILD_TOKEN $CI_REGISTRY"
-#  script:
-#    - "docker pull $CI_REGISTRY_IMAGE || true"
-#    - "docker build --cache-from $CI_REGISTRY_IMAGE --tag $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA --tag $CI_REGISTRY_IMAGE:next ."
-#    - "docker push $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA"
-#    - "docker push $CI_REGISTRY_IMAGE:next"
-#
-#package_latest:
-#  stage: packaging
-#  image: docker
-#  only:
-#    - master
-#  services:
-#    - docker:dind
-#  dependencies:
-#    - build
-#  variables:
-#    DOCKER_HOST: tcp://docker:2375
-#    DOCKER_DRIVER: overlay2
-#  before_script:
-#    - docker version
-#    - docker info
-#    - "docker login -u gitlab-ci-token -p $CI_BUILD_TOKEN $CI_REGISTRY"
-#  script:
-#    - "docker pull $CI_REGISTRY_IMAGE || true"
-#    - "docker build --cache-from $CI_REGISTRY_IMAGE --tag $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA --tag $CI_REGISTRY_IMAGE:latest ."
-#    - "docker push $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA"
-#    - "docker push $CI_REGISTRY_IMAGE:latest"
-#  after_script:
-#    - "docker logout ${CI_REGISTRY}"
+docker:latest:
+  stage: package
+  image: docker
+  only:
+    - master
+  services:
+    - docker:dind
+  dependencies:
+    - proto
+  variables:
+    DOCKER_HOST: tcp://docker:2375
+    DOCKER_DRIVER: overlay2
+    DOCKER_TLS_CERTDIR: ""
+  before_script:
+    - docker version
+    - docker info
+    - "docker login -u gitlab-ci-token -p $CI_BUILD_TOKEN $CI_REGISTRY"
+  script:
+    - "docker pull $CI_REGISTRY_IMAGE || true"
+    - "docker build --cache-from $CI_REGISTRY_IMAGE --tag $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA --tag $CI_REGISTRY_IMAGE:latest ."
+    - "docker push $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA"
+    - "docker push $CI_REGISTRY_IMAGE:latest"
+  after_script:
+    - "docker logout ${CI_REGISTRY}"
+  tags:
+    - gitlab-org-docker
 
 ##########################################################
 # Deploying stage
 
 integration:
-  image: python:3.5
-  stage: deploying
+  image: registry.gitlab.com/ignitionrobotics/web/images/kubectl:latest
+  stage: deploy
   dependencies:
-    - proto
-    - build
-  before_script:
-    - apt-get update
-    - apt-get install -y zip python-pip
-    - pip install boto3==1.3.0
-    - cp -n /builds/ignitionrobotics/web/cloudsim/ign-transport/proto/ignition/msgs/*.go ./ign-transport/proto/ignition/msgs/
+    - docker
   script:
-    - zip -r artifact.zip * .ebextensions -x bin/\* -x vendor/\*
-    - python beanstalk_deploy.py
+    - *deploy_kubernetes
+  tags:
+    - testing
+    - kubernetes
   environment:
     name: integration
-    url: https://web-cloudsim-integration.us-east-1.elasticbeanstalk.com/1.0
   except:
     - master
     - develop
   when: manual
-  tags:
-    - gitlab-org
 
 integration_1:
-  image: python:3.5
-  stage: deploying
+  image: registry.gitlab.com/ignitionrobotics/web/images/kubectl:latest
+  stage: deploy
   dependencies:
-    - proto
-    - build
-  before_script:
-    - apt-get update
-    - apt-get install -y zip python-pip
-    - pip install boto3==1.3.0
-    - cp -n /builds/ignitionrobotics/web/cloudsim/ign-transport/proto/ignition/msgs/*.go ./ign-transport/proto/ignition/msgs/
+    - docker
   script:
-    - zip -r artifact.zip * .ebextensions -x bin/\* -x vendor/\*
-    - python beanstalk_deploy.py
+    - *deploy_kubernetes
+  tags:
+    - testing
+    - kubernetes
   environment:
     name: integration-1
-    url: https://web-cloudsim-integration-1.us-east-1.elasticbeanstalk.com/1.0
   except:
     - master
     - develop
   when: manual
-  tags:
-    - gitlab-org
 
 staging:
-  image: python:3.5
-  stage: deploying
+  image: registry.gitlab.com/ignitionrobotics/web/images/kubectl:latest
+  stage: deploy
   dependencies:
-    - proto
-    - build
-  before_script:
-    - apt-get update
-    - apt-get install -y zip python-pip
-    - pip install boto3==1.3.0
-    - cp -n /builds/ignitionrobotics/web/cloudsim/ign-transport/proto/ignition/msgs/*.go ./ign-transport/proto/ignition/msgs/
+    - docker:next
   script:
-    - zip -r artifact.zip * .ebextensions -x bin/\* -x vendor/\*
-    - python beanstalk_deploy.py
+    - *deploy_kubernetes
+  tags:
+    - testing
+    - kubernetes
   environment:
     name: staging
-    url: https://web-cloudsim-staging.us-east-1.elasticbeanstalk.com/1.0
   only:
-    - "/^release\\/.*$/"
     - develop
   when: manual
-  tags:
-    - gitlab-org
 
 production:
-  image: python:3.5
-  stage: deploying
+  image: registry.gitlab.com/ignitionrobotics/web/images/kubectl:latest
+  stage: deploy
   dependencies:
-    - proto
-    - build
-  before_script:
-    - apt-get update
-    - apt-get install -y zip python-pip
-    - pip install boto3==1.3.0
-    - cp -n /builds/ignitionrobotics/web/cloudsim/ign-transport/proto/ignition/msgs/*.go ./ign-transport/proto/ignition/msgs/
+    - docker:latest
   script:
-    - zip -r artifact.zip * .ebextensions -x bin/\* -x vendor/\*
-    - python beanstalk_deploy.py
+    - *deploy_kubernetes
+  tags:
+    - kubernetes
+    - production
   environment:
     name: production
-    url: https://web-cloudsim-production.us-east-1.elasticbeanstalk.com/1.0
   only:
     - master
   when: manual
-  tags:
-    - gitlab-org
