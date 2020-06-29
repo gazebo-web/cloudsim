@@ -1988,6 +1988,10 @@ func (s *Service) GetSimulationWebsocketAddress(ctx context.Context, tx *gorm.DB
 
 	// Check that the requesting user has the correct permissions
 	username := *user.Username
+	// Parent simulations are not valid as they do not run simulations directly
+	if dep.isMultiSimParent() {
+		return nil, ign.NewErrorMessage(ign.ErrorInvalidSimulationStatus)
+	}
 	// Multisim child simulations can only be accessed by admins
 	if dep.isMultiSimChild() && !s.userAccessor.IsSystemAdmin(username) {
 		return nil, ign.NewErrorMessage(ign.ErrorUnauthorized)

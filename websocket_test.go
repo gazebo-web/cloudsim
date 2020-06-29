@@ -4,88 +4,72 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/suite"
 	sim "gitlab.com/ignitionrobotics/web/cloudsim/simulations"
 	"gitlab.com/ignitionrobotics/web/ign-go"
 	igntest "gitlab.com/ignitionrobotics/web/ign-go/testhelpers"
+	"sync"
 	"testing"
+	"time"
 )
 
-func TestWebsocketAddressUser(t *testing.T) {
-	// General test setup
-	setup()
-
-	circuit := "Virtual Stix"
-	createSimURI := "/1.0/simulations"
-	teamAUser1 := newJWT(createJWTForIdentity(t, "TeamAUser1"))
-	teamBUser1 := newJWT(createJWTForIdentity(t, "TeamBUser1"))
-
-	createSubtForm := map[string]string{
-		"name":        "sim1",
-		"owner":       "TeamA",
-		"circuit":     circuit,
-		"robot_name":  "X1",
-		"robot_type":  "X1_SENSOR_CONFIG_1",
-		"robot_image": "infrastructureascode/aws-cli:latest",
-	}
-
-	var groupID string
-	invokeURITestMultipartPOST(
-		t,
-		uriTest{
-			testDesc:          "WebSocket Address Test -- Creating simulation deployment",
-			URL:               createSimURI,
-			jwtGen:            teamAUser1,
-			expErrMsg:         nil,
-			ignoreErrorBody:   false,
-			ignoreOptionsCall: false,
-		},
-		createSubtForm,
-		func(bslice *[]byte, resp *igntest.AssertResponse) {
-			var dep sim.SimulationDeployment
-			assert.NoError(t, json.Unmarshal(*bslice, &dep))
-			groupID = *dep.GroupID
-		},
-	)
-
-	websocketAddr := "/1.0/simulations/%s/websocket"
-	testA := uriTest{
-		testDesc:        "WebSocket Address Test -- User TeamA should get websocket address",
-		URL:             fmt.Sprintf(websocketAddr, groupID),
-		jwtGen:          teamAUser1,
-		expErrMsg:       nil,
-		ignoreErrorBody: false,
-	}
-
-	t.Run(testA.testDesc, func(t *testing.T) {
-		invokeURITest(t, testA, func(bslice *[]byte, resp *igntest.AssertResponse) {
-			var wsResp sim.WebsocketAddressResponse
-			assert.NoError(t, json.Unmarshal(*bslice, &wsResp))
-			assert.True(t, sim.IsWebsocketAddress(wsResp.Address, &groupID))
-			assert.NotEmpty(t, wsResp.Token)
-		})
-	})
-
-	testB := uriTest{
-		testDesc:        "WebSocket Address Test -- User TeamB shouldn't get websocket address from TeamA",
-		URL:             fmt.Sprintf(websocketAddr, groupID),
-		jwtGen:          teamBUser1,
-		expErrMsg:       ign.NewErrorMessage(ign.ErrorUnauthorized),
-		ignoreErrorBody: false,
-	}
-
-	t.Run(testB.testDesc, func(t *testing.T) {
-		invokeURITest(t, testB, func(bslice *[]byte, resp *igntest.AssertResponse) {})
-	})
+func TestWebsocketAddressSuite(t *testing.T) {
+	suite.Run(t, &WebsocketAddressTestSuite{})
 }
 
-func TestWebsocketAddressAdmin(t *testing.T) {
-	// General test setup
+type WebsocketAddressTestSuite struct {
+	suite.Suite
+	singleSimCircuit string
+	singleSimGroupID string
+	multiSimCircuit  string
+	multiSimGroupID  string
+	createSimURI     string
+	websocketURI     string
+	jwtTeamAUser1    *testJWT
+	jwtTeamBUser1    *testJWT
+	jwtSysAdmin      *testJWT
+}
+
+func (suite *WebsocketAddressTestSuite) SetupSuite() {
+	suite.singleSimCircuit = "Virtual Stix"
+	suite.multiSimCircuit = "Urban Practice 3"
+	suite.createSimURI = "/1.0/simulations"
+	suite.websocketURI = "/1.0/simulations/%s/websocket"
+	suite.jwtTeamAUser1 = newJWT(createJWTForIdentity(suite.T(), "TeamAUser1"))
+	suite.jwtTeamBUser1 = newJWT(createJWTForIdentity(suite.T(), "TeamBUser1"))
+	suite.jwtSysAdmin = getDefaultTestJWT()
+
+	// Initialize the database. Note that this is only performed once for the entire suite.
 	setup()
 
-	circuit := "Virtual Stix"
-	createSimURI := "/1.0/simulations"
-	teamAUser1 := newJWT(createJWTForIdentity(t, "TeamAUser1"))
-	sysAdmin := getDefaultTestJWT()
+	// Create simulations.
+	suite.singleSimGroupID = suite.requestSimulation(suite.singleSimCircuit, suite.jwtTeamAUser1)
+	suite.multiSimGroupID = suite.getChildSimGroupID(
+		suite.requestSimulation(suite.multiSimCircuit, suite.jwtTeamAUser1),
+	)
+}
+
+// requestSimulation requests a simulation launch
+func (suite *WebsocketAddressTestSuite) requestSimulation(circuit string, ownerJWT *testJWT) string {
+
+	// A WaitGroup is set to wait until the async worker finishes launching the simulation
+	var wg sync.WaitGroup
+	if circuit == suite.singleSimCircuit {
+		wg.Add(1)
+	} else if circuit == suite.multiSimCircuit {
+		// HACK This is very tightly coupled to the number of children set in the test circuit
+		wg.Add(6)
+	} else {
+		suite.Fail("Please use one of the circuits in this test suite.")
+	}
+
+	// Use the notify signal to mark the worker as done
+	cb := func(poolEvent sim.PoolEvent, groupID string, result interface{}, em *ign.ErrMsg) {
+		if poolEvent == sim.PoolStartSimulation {
+			wg.Done()
+		}
+	}
+	sim.SimServImpl.(*sim.Service).SetPoolEventsListener(cb)
 
 	createSubtForm := map[string]string{
 		"name":        "sim1",
@@ -97,12 +81,13 @@ func TestWebsocketAddressAdmin(t *testing.T) {
 	}
 
 	var groupID string
+
 	invokeURITestMultipartPOST(
-		t,
+		suite.T(),
 		uriTest{
 			testDesc:          "WebSocket Address Test -- Creating simulation deployment",
-			URL:               createSimURI,
-			jwtGen:            teamAUser1,
+			URL:               suite.createSimURI,
+			jwtGen:            ownerJWT,
 			expErrMsg:         nil,
 			ignoreErrorBody:   false,
 			ignoreOptionsCall: false,
@@ -110,95 +95,85 @@ func TestWebsocketAddressAdmin(t *testing.T) {
 		createSubtForm,
 		func(bslice *[]byte, resp *igntest.AssertResponse) {
 			var dep sim.SimulationDeployment
-			assert.NoError(t, json.Unmarshal(*bslice, &dep))
+			assert.NoError(suite.T(), json.Unmarshal(*bslice, &dep))
 			groupID = *dep.GroupID
 		},
 	)
 
-	websocketAddr := "/1.0/simulations/%s/websocket"
-	testAdmin := uriTest{
-		testDesc:        "WebSocket Address Test -- Admin should get websocket address for every simulation",
-		URL:             fmt.Sprintf(websocketAddr, groupID),
-		jwtGen:          sysAdmin,
-		expErrMsg:       nil,
+	// Wait up to 5 seconds for the async worker to finish
+	suite.False(wgTimeoutWait(&wg, 5*time.Second))
+
+	return groupID
+}
+
+// testWebsocketAddress tests that a specific user has access to a simulation's websocket address.
+func (suite *WebsocketAddressTestSuite) testWebsocketAddress(testDesc string, groupID string, requestJWT *testJWT,
+	expErrMsg *ign.ErrMsg) {
+
+	testURI := uriTest{
+		testDesc:        testDesc,
+		URL:             fmt.Sprintf(suite.websocketURI, groupID),
+		jwtGen:          requestJWT,
+		expErrMsg:       expErrMsg,
 		ignoreErrorBody: false,
 	}
 
-	t.Run(testAdmin.testDesc, func(t *testing.T) {
-		invokeURITest(t, testAdmin, func(bslice *[]byte, resp *igntest.AssertResponse) {
+	suite.Run(testURI.testDesc, func() {
+		invokeURITest(suite.T(), testURI, func(bslice *[]byte, resp *igntest.AssertResponse) {
 			var wsResp sim.WebsocketAddressResponse
-			assert.NoError(t, json.Unmarshal(*bslice, &wsResp))
-			assert.True(t, sim.IsWebsocketAddress(wsResp.Address, &groupID))
-			assert.NotEmpty(t, wsResp.Token)
+			suite.NoError(json.Unmarshal(*bslice, &wsResp))
+			// Validate the address structure
+			suite.True(sim.IsWebsocketAddress(wsResp.Address, &groupID))
+			// Validate that a token was included
+			suite.NotEmpty(wsResp.Token)
 		})
 	})
 }
 
-func TestWebsocketAddressChildSimulations(t *testing.T) {
-	// General test setup
-	setup()
+func (suite *WebsocketAddressTestSuite) getChildSimGroupID(groupID string) string {
+	return fmt.Sprintf("%s-c-1", groupID)
+}
 
-	circuit := "Urban Practice 3"
-	createSimURI := "/1.0/simulations"
-	teamAUser1 := newJWT(createJWTForIdentity(t, "TeamAUser1"))
-	sysAdmin := getDefaultTestJWT()
+func (suite *WebsocketAddressTestSuite) TestWebsocketAddressUser() {
 
-	createSubtForm := map[string]string{
-		"name":        "sim1",
-		"owner":       "TeamA",
-		"circuit":     circuit,
-		"robot_name":  "X1",
-		"robot_type":  "X1_SENSOR_CONFIG_1",
-		"robot_image": "infrastructureascode/aws-cli:latest",
-	}
-
-	var groupID string
-	invokeURITestMultipartPOST(
-		t,
-		uriTest{
-			testDesc:          "WebSocket Address Test -- Creating simulation deployment",
-			URL:               createSimURI,
-			jwtGen:            teamAUser1,
-			expErrMsg:         nil,
-			ignoreErrorBody:   false,
-			ignoreOptionsCall: false,
-		},
-		createSubtForm,
-		func(bslice *[]byte, resp *igntest.AssertResponse) {
-			var dep sim.SimulationDeployment
-			assert.NoError(t, json.Unmarshal(*bslice, &dep))
-			groupID = *dep.GroupID
-		},
+	suite.testWebsocketAddress(
+		"WebSocket Address Test -- User TeamA should get websocket address",
+		suite.singleSimGroupID,
+		suite.jwtTeamAUser1,
+		nil,
 	)
 
-	websocketAddr := "/1.0/simulations/%s-c-1/websocket"
+	suite.testWebsocketAddress(
+		"WebSocket Address Test -- User TeamB shouldn't get websocket address from TeamA",
+		suite.singleSimGroupID,
+		suite.jwtTeamBUser1,
+		ign.NewErrorMessage(ign.ErrorUnauthorized),
+	)
+}
 
-	testA := uriTest{
-		testDesc:        "WebSocket Address Test -- User TeamA should not get websocket address for child simulations",
-		URL:             fmt.Sprintf(websocketAddr, groupID),
-		jwtGen:          teamAUser1,
-		expErrMsg:       ign.NewErrorMessage(ign.ErrorUnauthorized),
-		ignoreErrorBody: false,
-	}
+func (suite *WebsocketAddressTestSuite) TestWebsocketAddressAdmin() {
 
-	t.Run(testA.testDesc, func(t *testing.T) {
-		invokeURITest(t, testA, func(bslice *[]byte, resp *igntest.AssertResponse) {})
-	})
+	suite.testWebsocketAddress(
+		"WebSocket Address Test -- Admin should get websocket address for every simulation",
+		suite.singleSimGroupID,
+		suite.jwtSysAdmin,
+		nil,
+	)
+}
 
-	testAdmin := uriTest{
-		testDesc:        "WebSocket Address Test -- Admin should get websocket address for child simulations",
-		URL:             fmt.Sprintf(websocketAddr, groupID),
-		jwtGen:          sysAdmin,
-		expErrMsg:       nil,
-		ignoreErrorBody: false,
-	}
+func (suite *WebsocketAddressTestSuite) TestWebsocketAddressChildSimulations() {
 
-	t.Run(testAdmin.testDesc, func(t *testing.T) {
-		invokeURITest(t, testAdmin, func(bslice *[]byte, resp *igntest.AssertResponse) {
-			var wsResp sim.WebsocketAddressResponse
-			assert.NoError(t, json.Unmarshal(*bslice, &wsResp))
-			assert.True(t, sim.IsWebsocketAddress(wsResp.Address, &groupID))
-			assert.NotEmpty(t, wsResp.Token)
-		})
-	})
+	suite.testWebsocketAddress(
+		"WebSocket Address Test -- User TeamA should not get websocket address for child simulations",
+		suite.multiSimGroupID,
+		suite.jwtTeamAUser1,
+		ign.NewErrorMessage(ign.ErrorUnauthorized),
+	)
+
+	suite.testWebsocketAddress(
+		"WebSocket Address Test -- Admin should get websocket address for child simulations",
+		suite.multiSimGroupID,
+		suite.jwtSysAdmin,
+		nil,
+	)
 }
