@@ -10,6 +10,10 @@ import (
 	"testing"
 )
 
+func TestIngressTestSuite(t *testing.T) {
+	suite.Run(t, &IngressTestSuite{})
+}
+
 // Define the suite, and absorb the built-in basic suite
 // functionality from testify - including a T() method which
 // returns the current testing context
@@ -300,8 +304,4 @@ func (suite *IngressTestSuite) TestUpsertIngressRuleRemoveIngressRule() {
 	// Remove multiple non-dummy path
 	ingress = remove(ingress, paths[0].path, "/non-existent", multiplePaths[1].path)
 	test(ingress, suite.ingressHostRuleIndex, 1, multiplePaths[2])
-}
-
-func TestIngressTestSuite(t *testing.T) {
-	suite.Run(t, &IngressTestSuite{})
 }

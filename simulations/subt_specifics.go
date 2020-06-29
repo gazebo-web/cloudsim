@@ -683,7 +683,7 @@ func (sa *SubTApplication) getSimulationWebsocketAddress(ctx context.Context, s 
 	dep *SimulationDeployment) (interface{}, *ign.ErrMsg) {
 
 	// The simulation must be running to be able to connect to the websocket server
-	if !dep.IsRunning() {
+	if *dep.DeploymentStatus != int(simRunning) {
 		return nil, ign.NewErrorMessage(ign.ErrorInvalidSimulationStatus)
 	}
 
