@@ -1,14 +1,15 @@
 package main
 
 import (
-	"gitlab.com/ignitionrobotics/web/ign-go"
-	"gitlab.com/ignitionrobotics/web/ign-go/testhelpers"
 	"bytes"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"gitlab.com/ignitionrobotics/web/ign-go"
+	"gitlab.com/ignitionrobotics/web/ign-go/testhelpers"
 	"net/http"
 	"os"
+	"sync"
 	"testing"
 	"time"
 )
@@ -209,4 +210,22 @@ func errMsgAndContentType(em *ign.ErrMsg, successCT string) (ign.ErrMsg, string)
 		return *em, ctTextPlain
 	}
 	return ign.ErrorMessageOK(), successCT
+}
+
+// wgTimeoutWait works just like sync.WaitGroup.Wait() except it times out after a set duration.
+func wgTimeoutWait(wg *sync.WaitGroup, timeout time.Duration) bool {
+
+	c := make(chan struct{})
+
+	go func() {
+		defer close(c)
+		wg.Wait()
+	}()
+
+	select {
+	case <-c:
+		return false // completed normally
+	case <-time.After(timeout):
+		return true // timed out
+	}
 }
