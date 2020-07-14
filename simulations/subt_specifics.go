@@ -689,8 +689,18 @@ func (sa *SubTApplication) getSimulationWebsocketAddress(ctx context.Context, s 
 
 	return &WebsocketAddressResponse{
 		Token:   *dep.AuthorizationToken,
-		Address: fmt.Sprintf("%s/simulations/%s", sa.cfg.WebsocketHost, *dep.GroupID),
+		Address: fmt.Sprintf("%s/%s", sa.getSimulationWebsocketHost(), sa.getSimulationWebsocketPath(*dep.GroupID)),
 	}, nil
+}
+
+// getSimulationWebsocketHost returns the host of the websocket address.
+func (sa *SubTApplication) getSimulationWebsocketHost() string {
+	return sa.cfg.WebsocketHost
+}
+
+// getSimulationWebsocketPath returns the websocket address path for the given simulation's group id.
+func (sa *SubTApplication) getSimulationWebsocketPath(groupID string) string {
+	return fmt.Sprintf("simulations/%s", groupID)
 }
 
 ////////////////////////////////////////////////////////////////////////////

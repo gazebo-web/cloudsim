@@ -70,9 +70,9 @@ type metadataSubT struct {
 // SimulationDeployments DB records. If new internal fields are added, they should
 // be removed inside GetSimulationDeployment() method.
 type ExtraInfoSubT struct {
-	Circuit    string      `json:"circuit,omitempty"`
-	WorldIndex *int        `json:"world_index,omitempty"`
-	Robots     []SubTRobot `json:"robots,omitempty"`
+	Circuit    string          `json:"circuit,omitempty"`
+	WorldIndex *int            `json:"world_index,omitempty"`
+	Robots     []SubTRobot     `json:"robots,omitempty"`
 	Marsupials []SubTMarsupial `json:"marsupials,omitempty"`
 	// Which "simulation run" number is this? It is computed based on the number of worlds in the circuit and
 	// how many time to run them. For multiSims, the RunIndex can be seen as the child index.
@@ -251,6 +251,6 @@ func GetAggregatedSubTSimulationValues(tx *gorm.DB, simDep *SimulationDeployment
 
 // WebsocketAddressResponse represents a response from the get websocket's server address route.
 type WebsocketAddressResponse struct {
-	Token string `json:"authorization_token"`
+	Token   string `json:"authorization_token"`
 	Address string `json:"websocket_address"`
 }
