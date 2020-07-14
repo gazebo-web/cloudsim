@@ -3,6 +3,8 @@ package simulations
 import (
 	"context"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
+	ignws "gitlab.com/ignitionrobotics/web/cloudsim/transport/ign"
 	"testing"
 	"time"
 )
@@ -18,7 +20,13 @@ func TestRunningSimulation_IsExpired(t *testing.T) {
 		ValidFor:  sptr("6h0m0s"),
 	}
 
-	rs, err := NewRunningSimulation(ctx, &dep, "test", "test", 720)
+	transport := ignws.NewPubSubTransporterMock()
+
+	cb := mock.AnythingOfType("ign.Callback")
+
+	transport.On("Subscribe", "test", cb).Twice().Return(nil)
+
+	rs, err := NewRunningSimulation(ctx, &dep, transport, "test", "test", 720)
 	if err != nil {
 		t.Fail()
 	}

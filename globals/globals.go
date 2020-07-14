@@ -1,13 +1,13 @@
 package globals
 
 import (
-	"gitlab.com/ignitionrobotics/web/fuelserver/permissions"
-	"gitlab.com/ignitionrobotics/web/ign-go"
-	igntran "gitlab.com/ignitionrobotics/web/cloudsim/ign-transport"
-	useracc "gitlab.com/ignitionrobotics/web/cloudsim/users"
 	"github.com/aws/aws-sdk-go/service/ec2/ec2iface"
 	"github.com/aws/aws-sdk-go/service/s3/s3iface"
 	"github.com/go-playground/form"
+	ignws "gitlab.com/ignitionrobotics/web/cloudsim/transport/ign"
+	useracc "gitlab.com/ignitionrobotics/web/cloudsim/users"
+	"gitlab.com/ignitionrobotics/web/fuelserver/permissions"
+	"gitlab.com/ignitionrobotics/web/ign-go"
 	"gopkg.in/go-playground/validator.v9"
 	"k8s.io/client-go/kubernetes"
 )
@@ -37,12 +37,6 @@ var Validate *validator.Validate
 // See https://github.com/go-playground/form.
 // We use a single instance of Decoder, as it caches struct info
 var FormDecoder *form.Decoder
-
-// IgnTransport holds a reference to a ign_transport node.
-var IgnTransport *igntran.GoIgnTransportNode
-
-// IgnTransportTopic is the name of the topic to publish to (for testing purposes)
-var IgnTransportTopic string
 
 // DefaultEmailRecipients is the default recipient when sending emails.
 // It is set using IGN_DEFAULT_EMAIL_RECIPIENT env var.
@@ -82,3 +76,6 @@ var S3Svc s3iface.S3API
 // Dev note: code should not use this from globals. Instead configure your logic with arguments
 // in the constructors. This is here to use from tests.
 var EC2Svc ec2iface.EC2API
+
+// TransportTestMock holds a reference to the mock for the transport layer.
+var TransportTestMock *ignws.PubSubTransporterMock

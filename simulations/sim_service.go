@@ -8,7 +8,10 @@ import (
 	"github.com/panjf2000/ants"
 	"github.com/pkg/errors"
 	"github.com/satori/go.uuid"
+	"gitlab.com/ignitionrobotics/web/cloudsim/globals"
 	"gitlab.com/ignitionrobotics/web/cloudsim/queues"
+	"gitlab.com/ignitionrobotics/web/cloudsim/transport"
+	ignws "gitlab.com/ignitionrobotics/web/cloudsim/transport/ign"
 	useracc "gitlab.com/ignitionrobotics/web/cloudsim/users"
 	"gitlab.com/ignitionrobotics/web/fuelserver/bundles/users"
 	per "gitlab.com/ignitionrobotics/web/fuelserver/permissions"
@@ -179,6 +182,7 @@ type simServConfig struct {
 	// MaxDurationForSimulations is the maximum number of minutes a simulation can run in cloudsim.
 	// This is a default value. Specific ApplicationTypes are expected to overwrite this.
 	MaxDurationForSimulations int `env:"SIMSVC_SIM_MAX_DURATION_MINUTES" envDefault:"45"`
+	IsTest                    bool
 }
 
 // ApplicationType represents an Application (eg. SubT). Applications are used
@@ -202,6 +206,8 @@ type ApplicationType interface {
 	getGazeboWorldWarmupTopic(ctx context.Context, tx *gorm.DB, dep *SimulationDeployment) (string, error)
 	getSimulationWebsocketAddress(ctx context.Context, s *Service, tx *gorm.DB,
 		dep *SimulationDeployment) (interface{}, *ign.ErrMsg)
+	getSimulationWebsocketHost() string
+	getSimulationWebsocketPath(groupID string) string
 	getSimulationLogsForDownload(ctx context.Context, tx *gorm.DB, dep *SimulationDeployment,
 		robotName *string) (*string, *ign.ErrMsg)
 	getSimulationLiveLogs(ctx context.Context, s *Service, tx *gorm.DB, dep *SimulationDeployment,
@@ -233,7 +239,7 @@ type PoolFactory func(poolSize int, jobF func(interface{})) (JobPool, error)
 
 // NewSimulationsService creates a new simulations service
 func NewSimulationsService(ctx context.Context, db *gorm.DB, nm NodeManager,
-	kcli kubernetes.Interface, pf PoolFactory, ua useracc.UserAccessor) (SimService, error) {
+	kcli kubernetes.Interface, pf PoolFactory, ua useracc.UserAccessor, isTest bool) (SimService, error) {
 
 	var err error
 	s := Service{}
@@ -249,7 +255,9 @@ func NewSimulationsService(ctx context.Context, db *gorm.DB, nm NodeManager,
 	s.scheduler = scheduler.GetInstance()
 
 	// Read configuration from environment
-	s.cfg = simServConfig{}
+	s.cfg = simServConfig{
+		IsTest: isTest,
+	}
 	if err := env.Parse(&s.cfg); err != nil {
 		return nil, err
 	}
@@ -1485,12 +1493,42 @@ func (s *Service) createRunningSimulation(ctx context.Context, tx *gorm.DB, dep 
 		return err
 	}
 
-	rs, err := NewRunningSimulation(ctx, dep, worldStatsTopic, worldWarmupTopic, maxSimSeconds)
+	t, err := s.setupRunningSimulationTransportLayer(dep)
+	if err != nil {
+		return err
+	}
+
+	rs, err := NewRunningSimulation(ctx, dep, t, worldStatsTopic, worldWarmupTopic, maxSimSeconds)
 	if err != nil {
 		return err
 	}
 	s.addRunningSimulation(rs)
 	return nil
+}
+
+// setupRunningSimulationTransportLayer initializes a new transport layer for the given simulation deployment.
+func (s *Service) setupRunningSimulationTransportLayer(dep *SimulationDeployment) (ignws.PubSubWebsocketTransporter, error) {
+	host := s.applications[*dep.Application].getSimulationWebsocketHost()
+	path := s.applications[*dep.Application].getSimulationWebsocketPath(*dep.GroupID)
+
+	t, err := newTransporter(host, path, *dep.AuthorizationToken, s.cfg.IsTest)
+	if err != nil {
+		return nil, err
+	}
+
+	return t, nil
+}
+
+// newTransporter returns a new ign websocket transport.
+// If isTest is set to true, it will return the default transport test mock.
+func newTransporter(host, path, token string, isTest bool) (ignws.PubSubWebsocketTransporter, error) {
+	if isTest {
+		if globals.TransportTestMock == nil {
+			return nil, errors.New("mock for testing transport not initialized")
+		}
+		return globals.TransportTestMock, nil
+	}
+	return ignws.NewIgnWebsocketTransporter(host, path, transport.WebsocketSecureScheme, token)
 }
 
 func (s *Service) requeueSimulation(simDep *SimulationDeployment) *ign.ErrMsg {

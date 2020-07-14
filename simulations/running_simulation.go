@@ -1,12 +1,12 @@
 package simulations
 
 import (
-	"gitlab.com/ignitionrobotics/web/ign-go"
-	igntran "gitlab.com/ignitionrobotics/web/cloudsim/ign-transport"
-	msgs "gitlab.com/ignitionrobotics/web/cloudsim/ign-transport/proto/ignition/msgs"
 	"context"
 	"fmt"
-	proto "github.com/golang/protobuf/proto"
+	msgs "gitlab.com/ignitionrobotics/web/cloudsim/ign-transport/proto/ignition/msgs"
+	"gitlab.com/ignitionrobotics/web/cloudsim/transport"
+	ignws "gitlab.com/ignitionrobotics/web/cloudsim/transport/ign"
+	"gitlab.com/ignitionrobotics/web/ign-go"
 	"sync"
 	"time"
 )
@@ -25,8 +25,8 @@ type RunningSimulation struct {
 	// The desired state. Based on it, the RunningSimulation will use ign-transport
 	// to request gazebo to switch to that state
 	desiredState gazeboState
-	// The ign-transport node to interact with Gazebo
-	ignTransportNode *igntran.GoIgnTransportNode
+	// The websocket transport mechanism to communicate to the ign websocket server
+	websocketTransportNode ignws.PubSubWebsocketTransporter
 	// An internal flag to show if we are sending ign-transport messages
 	publishing bool
 	// A mutex used to guard access to currentState field
@@ -65,7 +65,7 @@ const (
 // The worldStatsTopic arg is the topic to subscribe to get notifications about the
 // simulation state (eg. /world/default/stats). The optional worldWarmupTopic
 // is used to get notifications about the time when the Simulation actually started.
-func NewRunningSimulation(ctx context.Context, dep *SimulationDeployment, worldStatsTopic string,
+func NewRunningSimulation(ctx context.Context, dep *SimulationDeployment, t ignws.PubSubWebsocketTransporter, worldStatsTopic string,
 	worldWarmupTopic string, maxSimSeconds int) (*RunningSimulation, error) {
 	groupID := *dep.GroupID
 	logger(ctx).Info(fmt.Sprintf("Creating new RunningSimulation for groupID[%s] with topics stats[%s] and maxSimSeconds[%d]", groupID, worldStatsTopic, maxSimSeconds))
@@ -75,21 +75,17 @@ func NewRunningSimulation(ctx context.Context, dep *SimulationDeployment, worldS
 	validFor, _ = time.ParseDuration(*dep.ValidFor)
 
 	s := RunningSimulation{
-		GroupID:              groupID,
-		Owner:                *dep.Owner,
-		currentState:         stateUnknown,
-		lockCurrentState:     sync.RWMutex{},
-		lockDesiredState:     sync.RWMutex{},
-		publishing:           false,
-		SimCreatedAtTime:     time.Now(),
-		MaxValidUntil:        time.Now().Add(validFor),
-		SimMaxAllowedSeconds: int64(maxSimSeconds),
+		GroupID:                groupID,
+		Owner:                  *dep.Owner,
+		currentState:           stateUnknown,
+		lockCurrentState:       sync.RWMutex{},
+		lockDesiredState:       sync.RWMutex{},
+		publishing:             false,
+		SimCreatedAtTime:       time.Now(),
+		MaxValidUntil:          time.Now().Add(validFor),
+		SimMaxAllowedSeconds:   int64(maxSimSeconds),
+		websocketTransportNode: t,
 	}
-	var err error
-	if s.ignTransportNode, err = igntran.NewIgnTransportNode(&groupID); err != nil {
-		return nil, err
-	}
-
 	// create a new specific logger for this running simulation
 	reqID := fmt.Sprintf("RunningSimulation-sim-%s", groupID)
 	newLogger := logger(ctx).Clone(reqID)
@@ -97,13 +93,19 @@ func NewRunningSimulation(ctx context.Context, dep *SimulationDeployment, worldS
 	ctx = ign.NewContextWithLogger(ctx, newLogger)
 
 	// subscribe to the stats topic to know the play/pause status
-	_ = s.ignTransportNode.IgnTransportSubscribe(worldStatsTopic, func(msg []byte, msgType string) {
-		s.callbackWorldStats(ctx, msg, msgType)
+	err := s.websocketTransportNode.Subscribe(worldStatsTopic, func(message transport.Messager) {
+		s.callbackWorldStats(ctx, message)
 	})
+	if err != nil {
+		return nil, err
+	}
 
-	_ = s.ignTransportNode.IgnTransportSubscribe(worldWarmupTopic, func(msg []byte, msgType string) {
-		s.callbackWarmup(ctx, msg, msgType)
+	err = s.websocketTransportNode.Subscribe(worldWarmupTopic, func(message transport.Messager) {
+		s.callbackWarmup(ctx, message)
 	})
+	if err != nil {
+		return nil, err
+	}
 
 	return &s, nil
 }
@@ -112,10 +114,10 @@ func NewRunningSimulation(ctx context.Context, dep *SimulationDeployment, worldS
 func (s *RunningSimulation) Free(ctx context.Context) {
 	logger(ctx).Info(fmt.Sprintf("RunningSimulation groupID[%s] Free() invoked", s.GroupID))
 	s.publishing = false
-	if s.ignTransportNode != nil {
-		s.ignTransportNode.Free()
+	if s.websocketTransportNode != nil && s.websocketTransportNode.IsConnected() {
+		s.websocketTransportNode.Disconnect()
 	}
-	s.ignTransportNode = nil
+	s.websocketTransportNode = nil
 }
 
 // IsExpired returns true is the RunningSimulation is expired.
@@ -186,10 +188,11 @@ func (s *RunningSimulation) runSetGazeboState(ctx context.Context, newState gaze
 			}
 
 			// Publish msg to gazebo
-			msg, _ := buildGazeboSetStateMessage(ctx, desired)
-			if s.ignTransportNode != nil {
+			if s.websocketTransportNode != nil {
+				msg, msgType := buildGazeboSetStateMessage(ctx, desired)
 				// TODO we need to update this with a call to ign' service "/world/default/control"
-				_ = s.ignTransportNode.IgnTransportPublishStringMsg("/foo", msg)
+				pubMsg := ignws.NewPublicationMessage("/foo", msgType, msg)
+				_ = s.websocketTransportNode.Publish(pubMsg)
 			}
 			// Wait some time before re checking
 			Sleep(50 * time.Millisecond)
@@ -207,15 +210,13 @@ func buildGazeboSetStateMessage(ctx context.Context, state gazeboState) (msg, ms
 	return
 }
 
-// callbackWorldStats is the callback passed to ign-transport. It will be invoked
+// callbackWorldStats is the callback passed to the websocket client. It will be invoked
 // each time a message is received in the topic associated to this node's groupID.
-func (s *RunningSimulation) callbackWorldStats(ctx context.Context, msg []byte, msgType string) {
-
+func (s *RunningSimulation) callbackWorldStats(ctx context.Context, msg transport.Messager) {
 	ws := msgs.WorldStatistics{}
-	var err error
-	if err = proto.Unmarshal(msg, &ws); err != nil {
+	if err := msg.GetPayload(&ws); err != nil {
 		// do nothing . Just log it
-		logger(ctx).Error(fmt.Sprintf("RunningSimulation groupID[%s]- error while unmarshalling WorldStats msg. Got type[%s]. Msg[%s]", s.GroupID, msgType, msg), err)
+		logger(ctx).Error(fmt.Sprintf("RunningSimulation groupID[%s]- error while unmarshalling WorldStats msg. Got Msg[%s]", s.GroupID, msg), err)
 		return
 	}
 
@@ -238,14 +239,13 @@ func (s *RunningSimulation) callbackWorldStats(ctx context.Context, msg []byte, 
 	s.SimTimeSeconds = ws.SimTime.Sec
 }
 
-// callbackWarmup is the callback passed to ign-transport that will be invoked each time
+// callbackWarmup is the callback passed to the websocket client that will be invoked each time
 // a message is received at the /warmup/ready topic.
-func (s *RunningSimulation) callbackWarmup(ctx context.Context, msg []byte, msgType string) {
+func (s *RunningSimulation) callbackWarmup(ctx context.Context, msg transport.Messager) {
 	wup := msgs.StringMsg{}
-	var err error
-	if err = proto.Unmarshal(msg, &wup); err != nil {
+	if err := msg.GetPayload(&wup); err != nil {
 		// do nothing . Just log it
-		logger(ctx).Error(fmt.Sprintf("RunningSimulation groupID[%s]- error while unmarshalling Warmup msg. Got type[%s]. Msg[%s]", s.GroupID, msgType, msg), err)
+		logger(ctx).Error(fmt.Sprintf("RunningSimulation groupID[%s]- error while unmarshalling Warmup msg. Got Msg[%s]", s.GroupID, msg), err)
 		return
 	}
 
@@ -266,7 +266,8 @@ func (s *RunningSimulation) callbackWarmup(ctx context.Context, msg []byte, msgT
 // SendMessage publishes a string message to an specific topic.
 func (s *RunningSimulation) SendMessage(ctx context.Context, topic, msg, msgType string) {
 	logger(ctx).Info(fmt.Sprintf("RunningSimulation groupID[%s]- publish msg [%s] to topic [%s] with type [%s]", s.GroupID, msg, topic, msgType))
-	if s.ignTransportNode != nil {
-		_ = s.ignTransportNode.IgnTransportPublishStringMsg(topic, msg)
+	if s.websocketTransportNode != nil {
+		pubMsg := ignws.NewPublicationMessage(topic, msgType, msg)
+		_ = s.websocketTransportNode.Publish(pubMsg)
 	}
 }
