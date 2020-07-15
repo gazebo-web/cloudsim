@@ -62,7 +62,7 @@ func (r repository) Get(name string) (*Track, error) {
 	r.logger.Debug(fmt.Sprintf("Getting Track with name: %s", name))
 	err := r.db.Model(&Track{}).First(&t).Where("name = ?", name).Error
 	if err != nil {
-		r.logger.Debug(fmt.Sprintf("There's been an error while getting a track. Error: %+v", err))
+		r.logger.Debug(fmt.Sprintf("There's been an error while getting a track with name: %s. Error: %+v", name, err))
 		return nil, err
 	}
 	r.logger.Debug(fmt.Sprintf("Track returned: %+v", t))
@@ -89,7 +89,6 @@ func (r repository) Update(name string, track Track) (*Track, error) {
 	r.logger.Debug(fmt.Sprintf("Updating track with name: %s. Input: %+v", name, track))
 	_, err := r.Get(name)
 	if err != nil {
-		r.logger.Debug(fmt.Sprintf("There's been an error while getting the track with name: %s. Error: %+v", name, err))
 		return nil, err
 	}
 	err = r.db.Model(&Track{}).Save(&track).Where("name = ?", name).Error
@@ -108,7 +107,6 @@ func (r repository) Delete(name string) (*Track, error) {
 	r.logger.Debug(fmt.Sprintf("Removing track with name: %s", name))
 	t, err := r.Get(name)
 	if err != nil {
-		r.logger.Debug(fmt.Sprintf("There's been an error while getting the track with name: %s. Error: %+v", name, err))
 		return nil, err
 	}
 	err = r.db.Model(&Track{}).Delete(t, "name = ?", name).Error

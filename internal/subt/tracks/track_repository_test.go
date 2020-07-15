@@ -19,12 +19,14 @@ type trackRepositoryTest struct {
 }
 
 func (s *trackRepositoryTest) SetupTest() {
-	db, err := gorm.Open("sqlite3", "/tmp/test.db")
+	var db *gorm.DB
+	dbConfig, err := ign.NewDatabaseConfigFromEnvVars()
 	s.NoError(err)
+	db, err = ign.InitDbWithCfg(&dbConfig)
 	s.db = db
 	s.db.DropTableIfExists(&Track{})
 	s.db.AutoMigrate(&Track{})
-	s.repository = NewRepository(db, ign.NewLoggerNoRollbar("track-repository-test", ign.VerbosityDebug))
+	s.repository = NewRepository(s.db, ign.NewLoggerNoRollbar("track-repository-test", ign.VerbosityDebug))
 }
 
 func (s *trackRepositoryTest) addMockData(key string) *Track {
