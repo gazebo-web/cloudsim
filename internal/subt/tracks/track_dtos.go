@@ -1,7 +1,7 @@
 package tracks
 
-// CreateTrack is a Data Access Object for creating a new track.
-type CreateTrack struct {
+// CreateTrackInput is a Data Access Object used as an input for creating a new track.
+type CreateTrackInput struct {
 	Name        string `json:"name"`
 	Image       string `json:"image"`
 	BridgeImage string `json:"bridge_image"`
@@ -16,8 +16,8 @@ type CreateTrack struct {
 	Public bool `json:"public"`
 }
 
-// UpdateTrack is a Data Access Object for updating an existent track.
-type UpdateTrack struct {
+// UpdateTrackInput is a Data Access Object used as an input for updating an existent track.
+type UpdateTrackInput struct {
 	Name        string
 	Image       string
 	BridgeImage string
