@@ -13,7 +13,6 @@ type CreateTrackInput struct {
 	MaxSimSeconds int `json:"max_sim_seconds"`
 	// Public makes a track available for launching directly.
 	// Tracks that are not public can only be launched as part of a Circuit.
-	// Default value: false
 	Public bool `json:"public"`
 }
 
@@ -29,6 +28,5 @@ type UpdateTrackInput struct {
 	// Maximum number of allowed "simulation seconds" for each world. 0 means unlimited.
 	MaxSimSeconds int `json:"max_sim_seconds"`
 	// Public sets a track open for single runs.
-	// Default value: false
 	Public bool `json:"public"`
 }

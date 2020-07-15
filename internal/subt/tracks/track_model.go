@@ -15,7 +15,6 @@ type Track struct {
 	// Maximum number of allowed "simulation seconds" for each world. 0 means unlimited.
 	MaxSimSeconds int `json:"max_sim_seconds"`
 	// Public sets a track open for single runs.
-	// Default value: false
 	Public bool `json:"public"`
 }
 
