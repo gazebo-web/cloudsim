@@ -16,6 +16,11 @@ type CreateTrackInput struct {
 	Public bool `json:"public"`
 }
 
+// CreateTrackOutput is a Data Access Object used to return the name of the Track that has been created.
+type CreateTrackOutput struct {
+	Name string `json:"name"`
+}
+
 // UpdateTrackInput is a Data Access Object used as an input for updating an existent track.
 type UpdateTrackInput struct {
 	Name        string
@@ -30,4 +35,9 @@ type UpdateTrackInput struct {
 	// Public sets a track open for single runs.
 	// Default value: false
 	Public bool
+}
+
+// UpdateTrackOutput is a Data Access Object used to return the name of the Track that has been updated.
+type UpdateTrackOutput struct {
+	Name string `json:"name"`
 }
