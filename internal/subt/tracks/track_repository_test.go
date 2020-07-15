@@ -83,6 +83,23 @@ func (s *trackRepositoryTest) TestGetAll() {
 	s.EqualValues(valueC, result[2])
 }
 
+func (s *trackRepositoryTest) TestUpdate() {
+	value := s.addMockData("Practice1")
+	value.BridgeImage = "test.org/bridge-image-changed"
+	result, err := s.repository.Update("TestPractice1", *value)
+	s.NoError(err)
+	s.EqualValues(value, result)
+}
+
+func (s *trackRepositoryTest) TestDelete() {
+	value := s.addMockData("Practice1")
+	result, err := s.repository.Delete("TestPractice1")
+	s.NoError(err)
+	s.EqualValues(value, result)
+	_, err = s.repository.Get("TestPractice1")
+	s.Error(err)
+}
+
 func (s *trackRepositoryTest) AfterTest() {
 	s.db.Close()
 }
