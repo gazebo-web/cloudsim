@@ -18,3 +18,7 @@ type Track struct {
 	// Default value: false
 	Public bool
 }
+
+func (Track) TableName() string {
+	return "subt_tracks"
+}
