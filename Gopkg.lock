@@ -239,7 +239,7 @@
   name = "github.com/jinzhu/gorm"
   packages = [
     ".",
-    "dialects/sqlite"
+    "dialects/mysql"
   ]
   revision = "472c70caa40267cb89fd8facb07fe6454b578626"
   version = "v1.9.2"
@@ -300,12 +300,6 @@
   name = "github.com/mattn/go-pointer"
   packages = ["."]
   revision = "49522c3f37914a12a6813caf41f4a9e84d39ca0a"
-
-[[projects]]
-  name = "github.com/mattn/go-sqlite3"
-  packages = ["."]
-  revision = "baaf8a978416040e7f2d00ac36e345098d0588d8"
-  version = "v2.0.6"
 
 [[projects]]
   name = "github.com/mitchellh/go-homedir"
@@ -812,6 +806,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "5f8d4835f0cd1a5a186715603a8f288eefe038a92d92cb08668504479eb6e978"
+  inputs-digest = "d7db7b1fd067d74ceadbb1ef6881540eef1d0811ed01582668cad4cae2e78305"
   solver-name = "gps-cdcl"
   solver-version = 1
