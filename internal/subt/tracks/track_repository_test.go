@@ -51,9 +51,8 @@ func (s *trackRepositoryTest) TestCreate() {
 		MaxSimSeconds: 10,
 		Public:        true,
 	}
-	result, err := s.repository.Create(track)
+	_, err := s.repository.Create(track)
 	s.NoError(err)
-	s.EqualValues(track, result)
 
 	var count int
 	err = s.db.Model(&Track{}).Count(&count).Error
@@ -68,7 +67,8 @@ func (s *trackRepositoryTest) TestGetOne() {
 
 	result, err := s.repository.Get("TestPractice1")
 	s.NoError(err)
-	s.EqualValues(value, result)
+	s.Equal(value.ID, result.ID)
+	s.Equal(value.Name, result.Name)
 }
 
 func (s *trackRepositoryTest) TestGetAll() {
@@ -78,9 +78,9 @@ func (s *trackRepositoryTest) TestGetAll() {
 
 	result, err := s.repository.GetAll()
 	s.NoError(err)
-	s.EqualValues(valueA, result[0])
-	s.EqualValues(valueB, result[1])
-	s.EqualValues(valueC, result[2])
+	s.Equal(valueA.ID, result[0].ID)
+	s.Equal(valueB.ID, result[1].ID)
+	s.Equal(valueC.ID, result[2].ID)
 }
 
 func (s *trackRepositoryTest) TestUpdate() {
@@ -88,16 +88,21 @@ func (s *trackRepositoryTest) TestUpdate() {
 	value.BridgeImage = "test.org/bridge-image-changed"
 	result, err := s.repository.Update("TestPractice1", *value)
 	s.NoError(err)
-	s.EqualValues(value, result)
+	s.Equal(value.ID, result.ID)
+	s.Equal("test.org/bridge-image-changed", result.BridgeImage)
+	s.False(value.UpdatedAt.Equal(result.UpdatedAt))
 }
 
 func (s *trackRepositoryTest) TestDelete() {
 	value := s.addMockData("Practice1")
 	result, err := s.repository.Delete("TestPractice1")
 	s.NoError(err)
-	s.EqualValues(value, result)
-	_, err = s.repository.Get("TestPractice1")
-	s.Error(err)
+	s.Equal(value.ID, result.ID)
+
+	var count int
+	err = s.db.Model(&Track{}).Count(&count).Error
+	s.NoError(err)
+	s.Equal(0, count)
 }
 
 func (s *trackRepositoryTest) AfterTest() {
