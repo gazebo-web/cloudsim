@@ -4,6 +4,7 @@ import (
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/sqlite"
 	"github.com/stretchr/testify/suite"
+	"gitlab.com/ignitionrobotics/web/ign-go"
 	"testing"
 )
 
@@ -23,7 +24,7 @@ func (s *trackRepositoryTest) SetupTest() {
 	s.db = db
 	s.db.DropTableIfExists(&Track{})
 	s.db.AutoMigrate(&Track{})
-	s.repository = NewRepository(db)
+	s.repository = NewRepository(db, ign.NewLoggerNoRollbar("track-repository-test", ign.VerbosityDebug))
 }
 
 func (s *trackRepositoryTest) addMockData(key string) *Track {
