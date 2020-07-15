@@ -1,6 +1,6 @@
 package tracks
 
-// CreateTrackInput is a Data Access Object used as an input for creating a new track.
+// CreateTrackInput is an input for creating a new track.
 type CreateTrackInput struct {
 	Name        string `json:"name"`
 	Image       string `json:"image"`
@@ -11,18 +11,13 @@ type CreateTrackInput struct {
 	WarmupTopic string `json:"warmup_topic"`
 	// Maximum number of allowed "simulation seconds" for each world. 0 means unlimited.
 	MaxSimSeconds int `json:"max_sim_seconds"`
-	// Public makes a track available for launching directly. 
-        // Tracks that are not public can only be launched as part of a Circuit.
+	// Public makes a track available for launching directly.
+	// Tracks that are not public can only be launched as part of a Circuit.
 	// Default value: false
 	Public bool `json:"public"`
 }
 
-// CreateTrackOutput is a Data Access Object used to return the name of the Track that has been created.
-type CreateTrackOutput struct {
-	Name string `json:"name"`
-}
-
-// UpdateTrackInput is a Data Access Object used as an input for updating an existent track.
+// UpdateTrackInput is an input for updating an existent track.
 type UpdateTrackInput struct {
 	Name        string `json:"name"`
 	Image       string `json:"image"`
@@ -36,9 +31,4 @@ type UpdateTrackInput struct {
 	// Public sets a track open for single runs.
 	// Default value: false
 	Public bool `json:"public"`
-}
-
-// UpdateTrackOutput is a Data Access Object used to return the name of the Track that has been updated.
-type UpdateTrackOutput struct {
-	Name string `json:"name"`
 }
