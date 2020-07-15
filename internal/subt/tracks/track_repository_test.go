@@ -113,8 +113,9 @@ func (s *trackRepositoryTest) TestUpdateNonExistent() {
 func (s *trackRepositoryTest) TestUpdateEmptyField() {
 	value := s.addMockData("Practice1")
 	value.BridgeImage = ""
-	_, err := s.repository.Update("TestPractice1", *value)
-	s.Error(err)
+	result, err := s.repository.Update("TestPractice1", *value)
+	s.NoError(err)
+	s.Empty(result.BridgeImage)
 }
 
 func (s *trackRepositoryTest) TestDelete() {
