@@ -8,7 +8,7 @@ type Repository interface {
 	repositoryDelete
 }
 
-// repositoryCreate has a method to Create a track from the database.
+// repositoryCreate has a method to Create a track in the database.
 type repositoryCreate interface {
 	Create(track Track) (*Track, error)
 }
@@ -19,7 +19,7 @@ type repositoryRead interface {
 	GetAll() ([]Track, error)
 }
 
-// repositoryUpdate has a method to update a track from the database.
+// repositoryUpdate has a method to update a track in the database.
 type repositoryUpdate interface {
 	Update(name string, track Track) (*Track, error)
 }
