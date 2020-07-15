@@ -5,7 +5,7 @@ import "github.com/jinzhu/gorm"
 // Track is a world that will be used to run a simulation.
 type Track struct {
 	gorm.Model
-	Name        string `json:"name"`
+	Name        string `json:"name" gorm:"unique"`
 	Image       string `json:"image"`
 	BridgeImage string `json:"bridge_image"`
 	// Topic used to track general stats of the simulation (runtime, sim runtime, etc.)
