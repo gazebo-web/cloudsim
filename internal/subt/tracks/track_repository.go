@@ -17,7 +17,7 @@ type repositoryCreate interface {
 
 // repositoryRead has a method to get one or multiple tracks from the database.
 type repositoryRead interface {
-	Get(name string)
+	Get(name string) (*Track, error)
 	GetAll() ([]Track, error)
 }
 
@@ -39,7 +39,7 @@ func (r repository) Create(track Track) (*Track, error) {
 	panic("implement me")
 }
 
-func (r repository) Get(name string) {
+func (r repository) Get(name string) (*Track, error) {
 	panic("implement me")
 }
 

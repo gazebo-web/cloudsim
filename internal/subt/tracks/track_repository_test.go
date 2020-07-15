@@ -26,8 +26,23 @@ func (s *trackRepositoryTest) SetupTest() {
 	s.repository = NewRepository(db)
 }
 
+func (s *trackRepositoryTest) addMockData(key string) *Track {
+	value := &Track{
+		Name:          "Test" + key,
+		Image:         "test.org/image-" + key,
+		BridgeImage:   "test.org/image-" + key,
+		StatsTopic:    "/stats",
+		WarmupTopic:   "/warmup",
+		MaxSimSeconds: 10,
+		Public:        false,
+	}
+	err := s.db.Model(&Track{}).Save(value).Error
+	s.NoError(err)
+	return value
+}
+
 func (s *trackRepositoryTest) TestCreate() {
-	s.repository.Create(Track{
+	track := Track{
 		Name:          "Name test",
 		Image:         "test.org/image",
 		BridgeImage:   "test.org/bridge-image",
@@ -35,12 +50,37 @@ func (s *trackRepositoryTest) TestCreate() {
 		WarmupTopic:   "/warmup",
 		MaxSimSeconds: 10,
 		Public:        true,
-	})
+	}
+	result, err := s.repository.Create(track)
+	s.NoError(err)
+	s.EqualValues(track, result)
 
 	var count int
-	err := s.db.Model(&Track{}).Count(&count).Error
+	err = s.db.Model(&Track{}).Count(&count).Error
 	s.NoError(err)
 	s.Equal(1, count)
+}
+
+func (s *trackRepositoryTest) TestGetOne() {
+	value := s.addMockData("Practice1")
+	s.addMockData("Practice2")
+	s.addMockData("Practice3")
+
+	result, err := s.repository.Get("TestPractice1")
+	s.NoError(err)
+	s.EqualValues(value, result)
+}
+
+func (s *trackRepositoryTest) TestGetAll() {
+	valueA := s.addMockData("Practice1")
+	valueB := s.addMockData("Practice2")
+	valueC := s.addMockData("Practice3")
+
+	result, err := s.repository.GetAll()
+	s.NoError(err)
+	s.EqualValues(valueA, result[0])
+	s.EqualValues(valueB, result[1])
+	s.EqualValues(valueC, result[2])
 }
 
 func (s *trackRepositoryTest) AfterTest() {
