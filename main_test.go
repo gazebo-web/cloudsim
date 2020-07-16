@@ -2,8 +2,10 @@ package main
 
 import (
 	"context"
+	"github.com/stretchr/testify/mock"
 	"gitlab.com/ignitionrobotics/web/cloudsim/globals"
 	sim "gitlab.com/ignitionrobotics/web/cloudsim/simulations"
+	ignws "gitlab.com/ignitionrobotics/web/cloudsim/transport/ign"
 	"gitlab.com/ignitionrobotics/web/cloudsim/users"
 	"gitlab.com/ignitionrobotics/web/ign-go"
 	"gitlab.com/ignitionrobotics/web/ign-go/testhelpers"
@@ -29,19 +31,23 @@ func TestMain(m *testing.M) {
 // first line.
 // You can use the alternative function `setupWithCustomInitalizer`
 func setup() {
-	setupWithCustomInitalizer(nil)
+	setupWithCustomInitializer(nil)
 }
 
 type customInitializer func(ctx context.Context)
 
 // setup helper function
-func setupWithCustomInitalizer(customFn customInitializer) {
+func setupWithCustomInitializer(customFn customInitializer) {
 	logger := ign.NewLoggerNoRollbar("test", ign.VerbosityDebug)
 	logCtx := ign.NewContextWithLogger(context.Background(), logger)
+
+	worldStatsTopic := "/world/default/stat"
+	worldWarmupTopic := "/subt/start"
+
 	// Make sure we don't have data from other tests.
 	// For this we drop db tables and recreate them.
 	packageTearDown(logCtx)
-	createDBTablesAndData(logCtx)
+	createDBTablesAndData(logCtx, worldStatsTopic, worldWarmupTopic)
 
 	// Mocking
 	// Use the K8Mock as default K8 test mock
@@ -72,6 +78,16 @@ func setupWithCustomInitalizer(customFn customInitializer) {
 
 	// Create the router, and indicate that we are testing
 	igntest.SetupTest(globals.Server.Router)
+
+	if globals.TransportTestMock == nil {
+		globals.TransportTestMock = ignws.NewPubSubTransporterMock()
+	}
+
+	expectedFn := mock.AnythingOfType("ign.Callback")
+	globals.TransportTestMock.On("Subscribe", worldStatsTopic, expectedFn).Return(nil)
+	globals.TransportTestMock.On("Subscribe", worldWarmupTopic, expectedFn).Return(nil)
+	globals.TransportTestMock.On("Disconnect").Return()
+	globals.TransportTestMock.On("IsConnected").Return(true)
 }
 
 // useEC2NodeManager forces the application to use an Ec2Client object as the
@@ -112,9 +128,6 @@ func packageTearDown(ctx context.Context) {
 	sim.MaxAWSRetries = 8
 	sim.SimServImpl.(*sim.Service).AllowRequeuing = true
 
-	// Destroy ign_transport node
-	globals.IgnTransport.Free()
-
 	cleanDBTables(ctx)
 }
 
@@ -122,7 +135,7 @@ func cleanDBTables(ctx context.Context) {
 	DBDropModels(ctx, globals.Server.Db)
 }
 
-func createDBTablesAndData(ctx context.Context) {
+func createDBTablesAndData(ctx context.Context, worldStatsTopic, worldWarmupTopic string) {
 	DBMigrate(ctx, globals.Server.Db)
 	// After removing tables we can ask casbin to re initialize
 	if err := globals.Permissions.Reload(sysAdminForTest); err != nil {
@@ -139,8 +152,8 @@ func createDBTablesAndData(ctx context.Context) {
 			Times:              sptr("1"),
 			Image:              sptr("infrastructureascode/aws-cli:latest"),
 			BridgeImage:        sptr("infrastructureascode/aws-cli:latest"),
-			WorldStatsTopics:   sptr("/world/default/stat"),
-			WorldWarmupTopics:  sptr("/subt/start"),
+			WorldStatsTopics:   sptr(worldStatsTopic),
+			WorldWarmupTopics:  sptr(worldWarmupTopic),
 			WorldMaxSimSeconds: sptr("0"),
 			MaxCredits:         intptr(1000),
 		},
@@ -150,8 +163,8 @@ func createDBTablesAndData(ctx context.Context) {
 			Times:                 sptr("1"),
 			Image:                 sptr("infrastructureascode/aws-cli:latest"),
 			BridgeImage:           sptr("infrastructureascode/aws-cli:latest"),
-			WorldStatsTopics:      sptr("/world/default/stat"),
-			WorldWarmupTopics:     sptr("/subt/start"),
+			WorldStatsTopics:      sptr(worldStatsTopic),
+			WorldWarmupTopics:     sptr(worldWarmupTopic),
 			WorldMaxSimSeconds:    sptr("0"),
 			Seeds:                 sptr("10"),
 			MaxCredits:            nil,
@@ -164,8 +177,8 @@ func createDBTablesAndData(ctx context.Context) {
 			Times:              sptr("1"),
 			Image:              sptr("infrastructureascode/aws-cli:latest"),
 			BridgeImage:        sptr("infrastructureascode/aws-cli:latest"),
-			WorldStatsTopics:   sptr("/world/default/stat"),
-			WorldWarmupTopics:  sptr("/subt/start"),
+			WorldStatsTopics:   sptr(worldStatsTopic),
+			WorldWarmupTopics:  sptr(worldWarmupTopic),
 			WorldMaxSimSeconds: sptr("0"),
 			MaxCredits:         intptr(10),
 		},
@@ -175,8 +188,8 @@ func createDBTablesAndData(ctx context.Context) {
 			Times:              sptr("3,3"),
 			Image:              sptr("infrastructureascode/aws-cli:latest"),
 			BridgeImage:        sptr("infrastructureascode/aws-cli:latest"),
-			WorldStatsTopics:   sptr("/world/default/stat"),
-			WorldWarmupTopics:  sptr("/subt/start"),
+			WorldStatsTopics:   sptr(worldStatsTopic),
+			WorldWarmupTopics:  sptr(worldWarmupTopic),
 			WorldMaxSimSeconds: sptr("0"),
 			MaxCredits:         nil,
 			CompetitionDate:    timeptr(time.Now().Add(time.Hour * 24)),
@@ -187,8 +200,8 @@ func createDBTablesAndData(ctx context.Context) {
 			Times:                 sptr("1"),
 			Image:                 sptr("infrastructureascode/aws-cli:latest"),
 			BridgeImage:           sptr("infrastructureascode/aws-cli:latest"),
-			WorldStatsTopics:      sptr("/world/default/stat"),
-			WorldWarmupTopics:     sptr("/subt/start"),
+			WorldStatsTopics:      sptr(worldStatsTopic),
+			WorldWarmupTopics:     sptr(worldWarmupTopic),
 			WorldMaxSimSeconds:    sptr("0"),
 			MaxCredits:            nil,
 			RequiresQualification: boolptr(false),
@@ -200,8 +213,8 @@ func createDBTablesAndData(ctx context.Context) {
 			Times:              sptr("3, 3"),
 			Image:              sptr("infrastructureascode/aws-cli:latest"),
 			BridgeImage:        sptr("infrastructureascode/aws-cli:latest"),
-			WorldStatsTopics:   sptr("/world/default/stat"),
-			WorldWarmupTopics:  sptr("/subt/start"),
+			WorldStatsTopics:   sptr(worldStatsTopic),
+			WorldWarmupTopics:  sptr(worldWarmupTopic),
 			WorldMaxSimSeconds: sptr("0"),
 			MaxCredits:         nil,
 			CompetitionDate:    timeptr(time.Now().Add(-time.Hour * 24)),
@@ -212,8 +225,8 @@ func createDBTablesAndData(ctx context.Context) {
 			Times:                 sptr("1"),
 			Image:                 sptr("infrastructureascode/aws-cli:latest"),
 			BridgeImage:           sptr("infrastructureascode/aws-cli:latest"),
-			WorldStatsTopics:      sptr("/world/default/stat"),
-			WorldWarmupTopics:     sptr("/subt/start"),
+			WorldStatsTopics:      sptr(worldStatsTopic),
+			WorldWarmupTopics:     sptr(worldWarmupTopic),
 			WorldMaxSimSeconds:    sptr("0"),
 			Seeds:                 sptr("10"),
 			MaxCredits:            nil,

@@ -212,6 +212,12 @@
   version = "v1.7.0"
 
 [[projects]]
+  name = "github.com/gorilla/websocket"
+  packages = ["."]
+  revision = "b65e62901fc1c0d968042419e74789f6af455eb9"
+  version = "v1.4.2"
+
+[[projects]]
   branch = "master"
   name = "github.com/howeyc/gopass"
   packages = ["."]
@@ -368,9 +374,16 @@
   version = "v1.4.0"
 
 [[projects]]
+  name = "github.com/stretchr/objx"
+  packages = ["."]
+  revision = "477a77ecc69700c7cdeb1fa9e129548e1c1c393c"
+  version = "v0.1.1"
+
+[[projects]]
   name = "github.com/stretchr/testify"
   packages = [
     "assert",
+    "mock",
     "require",
     "suite"
   ]
@@ -757,6 +770,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "48b7b39138f7610edd9e6ad0022d2d42e8483f1495730f445c9d261460a20c8a"
+  inputs-digest = "8c43e3cb6a6a169e5efe6f7b97b769506584901852425a18b48919f16f6e1c9a"
   solver-name = "gps-cdcl"
   solver-version = 1

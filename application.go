@@ -15,12 +15,6 @@ package main
 
 // Import this file's dependencies
 import (
-	"gitlab.com/ignitionrobotics/web/fuelserver/permissions"
-	"gitlab.com/ignitionrobotics/web/ign-go"
-	"gitlab.com/ignitionrobotics/web/cloudsim/globals"
-	igntran "gitlab.com/ignitionrobotics/web/cloudsim/ign-transport"
-	sim "gitlab.com/ignitionrobotics/web/cloudsim/simulations"
-	useracc "gitlab.com/ignitionrobotics/web/cloudsim/users"
 	"context"
 	"flag"
 	"fmt"
@@ -29,6 +23,11 @@ import (
 	"github.com/go-playground/form"
 	"github.com/joho/godotenv"
 	"github.com/pkg/errors"
+	"gitlab.com/ignitionrobotics/web/cloudsim/globals"
+	sim "gitlab.com/ignitionrobotics/web/cloudsim/simulations"
+	useracc "gitlab.com/ignitionrobotics/web/cloudsim/users"
+	"gitlab.com/ignitionrobotics/web/fuelserver/permissions"
+	"gitlab.com/ignitionrobotics/web/ign-go"
 	"gopkg.in/go-playground/validator.v9"
 	"k8s.io/client-go/kubernetes"
 	"log"
@@ -235,25 +234,13 @@ func init() {
 	if cfg.isGoTest {
 		pFactory = sim.SynchronicPoolFactory
 	}
-	if sim.SimServImpl, err = sim.NewSimulationsService(logCtx, globals.Server.Db, nm, kcli, pFactory, userAccessor); err != nil {
+	if sim.SimServImpl, err = sim.NewSimulationsService(logCtx, globals.Server.Db, nm, kcli, pFactory, userAccessor, cfg.isGoTest); err != nil {
 		// Log and shutdown the app , if there is an error during startup
 		logger.Critical("Critical error trying to create Simulations services", err)
 		log.Fatalf("%+v\n", err)
 	}
 	sim.SimServImpl.RegisterApplication(logCtx, subT)
 	sim.SimServImpl.Start(logCtx)
-
-	// initialize ign-transport, for pub/sub
-	initIgnTransport(cfg)
-}
-
-/////////////////////////////////////////////////
-// initIgnTransport creates a new ignition transport node and subscribes to a test topic
-func initIgnTransport(cfg appConfig) {
-	// Create a new ignition transport node
-	ignNode, _ := igntran.NewIgnTransportNode(nil)
-	globals.IgnTransport = ignNode
-	globals.IgnTransportTopic = cfg.IgnTransportTopic
 }
 
 /////////////////////////////////////////////////
@@ -266,8 +253,6 @@ func main() {
 	if ecNm != nil {
 		ecNm.Stop()
 	}
-	// Destroy ign_transport node
-	globals.IgnTransport.Free()
 }
 
 func initValidator(cfg appConfig) *validator.Validate {
