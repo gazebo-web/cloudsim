@@ -48,7 +48,7 @@ func (r repository) Create(track Track) (*Track, error) {
 	r.logger.Debug(fmt.Sprintf("Creating Track. Input: %+v", track))
 	err := r.db.Model(&Track{}).Create(&track).Error
 	if err != nil {
-		r.logger.Debug(fmt.Sprintf("There's been an error while persisting a track. Error: %+v", err))
+		r.logger.Debug(fmt.Sprintf("Failed to persist a track. Error: %+v", err))
 		return nil, err
 	}
 	r.logger.Debug(fmt.Sprintf("Track created. Output: %+v", track))
@@ -62,7 +62,7 @@ func (r repository) Get(name string) (*Track, error) {
 	r.logger.Debug(fmt.Sprintf("Getting Track with name: %s", name))
 	err := r.db.Model(&Track{}).First(&t).Where("name = ?", name).Error
 	if err != nil {
-		r.logger.Debug(fmt.Sprintf("There's been an error while getting a track with name: %s. Error: %+v", name, err))
+		r.logger.Debug(fmt.Sprintf("Failed to get track with name: %s. Error: %+v", name, err))
 		return nil, err
 	}
 	r.logger.Debug(fmt.Sprintf("Track returned: %+v", t))
@@ -75,7 +75,7 @@ func (r repository) GetAll() ([]Track, error) {
 	r.logger.Debug("Getting the list of tracks")
 	err := r.db.Model(&Track{}).Find(&t).Error
 	if err != nil {
-		r.logger.Debug(fmt.Sprintf("There's been an error while getting the list of tracks. Error: %+v", err))
+		r.logger.Debug(fmt.Sprintf("Failed to get the list of tracks. Error: %+v", err))
 		return nil, err
 	}
 	r.logger.Debug(fmt.Sprintf("Tracks returned: %+v", t))
@@ -93,7 +93,7 @@ func (r repository) Update(name string, track Track) (*Track, error) {
 	}
 	err = r.db.Model(&Track{}).Save(&track).Where("name = ?", name).Error
 	if err != nil {
-		r.logger.Debug(fmt.Sprintf("There's been an error while updating the track with name: %s. Error: %+v", name, err))
+		r.logger.Debug(fmt.Sprintf("Failed to update track with name: %s. Error: %+v", name, err))
 		return nil, err
 	}
 	r.logger.Debug(fmt.Sprintf("Track updated: %+v", track))
@@ -111,7 +111,7 @@ func (r repository) Delete(name string) (*Track, error) {
 	}
 	err = r.db.Model(&Track{}).Delete(t, "name = ?", name).Error
 	if err != nil {
-		r.logger.Debug(fmt.Sprintf("There's been an error while removing the track with name: %s. Error: %+v", name, err))
+		r.logger.Debug(fmt.Sprintf("Failed to remove track with name: %s. Error: %+v", name, err))
 		return nil, err
 	}
 	r.logger.Debug(fmt.Sprintf("Track deleted: %+v", t))
