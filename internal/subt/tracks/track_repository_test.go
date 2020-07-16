@@ -9,7 +9,7 @@ import (
 )
 
 func TestTrackRepository(t *testing.T) {
-	suite.Run(t, new(trackRepositoryTest))
+	suite.Run(t, new(trackRepositoryTestSuite))
 }
 
 type trackRepositoryTestSuite struct {
@@ -18,7 +18,7 @@ type trackRepositoryTestSuite struct {
 	repository Repository
 }
 
-func (s *trackRepositoryTest) SetupTest() {
+func (s *trackRepositoryTestSuite) SetupTest() {
 	var db *gorm.DB
 	dbConfig, err := ign.NewDatabaseConfigFromEnvVars()
 	s.NoError(err)
@@ -29,7 +29,7 @@ func (s *trackRepositoryTest) SetupTest() {
 	s.repository = NewRepository(s.db, ign.NewLoggerNoRollbar("track-repository-test", ign.VerbosityDebug))
 }
 
-func (s *trackRepositoryTest) addMockData(key string) *Track {
+func (s *trackRepositoryTestSuite) addMockData(key string) *Track {
 	value := &Track{
 		Name:          "Test" + key,
 		Image:         "test.org/image-" + key,
@@ -44,7 +44,7 @@ func (s *trackRepositoryTest) addMockData(key string) *Track {
 	return value
 }
 
-func (s *trackRepositoryTest) TestCreate() {
+func (s *trackRepositoryTestSuite) TestCreate() {
 	var count int
 	err := s.db.Model(&Track{}).Count(&count).Error
 	s.NoError(err)
@@ -67,7 +67,7 @@ func (s *trackRepositoryTest) TestCreate() {
 	s.Equal(1, count)
 }
 
-func (s *trackRepositoryTest) TestGetOne() {
+func (s *trackRepositoryTestSuite) TestGetOne() {
 	value := s.addMockData("Practice1")
 	s.addMockData("Practice2")
 	s.addMockData("Practice3")
@@ -78,7 +78,7 @@ func (s *trackRepositoryTest) TestGetOne() {
 	s.Equal(value.Name, result.Name)
 }
 
-func (s *trackRepositoryTest) TestGetAll() {
+func (s *trackRepositoryTestSuite) TestGetAll() {
 	valueA := s.addMockData("Practice1")
 	valueB := s.addMockData("Practice2")
 	valueC := s.addMockData("Practice3")
@@ -90,7 +90,7 @@ func (s *trackRepositoryTest) TestGetAll() {
 	s.Equal(valueC.ID, result[2].ID)
 }
 
-func (s *trackRepositoryTest) TestUpdate() {
+func (s *trackRepositoryTestSuite) TestUpdate() {
 	value := s.addMockData("Practice1")
 	value.BridgeImage = "test.org/bridge-image-changed"
 	result, err := s.repository.Update("TestPractice1", *value)
@@ -100,7 +100,7 @@ func (s *trackRepositoryTest) TestUpdate() {
 	s.False(value.UpdatedAt.Equal(result.UpdatedAt))
 }
 
-func (s *trackRepositoryTest) TestUpdateNonExistent() {
+func (s *trackRepositoryTestSuite) TestUpdateNonExistent() {
 	_, err := s.repository.Update("TestPractice1", Track{
 		Name:          "test",
 		Image:         "test",
@@ -113,7 +113,7 @@ func (s *trackRepositoryTest) TestUpdateNonExistent() {
 	s.Error(err)
 }
 
-func (s *trackRepositoryTest) TestUpdateEmptyField() {
+func (s *trackRepositoryTestSuite) TestUpdateEmptyField() {
 	value := s.addMockData("Practice1")
 	value.BridgeImage = ""
 	result, err := s.repository.Update("TestPractice1", *value)
@@ -121,7 +121,7 @@ func (s *trackRepositoryTest) TestUpdateEmptyField() {
 	s.Empty(result.BridgeImage)
 }
 
-func (s *trackRepositoryTest) TestDelete() {
+func (s *trackRepositoryTestSuite) TestDelete() {
 	value := s.addMockData("Practice1")
 
 	var count int
@@ -138,11 +138,11 @@ func (s *trackRepositoryTest) TestDelete() {
 	s.Equal(0, count)
 }
 
-func (s *trackRepositoryTest) TestDeleteNonExistent() {
+func (s *trackRepositoryTestSuite) TestDeleteNonExistent() {
 	_, err := s.repository.Delete("TestPractice")
 	s.Error(err)
 }
 
-func (s *trackRepositoryTest) AfterTest() {
+func (s *trackRepositoryTestSuite) AfterTest() {
 	s.db.Close()
 }
