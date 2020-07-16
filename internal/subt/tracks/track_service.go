@@ -50,7 +50,7 @@ func (s service) Create(input CreateTrackInput) (*Track, error) {
 	track := CreateTrackFromInput(input)
 	output, err := s.repository.Create(track)
 	if err != nil {
-		s.logger.Debug(fmt.Sprintf(" [Track.Service] Repository.Create() failed. Error: %+v", err))
+		s.logger.Debug(fmt.Sprintf(" [Track.Service] Creation failed failed. Error: %+v", err))
 		return nil, err
 	}
 	s.logger.Debug(fmt.Sprintf(" [Track.Service] Track created. Output: %+v", output))
@@ -62,7 +62,14 @@ func (s service) Get(name string) (*Track, error) {
 }
 
 func (s service) GetAll() ([]Track, error) {
-	panic("implement me")
+	s.logger.Debug(" [Track.Service] Getting all tracks")
+	tracks, err := s.repository.GetAll()
+	if err != nil {
+		s.logger.Debug(fmt.Sprintf(" [Track.Service] Getting tracks failed. Error: %+v", err))
+		return nil, err
+	}
+	s.logger.Debug(fmt.Sprintf(" [Track.Service] Getting all tracks succeeded. Tracks: %+v", tracks))
+	return tracks, nil
 }
 
 func (s service) Update(track UpdateTrackInput) (*Track, error) {
