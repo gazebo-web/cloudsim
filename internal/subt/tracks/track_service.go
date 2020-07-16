@@ -54,7 +54,7 @@ func (s service) Create(input CreateTrackInput) (*Track, error) {
 		s.logger.Debug(fmt.Sprintf(" [Track.Service] Creation failed failed. Error: %+v", err))
 		return nil, err
 	}
-	s.logger.Debug(fmt.Sprintf(" [Track.Service] Track created. Output: %+v", output))
+	s.logger.Debug(fmt.Sprintf(" [Track.Service] Track created. Output: %+v", *output))
 	return output, nil
 }
 
@@ -66,7 +66,7 @@ func (s service) Get(name string) (*Track, error) {
 		s.logger.Debug(fmt.Sprintf(" [Track.Service] Getting track with name %s failed. Error: %+v", name, err))
 		return nil, err
 	}
-	s.logger.Debug(fmt.Sprintf(" [Track.Service] Track found. Output: %+v", track))
+	s.logger.Debug(fmt.Sprintf(" [Track.Service] Track found. Output: %+v", *track))
 	return track, nil
 }
 
@@ -85,6 +85,11 @@ func (s service) GetAll() ([]Track, error) {
 // Update updates a track with the given name and populates it with information provided by the given input.
 func (s service) Update(name string, input UpdateTrackInput) (*Track, error) {
 	s.logger.Debug(fmt.Sprintf(" [Track.Service] Updating track with name: %s. Input: %+v", name, input))
+	err := s.validator.Struct(&input)
+	if err != nil {
+		s.logger.Debug(fmt.Sprintf(" [Track.Service] Validating input failed. Error: %+v", err))
+		return nil, err
+	}
 	track, err := s.Get(name)
 	if err != nil {
 		return nil, err
@@ -95,13 +100,24 @@ func (s service) Update(name string, input UpdateTrackInput) (*Track, error) {
 		s.logger.Debug(fmt.Sprintf(" [Track.Service] Updating track with name: %s failed. Error: %+v", name, err))
 		return nil, err
 	}
-	s.logger.Debug(fmt.Sprintf(" [Track.Service] Updating track with name: %s succeeded. Output: %+v", name, track))
+	s.logger.Debug(fmt.Sprintf(" [Track.Service] Updating track with name: %s succeeded. Output: %+v", name, *track))
 	return track, nil
 }
 
 // Delete removes the track with the given name.
 func (s service) Delete(name string) (*Track, error) {
-	panic("implement me")
+	s.logger.Debug(fmt.Sprintf(" [Track.Service] Removing track with name: %s", name))
+	input, err := s.Get(name)
+	if err != nil {
+		return nil, err
+	}
+	result, err := s.repository.Delete(*input)
+	if err != nil {
+		s.logger.Debug(fmt.Sprintf(" [Track.Service] Deleting the track with name: %s failed. Error: %+v", name, err))
+		return nil, err
+	}
+	s.logger.Debug(fmt.Sprintf(" [Track.Service] Track deleted with name: %s. Track: %+v", name, *result))
+	return result, nil
 }
 
 // NewService initializes a new Service implementation
