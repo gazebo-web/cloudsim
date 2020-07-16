@@ -27,7 +27,7 @@ type serviceRead interface {
 
 // serviceUpdate has the business logic for updating a Track.
 type serviceUpdate interface {
-	Update(track UpdateTrackInput) (*Track, error)
+	Update(name string, input UpdateTrackInput) (*Track, error)
 }
 
 // serviceDelete has the business logic for deleting a Track.
@@ -41,6 +41,7 @@ type service struct {
 	logger     ign.Logger
 }
 
+// Create creates a new Track from the given Input.
 func (s service) Create(input CreateTrackInput) (*Track, error) {
 	s.logger.Debug(fmt.Sprintf(" [Track.Service] Creating track. Input: %+v", input))
 	if err := s.validator.Struct(&input); err != nil {
@@ -57,10 +58,19 @@ func (s service) Create(input CreateTrackInput) (*Track, error) {
 	return output, nil
 }
 
+// Get gets a Track with the given name.
 func (s service) Get(name string) (*Track, error) {
-	panic("implement me")
+	s.logger.Debug(" [Track.Service] Getting Track with name: ", name)
+	track, err := s.repository.Get(name)
+	if err != nil {
+		s.logger.Debug(fmt.Sprintf(" [Track.Service] Getting track with name %s failed. Error: %+v", name, err))
+		return nil, err
+	}
+	s.logger.Debug(fmt.Sprintf(" [Track.Service] Track found. Output: %+v", track))
+	return track, nil
 }
 
+// GetAll returns a slice with all the tracks.
 func (s service) GetAll() ([]Track, error) {
 	s.logger.Debug(" [Track.Service] Getting all tracks")
 	tracks, err := s.repository.GetAll()
@@ -72,14 +82,29 @@ func (s service) GetAll() ([]Track, error) {
 	return tracks, nil
 }
 
-func (s service) Update(track UpdateTrackInput) (*Track, error) {
-	panic("implement me")
+// Update updates a track with the given name and populates it with information provided by the given input.
+func (s service) Update(name string, input UpdateTrackInput) (*Track, error) {
+	s.logger.Debug(fmt.Sprintf(" [Track.Service] Updating track with name: %s. Input: %+v", name, input))
+	track, err := s.Get(name)
+	if err != nil {
+		return nil, err
+	}
+	updatedTrack := UpdateTrackFromInput(*track, input)
+	track, err = s.repository.Update(name, updatedTrack)
+	if err != nil {
+		s.logger.Debug(fmt.Sprintf(" [Track.Service] Updating track with name: %s failed. Error: %+v", name, err))
+		return nil, err
+	}
+	s.logger.Debug(fmt.Sprintf(" [Track.Service] Updating track with name: %s succeeded. Output: %+v", name, track))
+	return track, nil
 }
 
+// Delete removes the track with the given name.
 func (s service) Delete(name string) (*Track, error) {
 	panic("implement me")
 }
 
+// NewService initializes a new Service implementation
 func NewService(r Repository, v *validator.Validate, logger ign.Logger) Service {
 	return &service{
 		repository: r,
