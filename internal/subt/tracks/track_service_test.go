@@ -116,3 +116,46 @@ func (s *trackServiceTestSuite) TestGetOne_NonExistent() {
 	_, err := s.service.Get("Test")
 	s.Error(err)
 }
+
+func (s *trackServiceTestSuite) TestUpdate() {
+	_, err := s.service.Create(CreateTrackInput{
+		Name:          "Virtual TestA",
+		Image:         "testA",
+		BridgeImage:   "testA",
+		StatsTopic:    "testA",
+		WarmupTopic:   "testA",
+		MaxSimSeconds: 30,
+		Public:        false,
+	})
+
+	s.NoError(err)
+
+	before, err := s.service.Get("Virtual TestA")
+	s.NoError(err)
+
+	updatedTrackInput := UpdateTrackInput{
+		Name:          "Virtual TestB",
+		Image:         "testB",
+		BridgeImage:   "testB",
+		StatsTopic:    "testB",
+		WarmupTopic:   "testB",
+		MaxSimSeconds: 30,
+		Public:        true,
+	}
+
+	s.service.Update("Virtual TestA", updatedTrackInput)
+
+	result, err := s.service.Get("Virtual TestB")
+	s.NoError(err)
+
+	s.Equal(before.ID, result.ID)
+	s.Equal(updatedTrackInput.Name, result.Name)
+}
+
+func (s *trackServiceTestSuite) TestUpdate_InvalidInput() {
+
+}
+
+func (s *trackServiceTestSuite) TestUpdate_NonExistent() {
+
+}
