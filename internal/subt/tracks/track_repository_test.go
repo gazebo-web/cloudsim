@@ -116,18 +116,13 @@ func (s *trackRepositoryTestSuite) TestDelete() {
 	s.NoError(err)
 	s.Equal(1, count)
 
-	result, err := s.repository.Delete("TestPractice1")
+	result, err := s.repository.Delete(*value)
 	s.NoError(err)
 	s.Equal(value.ID, result.ID)
 
 	err = s.db.Model(&Track{}).Count(&count).Error
 	s.NoError(err)
 	s.Equal(0, count)
-}
-
-func (s *trackRepositoryTestSuite) TestDeleteNonExistent() {
-	_, err := s.repository.Delete("TestPractice")
-	s.Error(err)
 }
 
 func (s *trackRepositoryTestSuite) AfterTest() {

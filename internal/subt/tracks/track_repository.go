@@ -32,7 +32,7 @@ type repositoryUpdate interface {
 
 // repositoryDelete has a method to delete a track from the database.
 type repositoryDelete interface {
-	Delete(name string) (*Track, error)
+	Delete(track Track) (*Track, error)
 }
 
 // repository is a Repository implementation.
@@ -96,22 +96,18 @@ func (r repository) Update(name string, track Track) (*Track, error) {
 	return &track, nil
 }
 
-// Delete removes a record with the given name.
+// Delete removes the given Track.
 // It returns the deleted record.
 // It will return an error if the record could not be deleted.
-func (r repository) Delete(name string) (*Track, error) {
-	r.logger.Debug(fmt.Sprintf(" [Track.Repository] Removing track with name: %s", name))
-	t, err := r.Get(name)
+func (r repository) Delete(track Track) (*Track, error) {
+	r.logger.Debug(fmt.Sprintf(" [Track.Repository] Removing track with name: %s", track.Name))
+	err := r.db.Model(&Track{}).Where("name = ?", track.Name).Delete(&track).Error
 	if err != nil {
+		r.logger.Debug(fmt.Sprintf(" [Track.Repository] Failed to remove track with name: %s. Error: %+v", track.Name, err))
 		return nil, err
 	}
-	err = r.db.Model(&Track{}).Delete(t, "name = ?", name).Error
-	if err != nil {
-		r.logger.Debug(fmt.Sprintf(" [Track.Repository] Failed to remove track with name: %s. Error: %+v", name, err))
-		return nil, err
-	}
-	r.logger.Debug(fmt.Sprintf(" [Track.Repository] Track deleted: %+v", t))
-	return t, nil
+	r.logger.Debug(fmt.Sprintf(" [Track.Repository] Track deleted: %+v", track))
+	return &track, nil
 }
 
 // NewRepository initializes a new Repository implementation using gorm.
