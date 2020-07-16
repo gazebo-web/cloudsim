@@ -57,3 +57,48 @@ func (s *trackServiceTestSuite) TestCreate_EmptyFields() {
 	_, err := s.service.Create(input)
 	s.Error(err)
 }
+
+func (s *trackServiceTestSuite) TestGetAll() {
+	trackA, _ := s.service.Create(CreateTrackInput{
+		Name:          "Virtual TestA",
+		Image:         "testA",
+		BridgeImage:   "testA",
+		StatsTopic:    "testA",
+		WarmupTopic:   "testA",
+		MaxSimSeconds: 30,
+		Public:        false,
+	})
+	trackB, _ := s.service.Create(CreateTrackInput{
+		Name:          "Virtual TestB",
+		Image:         "testB",
+		BridgeImage:   "testB",
+		StatsTopic:    "testB",
+		WarmupTopic:   "testB",
+		MaxSimSeconds: 30,
+		Public:        false,
+	})
+	trackC, _ := s.service.Create(CreateTrackInput{
+		Name:          "Virtual TestC",
+		Image:         "testC",
+		BridgeImage:   "testC",
+		StatsTopic:    "testC",
+		WarmupTopic:   "testC",
+		MaxSimSeconds: 30,
+		Public:        false,
+	})
+
+	tracks, err := s.service.GetAll()
+	s.NoError(err)
+	s.Len(tracks, 3)
+	s.Equal(trackA, tracks[0])
+	s.Equal(trackB, tracks[1])
+	s.Equal(trackC, tracks[2])
+}
+
+func (s *trackServiceTestSuite) TestGetOne_Exists() {
+
+}
+
+func (s *trackServiceTestSuite) TestGetOne_NonExistent() {
+
+}
