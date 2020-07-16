@@ -45,13 +45,13 @@ type repository struct {
 // It returns the created track.
 // It will return an error if the track creation failed.
 func (r repository) Create(track Track) (*Track, error) {
-	r.logger.Debug(fmt.Sprintf("Creating Track. Input: %+v", track))
+	r.logger.Debug(fmt.Sprintf(" [Track.Repository] Creating Track. Input: %+v", track))
 	err := r.db.Model(&Track{}).Create(&track).Error
 	if err != nil {
-		r.logger.Debug(fmt.Sprintf("Failed to persist a track. Error: %+v", err))
+		r.logger.Debug(fmt.Sprintf(" [Track.Repository] Failed to persist a track. Error: %+v", err))
 		return nil, err
 	}
-	r.logger.Debug(fmt.Sprintf("Track created. Output: %+v", track))
+	r.logger.Debug(fmt.Sprintf(" [Track.Repository] Track created. Output: %+v", track))
 	return &track, nil
 }
 
@@ -59,13 +59,13 @@ func (r repository) Create(track Track) (*Track, error) {
 // If the track wasn't found, it will return an error.
 func (r repository) Get(name string) (*Track, error) {
 	var t Track
-	r.logger.Debug(fmt.Sprintf("Getting Track with name: %s", name))
+	r.logger.Debug(fmt.Sprintf(" [Track.Repository] Getting Track with name: %s", name))
 	err := r.db.Model(&Track{}).First(&t).Where("name = ?", name).Error
 	if err != nil {
-		r.logger.Debug(fmt.Sprintf("Failed to get track with name: %s. Error: %+v", name, err))
+		r.logger.Debug(fmt.Sprintf(" [Track.Repository] Failed to get track with name: %s. Error: %+v", name, err))
 		return nil, err
 	}
-	r.logger.Debug(fmt.Sprintf("Track returned: %+v", t))
+	r.logger.Debug(fmt.Sprintf(" [Track.Repository] Track returned: %+v", t))
 	return &t, nil
 }
 
@@ -75,10 +75,10 @@ func (r repository) GetAll() ([]Track, error) {
 	r.logger.Debug("Getting the list of tracks")
 	err := r.db.Model(&Track{}).Find(&t).Error
 	if err != nil {
-		r.logger.Debug(fmt.Sprintf("Failed to get the list of tracks. Error: %+v", err))
+		r.logger.Debug(fmt.Sprintf(" [Track.Repository] Failed to get the list of tracks. Error: %+v", err))
 		return nil, err
 	}
-	r.logger.Debug(fmt.Sprintf("Tracks returned: %+v", t))
+	r.logger.Debug(fmt.Sprintf(" [Track.Repository] Tracks returned: %+v", t))
 	return t, nil
 }
 
@@ -86,17 +86,17 @@ func (r repository) GetAll() ([]Track, error) {
 // It returns the updated track.
 // It will return an error if the update could not be processed.
 func (r repository) Update(name string, track Track) (*Track, error) {
-	r.logger.Debug(fmt.Sprintf("Updating track with name: %s. Input: %+v", name, track))
+	r.logger.Debug(fmt.Sprintf(" [Track.Repository] Updating track with name: %s. Input: %+v", name, track))
 	_, err := r.Get(name)
 	if err != nil {
 		return nil, err
 	}
 	err = r.db.Model(&Track{}).Save(&track).Where("name = ?", name).Error
 	if err != nil {
-		r.logger.Debug(fmt.Sprintf("Failed to update track with name: %s. Error: %+v", name, err))
+		r.logger.Debug(fmt.Sprintf(" [Track.Repository] Failed to update track with name: %s. Error: %+v", name, err))
 		return nil, err
 	}
-	r.logger.Debug(fmt.Sprintf("Track updated: %+v", track))
+	r.logger.Debug(fmt.Sprintf(" [Track.Repository] Track updated: %+v", track))
 	return &track, nil
 }
 
@@ -104,17 +104,17 @@ func (r repository) Update(name string, track Track) (*Track, error) {
 // It returns the deleted record.
 // It will return an error if the record could not be deleted.
 func (r repository) Delete(name string) (*Track, error) {
-	r.logger.Debug(fmt.Sprintf("Removing track with name: %s", name))
+	r.logger.Debug(fmt.Sprintf(" [Track.Repository] Removing track with name: %s", name))
 	t, err := r.Get(name)
 	if err != nil {
 		return nil, err
 	}
 	err = r.db.Model(&Track{}).Delete(t, "name = ?", name).Error
 	if err != nil {
-		r.logger.Debug(fmt.Sprintf("Failed to remove track with name: %s. Error: %+v", name, err))
+		r.logger.Debug(fmt.Sprintf(" [Track.Repository] Failed to remove track with name: %s. Error: %+v", name, err))
 		return nil, err
 	}
-	r.logger.Debug(fmt.Sprintf("Track deleted: %+v", t))
+	r.logger.Debug(fmt.Sprintf(" [Track.Repository] Track deleted: %+v", t))
 	return t, nil
 }
 

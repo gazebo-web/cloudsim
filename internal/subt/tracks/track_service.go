@@ -1,5 +1,11 @@
 package tracks
 
+import (
+	"fmt"
+	"gitlab.com/ignitionrobotics/web/ign-go"
+	"gopkg.in/go-playground/validator.v9"
+)
+
 // Service groups a set of methods that have the business logic to perform CRUD operations for a Track.
 type Service interface {
 	serviceCreate
@@ -10,7 +16,7 @@ type Service interface {
 
 // serviceCreate has the business logic for creating a Track.
 type serviceCreate interface {
-	Create(track CreateTrackInput) (*Track, error)
+	Create(input CreateTrackInput) (*Track, error)
 }
 
 // serviceRead has the business logic for reading one or multiple Tracks.
@@ -31,10 +37,24 @@ type serviceDelete interface {
 
 type service struct {
 	repository Repository
+	validator  *validator.Validate
+	logger     ign.Logger
 }
 
-func (s service) Create(track CreateTrackInput) (*Track, error) {
-	panic("implement me")
+func (s service) Create(input CreateTrackInput) (*Track, error) {
+	s.logger.Debug(fmt.Sprintf(" [Track.Service] Creating track. Input: %+v", input))
+	if err := s.validator.Struct(&input); err != nil {
+		s.logger.Debug(fmt.Sprintf(" [Track.Service] Validation failed. Error: %+v", err))
+		return nil, err
+	}
+	track := CreateTrackFromInput(input)
+	output, err := s.repository.Create(track)
+	if err != nil {
+		s.logger.Debug(fmt.Sprintf(" [Track.Service] Repository.Create() failed. Error: %+v", err))
+		return nil, err
+	}
+	s.logger.Debug(fmt.Sprintf(" [Track.Service] Track created. Output: %+v", output))
+	return output, nil
 }
 
 func (s service) Get(name string) (*Track, error) {
@@ -53,8 +73,10 @@ func (s service) Delete(name string) (*Track, error) {
 	panic("implement me")
 }
 
-func NewService(r Repository) Service {
+func NewService(r Repository, v *validator.Validate, logger ign.Logger) Service {
 	return &service{
 		repository: r,
+		validator:  v,
+		logger:     logger,
 	}
 }

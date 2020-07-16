@@ -4,6 +4,7 @@ import (
 	"github.com/jinzhu/gorm"
 	"github.com/stretchr/testify/suite"
 	"gitlab.com/ignitionrobotics/web/ign-go"
+	"gopkg.in/go-playground/validator.v9"
 	"testing"
 )
 
@@ -26,8 +27,9 @@ func (s *trackServiceTestSuite) SetupTest() {
 	s.db = db
 	s.db.DropTableIfExists(&Track{})
 	s.db.AutoMigrate(&Track{})
-	s.repository = NewRepository(s.db, ign.NewLoggerNoRollbar("track-service-test", ign.VerbosityDebug))
-	s.service = NewService(s.repository)
+	logger := ign.NewLoggerNoRollbar("track-service-test", ign.VerbosityDebug)
+	s.repository = NewRepository(s.db, logger)
+	s.service = NewService(s.repository, validator.New(), logger)
 }
 
 func (s *trackServiceTestSuite) TestCreate_OK() {

@@ -21,3 +21,29 @@ type Track struct {
 func (Track) TableName() string {
 	return "subt_tracks"
 }
+
+// CreateTrackFromInput receives an input and returns a new Track with the input values.
+func CreateTrackFromInput(input CreateTrackInput) Track {
+	return Track{
+		Name:          input.Name,
+		Image:         input.Image,
+		BridgeImage:   input.BridgeImage,
+		StatsTopic:    input.StatsTopic,
+		WarmupTopic:   input.WarmupTopic,
+		MaxSimSeconds: input.MaxSimSeconds,
+		Public:        input.Public,
+	}
+}
+
+// UpdateTrackFromInput receives a model and an updated input.
+// It returns the model updated with the input values.
+func UpdateTrackFromInput(model Track, input UpdateTrackInput) Track {
+	model.Name = input.Name
+	model.Image = input.Image
+	model.BridgeImage = input.BridgeImage
+	model.StatsTopic = input.StatsTopic
+	model.WarmupTopic = input.WarmupTopic
+	model.MaxSimSeconds = input.MaxSimSeconds
+	model.Public = input.Public
+	return model
+}
