@@ -1,11 +1,11 @@
 package users
 
 import (
+	"context"
+	"github.com/jinzhu/gorm"
 	fuelusers "gitlab.com/ignitionrobotics/web/fuelserver/bundles/users"
 	per "gitlab.com/ignitionrobotics/web/fuelserver/permissions"
 	"gitlab.com/ignitionrobotics/web/ign-go"
-	"context"
-	"github.com/jinzhu/gorm"
 	"log"
 	"strings"
 )
