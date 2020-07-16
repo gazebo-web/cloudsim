@@ -87,11 +87,7 @@ func (r repository) GetAll() ([]Track, error) {
 // It will return an error if the update could not be processed.
 func (r repository) Update(name string, track Track) (*Track, error) {
 	r.logger.Debug(fmt.Sprintf(" [Track.Repository] Updating track with name: %s. Input: %+v", name, track))
-	_, err := r.Get(name)
-	if err != nil {
-		return nil, err
-	}
-	err = r.db.Model(&Track{}).Save(&track).Where("name = ?", name).Error
+	err := r.db.Model(&Track{}).Where("name = ?", name).Save(&track).Error
 	if err != nil {
 		r.logger.Debug(fmt.Sprintf(" [Track.Repository] Failed to update track with name: %s. Error: %+v", name, err))
 		return nil, err

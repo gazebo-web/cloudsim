@@ -100,19 +100,6 @@ func (s *trackRepositoryTestSuite) TestUpdate() {
 	s.False(value.UpdatedAt.Equal(result.UpdatedAt))
 }
 
-func (s *trackRepositoryTestSuite) TestUpdateNonExistent() {
-	_, err := s.repository.Update("TestPractice1", Track{
-		Name:          "test",
-		Image:         "test",
-		BridgeImage:   "test",
-		StatsTopic:    "test",
-		WarmupTopic:   "test",
-		MaxSimSeconds: 20,
-		Public:        false,
-	})
-	s.Error(err)
-}
-
 func (s *trackRepositoryTestSuite) TestUpdateEmptyField() {
 	value := s.addMockData("Practice1")
 	value.BridgeImage = ""
