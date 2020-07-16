@@ -127,7 +127,6 @@ func (s *trackServiceTestSuite) TestUpdate() {
 		MaxSimSeconds: 30,
 		Public:        false,
 	})
-
 	s.NoError(err)
 
 	before, err := s.service.Get("Virtual TestA")
@@ -153,9 +152,53 @@ func (s *trackServiceTestSuite) TestUpdate() {
 }
 
 func (s *trackServiceTestSuite) TestUpdate_InvalidInput() {
+	_, err := s.service.Create(CreateTrackInput{
+		Name:          "Virtual TestA",
+		Image:         "testA",
+		BridgeImage:   "testA",
+		StatsTopic:    "testA",
+		WarmupTopic:   "testA",
+		MaxSimSeconds: 30,
+		Public:        false,
+	})
+	s.NoError(err)
 
+	updateTrackInput := UpdateTrackInput{}
+	_, err = s.service.Update("Virtual TestA", updateTrackInput)
+	s.Error(err)
 }
 
 func (s *trackServiceTestSuite) TestUpdate_NonExistent() {
+	updateTrackInput := UpdateTrackInput{}
+	_, err := s.service.Update("Virtual TestA", updateTrackInput)
+	s.Error(err)
+}
 
+func (s *trackServiceTestSuite) TestDelete() {
+	_, err := s.service.Create(CreateTrackInput{
+		Name:          "Virtual TestA",
+		Image:         "testA",
+		BridgeImage:   "testA",
+		StatsTopic:    "testA",
+		WarmupTopic:   "testA",
+		MaxSimSeconds: 30,
+		Public:        false,
+	})
+	s.NoError(err)
+
+	before, err := s.service.Get("Virtual TestA")
+	s.NoError(err)
+
+	after, err := s.service.Delete(before.Name)
+
+	s.Equal(before.ID, after.ID)
+
+	result, err := s.service.Get(before.Name)
+	s.Error(err)
+	s.Nil(result)
+}
+
+func (s *trackServiceTestSuite) TestDelete_NonExistent() {
+	_, err := s.service.Delete("Test")
+	s.Error(err)
 }
