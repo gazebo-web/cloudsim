@@ -12,7 +12,7 @@ func TestTrackRepository(t *testing.T) {
 	suite.Run(t, new(trackRepositoryTest))
 }
 
-type trackRepositoryTest struct {
+type trackRepositoryTestSuite struct {
 	suite.Suite
 	db         *gorm.DB
 	repository Repository
