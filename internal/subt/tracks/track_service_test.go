@@ -90,9 +90,9 @@ func (s *trackServiceTestSuite) TestGetAll() {
 	tracks, err := s.service.GetAll()
 	s.NoError(err)
 	s.Len(tracks, 3)
-	s.Equal(trackA, tracks[0])
-	s.Equal(trackB, tracks[1])
-	s.Equal(trackC, tracks[2])
+	s.Equal(trackA.Name, tracks[0].Name)
+	s.Equal(trackB.Name, tracks[1].Name)
+	s.Equal(trackC.Name, tracks[2].Name)
 }
 
 func (s *trackServiceTestSuite) TestGetOne_Exists() {
