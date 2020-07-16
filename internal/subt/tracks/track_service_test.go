@@ -96,9 +96,23 @@ func (s *trackServiceTestSuite) TestGetAll() {
 }
 
 func (s *trackServiceTestSuite) TestGetOne_Exists() {
+	createdTrack, _ := s.service.Create(CreateTrackInput{
+		Name:          "Virtual TestA",
+		Image:         "testA",
+		BridgeImage:   "testA",
+		StatsTopic:    "testA",
+		WarmupTopic:   "testA",
+		MaxSimSeconds: 30,
+		Public:        false,
+	})
 
+	result, err := s.service.Get(createdTrack.Name)
+
+	s.NoError(err)
+	s.Equal(createdTrack.Name, result.Name)
 }
 
 func (s *trackServiceTestSuite) TestGetOne_NonExistent() {
-
+	_, err := s.service.Get("Test")
+	s.Error(err)
 }
