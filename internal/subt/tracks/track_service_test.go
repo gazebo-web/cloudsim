@@ -35,8 +35,8 @@ func (s *trackServiceTestSuite) SetupTest() {
 func (s *trackServiceTestSuite) TestCreate_OK() {
 	input := CreateTrackInput{
 		Name:          "Virtual Stix",
-		Image:         "dkr.ecr.us-east-1.amazonws.com/stix:latest",
-		BridgeImage:   "dkr.ecr.us-east-1.amazonws.com/stix-bridge:latest",
+		Image:         "https://dkr.ecr.us-east-1.amazonws.com/stix:latest",
+		BridgeImage:   "https://dkr.ecr.us-east-1.amazonws.com/stix-bridge:latest",
 		StatsTopic:    "/stats",
 		WarmupTopic:   "/warmup",
 		MaxSimSeconds: 3600,
@@ -59,7 +59,7 @@ func (s *trackServiceTestSuite) TestCreate_EmptyFields() {
 }
 
 func (s *trackServiceTestSuite) TestGetAll() {
-	trackA, _ := s.service.Create(CreateTrackInput{
+	trackA, _ := s.repository.Create(Track{
 		Name:          "Virtual TestA",
 		Image:         "testA",
 		BridgeImage:   "testA",
@@ -68,7 +68,7 @@ func (s *trackServiceTestSuite) TestGetAll() {
 		MaxSimSeconds: 30,
 		Public:        false,
 	})
-	trackB, _ := s.service.Create(CreateTrackInput{
+	trackB, _ := s.repository.Create(Track{
 		Name:          "Virtual TestB",
 		Image:         "testB",
 		BridgeImage:   "testB",
@@ -77,7 +77,7 @@ func (s *trackServiceTestSuite) TestGetAll() {
 		MaxSimSeconds: 30,
 		Public:        false,
 	})
-	trackC, _ := s.service.Create(CreateTrackInput{
+	trackC, _ := s.repository.Create(Track{
 		Name:          "Virtual TestC",
 		Image:         "testC",
 		BridgeImage:   "testC",
@@ -96,7 +96,7 @@ func (s *trackServiceTestSuite) TestGetAll() {
 }
 
 func (s *trackServiceTestSuite) TestGetOne_Exists() {
-	createdTrack, _ := s.service.Create(CreateTrackInput{
+	createdTrack, _ := s.repository.Create(Track{
 		Name:          "Virtual TestA",
 		Image:         "testA",
 		BridgeImage:   "testA",
@@ -118,7 +118,7 @@ func (s *trackServiceTestSuite) TestGetOne_NonExistent() {
 }
 
 func (s *trackServiceTestSuite) TestUpdate() {
-	_, err := s.service.Create(CreateTrackInput{
+	_, err := s.repository.Create(Track{
 		Name:          "Virtual TestA",
 		Image:         "testA",
 		BridgeImage:   "testA",
@@ -152,7 +152,7 @@ func (s *trackServiceTestSuite) TestUpdate() {
 }
 
 func (s *trackServiceTestSuite) TestUpdate_InvalidInput() {
-	_, err := s.service.Create(CreateTrackInput{
+	_, err := s.repository.Create(Track{
 		Name:          "Virtual TestA",
 		Image:         "testA",
 		BridgeImage:   "testA",
@@ -175,7 +175,7 @@ func (s *trackServiceTestSuite) TestUpdate_NonExistent() {
 }
 
 func (s *trackServiceTestSuite) TestDelete() {
-	_, err := s.service.Create(CreateTrackInput{
+	_, err := s.repository.Create(Track{
 		Name:          "Virtual TestA",
 		Image:         "testA",
 		BridgeImage:   "testA",

@@ -3,8 +3,8 @@ package tracks
 // CreateTrackInput is an input for creating a new track.
 type CreateTrackInput struct {
 	Name        string `json:"name" validate:"required,gt=10"`
-	Image       string `json:"image" validate:"required,fqdn"`
-	BridgeImage string `json:"bridge_image" validate:"required,fqdn"`
+	Image       string `json:"image" validate:"required"`
+	BridgeImage string `json:"bridge_image" validate:"required"`
 	// Topic used to track general stats of the simulation (runtime, sim runtime, etc.)
 	StatsTopic string `json:"stats_topic" validate:"required"`
 	// Topic used to track when the simulation officially starts and ends
@@ -19,8 +19,8 @@ type CreateTrackInput struct {
 // UpdateTrackInput is an input for updating an existent track.
 type UpdateTrackInput struct {
 	Name        string `json:"name" validate:"required,gt=10"`
-	Image       string `json:"image" validate:"required,fqdn"`
-	BridgeImage string `json:"bridge_image" validate:"required,fqdn"`
+	Image       string `json:"image" validate:"required"`
+	BridgeImage string `json:"bridge_image" validate:"required"`
 	// Topic used to track general stats of the simulation (runtime, sim runtime, etc.)
 	StatsTopic string `json:"stats_topic" validate:"required"`
 	// Topic used to track when the simulation officially starts and ends
