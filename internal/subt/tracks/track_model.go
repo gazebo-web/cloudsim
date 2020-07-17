@@ -18,6 +18,7 @@ type Track struct {
 	Public bool `json:"public"`
 }
 
+// TableName returns the name of the Track table.
 func (Track) TableName() string {
 	return "subt_tracks"
 }
