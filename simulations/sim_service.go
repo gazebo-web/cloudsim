@@ -170,8 +170,13 @@ type Service struct {
 var SimServImpl SimService
 
 type simServConfig struct {
-	PoolSizeLaunchSim    int `env:"SIMSVC_POOL_LAUNCH_SIM" envDefault:"10"`
+	// KubernetesNamespace is the Kubernetes namespace for simulation resources.
+	KubernetesNamespace string `env:"SIMSVC_KUBERNETES_NAMESPACE" envDefault:"default"`
+	// PoolSizeLaunchSim is the number of worker threads available to launch simulations.
+	PoolSizeLaunchSim int `env:"SIMSVC_POOL_LAUNCH_SIM" envDefault:"10"`
+	// PoolSizeTerminateSim is the number of worker threads available to terminate simulations.
 	PoolSizeTerminateSim int `env:"SIMSVC_POOL_TERMINATE_SIM" envDefault:"10"`
+	// PoolSizeErrorHandler is the number of worker threads available to handle simulation errors.
 	PoolSizeErrorHandler int `env:"SIMSVC_POOL_ERROR_HANDLER" envDefault:"20"`
 	// Timeout in seconds to wait until a new Pod is ready. Default: 5 minutes.
 	PodReadyTimeoutSeconds int `env:"SIMSVC_POD_READY_TIMEOUT_SECONDS" envDefault:"300"`
@@ -182,7 +187,8 @@ type simServConfig struct {
 	// MaxDurationForSimulations is the maximum number of minutes a simulation can run in cloudsim.
 	// This is a default value. Specific ApplicationTypes are expected to overwrite this.
 	MaxDurationForSimulations int `env:"SIMSVC_SIM_MAX_DURATION_MINUTES" envDefault:"45"`
-	IsTest                    bool
+	// IsTest determines if a service is being used for a test
+	IsTest bool
 }
 
 // ApplicationType represents an Application (eg. SubT). Applications are used
@@ -444,7 +450,7 @@ func (s *Service) GetApplications() map[string]ApplicationType {
 func (s *Service) initializeRunningSimulationsFromCluster(ctx context.Context, tx *gorm.DB) error {
 
 	// Find all Pods associated to cloudsim
-	podsInterface := s.clientset.CoreV1().Pods(corev1.NamespaceDefault)
+	podsInterface := s.clientset.CoreV1().Pods(s.cfg.KubernetesNamespace)
 	pods, err := podsInterface.List(metav1.ListOptions{LabelSelector: cloudsimTagLabel})
 	if err != nil {
 		logger(ctx).Error("Error getting initial list of Cloudsim Pods from cluster", err)
@@ -798,7 +804,7 @@ func (s *Service) countPods(ctx context.Context, user *users.User) (interface{},
 		return nil, ign.NewErrorMessage(ign.ErrorUnauthorized)
 	}
 
-	pods, err := s.clientset.CoreV1().Pods(metav1.NamespaceDefault).List(metav1.ListOptions{})
+	pods, err := s.clientset.CoreV1().Pods(s.cfg.KubernetesNamespace).List(metav1.ListOptions{})
 	if err != nil {
 		return nil, ign.NewErrorMessageWithBase(ign.ErrorUnexpected, err)
 	}
@@ -1423,7 +1429,7 @@ func (s *Service) startSimulation(ctx context.Context, tx *gorm.DB,
 		}
 		// Wait until Nodes are ready before updating the status.
 		timeout := time.Duration(s.cfg.NodeReadyTimeoutSeconds) * time.Second
-		if err := WaitForNodesReady(ctx, s.clientset, corev1.NamespaceDefault, *nodeSelectorGroupID, timeout); err != nil {
+		if err := WaitForNodesReady(ctx, s.clientset, s.cfg.KubernetesNamespace, *nodeSelectorGroupID, timeout); err != nil {
 			return nil, ign.NewErrorMessageWithBase(ign.ErrorK8Create, err)
 		}
 		timeTrack(ctx, tstart, "startSimulation - launchNodes")
@@ -1444,7 +1450,7 @@ func (s *Service) startSimulation(ctx context.Context, tx *gorm.DB,
 		// Idea, use kubernetes's readinessProbes for that.
 		groupIDLabel := getPodLabelSelectorForSearches(groupID)
 		timeout = time.Duration(s.cfg.PodReadyTimeoutSeconds) * time.Second
-		if err := WaitForPodsReady(ctx, s.clientset, corev1.NamespaceDefault, groupIDLabel, timeout); err != nil {
+		if err := WaitForPodsReady(ctx, s.clientset, s.cfg.KubernetesNamespace, groupIDLabel, timeout); err != nil {
 			return nil, ign.NewErrorMessageWithBase(ign.ErrorK8Create, err)
 		}
 
