@@ -30,8 +30,9 @@ func (g GormRepository) PluralName() string {
 // Model returns a pointer to the entity struct for this repository.
 // Example: &Car{}
 func (g GormRepository) Model() domain.Entity {
-	copy := g.entity
-	return copy
+	c := new(domain.Entity)
+	*c = g.entity
+	return *c
 }
 
 // Create persists the given entities in the database.
