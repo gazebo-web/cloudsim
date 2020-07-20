@@ -17,13 +17,13 @@ type GormRepository struct {
 // SingularName returns the singular name for this repository's entity.
 // Example: "Car"
 func (g GormRepository) SingularName() string {
-	panic("Must be implemented by the specific repository")
+	return g.Model().SingularName()
 }
 
 // PluralName returns the plural name for this repository's entity.
 // Example: "Cars"
 func (g GormRepository) PluralName() string {
-	panic("Must be implemented by the specific repository")
+	return g.Model().PluralName()
 }
 
 // Model returns a pointer to the entity struct for this repository.
