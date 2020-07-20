@@ -69,7 +69,7 @@ func (g GormRepository) Find(offset, limit *int, filters ...Filter) ([]domain.En
 		q = q.Limit(*limit)
 	}
 	for _, f := range filters {
-		q = q.Where(fmt.Sprintf("%s = ?", f.Key()), f.Value())
+		q = q.Where(fmt.Sprintf(f.Key()), f.Value())
 	}
 	err := q.Find(&output).Error
 	if err != nil {
@@ -88,7 +88,7 @@ func (g GormRepository) FindOne(filters ...Filter) (domain.Entity, error) {
 		return nil, errors.New("no filters provided")
 	}
 	for _, f := range filters {
-		q = q.Where(fmt.Sprintf("%s = ?", f.Key()), f.Value())
+		q = q.Where(fmt.Sprintf(f.Key()), f.Value())
 	}
 	err := q.First(output).Error
 	if err != nil {
@@ -104,7 +104,7 @@ func (g GormRepository) Update(data domain.Entity, filters ...Filter) error {
 		return errors.New("no filters provided")
 	}
 	for _, f := range filters {
-		q = q.Where(fmt.Sprintf("%s = ?", f.Key()), f.Value())
+		q = q.Where(fmt.Sprintf(f.Key()), f.Value())
 	}
 	err := q.Update(data).Error
 	if err != nil {
@@ -120,7 +120,7 @@ func (g GormRepository) Delete(filters ...Filter) error {
 		return errors.New("no filters provided")
 	}
 	for _, f := range filters {
-		q = q.Where(fmt.Sprintf("%s = ?", f.Key()), f.Value())
+		q = q.Where(fmt.Sprintf(f.Key()), f.Value())
 	}
 	err := q.Delete(g.Model()).Error
 	if err != nil {
