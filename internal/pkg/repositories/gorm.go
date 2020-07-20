@@ -12,7 +12,7 @@ import (
 type GormRepository struct {
 	DB     *gorm.DB
 	Logger ign.Logger
-	Entity domain.Entity
+	entity domain.Entity
 }
 
 // SingularName returns the singular name for this repository's entity.
@@ -30,7 +30,7 @@ func (g GormRepository) PluralName() string {
 // Model returns a pointer to the entity struct for this repository.
 // Example: &Car{}
 func (g GormRepository) Model() domain.Entity {
-	return g.Entity
+	return g.entity
 }
 
 // Create persists the given entities in the database.
@@ -129,9 +129,10 @@ func (g GormRepository) Delete(filters ...Filter) error {
 }
 
 // NewGormRepository initializes a new Repository implementation using gorm.
-func NewGormRepository(db *gorm.DB, logger ign.Logger) Repository {
+func NewGormRepository(db *gorm.DB, logger ign.Logger, entity domain.Entity) Repository {
 	return &GormRepository{
 		DB:     db,
 		Logger: logger,
+		entity: entity,
 	}
 }

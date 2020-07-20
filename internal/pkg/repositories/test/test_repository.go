@@ -15,7 +15,7 @@ type testRepository interface {
 }
 
 type testRepositoryImpl struct {
-	repository repositories.GormRepository
+	repository repositories.Repository
 }
 
 func (t *testRepositoryImpl) create(test Test) (*Test, error) {
@@ -55,11 +55,7 @@ func (t *testRepositoryImpl) Model() domain.Entity {
 
 func NewTestRepository(db *gorm.DB, logger ign.Logger) testRepository {
 	return &testRepositoryImpl{
-		repository: repositories.GormRepository{
-			DB:     db,
-			Logger: logger,
-			Entity: &Test{},
-		},
+		repository: repositories.NewGormRepository(db, logger, &Test{}),
 	}
 }
 
