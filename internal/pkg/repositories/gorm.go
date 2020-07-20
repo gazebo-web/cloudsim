@@ -35,37 +35,45 @@ func (g GormRepository) Model() domain.Entity {
 
 // Create persists the given entities in the database.
 func (g GormRepository) Create(entities []domain.Entity) ([]domain.Entity, error) {
-	g.Logger.Debug(fmt.Sprintf(" [%s.Repository] Creating %s. Input: %+v", g.SingularName(), g.PluralName(), entities))
+	g.Logger.Debug(fmt.Sprintf(" [%s.Repository] Creating %s. Input: %+v",
+		g.SingularName(), g.PluralName(), entities))
 	tx := g.DB.Begin()
 	for _, e := range entities {
 		err := tx.Model(g.Model()).Create(e).Error
 		if err != nil {
-			g.Logger.Debug(fmt.Sprintf(" [%s.Repository] Creating %s failed. Input: %+v. Rolling back...", g.SingularName(), g.PluralName(), e))
+			g.Logger.Debug(fmt.Sprintf(" [%s.Repository] Creating %s failed. Input: %+v. Rolling back...",
+				g.SingularName(), g.PluralName(), e))
 			tx.Rollback()
 			return nil, err
 		}
 	}
-	g.Logger.Debug(fmt.Sprintf(" [%s.Repository] Creating %s succeeded. Committing...", g.SingularName(), g.PluralName()))
+	g.Logger.Debug(fmt.Sprintf(" [%s.Repository] Creating %s succeeded. Committing...",
+		g.SingularName(), g.PluralName()))
 	err := tx.Commit().Error
 	if err != nil {
-		g.Logger.Debug(fmt.Sprintf(" [%s.Repository] Error while commiting the transaction.", g.SingularName()))
+		g.Logger.Debug(fmt.Sprintf(" [%s.Repository] Error while commiting the transaction.",
+			g.SingularName()))
 		return nil, err
 	}
-	g.Logger.Debug(fmt.Sprintf(" [%s.Repository] %s created.", g.SingularName(), g.PluralName()))
+	g.Logger.Debug(fmt.Sprintf(" [%s.Repository] %s created.",
+		g.SingularName(), g.PluralName()))
 	return entities, nil
 }
 
 // Find returns a list of entities that match the given filters.
 // If `offset` and `limit` are not nil, it will return up to `limit` results from the provided `offset`.
 func (g GormRepository) Find(output interface{}, offset, limit *int, filters ...Filter) error {
-	g.Logger.Debug(fmt.Sprintf(" [%s.Repository] Getting all %s. Filters: %+v", g.SingularName(), g.PluralName(), filters))
+	g.Logger.Debug(fmt.Sprintf(" [%s.Repository] Getting all %s. Filters: %+v",
+		g.SingularName(), g.PluralName(), filters))
 	q := g.DB.Model(g.Model())
 	if offset != nil {
-		g.Logger.Debug(fmt.Sprintf(" [%s.Repository] Offset: %d.", g.SingularName(), *offset))
+		g.Logger.Debug(fmt.Sprintf(" [%s.Repository] Offset: %d.",
+			g.SingularName(), *offset))
 		q = q.Offset(*offset)
 	}
 	if limit != nil {
-		g.Logger.Debug(fmt.Sprintf(" [%s.Repository] Limit: %d.", g.SingularName(), *limit))
+		g.Logger.Debug(fmt.Sprintf(" [%s.Repository] Limit: %d.",
+			g.SingularName(), *limit))
 		q = q.Limit(*limit)
 	}
 	for _, f := range filters {
@@ -73,10 +81,12 @@ func (g GormRepository) Find(output interface{}, offset, limit *int, filters ...
 	}
 	err := q.Find(output).Error
 	if err != nil {
-		g.Logger.Debug(fmt.Sprintf(" [%s.Repository] Getting all %s failed. Error: %+v", g.SingularName(), g.PluralName(), err))
+		g.Logger.Debug(fmt.Sprintf(" [%s.Repository] Getting all %s failed. Error: %+v",
+			g.SingularName(), g.PluralName(), err))
 		return err
 	}
-	g.Logger.Debug(fmt.Sprintf(" [%s.Repository] Getting all %s succeed. Output: %+v", g.SingularName(), g.PluralName(), output))
+	g.Logger.Debug(fmt.Sprintf(" [%s.Repository] Getting all %s succeed. Output: %+v",
+		g.SingularName(), g.PluralName(), output))
 	return nil
 }
 
@@ -98,9 +108,6 @@ func (g GormRepository) FindOne(entity domain.Entity, filters ...Filter) error {
 
 // Update updates the entities that match the given filters with the given data.
 func (g GormRepository) Update(data domain.Entity, filters ...Filter) error {
-	if len(filters) == 0 {
-		return errors.New("no filters provided")
-	}
 	q := g.DB.Model(g.Model())
 	for _, f := range filters {
 		q = q.Where(f.Key(), f.Value())
