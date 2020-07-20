@@ -24,9 +24,9 @@ func (s *testRepositorySuite) SetupTest() {
 	db, err = ign.InitDbWithCfg(&dbConfig)
 	s.NoError(err)
 	s.db = db
-	s.db.DropTableIfExists(&Test{})
-	s.db.AutoMigrate(&Test{})
-	s.repository = NewTestRepository(s.db, ign.NewLoggerNoRollbar("track-repository-Test", ign.VerbosityDebug))
+	s.db.DropTableIfExists(&test{})
+	s.db.AutoMigrate(&test{})
+	s.repository = newTestRepository(s.db, ign.NewLoggerNoRollbar("track-repository-test", ign.VerbosityDebug))
 }
 
 func (s testRepositorySuite) AfterTest() {
@@ -34,17 +34,17 @@ func (s testRepositorySuite) AfterTest() {
 }
 
 func (s testRepositorySuite) init() {
-	_, err := s.repository.create(Test{
+	_, err := s.repository.create(test{
 		Name:  "Test1",
 		Value: 1,
 	})
 	s.NoError(err, "Should not throw an error when creating Test1")
-	_, err = s.repository.create(Test{
+	_, err = s.repository.create(test{
 		Name:  "Test2",
 		Value: 2,
 	})
 	s.NoError(err, "Should not throw an error when creating Test2")
-	_, err = s.repository.create(Test{
+	_, err = s.repository.create(test{
 		Name:  "Test3",
 		Value: 3,
 	})
@@ -54,14 +54,14 @@ func (s testRepositorySuite) init() {
 func (s testRepositorySuite) TestCreate() {
 	t := newTest("test", 1234)
 	var count int
-	err := s.db.Model(&Test{}).Count(&count).Error
+	err := s.db.Model(&test{}).Count(&count).Error
 	s.NoError(err, "Should not throw an error when counting.")
 	s.Equal(0, count, "Before creating a test the count should be 0.")
 
 	_, err = s.repository.create(t)
 	s.NoError(err, "Creating a test with the repository should not throw an error.")
 
-	err = s.db.Model(&Test{}).Count(&count).Error
+	err = s.db.Model(&test{}).Count(&count).Error
 	s.NoError(err, "Should not throw an error when counting.")
 	s.Equal(1, count, "After creating a test the count should be 1.")
 }

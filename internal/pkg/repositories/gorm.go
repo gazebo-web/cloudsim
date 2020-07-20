@@ -30,7 +30,8 @@ func (g GormRepository) PluralName() string {
 // Model returns a pointer to the entity struct for this repository.
 // Example: &Car{}
 func (g GormRepository) Model() domain.Entity {
-	return g.entity
+	copy := g.entity
+	return copy
 }
 
 // Create persists the given entities in the database.
@@ -65,7 +66,7 @@ func (g GormRepository) Create(entities []domain.Entity) ([]domain.Entity, error
 func (g GormRepository) Find(output interface{}, offset, limit *int, filters ...Filter) error {
 	g.Logger.Debug(fmt.Sprintf(" [%s.Repository] Getting all %s. Filters: %+v",
 		g.SingularName(), g.PluralName(), filters))
-	q := g.DB.Model(g.Model())
+	q := g.startQuery()
 	if offset != nil {
 		g.Logger.Debug(fmt.Sprintf(" [%s.Repository] Offset: %d.",
 			g.SingularName(), *offset))
@@ -76,9 +77,7 @@ func (g GormRepository) Find(output interface{}, offset, limit *int, filters ...
 			g.SingularName(), *limit))
 		q = q.Limit(*limit)
 	}
-	for _, f := range filters {
-		q = q.Where(f.Key(), f.Value())
-	}
+	q = g.setQueryFilters(q, filters)
 	err := q.Find(output).Error
 	if err != nil {
 		g.Logger.Debug(fmt.Sprintf(" [%s.Repository] Getting all %s failed. Error: %+v",
@@ -95,10 +94,8 @@ func (g GormRepository) FindOne(entity domain.Entity, filters ...Filter) error {
 	if len(filters) == 0 {
 		return errors.New("no filters provided")
 	}
-	q := g.DB.Model(g.Model())
-	for _, f := range filters {
-		q = q.Where(f.Key(), f.Value())
-	}
+	q := g.startQuery()
+	q = g.setQueryFilters(q, filters)
 	err := q.First(entity).Error
 	if err != nil {
 		return err
@@ -108,10 +105,8 @@ func (g GormRepository) FindOne(entity domain.Entity, filters ...Filter) error {
 
 // Update updates the entities that match the given filters with the given data.
 func (g GormRepository) Update(data domain.Entity, filters ...Filter) error {
-	q := g.DB.Model(g.Model())
-	for _, f := range filters {
-		q = q.Where(f.Key(), f.Value())
-	}
+	q := g.startQuery()
+	q = g.setQueryFilters(q, filters)
 	err := q.Update(data).Error
 	if err != nil {
 		return err
@@ -121,18 +116,24 @@ func (g GormRepository) Update(data domain.Entity, filters ...Filter) error {
 
 // Delete removes a set of entities that match the given filters.
 func (g GormRepository) Delete(filters ...Filter) error {
-	q := g.DB.Model(g.Model())
-	if len(filters) == 0 {
-		return errors.New("no filters provided")
-	}
-	for _, f := range filters {
-		q = q.Where(f.Key(), f.Value())
-	}
+	q := g.startQuery()
+	g.setQueryFilters(q, filters)
 	err := q.Delete(g.Model()).Error
 	if err != nil {
 		return err
 	}
 	return nil
+}
+
+func (g GormRepository) startQuery() *gorm.DB {
+	return g.DB.Model(g.Model())
+}
+
+func (g GormRepository) setQueryFilters(q *gorm.DB, filters []Filter) *gorm.DB {
+	for _, f := range filters {
+		q = q.Where(f.Template(), f.Value())
+	}
+	return q
 }
 
 // NewGormRepository initializes a new Repository implementation using gorm.
