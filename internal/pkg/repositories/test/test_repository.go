@@ -9,16 +9,16 @@ import (
 )
 
 type testRepository interface {
-	Create(test Test) (*Test, error)
-	GetByName(name string) (*Test, error)
-	GetByValue(value int) ([]Test, error)
+	create(test Test) (*Test, error)
+	getByName(name string) (*Test, error)
+	getByValue(value int) ([]Test, error)
 }
 
 type testRepositoryImpl struct {
 	repository repositories.GormRepository
 }
 
-func (t *testRepositoryImpl) Create(test Test) (*Test, error) {
+func (t *testRepositoryImpl) create(test Test) (*Test, error) {
 	var tests []domain.Entity
 	tests = append(tests, &test)
 	_, err := t.repository.Create(tests)
@@ -28,28 +28,24 @@ func (t *testRepositoryImpl) Create(test Test) (*Test, error) {
 	return &test, nil
 }
 
-func (t *testRepositoryImpl) GetByName(name string) (*Test, error) {
+func (t *testRepositoryImpl) getByName(name string) (*Test, error) {
 	nameFilter := repositories.NewGormFilter("name", name)
-	e, err := t.repository.FindOne(nameFilter)
+	output := Test{}
+	err := t.repository.FindOne(&output, nameFilter)
 	if err != nil {
 		return nil, err
 	}
-	result := e.(*Test)
-	return result, err
+	return &output, nil
 }
 
-func (t *testRepositoryImpl) GetByValue(value int) ([]Test, error) {
+func (t *testRepositoryImpl) getByValue(value int) ([]Test, error) {
 	valueFilter := repositories.NewGormFilter("value", value)
-	output, err := t.repository.Find(nil, nil, valueFilter)
+	var output []Test
+	err := t.repository.Find(&output, nil, nil, valueFilter)
 	if err != nil {
 		return nil, err
 	}
-	var result []Test
-	for _, o := range output {
-		test := o.(*Test)
-		result = append(result, *test)
-	}
-	return result, nil
+	return output, nil
 }
 
 // Model returns a pointer to the entity struct for this repository.

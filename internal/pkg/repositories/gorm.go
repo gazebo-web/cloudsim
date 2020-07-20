@@ -57,8 +57,7 @@ func (g GormRepository) Create(entities []domain.Entity) ([]domain.Entity, error
 
 // Find returns a list of entities that match the given filters.
 // If `offset` and `limit` are not nil, it will return up to `limit` results from the provided `offset`.
-func (g GormRepository) Find(offset, limit *int, filters ...Filter) ([]domain.Entity, error) {
-	var output []domain.Entity
+func (g GormRepository) Find(output interface{}, offset, limit *int, filters ...Filter) error {
 	g.Logger.Debug(fmt.Sprintf(" [%s.Repository] Getting all %s. Filters: %+v", g.SingularName(), g.PluralName(), filters))
 	q := g.DB.Model(g.Model())
 	if offset != nil {
@@ -70,42 +69,41 @@ func (g GormRepository) Find(offset, limit *int, filters ...Filter) ([]domain.En
 		q = q.Limit(*limit)
 	}
 	for _, f := range filters {
-		q = q.Where(fmt.Sprintf(f.Key()), f.Value())
+		q = q.Where(f.Key(), f.Value())
 	}
-	err := q.Find(&output).Error
+	err := q.Find(output).Error
 	if err != nil {
 		g.Logger.Debug(fmt.Sprintf(" [%s.Repository] Getting all %s failed. Error: %+v", g.SingularName(), g.PluralName(), err))
-		return nil, err
+		return err
 	}
 	g.Logger.Debug(fmt.Sprintf(" [%s.Repository] Getting all %s succeed. Output: %+v", g.SingularName(), g.PluralName(), output))
-	return output, nil
+	return nil
 }
 
 // FindOne returns an Entity that matches the given Filter.
-func (g GormRepository) FindOne(filters ...Filter) (domain.Entity, error) {
-	var output domain.Entity
-	q := g.DB.Model(g.Model())
+func (g GormRepository) FindOne(entity domain.Entity, filters ...Filter) error {
 	if len(filters) == 0 {
-		return nil, errors.New("no filters provided")
+		return errors.New("no filters provided")
 	}
+	q := g.DB.Model(g.Model())
 	for _, f := range filters {
-		q = q.Where(fmt.Sprintf(f.Key()), f.Value())
+		q = q.Where(f.Key(), f.Value())
 	}
-	err := q.First(output).Error
+	err := q.First(entity).Error
 	if err != nil {
-		return nil, err
+		return err
 	}
-	return output, nil
+	return nil
 }
 
 // Update updates the entities that match the given filters with the given data.
 func (g GormRepository) Update(data domain.Entity, filters ...Filter) error {
-	q := g.DB.Model(g.Model())
 	if len(filters) == 0 {
 		return errors.New("no filters provided")
 	}
+	q := g.DB.Model(g.Model())
 	for _, f := range filters {
-		q = q.Where(fmt.Sprintf(f.Key()), f.Value())
+		q = q.Where(f.Key(), f.Value())
 	}
 	err := q.Update(data).Error
 	if err != nil {
@@ -121,7 +119,7 @@ func (g GormRepository) Delete(filters ...Filter) error {
 		return errors.New("no filters provided")
 	}
 	for _, f := range filters {
-		q = q.Where(fmt.Sprintf(f.Key()), f.Value())
+		q = q.Where(f.Key(), f.Value())
 	}
 	err := q.Delete(g.Model()).Error
 	if err != nil {
