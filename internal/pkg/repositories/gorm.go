@@ -77,12 +77,13 @@ func (g GormRepository) Find(output interface{}, limit, offset *int, filters ...
 		g.Logger.Debug(fmt.Sprintf(" [%s.Repository] Limit: %d.",
 			g.SingularName(), *limit))
 		q = q.Limit(*limit)
+		if offset != nil {
+			g.Logger.Debug(fmt.Sprintf(" [%s.Repository] Offset: %d.",
+				g.SingularName(), *offset))
+			q = q.Offset(*offset)
+		}
 	}
-	if limit != nil && offset != nil {
-		g.Logger.Debug(fmt.Sprintf(" [%s.Repository] Offset: %d.",
-			g.SingularName(), *offset))
-		q = q.Offset(*offset)
-	}
+
 	q = g.setQueryFilters(q, filters)
 	err := q.Find(output).Error
 	if err != nil {
