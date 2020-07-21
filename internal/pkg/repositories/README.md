@@ -44,7 +44,7 @@ type Filter interface {
 ```
 
 ## GORM
-We've created a gorm implementation that satifies the interfaces described below, in the following section you'll find a couple of examples to help you understand how to use this specific implementation with your codebase.
+We've created a gorm implementation that satisfies the interfaces described before. In the following section you'll find a couple of examples to help you understand how to use this specific implementation with your codebase.
 
 ### Setup
 
