@@ -11,7 +11,7 @@ func (w gormFilter) Template() string {
 	return w.template
 }
 
-// Value returns the filter's value.
+// Values returns the filter's value.
 func (w gormFilter) Values() []interface{} {
 	return w.values
 }
