@@ -80,3 +80,18 @@ func (s testRepositorySuite) TestGetByValue() {
 	s.NoError(err, "Should not throw an error when getting by name.")
 	s.Len(result, 1, "The result slice should be length=1.")
 }
+
+func (s testRepositorySuite) TestDelete() {
+	s.init()
+	var count int
+	err := s.db.Model(&test{}).Count(&count).Error
+	s.NoError(err, "Should not throw an error when counting.")
+	s.Equal(3, count, "Before removing a test the count should be 3.")
+
+	err = s.repository.delete("Test1")
+	s.NoError(err, "Should not throw an error when removing an entity.")
+
+	err = s.db.Model(&test{}).Count(&count).Error
+	s.NoError(err, "Should not throw an error when counting.")
+	s.Equal(2, count, "After removing a test the count should be 2.")
+}

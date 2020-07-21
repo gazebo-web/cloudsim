@@ -118,7 +118,7 @@ func (g GormRepository) Update(data domain.Entity, filters ...Filter) error {
 // Delete removes a set of entities that match the given filters.
 func (g GormRepository) Delete(filters ...Filter) error {
 	q := g.startQuery()
-	g.setQueryFilters(q, filters)
+	q = g.setQueryFilters(q, filters)
 	err := q.Delete(g.Model()).Error
 	if err != nil {
 		return err

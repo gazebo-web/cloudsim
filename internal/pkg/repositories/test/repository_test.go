@@ -11,6 +11,7 @@ type testRepository interface {
 	create(test test) (*test, error)
 	getByName(name string) (*test, error)
 	getByValue(value int) ([]test, error)
+	delete(name string) error
 }
 
 type testRepositoryImpl struct {
@@ -45,6 +46,15 @@ func (t *testRepositoryImpl) getByValue(value int) ([]test, error) {
 		return nil, err
 	}
 	return output, nil
+}
+
+func (t *testRepositoryImpl) delete(name string) error {
+	f := repositories.NewGormFilter("name = ?", name)
+	err := t.repository.Delete(f)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 // Model returns a pointer to the entity struct for this repository.
