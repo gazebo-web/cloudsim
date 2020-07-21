@@ -84,7 +84,8 @@ func (s testRepositorySuite) TestGetByName() {
 func (s testRepositorySuite) TestGetByValue() {
 	s.init()
 	result, err := s.repository.getByValue(1)
-	s.NoError(err, "Should not throw an error when getting by name.")
+	s.NoError(err, "Should not throw an error when getting by value.")
+        s.Equal("Test1", result.Name, "First database entry should have name Test1.")
 	s.Len(result, 1, "The result slice should be length=1.")
 }
 
