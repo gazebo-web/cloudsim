@@ -64,19 +64,19 @@ func (g GormRepository) Create(entities []domain.Entity) ([]domain.Entity, error
 
 // Find returns a list of entities that match the given filters.
 // If `offset` and `limit` are not nil, it will return up to `limit` results from the provided `offset`.
-func (g GormRepository) Find(output interface{}, offset, limit *int, filters ...Filter) error {
+func (g GormRepository) Find(output interface{}, limit, offset *int, filters ...Filter) error {
 	g.Logger.Debug(fmt.Sprintf(" [%s.Repository] Getting all %s. Filters: %+v",
 		g.SingularName(), g.PluralName(), filters))
 	q := g.startQuery()
-	if offset != nil {
-		g.Logger.Debug(fmt.Sprintf(" [%s.Repository] Offset: %d.",
-			g.SingularName(), *offset))
-		q = q.Offset(*offset)
-	}
 	if limit != nil {
 		g.Logger.Debug(fmt.Sprintf(" [%s.Repository] Limit: %d.",
 			g.SingularName(), *limit))
 		q = q.Limit(*limit)
+	}
+	if limit != nil && offset != nil {
+		g.Logger.Debug(fmt.Sprintf(" [%s.Repository] Offset: %d.",
+			g.SingularName(), *offset))
+		q = q.Offset(*offset)
 	}
 	q = g.setQueryFilters(q, filters)
 	err := q.Find(output).Error
