@@ -91,7 +91,7 @@ func (test) TableName() string {
 }
 
 func (test) SingularName() string {
-	return "test"
+	return "Test"
 }
 
 func (test) PluralName() string {
