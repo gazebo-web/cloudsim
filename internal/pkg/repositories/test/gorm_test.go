@@ -95,3 +95,20 @@ func (s testRepositorySuite) TestDelete() {
 	s.NoError(err, "Should not throw an error when counting.")
 	s.Equal(2, count, "After removing a test the count should be 2.")
 }
+
+func (s testRepositorySuite) TestGetAll() {
+	s.init()
+
+	var count int
+	err := s.db.Model(&test{}).Count(&count).Error
+	s.NoError(err, "Should not throw an error when counting.")
+	s.Equal(3, count, "The total amount of entries should be 3.")
+
+	result, err := s.repository.getAll()
+	s.NoError(err, "Should not throw an error when getting all entities.")
+	s.Len(result, count, "The result slice should have the same length at the previous count.")
+}
+
+func (s testRepositorySuite) TestUpdate() {
+
+}

@@ -11,11 +11,21 @@ type testRepository interface {
 	create(test test) (*test, error)
 	getByName(name string) (*test, error)
 	getByValue(value int) ([]test, error)
+	getAll() ([]test, error)
 	delete(name string) error
 }
 
 type testRepositoryImpl struct {
 	repository repositories.Repository
+}
+
+func (t *testRepositoryImpl) getAll() ([]test, error) {
+	var tests []test
+	err := t.repository.Find(&tests, nil, nil)
+	if err != nil {
+		return nil, err
+	}
+	return tests, nil
 }
 
 func (t *testRepositoryImpl) create(test test) (*test, error) {
