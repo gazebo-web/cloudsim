@@ -6,6 +6,7 @@ import (
 	"github.com/jinzhu/gorm"
 	"gitlab.com/ignitionrobotics/web/cloudsim/internal/pkg/domain"
 	"gitlab.com/ignitionrobotics/web/ign-go"
+	"reflect"
 )
 
 // GormRepository is a Repository implementation using GORM.
@@ -30,9 +31,13 @@ func (g GormRepository) PluralName() string {
 // Model returns a pointer to the entity struct for this repository.
 // Example: &Car{}
 func (g GormRepository) Model() domain.Entity {
-	c := new(domain.Entity)
-	*c = g.entity
-	return *c
+	entity := reflect.ValueOf(g.entity)
+
+	if entity.Kind() == reflect.Ptr {
+		entity = reflect.Indirect(entity)
+	}
+
+	return reflect.New(entity.Type()).Interface().(domain.Entity)
 }
 
 // Create persists the given entities in the database.
