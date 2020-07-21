@@ -4,7 +4,6 @@ import (
 	"github.com/jinzhu/gorm"
 	"gitlab.com/ignitionrobotics/web/cloudsim/internal/pkg/domain"
 	"gitlab.com/ignitionrobotics/web/cloudsim/internal/pkg/repositories"
-	"gitlab.com/ignitionrobotics/web/ign-go"
 )
 
 type testRepository interface {
@@ -75,9 +74,9 @@ func (t *testRepositoryImpl) Model() domain.Entity {
 }
 
 // newTestRepository initializes a new testRepository.
-func newTestRepository(db *gorm.DB, logger ign.Logger) testRepository {
+func newTestRepository(base repositories.Repository) testRepository {
 	return &testRepositoryImpl{
-		repository: repositories.NewGormRepository(db, logger, &test{}),
+		repository: base,
 	}
 }
 

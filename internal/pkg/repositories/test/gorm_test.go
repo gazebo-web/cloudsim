@@ -3,7 +3,10 @@ package test
 import (
 	"github.com/jinzhu/gorm"
 	"github.com/stretchr/testify/suite"
+	"gitlab.com/ignitionrobotics/web/cloudsim/internal/pkg/domain"
+	"gitlab.com/ignitionrobotics/web/cloudsim/internal/pkg/repositories"
 	"gitlab.com/ignitionrobotics/web/ign-go"
+	"reflect"
 	"testing"
 )
 
@@ -13,8 +16,10 @@ func TestGormRepository(t *testing.T) {
 
 type testRepositorySuite struct {
 	suite.Suite
-	db         *gorm.DB
-	repository testRepository
+	db             *gorm.DB
+	baseEntity     domain.Entity
+	baseRepository repositories.Repository
+	repository     testRepository
 }
 
 func (s *testRepositorySuite) SetupTest() {
@@ -26,7 +31,9 @@ func (s *testRepositorySuite) SetupTest() {
 	s.db = db
 	s.db.DropTableIfExists(&test{})
 	s.db.AutoMigrate(&test{})
-	s.repository = newTestRepository(s.db, ign.NewLoggerNoRollbar("track-repository-test", ign.VerbosityDebug))
+	s.baseEntity = &test{}
+	s.baseRepository = repositories.NewGormRepository(s.db, ign.NewLoggerNoRollbar("track-repository-test", ign.VerbosityDebug), s.baseEntity)
+	s.repository = newTestRepository(s.baseRepository)
 }
 
 func (s testRepositorySuite) AfterTest() {
@@ -116,11 +123,21 @@ func (s testRepositorySuite) TestUpdate() {
 	s.NoError(err, "Should not throw an error when updating an entity.")
 
 	_, err = s.repository.getByName("Test1")
-	s.Error(err, "Should throw an error when getting the former name of the updated entity.")
+	s.Error(err, "Should throw an error when getting a test with the former name of the updated entity.")
 
 	result, err := s.repository.getByName("Test111")
 	s.NoError(err, "Should not throw an error when getting the updated entity.")
 
 	s.Equal("Test111", result.Name)
 	s.Equal(12345, result.Value)
+}
+
+func (s testRepositorySuite) TestModel() {
+	test := &test{}
+	testEntity := reflect.ValueOf(test)
+	baseEntity := reflect.ValueOf(s.baseEntity)
+	s.NotEqual(testEntity.Pointer(), baseEntity)
+
+	baseRepositoryModel := reflect.ValueOf(s.baseRepository.Model())
+	s.NotEqual(baseEntity.Pointer(), baseRepositoryModel.Pointer())
 }
