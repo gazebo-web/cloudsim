@@ -85,7 +85,7 @@ func (s testRepositorySuite) TestGetByValue() {
 	s.init()
 	result, err := s.repository.getByValue(1)
 	s.NoError(err, "Should not throw an error when getting by value.")
-        s.Equal("Test1", result.Name, "First database entry should have name Test1.")
+	s.Equal("Test1", result[0].Name, "First database entry should have name Test1.")
 	s.Len(result, 1, "The result slice should be length=1.")
 }
 
@@ -133,12 +133,19 @@ func (s testRepositorySuite) TestUpdate() {
 	s.Equal(12345, result.Value)
 }
 
-func (s testRepositorySuite) TestModel() {
-	test := &test{}
-	testEntity := reflect.ValueOf(test)
-	baseEntity := reflect.ValueOf(s.baseEntity)
-	s.NotEqual(testEntity.Pointer(), baseEntity)
+func (s testRepositorySuite) TestUpdateZeroValue() {
+	s.init()
+	err := s.repository.update("Test1", test{Value: 0})
+	s.NoError(err, "Should not throw an error when updating an entity.")
 
+	result, err := s.repository.getByName("Test1")
+	s.NoError(err, "Should not throw an error when getting the updated entity.")
+
+	s.Equal(0, result.Value)
+}
+
+func (s testRepositorySuite) TestModel() {
+	baseEntity := reflect.ValueOf(s.baseEntity)
 	baseRepositoryModel := reflect.ValueOf(s.baseRepository.Model())
 	s.NotEqual(baseEntity.Pointer(), baseRepositoryModel.Pointer())
 }
