@@ -132,7 +132,7 @@ func (g GormRepository) startQuery() *gorm.DB {
 
 func (g GormRepository) setQueryFilters(q *gorm.DB, filters []Filter) *gorm.DB {
 	for _, f := range filters {
-		q = q.Where(f.Template(), f.Values())
+		q = q.Where(f.Template(), f.Values()...)
 	}
 	return q
 }
