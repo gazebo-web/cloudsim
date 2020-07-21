@@ -1,6 +1,8 @@
 package tracks
 
-import "github.com/jinzhu/gorm"
+import (
+	"github.com/jinzhu/gorm"
+)
 
 // Track is a world that will be used to run a simulation.
 type Track struct {
@@ -16,6 +18,14 @@ type Track struct {
 	MaxSimSeconds int `json:"max_sim_seconds"`
 	// Public sets a track open for single runs.
 	Public bool `json:"public"`
+}
+
+func (Track) SingularName() string {
+	return "Track"
+}
+
+func (Track) PluralName() string {
+	return "Tracks"
 }
 
 // TableName returns the name of the Track table.
