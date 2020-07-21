@@ -110,5 +110,17 @@ func (s testRepositorySuite) TestGetAll() {
 }
 
 func (s testRepositorySuite) TestUpdate() {
+	s.init()
 
+	err := s.repository.update("Test1", test{Name: "Test111", Value: 12345})
+	s.NoError(err, "Should not throw an error when updating an entity.")
+
+	_, err = s.repository.getByName("Test1")
+	s.Error(err, "Should throw an error when getting the former name of the updated entity.")
+
+	result, err := s.repository.getByName("Test111")
+	s.NoError(err, "Should not throw an error when getting the updated entity.")
+
+	s.Equal("Test111", result.Name)
+	s.Equal(12345, result.Value)
 }

@@ -13,10 +13,16 @@ type testRepository interface {
 	getByValue(value int) ([]test, error)
 	getAll() ([]test, error)
 	delete(name string) error
+	update(name string, data test) error
 }
 
 type testRepositoryImpl struct {
 	repository repositories.Repository
+}
+
+func (t *testRepositoryImpl) update(name string, data test) error {
+	f := repositories.NewGormFilter("name = ?", name)
+	return t.repository.Update(&data, f)
 }
 
 func (t *testRepositoryImpl) getAll() ([]test, error) {
@@ -60,11 +66,7 @@ func (t *testRepositoryImpl) getByValue(value int) ([]test, error) {
 
 func (t *testRepositoryImpl) delete(name string) error {
 	f := repositories.NewGormFilter("name = ?", name)
-	err := t.repository.Delete(f)
-	if err != nil {
-		return err
-	}
-	return nil
+	return t.repository.Delete(f)
 }
 
 // Model returns a pointer to the entity struct for this repository.
