@@ -9,6 +9,8 @@ import (
 	"reflect"
 )
 
+
+
 // GormRepository is a Repository implementation using GORM.
 type GormRepository struct {
 	DB     *gorm.DB
@@ -114,7 +116,11 @@ func (g GormRepository) FindOne(entity domain.Entity, filters ...Filter) error {
 func (g GormRepository) Update(data domain.Entity, filters ...Filter) error {
 	q := g.startQuery()
 	q = g.setQueryFilters(q, filters)
-	err := q.Update(data).Error
+	mappedData, ok := data.(*gormMap)
+	if !ok {
+		return errors.New("invalid data type")
+	}
+	err := q.Update(mappedData.Map).Error
 	if err != nil {
 		return err
 	}
@@ -151,3 +157,4 @@ func NewGormRepository(db *gorm.DB, logger ign.Logger, entity domain.Entity) Rep
 		entity: entity,
 	}
 }
+

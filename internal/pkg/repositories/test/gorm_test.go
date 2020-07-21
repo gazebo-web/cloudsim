@@ -120,7 +120,9 @@ func (s testRepositorySuite) TestGetAll() {
 func (s testRepositorySuite) TestUpdate() {
 	s.init()
 
-	err := s.repository.update("Test1", test{Name: "Test111", Value: 12345})
+	input := repositories.NewGormMap(map[string]interface{}{ "name": "Test111", "value": 12345 }, &test{})
+
+	err := s.repository.update("Test1", input)
 	s.NoError(err, "Should not throw an error when updating an entity.")
 
 	_, err = s.repository.getByName("Test1")
@@ -135,7 +137,8 @@ func (s testRepositorySuite) TestUpdate() {
 
 func (s testRepositorySuite) TestUpdateZeroValue() {
 	s.init()
-	err := s.repository.update("Test1", test{Value: 0})
+	input := repositories.NewGormMap(map[string]interface{}{ "value": 0 }, &test{})
+	err := s.repository.update("Test1", input)
 	s.NoError(err, "Should not throw an error when updating an entity.")
 
 	result, err := s.repository.getByName("Test1")
