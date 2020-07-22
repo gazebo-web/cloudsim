@@ -90,6 +90,20 @@ func (s testRepositorySuite) TestGetByValue() {
 	s.Len(result, 1, "The result slice should be length=1.")
 }
 
+
+func (s testRepositorySuite) TestGetAll() {
+	s.init()
+
+	var count int
+	err := s.db.Model(&test{}).Count(&count).Error
+	s.NoError(err, "Should not throw an error when counting.")
+	s.Equal(3, count, "The total amount of entries should be 3.")
+
+	result, err := s.repository.getAll()
+	s.NoError(err, "Should not throw an error when getting all entities.")
+	s.Len(result, count, "The result slice should have the same length at the previous count.")
+}
+
 func (s testRepositorySuite) TestDelete() {
 	s.init()
 	var count int
@@ -120,17 +134,34 @@ func (s testRepositorySuite) TestDeleteAll() {
 	s.Equal(0, count, "After removing all tests the count should be 0.")
 }
 
-func (s testRepositorySuite) TestGetAll() {
+func (s testRepositorySuite) TestDeleteSome() {
 	s.init()
-
 	var count int
 	err := s.db.Model(&test{}).Count(&count).Error
 	s.NoError(err, "Should not throw an error when counting.")
-	s.Equal(3, count, "The total amount of entries should be 3.")
+	s.Equal(3, count, "Before removing a test the count should be 3.")
 
-	result, err := s.repository.getAll()
-	s.NoError(err, "Should not throw an error when getting all entities.")
-	s.Len(result, count, "The result slice should have the same length at the previous count.")
+	err = s.repository.deleteSome([]string{"Test1", "Test2"})
+	s.NoError(err, "Should not throw an error when removing some entities.")
+
+	err = s.db.Model(&test{}).Count(&count).Error
+	s.NoError(err, "Should not throw an error when counting.")
+	s.Equal(1, count, "After removing all tests the count should be 0.")
+}
+
+func (s testRepositorySuite) TestDeleteInvalid() {
+	s.init()
+	var count int
+	err := s.db.Model(&test{}).Count(&count).Error
+	s.NoError(err, "Should not throw an error when counting.")
+	s.Equal(3, count, "Before removing a test the count should be 3.")
+
+	err = s.repository.delete("1234")
+	s.Error(err, "Should throw an error when removing an invalid entity.")
+
+	err = s.db.Model(&test{}).Count(&count).Error
+	s.NoError(err, "Should not throw an error when counting.")
+	s.Equal(3, count, "After deleting a non existent test failed, the count should remain the same 3.")
 }
 
 func (s testRepositorySuite) TestUpdate() {
@@ -172,6 +203,26 @@ func (s testRepositorySuite) TestUpdateZeroValue() {
 	s.NoError(err, "Should not throw an error when getting the updated entity.")
 
 	s.Equal(0, result.Value)
+}
+
+func (s testRepositorySuite) TestUpdateInvalid() {
+	s.init()
+
+	err := s.repository.update("12345", nil)
+	s.Error(err, "Should throw an error when trying to update an invalid entity.")
+}
+
+func (s testRepositorySuite) TestUpdateSomeValues() {
+	s.init()
+
+	err := s.repository.updateSome([]string{"Test1", "Test2"}, map[string]interface{}{ "value": 99 })
+
+	result, err := s.repository.getAll()
+	s.NoError(err, "Should not throw an error when getting the updated entities.")
+	s.Equal(99, result[0].Value)
+	s.Equal(99, result[1].Value)
+	s.Equal(3, result[2].Value)
+
 }
 
 func (s testRepositorySuite) TestModel() {

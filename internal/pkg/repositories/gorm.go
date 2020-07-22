@@ -90,7 +90,8 @@ func (g GormRepository) Find(output interface{}, limit, offset *int, filters ...
 	}
 
 	q = g.setQueryFilters(q, filters)
-	err := q.Find(output).Error
+	q = q.Find(output)
+	err := q.Error
 	if err != nil {
 		g.Logger.Debug(fmt.Sprintf(" [%s.Repository] Getting all %s failed. Error: %+v",
 			g.SingularName(), g.PluralName(), err))
@@ -112,7 +113,8 @@ func (g GormRepository) FindOne(entity domain.Entity, filters ...Filter) error {
 	}
 	q := g.startQuery()
 	q = g.setQueryFilters(q, filters)
-	err := q.First(entity).Error
+	q = q.First(entity)
+	err := q.Error
 	if err != nil {
 		g.Logger.Debug(fmt.Sprintf(" [%s.Repository] Getting %s failed. Error: %+v.",
 			g.SingularName(), g.SingularName(), err))
@@ -129,7 +131,11 @@ func (g GormRepository) Update(data interface{}, filters ...Filter) error {
 		g.SingularName(), data, filters))
 	q := g.startQuery()
 	q = g.setQueryFilters(q, filters)
-	err := q.Update(data).Error
+	q = q.Update(data)
+	err := q.Error
+	if err == nil && q.RowsAffected == 0 {
+		err = errors.New("no entities were updated")
+	}
 	if err != nil {
 		g.Logger.Debug(fmt.Sprintf(" [%s.Repository] Updating failed. Error: %+v",
 			g.SingularName(), err))
@@ -146,7 +152,11 @@ func (g GormRepository) Delete(filters ...Filter) error {
 		g.SingularName(), filters))
 	q := g.startQuery()
 	q = g.setQueryFilters(q, filters)
-	err := q.Delete(g.Model()).Error
+	q = q.Delete(g.Model())
+	err := q.Error
+	if err == nil && q.RowsAffected == 0 {
+		err = errors.New("no entities were deleted")
+	}
 	if err != nil {
 		g.Logger.Debug(fmt.Sprintf(" [%s.Repository] Deleting failed. Error: %+v",
 			g.SingularName(), err))

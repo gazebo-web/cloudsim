@@ -13,12 +13,24 @@ type testRepository interface {
 	getAll() ([]test, error)
 	delete(name string) error
 	deleteAll() error
+	deleteSome(names []string) error
 	update(name string, data map[string]interface{}) error
+	updateSome(names []string, data map[string]interface{}) error
 	updateAll(data map[string]interface{}) error
 }
 
 type testRepositoryImpl struct {
 	repository repositories.Repository
+}
+
+func (t *testRepositoryImpl) deleteSome(names []string) error {
+	f := repositories.NewGormFilter("name IN (?)", names)
+	return t.repository.Delete(f)
+}
+
+func (t *testRepositoryImpl) updateSome(names []string, data map[string]interface{}) error {
+	f := repositories.NewGormFilter("name IN (?)", names)
+	return t.repository.Update(data, f)
 }
 
 func (t *testRepositoryImpl) deleteAll() error {
