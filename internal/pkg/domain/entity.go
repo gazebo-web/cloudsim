@@ -1,6 +1,6 @@
 package domain
 
-// Entity represents a generic entity.
+// Entity represents a generic entity. Entities represent models to be used with a certain Repository.
 type Entity interface {
 	// TableName returns the table/collection name for a certain entity.
 	TableName() string
