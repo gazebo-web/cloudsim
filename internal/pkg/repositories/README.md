@@ -1,6 +1,6 @@
 # Repositories package
-The goal of this document is to explain how to use the generic repository interface. It currently supports the following ORMs:
-- Gorm
+The goal of this document is to explain how to use the generic repository interface. As it is right now, it supports the following ORMs:
+- GORM
 
 ## Interfaces
 This package groups a set of interfaces to `Create`, `Find`, `Update` and `Delete` entities from a certain database. It makes use of the `Entity` interface to define tables that will have the information provided with the repository.
@@ -44,7 +44,7 @@ type Filter interface {
 ```
 
 ## GORM
-We've created a gorm implementation that satisfies the interfaces described before. In the following section you'll find a couple of examples to help you understand how to use this specific implementation with your codebase.
+We've created a gorm implementation that satisfies the interfaces described before. In the following section you'll find a couple of examples to help you understand how to use this specific implementation in your codebase.
 
 ### Setup
 First of all, you need to set up a model and implement the Entity interface.
@@ -52,7 +52,6 @@ First of all, you need to set up a model and implement the Entity interface.
 ```golang
 type Car struct {
     gorm.Model
-    Name string
     Color string
     Owner string
 }
@@ -88,9 +87,47 @@ func main() {
 And that's it! Now you're ready to start using this implementation.
 
 ### Repository
+In this section we're going take a look at the different methods to perform CRUD operations with our brand-new entity.
 
 #### Create car
+```golang
+func CreateCars(repository repositories.Repository) {
+    cars := []Car{
+        {
+            Color:  "Red",
+            Owner:  "Owner A",
+        },
+        {
+            Color:  "Blue",
+            Owner:  "Owner B",
+        },
+        {
+            Color:  "Green",
+            Owner:  "Owner C",
+        },
+    }
 
+    var entities []domain.Entity
+    for _, c := range cars {
+        entities = append(entities, &c)
+    }
+    _, err := repository.Create(entities)
+    if err != nil {
+        fmt.Printf("Error: %+v", err)
+    }
+    return
+}
+```
+
+### Get one car
+
+### Get all cars
+
+### Get some cars
+
+### Update cars
+
+### Delete cars
 
 ### Filter
 
