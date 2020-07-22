@@ -9,8 +9,6 @@ import (
 	"reflect"
 )
 
-
-
 // GormRepository is a Repository implementation using GORM.
 type GormRepository struct {
 	DB     *gorm.DB
@@ -105,37 +103,57 @@ func (g GormRepository) Find(output interface{}, limit, offset *int, filters ...
 
 // FindOne returns an Entity that matches the given Filter.
 func (g GormRepository) FindOne(entity domain.Entity, filters ...Filter) error {
+	g.Logger.Debug(fmt.Sprintf(" [%s.Repository] Getting %s. Filters: %+v",
+		g.SingularName(), g.SingularName(), filters))
 	if len(filters) == 0 {
+		g.Logger.Debug(fmt.Sprintf(" [%s.Repository] Getting %s failed. No filters provided.",
+			g.SingularName(), g.SingularName()))
 		return errors.New("no filters provided")
 	}
 	q := g.startQuery()
 	q = g.setQueryFilters(q, filters)
 	err := q.First(entity).Error
 	if err != nil {
+		g.Logger.Debug(fmt.Sprintf(" [%s.Repository] Getting %s failed. Error: %+v.",
+			g.SingularName(), g.SingularName(), err))
 		return err
 	}
+	g.Logger.Debug(fmt.Sprintf(" [%s.Repository] %s found. Result: %+v.",
+		g.SingularName(), g.SingularName(), entity))
 	return nil
 }
 
 // Update updates the entities that match the given filters with the given data.
 func (g GormRepository) Update(data interface{}, filters ...Filter) error {
+	g.Logger.Debug(fmt.Sprintf(" [%s.Repository] Updating with data: %+v. Filters: %+v",
+		g.SingularName(), data, filters))
 	q := g.startQuery()
 	q = g.setQueryFilters(q, filters)
 	err := q.Update(data).Error
 	if err != nil {
+		g.Logger.Debug(fmt.Sprintf(" [%s.Repository] Updating failed. Error: %+v",
+			g.SingularName(), err))
 		return err
 	}
+	g.Logger.Debug(fmt.Sprintf(" [%s.Repository] Updating succeed. Updated records: %d.",
+		g.SingularName(), q.RowsAffected))
 	return nil
 }
 
 // Delete removes a set of entities that match the given filters.
 func (g GormRepository) Delete(filters ...Filter) error {
+	g.Logger.Debug(fmt.Sprintf(" [%s.Repository] Deleting records. Filters: %+v",
+		g.SingularName(), filters))
 	q := g.startQuery()
 	q = g.setQueryFilters(q, filters)
 	err := q.Delete(g.Model()).Error
 	if err != nil {
+		g.Logger.Debug(fmt.Sprintf(" [%s.Repository] Deleting failed. Error: %+v",
+			g.SingularName(), err))
 		return err
 	}
+	g.Logger.Debug(fmt.Sprintf(" [%s.Repository] Deleting succeed. Removed records: %d.",
+		g.SingularName(), q.RowsAffected))
 	return nil
 }
 
@@ -158,4 +176,3 @@ func NewGormRepository(db *gorm.DB, logger ign.Logger, entity domain.Entity) Rep
 		entity: entity,
 	}
 }
-
