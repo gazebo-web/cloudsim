@@ -47,8 +47,50 @@ type Filter interface {
 We've created a gorm implementation that satisfies the interfaces described before. In the following section you'll find a couple of examples to help you understand how to use this specific implementation with your codebase.
 
 ### Setup
+First of all, you need to set up a model and implement the Entity interface.
+
+```golang
+type Car struct {
+    gorm.Model
+    Name string
+    Color string
+    Owner string
+}
+
+// You can avoid adding the TableName() here since gorm.Model already includes it.
+func (Car) TableName() string {
+	return "cars"
+}
+
+func (Car) SingularName() string {
+	return "Car"
+}
+
+func (Car) PluralName() string {
+	return "Cars"
+}
+```
+
+After that, you'll need to initialize gorm's repository implementation. `NewGormRepository()` accepts 3 arguments: A `*gorm.DB` instance, an implementation for the `ign.Logger` interface, and a pointer to an entity of type `Car` that we created before.
+```golang
+func main() {
+    db, err := gorm.Open(...)
+    if err != nil {
+        os.Exit(1)
+    }
+    
+    carLogger := ign.NewLoggerNoRollbar("cars", ign.VerbosityDebug) // Use your own.
+    
+    repository := repositories.NewGormRepository(db, carLogger, &Car{})
+}
+```
+
+And that's it! Now you're ready to start using this implementation.
 
 ### Repository
+
+#### Create car
+
 
 ### Filter
 
