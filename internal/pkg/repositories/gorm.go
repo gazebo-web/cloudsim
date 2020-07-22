@@ -113,14 +113,10 @@ func (g GormRepository) FindOne(entity domain.Entity, filters ...Filter) error {
 }
 
 // Update updates the entities that match the given filters with the given data.
-func (g GormRepository) Update(data domain.Entity, filters ...Filter) error {
+func (g GormRepository) Update(data interface{}, filters ...Filter) error {
 	q := g.startQuery()
 	q = g.setQueryFilters(q, filters)
-	mappedData, ok := data.(*gormMap)
-	if !ok {
-		return errors.New("invalid data type")
-	}
-	err := q.Update(mappedData.Map).Error
+	err := q.Update(data).Error
 	if err != nil {
 		return err
 	}

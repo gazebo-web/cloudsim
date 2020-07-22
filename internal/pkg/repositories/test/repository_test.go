@@ -12,14 +12,14 @@ type testRepository interface {
 	getByValue(value int) ([]test, error)
 	getAll() ([]test, error)
 	delete(name string) error
-	update(name string, data domain.Entity) error
+	update(name string, data map[string]interface{}) error
 }
 
 type testRepositoryImpl struct {
 	repository repositories.Repository
 }
 
-func (t *testRepositoryImpl) update(name string, data domain.Entity) error {
+func (t *testRepositoryImpl) update(name string, data map[string]interface{}) error {
 	f := repositories.NewGormFilter("name = ?", name)
 	return t.repository.Update(data, f)
 }
