@@ -56,7 +56,6 @@ type Car struct {
     Owner string
 }
 
-// You can avoid adding the TableName() here since gorm.Model already includes it.
 func (Car) TableName() string {
 	return "cars"
 }
@@ -108,18 +107,31 @@ func CreateCars(repository repositories.Repository) {
     }
 
     var entities []domain.Entity
-    for _, c := range cars {
-        entities = append(entities, &c)
+    for _, car := range cars {
+        entities = append(entities, &car)
     }
     _, err := repository.Create(entities)
     if err != nil {
         fmt.Printf("Error: %+v", err)
     }
-    return
+    fmt.Println("Car:", output)
 }
 ```
 
 ### Get one car
+To get cars, you need to use filters:
+
+```golang
+func GetOneCar(repository repositories.Repository) {
+    f := repositories.NewGormFilter("owner = ?", "Owner A")
+    output := Car{}
+    err := t.repository.FindOne(&output, f)
+    if err != nil {
+        fmt.Printf("Error: %+v", err)
+    }
+    fmt.Println("Car:", output)
+}
+```
 
 ### Get all cars
 

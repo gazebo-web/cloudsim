@@ -47,6 +47,11 @@ func (g GormRepository) Create(entities []domain.Entity) ([]domain.Entity, error
 	g.Logger.Debug(fmt.Sprintf(" [%s.Repository] Creating %s. Input: %+v",
 		g.SingularName(), g.PluralName(), entities))
 	tx := g.DB.Begin()
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback()
+		}
+	}()
 	for _, entity := range entities {
 		err := tx.Model(g.Model()).Create(entity).Error
 		if err != nil {

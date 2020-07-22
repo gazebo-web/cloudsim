@@ -41,36 +41,37 @@ func (s testRepositorySuite) AfterTest() {
 }
 
 func (s testRepositorySuite) init() {
-	_, err := s.repository.create(test{
-		Name:  "Test1",
-		Value: 1,
+	_, err := s.repository.create([]test{
+		{
+			Name:  "Test1",
+			Value: 1,
+		},
+		{
+			Name:  "Test2",
+			Value: 2,
+		},
+		{
+			Name:  "Test3",
+			Value: 3,
+		},
 	})
-	s.NoError(err, "Should not throw an error when creating Test1")
-	_, err = s.repository.create(test{
-		Name:  "Test2",
-		Value: 2,
-	})
-	s.NoError(err, "Should not throw an error when creating Test2")
-	_, err = s.repository.create(test{
-		Name:  "Test3",
-		Value: 3,
-	})
-	s.NoError(err, "Should not throw an error when creating Test3")
+	s.NoError(err, "Should not throw an error when creating test entries")
 }
 
 func (s testRepositorySuite) TestCreate() {
-	t := newTest("test", 1234)
+	var tests []test
+	tests = append(tests, newTest("test", 1234), newTest("test2", 12345))
 	var count int
 	err := s.db.Model(&test{}).Count(&count).Error
 	s.NoError(err, "Should not throw an error when counting.")
 	s.Equal(0, count, "Before creating a test the count should be 0.")
 
-	_, err = s.repository.create(t)
+	_, err = s.repository.create(tests)
 	s.NoError(err, "Creating a test with the repository should not throw an error.")
 
 	err = s.db.Model(&test{}).Count(&count).Error
 	s.NoError(err, "Should not throw an error when counting.")
-	s.Equal(1, count, "After creating a test the count should be 1.")
+	s.Equal(2, count, "After creating a test the count should be 2.")
 }
 
 func (s testRepositorySuite) TestGetByName() {

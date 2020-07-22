@@ -7,7 +7,7 @@ import (
 )
 
 type testRepository interface {
-	create(test test) (*test, error)
+	create(test []test) ([]test, error)
 	getByName(name string) (*test, error)
 	getByValue(value int) ([]test, error)
 	getAll() ([]test, error)
@@ -33,14 +33,16 @@ func (t *testRepositoryImpl) getAll() ([]test, error) {
 	return tests, nil
 }
 
-func (t *testRepositoryImpl) create(test test) (*test, error) {
-	var tests []domain.Entity
-	tests = append(tests, &test)
-	_, err := t.repository.Create(tests)
+func (t *testRepositoryImpl) create(tests []test) ([]test, error) {
+	var input []domain.Entity
+	for _, test := range tests {
+		input = append(input, &test)
+	}
+	_, err := t.repository.Create(input)
 	if err != nil {
 		return nil, err
 	}
-	return &test, nil
+	return tests, nil
 }
 
 func (t *testRepositoryImpl) getByName(name string) (*test, error) {
