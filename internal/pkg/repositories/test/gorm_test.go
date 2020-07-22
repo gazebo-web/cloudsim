@@ -41,25 +41,25 @@ func (s testRepositorySuite) AfterTest() {
 }
 
 func (s testRepositorySuite) init() {
-	_, err := s.repository.create([]test{
-		{
-			Name:  "Test1",
-			Value: 1,
-		},
-		{
-			Name:  "Test2",
-			Value: 2,
-		},
-		{
-			Name:  "Test3",
-			Value: 3,
-		},
-	})
+	test1 := &test{
+		Name:  "Test1",
+		Value: 1,
+	}
+	test2 := &test{
+		Name:  "Test2",
+		Value: 2,
+	}
+
+	test3 := &test{
+		Name:  "Test3",
+		Value: 3,
+	}
+	_, err := s.repository.create([]*test{test1, test2, test3})
 	s.NoError(err, "Should not throw an error when creating test entries")
 }
 
 func (s testRepositorySuite) TestCreate() {
-	var tests []test
+	var tests []*test
 	tests = append(tests, newTest("test", 1234), newTest("test2", 12345))
 	var count int
 	err := s.db.Model(&test{}).Count(&count).Error
@@ -105,6 +105,21 @@ func (s testRepositorySuite) TestDelete() {
 	s.Equal(2, count, "After removing a test the count should be 2.")
 }
 
+func (s testRepositorySuite) TestDeleteAll() {
+	s.init()
+	var count int
+	err := s.db.Model(&test{}).Count(&count).Error
+	s.NoError(err, "Should not throw an error when counting.")
+	s.Equal(3, count, "Before removing a test the count should be 3.")
+
+	err = s.repository.deleteAll()
+	s.NoError(err, "Should not throw an error when removing all entities.")
+
+	err = s.db.Model(&test{}).Count(&count).Error
+	s.NoError(err, "Should not throw an error when counting.")
+	s.Equal(0, count, "After removing all tests the count should be 0.")
+}
+
 func (s testRepositorySuite) TestGetAll() {
 	s.init()
 
@@ -132,6 +147,20 @@ func (s testRepositorySuite) TestUpdate() {
 
 	s.Equal("Test111", result.Name)
 	s.Equal(12345, result.Value)
+}
+
+func (s testRepositorySuite) TestUpdateAll() {
+	s.init()
+
+	err := s.repository.updateAll(map[string]interface{}{ "name": "Test123" })
+	s.NoError(err, "Should not throw an error when updating all entities.")
+
+	result, err := s.repository.getAll()
+	s.NoError(err, "Should not throw an error when getting all entries")
+
+	s.Equal("Test123", result[0].Name)
+	s.Equal("Test123", result[1].Name)
+	s.Equal("Test123", result[2].Name)
 }
 
 func (s testRepositorySuite) TestUpdateZeroValue() {

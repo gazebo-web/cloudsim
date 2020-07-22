@@ -7,16 +7,26 @@ import (
 )
 
 type testRepository interface {
-	create(test []test) ([]test, error)
+	create(tests []*test) ([]*test, error)
 	getByName(name string) (*test, error)
 	getByValue(value int) ([]test, error)
 	getAll() ([]test, error)
 	delete(name string) error
+	deleteAll() error
 	update(name string, data map[string]interface{}) error
+	updateAll(data map[string]interface{}) error
 }
 
 type testRepositoryImpl struct {
 	repository repositories.Repository
+}
+
+func (t *testRepositoryImpl) deleteAll() error {
+	return t.repository.Delete()
+}
+
+func (t *testRepositoryImpl) updateAll(data map[string]interface{}) error {
+	return t.repository.Update(data)
 }
 
 func (t *testRepositoryImpl) update(name string, data map[string]interface{}) error {
@@ -33,10 +43,10 @@ func (t *testRepositoryImpl) getAll() ([]test, error) {
 	return tests, nil
 }
 
-func (t *testRepositoryImpl) create(tests []test) ([]test, error) {
+func (t *testRepositoryImpl) create(tests []*test) ([]*test, error) {
 	var input []domain.Entity
 	for _, test := range tests {
-		input = append(input, &test)
+		input = append(input, test)
 	}
 	_, err := t.repository.Create(input)
 	if err != nil {
@@ -100,8 +110,8 @@ func (test) PluralName() string {
 	return "Tests"
 }
 
-func newTest(name string, value int) test {
-	return test{
+func newTest(name string, value int) *test {
+	return &test{
 		Name:  name,
 		Value: value,
 	}
