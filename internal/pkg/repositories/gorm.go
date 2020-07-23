@@ -1,7 +1,6 @@
 package repositories
 
 import (
-	"errors"
 	"fmt"
 	"github.com/jinzhu/gorm"
 	"gitlab.com/ignitionrobotics/web/cloudsim/internal/pkg/domain"
@@ -45,11 +44,16 @@ func (g GormRepository) Create(entities []domain.Entity) ([]domain.Entity, error
 	g.Logger.Debug(fmt.Sprintf(" [%s.Repository] Creating %s. Input: %+v",
 		g.SingularName(), g.PluralName(), entities))
 	tx := g.DB.Begin()
-	for _, e := range entities {
-		err := tx.Model(g.Model()).Create(e).Error
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback()
+		}
+	}()
+	for _, entity := range entities {
+		err := tx.Model(g.Model()).Create(entity).Error
 		if err != nil {
 			g.Logger.Debug(fmt.Sprintf(" [%s.Repository] Creating %s failed. Input: %+v. Rolling back...",
-				g.SingularName(), g.PluralName(), e))
+				g.SingularName(), g.PluralName(), entity))
 			tx.Rollback()
 			return nil, err
 		}
@@ -77,14 +81,16 @@ func (g GormRepository) Find(output interface{}, limit, offset *int, filters ...
 		g.Logger.Debug(fmt.Sprintf(" [%s.Repository] Limit: %d.",
 			g.SingularName(), *limit))
 		q = q.Limit(*limit)
+		if offset != nil {
+			g.Logger.Debug(fmt.Sprintf(" [%s.Repository] Offset: %d.",
+				g.SingularName(), *offset))
+			q = q.Offset(*offset)
+		}
 	}
-	if limit != nil && offset != nil {
-		g.Logger.Debug(fmt.Sprintf(" [%s.Repository] Offset: %d.",
-			g.SingularName(), *offset))
-		q = q.Offset(*offset)
-	}
+
 	q = g.setQueryFilters(q, filters)
-	err := q.Find(output).Error
+	q = q.Find(output)
+	err := q.Error
 	if err != nil {
 		g.Logger.Debug(fmt.Sprintf(" [%s.Repository] Getting all %s failed. Error: %+v",
 			g.SingularName(), g.PluralName(), err))
@@ -97,37 +103,64 @@ func (g GormRepository) Find(output interface{}, limit, offset *int, filters ...
 
 // FindOne returns an Entity that matches the given Filter.
 func (g GormRepository) FindOne(entity domain.Entity, filters ...Filter) error {
+	g.Logger.Debug(fmt.Sprintf(" [%s.Repository] Getting %s. Filters: %+v",
+		g.SingularName(), g.SingularName(), filters))
 	if len(filters) == 0 {
-		return errors.New("no filters provided")
+		g.Logger.Debug(fmt.Sprintf(" [%s.Repository] Getting %s failed. No filters provided.",
+			g.SingularName(), g.SingularName()))
+		return ErrNoFilter
 	}
 	q := g.startQuery()
 	q = g.setQueryFilters(q, filters)
-	err := q.First(entity).Error
+	q = q.First(entity)
+	err := q.Error
 	if err != nil {
+		g.Logger.Debug(fmt.Sprintf(" [%s.Repository] Getting %s failed. Error: %+v.",
+			g.SingularName(), g.SingularName(), err))
 		return err
 	}
+	g.Logger.Debug(fmt.Sprintf(" [%s.Repository] %s found. Result: %+v.",
+		g.SingularName(), g.SingularName(), entity))
 	return nil
 }
 
 // Update updates the entities that match the given filters with the given data.
-func (g GormRepository) Update(data domain.Entity, filters ...Filter) error {
+func (g GormRepository) Update(data interface{}, filters ...Filter) error {
+	g.Logger.Debug(fmt.Sprintf(" [%s.Repository] Updating with data: %+v. Filters: %+v",
+		g.SingularName(), data, filters))
 	q := g.startQuery()
 	q = g.setQueryFilters(q, filters)
-	err := q.Update(data).Error
+	q = q.Update(data)
+	err := q.Error
 	if err != nil {
+		g.Logger.Debug(fmt.Sprintf(" [%s.Repository] Updating failed. Error: %+v",
+			g.SingularName(), err))
 		return err
+	} else if q.RowsAffected == 0 {
+		return ErrNoEntitiesUpdated
 	}
+	g.Logger.Debug(fmt.Sprintf(" [%s.Repository] Updating succeed. Updated records: %d.",
+		g.SingularName(), q.RowsAffected))
 	return nil
 }
 
 // Delete removes a set of entities that match the given filters.
 func (g GormRepository) Delete(filters ...Filter) error {
+	g.Logger.Debug(fmt.Sprintf(" [%s.Repository] Deleting records. Filters: %+v",
+		g.SingularName(), filters))
 	q := g.startQuery()
 	q = g.setQueryFilters(q, filters)
-	err := q.Delete(g.Model()).Error
+	q = q.Delete(g.Model())
+	err := q.Error
 	if err != nil {
+		g.Logger.Debug(fmt.Sprintf(" [%s.Repository] Deleting failed. Error: %+v",
+			g.SingularName(), err))
 		return err
+	} else if q.RowsAffected == 0 {
+		return ErrNoEntitiesDeleted
 	}
+	g.Logger.Debug(fmt.Sprintf(" [%s.Repository] Deleting succeed. Removed records: %d.",
+		g.SingularName(), q.RowsAffected))
 	return nil
 }
 

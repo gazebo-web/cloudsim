@@ -7,21 +7,43 @@ import (
 )
 
 type testRepository interface {
-	create(test test) (*test, error)
+	create(tests []*test) ([]*test, error)
 	getByName(name string) (*test, error)
 	getByValue(value int) ([]test, error)
 	getAll() ([]test, error)
 	delete(name string) error
-	update(name string, data test) error
+	deleteAll() error
+	deleteSome(names []string) error
+	update(name string, data map[string]interface{}) error
+	updateSome(names []string, data map[string]interface{}) error
+	updateAll(data map[string]interface{}) error
 }
 
 type testRepositoryImpl struct {
 	repository repositories.Repository
 }
 
-func (t *testRepositoryImpl) update(name string, data test) error {
+func (t *testRepositoryImpl) deleteSome(names []string) error {
+	f := repositories.NewGormFilter("name IN (?)", names)
+	return t.repository.Delete(f)
+}
+
+func (t *testRepositoryImpl) updateSome(names []string, data map[string]interface{}) error {
+	f := repositories.NewGormFilter("name IN (?)", names)
+	return t.repository.Update(data, f)
+}
+
+func (t *testRepositoryImpl) deleteAll() error {
+	return t.repository.Delete()
+}
+
+func (t *testRepositoryImpl) updateAll(data map[string]interface{}) error {
+	return t.repository.Update(data)
+}
+
+func (t *testRepositoryImpl) update(name string, data map[string]interface{}) error {
 	f := repositories.NewGormFilter("name = ?", name)
-	return t.repository.Update(&data, f)
+	return t.repository.Update(data, f)
 }
 
 func (t *testRepositoryImpl) getAll() ([]test, error) {
@@ -33,14 +55,16 @@ func (t *testRepositoryImpl) getAll() ([]test, error) {
 	return tests, nil
 }
 
-func (t *testRepositoryImpl) create(test test) (*test, error) {
-	var tests []domain.Entity
-	tests = append(tests, &test)
-	_, err := t.repository.Create(tests)
+func (t *testRepositoryImpl) create(tests []*test) ([]*test, error) {
+	var input []domain.Entity
+	for _, test := range tests {
+		input = append(input, test)
+	}
+	_, err := t.repository.Create(input)
 	if err != nil {
 		return nil, err
 	}
-	return &test, nil
+	return tests, nil
 }
 
 func (t *testRepositoryImpl) getByName(name string) (*test, error) {
@@ -91,15 +115,15 @@ func (test) TableName() string {
 }
 
 func (test) SingularName() string {
-	return "test"
+	return "Test"
 }
 
 func (test) PluralName() string {
 	return "Tests"
 }
 
-func newTest(name string, value int) test {
-	return test{
+func newTest(name string, value int) *test {
+	return &test{
 		Name:  name,
 		Value: value,
 	}
