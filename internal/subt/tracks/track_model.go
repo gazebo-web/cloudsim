@@ -20,10 +20,12 @@ type Track struct {
 	Public bool `json:"public"`
 }
 
+// SingularName returns the Track entity name in singular.
 func (Track) SingularName() string {
 	return "Track"
 }
 
+// PluralName returns the Track entity name in plural.
 func (Track) PluralName() string {
 	return "Tracks"
 }
