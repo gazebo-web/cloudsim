@@ -91,17 +91,17 @@ func (s service) Update(name string, input UpdateTrackInput) (*Track, error) {
 // Delete removes the track with the given name.
 func (s service) Delete(name string) (*Track, error) {
 	s.logger.Debug(fmt.Sprintf(" [Track.Service] Removing track with name: %s", name))
-	input, err := s.Get(name)
+	entity, err := s.Get(name)
 	if err != nil {
 		return nil, err
 	}
-	result, err := s.repository.Delete(*input)
+	err = s.repository.Delete(repositories.NewGormFilter("name = ?", name))
 	if err != nil {
 		s.logger.Debug(fmt.Sprintf(" [Track.Service] Deleting the track with name: %s failed. Error: %+v", name, err))
 		return nil, err
 	}
-	s.logger.Debug(fmt.Sprintf(" [Track.Service] Track deleted with name: %s. Track: %+v", name, *result))
-	return result, nil
+	s.logger.Debug(fmt.Sprintf(" [Track.Service] Track deleted with name: %s. Track: %+v", name, *entity))
+	return entity, nil
 }
 
 // NewService initializes a new Service implementation
