@@ -777,7 +777,7 @@ func (sa *SubTApplication) getSimulationLiveLogs(ctx context.Context, s *Service
 		container = GazeboServerContainerName
 	}
 
-	raw, err := KubernetesPodGetLog(ctx, s.clientset, metav1.NamespaceDefault, podName, container, lines)
+	raw, err := KubernetesPodGetLog(ctx, s.clientset, s.cfg.KubernetesNamespace, podName, container, lines)
 
 	if raw == nil {
 		raw = sptr("No logs to show")
@@ -808,7 +808,7 @@ func (sa *SubTApplication) getSimulationScore(ctx context.Context, s *Service,
 	podName := sa.getGazeboPodName(getSimulationPodNamePrefix(*dep.GroupID))
 	path := fmt.Sprintf("%s/logs/score.yml", sa.cfg.GazeboLogsVolumeMountPath)
 
-	out, err := KubernetesPodReadFile(ctx, s.clientset, metav1.NamespaceDefault, podName, GazeboServerContainerName, path)
+	out, err := KubernetesPodReadFile(ctx, s.clientset, s.cfg.KubernetesNamespace, podName, GazeboServerContainerName, path)
 	if err != nil {
 		return nil, ign.NewErrorMessageWithBase(int64(ErrorInvalidScore), err)
 	}
@@ -841,7 +841,7 @@ func (sa *SubTApplication) getSimulationStatistics(ctx context.Context, s *Servi
 	podName := sa.getGazeboPodName(getSimulationPodNamePrefix(*dep.GroupID))
 	path := fmt.Sprintf("%s/logs/summary.yml", sa.cfg.GazeboLogsVolumeMountPath)
 
-	out, err := KubernetesPodReadFile(ctx, s.clientset, metav1.NamespaceDefault, podName, GazeboServerContainerName, path)
+	out, err := KubernetesPodReadFile(ctx, s.clientset, s.cfg.KubernetesNamespace, podName, GazeboServerContainerName, path)
 	if err != nil {
 		return nil, ign.NewErrorMessageWithBase(int64(ErrorInvalidSummary), err)
 	}
@@ -1110,7 +1110,7 @@ func (sa *SubTApplication) launchApplication(ctx context.Context, s *Service, tx
 	npGz := sa.createNetworkPolicy(ctx, gazeboPodName, baseLabels, gzserverLabels, bridgeLabels)
 	// We update the networkpolicy of the GzServer to also allow outbound connections to internet.
 	npGz.Spec.Egress = append(npGz.Spec.Egress, networkingv1.NetworkPolicyEgressRule{})
-	_, err = s.clientset.NetworkingV1().NetworkPolicies(corev1.NamespaceDefault).Create(npGz)
+	_, err = s.clientset.NetworkingV1().NetworkPolicies(s.cfg.KubernetesNamespace).Create(npGz)
 	if err != nil {
 		return nil, ign.NewErrorMessageWithBase(ign.ErrorK8Create, err)
 	}
@@ -1257,7 +1257,7 @@ func (sa *SubTApplication) launchApplication(ctx context.Context, s *Service, tx
 	}
 
 	// Launch the gzserver Pod
-	_, err = s.clientset.CoreV1().Pods(corev1.NamespaceDefault).Create(gzPod)
+	_, err = s.clientset.CoreV1().Pods(s.cfg.KubernetesNamespace).Create(gzPod)
 	if err != nil {
 		return nil, ign.NewErrorMessageWithBase(ign.ErrorK8Create, err)
 	}
@@ -1286,7 +1286,7 @@ func (sa *SubTApplication) launchApplication(ctx context.Context, s *Service, tx
 			sa.getGazeboLogsFilename(groupID),
 		)
 		// Launch the copy pod
-		_, err := s.clientset.CoreV1().Pods(corev1.NamespaceDefault).Create(copyPod)
+		_, err := s.clientset.CoreV1().Pods(s.cfg.KubernetesNamespace).Create(copyPod)
 		if err != nil {
 			return nil, ign.NewErrorMessageWithBase(ign.ErrorK8Create, err)
 		}
@@ -1295,12 +1295,20 @@ func (sa *SubTApplication) launchApplication(ctx context.Context, s *Service, tx
 	// Expose the Gazebo websocket server if an auth key is available
 	if dep.AuthorizationToken != nil && len(sa.cfg.IngressName) > 0 {
 		// Create and launch a service to expose the websocket server to the cluster
-		service, err := sa.createWebsocketService(ctx, s.clientset, dep, podNamePrefix, baseLabels, gzserverLabels)
+		service, err := sa.createWebsocketService(
+			ctx,
+			s.clientset,
+			s.cfg.KubernetesNamespace,
+			dep,
+			podNamePrefix,
+			baseLabels,
+			gzserverLabels,
+		)
 		if err != nil {
 			return nil, ign.NewErrorMessageWithBase(ign.ErrorK8Create, err)
 		}
 		// Create an ingress rule to allow traffic to the websocket service from the Internet
-		_, err = sa.createWebsocketIngress(ctx, s.clientset, dep, service)
+		_, err = sa.createWebsocketIngress(ctx, s.clientset, s.cfg.KubernetesNamespace, dep, service)
 		if err != nil {
 			return nil, ign.NewErrorMessageWithBase(ign.ErrorK8Create, err)
 		}
@@ -1329,7 +1337,7 @@ func (sa *SubTApplication) launchApplication(ctx context.Context, s *Service, tx
 			specificBridgeLabels, gzserverLabels, specificFcLabels)
 		// We update the networkpolicy of the Comms Bridge to also allow outbound connections to internet.
 		npBridge.Spec.Egress = append(npBridge.Spec.Egress, networkingv1.NetworkPolicyEgressRule{})
-		_, err = s.clientset.NetworkingV1().NetworkPolicies(corev1.NamespaceDefault).Create(npBridge)
+		_, err = s.clientset.NetworkingV1().NetworkPolicies(s.cfg.KubernetesNamespace).Create(npBridge)
 		if err != nil {
 			return nil, ign.NewErrorMessageWithBase(ign.ErrorK8Create, err)
 		}
@@ -1337,7 +1345,7 @@ func (sa *SubTApplication) launchApplication(ctx context.Context, s *Service, tx
 		// Network Policy for field-computer Pods (Note: they cannnot connect to internet)
 		npfc := sa.createNetworkPolicy(ctx, fcPodName, baseLabels, specificFcLabels,
 			specificBridgeLabels)
-		_, err = s.clientset.NetworkingV1().NetworkPolicies(corev1.NamespaceDefault).Create(npfc)
+		_, err = s.clientset.NetworkingV1().NetworkPolicies(s.cfg.KubernetesNamespace).Create(npfc)
 		if err != nil {
 			return nil, ign.NewErrorMessageWithBase(ign.ErrorK8Create, err)
 		}
@@ -1379,7 +1387,7 @@ func (sa *SubTApplication) launchApplication(ctx context.Context, s *Service, tx
 
 		// Launch the bridge pods
 		logger(ctx).Info("Launching bridge pod", bridgePod.Spec.InitContainers)
-		_, err = s.clientset.CoreV1().Pods(corev1.NamespaceDefault).Create(bridgePod)
+		_, err = s.clientset.CoreV1().Pods(s.cfg.KubernetesNamespace).Create(bridgePod)
 		if err != nil {
 			return nil, ign.NewErrorMessageWithBase(ign.ErrorK8Create, err)
 		}
@@ -1405,7 +1413,7 @@ func (sa *SubTApplication) launchApplication(ctx context.Context, s *Service, tx
 	// Launch the bridge copy pods
 	if sa.cfg.S3LogsCopyEnabled {
 		for _, pod := range copyPods {
-			_, err := s.clientset.CoreV1().Pods(corev1.NamespaceDefault).Create(pod)
+			_, err := s.clientset.CoreV1().Pods(s.cfg.KubernetesNamespace).Create(pod)
 			if err != nil {
 				return nil, ign.NewErrorMessageWithBase(ign.ErrorK8Create, err)
 			}
@@ -1424,7 +1432,7 @@ func (sa *SubTApplication) launchApplication(ctx context.Context, s *Service, tx
 		})
 
 		// Launch the field-computer Pod
-		_, err = s.clientset.CoreV1().Pods(corev1.NamespaceDefault).Create(fcPod)
+		_, err = s.clientset.CoreV1().Pods(s.cfg.KubernetesNamespace).Create(fcPod)
 		if err != nil {
 			return nil, ign.NewErrorMessageWithBase(ign.ErrorK8Create, err)
 		}
@@ -1481,12 +1489,12 @@ func waitForPodConditionAndGetIP(ctx context.Context, s *Service, matchLabels ma
 	timeout := time.Duration(s.cfg.PodReadyTimeoutSeconds) * time.Second
 	opts := metav1.ListOptions{LabelSelector: labelSelector}
 
-	if err := WaitForMatchPodsCondition(ctx, s.clientset, corev1.NamespaceDefault,
+	if err := WaitForMatchPodsCondition(ctx, s.clientset, s.cfg.KubernetesNamespace,
 		opts, condStr, timeout, cond); err != nil {
 		return nil, err
 	}
 
-	podsInterface := s.clientset.CoreV1().Pods(corev1.NamespaceDefault)
+	podsInterface := s.clientset.CoreV1().Pods(s.cfg.KubernetesNamespace)
 	runningPods, err := podsInterface.List(opts)
 	if err != nil || len(runningPods.Items) == 0 {
 		return nil, errors.New("Pods not found for labels: " + labelSelector)
@@ -1548,8 +1556,8 @@ func (sa *SubTApplication) addSharedVolumeConfigurationContainer(pod *corev1.Pod
 }
 
 // createWebsocketService creates a Kubernetes Service that exposes the websocket server to the cluster.
-// This server can then be exposed to the Internet by using a load balancer.
-func (sa *SubTApplication) createWebsocketService(ctx context.Context, kc kubernetes.Interface,
+// This service can then be exposed to the Internet by a separate load balancer.
+func (sa *SubTApplication) createWebsocketService(ctx context.Context, kc kubernetes.Interface, namespace string,
 	dep *SimulationDeployment, podNamePrefix string, serviceLabels map[string]string,
 	targetLabels map[string]string) (*corev1.Service, error) {
 
@@ -1572,7 +1580,7 @@ func (sa *SubTApplication) createWebsocketService(ctx context.Context, kc kubern
 	}
 
 	// Launch the service
-	_, err := kc.CoreV1().Services(corev1.NamespaceDefault).Create(service)
+	_, err := kc.CoreV1().Services(namespace).Create(service)
 	if err != nil {
 		return nil, err
 	}
@@ -1580,7 +1588,7 @@ func (sa *SubTApplication) createWebsocketService(ctx context.Context, kc kubern
 	return service, nil
 }
 
-func (sa *SubTApplication) createWebsocketIngress(ctx context.Context, kc kubernetes.Interface,
+func (sa *SubTApplication) createWebsocketIngress(ctx context.Context, kc kubernetes.Interface, namespace string,
 	dep *SimulationDeployment, service *corev1.Service) (*v1beta1.Ingress, error) {
 
 	// Prepare the rule path
@@ -1603,7 +1611,7 @@ func (sa *SubTApplication) createWebsocketIngress(ctx context.Context, kc kubern
 	return upsertIngressRule(
 		ctx,
 		kc,
-		corev1.NamespaceDefault,
+		namespace,
 		sa.cfg.IngressName,
 		host,
 		rulePath,
@@ -2112,7 +2120,7 @@ func (sa *SubTApplication) deleteApplication(ctx context.Context, s *Service, tx
 	}
 
 	// Find and delete all Pods associated to the groupID.
-	podsInterface := s.clientset.CoreV1().Pods(corev1.NamespaceDefault)
+	podsInterface := s.clientset.CoreV1().Pods(s.cfg.KubernetesNamespace)
 	pods, err := podsInterface.List(metav1.ListOptions{LabelSelector: groupIDLabel})
 	if err != nil || len(pods.Items) == 0 {
 		// Pods for this groupID not found. Continue or fail?
@@ -2140,7 +2148,7 @@ func (sa *SubTApplication) deleteApplication(ctx context.Context, s *Service, tx
 	logger(ctx).Info("Successfully deleted pods for groupID: " + groupID)
 
 	// Find and delete all Services associated to the groupID.
-	serviceInterface := s.clientset.CoreV1().Services(corev1.NamespaceDefault)
+	serviceInterface := s.clientset.CoreV1().Services(s.cfg.KubernetesNamespace)
 	services, err := serviceInterface.List(metav1.ListOptions{LabelSelector: groupIDLabel})
 	if err != nil || len(services.Items) == 0 {
 		// Services for this groupID not found. Continue or fail?
@@ -2173,7 +2181,7 @@ func (sa *SubTApplication) deleteApplication(ctx context.Context, s *Service, tx
 		_, err := removeIngressRule(
 			ctx,
 			s.clientset,
-			corev1.NamespaceDefault,
+			s.cfg.KubernetesNamespace,
 			sa.cfg.IngressName,
 			host,
 			sa.getSimulationIngressPath(groupID),
@@ -2195,7 +2203,7 @@ func (sa *SubTApplication) deleteApplication(ctx context.Context, s *Service, tx
 	// Dev note: it is important to remove the network policies AFTER the gzlogs are
 	// copied to S3. Otherwise, if we remove the policies before, the pod will lose
 	// access to outside world and the copy to S3 will not work.
-	npInterface := s.clientset.NetworkingV1().NetworkPolicies(corev1.NamespaceDefault)
+	npInterface := s.clientset.NetworkingV1().NetworkPolicies(s.cfg.KubernetesNamespace)
 	nps, err := npInterface.List(metav1.ListOptions{LabelSelector: groupIDLabel})
 	if err != nil || len(nps.Items) == 0 {
 		logger(ctx).Warning("Network Policies not found for the groupID: "+groupID, err)
@@ -2338,7 +2346,7 @@ func (sa *SubTApplication) uploadSimulationLogs(ctx context.Context, s *Service,
 		getPodLabelSelectorForSearches(groupID),
 		labelAndValue(subtTypeGazebo, "true"),
 	)
-	pods, err := s.clientset.CoreV1().Pods(corev1.NamespaceDefault).List(opts)
+	pods, err := s.clientset.CoreV1().Pods(s.cfg.KubernetesNamespace).List(opts)
 	if err != nil {
 		msg := fmt.Sprintf("Could not get the simulation pod while attempting to upload log files.")
 		logger.Error(msg, err)
@@ -2348,7 +2356,7 @@ func (sa *SubTApplication) uploadSimulationLogs(ctx context.Context, s *Service,
 			err := KubernetesPodSendS3CopyCommand(
 				ctx,
 				s.clientset,
-				metav1.NamespaceDefault,
+				s.cfg.KubernetesNamespace,
 				sa.getCopyPodName(podName),
 				CopyToS3SidecarContainerName,
 				bucket,
@@ -2366,7 +2374,7 @@ func (sa *SubTApplication) uploadSimulationLogs(ctx context.Context, s *Service,
 		getPodLabelSelectorForSearches(groupID),
 		labelAndValue(subtTypeCommsBridge, "true"),
 	)
-	pods, err = s.clientset.CoreV1().Pods(corev1.NamespaceDefault).List(opts)
+	pods, err = s.clientset.CoreV1().Pods(s.cfg.KubernetesNamespace).List(opts)
 	if err != nil {
 		msg := fmt.Sprintf("Could not get comms-bridge pods while attempting to upload log files.")
 		logger.Error(msg, err)
@@ -2377,7 +2385,7 @@ func (sa *SubTApplication) uploadSimulationLogs(ctx context.Context, s *Service,
 			err := KubernetesPodSendS3CopyCommand(
 				ctx,
 				s.clientset,
-				metav1.NamespaceDefault,
+				s.cfg.KubernetesNamespace,
 				sa.getCopyPodName(podName),
 				CopyToS3SidecarContainerName,
 				bucket,
