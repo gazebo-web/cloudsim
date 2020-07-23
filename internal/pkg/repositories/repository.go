@@ -1,7 +1,14 @@
 package repositories
 
 import (
+	"errors"
 	"gitlab.com/ignitionrobotics/web/cloudsim/internal/pkg/domain"
+)
+
+var (
+	ErrNoFilter = errors.New("no filters provided")
+	ErrNoEntitiesUpdated = errors.New("no entities were updated")
+	ErrNoEntitiesDeleted = errors.New("no entities were deleted")
 )
 
 // Repository represents a generic repository layer interface.

@@ -1,7 +1,6 @@
 package repositories
 
 import (
-	"errors"
 	"fmt"
 	"github.com/jinzhu/gorm"
 	"gitlab.com/ignitionrobotics/web/cloudsim/internal/pkg/domain"
@@ -109,7 +108,7 @@ func (g GormRepository) FindOne(entity domain.Entity, filters ...Filter) error {
 	if len(filters) == 0 {
 		g.Logger.Debug(fmt.Sprintf(" [%s.Repository] Getting %s failed. No filters provided.",
 			g.SingularName(), g.SingularName()))
-		return errors.New("no filters provided")
+		return ErrNoFilter
 	}
 	q := g.startQuery()
 	q = g.setQueryFilters(q, filters)
@@ -133,13 +132,12 @@ func (g GormRepository) Update(data interface{}, filters ...Filter) error {
 	q = g.setQueryFilters(q, filters)
 	q = q.Update(data)
 	err := q.Error
-	if err == nil && q.RowsAffected == 0 {
-		err = errors.New("no entities were updated")
-	}
 	if err != nil {
 		g.Logger.Debug(fmt.Sprintf(" [%s.Repository] Updating failed. Error: %+v",
 			g.SingularName(), err))
 		return err
+	} else if q.RowsAffected == 0 {
+		return ErrNoEntitiesUpdated
 	}
 	g.Logger.Debug(fmt.Sprintf(" [%s.Repository] Updating succeed. Updated records: %d.",
 		g.SingularName(), q.RowsAffected))
@@ -159,7 +157,7 @@ func (g GormRepository) Delete(filters ...Filter) error {
 			g.SingularName(), err))
 		return err
 	} else if q.RowsAffected == 0 {
-		return errors.New("no entities were deleted")
+		return ErrNoEntitiesDeleted
 	}
 	g.Logger.Debug(fmt.Sprintf(" [%s.Repository] Deleting succeed. Removed records: %d.",
 		g.SingularName(), q.RowsAffected))
