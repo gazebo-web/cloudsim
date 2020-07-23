@@ -154,13 +154,12 @@ func (g GormRepository) Delete(filters ...Filter) error {
 	q = g.setQueryFilters(q, filters)
 	q = q.Delete(g.Model())
 	err := q.Error
-	if err == nil && q.RowsAffected == 0 {
-		err = errors.New("no entities were deleted")
-	}
 	if err != nil {
 		g.Logger.Debug(fmt.Sprintf(" [%s.Repository] Deleting failed. Error: %+v",
 			g.SingularName(), err))
 		return err
+	} else if q.RowsAffected == 0 {
+		return errors.New("no entities were deleted")
 	}
 	g.Logger.Debug(fmt.Sprintf(" [%s.Repository] Deleting succeed. Removed records: %d.",
 		g.SingularName(), q.RowsAffected))
