@@ -146,7 +146,7 @@ func (s testRepositorySuite) TestDeleteSome() {
 
 	err = s.db.Model(&test{}).Count(&count).Error
 	s.NoError(err, "Should not throw an error when counting.")
-	s.Equal(1, count, "After removing all tests the count should be 0.")
+	s.Equal(1, count, "After removing all tests the count should be 1.")
 }
 
 func (s testRepositorySuite) TestDeleteInvalid() {
