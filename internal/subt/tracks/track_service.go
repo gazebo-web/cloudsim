@@ -105,7 +105,7 @@ func (s service) Delete(name string) (*Track, error) {
 }
 
 // NewService initializes a new Service implementation
-func NewService(r Repository, v *validator.Validate, logger ign.Logger) Service {
+func NewService(r repositories.Repository, v *validator.Validate, logger ign.Logger) Service {
 	return &service{
 		repository: r,
 		validator:  v,
