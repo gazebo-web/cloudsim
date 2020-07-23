@@ -6,8 +6,13 @@ import (
 )
 
 var (
+	// ErrNoFilter represents an error when no filter are provided.
 	ErrNoFilter = errors.New("no filters provided")
+	// ErrNoEntitiesUpdated represent an error when no entities were updated in the database
+	// after an Update operation.
 	ErrNoEntitiesUpdated = errors.New("no entities were updated")
+	// ErrNoEntitiesDeleted represent an error when no entities were deleted in the database
+	// after a Delete operation.
 	ErrNoEntitiesDeleted = errors.New("no entities were deleted")
 )
 
