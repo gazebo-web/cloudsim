@@ -22,9 +22,9 @@ type CreateTrackInput struct {
 	Public bool `json:"public" validate:"required"`
 }
 
-// ToMap converts the current struct into a map[string]interface{}
-func (c CreateTrackInput) ToMap() (map[string]interface{}, error) {
-	return structs.ToMap(&c)
+// Value converts the current struct into a map[string]interface{}
+func (c CreateTrackInput) Value() (interface{}, error) {
+	return CreateTrackFromInput(c), nil
 }
 
 // NewCreateTrackInput creates a new CreateTrackInput from the given []byte.
@@ -53,8 +53,8 @@ type UpdateTrackInput struct {
 	Public *bool `json:"public,omitempty"`
 }
 
-// ToMap converts the current struct into a map[string]interface{}
-func (u UpdateTrackInput) ToMap() (map[string]interface{}, error) {
+// Value converts the current struct into a map[string]interface{}
+func (u UpdateTrackInput) Value() (interface{}, error) {
 	return structs.ToMap(&u)
 }
 

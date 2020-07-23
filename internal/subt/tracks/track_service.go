@@ -30,7 +30,8 @@ func (s service) Create(input CreateTrackInput) (*Track, error) {
 		s.logger.Debug(fmt.Sprintf(" [Track.Service] Validation failed. Error: %+v", err))
 		return nil, err
 	}
-	track := CreateTrackFromInput(input)
+	value, err := input.Value()
+	track := value.(*Track)
 	output, err := s.repository.Create([]domain.Entity{track})
 	if err != nil {
 		s.logger.Debug(fmt.Sprintf(" [Track.Service] Creation failed failed. Error: %+v", err))
@@ -74,7 +75,7 @@ func (s service) Update(name string, input UpdateTrackInput) (interface{}, error
 		s.logger.Debug(fmt.Sprintf(" [Track.Service] Validating input failed. Error: %+v", err))
 		return nil, err
 	}
-	updatedTrack, err := input.ToMap()
+	updatedTrack, err := input.Value()
 	if err != nil {
 		return nil, err
 	}
