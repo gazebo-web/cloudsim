@@ -2,6 +2,7 @@ package tracks
 
 import (
 	"fmt"
+	"gitlab.com/ignitionrobotics/web/cloudsim/internal/pkg/repositories"
 	"gitlab.com/ignitionrobotics/web/ign-go"
 	"gopkg.in/go-playground/validator.v9"
 )
@@ -16,7 +17,7 @@ type Service interface {
 }
 
 type service struct {
-	repository Repository
+	repository repositories.Repository
 	validator  *validator.Validate
 	logger     ign.Logger
 }
