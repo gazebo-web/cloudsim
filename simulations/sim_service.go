@@ -1517,7 +1517,16 @@ func (s *Service) setupRunningSimulationTransportLayer(dep *SimulationDeployment
 	host := s.applications[*dep.Application].getSimulationWebsocketHost()
 	path := s.applications[*dep.Application].getSimulationWebsocketPath(*dep.GroupID)
 
-	t, err := newTransporter(host, path, *dep.AuthorizationToken, s.cfg.IsTest)
+	var t ignws.PubSubWebsocketTransporter
+	var err error
+	for i := 1; i <= 10; i++ {
+		t, err = newTransporter(host, path, *dep.AuthorizationToken, s.cfg.IsTest)
+		if err == nil {
+			break
+		}
+		// i * 10s
+		Sleep(time.Duration(i * 10) * time.Second)
+	}
 	if err != nil {
 		return nil, err
 	}
