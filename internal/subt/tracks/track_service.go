@@ -79,7 +79,7 @@ func (s service) Update(name string, input UpdateTrackInput) (*Track, error) {
 		return nil, err
 	}
 	updatedTrack := UpdateTrackFromInput(*track, input)
-	track, err = s.repository.Update(name, updatedTrack)
+	err = s.repository.Update(updatedTrack, repositories.NewGormFilter("name = ?", name))
 	if err != nil {
 		s.logger.Debug(fmt.Sprintf(" [Track.Service] Updating track with name: %s failed. Error: %+v", name, err))
 		return nil, err
