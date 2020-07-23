@@ -56,7 +56,8 @@ func (s service) Get(name string) (*Track, error) {
 // GetAll returns a slice with all the tracks.
 func (s service) GetAll() ([]Track, error) {
 	s.logger.Debug(" [Track.Service] Getting all tracks")
-	tracks, err := s.repository.GetAll()
+	var tracks []Track
+	err := s.repository.Find(&tracks, nil, nil)
 	if err != nil {
 		s.logger.Debug(fmt.Sprintf(" [Track.Service] Getting tracks failed. Error: %+v", err))
 		return nil, err
