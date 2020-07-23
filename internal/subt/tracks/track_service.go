@@ -13,7 +13,7 @@ type Service interface {
 	Create(input CreateTrackInput) (*Track, error)
 	Get(name string) (*Track, error)
 	GetAll() ([]Track, error)
-	Update(name string, input UpdateTrackInput) (*Track, error)
+	Update(name string, input UpdateTrackInput) (interface{}, error)
 	Delete(name string) (*Track, error)
 }
 
@@ -67,25 +67,24 @@ func (s service) GetAll() ([]Track, error) {
 }
 
 // Update updates a track with the given name and populates it with information provided by the given input.
-func (s service) Update(name string, input UpdateTrackInput) (*Track, error) {
+func (s service) Update(name string, input UpdateTrackInput) (interface{}, error) {
 	s.logger.Debug(fmt.Sprintf(" [Track.Service] Updating track with name: %s. Input: %+v", name, input))
 	err := s.validator.Struct(&input)
 	if err != nil {
 		s.logger.Debug(fmt.Sprintf(" [Track.Service] Validating input failed. Error: %+v", err))
 		return nil, err
 	}
-	track, err := s.Get(name)
+	updatedTrack, err := input.ToMap()
 	if err != nil {
 		return nil, err
 	}
-	updatedTrack := UpdateTrackFromInput(*track, input)
 	err = s.repository.Update(updatedTrack, repositories.NewGormFilter("name = ?", name))
 	if err != nil {
 		s.logger.Debug(fmt.Sprintf(" [Track.Service] Updating track with name: %s failed. Error: %+v", name, err))
 		return nil, err
 	}
-	s.logger.Debug(fmt.Sprintf(" [Track.Service] Updating track with name: %s succeeded. Output: %+v", name, *track))
-	return track, nil
+	s.logger.Debug(fmt.Sprintf(" [Track.Service] Updating track with name: %s succeeded. Output: %+v", name, updatedTrack))
+	return input, nil
 }
 
 // Delete removes the track with the given name.

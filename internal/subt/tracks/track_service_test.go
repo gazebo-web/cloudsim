@@ -3,6 +3,7 @@ package tracks
 import (
 	"github.com/jinzhu/gorm"
 	"github.com/stretchr/testify/suite"
+	"gitlab.com/ignitionrobotics/web/cloudsim/internal/pkg/domain"
 	"gitlab.com/ignitionrobotics/web/cloudsim/internal/pkg/repositories"
 	"gitlab.com/ignitionrobotics/web/ign-go"
 	"gopkg.in/go-playground/validator.v9"
@@ -29,8 +30,42 @@ func (s *trackServiceTestSuite) SetupTest() {
 	s.db.DropTableIfExists(&Track{})
 	s.db.AutoMigrate(&Track{})
 	logger := ign.NewLoggerNoRollbar("track-service-test", ign.VerbosityDebug)
-	s.repository = NewRepository(s.db, logger)
+	s.repository = repositories.NewGormRepository(s.db, logger, &Track{})
 	s.service = NewService(s.repository, validator.New(), logger)
+}
+
+func (s *trackServiceTestSuite) init() {
+	tracks := []domain.Entity{
+		&Track{
+			Name:          "Virtual TestA",
+			Image:         "testA",
+			BridgeImage:   "testA",
+			StatsTopic:    "testA",
+			WarmupTopic:   "testA",
+			MaxSimSeconds: 30,
+			Public:        false,
+		},
+		&Track{
+			Name:          "Virtual TestB",
+			Image:         "testB",
+			BridgeImage:   "testB",
+			StatsTopic:    "testB",
+			WarmupTopic:   "testB",
+			MaxSimSeconds: 30,
+			Public:        false,
+		},
+		&Track{
+			Name:          "Virtual TestC",
+			Image:         "testC",
+			BridgeImage:   "testC",
+			StatsTopic:    "testC",
+			WarmupTopic:   "testC",
+			MaxSimSeconds: 30,
+			Public:        false,
+		},
+	}
+	_, err := s.repository.Create(tracks)
+	s.NoError(err)
 }
 
 func (s *trackServiceTestSuite) TestCreate_OK() {
@@ -60,57 +95,23 @@ func (s *trackServiceTestSuite) TestCreate_EmptyFields() {
 }
 
 func (s *trackServiceTestSuite) TestGetAll() {
-	trackA, _ := s.repository.Create(Track{
-		Name:          "Virtual TestA",
-		Image:         "testA",
-		BridgeImage:   "testA",
-		StatsTopic:    "testA",
-		WarmupTopic:   "testA",
-		MaxSimSeconds: 30,
-		Public:        false,
-	})
-	trackB, _ := s.repository.Create(Track{
-		Name:          "Virtual TestB",
-		Image:         "testB",
-		BridgeImage:   "testB",
-		StatsTopic:    "testB",
-		WarmupTopic:   "testB",
-		MaxSimSeconds: 30,
-		Public:        false,
-	})
-	trackC, _ := s.repository.Create(Track{
-		Name:          "Virtual TestC",
-		Image:         "testC",
-		BridgeImage:   "testC",
-		StatsTopic:    "testC",
-		WarmupTopic:   "testC",
-		MaxSimSeconds: 30,
-		Public:        false,
-	})
+	s.init()
 
 	tracks, err := s.service.GetAll()
 	s.NoError(err)
 	s.Len(tracks, 3)
-	s.Equal(trackA.Name, tracks[0].Name)
-	s.Equal(trackB.Name, tracks[1].Name)
-	s.Equal(trackC.Name, tracks[2].Name)
+	s.Equal("Virtual TestA", tracks[0].Name)
+	s.Equal("Virtual TestB", tracks[1].Name)
+	s.Equal("Virtual TestC", tracks[2].Name)
 }
 
 func (s *trackServiceTestSuite) TestGetOne_Exists() {
-	createdTrack, _ := s.repository.Create(Track{
-		Name:          "Virtual TestA",
-		Image:         "testA",
-		BridgeImage:   "testA",
-		StatsTopic:    "testA",
-		WarmupTopic:   "testA",
-		MaxSimSeconds: 30,
-		Public:        false,
-	})
+	s.init()
 
-	result, err := s.service.Get(createdTrack.Name)
+	result, err := s.service.Get("Virtual TestA")
 
 	s.NoError(err)
-	s.Equal(createdTrack.Name, result.Name)
+	s.Equal("Virtual TestA", result.Name)
 }
 
 func (s *trackServiceTestSuite) TestGetOne_NonExistent() {
@@ -119,53 +120,31 @@ func (s *trackServiceTestSuite) TestGetOne_NonExistent() {
 }
 
 func (s *trackServiceTestSuite) TestUpdate() {
-	_, err := s.repository.Create(Track{
-		Name:          "Virtual TestA",
-		Image:         "testA",
-		BridgeImage:   "testA",
-		StatsTopic:    "testA",
-		WarmupTopic:   "testA",
-		MaxSimSeconds: 30,
-		Public:        false,
-	})
-	s.NoError(err)
-
-	before, err := s.service.Get("Virtual TestA")
-	s.NoError(err)
-
+	s.init()
+	name := "Virtual TestZ"
+	strValue := "testZ"
+	numValue := 30
+	logicValue := true
 	updatedTrackInput := UpdateTrackInput{
-		Name:          "Virtual TestB",
-		Image:         "testB",
-		BridgeImage:   "testB",
-		StatsTopic:    "testB",
-		WarmupTopic:   "testB",
-		MaxSimSeconds: 30,
-		Public:        true,
+		Name:          &name,
+		Image:         &strValue,
+		BridgeImage:   &strValue,
+		StatsTopic:    &strValue,
+		WarmupTopic:   &strValue,
+		MaxSimSeconds: &numValue,
+		Public:        &logicValue,
 	}
 
 	s.service.Update("Virtual TestA", updatedTrackInput)
 
-	result, err := s.service.Get("Virtual TestB")
+	result, err := s.service.Get("Virtual TestZ")
 	s.NoError(err)
-
-	s.Equal(before.ID, result.ID)
-	s.Equal(updatedTrackInput.Name, result.Name)
+	s.Equal(*updatedTrackInput.Name, result.Name)
 }
 
 func (s *trackServiceTestSuite) TestUpdate_InvalidInput() {
-	_, err := s.repository.Create(Track{
-		Name:          "Virtual TestA",
-		Image:         "testA",
-		BridgeImage:   "testA",
-		StatsTopic:    "testA",
-		WarmupTopic:   "testA",
-		MaxSimSeconds: 30,
-		Public:        false,
-	})
-	s.NoError(err)
-
 	updateTrackInput := UpdateTrackInput{}
-	_, err = s.service.Update("Virtual TestA", updateTrackInput)
+	_, err := s.service.Update("Virtual TestA", updateTrackInput)
 	s.Error(err)
 }
 
@@ -176,16 +155,7 @@ func (s *trackServiceTestSuite) TestUpdate_NonExistent() {
 }
 
 func (s *trackServiceTestSuite) TestDelete() {
-	_, err := s.repository.Create(Track{
-		Name:          "Virtual TestA",
-		Image:         "testA",
-		BridgeImage:   "testA",
-		StatsTopic:    "testA",
-		WarmupTopic:   "testA",
-		MaxSimSeconds: 30,
-		Public:        false,
-	})
-	s.NoError(err)
+	s.init()
 
 	before, err := s.service.Get("Virtual TestA")
 	s.NoError(err)
