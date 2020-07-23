@@ -1,6 +1,7 @@
 package domain
 
-// DTO represents a generic Data Transfer Object. It has a method to convert a struct into a map.
+// DTO represents a generic Data Transfer Object.
 type DTO interface {
+	// Value converts the given DTO into a struct accepted by the entity's repository layer.
 	Value() (interface{}, error)
 }
