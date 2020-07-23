@@ -43,13 +43,14 @@ func (s service) Create(input CreateTrackInput) (*Track, error) {
 // Get gets a Track with the given name.
 func (s service) Get(name string) (*Track, error) {
 	s.logger.Debug(" [Track.Service] Getting Track with name: ", name)
-	track, err := s.repository.Get(name)
+	var track Track
+	err := s.repository.FindOne(&track, repositories.NewGormFilter("name = ?", name))
 	if err != nil {
 		s.logger.Debug(fmt.Sprintf(" [Track.Service] Getting track with name %s failed. Error: %+v", name, err))
 		return nil, err
 	}
-	s.logger.Debug(fmt.Sprintf(" [Track.Service] Track found. Output: %+v", *track))
-	return track, nil
+	s.logger.Debug(fmt.Sprintf(" [Track.Service] Track found. Output: %+v", track))
+	return &track, nil
 }
 
 // GetAll returns a slice with all the tracks.
