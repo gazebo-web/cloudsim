@@ -34,8 +34,8 @@ func (Track) TableName() string {
 }
 
 // CreateTrackFromInput receives an input and returns a new Track with the input values.
-func CreateTrackFromInput(input CreateTrackInput) Track {
-	return Track{
+func CreateTrackFromInput(input CreateTrackInput) *Track {
+	return &Track{
 		Name:          input.Name,
 		Image:         input.Image,
 		BridgeImage:   input.BridgeImage,
@@ -48,7 +48,7 @@ func CreateTrackFromInput(input CreateTrackInput) Track {
 
 // UpdateTrackFromInput receives a model and an updated input.
 // It returns the model updated with the input values.
-func UpdateTrackFromInput(model Track, input UpdateTrackInput) Track {
+func UpdateTrackFromInput(model Track, input UpdateTrackInput) *Track {
 	model.Name = input.Name
 	model.Image = input.Image
 	model.BridgeImage = input.BridgeImage
@@ -56,5 +56,5 @@ func UpdateTrackFromInput(model Track, input UpdateTrackInput) Track {
 	model.WarmupTopic = input.WarmupTopic
 	model.MaxSimSeconds = input.MaxSimSeconds
 	model.Public = input.Public
-	return model
+	return &model
 }
