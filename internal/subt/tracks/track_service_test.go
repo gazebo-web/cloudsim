@@ -3,6 +3,7 @@ package tracks
 import (
 	"github.com/jinzhu/gorm"
 	"github.com/stretchr/testify/suite"
+	"gitlab.com/ignitionrobotics/web/cloudsim/internal/pkg/repositories"
 	"gitlab.com/ignitionrobotics/web/ign-go"
 	"gopkg.in/go-playground/validator.v9"
 	"testing"
@@ -15,7 +16,7 @@ func TestTrackService(t *testing.T) {
 type trackServiceTestSuite struct {
 	suite.Suite
 	db         *gorm.DB
-	repository Repository
+	repository repositories.Repository
 	service    Service
 }
 
