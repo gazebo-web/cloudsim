@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"gitlab.com/ignitionrobotics/web/cloudsim/internal/pkg/domain"
 	"gitlab.com/ignitionrobotics/web/cloudsim/internal/pkg/repositories"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/pagination"
 	"gitlab.com/ignitionrobotics/web/ign-go"
 	"gopkg.in/go-playground/validator.v9"
 )
@@ -59,14 +60,7 @@ func (s service) GetAll(page, pageSize *int) ([]Track, error) {
 	s.logger.Debug(" [Track.Service] Getting all tracks")
 	var tracks []Track
 
-	limit := 10
-	offset := 0
-	if pageSize != nil {
-		limit = *pageSize
-		if page != nil {
-			offset = *page * *pageSize
-		}
-	}
+	limit, offset := pagination.Calculate(page, pageSize)
 	err := s.repository.Find(&tracks, &limit, &offset)
 	if err != nil {
 		s.logger.Debug(fmt.Sprintf(" [Track.Service] Getting tracks failed. Error: %+v", err))
