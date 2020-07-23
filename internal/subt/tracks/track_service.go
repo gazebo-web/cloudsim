@@ -2,6 +2,7 @@ package tracks
 
 import (
 	"fmt"
+	"gitlab.com/ignitionrobotics/web/cloudsim/internal/pkg/domain"
 	"gitlab.com/ignitionrobotics/web/cloudsim/internal/pkg/repositories"
 	"gitlab.com/ignitionrobotics/web/ign-go"
 	"gopkg.in/go-playground/validator.v9"
@@ -30,13 +31,13 @@ func (s service) Create(input CreateTrackInput) (*Track, error) {
 		return nil, err
 	}
 	track := CreateTrackFromInput(input)
-	output, err := s.repository.Create(track)
+	output, err := s.repository.Create([]domain.Entity{track})
 	if err != nil {
 		s.logger.Debug(fmt.Sprintf(" [Track.Service] Creation failed failed. Error: %+v", err))
 		return nil, err
 	}
-	s.logger.Debug(fmt.Sprintf(" [Track.Service] Track created. Output: %+v", *output))
-	return output, nil
+	s.logger.Debug(fmt.Sprintf(" [Track.Service] Track created. Output: %+v", output))
+	return track, nil
 }
 
 // Get gets a Track with the given name.
