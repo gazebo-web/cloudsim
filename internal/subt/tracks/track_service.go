@@ -66,6 +66,10 @@ func (s service) GetAll(page, pageSize *int) ([]Track, error) {
 
 	var err error
 	page, pageSize, err = s.calculatePagination(page, pageSize)
+	if err != nil {
+		s.logger.Debug(fmt.Sprintf(" [Track.Service] Pagination failed. Error: %+v", err))
+		return nil, err
+	}
 
 	err = s.repository.Find(&tracks, page, pageSize)
 	if err != nil {
