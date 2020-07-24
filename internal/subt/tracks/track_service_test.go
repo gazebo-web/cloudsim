@@ -97,7 +97,7 @@ func (s *trackServiceTestSuite) TestCreate_EmptyFields() {
 func (s *trackServiceTestSuite) TestGetAll() {
 	s.init()
 
-	tracks, err := s.service.GetAll()
+	tracks, err := s.service.GetAll(nil, nil)
 	s.NoError(err)
 	s.Len(tracks, 3)
 	s.Equal("Virtual TestA", tracks[0].Name)

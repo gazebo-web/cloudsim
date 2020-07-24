@@ -104,6 +104,18 @@ func (s testRepositorySuite) TestGetAll() {
 	s.Len(result, count, "The result slice should have the same length at the previous count.")
 }
 
+func (s testRepositorySuite) TestGetPagination() {
+	s.init()
+
+	result, err := s.repository.getPagination(0, 2)
+	s.NoError(err, "Should not throw an error when getting paginated entities.")
+	s.Len(result, 2, "The result's length should be the same as the pageSize for the first page.")
+
+	result, err = s.repository.getPagination(1, 2)
+	s.NoError(err, "Should not throw an error when getting paginated entities.")
+	s.Len(result, 1, "The result's length should be the 1 for the second page.")
+}
+
 func (s testRepositorySuite) TestDelete() {
 	s.init()
 	var count int
