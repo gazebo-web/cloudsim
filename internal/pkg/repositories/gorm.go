@@ -194,12 +194,14 @@ func (g GormRepository) calculatePagination(page, pageSize *int) (limit *int, of
 		return
 	}
 
-	// Set the limit if there is a pagesize
-	limit := *pageSize
+	// Set the limit if there is a pageSize
+	limit = pageSize
 
 	// Set the offset if a page number was defined
+	var value int
 	if page != nil {
-		offset := *page * *pageSize
+		value = *page * *pageSize
+		offset = &value
 	}
 
 	return
