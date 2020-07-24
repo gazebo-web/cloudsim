@@ -165,6 +165,11 @@ func (g GormRepository) Delete(filters ...Filter) error {
 	return nil
 }
 
+// Count counts the amount of entities that match the given filters.
+func (g GormRepository) Count(filters ...Filter) (int, error) {
+	panic("implement me")
+}
+
 func (g GormRepository) startQuery() *gorm.DB {
 	return g.DB.Model(g.Model())
 }

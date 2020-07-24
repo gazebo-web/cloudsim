@@ -272,7 +272,28 @@ func (s testRepositorySuite) TestUpdateSomeValues() {
 	s.Equal(99, result[0].Value)
 	s.Equal(99, result[1].Value)
 	s.Equal(3, result[2].Value)
+}
 
+func (s testRepositorySuite) TestCount() {
+	s.init()
+
+	var count int
+	err := s.db.Model(&test{}).Count(&count).Error
+	s.NoError(err, "Should not throw an error when counting.")
+	s.Equal(3, count, "Before removing a test the count should be 3.")
+
+	value, err := s.repository.countAll()
+	s.NoError(err)
+	s.Equal(count, value, "The value returned by Count should be the same as the previous count.")
+
+}
+
+func (s testRepositorySuite) TestCountSome() {
+	s.init()
+
+	value, err := s.repository.countByName([]string{"Test1", "Test2"})
+	s.NoError(err)
+	s.Equal(2, value, "The value returned by Count should be the same as the previous count.")
 }
 
 func (s testRepositorySuite) TestModel() {

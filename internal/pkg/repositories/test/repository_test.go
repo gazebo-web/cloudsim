@@ -18,10 +18,21 @@ type testRepository interface {
 	update(name string, data map[string]interface{}) error
 	updateSome(names []string, data map[string]interface{}) error
 	updateAll(data map[string]interface{}) error
+	countAll() (int, error)
+	countByName(names []string) (int, error)
 }
 
 type testRepositoryImpl struct {
 	repository repositories.Repository
+}
+
+func (t *testRepositoryImpl) countAll() (int, error) {
+	return t.repository.Count()
+}
+
+func (t *testRepositoryImpl) countByName(names []string) (int, error) {
+	f := repositories.NewGormFilter("name IN (?)", names)
+	return t.repository.Count(f)
 }
 
 func (t *testRepositoryImpl) deleteSome(names []string) error {

@@ -23,7 +23,7 @@ type Repository interface {
 	FindOne(entity domain.Entity, filters ...Filter) error
 	Update(data interface{}, filters ...Filter) error
 	Delete(filters ...Filter) error
-	Count(filters ...Filter) int
+	Count(filters ...Filter) (int, error)
 	SingularName() string
 	PluralName() string
 	Model() domain.Entity
