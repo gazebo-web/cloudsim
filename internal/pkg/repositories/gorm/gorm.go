@@ -1,11 +1,23 @@
-package repositories
+package gorm
 
 import (
+	"errors"
 	"fmt"
 	"github.com/jinzhu/gorm"
 	"gitlab.com/ignitionrobotics/web/cloudsim/internal/pkg/domain"
 	"gitlab.com/ignitionrobotics/web/ign-go"
 	"reflect"
+)
+
+var (
+	// ErrNoFilter represents an error when no filter are provided.
+	ErrNoFilter = errors.New("no filters provided")
+	// ErrNoEntitiesUpdated represent an error when no entities were updated in the database
+	// after an Update operation.
+	ErrNoEntitiesUpdated = errors.New("no entities were updated")
+	// ErrNoEntitiesDeleted represent an error when no entities were deleted in the database
+	// after a Delete operation.
+	ErrNoEntitiesDeleted = errors.New("no entities were deleted")
 )
 
 // GormRepository is a Repository implementation using GORM.
@@ -73,7 +85,7 @@ func (g GormRepository) Create(entities []domain.Entity) ([]domain.Entity, error
 
 // Find returns a list of entities that match the given filters.
 // If `offset` and `limit` are not nil, it will return up to `limit` results from the provided `offset`.
-func (g GormRepository) Find(output interface{}, limit, offset *int, filters ...Filter) error {
+func (g GormRepository) Find(output interface{}, limit, offset *int, filters ...domain.Filter) error {
 	g.Logger.Debug(fmt.Sprintf(" [%s.Repository] Getting all %s. Filters: %+v",
 		g.SingularName(), g.PluralName(), filters))
 	q := g.startQuery()
@@ -102,7 +114,7 @@ func (g GormRepository) Find(output interface{}, limit, offset *int, filters ...
 }
 
 // FindOne returns an Entity that matches the given Filter.
-func (g GormRepository) FindOne(entity domain.Entity, filters ...Filter) error {
+func (g GormRepository) FindOne(entity domain.Entity, filters ...domain.Filter) error {
 	g.Logger.Debug(fmt.Sprintf(" [%s.Repository] Getting %s. Filters: %+v",
 		g.SingularName(), g.SingularName(), filters))
 	if len(filters) == 0 {
@@ -125,7 +137,7 @@ func (g GormRepository) FindOne(entity domain.Entity, filters ...Filter) error {
 }
 
 // Update updates the entities that match the given filters with the given data.
-func (g GormRepository) Update(data interface{}, filters ...Filter) error {
+func (g GormRepository) Update(data interface{}, filters ...domain.Filter) error {
 	g.Logger.Debug(fmt.Sprintf(" [%s.Repository] Updating with data: %+v. Filters: %+v",
 		g.SingularName(), data, filters))
 	q := g.startQuery()
@@ -145,7 +157,7 @@ func (g GormRepository) Update(data interface{}, filters ...Filter) error {
 }
 
 // Delete removes a set of entities that match the given filters.
-func (g GormRepository) Delete(filters ...Filter) error {
+func (g GormRepository) Delete(filters ...domain.Filter) error {
 	g.Logger.Debug(fmt.Sprintf(" [%s.Repository] Deleting records. Filters: %+v",
 		g.SingularName(), filters))
 	q := g.startQuery()
@@ -168,7 +180,7 @@ func (g GormRepository) startQuery() *gorm.DB {
 	return g.DB.Model(g.Model())
 }
 
-func (g GormRepository) setQueryFilters(q *gorm.DB, filters []Filter) *gorm.DB {
+func (g GormRepository) setQueryFilters(q *gorm.DB, filters []domain.Filter) *gorm.DB {
 	for _, f := range filters {
 		q = q.Where(f.Template(), f.Values()...)
 	}
@@ -176,7 +188,7 @@ func (g GormRepository) setQueryFilters(q *gorm.DB, filters []Filter) *gorm.DB {
 }
 
 // NewGormRepository initializes a new Repository implementation using gorm.
-func NewGormRepository(db *gorm.DB, logger ign.Logger, entity domain.Entity) Repository {
+func NewGormRepository(db *gorm.DB, logger ign.Logger, entity domain.Entity) domain.Repository {
 	return &GormRepository{
 		DB:     db,
 		Logger: logger,

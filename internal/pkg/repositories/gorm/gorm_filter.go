@@ -1,4 +1,6 @@
-package repositories
+package gorm
+
+import "gitlab.com/ignitionrobotics/web/cloudsim/internal/pkg/domain"
 
 // gormFilter is a filter to be used with gorm.
 type gormFilter struct {
@@ -17,7 +19,7 @@ func (w gormFilter) Values() []interface{} {
 }
 
 // NewGormFilter initializes a new filter with the given template and value to be used with gorm.
-func NewGormFilter(template string, values ...interface{}) Filter {
+func NewGormFilter(template string, values ...interface{}) domain.Filter {
 	return &gormFilter{
 		template: template,
 		values:    values,
