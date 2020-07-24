@@ -9,6 +9,10 @@ import (
 	"gopkg.in/go-playground/validator.v9"
 )
 
+var (
+	ErrInvalidPage = errors.New("invalid page")
+)
+
 // Service groups a set of methods that have the business logic to perform CRUD operations for a Track.
 type Service interface {
 	Create(input CreateTrackInput) (*Track, error)
@@ -60,22 +64,8 @@ func (s service) GetAll(page, pageSize *int) ([]Track, error) {
 	s.logger.Debug(" [Track.Service] Getting all tracks")
 	var tracks []Track
 
-	count, err := s.repository.Count()
-
-	if pageSize == nil {
-		pageSize = new(int)
-		*pageSize = 10
-	}
-
-	if page != nil && count < (*page+1) * *pageSize {
-		// TODO: Extract error into variable.
-		return nil, errors.New("invalid page")
-	}
-
-	if page == nil {
-		page = new(int)
-		*page = 0
-	}
+	var err error
+	page, pageSize, err = s.calculatePagination(page, pageSize)
 
 	err = s.repository.Find(&tracks, page, pageSize)
 	if err != nil {
@@ -84,6 +74,32 @@ func (s service) GetAll(page, pageSize *int) ([]Track, error) {
 	}
 	s.logger.Debug(fmt.Sprintf(" [Track.Service] Getting all tracks succeeded. Tracks: %+v", tracks))
 	return tracks, nil
+}
+
+func (s service) calculatePagination(page, pageSize *int) (p *int, ps *int, err error) {
+	count, err := s.repository.Count()
+	if err != nil {
+		return
+	}
+
+	if pageSize == nil {
+		pageSize = new(int)
+		*pageSize = 10
+	}
+
+	if page != nil && count < (*page+1) * *pageSize {
+		err = ErrInvalidPage
+		return
+	}
+
+	if page == nil {
+		page = new(int)
+		*page = 0
+	}
+
+	p = page
+	ps = pageSize
+	return
 }
 
 // Update updates a track with the given name and populates it with information provided by the given input.
