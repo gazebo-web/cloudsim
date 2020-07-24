@@ -90,7 +90,6 @@ func (s testRepositorySuite) TestGetByValue() {
 	s.Len(result, 1, "The result slice should be length=1.")
 }
 
-
 func (s testRepositorySuite) TestGetAll() {
 	s.init()
 
@@ -109,10 +108,13 @@ func (s testRepositorySuite) TestGetPagination() {
 
 	result, err := s.repository.getPagination(0, 2)
 	s.NoError(err, "Should not throw an error when getting paginated entities.")
+	s.Equal("Test1", result[0].Name)
+	s.Equal("Test2", result[1].Name)
 	s.Len(result, 2, "The result's length should be the same as the pageSize for the first page.")
 
 	result, err = s.repository.getPagination(1, 2)
 	s.NoError(err, "Should not throw an error when getting paginated entities.")
+	s.Equal("Test3", result[0].Name)
 	s.Len(result, 1, "The result's length should be the 1 for the second page.")
 }
 
@@ -179,7 +181,7 @@ func (s testRepositorySuite) TestDeleteInvalid() {
 func (s testRepositorySuite) TestUpdate() {
 	s.init()
 
-	err := s.repository.update("Test1", map[string]interface{}{ "name": "Test111", "value": 12345 })
+	err := s.repository.update("Test1", map[string]interface{}{"name": "Test111", "value": 12345})
 	s.NoError(err, "Should not throw an error when updating an entity.")
 
 	_, err = s.repository.getByName("Test1")
@@ -195,7 +197,7 @@ func (s testRepositorySuite) TestUpdate() {
 func (s testRepositorySuite) TestUpdateAll() {
 	s.init()
 
-	err := s.repository.updateAll(map[string]interface{}{ "name": "Test123" })
+	err := s.repository.updateAll(map[string]interface{}{"name": "Test123"})
 	s.NoError(err, "Should not throw an error when updating all entities.")
 
 	result, err := s.repository.getAll()
@@ -208,7 +210,7 @@ func (s testRepositorySuite) TestUpdateAll() {
 
 func (s testRepositorySuite) TestUpdateZeroValue() {
 	s.init()
-	err := s.repository.update("Test1", map[string]interface{}{ "value": 0 })
+	err := s.repository.update("Test1", map[string]interface{}{"value": 0})
 	s.NoError(err, "Should not throw an error when updating an entity.")
 
 	result, err := s.repository.getByName("Test1")
@@ -227,7 +229,7 @@ func (s testRepositorySuite) TestUpdateInvalid() {
 func (s testRepositorySuite) TestUpdateSomeValues() {
 	s.init()
 
-	err := s.repository.updateSome([]string{"Test1", "Test2"}, map[string]interface{}{ "value": 99 })
+	err := s.repository.updateSome([]string{"Test1", "Test2"}, map[string]interface{}{"value": 99})
 
 	result, err := s.repository.getAll()
 	s.NoError(err, "Should not throw an error when getting the updated entities.")
