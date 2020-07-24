@@ -189,17 +189,22 @@ func (g GormRepository) setQueryFilters(q *gorm.DB, filters []Filter) *gorm.DB {
 	return q
 }
 
-func (g GormRepository) calculatePagination(page, pageSize *int) (*int, *int) {
-	if pageSize != nil {
-		limit := *pageSize
-		if page != nil {
-			offset := *page * *pageSize
-			return &limit, &offset
-		}
-		return &limit, nil
+func (g GormRepository) calculatePagination(page, pageSize *int) (limit *int, offset *int) {
+	if pageSize == nil {
+		return
 	}
-	return nil, nil
+
+	// Set the limit if there is a pagesize
+	limit := *pageSize
+
+	// Set the offset if a page number was defined
+	if page != nil {
+		offset := *page * *pageSize
+	}
+
+	return
 }
+
 
 // NewGormRepository initializes a new Repository implementation using gorm.
 func NewGormRepository(db *gorm.DB, logger ign.Logger, entity domain.Entity) Repository {
