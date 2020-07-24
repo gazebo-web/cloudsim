@@ -62,15 +62,19 @@ func (s service) GetAll(page, pageSize *int) ([]Track, error) {
 
 	count, err := s.repository.Count()
 
-	// TODO: Move limit constant to another place.
-	limit := 10
 	if pageSize == nil {
-		pageSize = &limit
+		pageSize = new(int)
+		*pageSize = 10
 	}
 
 	if page != nil && count < (*page+1) * *pageSize {
 		// TODO: Extract error into variable.
 		return nil, errors.New("invalid page")
+	}
+
+	if page == nil {
+		page = new(int)
+		*page = 0
 	}
 
 	err = s.repository.Find(&tracks, page, pageSize)
