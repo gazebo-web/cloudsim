@@ -189,6 +189,8 @@ func (g GormRepository) setQueryFilters(q *gorm.DB, filters []Filter) *gorm.DB {
 	return q
 }
 
+// calculatePagination returns the calculated SQL LIMIT and OFFSET from the given page and pageSize.
+// NOTE: The count of `page` starts at 0.
 func (g GormRepository) calculatePagination(page, pageSize *int) (limit *int, offset *int) {
 	if pageSize == nil {
 		return
