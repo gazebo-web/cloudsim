@@ -73,10 +73,11 @@ func (g GormRepository) Create(entities []domain.Entity) ([]domain.Entity, error
 
 // Find returns a list of entities that match the given filters.
 // If `offset` and `limit` are not nil, it will return up to `limit` results from the provided `offset`.
-func (g GormRepository) Find(output interface{}, limit, offset *int, filters ...Filter) error {
+func (g GormRepository) Find(output interface{}, page, pageSize *int, filters ...Filter) error {
 	g.Logger.Debug(fmt.Sprintf(" [%s.Repository] Getting all %s. Filters: %+v",
 		g.SingularName(), g.PluralName(), filters))
 	q := g.startQuery()
+	limit, offset := g.calculatePagination(page, pageSize)
 	if limit != nil {
 		g.Logger.Debug(fmt.Sprintf(" [%s.Repository] Limit: %d.",
 			g.SingularName(), *limit))
@@ -173,6 +174,21 @@ func (g GormRepository) setQueryFilters(q *gorm.DB, filters []Filter) *gorm.DB {
 		q = q.Where(f.Template(), f.Values()...)
 	}
 	return q
+}
+
+func (g GormRepository) calculatePagination(page, pageSize *int) (*int, *int) {
+	if page == nil && pageSize == nil {
+		return nil, nil
+	}
+	limit := 0
+	offset := 10
+	if pageSize != nil {
+		limit = *pageSize
+		if page != nil {
+			offset = *page * *pageSize
+		}
+	}
+	return &limit, &offset
 }
 
 // NewGormRepository initializes a new Repository implementation using gorm.

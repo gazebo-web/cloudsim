@@ -60,8 +60,7 @@ func (s service) GetAll(page, pageSize *int) ([]Track, error) {
 	s.logger.Debug(" [Track.Service] Getting all tracks")
 	var tracks []Track
 
-	limit, offset := pagination.Calculate(page, pageSize)
-	err := s.repository.Find(&tracks, &limit, &offset)
+	err := s.repository.Find(&tracks, page, pageSize)
 	if err != nil {
 		s.logger.Debug(fmt.Sprintf(" [Track.Service] Getting tracks failed. Error: %+v", err))
 		return nil, err
