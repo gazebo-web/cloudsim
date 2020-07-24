@@ -65,7 +65,7 @@ func (s service) GetAll(page, pageSize *int) ([]Track, error) {
 	var tracks []Track
 
 	var err error
-	page, pageSize, err = s.calculatePagination(page, pageSize)
+	page, pageSize, err = s.validatePagination(page, pageSize)
 	if err != nil {
 		s.logger.Debug(fmt.Sprintf(" [Track.Service] Pagination failed. Error: %+v", err))
 		return nil, err
@@ -80,7 +80,12 @@ func (s service) GetAll(page, pageSize *int) ([]Track, error) {
 	return tracks, nil
 }
 
-func (s service) calculatePagination(page, pageSize *int) (p *int, ps *int, err error) {
+
+// validatePagination performs validation on `page` and `pageSize`.
+// If `page` and `pageSize` are nil, it will assign the default values.
+// page = 0
+// pageSize = 10
+func (s service) validatePagination(page, pageSize *int) (p *int, ps *int, err error) {
 	count, err := s.repository.Count()
 	if err != nil {
 		return
