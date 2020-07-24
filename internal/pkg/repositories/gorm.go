@@ -72,7 +72,8 @@ func (g GormRepository) Create(entities []domain.Entity) ([]domain.Entity, error
 }
 
 // Find returns a list of entities that match the given filters.
-// If `offset` and `limit` are not nil, it will return up to `limit` results from the provided `offset`.
+// If `page` and `pageSize` are not nil, it will return up to `pageSize` results from the provided `page`.
+// NOTE: `page` number starts at 0.
 func (g GormRepository) Find(output interface{}, page, pageSize *int, filters ...Filter) error {
 	g.Logger.Debug(fmt.Sprintf(" [%s.Repository] Getting all %s. Filters: %+v",
 		g.SingularName(), g.PluralName(), filters))
