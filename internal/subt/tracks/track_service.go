@@ -18,10 +18,6 @@ type Service interface {
 	Delete(name string) (*Track, error)
 }
 
-type Config struct {
-
-}
-
 type service struct {
 	repository repositories.Repository
 	validator  *validator.Validate
