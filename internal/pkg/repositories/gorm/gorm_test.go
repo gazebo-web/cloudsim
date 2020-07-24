@@ -31,7 +31,7 @@ func (s *testRepositorySuite) SetupTest() {
 	s.db.DropTableIfExists(&test{})
 	s.db.AutoMigrate(&test{})
 	s.baseEntity = &test{}
-	s.baseRepository = NewGormRepository(s.db, ign.NewLoggerNoRollbar("track-repository-test", ign.VerbosityDebug), s.baseEntity)
+	s.baseRepository = NewRepository(s.db, ign.NewLoggerNoRollbar("track-repository-test", ign.VerbosityDebug), s.baseEntity)
 	s.repository = newTestRepository(s.baseRepository)
 }
 
