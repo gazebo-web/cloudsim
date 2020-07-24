@@ -180,8 +180,8 @@ func (g GormRepository) calculatePagination(page, pageSize *int) (*int, *int) {
 	if pageSize == nil {
 		return nil, nil
 	}
-	var limit int
-	offset := 10
+	var offset int
+	limit := 10
 	if pageSize != nil {
 		limit = *pageSize
 		if page != nil {
