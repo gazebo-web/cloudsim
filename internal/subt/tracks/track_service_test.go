@@ -105,7 +105,7 @@ func (s *trackServiceTestSuite) TestGetAll() {
 	s.Equal("Virtual TestC", tracks[2].Name)
 }
 
-func (s *trackServiceTestSuite) GetAllPaginatedOK() {
+func (s *trackServiceTestSuite) TestGetAllPaginated() {
 	s.init()
 
 	page := 0
@@ -118,7 +118,7 @@ func (s *trackServiceTestSuite) GetAllPaginatedOK() {
 	s.Equal("Virtual TestB", tracks[1].Name)
 }
 
-func (s *trackServiceTestSuite) GetAllPaginatedInvalidPage() {
+func (s *trackServiceTestSuite) TestGetAllPaginated_InvalidPage() {
 	page := 99
 	size := 2
 	_, err := s.service.GetAll(&page, &size)
