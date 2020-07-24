@@ -177,7 +177,7 @@ func (g GormRepository) setQueryFilters(q *gorm.DB, filters []Filter) *gorm.DB {
 }
 
 func (g GormRepository) calculatePagination(page, pageSize *int) (*int, *int) {
-	if page == nil && pageSize == nil {
+	if pageSize == nil {
 		return nil, nil
 	}
 	limit := 0

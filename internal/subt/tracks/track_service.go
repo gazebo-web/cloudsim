@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"gitlab.com/ignitionrobotics/web/cloudsim/internal/pkg/domain"
 	"gitlab.com/ignitionrobotics/web/cloudsim/internal/pkg/repositories"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/pagination"
 	"gitlab.com/ignitionrobotics/web/ign-go"
 	"gopkg.in/go-playground/validator.v9"
 )
@@ -13,7 +12,7 @@ import (
 type Service interface {
 	Create(input CreateTrackInput) (*Track, error)
 	Get(name string) (*Track, error)
-	GetAll() ([]Track, error)
+	GetAll(page, pageSize *int) ([]Track, error)
 	Update(name string, input UpdateTrackInput) (interface{}, error)
 	Delete(name string) (*Track, error)
 }
