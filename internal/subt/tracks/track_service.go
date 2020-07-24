@@ -18,6 +18,10 @@ type Service interface {
 	Delete(name string) (*Track, error)
 }
 
+type Config struct {
+
+}
+
 type service struct {
 	repository repositories.Repository
 	validator  *validator.Validate
@@ -62,11 +66,15 @@ func (s service) GetAll(page, pageSize *int) ([]Track, error) {
 
 	count, err := s.repository.Count()
 
-	if page != nil && pageSize != nil {
-		if count < (*page+1)**pageSize {
-			// TODO: Extract error into variable.
-			return nil, errors.New("invalid page")
-		}
+	// TODO: Move limit constant to another place.
+	limit := 10
+	if pageSize == nil {
+		pageSize = &limit
+	}
+
+	if page != nil && count < (*page+1) * *pageSize {
+		// TODO: Extract error into variable.
+		return nil, errors.New("invalid page")
 	}
 
 	err = s.repository.Find(&tracks, page, pageSize)
