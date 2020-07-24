@@ -106,16 +106,52 @@ func (s testRepositorySuite) TestGetAll() {
 func (s testRepositorySuite) TestGetPagination() {
 	s.init()
 
-	result, err := s.repository.getPagination(0, 2)
+	var count int
+	err := s.db.Model(&test{}).Count(&count).Error
+	s.NoError(err, "Should not throw an error when counting.")
+
+	page := 0
+	size := 2
+	result, err := s.repository.getPagination(&page, &size)
 	s.NoError(err, "Should not throw an error when getting paginated entities.")
 	s.Equal("Test1", result[0].Name)
 	s.Equal("Test2", result[1].Name)
-	s.Len(result, 2, "The result's length should be the same as the pageSize for the first page.")
+	s.Len(result, size, "The result's length should be the same as the pageSize for the first page.")
 
-	result, err = s.repository.getPagination(1, 2)
+	page = 1
+	size = 2
+	result, err = s.repository.getPagination(&page, &size)
 	s.NoError(err, "Should not throw an error when getting paginated entities.")
 	s.Equal("Test3", result[0].Name)
-	s.Len(result, 1, "The result's length should be the 1 for the second page.")
+	s.Len(result, count-size, "The result's length should be the 1 for the second page.")
+}
+
+func (s testRepositorySuite) TestGetPaginationInvalidValues() {
+	s.init()
+
+	var count int
+	err := s.db.Model(&test{}).Count(&count).Error
+	s.NoError(err, "Should not throw an error when counting.")
+
+	page := 1
+	size := 2
+
+	result, err := s.repository.getPagination(nil, nil)
+	s.NoError(err)
+	s.Len(result, count)
+
+	result, err = s.repository.getPagination(nil, &size)
+	s.NoError(err)
+	s.Len(result, size)
+
+	result, err = s.repository.getPagination(&page, nil)
+	s.NoError(err)
+	s.Len(result, count)
+
+	result, err = s.repository.getPagination(&page, &size)
+	s.NoError(err)
+	s.Len(result, count-size)
+
 }
 
 func (s testRepositorySuite) TestDelete() {

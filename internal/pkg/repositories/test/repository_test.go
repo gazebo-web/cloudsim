@@ -11,7 +11,7 @@ type testRepository interface {
 	getByName(name string) (*test, error)
 	getByValue(value int) ([]test, error)
 	getAll() ([]test, error)
-	getPagination(page, pageSize int) ([]test, error)
+	getPagination(page, pageSize *int) ([]test, error)
 	delete(name string) error
 	deleteAll() error
 	deleteSome(names []string) error
@@ -88,9 +88,9 @@ func (t *testRepositoryImpl) getByValue(value int) ([]test, error) {
 	return output, nil
 }
 
-func (t *testRepositoryImpl) getPagination(page, pageSize int) ([]test, error) {
+func (t *testRepositoryImpl) getPagination(page, pageSize *int) ([]test, error) {
 	var output []test
-	err := t.repository.Find(&output, &page, &pageSize)
+	err := t.repository.Find(&output, page, pageSize)
 	if err != nil {
 		return nil, err
 	}
