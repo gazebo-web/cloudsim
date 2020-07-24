@@ -1,6 +1,7 @@
 package tracks
 
 import (
+	"errors"
 	"fmt"
 	"gitlab.com/ignitionrobotics/web/cloudsim/internal/pkg/domain"
 	"gitlab.com/ignitionrobotics/web/cloudsim/internal/pkg/repositories"
@@ -59,7 +60,16 @@ func (s service) GetAll(page, pageSize *int) ([]Track, error) {
 	s.logger.Debug(" [Track.Service] Getting all tracks")
 	var tracks []Track
 
-	err := s.repository.Find(&tracks, page, pageSize)
+	count, err := s.repository.Count()
+
+	if page != nil && pageSize != nil {
+		if count < (*page+1)**pageSize {
+			// TODO: Extract error into variable.
+			return nil, errors.New("invalid page")
+		}
+	}
+
+	err = s.repository.Find(&tracks, page, pageSize)
 	if err != nil {
 		s.logger.Debug(fmt.Sprintf(" [Track.Service] Getting tracks failed. Error: %+v", err))
 		return nil, err
