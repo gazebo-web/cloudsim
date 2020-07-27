@@ -126,34 +126,6 @@ func (s testRepositorySuite) TestGetPagination() {
 	s.Len(result, count-size, "The result's length should be the 1 for the second page.")
 }
 
-func (s testRepositorySuite) TestGetPaginationInvalidValues() {
-	s.init()
-
-	var count int
-	err := s.db.Model(&test{}).Count(&count).Error
-	s.NoError(err, "Should not throw an error when counting.")
-
-	page := 1
-	size := 2
-
-	result, err := s.repository.getPagination(nil, nil)
-	s.NoError(err)
-	s.Len(result, count)
-
-	result, err = s.repository.getPagination(nil, &size)
-	s.NoError(err)
-	s.Len(result, size)
-
-	result, err = s.repository.getPagination(&page, nil)
-	s.NoError(err)
-	s.Len(result, count)
-
-	result, err = s.repository.getPagination(&page, &size)
-	s.NoError(err)
-	s.Len(result, count-size)
-
-}
-
 func (s testRepositorySuite) TestDelete() {
 	s.init()
 	var count int

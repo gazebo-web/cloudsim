@@ -126,16 +126,22 @@ func (s *trackServiceTestSuite) TestGetAllPaginated() {
 	s.Len(tracks, 3)
 }
 
-func (s *trackServiceTestSuite) TestGetAllPaginated_InvalidPage() {
-	page := 99
-	size := 2
-	output, err := s.service.GetAll(&page, &size)
-	s.NoError(err)
-	s.Len(output, 0)
+func (s *trackServiceTestSuite) TestGetAllPaginated_NegativeValues() {
+	page := -5
+	size := -3
 
-	output, err = s.service.GetAll(&page, nil)
-	s.NoError(err)
-	s.Len(output, 0)
+	var err error
+	_, err = s.service.GetAll(nil, &size)
+	s.Error(err)
+	s.Equal(err, ErrNegativePageSize)
+
+	_, err = s.service.GetAll(&page, nil)
+	s.Error(err)
+	s.Equal(err, ErrNegativePage)
+
+	_, err = s.service.GetAll(&page, &size)
+	s.Error(err)
+	s.Equal(err, ErrNegativePageSize)
 }
 func (s *trackServiceTestSuite) TestGetOne_Exists() {
 	s.init()
