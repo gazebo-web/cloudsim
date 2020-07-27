@@ -1,9 +1,8 @@
-package test
+package gorm
 
 import (
 	"github.com/jinzhu/gorm"
 	"gitlab.com/ignitionrobotics/web/cloudsim/internal/pkg/domain"
-	"gitlab.com/ignitionrobotics/web/cloudsim/internal/pkg/repositories"
 )
 
 type testRepository interface {
@@ -20,16 +19,16 @@ type testRepository interface {
 }
 
 type testRepositoryImpl struct {
-	repository repositories.Repository
+	repository domain.Repository
 }
 
 func (t *testRepositoryImpl) deleteSome(names []string) error {
-	f := repositories.NewGormFilter("name IN (?)", names)
+	f := NewGormFilter("name IN (?)", names)
 	return t.repository.Delete(f)
 }
 
 func (t *testRepositoryImpl) updateSome(names []string, data map[string]interface{}) error {
-	f := repositories.NewGormFilter("name IN (?)", names)
+	f := NewGormFilter("name IN (?)", names)
 	return t.repository.Update(data, f)
 }
 
@@ -42,7 +41,7 @@ func (t *testRepositoryImpl) updateAll(data map[string]interface{}) error {
 }
 
 func (t *testRepositoryImpl) update(name string, data map[string]interface{}) error {
-	f := repositories.NewGormFilter("name = ?", name)
+	f := NewGormFilter("name = ?", name)
 	return t.repository.Update(data, f)
 }
 
@@ -68,7 +67,7 @@ func (t *testRepositoryImpl) create(tests []*test) ([]*test, error) {
 }
 
 func (t *testRepositoryImpl) getByName(name string) (*test, error) {
-	f := repositories.NewGormFilter("name = ?", name)
+	f := NewGormFilter("name = ?", name)
 	output := test{}
 	err := t.repository.FindOne(&output, f)
 	if err != nil {
@@ -78,7 +77,7 @@ func (t *testRepositoryImpl) getByName(name string) (*test, error) {
 }
 
 func (t *testRepositoryImpl) getByValue(value int) ([]test, error) {
-	f := repositories.NewGormFilter("value = ?", value)
+	f := NewGormFilter("value = ?", value)
 	var output []test
 	err := t.repository.Find(&output, nil, nil, f)
 	if err != nil {
@@ -88,7 +87,7 @@ func (t *testRepositoryImpl) getByValue(value int) ([]test, error) {
 }
 
 func (t *testRepositoryImpl) delete(name string) error {
-	f := repositories.NewGormFilter("name = ?", name)
+	f := NewGormFilter("name = ?", name)
 	return t.repository.Delete(f)
 }
 
@@ -98,7 +97,7 @@ func (t *testRepositoryImpl) Model() domain.Entity {
 }
 
 // newTestRepository initializes a new testRepository.
-func newTestRepository(base repositories.Repository) testRepository {
+func newTestRepository(base domain.Repository) testRepository {
 	return &testRepositoryImpl{
 		repository: base,
 	}

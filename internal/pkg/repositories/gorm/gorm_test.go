@@ -1,10 +1,9 @@
-package test
+package gorm
 
 import (
 	"github.com/jinzhu/gorm"
 	"github.com/stretchr/testify/suite"
 	"gitlab.com/ignitionrobotics/web/cloudsim/internal/pkg/domain"
-	"gitlab.com/ignitionrobotics/web/cloudsim/internal/pkg/repositories"
 	"gitlab.com/ignitionrobotics/web/ign-go"
 	"reflect"
 	"testing"
@@ -18,7 +17,7 @@ type testRepositorySuite struct {
 	suite.Suite
 	db             *gorm.DB
 	baseEntity     domain.Entity
-	baseRepository repositories.Repository
+	baseRepository domain.Repository
 	repository     testRepository
 }
 
@@ -32,7 +31,7 @@ func (s *testRepositorySuite) SetupTest() {
 	s.db.DropTableIfExists(&test{})
 	s.db.AutoMigrate(&test{})
 	s.baseEntity = &test{}
-	s.baseRepository = repositories.NewGormRepository(s.db, ign.NewLoggerNoRollbar("track-repository-test", ign.VerbosityDebug), s.baseEntity)
+	s.baseRepository = NewRepository(s.db, ign.NewLoggerNoRollbar("track-repository-test", ign.VerbosityDebug), s.baseEntity)
 	s.repository = newTestRepository(s.baseRepository)
 }
 

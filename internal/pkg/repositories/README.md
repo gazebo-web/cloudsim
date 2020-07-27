@@ -30,7 +30,7 @@ func (Car) PluralName() string {
 }
 ```
 
-After that, you'll need to initialize gorm's repository implementation. `NewGormRepository()` accepts 3 arguments: A `*gorm.DB` instance, an implementation for the `ign.Logger` interface, and a pointer to an entity of type `Car` that we created before.
+After that, you'll need to initialize gorm's repository implementation. `NewRepository()` accepts 3 arguments: A `*gorm.DB` instance, an implementation for the `ign.Logger` interface, and a pointer to an entity of type `Car` that we created before.
 ```golang
 func main() {
     db, err := gorm.Open(...)
@@ -40,7 +40,7 @@ func main() {
     
     carLogger := ign.NewLoggerNoRollbar("cars", ign.VerbosityDebug) // Use your own.
     
-    repository := repositories.NewGormRepository(db, carLogger, &Car{})
+    repository := repositories.NewRepository(db, carLogger, &Car{})
 }
 ```
 
