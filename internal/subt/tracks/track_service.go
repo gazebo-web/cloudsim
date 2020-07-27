@@ -88,25 +88,33 @@ func (s service) GetAll(page, pageSize *int) ([]Track, error) {
 // page = 0
 // pageSize = 10
 func (s service) validatePagination(page, pageSize *int) (*int, *int, error) {
-	if pageSize != nil {
-		if *pageSize < 0 {
-			return nil, nil, errors.New("negative page size")
-		}
-	} else {
-		pageSize = new(int)
-		*pageSize = 10
+	defaultPageSize := 10
+
+	var err error
+	pageSize, err = s.setPaginationValue(pageSize, &defaultPageSize, ErrNegativePageSize)
+	if err != nil {
+		return nil, nil, err
 	}
 
-	if page != nil {
-		if *page < 0 {
-			return nil, nil, errors.New("negative page")
-		}
-	} else {
-		page = new(int)
-		*page = 0
+	defaultPage := 0
+	page, err = s.setPaginationValue(page, &defaultPage, ErrNegativePage)
+	if err != nil {
+		return nil, nil, err
 	}
 
 	return page, pageSize, nil
+}
+
+// setPaginationValue checks if the given `value` is positive and not nil.
+// If `value` is negative, returns the err passed as an argument.
+// If `value` is nil, returns the default value passed as an argument.
+func (s service) setPaginationValue(value *int, defaultValue *int, err error) (*int, error) {
+	if value != nil && *value < 0 {
+		return nil, err
+	} else if *value > 0 {
+		return value, nil
+	}
+	return defaultValue, nil
 }
 
 // Update updates a track with the given name and populates it with information provided by the given input.
