@@ -107,7 +107,7 @@ func (s service) validatePagination(page, pageSize *int) (*int, *int, error) {
 // checkPositivePaginationValue checks if the given `value` is positive and not nil.
 // If `value` is negative, returns the err passed as an argument.
 // If `value` is nil, returns the default value passed as an argument.
-// If `value` doesn't match any of the previous statements, returns the actual value.
+// Otherwise, it returns the actual value.
 func (s service) checkPositivePaginationValue(value *int, defaultValue *int, err error) (*int, error) {
 	if value != nil {
 		if *value < 0 {
