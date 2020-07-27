@@ -88,16 +88,15 @@ func (s service) GetAll(page, pageSize *int) ([]Track, error) {
 // page = 0
 // pageSize = 10
 func (s service) validatePagination(page, pageSize *int) (*int, *int, error) {
-	defaultPageSize := 10
-
 	var err error
-	pageSize, err = s.setPaginationValue(pageSize, &defaultPageSize, ErrNegativePageSize)
+	defaultPageSize := 10
+	pageSize, err = s.setPositivePaginationValue(pageSize, &defaultPageSize, ErrNegativePageSize)
 	if err != nil {
 		return nil, nil, err
 	}
 
 	defaultPage := 0
-	page, err = s.setPaginationValue(page, &defaultPage, ErrNegativePage)
+	page, err = s.setPositivePaginationValue(page, &defaultPage, ErrNegativePage)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -105,10 +104,10 @@ func (s service) validatePagination(page, pageSize *int) (*int, *int, error) {
 	return page, pageSize, nil
 }
 
-// setPaginationValue checks if the given `value` is positive and not nil.
+// setPositivePaginationValue checks if the given `value` is positive and not nil.
 // If `value` is negative, returns the err passed as an argument.
 // If `value` is nil, returns the default value passed as an argument.
-func (s service) setPaginationValue(value *int, defaultValue *int, err error) (*int, error) {
+func (s service) setPositivePaginationValue(value *int, defaultValue *int, err error) (*int, error) {
 	if value != nil && *value < 0 {
 		return nil, err
 	} else if *value > 0 {
