@@ -1,16 +1,11 @@
 package tracks
 
 import (
-	"errors"
 	"fmt"
 	"gitlab.com/ignitionrobotics/web/cloudsim/internal/pkg/domain"
 	"gitlab.com/ignitionrobotics/web/cloudsim/internal/pkg/repositories"
 	"gitlab.com/ignitionrobotics/web/ign-go"
 	"gopkg.in/go-playground/validator.v9"
-)
-
-var (
-	ErrInvalidPage = errors.New("invalid page")
 )
 
 // Service groups a set of methods that have the business logic to perform CRUD operations for a Track.
@@ -65,7 +60,7 @@ func (s service) GetAll(page, pageSize *int) ([]Track, error) {
 	var tracks []Track
 
 	var err error
-	page, pageSize, err = s.validatePagination(page, pageSize)
+	page, pageSize = s.validatePagination(page, pageSize)
 	if err != nil {
 		s.logger.Debug(fmt.Sprintf(" [Track.Service] Pagination failed. Error: %+v", err))
 		return nil, err
@@ -80,25 +75,14 @@ func (s service) GetAll(page, pageSize *int) ([]Track, error) {
 	return tracks, nil
 }
 
-
 // validatePagination performs validation on `page` and `pageSize`.
 // If `page` and `pageSize` are nil, it will assign the default values.
 // page = 0
 // pageSize = 10
-func (s service) validatePagination(page, pageSize *int) (p *int, ps *int, err error) {
-	count, err := s.repository.Count()
-	if err != nil {
-		return
-	}
-
+func (s service) validatePagination(page, pageSize *int) (*int, *int) {
 	if pageSize == nil {
 		pageSize = new(int)
 		*pageSize = 10
-	}
-
-	if page != nil && count < (*page+1) * *pageSize {
-		err = ErrInvalidPage
-		return
 	}
 
 	if page == nil {
@@ -106,9 +90,7 @@ func (s service) validatePagination(page, pageSize *int) (p *int, ps *int, err e
 		*page = 0
 	}
 
-	p = page
-	ps = pageSize
-	return
+	return page, pageSize
 }
 
 // Update updates a track with the given name and populates it with information provided by the given input.

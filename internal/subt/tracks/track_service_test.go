@@ -129,12 +129,13 @@ func (s *trackServiceTestSuite) TestGetAllPaginated() {
 func (s *trackServiceTestSuite) TestGetAllPaginated_InvalidPage() {
 	page := 99
 	size := 2
-	_, err := s.service.GetAll(&page, &size)
-	s.Error(err)
+	output, err := s.service.GetAll(&page, &size)
+	s.NoError(err)
+	s.Len(output, 0)
 
-	// Count < (Page + 1) * 10
-	_, err = s.service.GetAll(&page, nil)
-	s.Error(err)
+	output, err = s.service.GetAll(&page, nil)
+	s.NoError(err)
+	s.Len(output, 0)
 }
 func (s *trackServiceTestSuite) TestGetOne_Exists() {
 	s.init()
