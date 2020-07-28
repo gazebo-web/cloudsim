@@ -1078,6 +1078,10 @@ func (sa *SubTApplication) launchApplication(ctx context.Context, s *Service, tx
 		gzRunCommand = append(gzRunCommand, fmt.Sprintf("websocketAdminAuthKey:=%s", *dep.AuthorizationToken))
 	}
 
+	// Set the maximum number of websocket connections. This can be removed
+	// when websocket scaling across multiple machines is implemented.
+	gzRunCommand = append(gzRunCommand, "websocketMaxConnections:=500")
+
 	// Pass Robot names and types to the gzserver Pod.
 	// robotName1:=xxx robotConfig1:=yyy robotName2:=xxx robotConfig2:=yyy (Note the numbers).
 	for i, robot := range extra.Robots {
