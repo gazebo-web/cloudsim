@@ -27,6 +27,7 @@ func (s *testRepositorySuite) SetupTest() {
 	dbConfig, err := ign.NewDatabaseConfigFromEnvVars()
 	s.NoError(err)
 	db, err = ign.InitDbWithCfg(&dbConfig)
+	db = db.Debug()
 	s.NoError(err)
 	s.db = db
 	s.db.DropTableIfExists(&test{})
@@ -124,6 +125,25 @@ func (s testRepositorySuite) TestGetPagination() {
 	s.NoError(err, "Should not throw an error when getting paginated entities.")
 	s.Equal("Test3", result[0].Name)
 	s.Len(result, count-size, "The result's length should be the 1 for the second page.")
+
+	page = -1
+	size = -3
+	_, err = s.repository.getPagination(&page, &size)
+	s.Error(err)
+}
+
+func (s testRepositorySuite) TestGetPaginated_NegativeValues() {
+	s.init()
+	page := -1
+	size := -3
+	_, err := s.repository.getPagination(&page, &size)
+	s.Error(err)
+
+	_, err = s.repository.getPagination(nil, &size)
+	s.Error(err)
+
+	_, err = s.repository.getPagination(&page, nil)
+	s.Error(err)
 }
 
 func (s testRepositorySuite) TestDelete() {

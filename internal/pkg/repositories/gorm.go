@@ -1,6 +1,7 @@
 package repositories
 
 import (
+	"errors"
 	"fmt"
 	"github.com/jinzhu/gorm"
 	"gitlab.com/ignitionrobotics/web/cloudsim/internal/pkg/domain"
@@ -14,6 +15,13 @@ type GormRepository struct {
 	Logger ign.Logger
 	entity domain.Entity
 }
+
+var (
+	// ErrNegativePageSize is returned when a negative page size is passed to validatePagination
+	ErrNegativePageSize = errors.New("negative page size")
+	// ErrNegativePage is returned when a negative page is passed to validatePagination
+	ErrNegativePage = errors.New("negative page")
+)
 
 // SingularName returns the singular name for this repository's entity.
 // Example: "Car"
@@ -77,6 +85,11 @@ func (g GormRepository) Create(entities []domain.Entity) ([]domain.Entity, error
 func (g GormRepository) Find(output interface{}, page, pageSize *int, filters ...Filter) error {
 	g.Logger.Debug(fmt.Sprintf(" [%s.Repository] Getting all %s. Filters: %+v",
 		g.SingularName(), g.PluralName(), filters))
+	var err error
+	page, pageSize, err = g.validatePagination(page, pageSize)
+	if err != nil {
+		return err
+	}
 	q := g.startQuery()
 	limit, offset := g.calculatePagination(page, pageSize)
 	if limit != nil {
@@ -92,7 +105,7 @@ func (g GormRepository) Find(output interface{}, page, pageSize *int, filters ..
 
 	q = g.setQueryFilters(q, filters)
 	q = q.Find(output)
-	err := q.Error
+	err = q.Error
 	if err != nil {
 		g.Logger.Debug(fmt.Sprintf(" [%s.Repository] Getting all %s failed. Error: %+v",
 			g.SingularName(), g.PluralName(), err))
@@ -207,6 +220,41 @@ func (g GormRepository) calculatePagination(page, pageSize *int) (limit *int, of
 	}
 
 	return
+}
+
+// validatePagination performs validation on `page` and `pageSize`.
+// If `page` and `pageSize` are nil, it will assign the default values.
+// page = 0
+// pageSize = 10
+func (g GormRepository) validatePagination(page, pageSize *int) (*int, *int, error) {
+	var err error
+	defaultPageSize := 10
+	pageSize, err = g.checkPositivePaginationValue(pageSize, &defaultPageSize, ErrNegativePageSize)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	defaultPage := 0
+	page, err = g.checkPositivePaginationValue(page, &defaultPage, ErrNegativePage)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	return page, pageSize, nil
+}
+
+// checkPositivePaginationValue checks if the given `value` is positive and not nil.
+// If `value` is negative, returns the err passed as an argument.
+// If `value` is nil, returns the default value passed as an argument.
+// Otherwise, it returns the actual value.
+func (g GormRepository) checkPositivePaginationValue(value *int, defaultValue *int, err error) (*int, error) {
+	if value != nil {
+		if *value < 0 {
+			return nil, err
+		}
+		return value, nil
+	}
+	return defaultValue, nil
 }
 
 

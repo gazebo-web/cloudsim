@@ -133,16 +133,17 @@ func (s *trackServiceTestSuite) TestGetAllPaginated_NegativeValues() {
 	var err error
 	_, err = s.service.GetAll(nil, &size)
 	s.Error(err)
-	s.Equal(err, ErrNegativePageSize)
+	s.Equal(err, repositories.ErrNegativePageSize)
 
 	_, err = s.service.GetAll(&page, nil)
 	s.Error(err)
-	s.Equal(err, ErrNegativePage)
+	s.Equal(err, repositories.ErrNegativePage)
 
 	_, err = s.service.GetAll(&page, &size)
 	s.Error(err)
-	s.Equal(err, ErrNegativePageSize)
+	s.Equal(err, repositories.ErrNegativePageSize)
 }
+
 func (s *trackServiceTestSuite) TestGetOne_Exists() {
 	s.init()
 
