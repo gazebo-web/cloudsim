@@ -1010,11 +1010,13 @@ func (sa *SubTApplication) launchApplication(ctx context.Context, s *Service, tx
 	// Parse the SubT extra info required for this Simulation
 	extra, err := ReadExtraInfoSubT(dep)
 	if err != nil {
+		logger(ctx).Error("[launchApplication] Failed to get extra info.", err)
 		return nil, ign.NewErrorMessageWithBase(ign.ErrorK8Create, err)
 	}
 	// Now get the Circuit rules for this simulation
 	rules, err := GetCircuitRules(tx, extra.Circuit)
 	if err != nil {
+		logger(ctx).Error("[launchApplication] Failed to get circuit rules when launching sim.", err)
 		return nil, ign.NewErrorMessageWithBase(ign.ErrorK8Create, err)
 	}
 
@@ -1116,6 +1118,7 @@ func (sa *SubTApplication) launchApplication(ctx context.Context, s *Service, tx
 	npGz.Spec.Egress = append(npGz.Spec.Egress, networkingv1.NetworkPolicyEgressRule{})
 	_, err = s.clientset.NetworkingV1().NetworkPolicies(s.cfg.KubernetesNamespace).Create(npGz)
 	if err != nil {
+		logger(ctx).Error("[launchApplication] Failed to create the gzserver network policy.", err)
 		return nil, ign.NewErrorMessageWithBase(ign.ErrorK8Create, err)
 	}
 
@@ -1263,6 +1266,7 @@ func (sa *SubTApplication) launchApplication(ctx context.Context, s *Service, tx
 	// Launch the gzserver Pod
 	_, err = s.clientset.CoreV1().Pods(s.cfg.KubernetesNamespace).Create(gzPod)
 	if err != nil {
+		logger(ctx).Error("[launchApplication] Failed to create the gzserver pod.", err)
 		return nil, ign.NewErrorMessageWithBase(ign.ErrorK8Create, err)
 	}
 
@@ -1271,6 +1275,7 @@ func (sa *SubTApplication) launchApplication(ctx context.Context, s *Service, tx
 	// This call will block.
 	ptrIP, err := waitForPodIPAndGetIP(ctx, s, gzserverLabels)
 	if err != nil {
+		logger(ctx).Error("[launchApplication] Timed out waiting for the gzserver pod to launch.", err)
 		return nil, ign.NewErrorMessageWithBase(ign.ErrorK8Create, err)
 	}
 	gzserverPodIP := (*ptrIP)[gazeboPodName]
@@ -1292,6 +1297,7 @@ func (sa *SubTApplication) launchApplication(ctx context.Context, s *Service, tx
 		// Launch the copy pod
 		_, err := s.clientset.CoreV1().Pods(s.cfg.KubernetesNamespace).Create(copyPod)
 		if err != nil {
+			logger(ctx).Error("[launchApplication] Failed to create the gzserver copy pod.", err)
 			return nil, ign.NewErrorMessageWithBase(ign.ErrorK8Create, err)
 		}
 	}
@@ -1309,11 +1315,13 @@ func (sa *SubTApplication) launchApplication(ctx context.Context, s *Service, tx
 			gzserverLabels,
 		)
 		if err != nil {
+			logger(ctx).Error("[launchApplication] Failed to create websocket Kubernetes service.", err)
 			return nil, ign.NewErrorMessageWithBase(ign.ErrorK8Create, err)
 		}
 		// Create an ingress rule to allow traffic to the websocket service from the Internet
 		_, err = sa.createWebsocketIngress(ctx, s.clientset, s.cfg.KubernetesNamespace, dep, service)
 		if err != nil {
+			logger(ctx).Error("[launchApplication] Failed to create websocket Kubernetes ingress rule.", err)
 			return nil, ign.NewErrorMessageWithBase(ign.ErrorK8Create, err)
 		}
 	}
@@ -1343,14 +1351,17 @@ func (sa *SubTApplication) launchApplication(ctx context.Context, s *Service, tx
 		npBridge.Spec.Egress = append(npBridge.Spec.Egress, networkingv1.NetworkPolicyEgressRule{})
 		_, err = s.clientset.NetworkingV1().NetworkPolicies(s.cfg.KubernetesNamespace).Create(npBridge)
 		if err != nil {
+			msg := fmt.Sprintf("[launchApplication] Failed to create network policy for robot %s bridge.", robot.Name)
+			logger(ctx).Error(msg, err)
 			return nil, ign.NewErrorMessageWithBase(ign.ErrorK8Create, err)
 		}
 
 		// Network Policy for field-computer Pods (Note: they cannnot connect to internet)
-		npfc := sa.createNetworkPolicy(ctx, fcPodName, baseLabels, specificFcLabels,
-			specificBridgeLabels)
+		npfc := sa.createNetworkPolicy(ctx, fcPodName, baseLabels, specificFcLabels, specificBridgeLabels)
 		_, err = s.clientset.NetworkingV1().NetworkPolicies(s.cfg.KubernetesNamespace).Create(npfc)
 		if err != nil {
+			msg := fmt.Sprintf("[launchApplication] Failed to create network policy for robot %s.", robot.Name)
+			logger(ctx).Error(msg, err)
 			return nil, ign.NewErrorMessageWithBase(ign.ErrorK8Create, err)
 		}
 
@@ -1393,6 +1404,8 @@ func (sa *SubTApplication) launchApplication(ctx context.Context, s *Service, tx
 		logger(ctx).Info("Launching bridge pod", bridgePod.Spec.InitContainers)
 		_, err = s.clientset.CoreV1().Pods(s.cfg.KubernetesNamespace).Create(bridgePod)
 		if err != nil {
+			msg := fmt.Sprintf("[launchApplication] Failed to create bridge pod for robot %s.", robot.Name)
+			logger(ctx).Error(msg, err)
 			return nil, ign.NewErrorMessageWithBase(ign.ErrorK8Create, err)
 		}
 
@@ -1411,6 +1424,7 @@ func (sa *SubTApplication) launchApplication(ctx context.Context, s *Service, tx
 	// Wait for Comms Bridge Pods to be Ready and get their IP addresses
 	bridgeIPs, err := waitForPodReadyAndGetIP(ctx, s, bridgeLabels)
 	if err != nil {
+		logger(ctx).Error("[launchApplication] Timed out waiting for bridge pods to launch.", err)
 		return nil, ign.NewErrorMessageWithBase(ign.ErrorK8Create, err)
 	}
 
@@ -1419,6 +1433,8 @@ func (sa *SubTApplication) launchApplication(ctx context.Context, s *Service, tx
 		for _, pod := range copyPods {
 			_, err := s.clientset.CoreV1().Pods(s.cfg.KubernetesNamespace).Create(pod)
 			if err != nil {
+				msg := fmt.Sprintf("[launchApplication] Failed to create copy pod for bridge pod %s.", pod.Name)
+				logger(ctx).Error(msg, err)
 				return nil, ign.NewErrorMessageWithBase(ign.ErrorK8Create, err)
 			}
 		}
@@ -1438,6 +1454,8 @@ func (sa *SubTApplication) launchApplication(ctx context.Context, s *Service, tx
 		// Launch the field-computer Pod
 		_, err = s.clientset.CoreV1().Pods(s.cfg.KubernetesNamespace).Create(fcPod)
 		if err != nil {
+			msg := fmt.Sprintf("[launchApplication] Failed to create field-computer pod %s.", fcPod.Name)
+			logger(ctx).Error(msg, err)
 			return nil, ign.NewErrorMessageWithBase(ign.ErrorK8Create, err)
 		}
 	}
@@ -1627,7 +1645,7 @@ func (sa *SubTApplication) createWebsocketIngress(ctx context.Context, kc kubern
 			break
 		}
 		// If an error occurred, retry for up to 10 min with exponential backoff
-		Sleep(time.Duration(1 << i) * time.Second)
+		Sleep(time.Duration(1<<i) * time.Second)
 	}
 
 	return ingress, err
