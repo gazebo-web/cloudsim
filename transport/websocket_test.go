@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"sync"
 	"testing"
 )
 
@@ -22,7 +23,7 @@ type websocketTestSuite struct {
 	router    *http.ServeMux
 
 	message     []byte
-	messageType int
+	lock sync.Mutex
 }
 
 func (suite *websocketTestSuite) SetupTest() {
@@ -35,13 +36,15 @@ func (suite *websocketTestSuite) SetupTest() {
 		conn, err := suite.upgrader.Upgrade(w, r, nil)
 		suite.NoError(err)
 		defer conn.Close()
-		for {
-			if err = conn.WriteMessage(websocket.TextMessage, []byte("test-server")); err != nil {
-				return
-			}
-			if suite.messageType, suite.message, err = conn.ReadMessage(); err != nil {
-				return
-			}
+		if err = conn.WriteMessage(websocket.TextMessage, []byte("test-server")); err != nil {
+			return
+		}
+		suite.lock.Lock()
+		defer suite.lock.Unlock()
+		var msg []byte
+		if _, msg, err = conn.ReadMessage(); err != nil {
+			suite.message = msg
+			return
 		}
 	}
 	suite.router = http.NewServeMux()
