@@ -1608,14 +1608,25 @@ func (sa *SubTApplication) createWebsocketIngress(ctx context.Context, kc kubern
 		host = &sa.cfg.WebsocketHost
 	}
 
-	return upsertIngressRule(
-		ctx,
-		kc,
-		namespace,
-		sa.cfg.IngressName,
-		host,
-		rulePath,
-	)
+	var ingress *v1beta1.Ingress
+	var err error
+	for i := uint(1); i < 9; i++ {
+		ingress, err = upsertIngressRule(
+			ctx,
+			kc,
+			namespace,
+			sa.cfg.IngressName,
+			host,
+			rulePath,
+		)
+		if err == nil {
+			break
+		}
+		// If an error occurred, retry for up to 10 min with exponential backoff
+		Sleep(time.Duration(1 << i) * time.Second)
+	}
+
+	return ingress, err
 }
 
 // createCommsBridgePod creates a basic comms-bridge pod. Callers should then
