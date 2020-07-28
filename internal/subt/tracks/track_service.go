@@ -12,7 +12,7 @@ import (
 type Service interface {
 	Create(input CreateTrackInput) (*Track, error)
 	Get(name string) (*Track, error)
-	GetAll() ([]Track, error)
+	GetAll(page, pageSize *int) ([]Track, error)
 	Update(name string, input UpdateTrackInput) (interface{}, error)
 	Delete(name string) (*Track, error)
 }
@@ -54,11 +54,14 @@ func (s service) Get(name string) (*Track, error) {
 	return &track, nil
 }
 
-// GetAll returns a slice with all the tracks.
-func (s service) GetAll() ([]Track, error) {
+// GetAll returns a slice with 10 tracks from the first track in the database.
+// If `page` and `pageSize` are not nil, it will return `pageSize` tracks starting from the `page` track.
+func (s service) GetAll(page, pageSize *int) ([]Track, error) {
 	s.logger.Debug(" [Track.Service] Getting all tracks")
 	var tracks []Track
-	err := s.repository.Find(&tracks, nil, nil)
+
+	var err error
+	err = s.repository.Find(&tracks, page, pageSize)
 	if err != nil {
 		s.logger.Debug(fmt.Sprintf(" [Track.Service] Getting tracks failed. Error: %+v", err))
 		return nil, err

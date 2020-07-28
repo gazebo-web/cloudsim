@@ -1,6 +1,7 @@
 package repositories
 
 import (
+	"errors"
 	"fmt"
 	"github.com/jinzhu/gorm"
 	"gitlab.com/ignitionrobotics/web/cloudsim/internal/pkg/domain"
@@ -14,6 +15,13 @@ type GormRepository struct {
 	Logger ign.Logger
 	entity domain.Entity
 }
+
+var (
+	// ErrNegativePageSize is returned when a negative page size is passed to validatePagination
+	ErrNegativePageSize = errors.New("negative page size")
+	// ErrNegativePage is returned when a negative page is passed to validatePagination
+	ErrNegativePage = errors.New("negative page")
+)
 
 // SingularName returns the singular name for this repository's entity.
 // Example: "Car"
@@ -72,11 +80,18 @@ func (g GormRepository) Create(entities []domain.Entity) ([]domain.Entity, error
 }
 
 // Find returns a list of entities that match the given filters.
-// If `offset` and `limit` are not nil, it will return up to `limit` results from the provided `offset`.
-func (g GormRepository) Find(output interface{}, limit, offset *int, filters ...Filter) error {
+// If `page` and `pageSize` are not nil, it will return up to `pageSize` results from the provided `page`.
+// NOTE: `page` number starts at 0.
+func (g GormRepository) Find(output interface{}, page, pageSize *int, filters ...Filter) error {
 	g.Logger.Debug(fmt.Sprintf(" [%s.Repository] Getting all %s. Filters: %+v",
 		g.SingularName(), g.PluralName(), filters))
+	var err error
+	page, pageSize, err = g.validatePagination(page, pageSize)
+	if err != nil {
+		return err
+	}
 	q := g.startQuery()
+	limit, offset := g.calculatePagination(page, pageSize)
 	if limit != nil {
 		g.Logger.Debug(fmt.Sprintf(" [%s.Repository] Limit: %d.",
 			g.SingularName(), *limit))
@@ -90,7 +105,7 @@ func (g GormRepository) Find(output interface{}, limit, offset *int, filters ...
 
 	q = g.setQueryFilters(q, filters)
 	q = q.Find(output)
-	err := q.Error
+	err = q.Error
 	if err != nil {
 		g.Logger.Debug(fmt.Sprintf(" [%s.Repository] Getting all %s failed. Error: %+v",
 			g.SingularName(), g.PluralName(), err))
@@ -164,6 +179,18 @@ func (g GormRepository) Delete(filters ...Filter) error {
 	return nil
 }
 
+// Count counts the amount of entities that match the given filters.
+func (g GormRepository) Count(filters ...Filter) (int, error) {
+	var count int
+	q := g.startQuery()
+	q = g.setQueryFilters(q, filters)
+	err := q.Count(&count).Error
+	if err != nil {
+		return 0, err
+	}
+	return count, nil
+}
+
 func (g GormRepository) startQuery() *gorm.DB {
 	return g.DB.Model(g.Model())
 }
@@ -174,6 +201,62 @@ func (g GormRepository) setQueryFilters(q *gorm.DB, filters []Filter) *gorm.DB {
 	}
 	return q
 }
+
+// calculatePagination returns the calculated SQL LIMIT and OFFSET from the given page and pageSize.
+// NOTE: The count of `page` starts at 0.
+func (g GormRepository) calculatePagination(page, pageSize *int) (limit *int, offset *int) {
+	if pageSize == nil {
+		return
+	}
+
+	// Set the limit if there is a pageSize
+	limit = pageSize
+
+	// Set the offset if a page number was defined
+	var value int
+	if page != nil {
+		value = *page * *pageSize
+		offset = &value
+	}
+
+	return
+}
+
+// validatePagination performs validation on `page` and `pageSize`.
+// If `page` and `pageSize` are nil, it will assign the default values.
+// page = 0
+// pageSize = 10
+func (g GormRepository) validatePagination(page, pageSize *int) (*int, *int, error) {
+	var err error
+	defaultPageSize := 10
+	pageSize, err = g.checkPositivePaginationValue(pageSize, &defaultPageSize, ErrNegativePageSize)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	defaultPage := 0
+	page, err = g.checkPositivePaginationValue(page, &defaultPage, ErrNegativePage)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	return page, pageSize, nil
+}
+
+// checkPositivePaginationValue checks if the given `value` is positive and not nil.
+// If `value` is negative, returns the err passed as an argument.
+// If `value` is nil, returns the default value passed as an argument.
+// Otherwise, it returns the actual value.
+func (g GormRepository) checkPositivePaginationValue(value *int, defaultValue *int, err error) (*int, error) {
+	if value != nil {
+		if *value < 0 {
+			return nil, err
+		}
+		return value, nil
+	}
+	return defaultValue, nil
+}
+
 
 // NewGormRepository initializes a new Repository implementation using gorm.
 func NewGormRepository(db *gorm.DB, logger ign.Logger, entity domain.Entity) Repository {

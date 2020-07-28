@@ -27,6 +27,7 @@ func (s *testRepositorySuite) SetupTest() {
 	dbConfig, err := ign.NewDatabaseConfigFromEnvVars()
 	s.NoError(err)
 	db, err = ign.InitDbWithCfg(&dbConfig)
+	db = db.Debug()
 	s.NoError(err)
 	s.db = db
 	s.db.DropTableIfExists(&test{})
@@ -90,7 +91,6 @@ func (s testRepositorySuite) TestGetByValue() {
 	s.Len(result, 1, "The result slice should be length=1.")
 }
 
-
 func (s testRepositorySuite) TestGetAll() {
 	s.init()
 
@@ -102,6 +102,48 @@ func (s testRepositorySuite) TestGetAll() {
 	result, err := s.repository.getAll()
 	s.NoError(err, "Should not throw an error when getting all entities.")
 	s.Len(result, count, "The result slice should have the same length at the previous count.")
+}
+
+func (s testRepositorySuite) TestGetPagination() {
+	s.init()
+
+	var count int
+	err := s.db.Model(&test{}).Count(&count).Error
+	s.NoError(err, "Should not throw an error when counting.")
+
+	page := 0
+	size := 2
+	result, err := s.repository.getPagination(&page, &size)
+	s.NoError(err, "Should not throw an error when getting paginated entities.")
+	s.Equal("Test1", result[0].Name)
+	s.Equal("Test2", result[1].Name)
+	s.Len(result, size, "The result's length should be the same as the pageSize for the first page.")
+
+	page = 1
+	size = 2
+	result, err = s.repository.getPagination(&page, &size)
+	s.NoError(err, "Should not throw an error when getting paginated entities.")
+	s.Equal("Test3", result[0].Name)
+	s.Len(result, count-size, "The result's length should be the 1 for the second page.")
+
+	page = -1
+	size = -3
+	_, err = s.repository.getPagination(&page, &size)
+	s.Error(err)
+}
+
+func (s testRepositorySuite) TestGetPaginated_NegativeValues() {
+	s.init()
+	page := -1
+	size := -3
+	_, err := s.repository.getPagination(&page, &size)
+	s.Error(err)
+
+	_, err = s.repository.getPagination(nil, &size)
+	s.Error(err)
+
+	_, err = s.repository.getPagination(&page, nil)
+	s.Error(err)
 }
 
 func (s testRepositorySuite) TestDelete() {
@@ -167,7 +209,7 @@ func (s testRepositorySuite) TestDeleteInvalid() {
 func (s testRepositorySuite) TestUpdate() {
 	s.init()
 
-	err := s.repository.update("Test1", map[string]interface{}{ "name": "Test111", "value": 12345 })
+	err := s.repository.update("Test1", map[string]interface{}{"name": "Test111", "value": 12345})
 	s.NoError(err, "Should not throw an error when updating an entity.")
 
 	_, err = s.repository.getByName("Test1")
@@ -183,7 +225,7 @@ func (s testRepositorySuite) TestUpdate() {
 func (s testRepositorySuite) TestUpdateAll() {
 	s.init()
 
-	err := s.repository.updateAll(map[string]interface{}{ "name": "Test123" })
+	err := s.repository.updateAll(map[string]interface{}{"name": "Test123"})
 	s.NoError(err, "Should not throw an error when updating all entities.")
 
 	result, err := s.repository.getAll()
@@ -196,7 +238,7 @@ func (s testRepositorySuite) TestUpdateAll() {
 
 func (s testRepositorySuite) TestUpdateZeroValue() {
 	s.init()
-	err := s.repository.update("Test1", map[string]interface{}{ "value": 0 })
+	err := s.repository.update("Test1", map[string]interface{}{"value": 0})
 	s.NoError(err, "Should not throw an error when updating an entity.")
 
 	result, err := s.repository.getByName("Test1")
@@ -215,14 +257,35 @@ func (s testRepositorySuite) TestUpdateInvalid() {
 func (s testRepositorySuite) TestUpdateSomeValues() {
 	s.init()
 
-	err := s.repository.updateSome([]string{"Test1", "Test2"}, map[string]interface{}{ "value": 99 })
+	err := s.repository.updateSome([]string{"Test1", "Test2"}, map[string]interface{}{"value": 99})
 
 	result, err := s.repository.getAll()
 	s.NoError(err, "Should not throw an error when getting the updated entities.")
 	s.Equal(99, result[0].Value)
 	s.Equal(99, result[1].Value)
 	s.Equal(3, result[2].Value)
+}
 
+func (s testRepositorySuite) TestCount() {
+	s.init()
+
+	var count int
+	err := s.db.Model(&test{}).Count(&count).Error
+	s.NoError(err, "Should not throw an error when counting.")
+	s.Equal(3, count, "Before removing a test the count should be 3.")
+
+	value, err := s.repository.countAll()
+	s.NoError(err)
+	s.Equal(count, value, "The value returned by Count should be the same as the previous count.")
+
+}
+
+func (s testRepositorySuite) TestCountSome() {
+	s.init()
+
+	value, err := s.repository.countByName([]string{"Test1", "Test2"})
+	s.NoError(err)
+	s.Equal(2, value, "The value returned by Count should be the same as the previous count.")
 }
 
 func (s testRepositorySuite) TestModel() {

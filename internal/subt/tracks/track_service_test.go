@@ -97,12 +97,51 @@ func (s *trackServiceTestSuite) TestCreate_EmptyFields() {
 func (s *trackServiceTestSuite) TestGetAll() {
 	s.init()
 
-	tracks, err := s.service.GetAll()
+	tracks, err := s.service.GetAll(nil, nil)
 	s.NoError(err)
 	s.Len(tracks, 3)
 	s.Equal("Virtual TestA", tracks[0].Name)
 	s.Equal("Virtual TestB", tracks[1].Name)
 	s.Equal("Virtual TestC", tracks[2].Name)
+}
+
+func (s *trackServiceTestSuite) TestGetAllPaginated() {
+	s.init()
+
+	page := 0
+	size := 2
+	tracks, err := s.service.GetAll(&page, &size)
+
+	s.NoError(err)
+	s.Len(tracks, 2)
+	s.Equal("Virtual TestA", tracks[0].Name)
+	s.Equal("Virtual TestB", tracks[1].Name)
+
+	tracks, err = s.service.GetAll(nil, &size)
+	s.NoError(err)
+	s.Len(tracks, size)
+
+	tracks, err = s.service.GetAll(nil, nil)
+	s.NoError(err)
+	s.Len(tracks, 3)
+}
+
+func (s *trackServiceTestSuite) TestGetAllPaginated_NegativeValues() {
+	page := -5
+	size := -3
+
+	var err error
+	_, err = s.service.GetAll(nil, &size)
+	s.Error(err)
+	s.Equal(err, repositories.ErrNegativePageSize)
+
+	_, err = s.service.GetAll(&page, nil)
+	s.Error(err)
+	s.Equal(err, repositories.ErrNegativePage)
+
+	_, err = s.service.GetAll(&page, &size)
+	s.Error(err)
+	s.Equal(err, repositories.ErrNegativePageSize)
 }
 
 func (s *trackServiceTestSuite) TestGetOne_Exists() {
