@@ -125,6 +125,9 @@ type subTSpecificsConfig struct {
 	S3LogsCopyEnabled bool `env:"AWS_GZ_LOGS_ENABLED" envDefault:"true"`
 	// MaxDurationForSimulations is the maximum number of minutes a simulation can run in SubT.
 	MaxDurationForSimulations int `env:"SUBT_SIM_DURATION_MINUTES" envDefault:"60"`
+	// MaxRobotModelCount is the maximum number of robots per model type. E.g. Up to 5 of any model: X1, X2, etc.
+	// Robot models are defined in SubTRobotType. A value of 0 means unlimited robots.
+	MaxRobotModelCount int `env:"SUBT_MAX_ROBOT_MODEL_COUNT" envDefault:"0"`
 	// AllowNotFoundDuringShutdown is a bool flag used to fail if a pod/service is not found
 	// during shut down. If 'true' then this handler will not fail when a pod-to-be-killed is not found.
 	AllowNotFoundDuringShutdown bool `env:"SUBT_ALLOW_NOT_FOUND" envDefault:"true"`
@@ -330,14 +333,27 @@ func (sa *SubTApplication) customizeSimulationRequest(ctx context.Context,
 	// Create the slice of robots and then serialize into the createSim's "Extra" field
 	robots := make([]SubTRobot, 0)
 	robotNames := make([]string, 0)
+	robotModelCount := make(map[string]int, 0)
 	for i, rn := range subtSim.RobotName {
+		robotType := SubTRobotTypes[subtSim.RobotType[i]]
+
 		robot := SubTRobot{
 			Name:    rn,
 			Type:    subtSim.RobotType[i],
 			Image:   subtSim.RobotImage[i],
-			Credits: SubTRobotTypes[subtSim.RobotType[i]].Credits,
+			Credits: robotType.Credits,
 		}
 		creditsSum += robot.Credits
+
+		// Limit the number of robots per model if a limit is set
+		if sa.cfg.MaxRobotModelCount > 0 {
+			robotModelCount[robotType.Model]++
+			if robotModelCount[robotType.Model] >= sa.cfg.MaxRobotModelCount {
+				msg := fmt.Sprintf("too many robots of model %s", robotType.Model)
+				return NewErrorMessageWithBase(ErrorRobotModelLimitReached, errors.New(msg))
+			}
+		}
+
 		robots = append(robots, robot)
 		robotNames = append(robotNames, robot.Name)
 	}
