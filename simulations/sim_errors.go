@@ -64,6 +64,9 @@ const (
 	ErrorInvalidRobotImage SimErrCode = 5520
 	// ErrorInvalidMarsupialSpecification is triggered when an invalid SubT marsupial pair is specified.
 	ErrorInvalidMarsupialSpecification SimErrCode = 5521
+	// ErrorRobotModelLimitReached is triggered when attempting to launch a simulation with too many robots of a
+	// single model.
+	ErrorRobotModelLimitReached SimErrCode = 5522
 )
 
 // NewErrorMessageWithBase receives an error code and a root error
@@ -170,8 +173,12 @@ func ErrorMessage(err SimErrCode) ign.ErrMsg {
 		em.ErrCode = int(ErrorInvalidRobotImage)
 		em.StatusCode = http.StatusBadRequest
 	case ErrorInvalidMarsupialSpecification:
-		em.Msg = "Invalid marsupial specification. A parent and child must be specified, seperated by a colon."
+		em.Msg = "Invalid marsupial specification. A parent and child must be specified, separated by a colon."
 		em.ErrCode = int(ErrorInvalidMarsupialSpecification)
+		em.StatusCode = http.StatusBadRequest
+	case ErrorRobotModelLimitReached:
+		em.Msg = "Too many robots of single model."
+		em.ErrCode = int(ErrorRobotModelLimitReached)
 		em.StatusCode = http.StatusBadRequest
 	}
 
