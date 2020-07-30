@@ -18,5 +18,5 @@ type UploadInput struct {
 // Storage groups a set of methods to interact with a Cloud Storage.
 type Storage interface {
 	Upload(input UploadInput) error
-	GetURL(bucket string, key string, expiresIn time.Duration) string
+	GetURL(bucket string, key string, expiresIn time.Duration) (string, error)
 }

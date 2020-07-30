@@ -29,7 +29,7 @@ func (s storage) Upload(input cloud.UploadInput) error {
 }
 
 // GetURL returns an URL to access the given bucket with the given key.
-func (s storage) GetURL(bucket string, key string, expiresIn time.Duration) string {
+func (s storage) GetURL(bucket string, key string, expiresIn time.Duration) (string, error) {
 	panic("implement me")
 }
 
