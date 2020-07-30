@@ -1,6 +1,8 @@
 package s3
 
 import (
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3iface"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/cloud"
 	"time"
@@ -13,7 +15,17 @@ type storage struct {
 
 // Upload uploads a file to the cloud storage.
 func (s storage) Upload(input cloud.UploadInput) error {
-	panic("implement me")
+	_, err := s.API.PutObject(&s3.PutObjectInput{
+		Bucket:               &input.Bucket,
+		Key:                  &input.Key,
+		ACL:                  aws.String("private"),
+		Body:                 input.File,
+		ContentLength:        aws.Int64(input.ContentLength),
+		ContentType:          aws.String(input.ContentType),
+		ContentDisposition:   aws.String("attachment"),
+		ServerSideEncryption: aws.String("AES256"),
+	})
+	return err
 }
 
 // GetURL returns an URL to access the given bucket with the given key.

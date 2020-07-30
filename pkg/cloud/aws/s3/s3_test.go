@@ -9,7 +9,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/cloud"
-	"net/http"
 	"testing"
 )
 
@@ -28,6 +27,7 @@ func runStorageTest(desiredOutput *s3.PutObjectOutput, err error) error {
 	body := []byte("test")
 	file := bytes.NewReader(body)
 	fileSize := int64(len(body))
+	contentType := "type-test"
 
 	input := &s3.PutObjectInput{
 		Bucket:               &bucket,
@@ -35,21 +35,21 @@ func runStorageTest(desiredOutput *s3.PutObjectOutput, err error) error {
 		ACL:                  aws.String("private"),
 		Body:                 file,
 		ContentLength:        &fileSize,
-		ContentType:          aws.String(http.DetectContentType(body)),
+		ContentType:          &contentType,
 		ContentDisposition:   aws.String("attachment"),
 		ServerSideEncryption: aws.String("AES256"),
 	}
 
-	api.On("PutObject", input).Return(desiredOutput, err).Once()
+	api.On("PutObject", input).Return(desiredOutput, err)
 
 	s := NewStorage(api)
 
 	return s.Upload(cloud.UploadInput{
-		Bucket:        "test",
-		Key:           "1234",
+		Bucket:        bucket,
+		Key:           key,
 		File:          file,
 		ContentLength: fileSize,
-		ContentType:   "type-test",
+		ContentType:   contentType,
 	})
 }
 
