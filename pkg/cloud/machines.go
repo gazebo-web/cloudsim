@@ -8,7 +8,7 @@ type CreateMachinesInput struct {
 	MinCount      int64
 	MaxCount      int64
 	FirewallRules []string
-	SubnetId      string
+	SubnetID      string
 	Tags          map[string]string
 }
 
