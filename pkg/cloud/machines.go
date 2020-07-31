@@ -27,12 +27,14 @@ type CountMachinesInput struct {
 	Tags       map[string][]string
 }
 
-// Machines groups a set of methods to interact with different web services to manage compute capacity in the cloud.
+// Machines requests physical instances from a cloud provider on which to deploy applications
 type Machines interface {
-	// Create creates a cloud machine.
+	// Create creates a set of cloud machines with a certain configuration.
 	Create(inputs []CreateMachinesInput) error
-	// Terminate terminates a cloud machine.
+	// Terminate terminates a set of cloud machines that match a set of names.
+	// The names are automatically created by the cloud provider.
 	Terminate(input TerminateMachinesInput) error
-	// Count returns the number of cloud machines.
+	// Count returns the number of cloud machines that match a set of selectors.
+	// The selectors should have been defined when creating the machines.
 	Count(input CountMachinesInput) int
 }
