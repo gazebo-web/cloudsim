@@ -30,7 +30,15 @@ func (s storage) Upload(input cloud.UploadInput) error {
 
 // GetURL returns an URL to access the given bucket with the given key.
 func (s storage) GetURL(bucket string, key string, expiresIn time.Duration) (string, error) {
-	panic("implement me")
+	req, _ := s.API.GetObjectRequest(&s3.GetObjectInput{
+		Bucket: &bucket,
+		Key:    &key,
+	})
+	u, err := req.Presign(expiresIn)
+	if err != nil {
+		return "", err
+	}
+	return u, nil
 }
 
 // NewStorage initializes a new cloud.Storage implementation using s3.

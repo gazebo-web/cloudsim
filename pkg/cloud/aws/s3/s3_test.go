@@ -3,6 +3,7 @@ package s3
 import (
 	"bytes"
 	"errors"
+	"fmt"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/request"
 	"github.com/aws/aws-sdk-go/service/s3"
@@ -10,28 +11,11 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/cloud"
+	"net/http"
+	"net/url"
 	"testing"
 	"time"
 )
-
-type s3api struct {
-	*mock.Mock
-	s3iface.S3API
-}
-
-func (s *s3api) PutObject(input *s3.PutObjectInput) (*s3.PutObjectOutput, error) {
-	args := s.Called(input)
-	output := args.Get(0).(*s3.PutObjectOutput)
-	err := args.Error(1)
-	return output, err
-}
-
-func (s *s3api) GetObjectRequest(input *s3.GetObjectInput) (*request.Request, *s3.GetObjectOutput) {
-	args := s.Called(input)
-	req := args.Get(0).(*request.Request)
-	output := args.Get(1).(*s3.GetObjectOutput)
-	return req, output
-}
 
 func TestUpload_OK(t *testing.T) {
 	output := s3.PutObjectOutput{}
@@ -45,13 +29,45 @@ func TestUpload_Failed(t *testing.T) {
 }
 
 func TestGetURL_OK(t *testing.T) {
-	result, err := runGetURLTest(&request.Request{}, nil)
+	bucket := "test"
+	filepath := "tmp/test/log.txt"
+	u := &url.URL{
+		Scheme: "https",
+		Host:   fmt.Sprintf("%s.s3.amazonws.com", bucket),
+		Path:   filepath,
+	}
+	result, err := runGetURLTest(bucket, filepath, &request.Request{
+		Operation: &request.Operation{
+			BeforePresignFn: nil,
+		},
+
+		HTTPRequest: &http.Request{
+			Method: "GET",
+			URL:    u,
+		},
+	})
 	assert.NoError(t, err)
-	assert.Equal(t, "", result)
+	assert.Equal(t, u.String(), result)
 }
 
 func TestGetURL_Failed(t *testing.T) {
-	result, err := runGetURLTest(&request.Request{}, nil)
+	bucket := "test"
+	filepath := "/tmp/test/log.txt"
+	u := &url.URL{
+		Scheme: "https",
+		Host:   fmt.Sprintf("%s.s3.amazonws.com", bucket),
+		Path:   filepath,
+	}
+	result, err := runGetURLTest(bucket, filepath, &request.Request{
+		Operation: &request.Operation{
+			BeforePresignFn: nil,
+		},
+		Error: errors.New(request.ErrCodeInvalidPresignExpire),
+		HTTPRequest: &http.Request{
+			Method: "GET",
+			URL:    u,
+		},
+	})
 	assert.Error(t, err)
 	assert.Equal(t, "", result)
 }
@@ -92,23 +108,39 @@ func runUploadTest(desiredOutput *s3.PutObjectOutput, err error) error {
 	})
 }
 
-func runGetURLTest(req *request.Request, output *s3.GetObjectOutput) (string, error) {
+func runGetURLTest(bucket, filepath string, req *request.Request) (string, error) {
 	api := &s3api{
 		Mock: new(mock.Mock),
 	}
 
-	bucket := "test"
-	filepath := "/tmp/test/log.txt"
 	expiresIn := time.Second
 
 	input := &s3.GetObjectInput{
-		Bucket: aws.String(bucket),
-		Key:    aws.String(filepath),
+		Bucket: &bucket,
+		Key:    &filepath,
 	}
 
-	api.On("GetObjectRequest", input).Return(req, output)
+	api.On("GetObjectRequest", input).Return(req)
 
 	s := NewStorage(api)
 
 	return s.GetURL(bucket, filepath, expiresIn)
+}
+
+type s3api struct {
+	*mock.Mock
+	s3iface.S3API
+}
+
+func (s *s3api) PutObject(input *s3.PutObjectInput) (*s3.PutObjectOutput, error) {
+	args := s.Called(input)
+	output := args.Get(0).(*s3.PutObjectOutput)
+	err := args.Error(1)
+	return output, err
+}
+
+func (s *s3api) GetObjectRequest(input *s3.GetObjectInput) (*request.Request, *s3.GetObjectOutput) {
+	args := s.Called(input)
+	req := args.Get(0).(*request.Request)
+	return req, nil
 }
