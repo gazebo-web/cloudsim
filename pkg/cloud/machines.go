@@ -5,6 +5,7 @@ package cloud
 type CreateMachinesInput struct {
 	DryRun        bool
 	KeyName       string
+	Type          string
 	MinCount      int64
 	MaxCount      int64
 	FirewallRules []string
@@ -26,9 +27,12 @@ type CountMachinesInput struct {
 	Tags       map[string][]string
 }
 
-// Machines groups a set of methods to Create, Terminate and Count cloud machines.
+// Machines groups a set of methods to interact with different web services to manage compute capacity in the cloud.
 type Machines interface {
-	Create(input CreateMachinesInput) error
+	// Create creates a cloud machine.
+	Create(inputs []CreateMachinesInput) error
+	// Terminate terminates a cloud machine.
 	Terminate(input TerminateMachinesInput) error
+	// Count returns the number of cloud machines.
 	Count(input CountMachinesInput) int
 }
