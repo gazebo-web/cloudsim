@@ -2,7 +2,15 @@ package cloud
 
 import (
 	"bytes"
+	"errors"
 	"time"
+)
+
+var (
+	// ErrMissingFile is returned when Upload gets called and no file is provided.
+	ErrMissingFile = errors.New("missing file")
+	// ErrBadContentType is returned when Upload gets called with an ivnalid content type.
+	ErrBadContentType = errors.New("bad content type")
 )
 
 // UploadInput is the input for the Storage.Upload operation.

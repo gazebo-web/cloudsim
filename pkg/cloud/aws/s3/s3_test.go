@@ -2,145 +2,225 @@ package s3
 
 import (
 	"bytes"
-	"errors"
-	"fmt"
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/request"
+	"github.com/aws/aws-sdk-go/aws/credentials"
+	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
-	"github.com/aws/aws-sdk-go/service/s3/s3iface"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/mock"
+	"github.com/johannesboyne/gofakes3"
+	"github.com/johannesboyne/gofakes3/backend/s3mem"
+	"github.com/stretchr/testify/suite"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/cloud"
 	"net/http"
+	"net/http/httptest"
 	"net/url"
 	"testing"
 	"time"
 )
 
-func TestUpload_OK(t *testing.T) {
-	output := s3.PutObjectOutput{}
-	err := runUploadTest(&output, nil)
-	assert.NoError(t, err)
+func TestStorageTestSuite(t *testing.T) {
+	suite.Run(t, new(s3StorageTestSuite))
 }
 
-func TestUpload_Failed(t *testing.T) {
-	err := runUploadTest(nil, errors.New("s3-test"))
-	assert.Error(t, err)
+type s3test struct {
+	Backend *s3mem.Backend
+	Faker   *gofakes3.GoFakeS3
+	Server  *httptest.Server
+	Config  *aws.Config
+	Session *session.Session
 }
 
-func TestGetURL_OK(t *testing.T) {
-	bucket := "test"
-	filepath := "tmp/test/log.txt"
-	u := &url.URL{
-		Scheme: "https",
-		Host:   fmt.Sprintf("%s.s3.amazonws.com", bucket),
-		Path:   filepath,
-	}
-	result, err := runGetURLTest(bucket, filepath, &request.Request{
-		Operation: &request.Operation{
-			BeforePresignFn: nil,
-		},
-
-		HTTPRequest: &http.Request{
-			Method: "GET",
-			URL:    u,
-		},
-	})
-	assert.NoError(t, err)
-	assert.Equal(t, u.String(), result)
+type s3StorageTestSuite struct {
+	suite.Suite
+	s3      *s3test
+	storage cloud.Storage
 }
 
-func TestGetURL_Failed(t *testing.T) {
-	bucket := "test"
-	filepath := "/tmp/test/log.txt"
-	u := &url.URL{
-		Scheme: "https",
-		Host:   fmt.Sprintf("%s.s3.amazonws.com", bucket),
-		Path:   filepath,
+func (s *s3StorageTestSuite) SetupTest() {
+	backend := s3mem.New()
+	faker := gofakes3.New(backend)
+	server := httptest.NewServer(faker.Server())
+	config := &aws.Config{
+		Credentials:      credentials.NewStaticCredentials("YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY", ""),
+		Endpoint:         aws.String(server.URL),
+		Region:           aws.String("us-east-1"),
+		DisableSSL:       aws.Bool(true),
+		S3ForcePathStyle: aws.Bool(true),
 	}
-	result, err := runGetURLTest(bucket, filepath, &request.Request{
-		Operation: &request.Operation{
-			BeforePresignFn: nil,
-		},
-		Error: errors.New(request.ErrCodeInvalidPresignExpire),
-		HTTPRequest: &http.Request{
-			Method: "GET",
-			URL:    u,
-		},
-	})
-	assert.Error(t, err)
-	assert.Equal(t, "", result)
+
+	s.s3 = &s3test{
+		Backend: backend,
+		Faker:   faker,
+		Server:  server,
+		Config:  config,
+		Session: session.Must(session.NewSession(config)),
+	}
 }
 
-func runUploadTest(desiredOutput *s3.PutObjectOutput, err error) error {
-	api := &s3api{
-		Mock: new(mock.Mock),
-	}
+func (s *s3StorageTestSuite) AfterTest() {
+	s.s3.Server.Close()
+}
 
-	bucket := "test"
-	key := "1234"
-	body := []byte("test")
-	file := bytes.NewReader(body)
-	fileSize := int64(len(body))
-	contentType := "type-test"
+func (s *s3StorageTestSuite) TestNewStorage() {
+	api := s3.New(s.s3.Session)
+	st := NewStorage(api)
+	obj, ok := st.(*storage)
+	s.True(ok)
+	s.NotNil(obj.API)
+}
 
-	input := &s3.PutObjectInput{
-		Bucket:               &bucket,
-		Key:                  &key,
-		ACL:                  aws.String("private"),
-		Body:                 file,
-		ContentLength:        &fileSize,
-		ContentType:          &contentType,
-		ContentDisposition:   aws.String("attachment"),
-		ServerSideEncryption: aws.String("AES256"),
-	}
+func (s *s3StorageTestSuite) TestUpload_OK() {
+	api := s3.New(s.s3.Session)
+	st := NewStorage(api)
+	_, err := api.CreateBucket(&s3.CreateBucketInput{Bucket: aws.String("bucket")})
+	s.NoError(err)
 
-	api.On("PutObject", input).Return(desiredOutput, err)
-
-	s := NewStorage(api)
-
-	return s.Upload(cloud.UploadInput{
-		Bucket:        bucket,
-		Key:           key,
+	bslice := []byte("test")
+	file := bytes.NewReader(bslice)
+	err = st.Upload(cloud.UploadInput{
+		Bucket:        "bucket",
+		Key:           "key",
 		File:          file,
-		ContentLength: fileSize,
-		ContentType:   contentType,
+		ContentLength: int64(len(bslice)),
+		ContentType:   http.DetectContentType(bslice),
 	})
+	s.NoError(err)
 }
 
-func runGetURLTest(bucket, filepath string, req *request.Request) (string, error) {
-	api := &s3api{
-		Mock: new(mock.Mock),
-	}
+func (s *s3StorageTestSuite) TestUpload_BucketDoesntExist() {
+	api := s3.New(s.s3.Session)
+	st := NewStorage(api)
 
-	expiresIn := time.Second
-
-	input := &s3.GetObjectInput{
-		Bucket: &bucket,
-		Key:    &filepath,
-	}
-
-	api.On("GetObjectRequest", input).Return(req)
-
-	s := NewStorage(api)
-
-	return s.GetURL(bucket, filepath, expiresIn)
+	bslice := []byte("test")
+	file := bytes.NewReader(bslice)
+	err := st.Upload(cloud.UploadInput{
+		Bucket:        "bucket",
+		Key:           "key",
+		File:          file,
+		ContentLength: int64(len(bslice)),
+		ContentType:   http.DetectContentType(bslice),
+	})
+	s.Error(err)
 }
 
-type s3api struct {
-	*mock.Mock
-	s3iface.S3API
+func (s *s3StorageTestSuite) TestUpload_MissingBucketName() {
+	api := s3.New(s.s3.Session)
+	st := NewStorage(api)
+
+	_, err := api.CreateBucket(&s3.CreateBucketInput{Bucket: aws.String("bucket")})
+	s.NoError(err)
+
+	bslice := []byte("test")
+	file := bytes.NewReader(bslice)
+	err = st.Upload(cloud.UploadInput{
+		Bucket:        "",
+		Key:           "key",
+		File:          file,
+		ContentLength: int64(len(bslice)),
+		ContentType:   http.DetectContentType(bslice),
+	})
+	s.Error(err)
 }
 
-func (s *s3api) PutObject(input *s3.PutObjectInput) (*s3.PutObjectOutput, error) {
-	args := s.Called(input)
-	output := args.Get(0).(*s3.PutObjectOutput)
-	err := args.Error(1)
-	return output, err
+func (s *s3StorageTestSuite) TestUpload_MissingKey() {
+	api := s3.New(s.s3.Session)
+	st := NewStorage(api)
+
+	_, err := api.CreateBucket(&s3.CreateBucketInput{Bucket: aws.String("bucket")})
+	s.NoError(err)
+
+	bslice := []byte("test")
+	file := bytes.NewReader(bslice)
+	err = st.Upload(cloud.UploadInput{
+		Bucket:        "bucket",
+		Key:           "",
+		File:          file,
+		ContentLength: int64(len(bslice)),
+		ContentType:   http.DetectContentType(bslice),
+	})
+	s.Error(err)
 }
 
-func (s *s3api) GetObjectRequest(input *s3.GetObjectInput) (*request.Request, *s3.GetObjectOutput) {
-	args := s.Called(input)
-	req := args.Get(0).(*request.Request)
-	return req, nil
+func (s *s3StorageTestSuite) TestUpload_MissingFile() {
+	api := s3.New(s.s3.Session)
+	st := NewStorage(api)
+
+	_, err := api.CreateBucket(&s3.CreateBucketInput{Bucket: aws.String("bucket")})
+	s.NoError(err)
+
+	bslice := []byte("test")
+	err = st.Upload(cloud.UploadInput{
+		Bucket:        "bucket",
+		Key:           "key",
+		File:          nil,
+		ContentLength: int64(len(bslice)),
+		ContentType:   http.DetectContentType(bslice),
+	})
+	s.Error(err)
+	s.Equal(cloud.ErrMissingFile, err)
+}
+
+func (s *s3StorageTestSuite) TestUpload_FileLengthMismatch() {
+	api := s3.New(s.s3.Session)
+	st := NewStorage(api)
+
+	_, err := api.CreateBucket(&s3.CreateBucketInput{Bucket: aws.String("bucket")})
+	s.NoError(err)
+
+	bslice := []byte("test")
+	file := bytes.NewReader(bslice)
+	err = st.Upload(cloud.UploadInput{
+		Bucket:        "bucket",
+		Key:           "key",
+		File:          file,
+		ContentLength: int64(len(bslice) + 123),
+		ContentType:   http.DetectContentType(bslice),
+	})
+	s.Error(err)
+}
+
+func (s *s3StorageTestSuite) TestUpload_BadContentType() {
+	api := s3.New(s.s3.Session)
+	st := NewStorage(api)
+
+	_, err := api.CreateBucket(&s3.CreateBucketInput{Bucket: aws.String("bucket")})
+	s.NoError(err)
+
+	bslice := []byte("test")
+	file := bytes.NewReader(bslice)
+	err = st.Upload(cloud.UploadInput{
+		Bucket:        "bucket",
+		Key:           "key",
+		File:          file,
+		ContentLength: int64(len(bslice)),
+		ContentType:   "test",
+	})
+	s.Error(err)
+	s.Equal(cloud.ErrBadContentType, err)
+}
+
+func (s *s3StorageTestSuite) TestGetURL() {
+	api := s3.New(s.s3.Session)
+	st := NewStorage(api)
+
+	_, err := api.CreateBucket(&s3.CreateBucketInput{Bucket: aws.String("bucket")})
+	s.NoError(err)
+
+	bslice := []byte("test")
+	file := bytes.NewReader(bslice)
+	err = st.Upload(cloud.UploadInput{
+		Bucket:        "bucket",
+		Key:           "key",
+		File:          file,
+		ContentLength: int64(len(bslice)),
+		ContentType:   http.DetectContentType(bslice),
+	})
+	s.NoError(err)
+
+	u, err := st.GetURL("bucket", "key", 5*time.Minute)
+	var expectedType string
+	s.NoError(err)
+	s.IsType(expectedType, u)
+
+	_, err = url.Parse(u)
+	s.NoError(err)
 }
