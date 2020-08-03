@@ -1,8 +1,24 @@
 package ec2
 
 import (
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/awserr"
+	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/aws/aws-sdk-go/service/ec2/ec2iface"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/cloud"
+	"regexp"
+	"time"
+)
+
+const (
+	// ErrCodeDryRunOperation is request when a request was a successful dry run that attempted to validate an
+	// operation.
+	ErrCodeDryRunOperation = "DryRunOperation"
+	// ErrCodeRequestLimitExceeded is returned when too many requests sent to AWS in a short period of time.
+	ErrCodeRequestLimitExceeded = "RequestLimitExceeded"
+	// ErrCodeInsufficientInstanceCapacity is returned when not enough instances are available to fulfill the
+	// request.
+	ErrCodeInsufficientInstanceCapacity = "InsufficientInstanceCapacity"
 )
 
 // machines is a cloud.Machines implementation.
@@ -10,18 +26,143 @@ type machines struct {
 	API ec2iface.EC2API
 }
 
-// Create creates EC2 machines.
-func (e machines) Create(input cloud.CreateMachinesInput) error {
-	panic("implement me")
+// isValidKeyName checks that the given keyName is valid.
+func (m machines) isValidKeyName(keyName string) bool {
+	return len(keyName) != 0 && keyName != ""
+}
+
+// isValidMachineCount checks that the given min and max values are valid machine count values.
+func (m machines) isValidMachineCount(min, max int64) bool {
+	return min != 0 && max != 0 && min <= max
+}
+
+// isValidSubnetID checks that the given subnet is a valid AWS subnet.
+func (m machines) isValidSubnetID(subnet []byte) bool {
+	matched, err := regexp.Match("subnet-(\\w+)", subnet)
+	if err != nil {
+		return false
+	}
+	return matched
+}
+
+// newRunInstancesInput initializes the configuration to run EC2 instances with the given input.
+func (m machines) newRunInstancesInput(createMachines cloud.CreateMachinesInput) *ec2.RunInstancesInput {
+	var tagSpec []*ec2.TagSpecification
+	for resource, ts := range createMachines.Tags {
+		var tags []*ec2.Tag
+		for key, value := range ts {
+			tags = append(tags, &ec2.Tag{
+				Key:   aws.String(key),
+				Value: aws.String(value),
+			})
+		}
+		tagSpec = append(tagSpec, &ec2.TagSpecification{
+			ResourceType: aws.String(resource),
+			Tags:         tags,
+		})
+	}
+	return &ec2.RunInstancesInput{
+		DryRun: aws.Bool(createMachines.DryRun),
+		IamInstanceProfile: &ec2.IamInstanceProfileSpecification{
+			Arn: aws.String(createMachines.ResourceName),
+		},
+		KeyName:          aws.String(createMachines.KeyName),
+		MaxCount:         aws.Int64(createMachines.MaxCount),
+		MinCount:         aws.Int64(createMachines.MinCount),
+		SecurityGroupIds: aws.StringSlice(createMachines.FirewallRules),
+		SubnetId:         aws.String(createMachines.SubnetID),
+		Placement: &ec2.Placement{
+			AvailabilityZone: aws.String(createMachines.Zone),
+		},
+		TagSpecifications: tagSpec,
+		UserData:          aws.String(createMachines.InitScript),
+	}
+}
+
+// createInstanceDryRun runs a new EC2 instance using dry run mode.
+// It will return an cloud.ErrDryRunFailed if the EC2 transaction
+// returns a different error code than ErrCodeDryRunOperation.
+func (m machines) createInstanceDryRun(input *ec2.RunInstancesInput) error {
+	if input.DryRun != nil && !(*input.DryRun) {
+		input.SetDryRun(true)
+	}
+	_, err := m.API.RunInstances(input)
+	awsErr, ok := err.(awserr.Error)
+	if !ok || awsErr.Code() != ErrCodeDryRunOperation {
+		return cloud.ErrDryRunFailed
+	}
+	return nil
+}
+
+func (m machines) sleepNSecondsBeforeMaxRetries(n, max int) {
+	if n != max {
+		time.Sleep(time.Second * time.Duration(n))
+	}
+}
+
+func (m machines) runInstance(input *ec2.RunInstancesInput) (*ec2.Reservation, error) {
+	if input.DryRun != nil && (*input.DryRun) {
+		input.SetDryRun(false)
+	}
+	return nil, nil
+}
+
+// create creates a single EC2 instance.
+func (m machines) create(input cloud.CreateMachinesInput) (*cloud.CreateMachinesOutput, error) {
+	if !m.isValidKeyName(input.KeyName) {
+		return nil, cloud.ErrMissingKeyName
+	}
+	if !m.isValidMachineCount(input.MinCount, input.MaxCount) {
+		return nil, cloud.ErrInvalidMachinesCount
+	}
+	if !m.isValidSubnetID([]byte(input.SubnetID)) {
+		return nil, cloud.ErrInvalidSubnetID
+	}
+
+	runInstanceInput := m.newRunInstancesInput(input)
+
+	var output cloud.CreateMachinesOutput
+	for try := 1; try <= input.Retries; try++ {
+		if err := m.createInstanceDryRun(runInstanceInput); err != nil {
+			m.sleepNSecondsBeforeMaxRetries(try, input.Retries)
+			continue
+		}
+
+		reservation, err := m.runInstance(runInstanceInput)
+		if err != nil {
+
+		}
+
+		for _, i := range reservation.Instances {
+			output.Instances = append(output.Instances, *i.InstanceId)
+		}
+	}
+
+	return &output, nil
+}
+
+// Create creates multiples EC2 instances. It will return the created machines.
+// This operation doesn't recover from an error.
+// You need to destroy the required machines when an error occurs.
+func (m machines) Create(inputs []cloud.CreateMachinesInput) (created []cloud.CreateMachinesOutput, err error) {
+	for _, input := range inputs {
+		var c *cloud.CreateMachinesOutput
+		c, err = m.create(input)
+		if err != nil {
+			return
+		}
+		created = append(created, *c)
+	}
+	return created, nil
 }
 
 // Terminate terminates EC2 machines.
-func (e machines) Terminate(input cloud.TerminateMachinesInput) error {
+func (m machines) Terminate(input cloud.TerminateMachinesInput) error {
 	panic("implement me")
 }
 
 // Count counts EC2 machines.
-func (e machines) Count(input cloud.CountMachinesInput) int {
+func (m machines) Count(input cloud.CountMachinesInput) int {
 	panic("implement me")
 }
 

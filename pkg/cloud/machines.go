@@ -1,15 +1,51 @@
 package cloud
 
+import "errors"
+
+var (
+	// ErrMissingKeyName is returned when the key name is missing.
+	ErrMissingKeyName = errors.New("missing key name")
+	// ErrInvalidMachinesCount is returned when the Min and Max count validation fails.
+	ErrInvalidMachinesCount = errors.New("invalid machines count")
+	// ErrInvalidSubnetID is returned when the subnet ID provided is invalid.
+	ErrInvalidSubnetID = errors.New("invalid subnet")
+	// ErrDryRunFailed is returned when a dry run operation fails.
+	ErrDryRunFailed = errors.New("dry run failed")
+	// ErrInsufficientMachines is returned when creating machines fails because there aren't enough machines.
+	ErrInsufficientMachines = errors.New("insufficient machines")
+)
+
 // CreateMachinesInput is the input for the Machines.Create operation.
 // It will be used to create a certain number of machines.
 type CreateMachinesInput struct {
+	ResourceName  string
 	DryRun        bool
 	KeyName       string
 	MinCount      int64
 	MaxCount      int64
 	FirewallRules []string
 	SubnetID      string
-	Tags          map[string]string
+	Zone          string
+	Tags          map[string]map[string]string
+	InitScript    string
+	Retries       int
+}
+
+// CreateMachinesOutput is the output for the Machines.Create operation.
+// It will be used to display the machines that were created.
+type CreateMachinesOutput struct {
+	Instances   []string
+	length      int
+	isLengthSet bool
+}
+
+// Length returns the amount of instances that were initialized.
+func (c *CreateMachinesOutput) Length() int {
+	if !c.isLengthSet {
+		c.length = len(c.Instances)
+		c.isLengthSet = true
+	}
+	return c.length
 }
 
 // TerminateMachinesInput is the input for the Machines.Terminate operation.
@@ -28,7 +64,7 @@ type CountMachinesInput struct {
 
 // Machines groups a set of methods to Create, Terminate and Count cloud machines.
 type Machines interface {
-	Create(input CreateMachinesInput) error
+	Create(input []CreateMachinesInput) ([]CreateMachinesOutput, error)
 	Terminate(input TerminateMachinesInput) error
 	Count(input CountMachinesInput) int
 }
