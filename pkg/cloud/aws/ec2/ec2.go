@@ -55,20 +55,7 @@ func (m machines) isValidSubnetID(subnet string) bool {
 
 // newRunInstancesInput initializes the configuration to run EC2 instances with the given input.
 func (m machines) newRunInstancesInput(createMachines cloud.CreateMachinesInput) *ec2.RunInstancesInput {
-	var tagSpec []*ec2.TagSpecification
-	for resource, ts := range createMachines.Tags {
-		var tags []*ec2.Tag
-		for key, value := range ts {
-			tags = append(tags, &ec2.Tag{
-				Key:   aws.String(key),
-				Value: aws.String(value),
-			})
-		}
-		tagSpec = append(tagSpec, &ec2.TagSpecification{
-			ResourceType: aws.String(resource),
-			Tags:         tags,
-		})
-	}
+	tagSpec := m.createTags(createMachines.Tags)
 	return &ec2.RunInstancesInput{
 		DryRun: aws.Bool(createMachines.DryRun),
 		IamInstanceProfile: &ec2.IamInstanceProfileSpecification{
@@ -85,6 +72,25 @@ func (m machines) newRunInstancesInput(createMachines cloud.CreateMachinesInput)
 		TagSpecifications: tagSpec,
 		UserData:          aws.String(createMachines.InitScript),
 	}
+}
+
+// createTags creates an array of ec2.TagSpecification from the given tag input.
+func (m machines) createTags(input map[string]map[string]string) []*ec2.TagSpecification {
+	var tagSpec []*ec2.TagSpecification
+	for resource, ts := range input {
+		var tags []*ec2.Tag
+		for key, value := range ts {
+			tags = append(tags, &ec2.Tag{
+				Key:   aws.String(key),
+				Value: aws.String(value),
+			})
+		}
+		tagSpec = append(tagSpec, &ec2.TagSpecification{
+			ResourceType: aws.String(resource),
+			Tags:         tags,
+		})
+	}
+	return tagSpec
 }
 
 // createInstanceDryRun runs a new EC2 instance using dry run mode.
