@@ -167,6 +167,36 @@ func (s *ec2MachinesTestSuite) TestCreate_InvalidSubnet() {
 	s.Equal(cloud.ErrInvalidSubnetID, err)
 }
 
+func (s *ec2MachinesTestSuite) TestCreate_ValidSubnet() {
+	input := []cloud.CreateMachinesInput{
+		{
+			DryRun:        false,
+			KeyName:       "key-name",
+			MinCount:      1,
+			MaxCount:      99,
+			FirewallRules: nil,
+			SubnetID:      "subnet-0dae7657",
+			Tags:          nil,
+		},
+	}
+	_, err := s.machines.Create(input)
+	s.NoError(err)
+
+	input = []cloud.CreateMachinesInput{
+		{
+			DryRun:        false,
+			KeyName:       "key-name",
+			MinCount:      1,
+			MaxCount:      99,
+			FirewallRules: nil,
+			SubnetID:      "subnet-06fe9fdb790aa78e7",
+			Tags:          nil,
+		},
+	}
+	_, err = s.machines.Create(input)
+	s.NoError(err)
+}
+
 type mockEC2 struct {
 	ec2iface.EC2API
 	*mock.Mock
