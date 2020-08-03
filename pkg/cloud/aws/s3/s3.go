@@ -5,6 +5,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3iface"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/cloud"
+	"net/http"
 	"time"
 )
 
@@ -15,7 +16,21 @@ type storage struct {
 
 // Upload uploads a file to the cloud storage.
 func (s storage) Upload(input cloud.UploadInput) error {
-	_, err := s.API.PutObject(&s3.PutObjectInput{
+	if input.File == nil {
+		return cloud.ErrMissingFile
+	}
+
+	var bslice []byte
+	_, err := input.File.Read(bslice)
+	if err != nil {
+		return err
+	}
+
+	if http.DetectContentType(bslice) != input.ContentType {
+		return cloud.ErrBadContentType
+	}
+
+	_, err = s.API.PutObject(&s3.PutObjectInput{
 		Bucket:               &input.Bucket,
 		Key:                  &input.Key,
 		ACL:                  aws.String("private"),

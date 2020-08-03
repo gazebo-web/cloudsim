@@ -27,6 +27,7 @@ type CreateMachinesInput struct {
 	ResourceName  string
 	DryRun        bool
 	KeyName       string
+	Type          string
 	MinCount      int64
 	MaxCount      int64
 	FirewallRules []string
@@ -68,9 +69,14 @@ type CountMachinesInput struct {
 	Tags       map[string][]string
 }
 
-// Machines groups a set of methods to Create, Terminate and Count cloud machines.
+// Machines requests physical instances from a cloud provider on which to deploy applications
 type Machines interface {
+	// Create creates a set of cloud machines with a certain configuration.
 	Create(input []CreateMachinesInput) ([]CreateMachinesOutput, error)
+	// Terminate terminates a set of cloud machines that match a set of names.
+	// The names are automatically created by the cloud provider.
 	Terminate(input TerminateMachinesInput) error
+	// Count returns the number of cloud machines that match a set of selectors.
+	// The selectors should have been defined when creating the machines.
 	Count(input CountMachinesInput) int
 }

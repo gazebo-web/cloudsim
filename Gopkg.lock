@@ -256,6 +256,17 @@
   revision = "c2b33e84"
 
 [[projects]]
+  branch = "master"
+  name = "github.com/johannesboyne/gofakes3"
+  packages = [
+    ".",
+    "backend/s3mem",
+    "internal/goskipiter",
+    "internal/s3io"
+  ]
+  revision = "6b2b4cb092ccbb4c16d6e71f9cf0e7f86db69efa"
+
+[[projects]]
   name = "github.com/joho/godotenv"
   packages = ["."]
   revision = "23d116af351c84513e1946b527c88823e476be13"
@@ -349,6 +360,12 @@
   version = "v1.0.2"
 
 [[projects]]
+  branch = "master"
+  name = "github.com/ryszard/goskiplist"
+  packages = ["skiplist"]
+  revision = "2dfbae5fcf46374f166f8969cb07e167f1be6273"
+
+[[projects]]
   name = "github.com/satori/go.uuid"
   packages = ["."]
   revision = "063359185d32c6b045fa171ad7033ea545864fa1"
@@ -358,6 +375,12 @@
   packages = ["diffmatchpatch"]
   revision = "1744e2970ca51c86172c8190fadad617561ed6e7"
   version = "v1.0.0"
+
+[[projects]]
+  branch = "master"
+  name = "github.com/shabbyrobe/gocovmerge"
+  packages = ["."]
+  revision = "3e036491d500ffc86c35e2cbe2e9c92f84183f7c"
 
 [[projects]]
   name = "github.com/spf13/pflag"
@@ -502,6 +525,12 @@
   name = "golang.org/x/time"
   packages = ["rate"]
   revision = "85acf8d2951cb2a3bde7632f9ff273ef0379bcbd"
+
+[[projects]]
+  branch = "master"
+  name = "golang.org/x/tools"
+  packages = ["cover"]
+  revision = "b5fad4ed8dd65a3d7aae567b1f4e751b8ca72837"
 
 [[projects]]
   name = "google.golang.org/appengine"
@@ -773,6 +802,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "dc1bd92041e09ce8c51c8099b323975dcfca9d2c6159d5f2a347674de813bbdc"
+  inputs-digest = "7508610f77071cba1f76fa002d5bcf47b8f475ef6e55e47e47b715df9db45953"
   solver-name = "gps-cdcl"
   solver-version = 1
