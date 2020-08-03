@@ -11,8 +11,14 @@ var (
 	ErrInvalidSubnetID = errors.New("invalid subnet")
 	// ErrDryRunFailed is returned when a dry run operation fails.
 	ErrDryRunFailed = errors.New("dry run failed")
+	// ErrUnknown is returned if an invalid errors is returned from AWS.
+	ErrUnknown = errors.New("unknown error")
 	// ErrInsufficientMachines is returned when creating machines fails because there aren't enough machines.
 	ErrInsufficientMachines = errors.New("insufficient machines")
+	// ErrRequestsLimitExceeded is returned if the request limit has been reached.
+	ErrRequestsLimitExceeded = errors.New("requests limit exceeded")
+	// ErrMachineCreationFailed is returned when creating machines fails.
+	ErrMachineCreationFailed = errors.New("machine creation failed")
 )
 
 // CreateMachinesInput is the input for the Machines.Create operation.

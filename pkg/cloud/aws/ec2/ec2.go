@@ -94,17 +94,38 @@ func (m machines) createInstanceDryRun(input *ec2.RunInstancesInput) error {
 	return nil
 }
 
+// sleepNSecondsBeforeMaxRetries pauses the current thread for n seconds.
 func (m machines) sleepNSecondsBeforeMaxRetries(n, max int) {
-	if n != max {
+	if n < max {
 		time.Sleep(time.Second * time.Duration(n))
 	}
 }
 
+// parseRunInstanceError parses the given awserr.Error and returns an error from the list of generic errors.
+func (m machines) parseRunInstanceError(err error) error {
+	awsErr, ok := err.(awserr.Error)
+	if !ok {
+		return cloud.ErrUnknown
+	}
+	switch awsErr.Code() {
+	case ErrCodeInsufficientInstanceCapacity:
+		return cloud.ErrInsufficientMachines
+	case ErrCodeRequestLimitExceeded:
+		return cloud.ErrRequestsLimitExceeded
+	}
+	return cloud.ErrUnknown
+}
+
+// runInstance is a wrapper for the EC2 RunInstances method.
 func (m machines) runInstance(input *ec2.RunInstancesInput) (*ec2.Reservation, error) {
 	if input.DryRun != nil && (*input.DryRun) {
 		input.SetDryRun(false)
 	}
-	return nil, nil
+	r, err := m.API.RunInstances(input)
+	if err != nil {
+		return nil, m.parseRunInstanceError(err)
+	}
+	return r, nil
 }
 
 // create creates a single EC2 instance.
@@ -130,7 +151,7 @@ func (m machines) create(input cloud.CreateMachinesInput) (*cloud.CreateMachines
 
 		reservation, err := m.runInstance(runInstanceInput)
 		if err != nil {
-
+			return &output, err
 		}
 
 		for _, i := range reservation.Instances {
