@@ -19,6 +19,9 @@ const (
 	// ErrCodeInsufficientInstanceCapacity is returned when not enough instances are available to fulfill the
 	// request.
 	ErrCodeInsufficientInstanceCapacity = "InsufficientInstanceCapacity"
+
+	shortSubnetLength = 15
+	longSubnetLength  = 24
 )
 
 // machines is a cloud.Machines implementation.
@@ -37,8 +40,13 @@ func (m machines) isValidMachineCount(min, max int64) bool {
 }
 
 // isValidSubnetID checks that the given subnet is a valid AWS subnet.
-func (m machines) isValidSubnetID(subnet []byte) bool {
-	matched, err := regexp.Match("subnet-(\\w+)", subnet)
+func (m machines) isValidSubnetID(subnet string) bool {
+	length := len(subnet)
+	if length != shortSubnetLength && length != longSubnetLength {
+		return false
+	}
+	input := []byte(subnet)
+	matched, err := regexp.Match("subnet-(\\w+)", input)
 	if err != nil {
 		return false
 	}
@@ -136,7 +144,7 @@ func (m machines) create(input cloud.CreateMachinesInput) (*cloud.CreateMachines
 	if !m.isValidMachineCount(input.MinCount, input.MaxCount) {
 		return nil, cloud.ErrInvalidMachinesCount
 	}
-	if !m.isValidSubnetID([]byte(input.SubnetID)) {
+	if !m.isValidSubnetID(input.SubnetID) {
 		return nil, cloud.ErrInvalidSubnetID
 	}
 

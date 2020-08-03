@@ -40,7 +40,7 @@ func (s *ec2MachinesTestSuite) TestCreate_MissingKeyName() {
 			MinCount:      1,
 			MaxCount:      10,
 			FirewallRules: nil,
-			SubnetID:      "subnet-1234",
+			SubnetID:      "subnet-06fe9fdb790aa78e7",
 			Tags:          nil,
 		},
 	}
@@ -57,7 +57,7 @@ func (s *ec2MachinesTestSuite) TestCreate_InvalidCountBothZero() {
 			MinCount:      0,
 			MaxCount:      0,
 			FirewallRules: nil,
-			SubnetID:      "subnet-1234",
+			SubnetID:      "subnet-06fe9fdb790aa78e7",
 			Tags:          nil,
 		},
 	}
@@ -74,7 +74,7 @@ func (s *ec2MachinesTestSuite) TestCreate_InvalidCountMinCountZero() {
 			MinCount:      0,
 			MaxCount:      1,
 			FirewallRules: nil,
-			SubnetID:      "subnet-1234",
+			SubnetID:      "subnet-06fe9fdb790aa78e7",
 			Tags:          nil,
 		},
 	}
@@ -91,7 +91,7 @@ func (s *ec2MachinesTestSuite) TestCreate_InvalidCountMaxCountZero() {
 			MinCount:      1,
 			MaxCount:      0,
 			FirewallRules: nil,
-			SubnetID:      "subnet-1234",
+			SubnetID:      "subnet-06fe9fdb790aa78e7",
 			Tags:          nil,
 		},
 	}
@@ -108,7 +108,7 @@ func (s *ec2MachinesTestSuite) TestCreate_MinCountGreaterThanMaxCount() {
 			MinCount:      99,
 			MaxCount:      1,
 			FirewallRules: nil,
-			SubnetID:      "subnet-1234",
+			SubnetID:      "subnet-06fe9fdb790aa78e7",
 			Tags:          nil,
 		},
 	}
@@ -125,7 +125,7 @@ func (s *ec2MachinesTestSuite) TestCreate_MinCountEqualsMaxCount() {
 			MinCount:      1,
 			MaxCount:      1,
 			FirewallRules: nil,
-			SubnetID:      "subnet-1234",
+			SubnetID:      "subnet-06fe9fdb790aa78e7",
 			Tags:          nil,
 		},
 	}
@@ -141,7 +141,7 @@ func (s *ec2MachinesTestSuite) TestCreate_NegativeCount() {
 			MinCount:      -100,
 			MaxCount:      -25,
 			FirewallRules: nil,
-			SubnetID:      "subnet-1234",
+			SubnetID:      "subnet-06fe9fdb790aa78e7",
 			Tags:          nil,
 		},
 	}
