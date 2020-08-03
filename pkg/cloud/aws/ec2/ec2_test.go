@@ -133,6 +133,23 @@ func (s *ec2MachinesTestSuite) TestCreate_MinCountEqualsMaxCount() {
 	s.NoError(err)
 }
 
+func (s *ec2MachinesTestSuite) TestCreate_NegativeCount() {
+	input := []cloud.CreateMachinesInput{
+		{
+			DryRun:        false,
+			KeyName:       "key-name",
+			MinCount:      -100,
+			MaxCount:      -25,
+			FirewallRules: nil,
+			SubnetID:      "subnet-1234",
+			Tags:          nil,
+		},
+	}
+	_, err := s.machines.Create(input)
+	s.Error(err)
+	s.Equal(cloud.ErrInvalidMachinesCount, err)
+}
+
 func (s *ec2MachinesTestSuite) TestCreate_InvalidSubnet() {
 	input := []cloud.CreateMachinesInput{
 		{
