@@ -33,7 +33,7 @@ func (m machines) isValidKeyName(keyName string) bool {
 
 // isValidMachineCount checks that the given min and max values are valid machine count values.
 func (m machines) isValidMachineCount(min, max int64) bool {
-	return min != 0 && max != 0 && min <= max
+	return min > 0 && max > 0 && min <= max
 }
 
 // isValidSubnetID checks that the given subnet is a valid AWS subnet.
