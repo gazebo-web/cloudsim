@@ -55,6 +55,14 @@ func (c *CreateMachinesOutput) Length() int {
 	return c.length
 }
 
+// ToTerminateMachinesInput converts the content of CreateMachinesOutput into TerminateMachinesInput.
+func (c *CreateMachinesOutput) ToTerminateMachinesInput(dryRun bool) *TerminateMachinesInput {
+	return &TerminateMachinesInput{
+		Names:  c.Instances,
+		DryRun: dryRun,
+	}
+}
+
 // TerminateMachinesInput is the input for the Machines.Terminate operation.
 // It will be used to terminate machines.
 type TerminateMachinesInput struct {
