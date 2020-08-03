@@ -71,8 +71,8 @@ func (s *ec2MachinesTestSuite) TestCreate_InvalidCountMinCountZero() {
 		{
 			DryRun:        false,
 			KeyName:       "key-name",
-			MinCount:      1,
-			MaxCount:      0,
+			MinCount:      0,
+			MaxCount:      1,
 			FirewallRules: nil,
 			SubnetID:      "subnet-1234",
 			Tags:          nil,
