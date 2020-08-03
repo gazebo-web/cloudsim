@@ -165,6 +165,36 @@ func (s *ec2MachinesTestSuite) TestCreate_InvalidSubnet() {
 	_, err := s.machines.Create(input)
 	s.Error(err)
 	s.Equal(cloud.ErrInvalidSubnetID, err)
+
+	input = []cloud.CreateMachinesInput{
+		{
+			DryRun:        false,
+			KeyName:       "key-name",
+			MinCount:      1,
+			MaxCount:      99,
+			FirewallRules: nil,
+			SubnetID:      "subnet-1234",
+			Tags:          nil,
+		},
+	}
+	_, err = s.machines.Create(input)
+	s.Error(err)
+	s.Equal(cloud.ErrInvalidSubnetID, err)
+
+	input = []cloud.CreateMachinesInput{
+		{
+			DryRun:        false,
+			KeyName:       "key-name",
+			MinCount:      1,
+			MaxCount:      99,
+			FirewallRules: nil,
+			SubnetID:      "subnet-1234",
+			Tags:          nil,
+		},
+	}
+	_, err = s.machines.Create(input)
+	s.Error(err)
+	s.Equal(cloud.ErrInvalidSubnetID, err)
 }
 
 func (s *ec2MachinesTestSuite) TestCreate_ValidSubnet() {
