@@ -10,8 +10,8 @@ version = "v3.0.0"
 [[projects]]
 name = "github.com/Microsoft/go-winio"
 packages = [
-    ".",
-    "pkg/guid"
+  ".",
+  "pkg/guid"
 ]
 revision = "6c72808b55902eae4c5943626030429ff20f3b63"
 version = "v0.4.14"
@@ -25,16 +25,16 @@ revision = "5493cabe49f7bfa6e2ec444a09d334d90cd4e2bd"
 [[projects]]
 name = "github.com/aws/aws-sdk-go"
 packages = [
-    "aws",
-    "aws/awserr",
-    "aws/awsutil",
-    "aws/client",
-    "aws/client/metadata",
-    "aws/corehandlers",
-    "aws/credentials",
-    "aws/credentials/ec2rolecreds",
-    "aws/credentials/endpointcreds",
-    "aws/credentials/processcreds",
+  "aws",
+  "aws/awserr",
+  "aws/awsutil",
+  "aws/client",
+  "aws/client/metadata",
+  "aws/corehandlers",
+  "aws/credentials",
+  "aws/credentials/ec2rolecreds",
+  "aws/credentials/endpointcreds",
+  "aws/credentials/processcreds",
     "aws/credentials/stscreds",
     "aws/csm",
     "aws/defaults",
@@ -105,7 +105,7 @@ packages = [
   version = "v0.3.0"
 
 [[projects]]
-  name = "github.com/davecgh/go-spew"
+name = "github.com/davecgh/go-spew"
 packages = ["spew"]
 revision = "8991bc29aa16c548c550c7ff78260e27b9ab7c73"
 version = "v1.1.1"
@@ -119,8 +119,8 @@ version = "v3.2.0"
 [[projects]]
 name = "github.com/docker/distribution"
 packages = [
-    "digestset",
-    "reference"
+  "digestset",
+  "reference"
 ]
 revision = "2461543d988979529609e8cb6fca9ca190dc48da"
 version = "v2.7.1"
@@ -128,23 +128,23 @@ version = "v2.7.1"
 [[projects]]
 name = "github.com/docker/docker"
 packages = [
-    "api",
-    "api/types",
-    "api/types/blkiodev",
-    "api/types/container",
-    "api/types/events",
-    "api/types/filters",
-    "api/types/image",
-    "api/types/mount",
-    "api/types/network",
-    "api/types/registry",
-    "api/types/strslice",
-    "api/types/swarm",
-    "api/types/swarm/runtime",
-    "api/types/time",
-    "api/types/versions",
-    "api/types/volume",
-    "client"
+  "api",
+  "api/types",
+  "api/types/blkiodev",
+  "api/types/container",
+  "api/types/events",
+  "api/types/filters",
+  "api/types/image",
+  "api/types/mount",
+  "api/types/network",
+  "api/types/registry",
+  "api/types/strslice",
+  "api/types/swarm",
+  "api/types/swarm/runtime",
+  "api/types/time",
+  "api/types/versions",
+  "api/types/volume",
+  "client"
 ]
 revision = "5acfe70329181e5b088217f0ec21b6ab50790e9b"
 version = "v17.12.0-ce-rc4"
@@ -152,9 +152,9 @@ version = "v17.12.0-ce-rc4"
 [[projects]]
 name = "github.com/docker/go-connections"
 packages = [
-    "nat",
-    "sockets",
-    "tlsconfig"
+  "nat",
+  "sockets",
+  "tlsconfig"
 ]
 revision = "7395e3f8aa162843a74ed6d48e79627d9792ac55"
 version = "v0.4.0"
@@ -169,8 +169,8 @@ version = "v0.4.0"
 branch = "master"
 name = "github.com/docker/spdystream"
 packages = [
-    ".",
-    "spdy"
+  ".",
+  "spdy"
 ]
 revision = "6480d4af844c189cf5dd913db24ddd339d3a4f85"
 
@@ -377,7 +377,7 @@ revision = "6480d4af844c189cf5dd913db24ddd339d3a4f85"
   version = "v1.1.0"
 
 [[projects]]
-  name = "github.com/modern-go/concurrent"
+name = "github.com/modern-go/concurrent"
 packages = ["."]
 revision = "bacd9c7ef1dd9b15be4a9909b8ac7a4e313eec94"
 version = "1.0.3"
@@ -397,8 +397,8 @@ version = "v1.0.0"
 [[projects]]
 name = "github.com/opencontainers/image-spec"
 packages = [
-    "specs-go",
-    "specs-go/v1"
+  "specs-go",
+  "specs-go/v1"
 ]
 revision = "d60099175f88c47cd379c4738d158884749ed235"
 version = "v1.0.1"
@@ -412,7 +412,7 @@ revision = "2ba69cd1384d2316956962735418a73007f4b881"
 name = "github.com/pelletier/go-buffruneio"
 packages = ["."]
 revision = "c37440a7cf42ac63b919c752ca73a85067e05992"
-  version = "v0.2.0"
+version = "v0.2.0"
 
 [[projects]]
   name = "github.com/pkg/errors"
@@ -555,14 +555,14 @@ revision = "c37440a7cf42ac63b919c752ca73a85067e05992"
   branch = "master"
   name = "golang.org/x/net"
   packages = [
-      "context",
-      "context/ctxhttp",
-      "http/httpguts",
-      "http2",
-      "http2/hpack",
-      "idna",
-      "internal/socks",
-      "proxy"
+    "context",
+    "context/ctxhttp",
+    "http/httpguts",
+    "http2",
+    "http2/hpack",
+    "idna",
+    "internal/socks",
+    "proxy"
   ]
   revision = "d26f9f9a57f3fab6a695bec0d84433c2c50f8bbf"
 
@@ -876,8 +876,8 @@ revision = "c37440a7cf42ac63b919c752ca73a85067e05992"
   version = "v1.10.0"
 
 [solve-meta]
-  analyzer-name = "dep"
+analyzer-name = "dep"
 analyzer-version = 1
-inputs-digest = "a9532101110d6de391ffdc4207d66e687d564e5076f99821b43c3350551c5d67"
+inputs-digest = "55d8b89dc2291e807695999ebbe16e888c94ecc113777be037ec1d34f3028053"
 solver-name = "gps-cdcl"
-  solver-version = 1
+solver-version = 1
