@@ -9,30 +9,30 @@ import (
 	"testing"
 )
 
-func TestMachines(t *testing.T) {
-	suite.Run(t, new(ec2MachinesTestSuite))
+func TestCreateMachines(t *testing.T) {
+	suite.Run(t, new(ec2CreateMachinesTestSuite))
 }
 
-type ec2MachinesTestSuite struct {
+type ec2CreateMachinesTestSuite struct {
 	suite.Suite
 	ec2API   *mockEC2
 	machines cloud.Machines
 }
 
-func (s *ec2MachinesTestSuite) SetupTest() {
+func (s *ec2CreateMachinesTestSuite) SetupTest() {
 	s.ec2API = &mockEC2{
 		Mock: new(mock.Mock),
 	}
 	s.machines = NewMachines(s.ec2API)
 }
 
-func (s *ec2MachinesTestSuite) TestNewMachines() {
+func (s *ec2CreateMachinesTestSuite) TestNewMachines() {
 	e, ok := s.machines.(*machines)
 	s.True(ok)
 	s.NotNil(e.API)
 }
 
-func (s *ec2MachinesTestSuite) TestCreate_MissingKeyName() {
+func (s *ec2CreateMachinesTestSuite) TestCreate_MissingKeyName() {
 	input := []cloud.CreateMachinesInput{
 		{
 			DryRun:        false,
@@ -49,7 +49,7 @@ func (s *ec2MachinesTestSuite) TestCreate_MissingKeyName() {
 	s.Equal(cloud.ErrMissingKeyName, err)
 }
 
-func (s *ec2MachinesTestSuite) TestCreate_InvalidCountBothZero() {
+func (s *ec2CreateMachinesTestSuite) TestCreate_InvalidCountBothZero() {
 	input := []cloud.CreateMachinesInput{
 		{
 			DryRun:        false,
@@ -66,7 +66,7 @@ func (s *ec2MachinesTestSuite) TestCreate_InvalidCountBothZero() {
 	s.Equal(cloud.ErrInvalidMachinesCount, err)
 }
 
-func (s *ec2MachinesTestSuite) TestCreate_InvalidCountMinCountZero() {
+func (s *ec2CreateMachinesTestSuite) TestCreate_InvalidCountMinCountZero() {
 	input := []cloud.CreateMachinesInput{
 		{
 			DryRun:        false,
@@ -83,7 +83,7 @@ func (s *ec2MachinesTestSuite) TestCreate_InvalidCountMinCountZero() {
 	s.Equal(cloud.ErrInvalidMachinesCount, err)
 }
 
-func (s *ec2MachinesTestSuite) TestCreate_InvalidCountMaxCountZero() {
+func (s *ec2CreateMachinesTestSuite) TestCreate_InvalidCountMaxCountZero() {
 	input := []cloud.CreateMachinesInput{
 		{
 			DryRun:        false,
@@ -100,7 +100,7 @@ func (s *ec2MachinesTestSuite) TestCreate_InvalidCountMaxCountZero() {
 	s.Equal(cloud.ErrInvalidMachinesCount, err)
 }
 
-func (s *ec2MachinesTestSuite) TestCreate_MinCountGreaterThanMaxCount() {
+func (s *ec2CreateMachinesTestSuite) TestCreate_MinCountGreaterThanMaxCount() {
 	input := []cloud.CreateMachinesInput{
 		{
 			DryRun:        false,
@@ -117,7 +117,7 @@ func (s *ec2MachinesTestSuite) TestCreate_MinCountGreaterThanMaxCount() {
 	s.Equal(cloud.ErrInvalidMachinesCount, err)
 }
 
-func (s *ec2MachinesTestSuite) TestCreate_MinCountEqualsMaxCount() {
+func (s *ec2CreateMachinesTestSuite) TestCreate_MinCountEqualsMaxCount() {
 	input := []cloud.CreateMachinesInput{
 		{
 			DryRun:        false,
@@ -133,7 +133,7 @@ func (s *ec2MachinesTestSuite) TestCreate_MinCountEqualsMaxCount() {
 	s.NoError(err)
 }
 
-func (s *ec2MachinesTestSuite) TestCreate_NegativeCount() {
+func (s *ec2CreateMachinesTestSuite) TestCreate_NegativeCount() {
 	input := []cloud.CreateMachinesInput{
 		{
 			DryRun:        false,
@@ -150,7 +150,7 @@ func (s *ec2MachinesTestSuite) TestCreate_NegativeCount() {
 	s.Equal(cloud.ErrInvalidMachinesCount, err)
 }
 
-func (s *ec2MachinesTestSuite) TestCreate_InvalidSubnet() {
+func (s *ec2CreateMachinesTestSuite) TestCreate_InvalidSubnet() {
 	input := []cloud.CreateMachinesInput{
 		{
 			DryRun:        false,
@@ -197,7 +197,7 @@ func (s *ec2MachinesTestSuite) TestCreate_InvalidSubnet() {
 	s.Equal(cloud.ErrInvalidSubnetID, err)
 }
 
-func (s *ec2MachinesTestSuite) TestCreate_ValidSubnet() {
+func (s *ec2CreateMachinesTestSuite) TestCreate_ValidSubnet() {
 	input := []cloud.CreateMachinesInput{
 		{
 			DryRun:        false,
