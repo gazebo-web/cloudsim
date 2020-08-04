@@ -13,17 +13,26 @@ import (
 
 // Docker represents a docker client.
 type Docker interface {
-	Pull(ctx context.Context, repository, image string) error
-	Create(ctx context.Context, name, image string, hostPortBinding nat.PortBinding, protocol string, port string) (containers.Container, error)
+	Pull(ctx context.Context, image string) error
+	Create(ctx context.Context, input CreateContainerInput) (containers.Container, error)
+}
+
+// CreateContainerInput is used to group a set of required fields when creating a container.
+type CreateContainerInput struct {
+	Name         string
+	Image        string
+	Protocol     *string
+	Port         *string
+	PortBindings []nat.PortBinding
+	EnvVars      containers.EnvVars
 }
 
 // docker is a Docker implementation.
 type docker struct {
-	CLI          *client.Client
-	repositories map[string]string
+	CLI *client.Client
 }
 
-func (d docker) Pull(ctx context.Context, repository, image string) error {
+func (d docker) Pull(ctx context.Context, image string) error {
 	r, err := d.CLI.ImagePull(ctx, image, types.ImagePullOptions{})
 	if err != nil {
 		return err
@@ -33,41 +42,43 @@ func (d docker) Pull(ctx context.Context, repository, image string) error {
 	return nil
 }
 
-// Create creates a docker container.
-func (d docker) Create(ctx context.Context, name, image string, hostPortBinding nat.PortBinding, protocol string, port string) (containers.Container, error) {
-	containerPort, err := nat.NewPort(protocol, port)
-
-	portBindings := nat.PortMap{
-		containerPort: []nat.PortBinding{hostPortBinding},
+// Create creates a new docker container.
+func (d docker) Create(ctx context.Context, input CreateContainerInput) (containers.Container, error) {
+	var portBindings nat.PortMap
+	if input.Protocol != nil && input.Port != nil {
+		containerPort, err := nat.NewPort(*input.Protocol, *input.Port)
+		if err != nil {
+			return nil, err
+		}
+		portBindings[containerPort] = input.PortBindings
 	}
 
 	body, err := d.CLI.ContainerCreate(
 		ctx,
 		&container.Config{
-			Image: image,
+			Image: input.Image,
+			Env:   input.EnvVars.ToSlice(),
 		},
 		&container.HostConfig{
 			PortBindings: portBindings,
 		},
 		nil,
-		name,
+		input.Name,
 	)
 	if err != nil {
 		return nil, err
 	}
 
-	return NewContainer(body.ID, name, image, portBindings, d.CLI), nil
+	return NewContainer(body.ID, input.Name, input.Image, portBindings, input.EnvVars, d.CLI), nil
 }
 
-func NewEngine() (Docker, error) {
+// NewClient initializes a new Docker client.
+func NewClient() (Docker, error) {
 	cli, err := client.NewEnvClient()
 	if err != nil {
 		return nil, err
 	}
 	return &docker{
-		repositories: map[string]string{
-			"dockerhub": "docker.io/library/",
-		},
 		CLI: cli,
 	}, nil
 }
