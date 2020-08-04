@@ -2,20 +2,29 @@
 
 
 [[projects]]
-  name = "github.com/Knetic/govaluate"
-  packages = ["."]
-  revision = "d216395917cc49052c7c7094cf57f09657ca08a8"
-  version = "v3.0.0"
+name = "github.com/Knetic/govaluate"
+packages = ["."]
+revision = "d216395917cc49052c7c7094cf57f09657ca08a8"
+version = "v3.0.0"
 
 [[projects]]
-  branch = "master"
-  name = "github.com/auth0/go-jwt-middleware"
-  packages = ["."]
-  revision = "5493cabe49f7bfa6e2ec444a09d334d90cd4e2bd"
+name = "github.com/Microsoft/go-winio"
+packages = [
+    ".",
+    "pkg/guid"
+]
+revision = "6c72808b55902eae4c5943626030429ff20f3b63"
+version = "v0.4.14"
 
 [[projects]]
-  name = "github.com/aws/aws-sdk-go"
-  packages = [
+branch = "master"
+name = "github.com/auth0/go-jwt-middleware"
+packages = ["."]
+revision = "5493cabe49f7bfa6e2ec444a09d334d90cd4e2bd"
+
+[[projects]]
+name = "github.com/aws/aws-sdk-go"
+packages = [
     "aws",
     "aws/awserr",
     "aws/awsutil",
@@ -97,24 +106,73 @@
 
 [[projects]]
   name = "github.com/davecgh/go-spew"
-  packages = ["spew"]
-  revision = "8991bc29aa16c548c550c7ff78260e27b9ab7c73"
-  version = "v1.1.1"
+packages = ["spew"]
+revision = "8991bc29aa16c548c550c7ff78260e27b9ab7c73"
+version = "v1.1.1"
 
 [[projects]]
-  name = "github.com/dgrijalva/jwt-go"
-  packages = ["."]
-  revision = "06ea1031745cb8b3dab3f6a236daf2b0aa468b7e"
-  version = "v3.2.0"
+name = "github.com/dgrijalva/jwt-go"
+packages = ["."]
+revision = "06ea1031745cb8b3dab3f6a236daf2b0aa468b7e"
+version = "v3.2.0"
 
 [[projects]]
-  branch = "master"
-  name = "github.com/docker/spdystream"
-  packages = [
+name = "github.com/docker/distribution"
+packages = [
+    "digestset",
+    "reference"
+]
+revision = "2461543d988979529609e8cb6fca9ca190dc48da"
+version = "v2.7.1"
+
+[[projects]]
+name = "github.com/docker/docker"
+packages = [
+    "api",
+    "api/types",
+    "api/types/blkiodev",
+    "api/types/container",
+    "api/types/events",
+    "api/types/filters",
+    "api/types/image",
+    "api/types/mount",
+    "api/types/network",
+    "api/types/registry",
+    "api/types/strslice",
+    "api/types/swarm",
+    "api/types/swarm/runtime",
+    "api/types/time",
+    "api/types/versions",
+    "api/types/volume",
+    "client"
+]
+revision = "5acfe70329181e5b088217f0ec21b6ab50790e9b"
+version = "v17.12.0-ce-rc4"
+
+[[projects]]
+name = "github.com/docker/go-connections"
+packages = [
+    "nat",
+    "sockets",
+    "tlsconfig"
+]
+revision = "7395e3f8aa162843a74ed6d48e79627d9792ac55"
+version = "v0.4.0"
+
+[[projects]]
+name = "github.com/docker/go-units"
+packages = ["."]
+revision = "519db1ee28dcc9fd2474ae59fca29a810482bfb1"
+version = "v0.4.0"
+
+[[projects]]
+branch = "master"
+name = "github.com/docker/spdystream"
+packages = [
     ".",
     "spdy"
-  ]
-  revision = "6480d4af844c189cf5dd913db24ddd339d3a4f85"
+]
+revision = "6480d4af844c189cf5dd913db24ddd339d3a4f85"
 
 [[projects]]
   name = "github.com/emirpasic/gods"
@@ -320,25 +378,40 @@
 
 [[projects]]
   name = "github.com/modern-go/concurrent"
-  packages = ["."]
-  revision = "bacd9c7ef1dd9b15be4a9909b8ac7a4e313eec94"
-  version = "1.0.3"
+packages = ["."]
+revision = "bacd9c7ef1dd9b15be4a9909b8ac7a4e313eec94"
+version = "1.0.3"
 
 [[projects]]
-  name = "github.com/modern-go/reflect2"
-  packages = ["."]
-  revision = "4b7aa43c6742a2c18fdef89dd197aaae7dac7ccd"
-  version = "1.0.1"
+name = "github.com/modern-go/reflect2"
+packages = ["."]
+revision = "4b7aa43c6742a2c18fdef89dd197aaae7dac7ccd"
+version = "1.0.1"
 
 [[projects]]
-  name = "github.com/panjf2000/ants"
-  packages = ["."]
-  revision = "2ba69cd1384d2316956962735418a73007f4b881"
+name = "github.com/opencontainers/go-digest"
+packages = ["."]
+revision = "ea51bea511f75cfa3ef6098cc253c5c3609b037a"
+version = "v1.0.0"
 
 [[projects]]
-  name = "github.com/pelletier/go-buffruneio"
-  packages = ["."]
-  revision = "c37440a7cf42ac63b919c752ca73a85067e05992"
+name = "github.com/opencontainers/image-spec"
+packages = [
+    "specs-go",
+    "specs-go/v1"
+]
+revision = "d60099175f88c47cd379c4738d158884749ed235"
+version = "v1.0.1"
+
+[[projects]]
+name = "github.com/panjf2000/ants"
+packages = ["."]
+revision = "2ba69cd1384d2316956962735418a73007f4b881"
+
+[[projects]]
+name = "github.com/pelletier/go-buffruneio"
+packages = ["."]
+revision = "c37440a7cf42ac63b919c752ca73a85067e05992"
   version = "v0.2.0"
 
 [[projects]]
@@ -482,11 +555,14 @@
   branch = "master"
   name = "golang.org/x/net"
   packages = [
-    "context",
-    "http/httpguts",
-    "http2",
-    "http2/hpack",
-    "idna"
+      "context",
+      "context/ctxhttp",
+      "http/httpguts",
+      "http2",
+      "http2/hpack",
+      "idna",
+      "internal/socks",
+      "proxy"
   ]
   revision = "d26f9f9a57f3fab6a695bec0d84433c2c50f8bbf"
 
@@ -801,7 +877,7 @@
 
 [solve-meta]
   analyzer-name = "dep"
-  analyzer-version = 1
-  inputs-digest = "7508610f77071cba1f76fa002d5bcf47b8f475ef6e55e47e47b715df9db45953"
-  solver-name = "gps-cdcl"
+analyzer-version = 1
+inputs-digest = "a9532101110d6de391ffdc4207d66e687d564e5076f99821b43c3350551c5d67"
+solver-name = "gps-cdcl"
   solver-version = 1

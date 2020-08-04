@@ -98,3 +98,7 @@
   # This dependency and version is needed by ign-fuel dependency.
   name = "gopkg.in/src-d/go-billy.v4"
   revision = "83cf655d40b15b427014d7875d10850f96edba14"
+
+[[override]]
+name = "github.com/docker/docker"
+version = "v17.12.0-ce"
