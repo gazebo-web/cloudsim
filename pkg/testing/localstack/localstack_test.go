@@ -6,12 +6,12 @@ import (
 )
 
 func TestNew_NotNil(t *testing.T) {
-	l := New()
+	l := New("localhost", 4566)
 	assert.NotNil(t, l)
 }
 
 func TestNew_TypeOfStruct(t *testing.T) {
-	l := New()
+	l := New("localhost", 4566)
 	_, ok := l.(*localStack)
 	assert.True(t, ok)
 }

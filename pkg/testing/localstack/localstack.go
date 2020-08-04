@@ -11,6 +11,9 @@ type localStack struct {
 }
 
 // New initializes a new LocalStack implementation.
-func New() LocalStack {
-	return &localStack{}
+func New(host string, edgePort int) LocalStack {
+	return &localStack{
+		host:     host,
+		edgePort: edgePort,
+	}
 }
