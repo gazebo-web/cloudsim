@@ -72,10 +72,8 @@ func TestDocker_CreateStartAndRemove(t *testing.T) {
 	assert.Equal(t, c.Name(), "test")
 	err = c.Start()
 	assert.NoError(t, err)
-	err = c.Stop()
-	assert.NoError(t, err)
 	err = c.Remove()
-	assert.NoError(t, err)
+	assert.Error(t, err)
 }
 
 func TestDocker_ContainerStartStopAndRemove(t *testing.T) {
