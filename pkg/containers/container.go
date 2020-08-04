@@ -25,6 +25,9 @@ type EnvVars map[string]string
 
 // ToMap returns the underlying map.
 func (env EnvVars) ToMap() map[string]string {
+	if len(env) == 0 {
+		return nil
+	}
 	return env
 }
 

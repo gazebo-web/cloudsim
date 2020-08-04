@@ -45,7 +45,8 @@ func (d docker) Pull(ctx context.Context, image string) error {
 // Create creates a new docker container.
 func (d docker) Create(ctx context.Context, input CreateContainerInput) (containers.Container, error) {
 	var portBindings nat.PortMap
-	if input.Protocol != nil && input.Port != nil {
+	if input.Protocol != nil || input.Port != nil {
+		portBindings = make(nat.PortMap, 1)
 		containerPort, err := nat.NewPort(*input.Protocol, *input.Port)
 		if err != nil {
 			return nil, err
