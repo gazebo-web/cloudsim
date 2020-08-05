@@ -5,6 +5,11 @@ variables:
   MYSQL_DATABASE: "cloudsim_test"
   MYSQL_ROOT_PASSWORD: "root"
   KUBERNETES_POLL_TIMEOUT: 540
+  SERVICES: "EC2"
+  START_WEB: 0
+  HOSTNAME_EXTERNAL: "localstack"
+  HOSTNAME: "localstack"
+  LOCALSTACK_HOSTNAME: "localstack"
 
 ##########################################################
 # Aliases
@@ -124,7 +129,7 @@ vet:
     - go vet $(go list ./... | grep -v /vendor/)
   services:
     - mysql:5.7
-    - name: localstack/localstack-full
+    - name: localstack/localstack
       alias: localstack
   environment:
     name: testing
@@ -144,7 +149,7 @@ test:
     - go test $(go list ./... | grep -v /vendor/)
   services:
     - mysql:5.7
-    - name: localstack/localstack-full
+    - name: localstack/localstack
       alias: localstack
   environment:
     name: testing
@@ -164,7 +169,7 @@ race:
     - go test -race $(go list ./... | grep -v /vendor/)
   services:
     - mysql:5.7
-    - name: localstack/localstack-full
+    - name: localstack/localstack
       alias: localstack
   environment:
     name: testing
@@ -187,7 +192,7 @@ coverage:
     - bash <(curl -s https://codecov.io/bash)
   services:
     - mysql:5.7
-    - name: localstack/localstack-full
+    - name: localstack/localstack
       alias: localstack
   environment:
     name: testing
