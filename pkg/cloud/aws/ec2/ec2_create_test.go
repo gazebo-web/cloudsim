@@ -28,8 +28,9 @@ func (s *ec2CreateMachinesTestSuite) SetupTest() {
 	s.NoError(err)
 	config := &aws.Config{
 		Credentials:      credentials.NewStaticCredentials("YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY", ""),
-		Endpoint:         aws.String("https://localstack:4566"),
+		Endpoint:         aws.String("http://localstack:4566"),
 		Region:           aws.String(endpoints.UsEast1RegionID),
+		DisableSSL:       aws.Bool(true),
 		S3ForcePathStyle: aws.Bool(true),
 	}
 	s.session = session.Must(session.NewSession(config))
