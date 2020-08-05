@@ -24,7 +24,7 @@ var (
 // CreateMachinesInput is the input for the Machines.Create operation.
 // It will be used to create a certain number of machines.
 type CreateMachinesInput struct {
-	ResourceName  string
+	ResourceName  *string
 	DryRun        bool
 	KeyName       string
 	Type          string

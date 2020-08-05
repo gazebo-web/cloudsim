@@ -57,9 +57,10 @@ func (m machines) isValidSubnetID(subnet string) bool {
 func (m machines) newRunInstancesInput(createMachines cloud.CreateMachinesInput) *ec2.RunInstancesInput {
 	tagSpec := m.createTags(createMachines.Tags)
 	return &ec2.RunInstancesInput{
-		DryRun: aws.Bool(createMachines.DryRun),
+		DryRun:       aws.Bool(createMachines.DryRun),
+		InstanceType: aws.String(createMachines.Type),
 		IamInstanceProfile: &ec2.IamInstanceProfileSpecification{
-			Arn: aws.String(createMachines.ResourceName),
+			Arn: createMachines.ResourceName,
 		},
 		KeyName:          aws.String(createMachines.KeyName),
 		MaxCount:         aws.Int64(createMachines.MaxCount),
@@ -176,12 +177,12 @@ func (m machines) create(input cloud.CreateMachinesInput) (*cloud.CreateMachines
 	return &output, nil
 }
 
-// Create creates multiples EC2 instances. It will return the created machines.
+// Create creates multiple EC2 instances. It will return the created machines.
 // This operation doesn't recover from an error.
 // You need to destroy the required machines when an error occurs.
 func (m machines) Create(inputs []cloud.CreateMachinesInput) (created []cloud.CreateMachinesOutput, err error) {
+	var c *cloud.CreateMachinesOutput
 	for _, input := range inputs {
-		var c *cloud.CreateMachinesOutput
 		c, err = m.create(input)
 		if err != nil {
 			return

@@ -3,13 +3,19 @@ version: '2.1'
 services:
   localstack:
     container_name: localstack
-    image: localstack/localstack
+    image: localstack/localstack-full
     ports:
       - "4566-4599:4566-4599"
+      - "8080:8080"
     environment:
       - SERVICES=ec2
       - DEFAULT_REGION=us-east-1
       - LAMBDA_EXECUTOR=docker-reuse
       - DOCKER_HOST=unix:///var/run/docker.sock
+      - EDGE_PORT=4566
+      - HOSTNAME_EXTERNAL=localstack
+      - HOSTNAME=localstack
+      - LOCALSTACK_HOSTNAME=localstack
+      - DEBUG=1
     volumes:
       - "/var/run/docker.sock:/var/run/docker.sock"
