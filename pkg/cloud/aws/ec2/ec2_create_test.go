@@ -1,9 +1,12 @@
 package ec2
 
 import (
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/credentials"
+	"github.com/aws/aws-sdk-go/aws/endpoints"
+	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/aws/aws-sdk-go/service/ec2/ec2iface"
-	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/suite"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/cloud"
 	"testing"
@@ -15,14 +18,22 @@ func TestCreateMachines(t *testing.T) {
 
 type ec2CreateMachinesTestSuite struct {
 	suite.Suite
-	ec2API   *mockEC2
+	session  *session.Session
+	ec2API   ec2iface.EC2API
 	machines cloud.Machines
 }
 
 func (s *ec2CreateMachinesTestSuite) SetupTest() {
-	s.ec2API = &mockEC2{
-		Mock: new(mock.Mock),
+	var err error
+	s.NoError(err)
+	config := &aws.Config{
+		Credentials:      credentials.NewStaticCredentials("YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY", ""),
+		Endpoint:         aws.String("https://localstack:4566"),
+		Region:           aws.String(endpoints.UsEast1RegionID),
+		S3ForcePathStyle: aws.Bool(true),
 	}
+	s.session = session.Must(session.NewSession(config))
+	s.ec2API = ec2.New(s.session)
 	s.machines = NewMachines(s.ec2API)
 }
 
@@ -225,17 +236,4 @@ func (s *ec2CreateMachinesTestSuite) TestCreate_ValidSubnet() {
 	}
 	_, err = s.machines.Create(input)
 	s.NoError(err)
-}
-
-type mockEC2 struct {
-	ec2iface.EC2API
-	*mock.Mock
-}
-
-// RunInstances mocks EC2 RunInstances method.
-func (m *mockEC2) RunInstances(input *ec2.RunInstancesInput) (*ec2.Reservation, error) {
-	args := m.Called(input)
-	reservation := args.Get(0).(*ec2.Reservation)
-	err := args.Error(1)
-	return reservation, err
 }

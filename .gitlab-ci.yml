@@ -124,6 +124,8 @@ vet:
     - go vet $(go list ./... | grep -v /vendor/)
   services:
     - mysql:5.7
+    - name: localstack/localstack-full
+      alias: localstack
   environment:
     name: testing
   tags:
@@ -142,6 +144,8 @@ test:
     - go test $(go list ./... | grep -v /vendor/)
   services:
     - mysql:5.7
+    - name: localstack/localstack-full
+      alias: localstack
   environment:
     name: testing
   tags:
@@ -160,6 +164,8 @@ race:
     - go test -race $(go list ./... | grep -v /vendor/)
   services:
     - mysql:5.7
+    - name: localstack/localstack-full
+      alias: localstack
   environment:
     name: testing
   allow_failure: true
@@ -181,6 +187,8 @@ coverage:
     - bash <(curl -s https://codecov.io/bash)
   services:
     - mysql:5.7
+    - name: localstack/localstack-full
+      alias: localstack
   environment:
     name: testing
   tags:
