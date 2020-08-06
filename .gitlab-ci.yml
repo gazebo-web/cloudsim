@@ -5,7 +5,7 @@ variables:
   MYSQL_DATABASE: "cloudsim_test"
   MYSQL_ROOT_PASSWORD: "root"
   KUBERNETES_POLL_TIMEOUT: 540
-  SERVICES: "EC2"
+  SERVICES: "ec2"
   START_WEB: 0
   HOSTNAME_EXTERNAL: "localstack"
   HOSTNAME: "localstack"
