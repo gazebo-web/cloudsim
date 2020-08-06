@@ -61,6 +61,12 @@
   version = "v1.16.26"
 
 [[projects]]
+  name = "github.com/beorn7/perks"
+  packages = ["quantile"]
+  revision = "37c8de3658fcb183f997c4e13e8337516ab753e6"
+  version = "v1.0.1"
+
+[[projects]]
   name = "github.com/caarlos0/env"
   packages = ["."]
   revision = "518fcfb943252f77846f92ce5794086d9cb4a1b5"
@@ -186,8 +192,8 @@
     "ptypes/duration",
     "ptypes/timestamp"
   ]
-  revision = "aa810b61a9c79d51363740d207bb46cf8e620ed5"
-  version = "v1.2.0"
+  revision = "d04d7b157bb510b1e0c10132224b616ac0e26b17"
+  version = "v1.4.2"
 
 [[projects]]
   branch = "master"
@@ -299,6 +305,12 @@
   revision = "49522c3f37914a12a6813caf41f4a9e84d39ca0a"
 
 [[projects]]
+  name = "github.com/matttproud/golang_protobuf_extensions"
+  packages = ["pbutil"]
+  revision = "c12348ce28de40eed0136aa2b644d0ee0650e56c"
+  version = "v1.0.1"
+
+[[projects]]
   name = "github.com/mitchellh/go-homedir"
   packages = ["."]
   revision = "af06845cf3004701891bf4fdb884bfe4920b3727"
@@ -338,6 +350,42 @@
   packages = ["difflib"]
   revision = "792786c7400a136282c1664665ae0a8db921c6c2"
   version = "v1.0.0"
+
+[[projects]]
+  name = "github.com/prometheus/client_golang"
+  packages = [
+    "prometheus",
+    "prometheus/internal",
+    "prometheus/promhttp"
+  ]
+  revision = "170205fb58decfd011f1550d4cfb737230d7ae4f"
+  version = "v1.1.0"
+
+[[projects]]
+  name = "github.com/prometheus/client_model"
+  packages = ["go"]
+  revision = "7bc5445566f0fe75b15de23e6b93886e982d7bf9"
+  version = "v0.2.0"
+
+[[projects]]
+  name = "github.com/prometheus/common"
+  packages = [
+    "expfmt",
+    "internal/bitbucket.org/ww/goautoneg",
+    "model"
+  ]
+  revision = "217fd62d44a79db8f842113234ae9383b8374983"
+  version = "v0.11.1"
+
+[[projects]]
+  name = "github.com/prometheus/procfs"
+  packages = [
+    ".",
+    "internal/fs",
+    "internal/util"
+  ]
+  revision = "3a900613711866765af641f387dad41b639dbdc4"
+  version = "v0.1.3"
 
 [[projects]]
   name = "github.com/rollbar/rollbar-go"
@@ -391,6 +439,12 @@
   version = "v1.3.0"
 
 [[projects]]
+  name = "github.com/urfave/negroni"
+  packages = ["."]
+  revision = "89f4046c21e1b86e8ef3550422b528ab1d62eba4"
+  version = "v2.0.2"
+
+[[projects]]
   name = "github.com/xanzy/ssh-agent"
   packages = ["."]
   revision = "6a3e2ff9e7c564f36873c2e36413f634534f1c44"
@@ -407,18 +461,20 @@
     "proto",
     "vcs"
   ]
-  revision = "e30fc2dc1ada34cc2ebf586571b67104c1ffd694"
-  version = "1.1.0"
+  revision = "b7bf42e448817349cc73ebf76b8b8fe3a5f08063"
+  version = "2.2.0"
 
 [[projects]]
   name = "gitlab.com/ignitionrobotics/web/ign-go"
   packages = [
     ".",
+    "monitoring",
+    "monitoring/prometheus",
     "scheduler",
     "testhelpers"
   ]
-  revision = "5694142fb0de68efe8a36cbcb8909ee2e065f89d"
-  version = "4.1.0"
+  revision = "78fc7e0891699e9f8f2bf4d3d2e2d0f70324be47"
+  version = "5.0.1"
 
 [[projects]]
   name = "gitlab.com/ignitionrobotics/web/scheduler"
@@ -505,6 +561,42 @@
   packages = ["cloudsql"]
   revision = "e9657d882bb81064595ca3b56cbe2546bbabf7b1"
   version = "v1.4.0"
+
+[[projects]]
+  name = "google.golang.org/protobuf"
+  packages = [
+    "encoding/prototext",
+    "encoding/protowire",
+    "internal/descfmt",
+    "internal/descopts",
+    "internal/detrand",
+    "internal/encoding/defval",
+    "internal/encoding/messageset",
+    "internal/encoding/tag",
+    "internal/encoding/text",
+    "internal/errors",
+    "internal/fieldsort",
+    "internal/filedesc",
+    "internal/filetype",
+    "internal/flags",
+    "internal/genid",
+    "internal/impl",
+    "internal/mapsort",
+    "internal/pragma",
+    "internal/set",
+    "internal/strs",
+    "internal/version",
+    "proto",
+    "reflect/protoreflect",
+    "reflect/protoregistry",
+    "runtime/protoiface",
+    "runtime/protoimpl",
+    "types/known/anypb",
+    "types/known/durationpb",
+    "types/known/timestamppb"
+  ]
+  revision = "3f7a61f89bb6813f89d981d1870ed68da0b3c3f1"
+  version = "v1.25.0"
 
 [[projects]]
   name = "gopkg.in/go-playground/validator.v9"
@@ -770,6 +862,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "8c43e3cb6a6a169e5efe6f7b97b769506584901852425a18b48919f16f6e1c9a"
+  inputs-digest = "44af0e4df663317e57162a607106e70ec079b51aa49784d9e33b4f6bced72964"
   solver-name = "gps-cdcl"
   solver-version = 1

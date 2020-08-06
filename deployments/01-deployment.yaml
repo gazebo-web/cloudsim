@@ -5,7 +5,6 @@ metadata:
   namespace: $APPLICATION_ENVIRONMENT
   labels:
     app: $APPLICATION_NAME
-    environment: $CI_ENVIRONMENT_SLUG
 spec:
   replicas: 1
   strategy:
@@ -13,14 +12,13 @@ spec:
   selector:
     matchLabels:
       app: $APPLICATION_NAME
-      environment: $CI_ENVIRONMENT_SLUG
   template:
     metadata:
       labels:
         app: $APPLICATION_NAME
-        environment: $CI_ENVIRONMENT_SLUG
       annotations:
-        configHash: " "
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8001"
     spec:
       containers:
         - name: $APPLICATION_NAME
