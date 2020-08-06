@@ -1,7 +1,6 @@
 package ec2
 
 import (
-	"fmt"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
@@ -28,6 +27,7 @@ type ec2CreateMachinesTestSuite struct {
 	availabilityZone string
 	securityGroup    string
 	arn              string
+	keyName          string
 }
 
 func (s *ec2CreateMachinesTestSuite) SetupSuite() {
@@ -46,20 +46,21 @@ func (s *ec2CreateMachinesTestSuite) SetupSuite() {
 		S3ForcePathStyle: aws.Bool(true),
 	}
 	var err error
+
 	s.session, err = session.NewSession(config)
-	if err != nil {
-		s.FailNow(err.Error())
-	}
+	s.NoError(err)
+
 	s.ec2API = ec2.New(s.session)
 	s.machines = NewMachines(s.ec2API)
+
 	s.subnet, s.availabilityZone, err = s.getDefaultSubnetAndAZ()
-	if err != nil {
-		s.FailNow(err.Error())
-	}
+	s.NoError(err)
+
 	s.securityGroup, err = s.getDefaultSecurityGroup()
-	if err != nil {
-		s.FailNow(err.Error())
-	}
+	s.NoError(err)
+
+	s.keyName, err = s.createDefaultKeyPair()
+	s.NoError(err)
 }
 
 func (s *ec2CreateMachinesTestSuite) SetupTest() {
@@ -95,7 +96,7 @@ func (s *ec2CreateMachinesTestSuite) TestCreate_InvalidCountBothZero() {
 	input := []cloud.CreateMachinesInput{
 		{
 			DryRun:        false,
-			KeyName:       "key-name",
+			KeyName:       s.keyName,
 			MinCount:      0,
 			MaxCount:      0,
 			FirewallRules: nil,
@@ -112,7 +113,7 @@ func (s *ec2CreateMachinesTestSuite) TestCreate_InvalidCountMinCountZero() {
 	input := []cloud.CreateMachinesInput{
 		{
 			DryRun:        false,
-			KeyName:       "key-name",
+			KeyName:       s.keyName,
 			MinCount:      0,
 			MaxCount:      1,
 			FirewallRules: nil,
@@ -129,7 +130,7 @@ func (s *ec2CreateMachinesTestSuite) TestCreate_InvalidCountMaxCountZero() {
 	input := []cloud.CreateMachinesInput{
 		{
 			DryRun:        false,
-			KeyName:       "key-name",
+			KeyName:       s.keyName,
 			MinCount:      1,
 			MaxCount:      0,
 			FirewallRules: nil,
@@ -146,7 +147,7 @@ func (s *ec2CreateMachinesTestSuite) TestCreate_MinCountGreaterThanMaxCount() {
 	input := []cloud.CreateMachinesInput{
 		{
 			DryRun:        false,
-			KeyName:       "key-name",
+			KeyName:       s.keyName,
 			MinCount:      99,
 			MaxCount:      1,
 			FirewallRules: nil,
@@ -163,7 +164,7 @@ func (s *ec2CreateMachinesTestSuite) TestCreate_MinCountEqualsMaxCount() {
 	input := []cloud.CreateMachinesInput{
 		{
 			DryRun:        false,
-			KeyName:       "key-name",
+			KeyName:       s.keyName,
 			MinCount:      1,
 			MaxCount:      1,
 			FirewallRules: nil,
@@ -179,7 +180,7 @@ func (s *ec2CreateMachinesTestSuite) TestCreate_NegativeCount() {
 	input := []cloud.CreateMachinesInput{
 		{
 			DryRun:        false,
-			KeyName:       "key-name",
+			KeyName:       s.keyName,
 			MinCount:      -100,
 			MaxCount:      -25,
 			FirewallRules: nil,
@@ -196,7 +197,7 @@ func (s *ec2CreateMachinesTestSuite) TestCreate_InvalidSubnet() {
 	input := []cloud.CreateMachinesInput{
 		{
 			DryRun:        false,
-			KeyName:       "key-name",
+			KeyName:       s.keyName,
 			MinCount:      1,
 			MaxCount:      99,
 			FirewallRules: nil,
@@ -211,7 +212,7 @@ func (s *ec2CreateMachinesTestSuite) TestCreate_InvalidSubnet() {
 	input = []cloud.CreateMachinesInput{
 		{
 			DryRun:        false,
-			KeyName:       "key-name",
+			KeyName:       s.keyName,
 			MinCount:      1,
 			MaxCount:      99,
 			FirewallRules: nil,
@@ -226,7 +227,7 @@ func (s *ec2CreateMachinesTestSuite) TestCreate_InvalidSubnet() {
 	input = []cloud.CreateMachinesInput{
 		{
 			DryRun:        false,
-			KeyName:       "key-name",
+			KeyName:       s.keyName,
 			MinCount:      1,
 			MaxCount:      99,
 			FirewallRules: nil,
@@ -241,23 +242,19 @@ func (s *ec2CreateMachinesTestSuite) TestCreate_InvalidSubnet() {
 
 func (s *ec2CreateMachinesTestSuite) TestCreate_Valid() {
 	before := s.machinesCount
-	fmt.Println("Subnet:", s.subnet)
 	input := []cloud.CreateMachinesInput{
 		{
-			ResourceName:  nil,
+			ResourceName:  "",
 			DryRun:        true,
-			KeyName:       "key-name",
+			Image:         "ami-03cf127a",
+			KeyName:       s.keyName,
 			Type:          "a1.medium",
 			MinCount:      1,
 			MaxCount:      1,
 			FirewallRules: []string{s.securityGroup},
 			SubnetID:      s.subnet,
 			Zone:          s.availabilityZone,
-			Tags: map[string]map[string]string{
-				"test": {
-					"owner": "osrf",
-				},
-			},
+			Retries:       10,
 		},
 	}
 	_, err := s.machines.Create(input)
@@ -290,4 +287,15 @@ func (s *ec2CreateMachinesTestSuite) countMachines() (int, error) {
 		return -1, err
 	}
 	return len(o.Reservations), nil
+}
+
+func (s *ec2CreateMachinesTestSuite) createDefaultKeyPair() (string, error) {
+	_, err := s.ec2API.CreateKeyPair(&ec2.CreateKeyPairInput{
+		DryRun:  aws.Bool(false),
+		KeyName: aws.String("create-machines-key-name"),
+	})
+	if err != nil {
+		return "", err
+	}
+	return "create-machines-key-name", nil
 }
