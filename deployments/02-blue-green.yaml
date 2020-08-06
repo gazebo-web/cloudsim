@@ -1,0 +1,66 @@
+apiVersion: flagger.app/v1beta1
+kind: Canary
+metadata:
+  name: $APPLICATION_NAME
+  namespace: $APPLICATION_ENVIRONMENT
+spec:
+  provider: kubernetes
+  targetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: $APPLICATION_NAME
+  progressDeadlineSeconds: 60
+  service:
+    name: web-cloudsim
+    port: 80
+    targetPort: 8001
+    portName: http
+    portDiscovery: true
+  analysis:
+    interval: 30s
+    threshold: 5
+    iterations: 2
+    metrics:
+      - name: request-success-rate
+        # minimum req success rate (non 5xx responses)
+        # percentage (0-100)
+        thresholdRange:
+          min: 99
+        # The interval MUST be at least twice as long as the prometheus scrape interval
+        interval: 1m
+    webhooks:
+      - name: load-test
+        url: http://flagger-loadtester.flagger
+        timeout: 5s
+        metadata:
+          type: cmd
+          cmd: $HEY_CMD
+---
+apiVersion: flagger.app/v1beta1
+kind: MetricTemplate
+metadata:
+  name: not-found-percentage
+  namespace: $APPLICATION_ENVIRONMENT
+spec:
+  provider:
+    type: prometheus
+    address: http://prometheus-server.prometheus
+  query: |
+    100 - sum(
+        rate(
+            http_request_duration_seconds_count{
+              kubernetes_namespace="{{ namespace }}",
+              kubernetes_pod_name=~"{{ target }}-[0-9a-zA-Z]+(-[0-9a-zA-Z]+)",
+              status="200"
+            }[{{ interval }}]
+        )
+    )
+    /
+    sum(
+        rate(
+            http_request_duration_seconds_count{
+              kubernetes_namespace="{{ namespace }}",
+              kubernetes_pod_name=~"{{ target }}-[0-9a-zA-Z]+(-[0-9a-zA-Z]+)"
+            }[{{ interval }}]
+        )
+    ) * 100
