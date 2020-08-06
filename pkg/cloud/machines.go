@@ -57,7 +57,7 @@ type CreateMachinesInput struct {
 	// In AWS: Security groups.
 	FirewallRules []string
 
-	// SubnetID is the ID of the subnet that defines a range of IP addresses in your network.	ºº11111111111111111111111111111111111111111111111111111111111qaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaAAAAAAAGTFRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRHUUUUUUUUUUUUUUUUUUUUUUUU45555555555555555555555555Rrrrr
+	// SubnetID is the ID of the subnet that defines a range of IP addresses in your network.
 	SubnetID string
 
 	// Zone is a location inside a datacenter that is isolated from other zones.
