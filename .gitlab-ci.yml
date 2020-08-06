@@ -7,6 +7,7 @@ variables:
   KUBERNETES_POLL_TIMEOUT: 540
   SERVICES: "ec2"
   START_WEB: 0
+  DEBUG: 1
   HOSTNAME_EXTERNAL: "localstack"
   HOSTNAME: "localstack"
   LOCALSTACK_HOSTNAME: "localstack"
