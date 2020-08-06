@@ -129,8 +129,6 @@ vet:
     - go vet $(go list ./... | grep -v /vendor/)
   services:
     - mysql:5.7
-    - name: localstack/localstack
-      alias: localstack
   environment:
     name: testing
   tags:

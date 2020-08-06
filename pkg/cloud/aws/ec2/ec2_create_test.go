@@ -31,7 +31,7 @@ type ec2CreateMachinesTestSuite struct {
 }
 
 func (s *ec2CreateMachinesTestSuite) SetupSuite() {
-	accessId := os.Getenv("AWS_ACCESS_KEY_ID")
+	accessID := os.Getenv("AWS_ACCESS_KEY_ID")
 	accessKey := os.Getenv("AWS_SECRET_ACCESS_KEY")
 	endpoint := os.Getenv("AWS_ENDPOINT")
 	if len(endpoint) == 0 {
@@ -39,7 +39,7 @@ func (s *ec2CreateMachinesTestSuite) SetupSuite() {
 	}
 
 	config := &aws.Config{
-		Credentials:      credentials.NewStaticCredentials(accessId, accessKey, ""),
+		Credentials:      credentials.NewStaticCredentials(accessID, accessKey, ""),
 		Endpoint:         aws.String(endpoint),
 		Region:           aws.String(endpoints.UsEast1RegionID),
 		DisableSSL:       aws.Bool(true),
@@ -262,7 +262,6 @@ func (s *ec2CreateMachinesTestSuite) TestCreate_Valid() {
 	after, err := s.countMachines()
 	s.NoError(err)
 	s.Equal(before+1, after)
-	s.machinesCount = after
 }
 
 func (s *ec2CreateMachinesTestSuite) getDefaultSubnetAndAZ() (string, string, error) {
