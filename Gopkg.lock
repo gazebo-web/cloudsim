@@ -16,16 +16,16 @@ revision = "5493cabe49f7bfa6e2ec444a09d334d90cd4e2bd"
 [[projects]]
 name = "github.com/aws/aws-sdk-go"
 packages = [
-    "aws",
-    "aws/awserr",
-    "aws/awsutil",
-    "aws/client",
-    "aws/client/metadata",
-    "aws/corehandlers",
-    "aws/credentials",
-    "aws/credentials/ec2rolecreds",
-    "aws/credentials/endpointcreds",
-    "aws/credentials/processcreds",
+  "aws",
+  "aws/awserr",
+  "aws/awsutil",
+  "aws/client",
+  "aws/client/metadata",
+  "aws/corehandlers",
+  "aws/credentials",
+  "aws/credentials/ec2rolecreds",
+  "aws/credentials/endpointcreds",
+  "aws/credentials/processcreds",
     "aws/credentials/stscreds",
     "aws/csm",
     "aws/defaults",
@@ -50,25 +50,31 @@ packages = [
     "private/protocol/restxml",
     "private/protocol/xml/xmlutil",
     "service/ec2",
-    "service/ec2/ec2iface",
-    "service/s3",
-    "service/s3/s3iface",
-    "service/s3/s3manager",
-    "service/ses",
-    "service/sts"
-  ]
-  revision = "81f3829f5a9d041041bdf56e55926691309d7699"
-  version = "v1.16.26"
+  "service/ec2/ec2iface",
+  "service/s3",
+  "service/s3/s3iface",
+  "service/s3/s3manager",
+  "service/ses",
+  "service/sts"
+]
+revision = "81f3829f5a9d041041bdf56e55926691309d7699"
+version = "v1.16.26"
 
 [[projects]]
-  name = "github.com/caarlos0/env"
-  packages = ["."]
-  revision = "518fcfb943252f77846f92ce5794086d9cb4a1b5"
-  version = "v3.5.0"
+name = "github.com/beorn7/perks"
+packages = ["quantile"]
+revision = "37c8de3658fcb183f997c4e13e8337516ab753e6"
+version = "v1.0.1"
 
 [[projects]]
-  name = "github.com/casbin/casbin"
-  packages = [
+name = "github.com/caarlos0/env"
+packages = ["."]
+revision = "518fcfb943252f77846f92ce5794086d9cb4a1b5"
+version = "v3.5.0"
+
+[[projects]]
+name = "github.com/casbin/casbin"
+packages = [
     ".",
     "config",
     "effect",
@@ -111,8 +117,8 @@ version = "v3.2.0"
 branch = "master"
 name = "github.com/docker/spdystream"
 packages = [
-    ".",
-    "spdy"
+  ".",
+  "spdy"
 ]
 revision = "6480d4af844c189cf5dd913db24ddd339d3a4f85"
 
@@ -178,16 +184,16 @@ revision = "6480d4af844c189cf5dd913db24ddd339d3a4f85"
   revision = "23def4e6c14b4da8ac2ed8007337bc5eb5007998"
 
 [[projects]]
-  name = "github.com/golang/protobuf"
-  packages = [
-    "proto",
-    "ptypes",
-    "ptypes/any",
-    "ptypes/duration",
-    "ptypes/timestamp"
-  ]
-  revision = "aa810b61a9c79d51363740d207bb46cf8e620ed5"
-  version = "v1.2.0"
+name = "github.com/golang/protobuf"
+packages = [
+  "proto",
+  "ptypes",
+  "ptypes/any",
+  "ptypes/duration",
+  "ptypes/timestamp"
+]
+revision = "d04d7b157bb510b1e0c10132224b616ac0e26b17"
+version = "v1.4.2"
 
 [[projects]]
   branch = "master"
@@ -303,20 +309,26 @@ revision = "6480d4af844c189cf5dd913db24ddd339d3a4f85"
     "oid",
     "scram"
   ]
-  revision = "51e2106eed1cea199c802d2a49e91e2491b02056"
-  version = "v1.1.0"
+revision = "51e2106eed1cea199c802d2a49e91e2491b02056"
+version = "v1.1.0"
 
 [[projects]]
-  branch = "master"
-  name = "github.com/mattn/go-pointer"
-  packages = ["."]
-  revision = "49522c3f37914a12a6813caf41f4a9e84d39ca0a"
+branch = "master"
+name = "github.com/mattn/go-pointer"
+packages = ["."]
+revision = "49522c3f37914a12a6813caf41f4a9e84d39ca0a"
 
 [[projects]]
-  name = "github.com/mitchellh/go-homedir"
-  packages = ["."]
-  revision = "af06845cf3004701891bf4fdb884bfe4920b3727"
-  version = "v1.1.0"
+name = "github.com/matttproud/golang_protobuf_extensions"
+packages = ["pbutil"]
+revision = "c12348ce28de40eed0136aa2b644d0ee0650e56c"
+version = "v1.0.1"
+
+[[projects]]
+name = "github.com/mitchellh/go-homedir"
+packages = ["."]
+revision = "af06845cf3004701891bf4fdb884bfe4920b3727"
+version = "v1.1.0"
 
 [[projects]]
 name = "github.com/modern-go/concurrent"
@@ -343,25 +355,61 @@ version = "v0.2.0"
 
 [[projects]]
   name = "github.com/pkg/errors"
-  packages = ["."]
-  revision = "ba968bfe8b2f7e042a574c888954fccecfa385b4"
-  version = "v0.8.1"
+packages = ["."]
+revision = "ba968bfe8b2f7e042a574c888954fccecfa385b4"
+version = "v0.8.1"
 
 [[projects]]
-  name = "github.com/pmezard/go-difflib"
-  packages = ["difflib"]
-  revision = "792786c7400a136282c1664665ae0a8db921c6c2"
-  version = "v1.0.0"
+name = "github.com/pmezard/go-difflib"
+packages = ["difflib"]
+revision = "792786c7400a136282c1664665ae0a8db921c6c2"
+version = "v1.0.0"
 
 [[projects]]
-  name = "github.com/rollbar/rollbar-go"
-  packages = ["."]
-  revision = "d450a931d7a085523b60f0f7c98487333a8ce5fa"
-  version = "v1.0.2"
+name = "github.com/prometheus/client_golang"
+packages = [
+  "prometheus",
+  "prometheus/internal",
+  "prometheus/promhttp"
+]
+revision = "170205fb58decfd011f1550d4cfb737230d7ae4f"
+version = "v1.1.0"
 
 [[projects]]
-  branch = "master"
-  name = "github.com/ryszard/goskiplist"
+name = "github.com/prometheus/client_model"
+packages = ["go"]
+revision = "7bc5445566f0fe75b15de23e6b93886e982d7bf9"
+version = "v0.2.0"
+
+[[projects]]
+name = "github.com/prometheus/common"
+packages = [
+  "expfmt",
+  "internal/bitbucket.org/ww/goautoneg",
+  "model"
+]
+revision = "217fd62d44a79db8f842113234ae9383b8374983"
+version = "v0.11.1"
+
+[[projects]]
+name = "github.com/prometheus/procfs"
+packages = [
+  ".",
+  "internal/fs",
+  "internal/util"
+]
+revision = "3a900613711866765af641f387dad41b639dbdc4"
+version = "v0.1.3"
+
+[[projects]]
+name = "github.com/rollbar/rollbar-go"
+packages = ["."]
+revision = "d450a931d7a085523b60f0f7c98487333a8ce5fa"
+version = "v1.0.2"
+
+[[projects]]
+branch = "master"
+name = "github.com/ryszard/goskiplist"
   packages = ["skiplist"]
   revision = "2dfbae5fcf46374f166f8969cb07e167f1be6273"
 
@@ -406,45 +454,53 @@ version = "v0.2.0"
   version = "v0.1.1"
 
 [[projects]]
-  name = "github.com/stretchr/testify"
-  packages = [
-    "assert",
-    "mock",
-    "require",
-    "suite"
-  ]
-  revision = "ffdc059bfe9ce6a4e144ba849dbedead332c6053"
-  version = "v1.3.0"
+name = "github.com/stretchr/testify"
+packages = [
+  "assert",
+  "mock",
+  "require",
+  "suite"
+]
+revision = "ffdc059bfe9ce6a4e144ba849dbedead332c6053"
+version = "v1.3.0"
 
 [[projects]]
-  name = "github.com/xanzy/ssh-agent"
-  packages = ["."]
-  revision = "6a3e2ff9e7c564f36873c2e36413f634534f1c44"
-  version = "v0.2.1"
+name = "github.com/urfave/negroni"
+packages = ["."]
+revision = "89f4046c21e1b86e8ef3550422b528ab1d62eba4"
+version = "v2.0.2"
 
 [[projects]]
-  name = "gitlab.com/ignitionrobotics/web/fuelserver"
-  packages = [
-    "bundles/common_resources",
-    "bundles/subt",
-    "bundles/users",
-    "globals",
-    "permissions",
-    "proto",
-    "vcs"
-  ]
-  revision = "e30fc2dc1ada34cc2ebf586571b67104c1ffd694"
-  version = "1.1.0"
+name = "github.com/xanzy/ssh-agent"
+packages = ["."]
+revision = "6a3e2ff9e7c564f36873c2e36413f634534f1c44"
+version = "v0.2.1"
 
 [[projects]]
-  name = "gitlab.com/ignitionrobotics/web/ign-go"
-  packages = [
-    ".",
-    "scheduler",
-    "testhelpers"
-  ]
-  revision = "5694142fb0de68efe8a36cbcb8909ee2e065f89d"
-  version = "4.1.0"
+name = "gitlab.com/ignitionrobotics/web/fuelserver"
+packages = [
+  "bundles/common_resources",
+  "bundles/subt",
+  "bundles/users",
+  "globals",
+  "permissions",
+  "proto",
+  "vcs"
+]
+revision = "b7bf42e448817349cc73ebf76b8b8fe3a5f08063"
+version = "2.2.0"
+
+[[projects]]
+name = "gitlab.com/ignitionrobotics/web/ign-go"
+packages = [
+  ".",
+  "monitoring",
+  "monitoring/prometheus",
+  "scheduler",
+  "testhelpers"
+]
+revision = "78fc7e0891699e9f8f2bf4d3d2e2d0f70324be47"
+version = "5.0.1"
 
 [[projects]]
   name = "gitlab.com/ignitionrobotics/web/scheduler"
@@ -486,7 +542,7 @@ version = "v0.2.0"
     "http/httpguts",
     "http2",
     "http2/hpack",
-      "idna"
+    "idna"
   ]
   revision = "d26f9f9a57f3fab6a695bec0d84433c2c50f8bbf"
 
@@ -528,25 +584,61 @@ version = "v0.2.0"
 
 [[projects]]
   branch = "master"
-  name = "golang.org/x/tools"
-  packages = ["cover"]
-  revision = "b5fad4ed8dd65a3d7aae567b1f4e751b8ca72837"
+name = "golang.org/x/tools"
+packages = ["cover"]
+revision = "b5fad4ed8dd65a3d7aae567b1f4e751b8ca72837"
 
 [[projects]]
-  name = "google.golang.org/appengine"
-  packages = ["cloudsql"]
-  revision = "e9657d882bb81064595ca3b56cbe2546bbabf7b1"
-  version = "v1.4.0"
+name = "google.golang.org/appengine"
+packages = ["cloudsql"]
+revision = "e9657d882bb81064595ca3b56cbe2546bbabf7b1"
+version = "v1.4.0"
 
 [[projects]]
-  name = "gopkg.in/go-playground/validator.v9"
-  packages = ["."]
-  revision = "774d09c3863ffb2e137ebe4c39ba27648d208f80"
-  version = "v9.26.0"
+name = "google.golang.org/protobuf"
+packages = [
+  "encoding/prototext",
+  "encoding/protowire",
+  "internal/descfmt",
+  "internal/descopts",
+  "internal/detrand",
+  "internal/encoding/defval",
+  "internal/encoding/messageset",
+  "internal/encoding/tag",
+  "internal/encoding/text",
+  "internal/errors",
+  "internal/fieldsort",
+  "internal/filedesc",
+  "internal/filetype",
+  "internal/flags",
+  "internal/genid",
+  "internal/impl",
+  "internal/mapsort",
+  "internal/pragma",
+  "internal/set",
+  "internal/strs",
+  "internal/version",
+  "proto",
+  "reflect/protoreflect",
+  "reflect/protoregistry",
+  "runtime/protoiface",
+  "runtime/protoimpl",
+  "types/known/anypb",
+  "types/known/durationpb",
+  "types/known/timestamppb"
+]
+revision = "3f7a61f89bb6813f89d981d1870ed68da0b3c3f1"
+version = "v1.25.0"
 
 [[projects]]
-  name = "gopkg.in/inf.v0"
-  packages = ["."]
+name = "gopkg.in/go-playground/validator.v9"
+packages = ["."]
+revision = "774d09c3863ffb2e137ebe4c39ba27648d208f80"
+version = "v9.26.0"
+
+[[projects]]
+name = "gopkg.in/inf.v0"
+packages = ["."]
   revision = "d2d2541c53f18d2a059457998ce2876cc8e67cbf"
   version = "v0.9.1"
 
@@ -802,6 +894,6 @@ version = "v0.2.0"
 [solve-meta]
 analyzer-name = "dep"
 analyzer-version = 1
-inputs-digest = "21e51e4710e3bb7e648ee3db7d8d9df3050b61324a51358f2f9111b8ddbafea0"
+inputs-digest = "955cfb2ab5152766d23d19ef7ccb989a199b58e677884b1d9085474d289b39b2"
 solver-name = "gps-cdcl"
 solver-version = 1

@@ -28,6 +28,7 @@ import (
 	useracc "gitlab.com/ignitionrobotics/web/cloudsim/users"
 	"gitlab.com/ignitionrobotics/web/fuelserver/permissions"
 	"gitlab.com/ignitionrobotics/web/ign-go"
+	"gitlab.com/ignitionrobotics/web/ign-go/monitoring/prometheus"
 	"gopkg.in/go-playground/validator.v9"
 	"k8s.io/client-go/kubernetes"
 	"log"
@@ -111,7 +112,11 @@ func init() {
 
 	var err error
 
-	globals.Server, err = ign.Init(cfg.Auth0RsaPublickey, "")
+	// Server monitoring provider. Specifying a provider makes the server automatically add middleware required to track
+	// metrics.
+	monitoring := prometheus.NewPrometheusProvider("")
+
+	globals.Server, err = ign.Init(cfg.Auth0RsaPublickey, "", monitoring)
 
 	if err != nil {
 		// Log and shutdown the app , if there is an error during startup
@@ -128,9 +133,14 @@ func init() {
 	s := globals.Server
 	mainRouter := ign.NewRouter()
 	apiPrefix := "/" + globals.APIVersion
+	// API
 	r := mainRouter.PathPrefix(apiPrefix).Subrouter()
 	s.ConfigureRouterWithRoutes(apiPrefix, r, sim.Routes)
-
+	// Health
+	m := mainRouter.PathPrefix("/").Subrouter()
+	s.ConfigureRouterWithRoutes("/", m, sim.MonitoringRoutes)
+	// Set router.
+	// Because a monitoring provider was set, this call will add monitoring routes as well as setting the router
 	globals.Server.SetRouter(mainRouter)
 
 	globals.DefaultEmailRecipients = sim.EnvVarToSlice("IGN_DEFAULT_EMAIL_RECIPIENT")

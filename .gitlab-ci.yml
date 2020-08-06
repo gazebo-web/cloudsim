@@ -1,5 +1,6 @@
 image: registry.gitlab.com/ignitionrobotics/web/images/cloudsim-pipelines
 
+
 variables:
   PKG_NAME: gitlab.com/ignitionrobotics/web/cloudsim
   MYSQL_DATABASE: "cloudsim_test"
@@ -38,12 +39,14 @@ variables:
 
 .deploy_kubernetes: &deploy_kubernetes
   - export CONTAINER_IMAGE="$CI_REGISTRY_IMAGE:$CI_COMMIT_SHA"
-  - envsubst < "./deployments/00-namespace.yaml" > "00-namespace.yaml"
-  - envsubst < "./deployments/01-service.yaml" > "01-service.yaml"
-  - envsubst < "./deployments/02-deployment.yaml" > "02-deployment.yaml"
-  - kubectl apply -f 00-namespace.yaml
-  - kubectl apply -f 01-service.yaml
-  - kubectl apply -f 02-deployment.yaml
+  - export APP_SELECTOR="$APPLICATION_NAME-primary"
+  - export HEY_CMD="hey -z 15s -q 5 -c 2 http://$APPLICATION_NAME-canary.$APPLICATION_ENVIRONMENT.svc.cluster.local/healthz"
+  - envsubst < "./deployments/00-namespace.yaml"
+  - envsubst < "./deployments/00-namespace.yaml"  | kubectl apply -f -
+  - envsubst < "./deployments/01-deployment.yaml"
+  - envsubst < "./deployments/01-deployment.yaml" | kubectl apply -f -
+  - envsubst < "./deployments/02-blue-green.yaml"
+  - envsubst < "./deployments/02-blue-green.yaml" | kubectl apply -f -
 
 ##########################################################
 # Cache configuration
@@ -225,7 +228,7 @@ docker:
   after_script:
     - "docker logout ${CI_REGISTRY}"
   tags:
-    - gitlab-org-docker
+    - docker
 
 docker:next:
   stage: package
@@ -251,7 +254,7 @@ docker:next:
   after_script:
     - "docker logout ${CI_REGISTRY}"
   tags:
-    - gitlab-org-docker
+    - docker
 
 docker:latest:
   stage: package
@@ -278,7 +281,7 @@ docker:latest:
   after_script:
     - "docker logout ${CI_REGISTRY}"
   tags:
-    - gitlab-org-docker
+    - docker
 
 ##########################################################
 # Deploying stage

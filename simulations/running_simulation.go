@@ -224,7 +224,7 @@ func (s *RunningSimulation) callbackWorldStats(ctx context.Context, msg transpor
 	s.stdoutSkipStatsMsgsCount++
 	if s.stdoutSkipStatsMsgsCount > stdoutSkipStatsMsgs {
 		s.stdoutSkipStatsMsgsCount = 0
-		logger(ctx).Debug(fmt.Sprintf("RunningSimulation groupID[%s]- WorldStats message received. Parsed struct: [%v]", s.GroupID, ws))
+		logger(ctx).Debug(fmt.Sprintf("RunningSimulation groupID[%s]- WorldStats message received. Parsed struct: [%s]", s.GroupID, ws.String()))
 	}
 
 	s.lockCurrentState.Lock()
@@ -252,12 +252,12 @@ func (s *RunningSimulation) callbackWarmup(ctx context.Context, msg transport.Me
 	if wup.Data == "started" {
 		// We only act the first time we receive this message
 		if s.SimWarmupSeconds == 0 {
-			logger(ctx).Info(fmt.Sprintf("RunningSimulation groupID[%s]- Warmup message received. Parsed struct: [%v]", s.GroupID, wup))
+			logger(ctx).Info(fmt.Sprintf("RunningSimulation groupID[%s]- Warmup message received. Parsed struct: [%v]", s.GroupID, wup.String()))
 
 			s.SimWarmupSeconds = s.SimTimeSeconds
 		}
 	} else if !s.Finished && wup.Data == "finished" {
-		logger(ctx).Info(fmt.Sprintf("RunningSimulation groupID[%s]- Finished message received. Parsed struct: [%v]", s.GroupID, wup))
+		logger(ctx).Info(fmt.Sprintf("RunningSimulation groupID[%s]- Finished message received. Parsed struct: [%v]", s.GroupID, wup.String()))
 
 		s.Finished = true
 	}
