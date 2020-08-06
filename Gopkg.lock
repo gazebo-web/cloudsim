@@ -26,30 +26,30 @@ packages = [
   "aws/credentials/ec2rolecreds",
   "aws/credentials/endpointcreds",
   "aws/credentials/processcreds",
-    "aws/credentials/stscreds",
-    "aws/csm",
-    "aws/defaults",
-    "aws/ec2metadata",
-    "aws/endpoints",
-    "aws/request",
-    "aws/session",
-    "aws/signer/v4",
-    "internal/ini",
-    "internal/s3err",
+  "aws/credentials/stscreds",
+  "aws/csm",
+  "aws/defaults",
+  "aws/ec2metadata",
+  "aws/endpoints",
+  "aws/request",
+  "aws/session",
+  "aws/signer/v4",
+  "internal/ini",
+  "internal/s3err",
     "internal/sdkio",
     "internal/sdkrand",
     "internal/sdkuri",
     "internal/shareddefaults",
-    "private/protocol",
-    "private/protocol/ec2query",
-    "private/protocol/eventstream",
-    "private/protocol/eventstream/eventstreamapi",
-    "private/protocol/query",
-    "private/protocol/query/queryutil",
-    "private/protocol/rest",
-    "private/protocol/restxml",
-    "private/protocol/xml/xmlutil",
-    "service/ec2",
+  "private/protocol",
+  "private/protocol/ec2query",
+  "private/protocol/eventstream",
+  "private/protocol/eventstream/eventstreamapi",
+  "private/protocol/query",
+  "private/protocol/query/queryutil",
+  "private/protocol/rest",
+  "private/protocol/restxml",
+  "private/protocol/xml/xmlutil",
+  "service/ec2",
   "service/ec2/ec2iface",
   "service/s3",
   "service/s3/s3iface",
@@ -75,16 +75,16 @@ version = "v3.5.0"
 [[projects]]
 name = "github.com/casbin/casbin"
 packages = [
-    ".",
-    "config",
-    "effect",
-    "log",
-    "model",
-    "persist",
-    "persist/file-adapter",
-    "rbac",
-    "rbac/default-role-manager",
-    "util"
+  ".",
+  "config",
+  "effect",
+  "log",
+  "model",
+  "persist",
+  "persist/file-adapter",
+  "rbac",
+  "rbac/default-role-manager",
+  "util"
   ]
   revision = "9814ac94c19c922c0afd5c2f34255e0d543ef372"
   version = "v1.8.2"
@@ -303,12 +303,12 @@ version = "v1.4.2"
   version = "v1.1.0"
 
 [[projects]]
-  name = "github.com/lib/pq"
-  packages = [
-    ".",
-    "oid",
-    "scram"
-  ]
+name = "github.com/lib/pq"
+packages = [
+  ".",
+  "oid",
+  "scram"
+]
 revision = "51e2106eed1cea199c802d2a49e91e2491b02056"
 version = "v1.1.0"
 
@@ -354,7 +354,7 @@ revision = "c37440a7cf42ac63b919c752ca73a85067e05992"
 version = "v0.2.0"
 
 [[projects]]
-  name = "github.com/pkg/errors"
+name = "github.com/pkg/errors"
 packages = ["."]
 revision = "ba968bfe8b2f7e042a574c888954fccecfa385b4"
 version = "v0.8.1"
@@ -410,8 +410,8 @@ version = "v1.0.2"
 [[projects]]
 branch = "master"
 name = "github.com/ryszard/goskiplist"
-  packages = ["skiplist"]
-  revision = "2dfbae5fcf46374f166f8969cb07e167f1be6273"
+packages = ["skiplist"]
+revision = "2dfbae5fcf46374f166f8969cb07e167f1be6273"
 
 [[projects]]
   name = "github.com/satori/go.uuid"
@@ -583,7 +583,7 @@ version = "5.0.1"
   revision = "85acf8d2951cb2a3bde7632f9ff273ef0379bcbd"
 
 [[projects]]
-  branch = "master"
+branch = "master"
 name = "golang.org/x/tools"
 packages = ["cover"]
 revision = "b5fad4ed8dd65a3d7aae567b1f4e751b8ca72837"
@@ -639,8 +639,8 @@ version = "v9.26.0"
 [[projects]]
 name = "gopkg.in/inf.v0"
 packages = ["."]
-  revision = "d2d2541c53f18d2a059457998ce2876cc8e67cbf"
-  version = "v0.9.1"
+revision = "d2d2541c53f18d2a059457998ce2876cc8e67cbf"
+version = "v0.9.1"
 
 [[projects]]
   name = "gopkg.in/src-d/go-billy.v4"
@@ -894,6 +894,6 @@ packages = ["."]
 [solve-meta]
 analyzer-name = "dep"
 analyzer-version = 1
-inputs-digest = "955cfb2ab5152766d23d19ef7ccb989a199b58e677884b1d9085474d289b39b2"
+inputs-digest = "3850321ff8392c54bdda017f76e07d88aed83f059055bc3a895f0099b3373fb6"
 solver-name = "gps-cdcl"
 solver-version = 1
