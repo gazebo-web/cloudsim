@@ -19,11 +19,32 @@ will want to start from there.
 
 Install base dependencies
 
+### System packages
+
 ```
 sudo apt-get update
-sudo apt-get install golang-goprotobuf-dev
 sudo apt-get install tar lsb-release gnupg pkg-config build-essential curl git mercurial
 ```
+
+### Protobuf
+```
+# Sanity check
+if [ -n "`which protoc`" ]; then   
+    echo -e "\\e[33mWarning: protoc is already installed in this system. Proceed with caution.\\e[0m"; 
+fi
+
+curl -OL https://github.com/google/protobuf/releases/download/v3.12.3/protoc-3.12.3-linux-x86_64.zip
+unzip protoc-3.12.3-linux-x86_64.zip -d protoc3
+mv ./protoc3/*/ /usr/local/bin/
+chown root:root /usr/local/bin/protoc
+chown -R root:root /usr/local/include/google
+
+# Install protoc-gen-go
+go get -u google.golang.org/protobuf/cmd/protoc-gen-go
+go install google.golang.org/protobuf/cmd/protoc-gen-go
+```
+
+### Ign-transport
 
 And then
 ```
