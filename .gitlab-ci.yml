@@ -13,6 +13,10 @@ variables:
   LOCALSTACK_HOSTNAME: "localstack"
   TEST_RANGE: 5
   USE_SSL: "false"
+  DEFAULT_REGION: us-east-1
+  LAMBDA_EXECUTOR: docker-reuse
+  DOCKER_HOST: unix:///var/run/docker.sock
+  EDGE_PORT: 4566
 
 ##########################################################
 # Aliases
@@ -152,7 +156,7 @@ test:
     - go test $(go list ./... | grep -v /vendor/)
   services:
     - mysql:5.7
-    - name: localstack/localstack
+    - name: localstack/localstack-full
       alias: localstack
   environment:
     name: testing
@@ -172,7 +176,7 @@ race:
     - go test -race $(go list ./... | grep -v /vendor/)
   services:
     - mysql:5.7
-    - name: localstack/localstack
+    - name: localstack/localstack-full
       alias: localstack
   environment:
     name: testing
@@ -195,7 +199,7 @@ coverage:
     - bash <(curl -s https://codecov.io/bash)
   services:
     - mysql:5.7
-    - name: localstack/localstack
+    - name: localstack/localstack-full
       alias: localstack
   environment:
     name: testing
