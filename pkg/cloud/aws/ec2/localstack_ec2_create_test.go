@@ -1,3 +1,5 @@
+// +build localstack
+
 package ec2
 
 import (
