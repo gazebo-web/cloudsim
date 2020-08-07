@@ -1,7 +1,6 @@
 package ec2
 
 import (
-	"fmt"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
@@ -12,6 +11,7 @@ import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/cloud"
 	"os"
 	"testing"
+	"time"
 )
 
 func TestCreateMachines(t *testing.T) {
@@ -35,12 +35,9 @@ func (s *ec2CreateMachinesTestSuite) SetupSuite() {
 	accessID := os.Getenv("AWS_ACCESS_KEY_ID")
 	accessKey := os.Getenv("AWS_SECRET_ACCESS_KEY")
 	endpoint := os.Getenv("AWS_ENDPOINT")
-	fmt.Println("Access ID:", accessID)
-	fmt.Println("Access Key:", accessKey)
 	if len(endpoint) == 0 {
 		endpoint = "http://localstack:4566"
 	}
-	fmt.Println("Endpoint:", endpoint)
 	config := &aws.Config{
 		Credentials:      credentials.NewStaticCredentials(accessID, accessKey, ""),
 		Endpoint:         aws.String(endpoint),
@@ -64,6 +61,9 @@ func (s *ec2CreateMachinesTestSuite) SetupSuite() {
 
 	s.keyName, err = s.createDefaultKeyPair()
 	s.NoError(err)
+
+	// Wait for localstack to run.
+	time.Sleep(10 * time.Second)
 }
 
 func (s *ec2CreateMachinesTestSuite) SetupTest() {
