@@ -11,7 +11,7 @@ var (
 	ErrInvalidSubnetID = errors.New("invalid subnet")
 	// ErrDryRunFailed is returned when a dry run operation fails.
 	ErrDryRunFailed = errors.New("dry run failed")
-	// ErrUnknown is returned if an invalid errors is returned from AWS.
+	// ErrUnknown is returned when an unknown error is triggered by a cloud provider.
 	ErrUnknown = errors.New("unknown error")
 	// ErrInsufficientMachines is returned when creating machines fails because there aren't enough machines.
 	ErrInsufficientMachines = errors.New("insufficient machines")

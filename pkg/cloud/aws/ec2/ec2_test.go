@@ -2,7 +2,9 @@ package ec2
 
 import (
 	"github.com/stretchr/testify/assert"
+	"sync"
 	"testing"
+	"time"
 )
 
 func TestIsValidKeyName(t *testing.T) {
@@ -37,4 +39,49 @@ func TestIsValidSubnetID(t *testing.T) {
 	assert.False(t, m.isValidSubnetID("subnet-06fe9fdb790aa7"))
 	assert.True(t, m.isValidSubnetID("subnet-06fe9fdb790aa78e7"))
 	assert.False(t, m.isValidSubnetID("subnet-06fe9fdb790aa78e71234778"))
+}
+
+func TestSleep0Seconds(t *testing.T) {
+	m := &machines{}
+
+	var wg sync.WaitGroup
+	wg.Add(1)
+	before := time.Now()
+	func() {
+		m.sleepNSecondsBeforeMaxRetries(0, 10)
+		wg.Done()
+	}()
+	wg.Wait()
+	now := time.Now()
+	assert.Equal(t, before.Second(), now.Second())
+}
+
+func TestSleep1Seconds(t *testing.T) {
+	m := &machines{}
+
+	var wg sync.WaitGroup
+	wg.Add(1)
+	before := time.Now()
+	func() {
+		m.sleepNSecondsBeforeMaxRetries(1, 10)
+		wg.Done()
+	}()
+	wg.Wait()
+	now := time.Now()
+	assert.Equal(t, before.Second()+1, now.Second())
+}
+
+func TestSleep0SecondsWhenIsMax(t *testing.T) {
+	m := &machines{}
+
+	var wg sync.WaitGroup
+	wg.Add(1)
+	before := time.Now()
+	func() {
+		m.sleepNSecondsBeforeMaxRetries(10, 10)
+		wg.Done()
+	}()
+	wg.Wait()
+	now := time.Now()
+	assert.Equal(t, before.Second(), now.Second())
 }
