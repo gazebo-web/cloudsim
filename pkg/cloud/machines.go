@@ -24,18 +24,55 @@ var (
 // CreateMachinesInput is the input for the Machines.Create operation.
 // It will be used to create a certain number of machines.
 type CreateMachinesInput struct {
-	ResourceName  string
-	DryRun        bool
-	KeyName       string
-	Type          string
-	MinCount      int64
-	MaxCount      int64
+	// ResourceName is a file naming convention used to identify a particular resource
+	// In AWS: Amazon Resource Names (ARN).
+	ResourceName string
+
+	// DryRun is a flag to enable DryRun mode when creating machines.
+	// If DryRun is set to true, the Machines.Create method will create instances using
+	// DryRun mode to guarantee that the operation could be performed first,
+	// and then executing the actual machine creation request.
+	// If DryRun is set to false, the Machines.Create method will bypass the DryRun mode.
+	DryRun bool
+
+	// KeyName is the SSH key-pair's name that will be used on the created machine.
+	KeyName string
+
+	// Type is the name of an instance type.
+	// Instances types comprise varying combinations of CPU, memory, storage, and networking capacity
+	// and give you the flexibility to choose the appropriate mix of resources for your applications.
+	Type string
+
+	// Image is the URL of the image that will be used to launch a machine.
+	// In AWS: Amazon Machine Images (AMI).
+	Image string
+
+	// MinCount defines the minimum amount of machines that should be created.
+	MinCount int64
+
+	// MaxCount defines the maximum amount of machines that should be created.
+	MaxCount int64
+
+	// FirewallRules is a group of firewall configurations that will be applied to the machine.
+	// In AWS: Security groups.
 	FirewallRules []string
-	SubnetID      string
-	Zone          string
-	Tags          map[string]map[string]string
-	InitScript    string
-	Retries       int
+
+	// SubnetID is the ID of the subnet that defines a range of IP addresses.
+	SubnetID string
+
+	// Zone is a location inside a datacenter that is isolated from other zones.
+	// In AWS: Availability zones.
+	Zone string
+
+	// Tags is a group of key-value pairs that is used to identify the machine.
+	Tags map[string]map[string]string
+
+	// InitScript is the initialization script that will be executed when the machine gets created.
+	InitScript string
+
+	// Retries is the max amount of retries that will be executed when running in dry run mode.
+	// Suggested value: 10.
+	Retries int
 }
 
 // CreateMachinesOutput is the output for the Machines.Create operation.

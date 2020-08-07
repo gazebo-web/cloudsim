@@ -55,22 +55,35 @@ func (m machines) isValidSubnetID(subnet string) bool {
 
 // newRunInstancesInput initializes the configuration to run EC2 instances with the given input.
 func (m machines) newRunInstancesInput(createMachines cloud.CreateMachinesInput) *ec2.RunInstancesInput {
+	var script *string
+	if len(createMachines.InitScript) == 0 {
+		script = &createMachines.InitScript
+	}
+
+	var iamProfile *ec2.IamInstanceProfileSpecification
+	if len(createMachines.ResourceName) == 0 {
+		iamProfile = &ec2.IamInstanceProfileSpecification{
+			Arn:  &createMachines.ResourceName,
+			Name: nil,
+		}
+	}
+
 	tagSpec := m.createTags(createMachines.Tags)
 	return &ec2.RunInstancesInput{
-		DryRun: aws.Bool(createMachines.DryRun),
-		IamInstanceProfile: &ec2.IamInstanceProfileSpecification{
-			Arn: aws.String(createMachines.ResourceName),
-		},
-		KeyName:          aws.String(createMachines.KeyName),
-		MaxCount:         aws.Int64(createMachines.MaxCount),
-		MinCount:         aws.Int64(createMachines.MinCount),
-		SecurityGroupIds: aws.StringSlice(createMachines.FirewallRules),
-		SubnetId:         aws.String(createMachines.SubnetID),
+		DryRun:             aws.Bool(createMachines.DryRun),
+		InstanceType:       aws.String(createMachines.Type),
+		ImageId:            aws.String(createMachines.Image),
+		IamInstanceProfile: iamProfile,
+		KeyName:            aws.String(createMachines.KeyName),
+		MaxCount:           aws.Int64(createMachines.MaxCount),
+		MinCount:           aws.Int64(createMachines.MinCount),
+		SecurityGroupIds:   aws.StringSlice(createMachines.FirewallRules),
+		SubnetId:           aws.String(createMachines.SubnetID),
 		Placement: &ec2.Placement{
 			AvailabilityZone: aws.String(createMachines.Zone),
 		},
 		TagSpecifications: tagSpec,
-		UserData:          aws.String(createMachines.InitScript),
+		UserData:          script,
 	}
 }
 
@@ -97,9 +110,7 @@ func (m machines) createTags(input map[string]map[string]string) []*ec2.TagSpeci
 // It will return an cloud.ErrDryRunFailed if the EC2 transaction
 // returns a different error code than ErrCodeDryRunOperation.
 func (m machines) createInstanceDryRun(input *ec2.RunInstancesInput) error {
-	if input.DryRun != nil && !(*input.DryRun) {
-		input.SetDryRun(true)
-	}
+	input.SetDryRun(true)
 	_, err := m.API.RunInstances(input)
 	awsErr, ok := err.(awserr.Error)
 	if !ok || awsErr.Code() != ErrCodeDryRunOperation {
@@ -132,9 +143,7 @@ func (m machines) parseRunInstanceError(err error) error {
 
 // runInstance is a wrapper for the EC2 RunInstances method.
 func (m machines) runInstance(input *ec2.RunInstancesInput) (*ec2.Reservation, error) {
-	if input.DryRun != nil && (*input.DryRun) {
-		input.SetDryRun(false)
-	}
+	input.SetDryRun(false)
 	r, err := m.API.RunInstances(input)
 	if err != nil {
 		return nil, m.parseRunInstanceError(err)
@@ -162,26 +171,29 @@ func (m machines) create(input cloud.CreateMachinesInput) (*cloud.CreateMachines
 			m.sleepNSecondsBeforeMaxRetries(try, input.Retries)
 			continue
 		}
-
-		reservation, err := m.runInstance(runInstanceInput)
-		if err != nil {
-			return &output, err
+		if try == input.Retries {
+			return nil, cloud.ErrUnknown
 		}
+	}
 
-		for _, i := range reservation.Instances {
-			output.Instances = append(output.Instances, *i.InstanceId)
-		}
+	reservation, err := m.runInstance(runInstanceInput)
+	if err != nil {
+		return &output, err
+	}
+
+	for _, i := range reservation.Instances {
+		output.Instances = append(output.Instances, *i.InstanceId)
 	}
 
 	return &output, nil
 }
 
-// Create creates multiples EC2 instances. It will return the created machines.
+// Create creates multiple EC2 instances. It will return the created machines.
 // This operation doesn't recover from an error.
 // You need to destroy the required machines when an error occurs.
 func (m machines) Create(inputs []cloud.CreateMachinesInput) (created []cloud.CreateMachinesOutput, err error) {
+	var c *cloud.CreateMachinesOutput
 	for _, input := range inputs {
-		var c *cloud.CreateMachinesOutput
 		c, err = m.create(input)
 		if err != nil {
 			return
