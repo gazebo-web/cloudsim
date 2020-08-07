@@ -12,7 +12,7 @@ variables:
   HOSTNAME: "localstack"
   LOCALSTACK_HOSTNAME: "localstack"
   TEST_RANGE: 5
-  USE_SSL: false
+  USE_SSL: "false"
 
 ##########################################################
 # Aliases
