@@ -202,6 +202,8 @@ ec2:localstack:
     - name: localstack/localstack-full
       alias: localstack
   environment:
+    name: testing
+  variables:
     SERVICES: "ec2"
     START_WEB: 0
     DEBUG: 1
