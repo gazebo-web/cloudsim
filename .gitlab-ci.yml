@@ -1,17 +1,22 @@
 image: registry.gitlab.com/ignitionrobotics/web/images/cloudsim-pipelines
 
-
 variables:
+  # Go
   PKG_NAME: gitlab.com/ignitionrobotics/web/cloudsim
+  # MySQL service
   MYSQL_DATABASE: "cloudsim_test"
   MYSQL_ROOT_PASSWORD: "root"
+  # Kubernetes executor
   KUBERNETES_POLL_TIMEOUT: 540
+  # LocalStack service
   SERVICES: "ec2"
   START_WEB: 0
   DEBUG: 1
   HOSTNAME_EXTERNAL: "localstack"
   HOSTNAME: "localstack"
   LOCALSTACK_HOSTNAME: "localstack"
+  TEST_RANGE: 5
+  USE_SSL: false
 
 ##########################################################
 # Aliases

@@ -37,7 +37,6 @@ func (s *ec2CreateMachinesTestSuite) SetupSuite() {
 	if len(endpoint) == 0 {
 		endpoint = "http://localstack:4566"
 	}
-
 	config := &aws.Config{
 		Credentials:      credentials.NewStaticCredentials(accessID, accessKey, ""),
 		Endpoint:         aws.String(endpoint),
@@ -254,7 +253,7 @@ func (s *ec2CreateMachinesTestSuite) TestCreate_Valid() {
 			FirewallRules: []string{s.securityGroup},
 			SubnetID:      s.subnet,
 			Zone:          s.availabilityZone,
-			Retries:       10,
+			Retries:       3,
 		},
 	}
 	_, err := s.machines.Create(input)
