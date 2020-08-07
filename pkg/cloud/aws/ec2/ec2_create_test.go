@@ -1,6 +1,7 @@
 package ec2
 
 import (
+	"fmt"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
@@ -34,9 +35,12 @@ func (s *ec2CreateMachinesTestSuite) SetupSuite() {
 	accessID := os.Getenv("AWS_ACCESS_KEY_ID")
 	accessKey := os.Getenv("AWS_SECRET_ACCESS_KEY")
 	endpoint := os.Getenv("AWS_ENDPOINT")
+	fmt.Println("Access ID:", accessID)
+	fmt.Println("Access Key:", accessKey)
 	if len(endpoint) == 0 {
 		endpoint = "http://localstack:4566"
 	}
+	fmt.Println("Endpoint:", endpoint)
 	config := &aws.Config{
 		Credentials:      credentials.NewStaticCredentials(accessID, accessKey, ""),
 		Endpoint:         aws.String(endpoint),
