@@ -5,18 +5,7 @@ variables:
   MYSQL_DATABASE: "cloudsim_test"
   MYSQL_ROOT_PASSWORD: "root"
   KUBERNETES_POLL_TIMEOUT: 540
-  SERVICES: "ec2"
-  START_WEB: 0
-  DEBUG: 1
-  HOSTNAME_EXTERNAL: "localstack"
-  HOSTNAME: "localstack"
-  LOCALSTACK_HOSTNAME: "localstack"
-  TEST_RANGE: 5
-  USE_SSL: "false"
-  DEFAULT_REGION: us-east-1
-  LAMBDA_EXECUTOR: docker-reuse
-  DOCKER_HOST: unix:///var/run/docker.sock
-  EDGE_PORT: 4566
+
 
 ##########################################################
 # Aliases
@@ -156,8 +145,6 @@ test:
     - go test $(go list ./... | grep -v /vendor/)
   services:
     - mysql:5.7
-    - name: localstack/localstack-full
-      alias: localstack
   environment:
     name: testing
   tags:
@@ -176,8 +163,6 @@ race:
     - go test -race $(go list ./... | grep -v /vendor/)
   services:
     - mysql:5.7
-    - name: localstack/localstack-full
-      alias: localstack
   environment:
     name: testing
   allow_failure: true
@@ -199,12 +184,39 @@ coverage:
     - bash <(curl -s https://codecov.io/bash)
   services:
     - mysql:5.7
-    - name: localstack/localstack-full
-      alias: localstack
   environment:
     name: testing
   tags:
     - gitlab-org
+
+ec2:localstack:
+  stage: test
+  before_script:
+    - *setup_project
+    - *setup_git_credentials
+    - *dep_ensure
+    - *setup_db
+  script:
+    - go test -v ./pkg/cloud/aws/ec2/ -tags=localstack
+  services:
+    - name: localstack/localstack-full
+      alias: localstack
+  environment:
+    SERVICES: "ec2"
+    START_WEB: 0
+    DEBUG: 1
+    HOSTNAME_EXTERNAL: "localstack"
+    HOSTNAME: "localstack"
+    LOCALSTACK_HOSTNAME: "localstack"
+    TEST_RANGE: 5
+    USE_SSL: "false"
+    DEFAULT_REGION: us-east-1
+    LAMBDA_EXECUTOR: docker-reuse
+    DOCKER_HOST: tcp://docker:2375
+    DOCKER_DRIVER: overlay2
+    DOCKER_TLS_CERTDIR: ""
+    EDGE_PORT: 4566
+
 
 ##########################################################
 # Packaging stage
