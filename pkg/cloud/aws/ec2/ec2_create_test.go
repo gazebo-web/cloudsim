@@ -1,9 +1,10 @@
 package ec2
 
 import (
+	"errors"
+	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/aws/aws-sdk-go/service/ec2/ec2iface"
-	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/suite"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/cloud"
 	"testing"
@@ -20,9 +21,7 @@ type ec2CreateMachinesTestSuite struct {
 }
 
 func (s *ec2CreateMachinesTestSuite) SetupTest() {
-	s.ec2API = &mockEC2{
-		Mock: new(mock.Mock),
-	}
+	s.ec2API = &mockEC2{}
 	s.machines = NewMachines(s.ec2API)
 }
 
@@ -47,6 +46,7 @@ func (s *ec2CreateMachinesTestSuite) TestCreate_MissingKeyName() {
 	_, err := s.machines.Create(input)
 	s.Error(err)
 	s.Equal(cloud.ErrMissingKeyName, err)
+	s.Equal(0, s.ec2API.RunInstancesCalls)
 }
 
 func (s *ec2CreateMachinesTestSuite) TestCreate_InvalidCountBothZero() {
@@ -64,6 +64,7 @@ func (s *ec2CreateMachinesTestSuite) TestCreate_InvalidCountBothZero() {
 	_, err := s.machines.Create(input)
 	s.Error(err)
 	s.Equal(cloud.ErrInvalidMachinesCount, err)
+	s.Equal(0, s.ec2API.RunInstancesCalls)
 }
 
 func (s *ec2CreateMachinesTestSuite) TestCreate_InvalidCountMinCountZero() {
@@ -81,6 +82,7 @@ func (s *ec2CreateMachinesTestSuite) TestCreate_InvalidCountMinCountZero() {
 	_, err := s.machines.Create(input)
 	s.Error(err)
 	s.Equal(cloud.ErrInvalidMachinesCount, err)
+	s.Equal(0, s.ec2API.RunInstancesCalls)
 }
 
 func (s *ec2CreateMachinesTestSuite) TestCreate_InvalidCountMaxCountZero() {
@@ -98,6 +100,7 @@ func (s *ec2CreateMachinesTestSuite) TestCreate_InvalidCountMaxCountZero() {
 	_, err := s.machines.Create(input)
 	s.Error(err)
 	s.Equal(cloud.ErrInvalidMachinesCount, err)
+	s.Equal(0, s.ec2API.RunInstancesCalls)
 }
 
 func (s *ec2CreateMachinesTestSuite) TestCreate_MinCountGreaterThanMaxCount() {
@@ -115,22 +118,7 @@ func (s *ec2CreateMachinesTestSuite) TestCreate_MinCountGreaterThanMaxCount() {
 	_, err := s.machines.Create(input)
 	s.Error(err)
 	s.Equal(cloud.ErrInvalidMachinesCount, err)
-}
-
-func (s *ec2CreateMachinesTestSuite) TestCreate_MinCountEqualsMaxCount() {
-	input := []cloud.CreateMachinesInput{
-		{
-			DryRun:        false,
-			KeyName:       "key-name",
-			MinCount:      1,
-			MaxCount:      1,
-			FirewallRules: nil,
-			SubnetID:      "subnet-06fe9fdb790aa78e7",
-			Tags:          nil,
-		},
-	}
-	_, err := s.machines.Create(input)
-	s.NoError(err)
+	s.Equal(0, s.ec2API.RunInstancesCalls)
 }
 
 func (s *ec2CreateMachinesTestSuite) TestCreate_NegativeCount() {
@@ -148,6 +136,7 @@ func (s *ec2CreateMachinesTestSuite) TestCreate_NegativeCount() {
 	_, err := s.machines.Create(input)
 	s.Error(err)
 	s.Equal(cloud.ErrInvalidMachinesCount, err)
+	s.Equal(0, s.ec2API.RunInstancesCalls)
 }
 
 func (s *ec2CreateMachinesTestSuite) TestCreate_InvalidSubnet() {
@@ -158,7 +147,7 @@ func (s *ec2CreateMachinesTestSuite) TestCreate_InvalidSubnet() {
 			MinCount:      1,
 			MaxCount:      99,
 			FirewallRules: nil,
-			SubnetID:      "test-1234",
+			SubnetID:      "subnet-1234",
 			Tags:          nil,
 		},
 	}
@@ -166,53 +155,11 @@ func (s *ec2CreateMachinesTestSuite) TestCreate_InvalidSubnet() {
 	s.Error(err)
 	s.Equal(cloud.ErrInvalidSubnetID, err)
 
-	input = []cloud.CreateMachinesInput{
-		{
-			DryRun:        false,
-			KeyName:       "key-name",
-			MinCount:      1,
-			MaxCount:      99,
-			FirewallRules: nil,
-			SubnetID:      "subnet-1234",
-			Tags:          nil,
-		},
-	}
-	_, err = s.machines.Create(input)
-	s.Error(err)
-	s.Equal(cloud.ErrInvalidSubnetID, err)
-
-	input = []cloud.CreateMachinesInput{
-		{
-			DryRun:        false,
-			KeyName:       "key-name",
-			MinCount:      1,
-			MaxCount:      99,
-			FirewallRules: nil,
-			SubnetID:      "subnet-1234",
-			Tags:          nil,
-		},
-	}
-	_, err = s.machines.Create(input)
-	s.Error(err)
-	s.Equal(cloud.ErrInvalidSubnetID, err)
+	s.Equal(0, s.ec2API.RunInstancesCalls)
 }
 
-func (s *ec2CreateMachinesTestSuite) TestCreate_ValidSubnet() {
+func (s *ec2CreateMachinesTestSuite) TestCreate_ValidWithoutDryRunMode() {
 	input := []cloud.CreateMachinesInput{
-		{
-			DryRun:        false,
-			KeyName:       "key-name",
-			MinCount:      1,
-			MaxCount:      99,
-			FirewallRules: nil,
-			SubnetID:      "subnet-0dae7657",
-			Tags:          nil,
-		},
-	}
-	_, err := s.machines.Create(input)
-	s.NoError(err)
-
-	input = []cloud.CreateMachinesInput{
 		{
 			DryRun:        false,
 			KeyName:       "key-name",
@@ -223,19 +170,57 @@ func (s *ec2CreateMachinesTestSuite) TestCreate_ValidSubnet() {
 			Tags:          nil,
 		},
 	}
-	_, err = s.machines.Create(input)
+	_, err := s.machines.Create(input)
 	s.NoError(err)
+	s.Equal(1, s.ec2API.RunInstancesCalls)
+}
+
+func (s *ec2CreateMachinesTestSuite) TestCreate_ValidWithDryRunMode() {
+	mock := &mockEC2DryRunMode{}
+	s.machines = NewMachines(mock)
+	input := []cloud.CreateMachinesInput{
+		{
+			DryRun:        true,
+			KeyName:       "key-name",
+			MinCount:      1,
+			MaxCount:      99,
+			FirewallRules: nil,
+			SubnetID:      "subnet-06fe9fdb790aa78e7",
+			Tags:          nil,
+			Retries:       3,
+		},
+	}
+	_, err := s.machines.Create(input)
+	s.NoError(err)
+	s.Equal(3, mock.RunInstancesCalls)
 }
 
 type mockEC2 struct {
 	ec2iface.EC2API
-	*mock.Mock
+	RunInstancesCalls int
 }
 
 // RunInstances mocks EC2 RunInstances method.
 func (m *mockEC2) RunInstances(input *ec2.RunInstancesInput) (*ec2.Reservation, error) {
-	args := m.Called(input)
-	reservation := args.Get(0).(*ec2.Reservation)
-	err := args.Error(1)
-	return reservation, err
+	m.RunInstancesCalls++
+	return &ec2.Reservation{}, nil
+}
+
+type mockEC2DryRunMode struct {
+	ec2iface.EC2API
+	RunInstancesCalls int
+}
+
+// RunInstances mocks EC2 RunInstances method.
+func (m *mockEC2DryRunMode) RunInstances(input *ec2.RunInstancesInput) (*ec2.Reservation, error) {
+	if m.RunInstancesCalls == 0 {
+		m.RunInstancesCalls++
+		return nil, awserr.New(ErrCodeRequestLimitExceeded, "request limit exceeded", errors.New("test error"))
+	}
+	if m.RunInstancesCalls == 1 {
+		m.RunInstancesCalls++
+		return nil, awserr.New(ErrCodeDryRunOperation, "dry run operation", errors.New("dry run error"))
+	}
+	m.RunInstancesCalls++
+	return &ec2.Reservation{}, nil
 }

@@ -2,6 +2,7 @@ package ec2
 
 import (
 	"github.com/stretchr/testify/assert"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/cloud"
 	"sync"
 	"testing"
 	"time"
@@ -84,4 +85,73 @@ func TestSleep0SecondsWhenIsMax(t *testing.T) {
 	wg.Wait()
 	now := time.Now()
 	assert.Equal(t, before.Second(), now.Second())
+}
+
+func TestNewRunInstanceInput(t *testing.T) {
+	m := &machines{}
+	out := m.newRunInstancesInput(cloud.CreateMachinesInput{
+		ResourceName:  "arn",
+		DryRun:        true,
+		KeyName:       "key-name",
+		Type:          "t2.large",
+		Image:         "docker-image",
+		MinCount:      1,
+		MaxCount:      2,
+		FirewallRules: []string{"first-rule", "second-rule"},
+		SubnetID:      "subnet-id",
+		Zone:          "zone-a",
+		Tags: map[string]map[string]string{
+			"namespace": {
+				"key": "value",
+			},
+		},
+		InitScript: "bash",
+		Retries:    1,
+	})
+
+	assert.NotNil(t, out.IamInstanceProfile.Arn)
+	assert.Equal(t, "arn", *out.IamInstanceProfile.Arn)
+
+	assert.NotNil(t, *out.DryRun)
+	assert.True(t, *out.DryRun)
+
+	assert.NotNil(t, out.KeyName)
+	assert.Equal(t, "key-name", *out.KeyName)
+
+	assert.NotNil(t, out.InstanceType)
+	assert.Equal(t, "t2.large", *out.InstanceType)
+
+	assert.NotNil(t, out.MinCount)
+	assert.NotNil(t, out.MaxCount)
+	assert.Equal(t, int64(1), *out.MinCount)
+	assert.Equal(t, int64(2), *out.MaxCount)
+
+	assert.NotNil(t, out.SecurityGroups)
+	assert.Len(t, out.SecurityGroups, 2)
+	assert.Equal(t, "first-rule", *out.SecurityGroups[0])
+	assert.Equal(t, "second-rule", *out.SecurityGroups[1])
+
+	assert.NotNil(t, out.SubnetId)
+	assert.Equal(t, "subnet-id", *out.SubnetId)
+
+	assert.NotNil(t, out.Placement.AvailabilityZone)
+	assert.Equal(t, "zone-a", *out.Placement.AvailabilityZone)
+
+	assert.NotNil(t, out.UserData)
+	assert.Equal(t, "bash", *out.UserData)
+}
+
+func TestCreateTags(t *testing.T) {
+	m := &machines{}
+
+	tagSpec := m.createTags(map[string]map[string]string{
+		"namespace": {
+			"key": "value",
+		},
+	})
+
+	assert.Len(t, tagSpec, 1)
+	assert.Len(t, tagSpec[0].Tags, 1)
+	assert.Equal(t, "key", *tagSpec[0].Tags[0].Key)
+	assert.Equal(t, "value", *tagSpec[0].Tags[0].Value)
 }

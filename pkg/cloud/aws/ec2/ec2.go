@@ -56,16 +56,21 @@ func (m machines) isValidSubnetID(subnet string) bool {
 // newRunInstancesInput initializes the configuration to run EC2 instances with the given input.
 func (m machines) newRunInstancesInput(createMachines cloud.CreateMachinesInput) *ec2.RunInstancesInput {
 	var script *string
-	if len(createMachines.InitScript) == 0 {
+	if len(createMachines.InitScript) > 0 {
 		script = &createMachines.InitScript
 	}
 
 	var iamProfile *ec2.IamInstanceProfileSpecification
-	if len(createMachines.ResourceName) == 0 {
+	if len(createMachines.ResourceName) > 0 {
 		iamProfile = &ec2.IamInstanceProfileSpecification{
 			Arn:  &createMachines.ResourceName,
 			Name: nil,
 		}
+	}
+
+	var securitGroups []*string
+	for _, sg := range createMachines.FirewallRules {
+		securitGroups = append(securitGroups, aws.String(sg))
 	}
 
 	tagSpec := m.createTags(createMachines.Tags)
@@ -84,6 +89,7 @@ func (m machines) newRunInstancesInput(createMachines cloud.CreateMachinesInput)
 		},
 		TagSpecifications: tagSpec,
 		UserData:          script,
+		SecurityGroups:    securitGroups,
 	}
 }
 
@@ -174,6 +180,7 @@ func (m machines) create(input cloud.CreateMachinesInput) (*cloud.CreateMachines
 		if try == input.Retries {
 			return nil, cloud.ErrUnknown
 		}
+		break
 	}
 
 	reservation, err := m.runInstance(runInstanceInput)
