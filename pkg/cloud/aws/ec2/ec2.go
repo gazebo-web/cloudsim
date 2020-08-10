@@ -212,7 +212,10 @@ func (m machines) Create(inputs []cloud.CreateMachinesInput) (created []cloud.Cr
 
 // Terminate terminates EC2 machines.
 func (m machines) Terminate(input cloud.TerminateMachinesInput) error {
-	panic("implement me")
+	if input.Names == nil || len(input.Names) == 0 {
+		return cloud.ErrMissingMachineNames
+	}
+	return nil
 }
 
 func (m machines) createFilters(input map[string][]string) []*ec2.Filter {

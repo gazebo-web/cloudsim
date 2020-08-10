@@ -19,6 +19,8 @@ var (
 	ErrRequestsLimitExceeded = errors.New("requests limit exceeded")
 	// ErrMachineCreationFailed is returned when creating machines fails.
 	ErrMachineCreationFailed = errors.New("machine creation failed")
+	// ErrMissingMachineNames is returned when no machines ids are provided to be terminated.
+	ErrMissingMachineNames = errors.New("missing machine names")
 )
 
 // CreateMachinesInput is the input for the Machines.Create operation.

@@ -16,12 +16,12 @@ func TestCountMachines(t *testing.T) {
 
 type ec2CountMachinesTestSuite struct {
 	suite.Suite
-	ec2API   *mocKEC2Count
+	ec2API   *mockEC2Count
 	machines cloud.Machines
 }
 
 func (s *ec2CountMachinesTestSuite) SetupTest() {
-	s.ec2API = &mocKEC2Count{}
+	s.ec2API = &mockEC2Count{}
 	s.machines = NewMachines(s.ec2API)
 }
 
@@ -89,13 +89,13 @@ func (s *ec2CountMachinesTestSuite) TestCount_GetMachinesWithFilters() {
 	s.Equal(1, result)
 }
 
-type mocKEC2Count struct {
+type mockEC2Count struct {
 	ec2iface.EC2API
 	InternalError  error
 	ReturnMachines bool
 }
 
-func (m *mocKEC2Count) DescribeInstances(input *ec2.DescribeInstancesInput) (*ec2.DescribeInstancesOutput, error) {
+func (m *mockEC2Count) DescribeInstances(input *ec2.DescribeInstancesInput) (*ec2.DescribeInstancesOutput, error) {
 	if m.InternalError != nil {
 		return nil, m.InternalError
 	}
