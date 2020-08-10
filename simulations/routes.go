@@ -693,3 +693,31 @@ var Routes ign.Routes = ign.Routes{
 		},
 	},
 }
+
+// MonitoringRoutes contains the different routes used for service monitoring.
+var MonitoringRoutes = ign.Routes{
+
+	///////////////
+	//  Healthz  //
+	///////////////
+
+	ign.Route{
+		Name:        "Cloudsim healthcheck",
+		Description: "Get cloudsim status",
+		URI:         "/healthz",
+		Headers:     nil,
+		Methods: ign.Methods{
+			ign.Method{
+				Type:        "GET",
+				Description: "Get cloudsim status",
+				Handlers: ign.FormatHandlers{
+					ign.FormatHandler{
+						Extension: "",
+						Handler:   ign.JSONResult(Healthz),
+					},
+				},
+			},
+		},
+		SecureMethods: ign.SecureMethods{},
+	},
+}
