@@ -1594,10 +1594,13 @@ func (sa *SubTApplication) addSharedVolumeConfigurationContainer(pod *corev1.Pod
 }
 
 // createWebsocketService creates a Kubernetes Service that exposes the websocket server to the cluster.
-// This service can then be exposed to the Internet by a separate load balancer.
+// This service can be exposed to the Internet via a load balancer.
 func (sa *SubTApplication) createWebsocketService(ctx context.Context, kc kubernetes.Interface, namespace string,
 	dep *SimulationDeployment, podNamePrefix string, serviceLabels map[string]string,
 	targetLabels map[string]string) (*corev1.Service, error) {
+
+	logger := logger(ctx)
+	logger.Info("Creating simulation cluster websocket service.")
 
 	// Prepare the service
 	service := &corev1.Service{
@@ -1626,8 +1629,15 @@ func (sa *SubTApplication) createWebsocketService(ctx context.Context, kc kubern
 	return service, nil
 }
 
+// createWebsocketIngress adds a rule to the environment's cluster ingress resource.
+// If an ingress controller is installedin the cluster, the creation of the ingress rule will trigger an ingress
+// controller to configure a load balancer to redirect simulation websocket requests to the cluster service created
+// for the websocket server.
 func (sa *SubTApplication) createWebsocketIngress(ctx context.Context, kc kubernetes.Interface, namespace string,
 	dep *SimulationDeployment, service *corev1.Service) (*v1beta1.Ingress, error) {
+
+	logger := logger(ctx)
+	logger.Info("Creating simulation websocket ingress rule.")
 
 	// Prepare the rule path
 	rulePath := &v1beta1.HTTPIngressPath{
@@ -1648,7 +1658,8 @@ func (sa *SubTApplication) createWebsocketIngress(ctx context.Context, kc kubern
 
 	var ingress *v1beta1.Ingress
 	var err error
-	for i := uint(1); i < 9; i++ {
+	retries := uint(9)
+	for i := uint(1); i < retries; i++ {
 		ingress, err = upsertIngressRule(
 			ctx,
 			kc,
@@ -1659,7 +1670,10 @@ func (sa *SubTApplication) createWebsocketIngress(ctx context.Context, kc kubern
 		)
 		if err == nil {
 			break
+		} else if i < retries-1 {
+			logger.Info("Failed to create ingress rule. Retrying. Error:", err)
 		}
+
 		// If an error occurred, retry for up to 10 min with exponential backoff
 		Sleep(time.Duration(1<<i) * time.Second)
 	}
