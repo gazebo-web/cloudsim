@@ -1,11 +1,25 @@
 package ec2
 
 import (
+	"errors"
+	"github.com/aws/aws-sdk-go/aws/awserr"
+	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/stretchr/testify/assert"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/cloud"
 	"testing"
 	"time"
 )
+
+func TestNewMachines(t *testing.T) {
+	s, err := session.NewSession(nil)
+	assert.NoError(t, err)
+	ec := ec2.New(s)
+	m := NewMachines(ec)
+	e, ok := m.(*machines)
+	assert.True(t, ok)
+	assert.NotNil(t, e.API)
+}
 
 func TestIsValidKeyName(t *testing.T) {
 	m := &machines{}
@@ -31,6 +45,8 @@ func TestIsValidSubnetID(t *testing.T) {
 	assert.False(t, m.isValidSubnetID(""))
 	assert.False(t, m.isValidSubnetID("test"))
 	assert.False(t, m.isValidSubnetID("test-1234"))
+	assert.False(t, m.isValidSubnetID("tested-0dae7657"))
+	assert.False(t, m.isValidSubnetID("tested-06fe9fdb790aa78e7"))
 
 	assert.False(t, m.isValidSubnetID("subnet-0de7657"))
 	assert.True(t, m.isValidSubnetID("subnet-0dae7657"))
@@ -69,7 +85,6 @@ func TestNewRunInstanceInput(t *testing.T) {
 	m := &machines{}
 	out := m.newRunInstancesInput(cloud.CreateMachinesInput{
 		ResourceName:  "arn",
-		DryRun:        true,
 		KeyName:       "key-name",
 		Type:          "t2.large",
 		Image:         "docker-image",
@@ -89,9 +104,6 @@ func TestNewRunInstanceInput(t *testing.T) {
 
 	assert.NotNil(t, out.IamInstanceProfile.Arn)
 	assert.Equal(t, "arn", *out.IamInstanceProfile.Arn)
-
-	assert.NotNil(t, *out.DryRun)
-	assert.True(t, *out.DryRun)
 
 	assert.NotNil(t, out.KeyName)
 	assert.Equal(t, "key-name", *out.KeyName)
@@ -150,4 +162,17 @@ func TestCreateFilters(t *testing.T) {
 	assert.Equal(t, "pending", *output[0].Values[0])
 	assert.NotNil(t, output[0].Values[1])
 	assert.Equal(t, "running", *output[0].Values[1])
+}
+
+func TestParseRunInstanceError(t *testing.T) {
+	m := &machines{}
+
+	err := m.parseRunInstanceError(errors.New("internal error"))
+	assert.Equal(t, cloud.ErrUnknown, err)
+
+	err = m.parseRunInstanceError(awserr.New(ErrCodeInsufficientInstanceCapacity, "test", nil))
+	assert.Equal(t, cloud.ErrInsufficientMachines, err)
+
+	err = m.parseRunInstanceError(awserr.New(ErrCodeRequestLimitExceeded, "test", nil))
+	assert.Equal(t, cloud.ErrRequestsLimitExceeded, err)
 }

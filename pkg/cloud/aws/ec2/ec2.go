@@ -75,7 +75,6 @@ func (m machines) newRunInstancesInput(createMachines cloud.CreateMachinesInput)
 
 	tagSpec := m.createTags(createMachines.Tags)
 	return &ec2.RunInstancesInput{
-		DryRun:             aws.Bool(createMachines.DryRun),
 		InstanceType:       aws.String(createMachines.Type),
 		ImageId:            aws.String(createMachines.Image),
 		IamInstanceProfile: iamProfile,
@@ -175,12 +174,12 @@ func (m machines) create(input cloud.CreateMachinesInput) (*cloud.CreateMachines
 	for try := 1; try <= input.Retries; try++ {
 		if err := m.createInstanceDryRun(runInstanceInput); err != nil {
 			m.sleepNSecondsBeforeMaxRetries(try, input.Retries)
-			continue
+		} else {
+			break
 		}
 		if try == input.Retries {
 			return nil, cloud.ErrUnknown
 		}
-		break
 	}
 
 	reservation, err := m.runInstance(runInstanceInput)
@@ -210,10 +209,42 @@ func (m machines) Create(inputs []cloud.CreateMachinesInput) (created []cloud.Cr
 	return created, nil
 }
 
+// terminateInstanceDryRun terminates an instance using dry run mode.
+func (m machines) terminateInstanceDryRun(input *ec2.TerminateInstancesInput) error {
+	input.SetDryRun(true)
+	_, err := m.API.TerminateInstances(input)
+	awsErr, ok := err.(awserr.Error)
+	if !ok || awsErr.Code() != ErrCodeDryRunOperation {
+		return cloud.ErrDryRunFailed
+	}
+	return nil
+}
+
 // Terminate terminates EC2 machines.
 func (m machines) Terminate(input cloud.TerminateMachinesInput) error {
 	if input.Names == nil || len(input.Names) == 0 {
 		return cloud.ErrMissingMachineNames
+	}
+
+	terminateInstancesInput := &ec2.TerminateInstancesInput{
+		InstanceIds: aws.StringSlice(input.Names),
+	}
+
+	for try := 1; try <= input.Retries; try++ {
+		if err := m.terminateInstanceDryRun(terminateInstancesInput); err != nil {
+			m.sleepNSecondsBeforeMaxRetries(try, input.Retries)
+		} else {
+			break
+		}
+		if try == input.Retries {
+			return cloud.ErrUnknown
+		}
+	}
+
+	terminateInstancesInput.SetDryRun(false)
+	_, err := m.API.TerminateInstances(terminateInstancesInput)
+	if err != nil {
+		return err
 	}
 	return nil
 }

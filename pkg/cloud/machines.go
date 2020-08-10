@@ -30,13 +30,6 @@ type CreateMachinesInput struct {
 	// In AWS: Amazon Resource Names (ARN).
 	ResourceName string
 
-	// DryRun is a flag to enable DryRun mode when creating machines.
-	// If DryRun is set to true, the Machines.Create method will create instances using
-	// DryRun mode to guarantee that the operation could be performed first,
-	// and then executing the actual machine creation request.
-	// If DryRun is set to false, the Machines.Create method will bypass the DryRun mode.
-	DryRun bool
-
 	// KeyName is the SSH key-pair's name that will be used on the created machine.
 	KeyName string
 
@@ -97,16 +90,15 @@ func (c *CreateMachinesOutput) Length() int {
 // ToTerminateMachinesInput converts the content of CreateMachinesOutput into TerminateMachinesInput.
 func (c *CreateMachinesOutput) ToTerminateMachinesInput(dryRun bool) *TerminateMachinesInput {
 	return &TerminateMachinesInput{
-		Names:  c.Instances,
-		DryRun: dryRun,
+		Names: c.Instances,
 	}
 }
 
 // TerminateMachinesInput is the input for the Machines.Terminate operation.
 // It will be used to terminate machines.
 type TerminateMachinesInput struct {
-	Names  []string
-	DryRun bool
+	Names   []string
+	Retries int
 }
 
 // CountMachinesInput is the input for the Machines.Count operation.

@@ -25,16 +25,9 @@ func (s *ec2CreateMachinesTestSuite) SetupTest() {
 	s.machines = NewMachines(s.ec2API)
 }
 
-func (s *ec2CreateMachinesTestSuite) TestNewMachines() {
-	e, ok := s.machines.(*machines)
-	s.True(ok)
-	s.NotNil(e.API)
-}
-
 func (s *ec2CreateMachinesTestSuite) TestCreate_MissingKeyName() {
 	input := []cloud.CreateMachinesInput{
 		{
-			DryRun:        false,
 			KeyName:       "",
 			MinCount:      1,
 			MaxCount:      10,
@@ -52,7 +45,6 @@ func (s *ec2CreateMachinesTestSuite) TestCreate_MissingKeyName() {
 func (s *ec2CreateMachinesTestSuite) TestCreate_InvalidCountBothZero() {
 	input := []cloud.CreateMachinesInput{
 		{
-			DryRun:        false,
 			KeyName:       "key-name",
 			MinCount:      0,
 			MaxCount:      0,
@@ -70,7 +62,6 @@ func (s *ec2CreateMachinesTestSuite) TestCreate_InvalidCountBothZero() {
 func (s *ec2CreateMachinesTestSuite) TestCreate_InvalidCountMinCountZero() {
 	input := []cloud.CreateMachinesInput{
 		{
-			DryRun:        false,
 			KeyName:       "key-name",
 			MinCount:      0,
 			MaxCount:      1,
@@ -88,7 +79,6 @@ func (s *ec2CreateMachinesTestSuite) TestCreate_InvalidCountMinCountZero() {
 func (s *ec2CreateMachinesTestSuite) TestCreate_InvalidCountMaxCountZero() {
 	input := []cloud.CreateMachinesInput{
 		{
-			DryRun:        false,
 			KeyName:       "key-name",
 			MinCount:      1,
 			MaxCount:      0,
@@ -106,7 +96,6 @@ func (s *ec2CreateMachinesTestSuite) TestCreate_InvalidCountMaxCountZero() {
 func (s *ec2CreateMachinesTestSuite) TestCreate_MinCountGreaterThanMaxCount() {
 	input := []cloud.CreateMachinesInput{
 		{
-			DryRun:        false,
 			KeyName:       "key-name",
 			MinCount:      99,
 			MaxCount:      1,
@@ -124,7 +113,6 @@ func (s *ec2CreateMachinesTestSuite) TestCreate_MinCountGreaterThanMaxCount() {
 func (s *ec2CreateMachinesTestSuite) TestCreate_NegativeCount() {
 	input := []cloud.CreateMachinesInput{
 		{
-			DryRun:        false,
 			KeyName:       "key-name",
 			MinCount:      -100,
 			MaxCount:      -25,
@@ -142,7 +130,6 @@ func (s *ec2CreateMachinesTestSuite) TestCreate_NegativeCount() {
 func (s *ec2CreateMachinesTestSuite) TestCreate_InvalidSubnet() {
 	input := []cloud.CreateMachinesInput{
 		{
-			DryRun:        false,
 			KeyName:       "key-name",
 			MinCount:      1,
 			MaxCount:      99,
@@ -161,13 +148,13 @@ func (s *ec2CreateMachinesTestSuite) TestCreate_InvalidSubnet() {
 func (s *ec2CreateMachinesTestSuite) TestCreate_ValidWithoutDryRunMode() {
 	input := []cloud.CreateMachinesInput{
 		{
-			DryRun:        false,
 			KeyName:       "key-name",
 			MinCount:      1,
 			MaxCount:      99,
 			FirewallRules: nil,
 			SubnetID:      "subnet-06fe9fdb790aa78e7",
 			Tags:          nil,
+			Retries:       0,
 		},
 	}
 	_, err := s.machines.Create(input)
@@ -180,7 +167,6 @@ func (s *ec2CreateMachinesTestSuite) TestCreate_ValidWithDryRunMode() {
 	s.machines = NewMachines(mock)
 	input := []cloud.CreateMachinesInput{
 		{
-			DryRun:        true,
 			KeyName:       "key-name",
 			MinCount:      1,
 			MaxCount:      99,
@@ -195,13 +181,35 @@ func (s *ec2CreateMachinesTestSuite) TestCreate_ValidWithDryRunMode() {
 	s.Equal(3, mock.RunInstancesCalls)
 }
 
+func (s *ec2CreateMachinesTestSuite) TestCreate_ErrorWithDryRunMode() {
+	s.ec2API.InternalError = errors.New("force error on dry run mode")
+	input := []cloud.CreateMachinesInput{
+		{
+			KeyName:       "key-name",
+			MinCount:      1,
+			MaxCount:      99,
+			FirewallRules: nil,
+			SubnetID:      "subnet-06fe9fdb790aa78e7",
+			Tags:          nil,
+			Retries:       3,
+		},
+	}
+	_, err := s.machines.Create(input)
+	s.Error(err)
+	s.Equal(cloud.ErrUnknown, err)
+}
+
 type mockEC2Create struct {
 	ec2iface.EC2API
 	RunInstancesCalls int
+	InternalError     error
 }
 
 // RunInstances mocks EC2 RunInstances method.
 func (m *mockEC2Create) RunInstances(input *ec2.RunInstancesInput) (*ec2.Reservation, error) {
+	if m.InternalError != nil {
+		return nil, m.InternalError
+	}
 	m.RunInstancesCalls++
 	return &ec2.Reservation{}, nil
 }
