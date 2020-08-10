@@ -215,9 +215,35 @@ func (m machines) Terminate(input cloud.TerminateMachinesInput) error {
 	panic("implement me")
 }
 
+func (m machines) createFilters(input map[string][]string) []*ec2.Filter {
+	var filters []*ec2.Filter
+	for k, v := range input {
+		filters = append(filters, &ec2.Filter{
+			Name:   aws.String(k),
+			Values: aws.StringSlice(v),
+		})
+	}
+	return filters
+}
+
 // Count counts EC2 machines.
 func (m machines) Count(input cloud.CountMachinesInput) int {
-	panic("implement me")
+	if input.MaxResults > 1000 || input.MaxResults < 5 {
+		return -1
+	}
+	filters := m.createFilters(input.Filters)
+	out, err := m.API.DescribeInstances(&ec2.DescribeInstancesInput{
+		MaxResults: aws.Int64(int64(input.MaxResults)),
+		Filters:    filters,
+	})
+	if err != nil {
+		return -1
+	}
+	var count int
+	for _, r := range out.Reservations {
+		count += len(r.Instances)
+	}
+	return count
 }
 
 // NewMachines initializes a new cloud.Machines implementation using EC2.

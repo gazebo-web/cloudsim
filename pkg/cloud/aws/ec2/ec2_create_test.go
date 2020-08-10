@@ -16,12 +16,12 @@ func TestCreateMachines(t *testing.T) {
 
 type ec2CreateMachinesTestSuite struct {
 	suite.Suite
-	ec2API   *mockEC2
+	ec2API   *mockEC2Create
 	machines cloud.Machines
 }
 
 func (s *ec2CreateMachinesTestSuite) SetupTest() {
-	s.ec2API = &mockEC2{}
+	s.ec2API = &mockEC2Create{}
 	s.machines = NewMachines(s.ec2API)
 }
 
@@ -176,7 +176,7 @@ func (s *ec2CreateMachinesTestSuite) TestCreate_ValidWithoutDryRunMode() {
 }
 
 func (s *ec2CreateMachinesTestSuite) TestCreate_ValidWithDryRunMode() {
-	mock := &mockEC2DryRunMode{}
+	mock := &mockEC2CreateDryRunMode{}
 	s.machines = NewMachines(mock)
 	input := []cloud.CreateMachinesInput{
 		{
@@ -195,24 +195,24 @@ func (s *ec2CreateMachinesTestSuite) TestCreate_ValidWithDryRunMode() {
 	s.Equal(3, mock.RunInstancesCalls)
 }
 
-type mockEC2 struct {
+type mockEC2Create struct {
 	ec2iface.EC2API
 	RunInstancesCalls int
 }
 
 // RunInstances mocks EC2 RunInstances method.
-func (m *mockEC2) RunInstances(input *ec2.RunInstancesInput) (*ec2.Reservation, error) {
+func (m *mockEC2Create) RunInstances(input *ec2.RunInstancesInput) (*ec2.Reservation, error) {
 	m.RunInstancesCalls++
 	return &ec2.Reservation{}, nil
 }
 
-type mockEC2DryRunMode struct {
+type mockEC2CreateDryRunMode struct {
 	ec2iface.EC2API
 	RunInstancesCalls int
 }
 
 // RunInstances mocks EC2 RunInstances method.
-func (m *mockEC2DryRunMode) RunInstances(input *ec2.RunInstancesInput) (*ec2.Reservation, error) {
+func (m *mockEC2CreateDryRunMode) RunInstances(input *ec2.RunInstancesInput) (*ec2.Reservation, error) {
 	if m.RunInstancesCalls == 0 {
 		m.RunInstancesCalls++
 		return nil, awserr.New(ErrCodeRequestLimitExceeded, "request limit exceeded", errors.New("test error"))

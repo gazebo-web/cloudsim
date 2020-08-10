@@ -3,7 +3,6 @@ package ec2
 import (
 	"github.com/stretchr/testify/assert"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/cloud"
-	"sync"
 	"testing"
 	"time"
 )
@@ -44,45 +43,24 @@ func TestIsValidSubnetID(t *testing.T) {
 
 func TestSleep0Seconds(t *testing.T) {
 	m := &machines{}
-
-	var wg sync.WaitGroup
-	wg.Add(1)
 	before := time.Now()
-	func() {
-		m.sleepNSecondsBeforeMaxRetries(0, 10)
-		wg.Done()
-	}()
-	wg.Wait()
+	m.sleepNSecondsBeforeMaxRetries(0, 10)
 	now := time.Now()
 	assert.Equal(t, before.Second(), now.Second())
 }
 
 func TestSleep1Seconds(t *testing.T) {
 	m := &machines{}
-
-	var wg sync.WaitGroup
-	wg.Add(1)
 	before := time.Now()
-	func() {
-		m.sleepNSecondsBeforeMaxRetries(1, 10)
-		wg.Done()
-	}()
-	wg.Wait()
+	m.sleepNSecondsBeforeMaxRetries(1, 10)
 	now := time.Now()
 	assert.Equal(t, before.Second()+1, now.Second())
 }
 
 func TestSleep0SecondsWhenIsMax(t *testing.T) {
 	m := &machines{}
-
-	var wg sync.WaitGroup
-	wg.Add(1)
 	before := time.Now()
-	func() {
-		m.sleepNSecondsBeforeMaxRetries(10, 10)
-		wg.Done()
-	}()
-	wg.Wait()
+	m.sleepNSecondsBeforeMaxRetries(10, 10)
 	now := time.Now()
 	assert.Equal(t, before.Second(), now.Second())
 }
@@ -154,4 +132,22 @@ func TestCreateTags(t *testing.T) {
 	assert.Len(t, tagSpec[0].Tags, 1)
 	assert.Equal(t, "key", *tagSpec[0].Tags[0].Key)
 	assert.Equal(t, "value", *tagSpec[0].Tags[0].Value)
+}
+
+func TestCreateFilters(t *testing.T) {
+	m := &machines{}
+
+	output := m.createFilters(map[string][]string{
+		"instance-state-name": {
+			"pending",
+			"running",
+		},
+	})
+
+	assert.NotNil(t, output[0].Name)
+	assert.Equal(t, "instance-state-name", *output[0].Name)
+	assert.NotNil(t, output[0].Values[0])
+	assert.Equal(t, "pending", *output[0].Values[0])
+	assert.NotNil(t, output[0].Values[1])
+	assert.Equal(t, "running", *output[0].Values[1])
 }
