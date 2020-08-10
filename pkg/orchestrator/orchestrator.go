@@ -17,6 +17,8 @@ var (
 type Orchestrator interface {
 	Nodes() NodeManager
 	Pods() PodManager
+	Services() ServiceManager
+	Ingresses() IngressManager
 }
 
 // NodeManager groups a set of methods to register nodes into a cluster.
@@ -29,6 +31,26 @@ type PodManager interface {
 	Exec(selector string) Executor
 	Reader(selector string) Reader
 	Waiter
+}
+
+// ServiceManager groups a set of methods to managing Services.
+// Services abstract a group of pods behind a single endpoint.
+type ServiceManager interface {
+	Get(selector, name string)
+}
+
+// IngressManager groups a set of methods to manage ingresses.
+type IngressManager interface {
+	GetByName(selector, name string)
+	Update(selector, name string, ingress interface{})
+	Rules(selector, name string) Ruler
+}
+
+// Ruler groups a set of methods to interact with an Ingress's rules.
+type Ruler interface {
+	Get(host string)
+	Upsert(host string, paths ...string)
+	Remove(host string, paths ...string)
 }
 
 // Executor groups a set of methods to execute commands or scripts inside a pod.
