@@ -1381,6 +1381,14 @@ func (sa *SubTApplication) launchApplication(ctx context.Context, s *Service, tx
 			return nil, ign.NewErrorMessageWithBase(ign.ErrorK8Create, err)
 		}
 
+		childMarsupial := "false"
+		for _, marsupial := range extra.Marsupials {
+			if marsupial.Child == robot.Name {
+				childMarsupial = "true"
+				break
+			}
+		}
+
 		// Launch the comms-bridge Pod
 		bridgePod := sa.createCommsBridgePod(
 			ctx,
@@ -1394,6 +1402,7 @@ func (sa *SubTApplication) launchApplication(ctx context.Context, s *Service, tx
 			robot,
 			*rules.BridgeImage,
 			worldNameParam,
+			childMarsupial,
 		)
 
 		// If S3 log backup is enabled then add an additional copy pod to upload
@@ -1685,7 +1694,7 @@ func (sa *SubTApplication) createWebsocketIngress(ctx context.Context, kc kubern
 // change the Pod's Image, Command and Args fields.
 func (sa *SubTApplication) createCommsBridgePod(ctx context.Context, dep *SimulationDeployment,
 	podName string, labels map[string]string, gzserverPodIP string, hostPath string, logDirectory string,
-	robotNumber int, robot SubTRobot, bridgeImage string, worldNameParam string) *corev1.Pod {
+	robotNumber int, robot SubTRobot, bridgeImage string, worldNameParam string, childMarsupial string) *corev1.Pod {
 
 	logMountPath := path.Join(hostPath, logDirectory)
 	hostPathType := corev1.HostPathDirectoryOrCreate
@@ -1793,6 +1802,7 @@ func (sa *SubTApplication) createCommsBridgePod(ctx context.Context, dep *Simula
 			fmt.Sprintf("robotName%d:=%s", robotNumber, robot.Name),
 			fmt.Sprintf("robotConfig%d:=%s", robotNumber, robot.Type),
 			"headless:=true",
+			fmt.Sprintf("marsupial:=%s", childMarsupial),
 		}
 	}
 
