@@ -92,7 +92,7 @@ func (suite *subscriberTestSuite) TestSubscribe_Accepted() {
 	err := suite.transport.Subscribe("test", func(message transport.Messager) {
 		var payload string
 		suite.NoError(message.GetPayload(&payload))
-		suite.EqualValues(suite.testTopicMessage, payload)
+		suite.EqualValues(suite.testTopicMessage.String(), payload)
 	})
 	suite.NoError(err)
 }
