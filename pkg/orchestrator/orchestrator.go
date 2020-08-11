@@ -5,11 +5,17 @@ import (
 )
 
 // Condition represents a state that should be reached.
-type Condition string
+type Condition struct {
+	Type   string
+	Status string
+}
 
 var (
 	// ReadyCondition is used to indicate that Nodes and Pods are ready.
-	ReadyCondition Condition = "Ready"
+	ReadyCondition = Condition{
+		Type:   "Ready",
+		Status: "True",
+	}
 )
 
 // Orchestrator groups a set of methods for managing a cluster.
@@ -24,8 +30,8 @@ type Orchestrator interface {
 type Resource interface {
 	// Name returns the name of the resource
 	Name() string
-	// Selector returns a set of key-value pairs that identify the resource.
-	Selector() map[string]string
+	// Selector returns the resource's selector.
+	Selector() string
 	// Namespace returns the namespace where the resource lives in.
 	Namespace() string
 }
@@ -33,5 +39,5 @@ type Resource interface {
 // Waiter groups a set of methods to wait for a certain job to be executed in
 // regular periods of time until a given timeout.
 type Waiter interface {
-	Wait(job func(), timeout time.Duration, pollFrequency time.Duration)
+	Wait(timeout time.Duration, pollFrequency time.Duration) error
 }

@@ -2,11 +2,9 @@ package kubernetes
 
 import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator"
-	"k8s.io/client-go/kubernetes"
 )
 
 type k8s struct {
-	API         kubernetes.Interface
 	nodeManager orchestrator.NodeManager
 	podManager  orchestrator.PodManager
 }
