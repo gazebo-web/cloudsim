@@ -8,6 +8,7 @@ import (
 type k8s struct {
 	API         kubernetes.Interface
 	nodeManager orchestrator.NodeManager
+	podManager  orchestrator.PodManager
 }
 
 func (k k8s) Nodes() orchestrator.NodeManager {
@@ -15,7 +16,7 @@ func (k k8s) Nodes() orchestrator.NodeManager {
 }
 
 func (k k8s) Pods() orchestrator.PodManager {
-	panic("implement me")
+	return k.podManager
 }
 
 func (k k8s) Services() orchestrator.ServiceManager {
@@ -29,5 +30,6 @@ func (k k8s) Ingresses() orchestrator.IngressManager {
 func NewKubernetes(nodeManager orchestrator.NodeManager, podManager orchestrator.PodManager) orchestrator.Orchestrator {
 	return &k8s{
 		nodeManager: nodeManager,
+		podManager:  podManager,
 	}
 }
