@@ -17,9 +17,9 @@ func TestNewKubernetes(t *testing.T) {
 }
 
 func TestNewKubernetesWithNodeManager(t *testing.T) {
-	var nm orchestrator.NodeManager
 	var pm orchestrator.PodManager
 
+	nm := NewNodeManager()
 	ks := NewKubernetes(nm, pm)
 
 	assert.NotNil(t, ks)
