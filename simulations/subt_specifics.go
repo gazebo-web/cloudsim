@@ -1381,6 +1381,14 @@ func (sa *SubTApplication) launchApplication(ctx context.Context, s *Service, tx
 			return nil, ign.NewErrorMessageWithBase(ign.ErrorK8Create, err)
 		}
 
+		childMarsupial := "false"
+		for _, marsupial := range extra.Marsupials {
+			if marsupial.Child == robot.Name {
+				childMarsupial = "true"
+				break
+			}
+		}
+
 		// Launch the comms-bridge Pod
 		bridgePod := sa.createCommsBridgePod(
 			ctx,
@@ -1394,6 +1402,7 @@ func (sa *SubTApplication) launchApplication(ctx context.Context, s *Service, tx
 			robot,
 			*rules.BridgeImage,
 			worldNameParam,
+			childMarsupial,
 		)
 
 		// If S3 log backup is enabled then add an additional copy pod to upload
@@ -1594,10 +1603,13 @@ func (sa *SubTApplication) addSharedVolumeConfigurationContainer(pod *corev1.Pod
 }
 
 // createWebsocketService creates a Kubernetes Service that exposes the websocket server to the cluster.
-// This service can then be exposed to the Internet by a separate load balancer.
+// This service can be exposed to the Internet via a load balancer.
 func (sa *SubTApplication) createWebsocketService(ctx context.Context, kc kubernetes.Interface, namespace string,
 	dep *SimulationDeployment, podNamePrefix string, serviceLabels map[string]string,
 	targetLabels map[string]string) (*corev1.Service, error) {
+
+	logger := logger(ctx)
+	logger.Info("Creating simulation cluster websocket service.")
 
 	// Prepare the service
 	service := &corev1.Service{
@@ -1626,8 +1638,15 @@ func (sa *SubTApplication) createWebsocketService(ctx context.Context, kc kubern
 	return service, nil
 }
 
+// createWebsocketIngress adds a rule to the environment's cluster ingress resource.
+// If an ingress controller is installedin the cluster, the creation of the ingress rule will trigger an ingress
+// controller to configure a load balancer to redirect simulation websocket requests to the cluster service created
+// for the websocket server.
 func (sa *SubTApplication) createWebsocketIngress(ctx context.Context, kc kubernetes.Interface, namespace string,
 	dep *SimulationDeployment, service *corev1.Service) (*v1beta1.Ingress, error) {
+
+	logger := logger(ctx)
+	logger.Info("Creating simulation websocket ingress rule.")
 
 	// Prepare the rule path
 	rulePath := &v1beta1.HTTPIngressPath{
@@ -1648,7 +1667,8 @@ func (sa *SubTApplication) createWebsocketIngress(ctx context.Context, kc kubern
 
 	var ingress *v1beta1.Ingress
 	var err error
-	for i := uint(1); i < 9; i++ {
+	retries := uint(9)
+	for i := uint(1); i < retries; i++ {
 		ingress, err = upsertIngressRule(
 			ctx,
 			kc,
@@ -1659,7 +1679,10 @@ func (sa *SubTApplication) createWebsocketIngress(ctx context.Context, kc kubern
 		)
 		if err == nil {
 			break
+		} else if i < retries-1 {
+			logger.Info("Failed to create ingress rule. Retrying. Error:", err)
 		}
+
 		// If an error occurred, retry for up to 10 min with exponential backoff
 		Sleep(time.Duration(1<<i) * time.Second)
 	}
@@ -1671,7 +1694,7 @@ func (sa *SubTApplication) createWebsocketIngress(ctx context.Context, kc kubern
 // change the Pod's Image, Command and Args fields.
 func (sa *SubTApplication) createCommsBridgePod(ctx context.Context, dep *SimulationDeployment,
 	podName string, labels map[string]string, gzserverPodIP string, hostPath string, logDirectory string,
-	robotNumber int, robot SubTRobot, bridgeImage string, worldNameParam string) *corev1.Pod {
+	robotNumber int, robot SubTRobot, bridgeImage string, worldNameParam string, childMarsupial string) *corev1.Pod {
 
 	logMountPath := path.Join(hostPath, logDirectory)
 	hostPathType := corev1.HostPathDirectoryOrCreate
@@ -1779,6 +1802,7 @@ func (sa *SubTApplication) createCommsBridgePod(ctx context.Context, dep *Simula
 			fmt.Sprintf("robotName%d:=%s", robotNumber, robot.Name),
 			fmt.Sprintf("robotConfig%d:=%s", robotNumber, robot.Type),
 			"headless:=true",
+			fmt.Sprintf("marsupial:=%s", childMarsupial),
 		}
 	}
 
