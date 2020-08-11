@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2/ec2iface"
 	"github.com/stretchr/testify/suite"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/cloud"
+	"gitlab.com/ignitionrobotics/web/ign-go"
 	"testing"
 )
 
@@ -22,7 +23,8 @@ type ec2CountMachinesTestSuite struct {
 
 func (s *ec2CountMachinesTestSuite) SetupTest() {
 	s.ec2API = &mockEC2Count{}
-	s.machines = NewMachines(s.ec2API)
+	logger := ign.NewLoggerNoRollbar("ec2CountMachinesTestSuite", ign.VerbosityDebug)
+	s.machines = NewMachines(s.ec2API, logger)
 }
 
 func (s *ec2CountMachinesTestSuite) TestCount_ReturnZeroWhenThereAreNoMachines() {

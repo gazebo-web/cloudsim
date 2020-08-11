@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/stretchr/testify/assert"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/cloud"
+	"gitlab.com/ignitionrobotics/web/ign-go"
 	"testing"
 	"time"
 )
@@ -15,7 +16,8 @@ func TestNewMachines(t *testing.T) {
 	s, err := session.NewSession(nil)
 	assert.NoError(t, err)
 	ec := ec2.New(s)
-	m := NewMachines(ec)
+	logger := ign.NewLoggerNoRollbar("TestNewMachines", ign.VerbosityDebug)
+	m := NewMachines(ec, logger)
 	e, ok := m.(*machines)
 	assert.True(t, ok)
 	assert.NotNil(t, e.API)

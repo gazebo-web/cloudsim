@@ -1,11 +1,13 @@
 package ec2
 
 import (
+	"fmt"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/aws/aws-sdk-go/service/ec2/ec2iface"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/cloud"
+	"gitlab.com/ignitionrobotics/web/ign-go"
 	"regexp"
 	"time"
 )
@@ -25,7 +27,8 @@ const (
 
 // machines is a cloud.Machines implementation.
 type machines struct {
-	API ec2iface.EC2API
+	API    ec2iface.EC2API
+	Logger ign.Logger
 }
 
 // isValidKeyName checks that the given keyName is valid.
@@ -197,14 +200,17 @@ func (m machines) create(input cloud.CreateMachinesInput) (*cloud.CreateMachines
 // This operation doesn't recover from an error.
 // You need to destroy the required machines when an error occurs.
 func (m machines) Create(inputs []cloud.CreateMachinesInput) (created []cloud.CreateMachinesOutput, err error) {
+	m.Logger.Debug(fmt.Sprintf("Creating machines with the following input: %+v", inputs))
 	var c *cloud.CreateMachinesOutput
 	for _, input := range inputs {
 		c, err = m.create(input)
 		if err != nil {
+			m.Logger.Debug(fmt.Sprintf("Creating machines failed while creating the following machine: %+v. Output: %+v. Error: %s", input, created, err))
 			return
 		}
 		created = append(created, *c)
 	}
+	m.Logger.Debug(fmt.Sprintf("Creating machines succeeded. Output: %+v", created))
 	return created, nil
 }
 
@@ -221,6 +227,7 @@ func (m machines) terminateInstanceDryRun(input *ec2.TerminateInstancesInput) er
 
 // Terminate terminates EC2 machines.
 func (m machines) Terminate(input cloud.TerminateMachinesInput) error {
+	m.Logger.Debug(fmt.Sprintf("Terminating machines with the following input: %+v", input))
 	if input.Names == nil || len(input.Names) == 0 {
 		return cloud.ErrMissingMachineNames
 	}
@@ -236,6 +243,7 @@ func (m machines) Terminate(input cloud.TerminateMachinesInput) error {
 			break
 		}
 		if try == input.Retries {
+			m.Logger.Debug(fmt.Sprintf("Maximum retries reached: (%d/%d)", try, input.Retries))
 			return cloud.ErrUnknown
 		}
 	}
@@ -243,8 +251,10 @@ func (m machines) Terminate(input cloud.TerminateMachinesInput) error {
 	terminateInstancesInput.SetDryRun(false)
 	_, err := m.API.TerminateInstances(terminateInstancesInput)
 	if err != nil {
+		m.Logger.Debug(fmt.Sprintf("Error while terminating instances. Instances: [%s]. Error: %s.", input.Names, err))
 		return err
 	}
+	m.Logger.Debug("Terminating machines succeeded.")
 	return nil
 }
 
@@ -261,7 +271,9 @@ func (m machines) createFilters(input map[string][]string) []*ec2.Filter {
 
 // Count counts EC2 machines.
 func (m machines) Count(input cloud.CountMachinesInput) int {
+	m.Logger.Debug(fmt.Sprintf("Counting machines with the following parameters: %+v", input))
 	if input.MaxResults > 1000 || input.MaxResults < 5 {
+		m.Logger.Debug("Invalid max results parameter. It should be between 5 and 1000.")
 		return -1
 	}
 	filters := m.createFilters(input.Filters)
@@ -270,18 +282,21 @@ func (m machines) Count(input cloud.CountMachinesInput) int {
 		Filters:    filters,
 	})
 	if err != nil {
+		m.Logger.Debug(fmt.Sprintf("Error while counting machines. Error: %s", err))
 		return -1
 	}
 	var count int
 	for _, r := range out.Reservations {
 		count += len(r.Instances)
 	}
+	m.Logger.Debug(fmt.Sprintf("Counting machines succedeed. Count: %d", count))
 	return count
 }
 
 // NewMachines initializes a new cloud.Machines implementation using EC2.
-func NewMachines(api ec2iface.EC2API) cloud.Machines {
+func NewMachines(api ec2iface.EC2API, logger ign.Logger) cloud.Machines {
 	return &machines{
-		API: api,
+		API:    api,
+		Logger: logger,
 	}
 }

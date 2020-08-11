@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2/ec2iface"
 	"github.com/stretchr/testify/suite"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/cloud"
+	"gitlab.com/ignitionrobotics/web/ign-go"
 	"testing"
 )
 
@@ -22,7 +23,8 @@ type ec2TerminateMachinesTestSuite struct {
 
 func (s *ec2TerminateMachinesTestSuite) SetupTest() {
 	s.ec2API = &mockEC2Terminate{}
-	s.machines = NewMachines(s.ec2API)
+	logger := ign.NewLoggerNoRollbar("ec2TerminateMachinesTestSuite", ign.VerbosityDebug)
+	s.machines = NewMachines(s.ec2API, logger)
 }
 
 func (s *ec2TerminateMachinesTestSuite) TestTerminate_ErrorWhenNilMachineNames() {
@@ -55,7 +57,8 @@ func (s *ec2TerminateMachinesTestSuite) TestTerminate_ErrorWithDryRunMode() {
 
 func (s *ec2TerminateMachinesTestSuite) TestTerminate_ValidWithDryRunMode() {
 	mock := &mockEC2TerminateDryRun{}
-	s.machines = NewMachines(mock)
+	logger := ign.NewLoggerNoRollbar("ec2TerminateMachinesTestSuite", ign.VerbosityDebug)
+	s.machines = NewMachines(mock, logger)
 	err := s.machines.Terminate(cloud.TerminateMachinesInput{
 		Names:   []string{"machine-id"},
 		Retries: 5,

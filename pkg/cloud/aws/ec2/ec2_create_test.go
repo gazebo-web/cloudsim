@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2/ec2iface"
 	"github.com/stretchr/testify/suite"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/cloud"
+	"gitlab.com/ignitionrobotics/web/ign-go"
 	"testing"
 )
 
@@ -22,7 +23,8 @@ type ec2CreateMachinesTestSuite struct {
 
 func (s *ec2CreateMachinesTestSuite) SetupTest() {
 	s.ec2API = &mockEC2Create{}
-	s.machines = NewMachines(s.ec2API)
+	logger := ign.NewLoggerNoRollbar("ec2CreateMachinesTestSuite", ign.VerbosityDebug)
+	s.machines = NewMachines(s.ec2API, logger)
 }
 
 func (s *ec2CreateMachinesTestSuite) TestCreate_MissingKeyName() {
@@ -164,7 +166,8 @@ func (s *ec2CreateMachinesTestSuite) TestCreate_ValidWithoutDryRunMode() {
 
 func (s *ec2CreateMachinesTestSuite) TestCreate_ValidWithDryRunMode() {
 	mock := &mockEC2CreateDryRunMode{}
-	s.machines = NewMachines(mock)
+	logger := ign.NewLoggerNoRollbar("ec2TerminateMachinesTestSuite", ign.VerbosityDebug)
+	s.machines = NewMachines(mock, logger)
 	input := []cloud.CreateMachinesInput{
 		{
 			KeyName:       "key-name",
