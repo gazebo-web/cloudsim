@@ -41,7 +41,7 @@ func (m machines) isValidMachineCount(min, max int64) bool {
 	return min > 0 && max > 0 && min <= max
 }
 
-// isValidSubnetID checks that the given subnet is a valid AWS subnet.
+// isValidSubnetID checks that the given subnet name is a valid for AWS.
 func (m machines) isValidSubnetID(subnet string) bool {
 	length := len(subnet)
 	if length != shortSubnetLength && length != longSubnetLength {
