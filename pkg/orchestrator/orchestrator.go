@@ -30,7 +30,8 @@ type Resource interface {
 	Namespace() string
 }
 
-// Waiter groups a set of methods to wait.
+// Waiter groups a set of methods to wait for a certain job to be executed in
+// regular periods of time until a given timeout.
 type Waiter interface {
 	Wait(job func(), timeout time.Duration, pollFrequency time.Duration)
 }
