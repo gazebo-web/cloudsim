@@ -15,7 +15,7 @@ import (
 const (
 	// ErrCodeDryRunOperation is the error code returned from a successful dry run operation.
 	ErrCodeDryRunOperation = "DryRunOperation"
-	// ErrCodeRequestLimitExceeded is returned when too many requests sent to AWS in a short period of time.
+	// ErrCodeRequestLimitExceeded is returned when too many requests are sent to AWS in a short period of time.
 	ErrCodeRequestLimitExceeded = "RequestLimitExceeded"
 	// ErrCodeInsufficientInstanceCapacity is returned when not enough instances are available to fulfill the
 	// request.
@@ -41,7 +41,7 @@ func (m machines) isValidMachineCount(min, max int64) bool {
 	return min > 0 && max > 0 && min <= max
 }
 
-// isValidSubnetID checks that the given subnet is a valid AWS subnet.
+// isValidSubnetID checks that the given subnet name is a valid for AWS.
 func (m machines) isValidSubnetID(subnet string) bool {
 	length := len(subnet)
 	if length != shortSubnetLength && length != longSubnetLength {
