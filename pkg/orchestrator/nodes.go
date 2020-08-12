@@ -3,7 +3,8 @@ package orchestrator
 import "errors"
 
 var (
-	ErrNodesNotReady = errors.New("nodes not ready")
+	// ErrNodesNotReady is returned when the nodes are not ready.
+	ErrNodesNotReady = errors.New("nodes are not ready")
 )
 
 // NodeManager groups a set of methods to register nodes into a cluster.
