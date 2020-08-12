@@ -23,6 +23,12 @@ var (
 	ErrMissingMachineNames = errors.New("missing machine names")
 )
 
+// Tag is a group of key-value pairs for a certain resource.
+type Tag struct {
+	Resource string
+	Map      map[string]string
+}
+
 // CreateMachinesInput is the input for the Machines.Create operation.
 // It will be used to create a certain number of machines.
 type CreateMachinesInput struct {
@@ -59,8 +65,8 @@ type CreateMachinesInput struct {
 	// In AWS: Availability zones.
 	Zone string
 
-	// Tags is a group of key-value pairs that is used to identify the machine.
-	Tags map[string]map[string]string
+	// Tags is a group of Tag that is being used to identify a machine.
+	Tags []Tag
 
 	// InitScript is the initialization script that will be executed when the machine gets created.
 	InitScript string
@@ -73,22 +79,16 @@ type CreateMachinesInput struct {
 // CreateMachinesOutput is the output for the Machines.Create operation.
 // It will be used to display the machines that were created.
 type CreateMachinesOutput struct {
-	Instances   []string
-	length      int
-	isLengthSet bool
+	Instances []string
 }
 
 // Length returns the amount of instances that were initialized.
 func (c *CreateMachinesOutput) Length() int {
-	if !c.isLengthSet {
-		c.length = len(c.Instances)
-		c.isLengthSet = true
-	}
-	return c.length
+	return len(c.Instances)
 }
 
 // ToTerminateMachinesInput converts the content of CreateMachinesOutput into TerminateMachinesInput.
-func (c *CreateMachinesOutput) ToTerminateMachinesInput(dryRun bool) *TerminateMachinesInput {
+func (c *CreateMachinesOutput) ToTerminateMachinesInput() *TerminateMachinesInput {
 	return &TerminateMachinesInput{
 		Names: c.Instances,
 	}
@@ -97,8 +97,7 @@ func (c *CreateMachinesOutput) ToTerminateMachinesInput(dryRun bool) *TerminateM
 // TerminateMachinesInput is the input for the Machines.Terminate operation.
 // It will be used to terminate machines.
 type TerminateMachinesInput struct {
-	Names   []string
-	Retries int
+	Names []string
 }
 
 // CountMachinesInput is the input for the Machines.Count operation.

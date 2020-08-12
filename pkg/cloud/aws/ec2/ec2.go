@@ -70,9 +70,9 @@ func (m machines) newRunInstancesInput(createMachines cloud.CreateMachinesInput)
 		}
 	}
 
-	var securitGroups []*string
+	var securityGroups []*string
 	for _, sg := range createMachines.FirewallRules {
-		securitGroups = append(securitGroups, aws.String(sg))
+		securityGroups = append(securityGroups, aws.String(sg))
 	}
 
 	tagSpec := m.createTags(createMachines.Tags)
@@ -90,33 +90,33 @@ func (m machines) newRunInstancesInput(createMachines cloud.CreateMachinesInput)
 		},
 		TagSpecifications: tagSpec,
 		UserData:          script,
-		SecurityGroups:    securitGroups,
+		SecurityGroups:    securityGroups,
 	}
 }
 
 // createTags creates an array of ec2.TagSpecification from the given tag input.
-func (m machines) createTags(input map[string]map[string]string) []*ec2.TagSpecification {
+func (m machines) createTags(input []cloud.Tag) []*ec2.TagSpecification {
 	var tagSpec []*ec2.TagSpecification
-	for resource, ts := range input {
+	for _, tag := range input {
 		var tags []*ec2.Tag
-		for key, value := range ts {
+		for key, value := range tag.Map {
 			tags = append(tags, &ec2.Tag{
 				Key:   aws.String(key),
 				Value: aws.String(value),
 			})
 		}
 		tagSpec = append(tagSpec, &ec2.TagSpecification{
-			ResourceType: aws.String(resource),
+			ResourceType: aws.String(tag.Resource),
 			Tags:         tags,
 		})
 	}
 	return tagSpec
 }
 
-// createInstanceDryRun runs a new EC2 instance using dry run mode.
+// runInstanceDryRun runs a new EC2 instance using dry run mode.
 // It will return an cloud.ErrDryRunFailed if the EC2 transaction
 // returns a different error code than ErrCodeDryRunOperation.
-func (m machines) createInstanceDryRun(input *ec2.RunInstancesInput) error {
+func (m machines) runInstanceDryRun(input *ec2.RunInstancesInput) error {
 	input.SetDryRun(true)
 	_, err := m.API.RunInstances(input)
 	awsErr, ok := err.(awserr.Error)
@@ -172,9 +172,8 @@ func (m machines) create(input cloud.CreateMachinesInput) (*cloud.CreateMachines
 
 	runInstanceInput := m.newRunInstancesInput(input)
 
-	var output cloud.CreateMachinesOutput
 	for try := 1; try <= input.Retries; try++ {
-		if err := m.createInstanceDryRun(runInstanceInput); err != nil {
+		if err := m.runInstanceDryRun(runInstanceInput); err != nil {
 			m.sleepNSecondsBeforeMaxRetries(try, input.Retries)
 		} else {
 			break
@@ -186,9 +185,10 @@ func (m machines) create(input cloud.CreateMachinesInput) (*cloud.CreateMachines
 
 	reservation, err := m.runInstance(runInstanceInput)
 	if err != nil {
-		return &output, err
+		return nil, err
 	}
 
+	var output cloud.CreateMachinesOutput
 	for _, i := range reservation.Instances {
 		output.Instances = append(output.Instances, *i.InstanceId)
 	}
@@ -214,42 +214,25 @@ func (m machines) Create(inputs []cloud.CreateMachinesInput) (created []cloud.Cr
 	return created, nil
 }
 
-// terminateInstanceDryRun terminates an instance using dry run mode.
-func (m machines) terminateInstanceDryRun(input *ec2.TerminateInstancesInput) error {
-	input.SetDryRun(true)
-	_, err := m.API.TerminateInstances(input)
-	awsErr, ok := err.(awserr.Error)
-	if !ok || awsErr.Code() != ErrCodeDryRunOperation {
-		return cloud.ErrDryRunFailed
+// terminate terminates EC2 instances.
+// It returns an error if no instances names are provided.
+// It also returns an error if the underlying TerminateInstances request fails.
+func (m machines) terminate(input cloud.TerminateMachinesInput) error {
+	if input.Names == nil || len(input.Names) == 0 {
+		return cloud.ErrMissingMachineNames
 	}
-	return nil
+	terminateInstancesInput := &ec2.TerminateInstancesInput{
+		DryRun:      aws.Bool(false),
+		InstanceIds: aws.StringSlice(input.Names),
+	}
+	_, err := m.API.TerminateInstances(terminateInstancesInput)
+	return err
 }
 
 // Terminate terminates EC2 machines.
 func (m machines) Terminate(input cloud.TerminateMachinesInput) error {
 	m.Logger.Debug(fmt.Sprintf("Terminating machines with the following input: %+v", input))
-	if input.Names == nil || len(input.Names) == 0 {
-		return cloud.ErrMissingMachineNames
-	}
-
-	terminateInstancesInput := &ec2.TerminateInstancesInput{
-		InstanceIds: aws.StringSlice(input.Names),
-	}
-
-	for try := 1; try <= input.Retries; try++ {
-		if err := m.terminateInstanceDryRun(terminateInstancesInput); err != nil {
-			m.sleepNSecondsBeforeMaxRetries(try, input.Retries)
-		} else {
-			break
-		}
-		if try == input.Retries {
-			m.Logger.Debug(fmt.Sprintf("Maximum retries reached: (%d/%d)", try, input.Retries))
-			return cloud.ErrUnknown
-		}
-	}
-
-	terminateInstancesInput.SetDryRun(false)
-	_, err := m.API.TerminateInstances(terminateInstancesInput)
+	err := m.terminate(input)
 	if err != nil {
 		m.Logger.Debug(fmt.Sprintf("Error while terminating instances. Instances: [%s]. Error: %s.", input.Names, err))
 		return err
@@ -258,6 +241,7 @@ func (m machines) Terminate(input cloud.TerminateMachinesInput) error {
 	return nil
 }
 
+// createFilters creates a set of filters from the given input.
 func (m machines) createFilters(input map[string][]string) []*ec2.Filter {
 	var filters []*ec2.Filter
 	for k, v := range input {

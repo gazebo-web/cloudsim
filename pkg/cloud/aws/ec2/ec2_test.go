@@ -95,9 +95,12 @@ func TestNewRunInstanceInput(t *testing.T) {
 		FirewallRules: []string{"first-rule", "second-rule"},
 		SubnetID:      "subnet-id",
 		Zone:          "zone-a",
-		Tags: map[string]map[string]string{
-			"namespace": {
-				"key": "value",
+		Tags: []cloud.Tag{
+			{
+				Resource: "instance",
+				Map: map[string]string{
+					"key": "value",
+				},
 			},
 		},
 		InitScript: "bash",
@@ -136,11 +139,16 @@ func TestNewRunInstanceInput(t *testing.T) {
 func TestCreateTags(t *testing.T) {
 	m := &machines{}
 
-	tagSpec := m.createTags(map[string]map[string]string{
-		"namespace": {
-			"key": "value",
+	tags := []cloud.Tag{
+		{
+			Resource: "instance",
+			Map: map[string]string{
+				"key": "value",
+			},
 		},
-	})
+	}
+
+	tagSpec := m.createTags(tags)
 
 	assert.Len(t, tagSpec, 1)
 	assert.Len(t, tagSpec[0].Tags, 1)
