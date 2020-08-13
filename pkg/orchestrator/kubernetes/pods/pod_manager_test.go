@@ -7,6 +7,7 @@ import (
 	apiv1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes/fake"
+	"k8s.io/kubernetes/pkg/client/conditions"
 	"sync"
 	"testing"
 	"time"
@@ -98,4 +99,74 @@ func TestManager_WaitForPodsToBeReady(t *testing.T) {
 
 	wg.Wait()
 	assert.NoError(t, err)
+}
+
+func TestManager_WaitForPodsErrWhenPodStateSucceeded(t *testing.T) {
+	pod := &apiv1.Pod{
+		TypeMeta: metav1.TypeMeta{},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "test",
+			Namespace: "default",
+			Labels: map[string]string{
+				"test": "app",
+			},
+		},
+		Spec: apiv1.PodSpec{},
+		Status: apiv1.PodStatus{
+			Conditions: []apiv1.PodCondition{},
+			Phase:      apiv1.PodSucceeded,
+		},
+	}
+
+	client := fake.NewSimpleClientset(pod)
+	fake := spdy.NewSPDYFakeInitializer()
+	m := NewManager(client, fake)
+	r := m.Condition(NewPod("test", "default", "test=app"), orchestrator.ReadyCondition)
+
+	var wg sync.WaitGroup
+	var err error
+	wg.Add(1)
+	go func() {
+		err = r.Wait(3*time.Second, 1*time.Microsecond)
+		wg.Done()
+	}()
+
+	wg.Wait()
+	assert.Error(t, err)
+	assert.Equal(t, conditions.ErrPodCompleted, err)
+}
+
+func TestManager_WaitForPodsErrWhenPodStateFailed(t *testing.T) {
+	pod := &apiv1.Pod{
+		TypeMeta: metav1.TypeMeta{},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "test",
+			Namespace: "default",
+			Labels: map[string]string{
+				"test": "app",
+			},
+		},
+		Spec: apiv1.PodSpec{},
+		Status: apiv1.PodStatus{
+			Conditions: []apiv1.PodCondition{},
+			Phase:      apiv1.PodFailed,
+		},
+	}
+
+	client := fake.NewSimpleClientset(pod)
+	fake := spdy.NewSPDYFakeInitializer()
+	m := NewManager(client, fake)
+	r := m.Condition(NewPod("test", "default", "test=app"), orchestrator.ReadyCondition)
+
+	var wg sync.WaitGroup
+	var err error
+	wg.Add(1)
+	go func() {
+		err = r.Wait(3*time.Second, 1*time.Microsecond)
+		wg.Done()
+	}()
+
+	wg.Wait()
+	assert.Error(t, err)
+	assert.Equal(t, conditions.ErrPodCompleted, err)
 }
