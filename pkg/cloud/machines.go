@@ -32,9 +32,9 @@ type Tag struct {
 // CreateMachinesInput is the input for the Machines.Create operation.
 // It will be used to create a certain number of machines.
 type CreateMachinesInput struct {
-	// ResourceName is a file naming convention used to identify a particular resource
-	// In AWS: Amazon Resource Names (ARN).
-	ResourceName string
+	// InstanceProfile is used to identify a particular resource.
+	// In AWS: Used to assign an AWS IAM profile to EC2 instances EC2 so that they can join the EKS cluster.
+	InstanceProfile string
 
 	// KeyName is the SSH key-pair's name that will be used on the created machine.
 	KeyName string

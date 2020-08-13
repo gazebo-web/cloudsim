@@ -63,9 +63,9 @@ func (m machines) newRunInstancesInput(createMachines cloud.CreateMachinesInput)
 	}
 
 	var iamProfile *ec2.IamInstanceProfileSpecification
-	if len(createMachines.ResourceName) > 0 {
+	if len(createMachines.InstanceProfile) > 0 {
 		iamProfile = &ec2.IamInstanceProfileSpecification{
-			Arn:  &createMachines.ResourceName,
+			Arn:  &createMachines.InstanceProfile,
 			Name: nil,
 		}
 	}
@@ -196,7 +196,7 @@ func (m machines) create(input cloud.CreateMachinesInput) (*cloud.CreateMachines
 	return &output, nil
 }
 
-// Create creates multiple EC2 instances. It will return the created machines.
+// Create creates multiple EC2 instances. It returns the id of the created machines.
 // This operation doesn't recover from an error.
 // You need to destroy the required machines when an error occurs.
 func (m machines) Create(inputs []cloud.CreateMachinesInput) (created []cloud.CreateMachinesOutput, err error) {

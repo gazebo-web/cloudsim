@@ -86,15 +86,15 @@ func TestSleep0SecondsWhenIsMax(t *testing.T) {
 func TestNewRunInstanceInput(t *testing.T) {
 	m := &machines{}
 	out := m.newRunInstancesInput(cloud.CreateMachinesInput{
-		ResourceName:  "arn",
-		KeyName:       "key-name",
-		Type:          "t2.large",
-		Image:         "docker-image",
-		MinCount:      1,
-		MaxCount:      2,
-		FirewallRules: []string{"first-rule", "second-rule"},
-		SubnetID:      "subnet-id",
-		Zone:          "zone-a",
+		InstanceProfile: "arn",
+		KeyName:         "key-name",
+		Type:            "t2.large",
+		Image:           "docker-image",
+		MinCount:        1,
+		MaxCount:        2,
+		FirewallRules:   []string{"first-rule", "second-rule"},
+		SubnetID:        "subnet-id",
+		Zone:            "zone-a",
 		Tags: []cloud.Tag{
 			{
 				Resource: "instance",
