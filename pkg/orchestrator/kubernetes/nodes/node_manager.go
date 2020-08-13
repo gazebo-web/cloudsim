@@ -15,12 +15,11 @@ type manager struct {
 
 // Condition returns a waiter.Waiter request to wait until a node reaches the given condition.
 func (m *manager) Condition(node orchestrator.Resource, condition orchestrator.Condition) waiter.Waiter {
-	var nodesNotReady []*apiv1.Node
 	opts := metav1.ListOptions{
 		LabelSelector: node.Selector(),
 	}
 	job := func() (bool, error) {
-		nodesNotReady = nil
+		var nodesNotReady []*apiv1.Node
 		nodes, err := m.API.CoreV1().Nodes().List(opts)
 		if err != nil {
 			return false, err

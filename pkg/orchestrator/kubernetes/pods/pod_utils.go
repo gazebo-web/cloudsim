@@ -10,7 +10,7 @@ import (
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/remotecommand"
-	"k8s.io/utils/exec"
+	"k8s.io/client-go/util/exec"
 )
 
 var (
@@ -37,7 +37,7 @@ func runExec(input runExecInput) (err error) {
 		}
 	}()
 
-	// TODO: The following line is panicking on tests.
+	// TODO: Find a way to avoid this line panicking on tests.
 	req := input.kubernetes.CoreV1().RESTClient().Post().
 		Namespace(input.namespace).
 		Name(input.name).
