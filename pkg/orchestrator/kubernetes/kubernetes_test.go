@@ -3,6 +3,8 @@ package kubernetes
 import (
 	"github.com/stretchr/testify/assert"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/kubernetes/nodes"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/kubernetes/pods"
 	"k8s.io/client-go/kubernetes/fake"
 	"testing"
 )
@@ -20,7 +22,7 @@ func TestNewKubernetes(t *testing.T) {
 func TestNewKubernetesWithNodeManager(t *testing.T) {
 	var pm orchestrator.PodManager
 	client := fake.NewSimpleClientset()
-	nm := NewNodeManager(client)
+	nm := nodes.NewManager(client)
 	ks := NewKubernetes(nm, pm)
 
 	assert.NotNil(t, ks)
@@ -31,7 +33,10 @@ func TestNewKubernetesWithNodeManager(t *testing.T) {
 func TestNewKubernetesWithPodManager(t *testing.T) {
 	var nm orchestrator.NodeManager
 
-	pm := NewPodManager()
+	client := fake.NewSimpleClientset()
+
+	pm := pods.NewManager(client)
+
 	ks := NewKubernetes(nm, pm)
 
 	assert.NotNil(t, ks)

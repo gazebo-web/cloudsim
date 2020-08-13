@@ -1,6 +1,9 @@
 package orchestrator
 
-import "errors"
+import (
+	"errors"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/waiter"
+)
 
 var (
 	// ErrNodesNotReady is returned when the nodes are not ready.
@@ -9,5 +12,5 @@ var (
 
 // NodeManager groups a set of methods to register nodes into a cluster.
 type NodeManager interface {
-	Condition(node Resource, condition Condition) Waiter
+	Condition(node Resource, condition Condition) waiter.Waiter
 }

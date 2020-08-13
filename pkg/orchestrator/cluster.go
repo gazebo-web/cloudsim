@@ -1,9 +1,5 @@
 package orchestrator
 
-import (
-	"time"
-)
-
 // Condition represents a state that should be reached.
 type Condition struct {
 	Type   string
@@ -18,8 +14,8 @@ var (
 	}
 )
 
-// Orchestrator groups a set of methods for managing a cluster.
-type Orchestrator interface {
+// ClusterManager groups a set of methods for managing a cluster.
+type ClusterManager interface {
 	Nodes() NodeManager
 	Pods() PodManager
 	Services() ServiceManager
@@ -34,10 +30,4 @@ type Resource interface {
 	Selector() string
 	// Namespace returns the namespace where the resource lives in.
 	Namespace() string
-}
-
-// Waiter groups a set of methods to wait for a certain job to be executed in
-// regular periods of time until a given timeout.
-type Waiter interface {
-	Wait(timeout time.Duration, pollFrequency time.Duration) error
 }

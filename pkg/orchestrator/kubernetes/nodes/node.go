@@ -1,4 +1,4 @@
-package kubernetes
+package nodes
 
 import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator"
@@ -9,7 +9,7 @@ type Node interface {
 	orchestrator.Resource
 }
 
-// node is a Node implementation.
+// node is a Node implementation that contains the basic information to identify a node in a Kubernetes cluster.
 type node struct {
 	name      string
 	selector  string

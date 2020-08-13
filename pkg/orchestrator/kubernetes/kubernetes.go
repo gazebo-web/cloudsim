@@ -4,7 +4,7 @@ import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator"
 )
 
-// k8s is an orchestrator.Orchestrator implementation.
+// k8s is a orchestrator.ClusterManager implementation.
 type k8s struct {
 	// nodeManager has a reference to a orchestrator.NodeManager implementation.
 	nodeManager orchestrator.NodeManager
@@ -33,8 +33,8 @@ func (k k8s) Ingresses() orchestrator.IngressManager {
 	panic("implement me")
 }
 
-// NewKubernetes returns a orchestrator.Orchestrator implementation using Kubernetes.
-func NewKubernetes(nodeManager orchestrator.NodeManager, podManager orchestrator.PodManager) orchestrator.Orchestrator {
+// NewKubernetes returns a orchestrator.ClusterManager implementation using Kubernetes.
+func NewKubernetes(nodeManager orchestrator.NodeManager, podManager orchestrator.PodManager) orchestrator.ClusterManager {
 	return &k8s{
 		nodeManager: nodeManager,
 		podManager:  podManager,

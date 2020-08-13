@@ -1,8 +1,9 @@
-package kubernetes
+package nodes
 
 import (
 	"github.com/stretchr/testify/assert"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/waiter"
 	apiv1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes/fake"
@@ -13,29 +14,13 @@ import (
 
 func TestNewNodeManager(t *testing.T) {
 	client := fake.NewSimpleClientset()
-	nm := NewNodeManager(client)
+	nm := NewManager(client)
 	assert.NotNil(t, nm)
 }
 
-func TestCondition_CreatesWaitRequest(t *testing.T) {
-	cli := fake.NewSimpleClientset()
-	nm := NewNodeManager(cli)
-
-	n := NewNode("test", "default", "test=app")
-	w := nm.Condition(n, orchestrator.ReadyCondition)
-
-	assert.IsType(t, &nodeConditionWaitRequest{}, w)
-
-	wr, ok := w.(*nodeConditionWaitRequest)
-
-	assert.True(t, ok)
-	assert.NotNil(t, wr.node)
-	assert.Equal(t, orchestrator.ReadyCondition, wr.condition)
-}
-
 func TestConditionSetAsExpected(t *testing.T) {
-	r := &nodeConditionWaitRequest{}
-	assert.True(t, r.isConditionSetAsExpected(apiv1.Node{
+	m := &manager{}
+	assert.True(t, m.isConditionSetAsExpected(apiv1.Node{
 		TypeMeta:   metav1.TypeMeta{},
 		ObjectMeta: metav1.ObjectMeta{},
 		Spec:       apiv1.NodeSpec{},
@@ -49,7 +34,7 @@ func TestConditionSetAsExpected(t *testing.T) {
 		},
 	}, orchestrator.ReadyCondition))
 
-	assert.False(t, r.isConditionSetAsExpected(apiv1.Node{
+	assert.False(t, m.isConditionSetAsExpected(apiv1.Node{
 		TypeMeta:   metav1.TypeMeta{},
 		ObjectMeta: metav1.ObjectMeta{},
 		Spec:       apiv1.NodeSpec{},
@@ -63,7 +48,7 @@ func TestConditionSetAsExpected(t *testing.T) {
 		},
 	}, orchestrator.ReadyCondition))
 
-	assert.False(t, r.isConditionSetAsExpected(apiv1.Node{
+	assert.False(t, m.isConditionSetAsExpected(apiv1.Node{
 		TypeMeta:   metav1.TypeMeta{},
 		ObjectMeta: metav1.ObjectMeta{},
 		Spec:       apiv1.NodeSpec{},
@@ -72,7 +57,7 @@ func TestConditionSetAsExpected(t *testing.T) {
 		},
 	}, orchestrator.ReadyCondition))
 
-	assert.False(t, r.isConditionSetAsExpected(apiv1.Node{
+	assert.False(t, m.isConditionSetAsExpected(apiv1.Node{
 		TypeMeta:   metav1.TypeMeta{},
 		ObjectMeta: metav1.ObjectMeta{},
 		Spec:       apiv1.NodeSpec{},
@@ -86,7 +71,7 @@ func TestConditionSetAsExpected(t *testing.T) {
 		},
 	}, orchestrator.ReadyCondition))
 
-	assert.False(t, r.isConditionSetAsExpected(apiv1.Node{
+	assert.False(t, m.isConditionSetAsExpected(apiv1.Node{
 		TypeMeta:   metav1.TypeMeta{},
 		ObjectMeta: metav1.ObjectMeta{},
 		Spec:       apiv1.NodeSpec{},
@@ -100,7 +85,7 @@ func TestConditionSetAsExpected(t *testing.T) {
 		},
 	}, orchestrator.ReadyCondition))
 
-	assert.False(t, r.isConditionSetAsExpected(apiv1.Node{
+	assert.False(t, m.isConditionSetAsExpected(apiv1.Node{
 		TypeMeta:   metav1.TypeMeta{},
 		ObjectMeta: metav1.ObjectMeta{},
 		Spec:       apiv1.NodeSpec{},
@@ -114,7 +99,7 @@ func TestConditionSetAsExpected(t *testing.T) {
 		},
 	}, orchestrator.ReadyCondition))
 
-	assert.False(t, r.isConditionSetAsExpected(apiv1.Node{
+	assert.False(t, m.isConditionSetAsExpected(apiv1.Node{
 		TypeMeta:   metav1.TypeMeta{},
 		ObjectMeta: metav1.ObjectMeta{},
 		Spec:       apiv1.NodeSpec{},
@@ -128,7 +113,7 @@ func TestConditionSetAsExpected(t *testing.T) {
 		},
 	}, orchestrator.ReadyCondition))
 
-	assert.False(t, r.isConditionSetAsExpected(apiv1.Node{
+	assert.False(t, m.isConditionSetAsExpected(apiv1.Node{
 		TypeMeta:   metav1.TypeMeta{},
 		ObjectMeta: metav1.ObjectMeta{},
 		Spec:       apiv1.NodeSpec{},
@@ -161,7 +146,7 @@ func TestWait_WaitForNodesToBeReady(t *testing.T) {
 		},
 	}
 	cli := fake.NewSimpleClientset(&node)
-	nm := NewNodeManager(cli)
+	nm := NewManager(cli)
 
 	n := NewNode("test", "default", "test=app")
 	r := nm.Condition(n, orchestrator.ReadyCondition)
@@ -201,7 +186,7 @@ func TestWait_ErrWhenNodesArentReady(t *testing.T) {
 		},
 	}
 	cli := fake.NewSimpleClientset(&node)
-	nm := NewNodeManager(cli)
+	nm := NewManager(cli)
 
 	n := NewNode("test", "default", "test=app")
 	r := nm.Condition(n, orchestrator.ReadyCondition)
@@ -215,4 +200,5 @@ func TestWait_ErrWhenNodesArentReady(t *testing.T) {
 	}()
 	wg.Wait()
 	assert.Error(t, err)
+	assert.Equal(t, waiter.ErrRequestTimeout, err)
 }
