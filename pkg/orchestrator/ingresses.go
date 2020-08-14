@@ -1,9 +1,18 @@
 package orchestrator
 
+import "errors"
+
+var (
+	// ErrRuleNotFound is returned when a rule doesn't exist.
+	ErrRuleNotFound = errors.New("rule not found")
+)
+
 // Rule is used to return a list of paths.
 type Rule interface {
 	Host() string
 	Paths() []Path
+	UpsertPaths(paths []Path)
+	ToOutput() interface{}
 }
 
 // Path matches a certain Regex to a specific Endpoint.
@@ -28,6 +37,6 @@ type IngressManager interface {
 // Ruler groups a set of methods to interact with an Ingress's rules.
 type Ruler interface {
 	Get(host string) (Rule, error)
-	Upsert(host string, paths ...Path) error
+	Upsert(rule Rule, paths ...Path) error
 	Remove(host string, paths ...Path) error
 }

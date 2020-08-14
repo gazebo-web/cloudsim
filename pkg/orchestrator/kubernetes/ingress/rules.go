@@ -3,6 +3,7 @@ package ingress
 import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator"
 	"k8s.io/api/extensions/v1beta1"
+	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
 // rule is an orchestrator.Rule implementation.
@@ -11,13 +12,57 @@ type rule struct {
 	paths []orchestrator.Path
 }
 
+func (r *rule) UpsertPaths(paths []orchestrator.Path) {
+	for _, p := range paths {
+		var updated bool
+		for i, rulePath := range r.paths {
+			if rulePath.Endpoint == p.Endpoint {
+				updated = true
+				r.paths[i] = p
+				break
+			}
+		}
+		if !updated {
+			r.paths = append(r.paths, p)
+		}
+	}
+}
+
+func (r *rule) toIngressPaths() []v1beta1.HTTPIngressPath {
+	var result []v1beta1.HTTPIngressPath
+	for _, p := range r.paths {
+		result = append(result, v1beta1.HTTPIngressPath{
+			Path: p.Regex,
+			Backend: v1beta1.IngressBackend{
+				ServiceName: p.Endpoint.Name,
+				ServicePort: intstr.IntOrString{
+					Type:   intstr.Int,
+					IntVal: p.Endpoint.Port,
+				},
+			},
+		})
+	}
+	return result
+}
+
+func (r *rule) ToOutput() interface{} {
+	return v1beta1.IngressRule{
+		Host: r.host,
+		IngressRuleValue: v1beta1.IngressRuleValue{
+			HTTP: &v1beta1.HTTPIngressRuleValue{
+				Paths: r.toIngressPaths(),
+			},
+		},
+	}
+}
+
 // Host returns the rule's host.
-func (r rule) Host() string {
+func (r *rule) Host() string {
 	return r.host
 }
 
 // Paths returns an array of paths.
-func (r rule) Paths() []orchestrator.Path {
+func (r *rule) Paths() []orchestrator.Path {
 	return r.paths
 }
 
@@ -27,36 +72,4 @@ func NewRule(host string, paths []orchestrator.Path) orchestrator.Rule {
 		host:  host,
 		paths: paths,
 	}
-}
-
-// ruler is an orchestrator.Ruler implementation.
-type ruler struct {
-	resource orchestrator.Resource
-	manager  *manager
-}
-
-// Get returns the rule definition of the given host.
-func (r ruler) Get(host string) (orchestrator.Rule, error) {
-	i, err := r.manager.get(r.resource)
-	if err != nil {
-		return nil, err
-	}
-	var rule *v1beta1.HTTPIngressRuleValue
-	for _, ingressRule := range i.Spec.Rules {
-		if ingressRule.Host == host {
-			rule = ingressRule.IngressRuleValue.HTTP
-		}
-	}
-	paths := NewPaths(rule.Paths)
-	return NewRule(host, paths), nil
-}
-
-// Upsert adds a set of paths to the given host's rule.
-func (r ruler) Upsert(host string, paths ...orchestrator.Path) error {
-	panic("implement me")
-}
-
-// Remove removes a set of paths from the given host's rule.
-func (r ruler) Remove(host string, paths ...orchestrator.Path) error {
-	panic("implement me")
 }

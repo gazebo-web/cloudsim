@@ -2,6 +2,7 @@ package ingress
 
 import (
 	"github.com/stretchr/testify/assert"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator"
 	"k8s.io/api/extensions/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
@@ -80,6 +81,77 @@ func TestManager_GetRuleReturnsIngress(t *testing.T) {
 	assert.Equal(t, "test", rule.Paths()[0].Regex)
 	assert.Equal(t, "test-service", rule.Paths()[0].Endpoint.Name)
 	assert.Equal(t, int32(3333), rule.Paths()[0].Endpoint.Port)
+}
+
+func TestManager_GetRuleReturnsError(t *testing.T) {
+	client := fake.NewSimpleClientset()
+	m := NewManager(client)
+	r := m.Rules(NewIngress("test", "default"))
+
+	_, err := r.Get("test.com")
+	assert.Error(t, err)
+}
+
+func TestManager_UpsertRulesReturnsErrorIfIngressDoesntExist(t *testing.T) {
+	client := fake.NewSimpleClientset()
+	m := NewManager(client)
+	path := orchestrator.Path{
+		Regex: "some-regex",
+		Endpoint: orchestrator.Endpoint{
+			Name: "http",
+			Port: 80,
+		},
+	}
+	r := NewRule("test.com", nil)
+	err := m.Rules(NewIngress("test", "default")).Upsert(r, path)
+	assert.Error(t, err)
+}
+
+func TestManager_UpsertRulesReturnsErrorIfRuleDoesntExist(t *testing.T) {
+	ing := newTestIngress()
+	client := fake.NewSimpleClientset(&ing)
+
+	m := NewManager(client)
+
+	path := orchestrator.Path{
+		Regex: "some-regex",
+		Endpoint: orchestrator.Endpoint{
+			Name: "http",
+			Port: 80,
+		},
+	}
+
+	r := NewRule("test.org", nil)
+
+	err := m.Rules(NewIngress("test", "default")).Upsert(r, path)
+
+	assert.Error(t, err)
+	assert.Equal(t, orchestrator.ErrRuleNotFound, err)
+}
+
+func TestManager_UpsertRulesReturnsNoError(t *testing.T) {
+	ing := newTestIngress()
+	client := fake.NewSimpleClientset(&ing)
+	m := NewManager(client)
+
+	resource := NewIngress("test", "default")
+
+	r, err := m.Rules(resource).Get("test.com")
+	assert.NoError(t, err)
+
+	path := orchestrator.Path{
+		Regex: "some-regex",
+		Endpoint: orchestrator.Endpoint{
+			Name: "http",
+			Port: 80,
+		},
+	}
+	err = m.Rules(resource).Upsert(r, path)
+	assert.NoError(t, err)
+
+	result, err := m.Rules(resource).Get("test.com")
+	assert.NoError(t, err)
+	assert.Len(t, result.Paths(), 2)
 }
 
 func newTestIngress() v1beta1.Ingress {
