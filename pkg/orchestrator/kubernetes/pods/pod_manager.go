@@ -18,13 +18,13 @@ type manager struct {
 }
 
 // Exec creates a new executor.
-func (p manager) Exec(pod orchestrator.Resource) orchestrator.Executor {
-	return newExecutor(p.API, pod, p.SPDY)
+func (m manager) Exec(pod orchestrator.Resource) orchestrator.Executor {
+	return newExecutor(m.API, pod, m.SPDY)
 }
 
 // Reader creates a new reader.
-func (p manager) Reader(pod orchestrator.Resource) orchestrator.Reader {
-	return newReader(p.API, pod, p.SPDY)
+func (m manager) Reader(pod orchestrator.Resource) orchestrator.Reader {
+	return newReader(m.API, pod, m.SPDY)
 }
 
 // Condition creates a new wait request.
