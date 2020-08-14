@@ -1,4 +1,4 @@
-package ingress
+package rules
 
 import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator"
@@ -8,8 +8,13 @@ import (
 
 // rule is an orchestrator.Rule implementation.
 type rule struct {
-	host  string
-	paths []orchestrator.Path
+	host     string
+	paths    []orchestrator.Path
+	resource orchestrator.Resource
+}
+
+func (r *rule) Resource() orchestrator.Resource {
+	return r.resource
 }
 
 func (r *rule) UpsertPaths(paths []orchestrator.Path) {
@@ -67,9 +72,25 @@ func (r *rule) Paths() []orchestrator.Path {
 }
 
 // NewRule initializes a new orchestrator.Rule.
-func NewRule(host string, paths []orchestrator.Path) orchestrator.Rule {
+func NewRule(resource orchestrator.Resource, host string, paths []orchestrator.Path) orchestrator.Rule {
 	return &rule{
-		host:  host,
-		paths: paths,
+		resource: resource,
+		host:     host,
+		paths:    paths,
 	}
+}
+
+// NewPaths returns a generic group of Paths from the given set of Kubernetes HTTPIngressPaths.
+func NewPaths(in []v1beta1.HTTPIngressPath) []orchestrator.Path {
+	var out []orchestrator.Path
+	for _, p := range in {
+		out = append(out, orchestrator.Path{
+			Regex: p.Path,
+			Endpoint: orchestrator.Endpoint{
+				Name: p.Backend.ServiceName,
+				Port: p.Backend.ServicePort.IntVal,
+			},
+		})
+	}
+	return out
 }
