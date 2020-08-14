@@ -5,6 +5,7 @@ import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/kubernetes/nodes"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/kubernetes/pods"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/kubernetes/spdy"
 	"k8s.io/client-go/kubernetes/fake"
 	"testing"
 )
@@ -34,8 +35,8 @@ func TestNewKubernetesWithPodManager(t *testing.T) {
 	var nm orchestrator.NodeManager
 
 	client := fake.NewSimpleClientset()
-
-	pm := pods.NewManager(client)
+	fakeSpdy := spdy.NewSPDYFakeInitializer()
+	pm := pods.NewManager(client, fakeSpdy)
 
 	ks := NewKubernetes(nm, pm)
 
