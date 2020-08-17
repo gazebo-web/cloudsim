@@ -65,10 +65,11 @@ const (
 // The worldStatsTopic arg is the topic to subscribe to get notifications about the
 // simulation state (eg. /world/default/stats). The optional worldWarmupTopic
 // is used to get notifications about the time when the Simulation actually started.
-func NewRunningSimulation(ctx context.Context, dep *SimulationDeployment, t ignws.PubSubWebsocketTransporter, worldStatsTopic string,
-	worldWarmupTopic string, maxSimSeconds int) (*RunningSimulation, error) {
+func NewRunningSimulation(ctx context.Context, dep *SimulationDeployment, t ignws.PubSubWebsocketTransporter,
+	worldStatsTopic string, worldWarmupTopic string, maxSimSeconds int) (*RunningSimulation, error) {
 	groupID := *dep.GroupID
-	logger(ctx).Info(fmt.Sprintf("Creating new RunningSimulation for groupID[%s] with topics stats[%s] and maxSimSeconds[%d]", groupID, worldStatsTopic, maxSimSeconds))
+	msg := "Creating new RunningSimulation for groupID[%s] with topics stats[%s] and maxSimSeconds[%d]"
+	logger(ctx).Info(fmt.Sprintf(msg, groupID, worldStatsTopic, maxSimSeconds))
 
 	// Backward compatibility: we assume 30 minutes by default.
 	var validFor time.Duration

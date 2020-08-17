@@ -2,6 +2,7 @@ package transport
 
 import (
 	"errors"
+	"fmt"
 	"github.com/gorilla/websocket"
 	"net/url"
 )
@@ -39,11 +40,16 @@ func (w *websocketTransport) Connect() error {
 // createConnection creates a new websocket connection based on the given URL and topic.
 // It returns an error if the connection wasn't established.
 func createConnection(addr url.URL) (*websocket.Conn, error) {
-	conn, _, err := websocket.DefaultDialer.Dial(addr.String(), nil)
-	if err != nil {
-		return nil, err
+	conn, resp, err := websocket.DefaultDialer.Dial(addr.String(), nil)
+	// Temporary debug code
+	if err == websocket.ErrBadHandshake {
+		if resp == nil {
+			fmt.Println("Websocket debug: resp is nil")
+		} else {
+			fmt.Println("Websocket debug:", resp.Status, resp.Body, resp)
+		}
 	}
-	return conn, nil
+	return conn, err
 }
 
 // IsConnected checks if the connection has been established
