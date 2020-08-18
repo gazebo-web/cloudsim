@@ -7,7 +7,7 @@ import (
 )
 
 // Initializer is used to initialize different SPDY executors.
-// We created this interface to inject Kubernetes a way to mock an SPDY executor.
+// This interface was created to allow mocking a Kubernetes SPDY executor.
 type Initializer interface {
 	NewSPDYExecutor(method string, url *url.URL) (remotecommand.Executor, error)
 }
