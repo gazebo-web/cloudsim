@@ -14,6 +14,7 @@ type Initializer interface {
 
 // initializer is a Initializer implementation.
 // It's a wrapper for the default Kubernetes remotecommand.NewSPDYExecutor implementation.
+// For tests, use `spdy.Fake` instead when initializing a pod manager.
 type initializer struct {
 	config *rest.Config
 }
