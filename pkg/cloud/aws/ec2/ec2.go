@@ -21,8 +21,10 @@ const (
 	// request.
 	ErrCodeInsufficientInstanceCapacity = "InsufficientInstanceCapacity"
 
+	// shortSubnetLength specifies the length of a v1 AWS subnet ID.
 	shortSubnetLength = 15
-	longSubnetLength  = 24
+	// longSubnetLength specifies the length of a v2 AWS subnet ID.
+	longSubnetLength = 24
 )
 
 // machines is a cloud.Machines implementation.
