@@ -16,9 +16,19 @@ type Rule interface {
 	ToOutput() interface{}
 }
 
-// Path matches a certain Regex to a specific Endpoint.
+// Path matches a certain Address to a specific Endpoint.
 type Path struct {
-	Regex    string
+	// Address is an extended POSIX regex as defined by IEEE Std 1003.1,
+	// (i.e this follows the egrep/unix syntax, not the perl syntax)
+	// matched against the path of an incoming request. Currently it can
+	// contain characters disallowed from the conventional "path"
+	// part of a URL as defined by RFC 3986. Paths must begin with
+	// a '/'. If unspecified, the path defaults to a catch all sending
+	// traffic to the backend.
+	Address string
+
+	// Endpoint has the information needed to route the incoming traffic in this Path
+	// into a specific service running inside the cluster.
 	Endpoint Endpoint
 }
 
@@ -30,6 +40,7 @@ type Endpoint struct {
 	Port int32
 }
 
+// IngressRulesManager groups a set of methods to manage rules from a certain Ingress.
 type IngressRulesManager interface {
 	Get(resource Resource, host string) (Rule, error)
 	Upsert(rule Rule, paths ...Path) error

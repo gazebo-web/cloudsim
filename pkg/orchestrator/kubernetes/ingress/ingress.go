@@ -16,17 +16,17 @@ type ingress struct {
 }
 
 // Selector returns the ingress selector. We aren't using selectors for ingresses right now.
-func (i ingress) Selector() string {
+func (i *ingress) Selector() string {
 	return ""
 }
 
 // Namespace returns the ingress namespace.
-func (i ingress) Namespace() string {
+func (i *ingress) Namespace() string {
 	return i.namespace
 }
 
 // Name returns the ingress name.
-func (i ingress) Name() string {
+func (i *ingress) Name() string {
 	return i.name
 }
 

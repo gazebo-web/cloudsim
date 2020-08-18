@@ -18,17 +18,17 @@ type manager struct {
 }
 
 // Exec creates a new executor.
-func (m manager) Exec(pod orchestrator.Resource) orchestrator.Executor {
+func (m *manager) Exec(pod orchestrator.Resource) orchestrator.Executor {
 	return newExecutor(m.API, pod, m.SPDY)
 }
 
 // Reader creates a new reader.
-func (m manager) Reader(pod orchestrator.Resource) orchestrator.Reader {
+func (m *manager) Reader(pod orchestrator.Resource) orchestrator.Reader {
 	return newReader(m.API, pod, m.SPDY)
 }
 
 // Condition creates a new wait request.
-func (m manager) Condition(pod orchestrator.Resource, condition orchestrator.Condition) waiter.Waiter {
+func (m *manager) Condition(pod orchestrator.Resource, condition orchestrator.Condition) waiter.Waiter {
 	opts := metav1.ListOptions{
 		LabelSelector: pod.Selector(),
 	}

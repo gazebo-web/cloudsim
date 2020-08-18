@@ -20,7 +20,7 @@ type initializer struct {
 }
 
 // NewSPDYExecutor creates a new remotecommand.Executor.
-func (i initializer) NewSPDYExecutor(method string, url *url.URL) (remotecommand.Executor, error) {
+func (i *initializer) NewSPDYExecutor(method string, url *url.URL) (remotecommand.Executor, error) {
 	exec, err := remotecommand.NewSPDYExecutor(i.config, method, url)
 	if err != nil {
 		return nil, err

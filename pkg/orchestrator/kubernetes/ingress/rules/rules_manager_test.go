@@ -21,7 +21,7 @@ func TestManager_GetRuleReturnsIngressRule(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, "test.com", rule.Host())
 	assert.Len(t, rule.Paths(), 1)
-	assert.Equal(t, "test", rule.Paths()[0].Regex)
+	assert.Equal(t, "test", rule.Paths()[0].Address)
 	assert.Equal(t, "test-service", rule.Paths()[0].Endpoint.Name)
 	assert.Equal(t, int32(3333), rule.Paths()[0].Endpoint.Port)
 }
@@ -38,13 +38,15 @@ func TestManager_UpsertRulesReturnsErrorIfIngressDoesntExist(t *testing.T) {
 	client := fake.NewSimpleClientset()
 	m := NewManager(client)
 	path := orchestrator.Path{
-		Regex: "some-regex",
+		Address: "some-regex",
 		Endpoint: orchestrator.Endpoint{
 			Name: "http",
 			Port: 80,
 		},
 	}
-	err := m.Upsert(NewRule(ingress.NewIngress("test", "default"), "test.org", []orchestrator.Path{}), path)
+	resource := ingress.NewIngress("test", "default")
+	rule := NewRule(resource, "test.org", []orchestrator.Path{})
+	err := m.Upsert(rule, path)
 	assert.Error(t, err)
 }
 
@@ -53,13 +55,15 @@ func TestManager_UpsertRulesReturnsErrorIfRuleDoesntExist(t *testing.T) {
 	client := fake.NewSimpleClientset(&ing)
 	m := NewManager(client)
 	path := orchestrator.Path{
-		Regex: "some-regex",
+		Address: "some-regex",
 		Endpoint: orchestrator.Endpoint{
 			Name: "http",
 			Port: 80,
 		},
 	}
-	err := m.Upsert(NewRule(ingress.NewIngress("test", "default"), "test.org", []orchestrator.Path{}), path)
+	resource := ingress.NewIngress("test", "default")
+	rule := NewRule(resource, "test.org", []orchestrator.Path{})
+	err := m.Upsert(rule, path)
 	assert.Error(t, err)
 	assert.Equal(t, orchestrator.ErrRuleNotFound, err)
 }
@@ -75,7 +79,7 @@ func TestManager_UpsertRulesReturnsNoError(t *testing.T) {
 	assert.NoError(t, err)
 
 	path := orchestrator.Path{
-		Regex: "some-regex",
+		Address: "some-regex",
 		Endpoint: orchestrator.Endpoint{
 			Name: "http",
 			Port: 80,

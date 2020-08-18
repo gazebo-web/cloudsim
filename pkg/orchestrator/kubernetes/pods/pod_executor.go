@@ -16,7 +16,7 @@ type executor struct {
 }
 
 // Cmd is used to run a command in a container inside a pod.
-func (e executor) Cmd(command []string) error {
+func (e *executor) Cmd(command []string) error {
 	var stdout, stderr bytes.Buffer
 	options := remotecommand.StreamOptions{
 		Stdin:  nil,
@@ -39,7 +39,7 @@ func (e executor) Cmd(command []string) error {
 }
 
 // Script is used to run a bash script inside a container.
-func (e executor) Script(script string) error {
+func (e *executor) Script(script string) error {
 	return e.Cmd([]string{"sh", "-c", script})
 }
 

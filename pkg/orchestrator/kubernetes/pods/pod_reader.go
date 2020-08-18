@@ -18,7 +18,7 @@ type reader struct {
 }
 
 // File is used to read a file from the given paths.
-func (r reader) File(paths ...string) (io.Reader, error) {
+func (r *reader) File(paths ...string) (io.Reader, error) {
 	var stdout, stderr bytes.Buffer
 	options := remotecommand.StreamOptions{
 		Stdin:  nil,
@@ -41,7 +41,7 @@ func (r reader) File(paths ...string) (io.Reader, error) {
 }
 
 // Logs returns the log from the given container running inside the pod.
-func (r reader) Logs(container string, lines int64) (string, error) {
+func (r *reader) Logs(container string, lines int64) (string, error) {
 	req := r.API.CoreV1().Pods(r.pod.Namespace()).GetLogs(r.pod.Name(), &apiv1.PodLogOptions{
 		Container: container,
 		TailLines: &lines,

@@ -15,18 +15,18 @@ type pod struct {
 }
 
 // Name returns the name of the pod.
-func (n pod) Name() string {
-	return n.name
+func (p pod) Name() string {
+	return p.name
 }
 
 // Selector returns the selector of the pod.
-func (n pod) Selector() string {
-	return n.selector
+func (p pod) Selector() string {
+	return p.selector
 }
 
 // Namespace returns the namespace of the pod.
-func (n pod) Namespace() string {
-	return n.namespace
+func (p pod) Namespace() string {
+	return p.namespace
 }
 
 // NewPod returns a new Pod implementation using pod.

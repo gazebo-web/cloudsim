@@ -13,7 +13,7 @@ type manager struct {
 }
 
 // Get returns the rule definition of the given host from the given resource.
-func (m manager) Get(resource orchestrator.Resource, host string) (orchestrator.Rule, error) {
+func (m *manager) Get(resource orchestrator.Resource, host string) (orchestrator.Rule, error) {
 	ingress, err := m.API.ExtensionsV1beta1().Ingresses(resource.Namespace()).Get(resource.Name(), metav1.GetOptions{})
 	if err != nil {
 		return nil, err
@@ -30,7 +30,7 @@ func (m manager) Get(resource orchestrator.Resource, host string) (orchestrator.
 
 // Upsert adds a set of paths to the given host's rule.
 // If the paths already exist, it updates them.
-func (m manager) Upsert(rule orchestrator.Rule, paths ...orchestrator.Path) error {
+func (m *manager) Upsert(rule orchestrator.Rule, paths ...orchestrator.Path) error {
 	ingress, err := m.API.ExtensionsV1beta1().Ingresses(rule.Resource().Namespace()).Get(rule.Resource().Name(), metav1.GetOptions{})
 	if err != nil {
 		return err
@@ -57,7 +57,7 @@ func (m manager) Upsert(rule orchestrator.Rule, paths ...orchestrator.Path) erro
 }
 
 // Remove removes a set of paths from the given host's rule.
-func (m manager) Remove(host string, paths ...orchestrator.Path) error {
+func (m *manager) Remove(host string, paths ...orchestrator.Path) error {
 	panic("implement me")
 }
 

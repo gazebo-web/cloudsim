@@ -17,17 +17,17 @@ type node struct {
 }
 
 // Name returns the name of the node.
-func (n node) Name() string {
+func (n *node) Name() string {
 	return n.name
 }
 
 // Selector returns the selector of the node.
-func (n node) Selector() string {
+func (n *node) Selector() string {
 	return n.selector
 }
 
 // Namespace returns the namespace of the node.
-func (n node) Namespace() string {
+func (n *node) Namespace() string {
 	return n.namespace
 }
 

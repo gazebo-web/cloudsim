@@ -37,7 +37,7 @@ func (r *rule) toIngressPaths() []v1beta1.HTTPIngressPath {
 	var result []v1beta1.HTTPIngressPath
 	for _, p := range r.paths {
 		result = append(result, v1beta1.HTTPIngressPath{
-			Path: p.Regex,
+			Path: p.Address,
 			Backend: v1beta1.IngressBackend{
 				ServiceName: p.Endpoint.Name,
 				ServicePort: intstr.IntOrString{
@@ -85,7 +85,7 @@ func NewPaths(in []v1beta1.HTTPIngressPath) []orchestrator.Path {
 	var out []orchestrator.Path
 	for _, p := range in {
 		out = append(out, orchestrator.Path{
-			Regex: p.Path,
+			Address: p.Path,
 			Endpoint: orchestrator.Endpoint{
 				Name: p.Backend.ServiceName,
 				Port: p.Backend.ServicePort.IntVal,

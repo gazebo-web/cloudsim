@@ -12,7 +12,7 @@ type Fake struct {
 }
 
 // Stream mocks the remotecommand.Executor Stream method.
-func (f Fake) Stream(options remotecommand.StreamOptions) error {
+func (f *Fake) Stream(options remotecommand.StreamOptions) error {
 	f.Calls++
 	if options.Stdout != nil {
 		_, err := options.Stdout.Write([]byte("stdout-test"))
@@ -36,7 +36,7 @@ func (f Fake) Stream(options remotecommand.StreamOptions) error {
 }
 
 // NewSPDYExecutor initializes a new remotecommand.Executor using Fake.
-func (f Fake) NewSPDYExecutor(method string, url *url.URL) (remotecommand.Executor, error) {
+func (f *Fake) NewSPDYExecutor(method string, url *url.URL) (remotecommand.Executor, error) {
 	return &Fake{}, nil
 }
 
