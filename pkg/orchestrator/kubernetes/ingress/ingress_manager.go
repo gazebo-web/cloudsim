@@ -11,6 +11,7 @@ type manager struct {
 	API kubernetes.Interface
 }
 
+// Get returns an Ingress with the given
 func (m *manager) Get(name string, namespace string) (orchestrator.Resource, error) {
 	_, err := m.API.ExtensionsV1beta1().Ingresses(name).Get(namespace, metav1.GetOptions{})
 	if err != nil {

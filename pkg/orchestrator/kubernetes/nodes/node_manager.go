@@ -14,7 +14,7 @@ type manager struct {
 }
 
 // Condition returns a waiter.Waiter request to wait until a node reaches the given condition.
-func (m *manager) Condition(node orchestrator.Resource, condition orchestrator.Condition) waiter.Waiter {
+func (m *manager) WaitForCondition(node orchestrator.Resource, condition orchestrator.Condition) waiter.Waiter {
 	opts := metav1.ListOptions{
 		LabelSelector: node.Selector(),
 	}

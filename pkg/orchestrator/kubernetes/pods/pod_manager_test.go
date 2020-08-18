@@ -77,7 +77,7 @@ func TestManager_WaitForPodsToBeReady(t *testing.T) {
 	client := fake.NewSimpleClientset(pod)
 	fake := spdy.NewSPDYFakeInitializer()
 	m := NewManager(client, fake)
-	r := m.Condition(NewPod("test", "default", "test=app"), orchestrator.ReadyCondition)
+	r := m.WaitForCondition(NewPod("test", "default", "test=app"), orchestrator.ReadyCondition)
 
 	var wg sync.WaitGroup
 	var err error
@@ -121,7 +121,7 @@ func TestManager_WaitForPodsErrWhenPodStateSucceeded(t *testing.T) {
 	client := fake.NewSimpleClientset(pod)
 	fake := spdy.NewSPDYFakeInitializer()
 	m := NewManager(client, fake)
-	r := m.Condition(NewPod("test", "default", "test=app"), orchestrator.ReadyCondition)
+	r := m.WaitForCondition(NewPod("test", "default", "test=app"), orchestrator.ReadyCondition)
 
 	var wg sync.WaitGroup
 	var err error
@@ -156,7 +156,7 @@ func TestManager_WaitForPodsErrWhenPodStateFailed(t *testing.T) {
 	client := fake.NewSimpleClientset(pod)
 	fake := spdy.NewSPDYFakeInitializer()
 	m := NewManager(client, fake)
-	r := m.Condition(NewPod("test", "default", "test=app"), orchestrator.ReadyCondition)
+	r := m.WaitForCondition(NewPod("test", "default", "test=app"), orchestrator.ReadyCondition)
 
 	var wg sync.WaitGroup
 	var err error

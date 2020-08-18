@@ -149,7 +149,7 @@ func TestWait_WaitForNodesToBeReady(t *testing.T) {
 	nm := NewManager(cli)
 
 	n := NewNode("test", "default", "test=app")
-	r := nm.Condition(n, orchestrator.ReadyCondition)
+	r := nm.WaitForCondition(n, orchestrator.ReadyCondition)
 
 	var wg sync.WaitGroup
 	var err error
@@ -189,7 +189,7 @@ func TestWait_ErrWhenNodesArentReady(t *testing.T) {
 	nm := NewManager(cli)
 
 	n := NewNode("test", "default", "test=app")
-	r := nm.Condition(n, orchestrator.ReadyCondition)
+	r := nm.WaitForCondition(n, orchestrator.ReadyCondition)
 
 	var wg sync.WaitGroup
 	var err error

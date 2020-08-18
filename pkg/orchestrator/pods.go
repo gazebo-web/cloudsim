@@ -9,7 +9,7 @@ import (
 type PodManager interface {
 	Exec(pod Resource) Executor
 	Reader(pod Resource) Reader
-	Condition(pod Resource, condition Condition) waiter.Waiter
+	WaitForCondition(pod Resource, condition Condition) waiter.Waiter
 }
 
 // Executor groups a set of methods to run commands and scripts inside a Pod.
