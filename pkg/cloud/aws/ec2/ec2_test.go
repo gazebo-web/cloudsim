@@ -85,8 +85,10 @@ func TestSleep0SecondsWhenIsMax(t *testing.T) {
 
 func TestNewRunInstanceInput(t *testing.T) {
 	m := &machines{}
+	instanceProfile := "arn"
+	script := "bash"
 	out := m.newRunInstancesInput(cloud.CreateMachinesInput{
-		InstanceProfile: "arn",
+		InstanceProfile: &instanceProfile,
 		KeyName:         "key-name",
 		Type:            "t2.large",
 		Image:           "docker-image",
@@ -103,7 +105,7 @@ func TestNewRunInstanceInput(t *testing.T) {
 				},
 			},
 		},
-		InitScript: "bash",
+		InitScript: &script,
 		Retries:    1,
 	})
 

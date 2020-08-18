@@ -30,8 +30,10 @@ func (s *ec2CountMachinesTestSuite) SetupTest() {
 func (s *ec2CountMachinesTestSuite) TestCount_ReturnZeroWhenThereAreNoMachines() {
 	s.ec2API.InternalError = nil
 	s.ec2API.ReturnMachines = false
+	var maxResults int64
+	maxResults = 1000
 	result := s.machines.Count(cloud.CountMachinesInput{
-		MaxResults: 1000,
+		MaxResults: &maxResults,
 		Filters:    nil,
 	})
 	s.Equal(0, result)
@@ -39,25 +41,10 @@ func (s *ec2CountMachinesTestSuite) TestCount_ReturnZeroWhenThereAreNoMachines()
 
 func (s *ec2CountMachinesTestSuite) TestCount_ReturnErrorWhenThereIsAnInternalAWSError() {
 	s.ec2API.InternalError = errors.New("test error")
+	var maxResults int64
+	maxResults = 1000
 	result := s.machines.Count(cloud.CountMachinesInput{
-		MaxResults: 1000,
-		Filters:    nil,
-	})
-	s.Equal(-1, result)
-}
-
-func (s *ec2CountMachinesTestSuite) TestCount_ErrorWhenMaxResultsLowerThan5() {
-	result := s.machines.Count(cloud.CountMachinesInput{
-		MaxResults: 4,
-		Filters:    nil,
-	})
-	s.Equal(-1, result)
-}
-
-func (s *ec2CountMachinesTestSuite) TestCount_ErrorWhenMaxResultsGreaterThan1000() {
-	s.ec2API.InternalError = nil
-	result := s.machines.Count(cloud.CountMachinesInput{
-		MaxResults: 1001,
+		MaxResults: &maxResults,
 		Filters:    nil,
 	})
 	s.Equal(-1, result)
@@ -66,8 +53,10 @@ func (s *ec2CountMachinesTestSuite) TestCount_ErrorWhenMaxResultsGreaterThan1000
 func (s *ec2CountMachinesTestSuite) TestCount_GetAllMachines() {
 	s.ec2API.InternalError = nil
 	s.ec2API.ReturnMachines = true
+	var maxResults int64
+	maxResults = 1000
 	result := s.machines.Count(cloud.CountMachinesInput{
-		MaxResults: 1000,
+		MaxResults: &maxResults,
 		Filters:    nil,
 	})
 	s.Equal(3, result)
@@ -76,8 +65,10 @@ func (s *ec2CountMachinesTestSuite) TestCount_GetAllMachines() {
 func (s *ec2CountMachinesTestSuite) TestCount_GetMachinesWithFilters() {
 	s.ec2API.InternalError = nil
 	s.ec2API.ReturnMachines = true
+	var maxResults int64
+	maxResults = 1000
 	result := s.machines.Count(cloud.CountMachinesInput{
-		MaxResults: 1000,
+		MaxResults: &maxResults,
 		Filters: map[string][]string{
 			"tag:cloudsim-simulation-worker": {
 				"name-prefix",

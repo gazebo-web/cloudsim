@@ -34,7 +34,7 @@ type Tag struct {
 type CreateMachinesInput struct {
 	// InstanceProfile is used to identify a particular resource.
 	// In AWS: Used to assign an AWS IAM profile to EC2 instances EC2 so that they can join the EKS cluster.
-	InstanceProfile string
+	InstanceProfile *string
 
 	// KeyName is the SSH key-pair's name that will be used on the created machine.
 	KeyName string
@@ -69,7 +69,7 @@ type CreateMachinesInput struct {
 	Tags []Tag
 
 	// InitScript is the initialization script that will be executed when the machine gets created.
-	InitScript string
+	InitScript *string
 
 	// Retries is the max amount of retries that will be executed when running in dry run mode.
 	// Suggested value: 10.
@@ -103,7 +103,7 @@ type TerminateMachinesInput struct {
 // CountMachinesInput is the input for the Machines.Count operation.
 // It will be used to count the number of machines that match a certain list of filters.
 type CountMachinesInput struct {
-	MaxResults int
+	MaxResults *int64
 	Filters    map[string][]string
 }
 

@@ -59,17 +59,10 @@ func (m machines) isValidSubnetID(subnet string) bool {
 
 // newRunInstancesInput initializes the configuration to run EC2 instances with the given input.
 func (m machines) newRunInstancesInput(createMachines cloud.CreateMachinesInput) *ec2.RunInstancesInput {
-	var script *string
-	if len(createMachines.InitScript) > 0 {
-		script = &createMachines.InitScript
-	}
-
 	var iamProfile *ec2.IamInstanceProfileSpecification
-	if len(createMachines.InstanceProfile) > 0 {
-		iamProfile = &ec2.IamInstanceProfileSpecification{
-			Arn:  &createMachines.InstanceProfile,
-			Name: nil,
-		}
+	iamProfile = &ec2.IamInstanceProfileSpecification{
+		Arn:  createMachines.InstanceProfile,
+		Name: nil,
 	}
 
 	var securityGroups []*string
@@ -91,7 +84,7 @@ func (m machines) newRunInstancesInput(createMachines cloud.CreateMachinesInput)
 			AvailabilityZone: aws.String(createMachines.Zone),
 		},
 		TagSpecifications: tagSpec,
-		UserData:          script,
+		UserData:          createMachines.InitScript,
 		SecurityGroups:    securityGroups,
 	}
 }
@@ -201,6 +194,8 @@ func (m machines) create(input cloud.CreateMachinesInput) (*cloud.CreateMachines
 // Create creates multiple EC2 instances. It returns the id of the created machines.
 // This operation doesn't recover from an error.
 // You need to destroy the required machines when an error occurs.
+// A single cloud.CreateMachinesOutput instance will be returned for every
+// cloud.CreateMachinesInput passed by parameter.
 func (m machines) Create(inputs []cloud.CreateMachinesInput) (created []cloud.CreateMachinesOutput, err error) {
 	m.Logger.Debug(fmt.Sprintf("Creating machines with the following input: %+v", inputs))
 	var c *cloud.CreateMachinesOutput
@@ -256,15 +251,21 @@ func (m machines) createFilters(input map[string][]string) []*ec2.Filter {
 }
 
 // Count counts EC2 machines.
+// If cloud.CountMachinesInput.MaxResults is greater than 1000. It will be set to 1000.
+// If cloud.CountMachinesInput MaxResults is less than 5. It will be set to 100.
 func (m machines) Count(input cloud.CountMachinesInput) int {
 	m.Logger.Debug(fmt.Sprintf("Counting machines with the following parameters: %+v", input))
-	if input.MaxResults > 1000 || input.MaxResults < 5 {
-		m.Logger.Debug("Invalid max results parameter. It should be between 5 and 1000.")
-		return -1
+	if input.MaxResults != nil {
+		if *input.MaxResults > 1000 {
+			*input.MaxResults = 1000
+		}
+		if *input.MaxResults < 5 {
+			*input.MaxResults = 100
+		}
 	}
 	filters := m.createFilters(input.Filters)
 	out, err := m.API.DescribeInstances(&ec2.DescribeInstancesInput{
-		MaxResults: aws.Int64(int64(input.MaxResults)),
+		MaxResults: input.MaxResults,
 		Filters:    filters,
 	})
 	if err != nil {
