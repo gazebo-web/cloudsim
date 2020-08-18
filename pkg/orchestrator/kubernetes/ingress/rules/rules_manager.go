@@ -61,6 +61,7 @@ func (m *manager) Remove(host string, paths ...orchestrator.Path) error {
 	panic("implement me")
 }
 
+// NewManager initializes a new orchestrator.IngressRulesManager implementation using Kubernetes.
 func NewManager(api kubernetes.Interface) orchestrator.IngressRulesManager {
 	return &manager{API: api}
 }

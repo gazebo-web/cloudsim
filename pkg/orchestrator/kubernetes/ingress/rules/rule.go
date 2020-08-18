@@ -50,6 +50,7 @@ func (r *rule) toIngressPaths() []v1beta1.HTTPIngressPath {
 	return result
 }
 
+// ToOutput returns the current rule as a v1beta1.IngressRule.
 func (r *rule) ToOutput() interface{} {
 	return v1beta1.IngressRule{
 		Host: r.host,
