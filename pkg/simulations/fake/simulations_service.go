@@ -15,7 +15,7 @@ func (s *Service) Get(groupID simulations.GroupID) (simulations.Simulation, erro
 	return sim, args.Error(1)
 }
 
-func NewService() simulations.Service {
+func NewService() *Service {
 	return &Service{
 		Mock: new(mock.Mock),
 	}

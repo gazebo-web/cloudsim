@@ -43,35 +43,44 @@ type start struct {
 	Simulations  simulations.Service
 }
 
-func (s start) HasStatus(groupID simulations.GroupID, status simulations.Status) (bool, error) {
+// HasStatus returns true if the simulation with the given group id has the given status.
+func (s *start) HasStatus(groupID simulations.GroupID, status simulations.Status) (bool, error) {
+	sim, err := s.Simulations.Get(groupID)
+	if err != nil {
+		return false, err
+	}
+	return sim.Status() == status, nil
+}
+
+func (s *start) IsParent(groupID simulations.GroupID) (bool, error) {
+	sim, err := s.Simulations.Get(groupID)
+	if err != nil {
+		return false, err
+	}
+	return sim.Kind() == simulations.SimParent, nil
+}
+
+func (s *start) IsChild(groupID simulations.GroupID) (bool, error) {
 	panic("implement me")
 }
 
-func (s start) IsParent(groupID simulations.GroupID) (bool, error) {
+func (s *start) SetStatus(groupID simulations.GroupID, status simulations.Status) error {
 	panic("implement me")
 }
 
-func (s start) IsChild(groupID simulations.GroupID) (bool, error) {
+func (s *start) CreateNodes(groupID simulations.GroupID) error {
 	panic("implement me")
 }
 
-func (s start) SetStatus(groupID simulations.GroupID, status simulations.Status) error {
+func (s *start) LaunchFieldComputer(groupID simulations.GroupID) error {
 	panic("implement me")
 }
 
-func (s start) CreateNodes(groupID simulations.GroupID) error {
+func (s *start) LaunchCommsBridge(groupID simulations.GroupID) error {
 	panic("implement me")
 }
 
-func (s start) LaunchFieldComputer(groupID simulations.GroupID) error {
-	panic("implement me")
-}
-
-func (s start) LaunchCommsBridge(groupID simulations.GroupID) error {
-	panic("implement me")
-}
-
-func (s start) WaitForSimulationPods(groupID simulations.GroupID) error {
+func (s *start) WaitForSimulationPods(groupID simulations.GroupID) error {
 	panic("implement me")
 }
 

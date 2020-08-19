@@ -39,7 +39,7 @@ type starterTestSuite struct {
 	awsAPI            *awsAPI
 	storage           cloud.Storage
 	machines          cloud.Machines
-	simulationService simulations.Service
+	simulationService *simfake.Service
 }
 
 func (s *starterTestSuite) initializeKubernetes() {
@@ -66,11 +66,54 @@ func (s *starterTestSuite) SetupTest() {
 	s.starter = NewSimulatorStarter(s.orchestrator, s.machines, s.storage, s.simulationService)
 }
 
-func (s *starterTestSuite) TestStartSimulation_IncorrectStatus() {
+func (s *starterTestSuite) TestStartSimulation_IncorrectStatusWhenSimulationsIsRunning() {
+	s.simulationService.
+		On("Get", simulations.GroupID("test-group-id")).
+		Return(
+			simfake.NewSimulation("test-group-id", simulations.StatusRunning, simulations.SimSingle),
+			nil,
+		)
+
 	ok, err := s.starter.HasStatus("test-group-id", simulations.StatusPending)
 	s.False(ok)
-	s.Error(err)
-	s.Equal(simulations.ErrIncorrectStatus, err)
+	s.NoError(err)
+}
+
+func (s *starterTestSuite) TestStartSimulation_CorrectStatus() {
+	s.simulationService.
+		On("Get", simulations.GroupID("test-group-id")).
+		Return(
+			simfake.NewSimulation("test-group-id", simulations.StatusPending, simulations.SimSingle),
+			nil,
+		)
+
+	ok, err := s.starter.HasStatus("test-group-id", simulations.StatusPending)
+	s.True(ok)
+	s.NoError(err)
+}
+
+func (s *starterTestSuite) TestStartSimulation_IsNotParent() {
+	s.simulationService.On("Get", simulations.GroupID("test-group-id")).Return(
+		simfake.NewSimulation("test-group-id", simulations.StatusPending, simulations.SimSingle),
+		nil,
+	)
+
+	ok, err := s.starter.IsParent("test-group-id")
+	s.False(ok)
+	s.NoError(err)
+}
+
+func (s *starterTestSuite) TestStartSimulation_IsParent() {
+	s.simulationService.
+		On("Get", simulations.GroupID("test-group-id")).
+		Return(
+			simfake.NewSimulation("test-group-id", simulations.StatusPending, simulations.SimParent),
+			nil,
+		)
+
+	ok, err := s.starter.IsParent("test-group-id")
+	s.True(ok)
+	s.NoError(err)
 }
 
 type awsAPI struct {

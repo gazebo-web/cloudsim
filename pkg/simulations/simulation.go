@@ -1,7 +1,5 @@
 package simulations
 
-import "errors"
-
 // GroupID is an universally unique identifier that helps identifying a Simulation.
 type GroupID string
 
@@ -11,6 +9,9 @@ type Status string
 var (
 	// StatusPending is used when a simulation is pending to be scheduled.
 	StatusPending Status = "pending"
+
+	// StatusRunning is used when a simulation is running.
+	StatusRunning Status = "running"
 )
 
 // Kind is used to identify if a Simulation is a single simulation or a multisim.
@@ -25,10 +26,6 @@ var (
 	SimParent Kind = 1
 	// SimChild represents a child simulation.
 	SimChild Kind = 2
-)
-
-var (
-	ErrIncorrectStatus = errors.New("incorrect simulation status")
 )
 
 // Simulation groups a set of methods to identify a simulation.
