@@ -3,7 +3,6 @@ package rules
 import (
 	"github.com/stretchr/testify/assert"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/kubernetes/ingress"
 	"k8s.io/api/extensions/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
@@ -17,7 +16,7 @@ func TestRule_GetRuleReturnsIngressRule(t *testing.T) {
 	client := fake.NewSimpleClientset(&ing)
 	ir := NewIngressRules(client)
 
-	rule, err := ir.Get(ingress.NewIngress("test", "default"), "test.com")
+	rule, err := ir.Get(ingresses.NewIngress("test", "default"), "test.com")
 	assert.NoError(t, err)
 	assert.Equal(t, "test.com", rule.Host())
 	assert.Len(t, rule.Paths(), 1)
@@ -30,7 +29,7 @@ func TestRule_GetRuleReturnsErrorWhenIngressDoesntExist(t *testing.T) {
 	client := fake.NewSimpleClientset()
 	m := NewIngressRules(client)
 
-	_, err := m.Get(ingress.NewIngress("test", "default"), "test.com")
+	_, err := m.Get(ingresses.NewIngress("test", "default"), "test.com")
 	assert.Error(t, err)
 }
 
@@ -44,7 +43,7 @@ func TestRule_UpsertRulesReturnsErrorIfIngressDoesntExist(t *testing.T) {
 			Port: 80,
 		},
 	}
-	resource := ingress.NewIngress("test", "default")
+	resource := ingresses.NewIngress("test", "default")
 	rule := NewRule(resource, "test.org", []orchestrator.Path{})
 	err := m.Upsert(rule, path)
 	assert.Error(t, err)
@@ -61,7 +60,7 @@ func TestRule_UpsertRulesReturnsErrorIfRuleDoesntExist(t *testing.T) {
 			Port: 80,
 		},
 	}
-	resource := ingress.NewIngress("test", "default")
+	resource := ingresses.NewIngress("test", "default")
 	rule := NewRule(resource, "test.org", []orchestrator.Path{})
 	err := m.Upsert(rule, path)
 	assert.Error(t, err)
@@ -73,7 +72,7 @@ func TestRule_UpsertRulesReturnsNoError(t *testing.T) {
 	client := fake.NewSimpleClientset(&ing)
 	m := NewIngressRules(client)
 
-	resource := ingress.NewIngress("test", "default")
+	resource := ingresses.NewIngress("test", "default")
 
 	r, err := m.Get(resource, "test.com")
 	assert.NoError(t, err)

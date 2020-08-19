@@ -1,4 +1,4 @@
-package ingress
+package ingresses
 
 import "gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator"
 
