@@ -14,6 +14,7 @@ import (
 
 const (
 	// ErrCodeDryRunOperation is the error code returned from a successful dry run operation.
+	// A successful dry run operation is returned from AWS when running a request in dry run mode succeeds.
 	ErrCodeDryRunOperation = "DryRunOperation"
 	// ErrCodeRequestLimitExceeded is returned when too many requests are sent to AWS in a short period of time.
 	ErrCodeRequestLimitExceeded = "RequestLimitExceeded"
