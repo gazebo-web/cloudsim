@@ -13,7 +13,7 @@ import (
 	"time"
 )
 
-func TestNewManager(t *testing.T) {
+func TestNewPods(t *testing.T) {
 	client := fake.NewSimpleClientset()
 	f := spdy.NewSPDYFakeInitializer()
 	m := NewPods(client, f)
@@ -25,7 +25,7 @@ func TestNewManager(t *testing.T) {
 
 /* TODO: Uncomment this test when addressing the following task:
 	https://app.asana.com/0/851925973517080/1188870406911377
-func TestManager_Executor(t *testing.T) {
+func TestPods_Executor(t *testing.T) {
 	resource := apiv1.Pod{
 		TypeMeta: metav1.TypeMeta{},
 		ObjectMeta: metav1.ObjectMeta{
@@ -52,7 +52,7 @@ func TestManager_Executor(t *testing.T) {
 }
 */
 
-func TestManager_WaitForPodsToBeReady(t *testing.T) {
+func TestPods_WaitForPodsToBeReady(t *testing.T) {
 	pod := &apiv1.Pod{
 		TypeMeta: metav1.TypeMeta{},
 		ObjectMeta: metav1.ObjectMeta{
@@ -101,7 +101,7 @@ func TestManager_WaitForPodsToBeReady(t *testing.T) {
 	assert.NoError(t, err)
 }
 
-func TestManager_WaitForPodsErrWhenPodStateSucceeded(t *testing.T) {
+func TestPods_WaitForPodsErrWhenPodStateSucceeded(t *testing.T) {
 	pod := &apiv1.Pod{
 		TypeMeta: metav1.TypeMeta{},
 		ObjectMeta: metav1.ObjectMeta{
@@ -136,7 +136,7 @@ func TestManager_WaitForPodsErrWhenPodStateSucceeded(t *testing.T) {
 	assert.Equal(t, conditions.ErrPodCompleted, err)
 }
 
-func TestManager_WaitForPodsErrWhenPodStateFailed(t *testing.T) {
+func TestPods_WaitForPodsErrWhenPodStateFailed(t *testing.T) {
 	pod := &apiv1.Pod{
 		TypeMeta: metav1.TypeMeta{},
 		ObjectMeta: metav1.ObjectMeta{

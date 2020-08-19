@@ -12,7 +12,7 @@ import (
 	"time"
 )
 
-func TestNewNodeManager(t *testing.T) {
+func TestNewNodeNodes(t *testing.T) {
 	client := fake.NewSimpleClientset()
 	nm := NewNodes(client)
 	assert.NotNil(t, nm)

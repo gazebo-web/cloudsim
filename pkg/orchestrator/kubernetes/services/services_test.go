@@ -9,7 +9,7 @@ import (
 	"testing"
 )
 
-func TestNewService(t *testing.T) {
+func TestCreateNewService(t *testing.T) {
 	client := fake.NewSimpleClientset()
 	s := NewServices(client)
 	err := s.Create(orchestrator.CreateServiceInput{

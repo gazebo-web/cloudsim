@@ -6,7 +6,7 @@ import (
 	"testing"
 )
 
-func TestNewManager(t *testing.T) {
+func TestNewIngresses(t *testing.T) {
 	client := fake.NewSimpleClientset()
 	m := NewIngresses(client)
 	assert.IsType(t, &ingresses{}, m)

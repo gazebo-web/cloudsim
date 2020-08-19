@@ -11,13 +11,13 @@ import (
 	"testing"
 )
 
-func TestManager_GetRuleReturnsIngressRule(t *testing.T) {
+func TestRule_GetRuleReturnsIngressRule(t *testing.T) {
 	ing := newTestIngress()
 
 	client := fake.NewSimpleClientset(&ing)
-	rulesManager := NewIngressRules(client)
+	ir := NewIngressRules(client)
 
-	rule, err := rulesManager.Get(ingress.NewIngress("test", "default"), "test.com")
+	rule, err := ir.Get(ingress.NewIngress("test", "default"), "test.com")
 	assert.NoError(t, err)
 	assert.Equal(t, "test.com", rule.Host())
 	assert.Len(t, rule.Paths(), 1)
@@ -26,7 +26,7 @@ func TestManager_GetRuleReturnsIngressRule(t *testing.T) {
 	assert.Equal(t, int32(3333), rule.Paths()[0].Endpoint.Port)
 }
 
-func TestManager_GetRuleReturnsErrorWhenIngressDoesntExist(t *testing.T) {
+func TestRule_GetRuleReturnsErrorWhenIngressDoesntExist(t *testing.T) {
 	client := fake.NewSimpleClientset()
 	m := NewIngressRules(client)
 
@@ -34,7 +34,7 @@ func TestManager_GetRuleReturnsErrorWhenIngressDoesntExist(t *testing.T) {
 	assert.Error(t, err)
 }
 
-func TestManager_UpsertRulesReturnsErrorIfIngressDoesntExist(t *testing.T) {
+func TestRule_UpsertRulesReturnsErrorIfIngressDoesntExist(t *testing.T) {
 	client := fake.NewSimpleClientset()
 	m := NewIngressRules(client)
 	path := orchestrator.Path{
@@ -50,7 +50,7 @@ func TestManager_UpsertRulesReturnsErrorIfIngressDoesntExist(t *testing.T) {
 	assert.Error(t, err)
 }
 
-func TestManager_UpsertRulesReturnsErrorIfRuleDoesntExist(t *testing.T) {
+func TestRule_UpsertRulesReturnsErrorIfRuleDoesntExist(t *testing.T) {
 	ing := newTestIngress()
 	client := fake.NewSimpleClientset(&ing)
 	m := NewIngressRules(client)
@@ -68,7 +68,7 @@ func TestManager_UpsertRulesReturnsErrorIfRuleDoesntExist(t *testing.T) {
 	assert.Equal(t, orchestrator.ErrRuleNotFound, err)
 }
 
-func TestManager_UpsertRulesReturnsNoError(t *testing.T) {
+func TestRule_UpsertRulesReturnsNoError(t *testing.T) {
 	ing := newTestIngress()
 	client := fake.NewSimpleClientset(&ing)
 	m := NewIngressRules(client)
