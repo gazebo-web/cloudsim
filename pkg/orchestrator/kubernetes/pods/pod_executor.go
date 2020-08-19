@@ -15,7 +15,7 @@ type executor struct {
 	spdyInit spdy.Initializer
 }
 
-// Cmd is used to run a command in a container inside a pod.
+// Cmd is used to run a command in a container inside a resource.
 func (e *executor) Cmd(command []string) error {
 	var stdout, stderr bytes.Buffer
 	options := remotecommand.StreamOptions{

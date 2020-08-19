@@ -15,7 +15,7 @@ func TestManager_GetRuleReturnsIngressRule(t *testing.T) {
 	ing := newTestIngress()
 
 	client := fake.NewSimpleClientset(&ing)
-	rulesManager := NewManager(client)
+	rulesManager := NewIngressRules(client)
 
 	rule, err := rulesManager.Get(ingress.NewIngress("test", "default"), "test.com")
 	assert.NoError(t, err)
@@ -28,7 +28,7 @@ func TestManager_GetRuleReturnsIngressRule(t *testing.T) {
 
 func TestManager_GetRuleReturnsErrorWhenIngressDoesntExist(t *testing.T) {
 	client := fake.NewSimpleClientset()
-	m := NewManager(client)
+	m := NewIngressRules(client)
 
 	_, err := m.Get(ingress.NewIngress("test", "default"), "test.com")
 	assert.Error(t, err)
@@ -36,7 +36,7 @@ func TestManager_GetRuleReturnsErrorWhenIngressDoesntExist(t *testing.T) {
 
 func TestManager_UpsertRulesReturnsErrorIfIngressDoesntExist(t *testing.T) {
 	client := fake.NewSimpleClientset()
-	m := NewManager(client)
+	m := NewIngressRules(client)
 	path := orchestrator.Path{
 		Address: "some-regex",
 		Endpoint: orchestrator.Endpoint{
@@ -53,7 +53,7 @@ func TestManager_UpsertRulesReturnsErrorIfIngressDoesntExist(t *testing.T) {
 func TestManager_UpsertRulesReturnsErrorIfRuleDoesntExist(t *testing.T) {
 	ing := newTestIngress()
 	client := fake.NewSimpleClientset(&ing)
-	m := NewManager(client)
+	m := NewIngressRules(client)
 	path := orchestrator.Path{
 		Address: "some-regex",
 		Endpoint: orchestrator.Endpoint{
@@ -71,7 +71,7 @@ func TestManager_UpsertRulesReturnsErrorIfRuleDoesntExist(t *testing.T) {
 func TestManager_UpsertRulesReturnsNoError(t *testing.T) {
 	ing := newTestIngress()
 	client := fake.NewSimpleClientset(&ing)
-	m := NewManager(client)
+	m := NewIngressRules(client)
 
 	resource := ingress.NewIngress("test", "default")
 

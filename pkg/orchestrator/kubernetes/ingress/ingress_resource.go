@@ -2,12 +2,12 @@ package ingress
 
 import "gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator"
 
-// Ingress is a Kubernetes ingress. It extends the generic orchestrator.Resource interface.
-type Ingress interface {
+// Resource is a Kubernetes ingress. It extends the generic orchestrator.Resource interface.
+type Resource interface {
 	orchestrator.Resource
 }
 
-// ingress is an Ingress implementation.
+// ingress is an Resource implementation.
 type ingress struct {
 	// name is the ingress' name.
 	name string
@@ -30,8 +30,8 @@ func (i *ingress) Name() string {
 	return i.name
 }
 
-// NewIngress initializes a new Ingress using Kubernetes.
-func NewIngress(name string, namespace string) Ingress {
+// NewIngress initializes a new Resource using Kubernetes.
+func NewIngress(name string, namespace string) Resource {
 	return &ingress{
 		name:      name,
 		namespace: namespace,

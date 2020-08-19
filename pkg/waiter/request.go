@@ -11,6 +11,8 @@ var (
 )
 
 // Waiter is used to wait for kubernetes nodes and pods to be in a certain state.
+//
+// Wait runs a new thread for at least `timeout` duration, repeated by every `frequency` cycles.
 type Waiter interface {
 	Wait(timeout time.Duration, frequency time.Duration) error
 }
@@ -21,7 +23,7 @@ type request struct {
 }
 
 // Wait executes a job in regular time intervals given by a certain frequency.
-// If there is an error in the job or the
+// If will return an error when the job fails or the request times out.
 func (r request) Wait(timeout time.Duration, frequency time.Duration) error {
 	return wait.PollImmediate(frequency, timeout, r.job)
 }

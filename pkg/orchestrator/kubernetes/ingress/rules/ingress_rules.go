@@ -7,21 +7,21 @@ import (
 	"k8s.io/client-go/kubernetes"
 )
 
-// manager is an orchestrator.IngressRulesManager implementation.
-type manager struct {
+// ingressRules is an orchestrator.IngressRules implementation.
+type ingressRules struct {
 	API kubernetes.Interface
 }
 
 // Get returns the rule definition of the given host from the given resource.
-func (m *manager) Get(resource orchestrator.Resource, host string) (orchestrator.Rule, error) {
+func (m *ingressRules) Get(resource orchestrator.Resource, host string) (orchestrator.Rule, error) {
 	ingress, err := m.API.ExtensionsV1beta1().Ingresses(resource.Namespace()).Get(resource.Name(), metav1.GetOptions{})
 	if err != nil {
 		return nil, err
 	}
-	var rule *v1beta1.HTTPIngressRuleValue
+	var rule v1beta1.HTTPIngressRuleValue
 	for _, ingressRule := range ingress.Spec.Rules {
 		if ingressRule.Host == host {
-			rule = ingressRule.IngressRuleValue.HTTP
+			rule = *ingressRule.IngressRuleValue.HTTP
 		}
 	}
 	paths := NewPaths(rule.Paths)
@@ -30,7 +30,7 @@ func (m *manager) Get(resource orchestrator.Resource, host string) (orchestrator
 
 // Upsert adds a set of paths to the given host's rule.
 // If the paths already exist, it updates them.
-func (m *manager) Upsert(rule orchestrator.Rule, paths ...orchestrator.Path) error {
+func (m *ingressRules) Upsert(rule orchestrator.Rule, paths ...orchestrator.Path) error {
 	ingress, err := m.API.ExtensionsV1beta1().Ingresses(rule.Resource().Namespace()).Get(rule.Resource().Name(), metav1.GetOptions{})
 	if err != nil {
 		return err
@@ -57,11 +57,11 @@ func (m *manager) Upsert(rule orchestrator.Rule, paths ...orchestrator.Path) err
 }
 
 // Remove removes a set of paths from the given host's rule.
-func (m *manager) Remove(host string, paths ...orchestrator.Path) error {
+func (m *ingressRules) Remove(host string, paths ...orchestrator.Path) error {
 	panic("implement me")
 }
 
-// NewManager initializes a new orchestrator.IngressRulesManager implementation using Kubernetes.
-func NewManager(api kubernetes.Interface) orchestrator.IngressRulesManager {
-	return &manager{API: api}
+// NewIngressRules initializes a new orchestrator.IngressRules implementation using Kubernetes.
+func NewIngressRules(api kubernetes.Interface) orchestrator.IngressRules {
+	return &ingressRules{API: api}
 }

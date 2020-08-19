@@ -5,11 +5,11 @@ import (
 	"io"
 )
 
-// PodManager groups a set of methods to perform an operation with a Pod.
-type PodManager interface {
-	Exec(pod Resource) Executor
-	Reader(pod Resource) Reader
-	WaitForCondition(pod Resource, condition Condition) waiter.Waiter
+// Pods groups a set of methods to perform an operation with a Pod.
+type Pods interface {
+	Exec(resource Resource) Executor
+	Reader(resource Resource) Reader
+	WaitForCondition(resource Resource, condition Condition) waiter.Waiter
 }
 
 // Executor groups a set of methods to run commands and scripts inside a Pod.

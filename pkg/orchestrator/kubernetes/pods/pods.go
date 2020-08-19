@@ -11,43 +11,44 @@ import (
 	"k8s.io/kubernetes/pkg/client/conditions"
 )
 
-// manager is a orchestrator.PodManager implementation.
-type manager struct {
+// pods is a orchestrator.Pods implementation.
+type pods struct {
 	API  kubernetes.Interface
 	SPDY spdy.Initializer
 }
 
 // Exec creates a new executor.
-func (m *manager) Exec(pod orchestrator.Resource) orchestrator.Executor {
-	return newExecutor(m.API, pod, m.SPDY)
+func (p *pods) Exec(pod orchestrator.Resource) orchestrator.Executor {
+	return newExecutor(p.API, pod, p.SPDY)
 }
 
 // Reader creates a new reader.
-func (m *manager) Reader(pod orchestrator.Resource) orchestrator.Reader {
-	return newReader(m.API, pod, m.SPDY)
+func (p *pods) Reader(pod orchestrator.Resource) orchestrator.Reader {
+	return newReader(p.API, pod, p.SPDY)
 }
 
-// WaitForCondition creates a new wait request.
-func (m *manager) WaitForCondition(pod orchestrator.Resource, condition orchestrator.Condition) waiter.Waiter {
+// WaitForCondition creates a new wait request that will be used to wait for a resource to match a certain condition.
+// The wait request won't be triggered until the method Wait has been called.
+func (p *pods) WaitForCondition(resource orchestrator.Resource, condition orchestrator.Condition) waiter.Waiter {
 	opts := metav1.ListOptions{
-		LabelSelector: pod.Selector(),
+		LabelSelector: resource.Selector(),
 	}
 	var podsNotReady []*apiv1.Pod
 	job := func() (bool, error) {
 		podsNotReady = nil
-		pods, err := m.API.CoreV1().Pods(pod.Namespace()).List(opts)
+		po, err := p.API.CoreV1().Pods(resource.Namespace()).List(opts)
 		if err != nil {
 			return false, err
 		}
-		for _, p := range pods.Items {
+		for _, i := range po.Items {
 			if condition == orchestrator.ReadyCondition {
-				ready, err := m.isPodReady(&p)
+				ready, err := p.isPodReady(&i)
 				if err != nil {
 					return false, err
 				}
 				if !ready {
 					pod := new(apiv1.Pod)
-					*pod = p
+					*pod = i
 					podsNotReady = append(podsNotReady, pod)
 				}
 			}
@@ -58,16 +59,16 @@ func (m *manager) WaitForCondition(pod orchestrator.Resource, condition orchestr
 }
 
 // isPodReady checks if the given Kubernetes Pod matches the ready condition.
-func (m *manager) isPodReady(pod *apiv1.Pod) (bool, error) {
+func (p *pods) isPodReady(pod *apiv1.Pod) (bool, error) {
 	if pod.Status.Phase == apiv1.PodFailed || pod.Status.Phase == apiv1.PodSucceeded {
 		return false, conditions.ErrPodCompleted
 	}
 	return podutil.IsPodReady(pod), nil
 }
 
-// NewManager initializes a new manager.
-func NewManager(api kubernetes.Interface, spdy spdy.Initializer) orchestrator.PodManager {
-	return &manager{
+// NewPods initializes a new orchestrator.Pods implementation for managing Kubernetes Pods.
+func NewPods(api kubernetes.Interface, spdy spdy.Initializer) orchestrator.Pods {
+	return &pods{
 		API:  api,
 		SPDY: spdy,
 	}

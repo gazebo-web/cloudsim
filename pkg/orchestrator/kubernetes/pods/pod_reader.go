@@ -40,21 +40,21 @@ func (r *reader) File(paths ...string) (io.Reader, error) {
 	return nil, parseExecError(err, &stdout, &stderr)
 }
 
-// Logs returns the log from the given container running inside the pod.
+// Logs returns the log from the given container running inside the resource.
 func (r *reader) Logs(container string, lines int64) (string, error) {
 	req := r.API.CoreV1().Pods(r.pod.Namespace()).GetLogs(r.pod.Name(), &apiv1.PodLogOptions{
 		Container: container,
 		TailLines: &lines,
 	})
 
-	reader, err := req.Stream()
-	defer reader.Close()
+	re, err := req.Stream()
 	if err != nil {
 		return "", err
 	}
+	defer re.Close()
 
 	var logs []byte
-	_, err = reader.Read(logs)
+	_, err = re.Read(logs)
 	if err != nil {
 		return "", err
 	}

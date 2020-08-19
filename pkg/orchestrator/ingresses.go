@@ -1,6 +1,6 @@
 package orchestrator
 
-// IngressManager groups a set of methods for managing Ingresses.
-type IngressManager interface {
+// Ingresses groups a set of methods for managing Ingresses.
+type Ingresses interface {
 	Get(name string, namespace string) (Resource, error)
 }

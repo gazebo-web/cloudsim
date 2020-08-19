@@ -15,18 +15,18 @@ import (
 
 func TestNewManager(t *testing.T) {
 	client := fake.NewSimpleClientset()
-	fake := spdy.NewSPDYFakeInitializer()
-	m := NewManager(client, fake)
+	f := spdy.NewSPDYFakeInitializer()
+	m := NewPods(client, f)
 	assert.NotNil(t, m)
-	assert.IsType(t, &manager{}, m)
-	pm := m.(*manager)
+	assert.IsType(t, &pods{}, m)
+	pm := m.(*pods)
 	assert.NotNil(t, pm.API)
 }
 
 /* TODO: Uncomment this test when addressing the following task:
 	https://app.asana.com/0/851925973517080/1188870406911377
 func TestManager_Executor(t *testing.T) {
-	pod := apiv1.Pod{
+	resource := apiv1.Pod{
 		TypeMeta: metav1.TypeMeta{},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "test",
@@ -39,9 +39,9 @@ func TestManager_Executor(t *testing.T) {
 		Status: apiv1.PodStatus{},
 	}
 
-	client := fake.NewSimpleClientset(&pod)
+	client := fake.NewSimpleClientset(&resource)
 	fake := spdy.NewSPDYFakeInitializer()
-	m := NewManager(client, fake)
+	m := NewPods(client, fake)
 
 	ex := m.Exec(NewPod("test", "default", "test=app"))
 
@@ -75,8 +75,8 @@ func TestManager_WaitForPodsToBeReady(t *testing.T) {
 	}
 
 	client := fake.NewSimpleClientset(pod)
-	fake := spdy.NewSPDYFakeInitializer()
-	m := NewManager(client, fake)
+	f := spdy.NewSPDYFakeInitializer()
+	m := NewPods(client, f)
 	r := m.WaitForCondition(NewPod("test", "default", "test=app"), orchestrator.ReadyCondition)
 
 	var wg sync.WaitGroup
@@ -119,8 +119,8 @@ func TestManager_WaitForPodsErrWhenPodStateSucceeded(t *testing.T) {
 	}
 
 	client := fake.NewSimpleClientset(pod)
-	fake := spdy.NewSPDYFakeInitializer()
-	m := NewManager(client, fake)
+	f := spdy.NewSPDYFakeInitializer()
+	m := NewPods(client, f)
 	r := m.WaitForCondition(NewPod("test", "default", "test=app"), orchestrator.ReadyCondition)
 
 	var wg sync.WaitGroup
@@ -154,8 +154,8 @@ func TestManager_WaitForPodsErrWhenPodStateFailed(t *testing.T) {
 	}
 
 	client := fake.NewSimpleClientset(pod)
-	fake := spdy.NewSPDYFakeInitializer()
-	m := NewManager(client, fake)
+	f := spdy.NewSPDYFakeInitializer()
+	m := NewPods(client, f)
 	r := m.WaitForCondition(NewPod("test", "default", "test=app"), orchestrator.ReadyCondition)
 
 	var wg sync.WaitGroup

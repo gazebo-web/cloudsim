@@ -14,12 +14,12 @@ import (
 
 func TestNewNodeManager(t *testing.T) {
 	client := fake.NewSimpleClientset()
-	nm := NewManager(client)
+	nm := NewNodes(client)
 	assert.NotNil(t, nm)
 }
 
 func TestConditionSetAsExpected(t *testing.T) {
-	m := &manager{}
+	m := &nodes{}
 	assert.True(t, m.isConditionSetAsExpected(apiv1.Node{
 		TypeMeta:   metav1.TypeMeta{},
 		ObjectMeta: metav1.ObjectMeta{},
@@ -146,9 +146,9 @@ func TestWait_WaitForNodesToBeReady(t *testing.T) {
 		},
 	}
 	cli := fake.NewSimpleClientset(&node)
-	nm := NewManager(cli)
+	nm := NewNodes(cli)
 
-	n := NewNode("test", "default", "test=app")
+	n := NewNodeResource("test", "default", "test=app")
 	r := nm.WaitForCondition(n, orchestrator.ReadyCondition)
 
 	var wg sync.WaitGroup
@@ -186,9 +186,9 @@ func TestWait_ErrWhenNodesArentReady(t *testing.T) {
 		},
 	}
 	cli := fake.NewSimpleClientset(&node)
-	nm := NewManager(cli)
+	nm := NewNodes(cli)
 
-	n := NewNode("test", "default", "test=app")
+	n := NewNodeResource("test", "default", "test=app")
 	r := nm.WaitForCondition(n, orchestrator.ReadyCondition)
 
 	var wg sync.WaitGroup

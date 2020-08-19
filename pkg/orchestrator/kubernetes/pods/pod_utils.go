@@ -14,8 +14,8 @@ import (
 )
 
 var (
-	// ErrPodExecFailed is returned when a panic is triggered after running a command in a pod.
-	ErrPodExecFailed = errors.New("could not run exec command on pod")
+	// ErrPodExecFailed is returned when a panic is triggered after running a command in a resource.
+	ErrPodExecFailed = errors.New("could not run exec command on resource")
 )
 
 // runExecInput is the input of runExec.
@@ -29,7 +29,7 @@ type runExecInput struct {
 	spdy       spdy.Initializer
 }
 
-// runExec runs an exec operation inside a pod.
+// runExec runs an exec operation inside a resource.
 func runExec(input runExecInput) (err error) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -100,7 +100,7 @@ func createExecErrorMessage(msg string, stdout io.Writer, stderr io.Writer) (str
 	}
 
 	return fmt.Sprintf(
-		"Executing a command inside a pod failed. Error: %s\nSTDOUT: [%s]\nSTDERR: [%s]",
+		"Executing a command inside a resource failed. Error: %s\nSTDOUT: [%s]\nSTDERR: [%s]",
 		msg, outDump, errDump,
 	), nil
 }

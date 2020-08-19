@@ -11,20 +11,22 @@ import (
 )
 
 func TestNewKubernetes(t *testing.T) {
-	var nm orchestrator.NodeManager
-	var pm orchestrator.PodManager
+	var nm orchestrator.Nodes
+	var pm orchestrator.Pods
+	var rm orchestrator.IngressRules
 
-	ks := NewKubernetes(nm, pm)
+	ks := NewKubernetes(nm, pm, rm)
 
 	assert.NotNil(t, ks)
 	assert.IsType(t, &k8s{}, ks)
 }
 
 func TestNewKubernetesWithNodeManager(t *testing.T) {
-	var pm orchestrator.PodManager
+	var pm orchestrator.Pods
+	var rm orchestrator.IngressRules
 	client := fake.NewSimpleClientset()
-	nm := nodes.NewManager(client)
-	ks := NewKubernetes(nm, pm)
+	nm := nodes.NewNodes(client)
+	ks := NewKubernetes(nm, pm, rm)
 
 	assert.NotNil(t, ks)
 	assert.IsType(t, &k8s{}, ks)
@@ -32,13 +34,14 @@ func TestNewKubernetesWithNodeManager(t *testing.T) {
 }
 
 func TestNewKubernetesWithPodManager(t *testing.T) {
-	var nm orchestrator.NodeManager
+	var nm orchestrator.Nodes
+	var rm orchestrator.IngressRules
 
 	client := fake.NewSimpleClientset()
 	fakeSpdy := spdy.NewSPDYFakeInitializer()
-	pm := pods.NewManager(client, fakeSpdy)
+	pm := pods.NewPods(client, fakeSpdy)
 
-	ks := NewKubernetes(nm, pm)
+	ks := NewKubernetes(nm, pm, rm)
 
 	assert.NotNil(t, ks)
 	assert.IsType(t, &k8s{}, ks)

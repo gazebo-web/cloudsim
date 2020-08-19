@@ -8,6 +8,6 @@ import (
 
 func TestNewManager(t *testing.T) {
 	client := fake.NewSimpleClientset()
-	m := NewManager(client)
-	assert.IsType(t, &manager{}, m)
+	m := NewIngresses(client)
+	assert.IsType(t, &ingresses{}, m)
 }

@@ -8,13 +8,14 @@ import (
 	"k8s.io/client-go/kubernetes"
 )
 
-// manager is a orchestrator.NodeManager implementation.
-type manager struct {
+// nodes is a orchestrator.Nodes implementation.
+type nodes struct {
 	API kubernetes.Interface
 }
 
-// Condition returns a waiter.Waiter request to wait until a node reaches the given condition.
-func (m *manager) WaitForCondition(node orchestrator.Resource, condition orchestrator.Condition) waiter.Waiter {
+// WaitForCondition creates a new wait request that will be used to wait for a resource to match a certain condition.
+// The wait request won't be triggered until the method Wait has been called.
+func (m *nodes) WaitForCondition(node orchestrator.Resource, condition orchestrator.Condition) waiter.Waiter {
 	opts := metav1.ListOptions{
 		LabelSelector: node.Selector(),
 	}
@@ -36,8 +37,8 @@ func (m *manager) WaitForCondition(node orchestrator.Resource, condition orchest
 	return waiter.NewWaitRequest(job)
 }
 
-// isConditionSetAsExpected checks if the given Kubernetes Node matches the expected condition.
-func (m *manager) isConditionSetAsExpected(node apiv1.Node, expected orchestrator.Condition) bool {
+// isConditionSetAsExpected checks if the given Kubernetes Resource matches the expected condition.
+func (m *nodes) isConditionSetAsExpected(node apiv1.Node, expected orchestrator.Condition) bool {
 	for _, cond := range node.Status.Conditions {
 		if cond.Type == apiv1.NodeConditionType(expected.Type) &&
 			cond.Status == apiv1.ConditionStatus(expected.Status) {
@@ -47,9 +48,9 @@ func (m *manager) isConditionSetAsExpected(node apiv1.Node, expected orchestrato
 	return false
 }
 
-// NewManager returns a orchestrator.NodeManager implementation with the given kubernetes.Interface API.
-func NewManager(api kubernetes.Interface) orchestrator.NodeManager {
-	return &manager{
+// NewNodes returns a orchestrator.Nodes implementation with the given kubernetes.Interface API.
+func NewNodes(api kubernetes.Interface) orchestrator.Nodes {
+	return &nodes{
 		API: api,
 	}
 }

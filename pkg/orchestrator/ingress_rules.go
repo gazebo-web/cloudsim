@@ -40,8 +40,8 @@ type Endpoint struct {
 	Port int32
 }
 
-// IngressRulesManager groups a set of methods to manage rules from a certain Ingress.
-type IngressRulesManager interface {
+// IngressRules groups a set of methods to manage rules from a certain Ingresses.
+type IngressRules interface {
 	Get(resource Resource, host string) (Rule, error)
 	Upsert(rule Rule, paths ...Path) error
 	Remove(host string, paths ...Path) error
