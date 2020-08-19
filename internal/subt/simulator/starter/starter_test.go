@@ -1,4 +1,4 @@
-package simulator
+package starter
 
 import (
 	"github.com/aws/aws-sdk-go/service/ec2/ec2iface"
@@ -16,6 +16,7 @@ import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/kubernetes/spdy"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
 	simfake "gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations/fake"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulator"
 	"gitlab.com/ignitionrobotics/web/ign-go"
 	"k8s.io/client-go/kubernetes/fake"
 	"testing"
@@ -27,7 +28,7 @@ func TestSimulatorStarter(t *testing.T) {
 
 type starterTestSuite struct {
 	suite.Suite
-	starter           Starter
+	starter           simulator.Starter
 	k8s               *fake.Clientset
 	nodes             orchestrator.Nodes
 	spdy              *spdy.Fake
