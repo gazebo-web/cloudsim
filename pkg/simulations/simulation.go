@@ -1,6 +1,6 @@
 package simulations
 
-// GroupID is an universally unique identifier that helps identifying a Simulation.
+// GroupID is an universally unique identifier that helps to identify a Simulation.
 type GroupID string
 
 // Status defines the latest stage that a Simulation has reached.
