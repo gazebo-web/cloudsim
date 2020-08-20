@@ -352,7 +352,7 @@ func (sa *SubTApplication) customizeSimulationRequest(ctx context.Context,
 		// Limit the number of robots per model if a limit is set
 		if sa.cfg.MaxRobotModelCount > 0 {
 			robotModelCount[robotType.Model]++
-			if robotModelCount[robotType.Model] >= sa.cfg.MaxRobotModelCount {
+			if robotModelCount[robotType.Model] > sa.cfg.MaxRobotModelCount {
 				msg := fmt.Sprintf("too many robots of model %s", robotType.Model)
 				return NewErrorMessageWithBase(ErrorRobotModelLimitReached, errors.New(msg))
 			}
