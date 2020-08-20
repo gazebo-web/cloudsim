@@ -3,6 +3,7 @@ package services
 import (
 	"fmt"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/kubernetes/types"
 	"gitlab.com/ignitionrobotics/web/ign-go"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -44,6 +45,61 @@ func (s *services) Create(input orchestrator.CreateServiceInput) error {
 		return err
 	}
 	s.Logger.Debug(fmt.Sprintf("Creating new Service %s succeded.", input.Name))
+	return nil
+}
+
+func (s *services) Get(name, namespace string) (orchestrator.Resource, error) {
+	s.Logger.Debug(fmt.Sprintf("Getting service with name [%s] in namespace [%s].", name, namespace))
+	output, err := s.API.CoreV1().Services(namespace).Get(name, metav1.GetOptions{})
+	if err != nil {
+		s.Logger.Debug(fmt.Sprintf("Getting service with name [%s] in namespace [%s] failed. Error: %s", name, namespace, err))
+		return nil, err
+	}
+	s.Logger.Debug(fmt.Sprintf("Getting service with name [%s] in namespace [%s] succeded.", name, namespace))
+	return types.NewResource(name, namespace, types.NewSelector(output.Labels)), nil
+}
+
+func (s *services) GetAllBySelector(namespace string, selector orchestrator.Selector) ([]orchestrator.Resource, error) {
+	s.Logger.Debug(fmt.Sprintf("Getting all services that match the following selectors: [%s]", selector.String()))
+	list, err := s.API.CoreV1().Services(namespace).List(metav1.ListOptions{
+		LabelSelector: selector.String(),
+	})
+	if err != nil {
+		s.Logger.Debug(fmt.Sprintf(
+			"Getting all services matching selector: [%s] failed. Error: %s",
+			selector.String(), err.Error()),
+		)
+		return nil, err
+	}
+	var output []orchestrator.Resource
+	for _, srv := range list.Items {
+		selector := types.NewSelector(srv.Labels)
+		output = append(output, types.NewResource(srv.Name, srv.Namespace, selector))
+	}
+	s.Logger.Debug(fmt.Sprintf(
+		"Getting all services matching selector: [%s] succeded. Output: %+v",
+		selector.String(), output),
+	)
+	return output, nil
+}
+
+func (s *services) Remove(resource orchestrator.Resource) error {
+	s.Logger.Debug(fmt.Sprintf(
+		"Removing service with name [%s] in namespace [%s] that match the following selectors: [%s].",
+		resource.Name(), resource.Namespace(), resource.Selector().String()),
+	)
+	err := s.API.CoreV1().Services(resource.Namespace()).Delete(resource.Name(), &metav1.DeleteOptions{})
+	if err != nil {
+		s.Logger.Debug(fmt.Sprintf(
+			"Removing service with name [%s] in namespace [%s] that match the following selectors: [%s] failed. Error: %s",
+			resource.Name(), resource.Namespace(), resource.Selector().String()), err.Error(),
+		)
+		return err
+	}
+	s.Logger.Debug(fmt.Sprintf(
+		"Removing service with name [%s] in namespace [%s] that match the following selectors: [%s] succeeded.",
+		resource.Name(), resource.Namespace(), resource.Selector().String()),
+	)
 	return nil
 }
 

@@ -4,6 +4,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/kubernetes/spdy"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/kubernetes/types"
 	"gitlab.com/ignitionrobotics/web/ign-go"
 	apiv1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -80,7 +81,9 @@ func TestPods_WaitForPodsToBeReady(t *testing.T) {
 	f := spdy.NewSPDYFakeInitializer()
 	logger := ign.NewLoggerNoRollbar("TestPods", ign.VerbosityDebug)
 	m := NewPods(client, f, logger)
-	r := m.WaitForCondition(NewPod("test", "default", "test=app"), orchestrator.ReadyCondition)
+	selector := types.NewSelector(map[string]string{"test": "app"})
+	res := types.NewResource("test", "default", selector)
+	r := m.WaitForCondition(res, orchestrator.ReadyCondition)
 
 	var wg sync.WaitGroup
 	var err error
@@ -125,7 +128,9 @@ func TestPods_WaitForPodsErrWhenPodStateSucceeded(t *testing.T) {
 	f := spdy.NewSPDYFakeInitializer()
 	logger := ign.NewLoggerNoRollbar("TestPods", ign.VerbosityDebug)
 	m := NewPods(client, f, logger)
-	r := m.WaitForCondition(NewPod("test", "default", "test=app"), orchestrator.ReadyCondition)
+	selector := types.NewSelector(map[string]string{"test": "app"})
+	res := types.NewResource("test", "default", selector)
+	r := m.WaitForCondition(res, orchestrator.ReadyCondition)
 
 	var wg sync.WaitGroup
 	var err error
@@ -161,7 +166,10 @@ func TestPods_WaitForPodsErrWhenPodStateFailed(t *testing.T) {
 	f := spdy.NewSPDYFakeInitializer()
 	logger := ign.NewLoggerNoRollbar("TestPods", ign.VerbosityDebug)
 	m := NewPods(client, f, logger)
-	r := m.WaitForCondition(NewPod("test", "default", "test=app"), orchestrator.ReadyCondition)
+
+	selector := types.NewSelector(map[string]string{"test": "app"})
+	res := types.NewResource("test", "default", selector)
+	r := m.WaitForCondition(res, orchestrator.ReadyCondition)
 
 	var wg sync.WaitGroup
 	var err error

@@ -3,6 +3,7 @@ package nodes
 import (
 	"github.com/stretchr/testify/assert"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/kubernetes/types"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/waiter"
 	"gitlab.com/ignitionrobotics/web/ign-go"
 	apiv1 "k8s.io/api/core/v1"
@@ -148,9 +149,9 @@ func TestWait_WaitForNodesToBeReady(t *testing.T) {
 	}
 	cli := fake.NewSimpleClientset(&node)
 	nm := NewNodes(cli, ign.NewLoggerNoRollbar("TestNodes", ign.VerbosityDebug))
-
-	n := NewNodeResource("test", "default", "test=app")
-	r := nm.WaitForCondition(n, orchestrator.ReadyCondition)
+	selector := types.NewSelector(map[string]string{"test": "app"})
+	res := types.NewResource("test", "default", selector)
+	r := nm.WaitForCondition(res, orchestrator.ReadyCondition)
 
 	var wg sync.WaitGroup
 	var err error
@@ -189,8 +190,9 @@ func TestWait_ErrWhenNodesArentReady(t *testing.T) {
 	cli := fake.NewSimpleClientset(&node)
 	nm := NewNodes(cli, ign.NewLoggerNoRollbar("TestNodes", ign.VerbosityDebug))
 
-	n := NewNodeResource("test", "default", "test=app")
-	r := nm.WaitForCondition(n, orchestrator.ReadyCondition)
+	selector := types.NewSelector(map[string]string{"test": "app"})
+	res := types.NewResource("test", "default", selector)
+	r := nm.WaitForCondition(res, orchestrator.ReadyCondition)
 
 	var wg sync.WaitGroup
 	var err error

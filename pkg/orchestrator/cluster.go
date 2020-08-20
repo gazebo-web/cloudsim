@@ -23,12 +23,18 @@ type Cluster interface {
 	IngressRules() IngressRules
 }
 
+// Selector is used to identify a certain resource.
+type Selector interface {
+	// String returns the selector represented in string format.
+	String() string
+}
+
 // Resource groups a set of method to identify a resource in a cluster.
 type Resource interface {
 	// Name returns the name of the resource
 	Name() string
-	// Selector returns the resource's selector.
-	Selector() string
+	// Selector returns the resource's Selector.
+	Selector() Selector
 	// Namespace returns the namespace where the resource lives in.
 	Namespace() string
 }
