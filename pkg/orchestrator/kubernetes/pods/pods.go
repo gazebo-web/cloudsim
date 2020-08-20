@@ -1,9 +1,11 @@
 package pods
 
 import (
+	"fmt"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/kubernetes/spdy"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/waiter"
+	"gitlab.com/ignitionrobotics/web/ign-go"
 	apiv1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
@@ -13,18 +15,21 @@ import (
 
 // pods is a orchestrator.Pods implementation.
 type pods struct {
-	API  kubernetes.Interface
-	SPDY spdy.Initializer
+	API    kubernetes.Interface
+	SPDY   spdy.Initializer
+	Logger ign.Logger
 }
 
 // Exec creates a new executor.
 func (p *pods) Exec(pod orchestrator.Resource) orchestrator.Executor {
-	return newExecutor(p.API, pod, p.SPDY)
+	p.Logger.Debug(fmt.Sprintf("Creating new executor for pod [%s]", pod.Name()))
+	return newExecutor(p.API, pod, p.SPDY, p.Logger)
 }
 
 // Reader creates a new reader.
 func (p *pods) Reader(pod orchestrator.Resource) orchestrator.Reader {
-	return newReader(p.API, pod, p.SPDY)
+	p.Logger.Debug(fmt.Sprintf("Creating new reader for pod [%s]", pod.Name()))
+	return newReader(p.API, pod, p.SPDY, p.Logger)
 }
 
 // WaitForCondition creates a new wait request that will be used to wait for a resource to match a certain condition.
@@ -67,9 +72,10 @@ func (p *pods) isPodReady(pod *apiv1.Pod) (bool, error) {
 }
 
 // NewPods initializes a new orchestrator.Pods implementation for managing Kubernetes Pods.
-func NewPods(api kubernetes.Interface, spdy spdy.Initializer) orchestrator.Pods {
+func NewPods(api kubernetes.Interface, spdy spdy.Initializer, logger ign.Logger) orchestrator.Pods {
 	return &pods{
-		API:  api,
-		SPDY: spdy,
+		API:    api,
+		SPDY:   spdy,
+		Logger: logger,
 	}
 }

@@ -13,10 +13,12 @@ type rule struct {
 	resource orchestrator.Resource
 }
 
+// Resource returns the resource associated with the current rule.
 func (r *rule) Resource() orchestrator.Resource {
 	return r.resource
 }
 
+// UpsertPaths inserts and update the given paths into the current rule.
 func (r *rule) UpsertPaths(paths []orchestrator.Path) {
 	for _, p := range paths {
 		var updated bool
@@ -33,6 +35,23 @@ func (r *rule) UpsertPaths(paths []orchestrator.Path) {
 	}
 }
 
+// RemovePaths removes the paths from the current rule.
+func (r *rule) RemovePaths(paths []orchestrator.Path) {
+	for _, p := range paths {
+		for i, rulePath := range r.paths {
+			if rulePath.Endpoint == p.Endpoint {
+				pathsLen := len(r.paths)
+				if pathsLen > 1 {
+					r.paths[i] = r.paths[pathsLen-1]
+				}
+				r.paths = r.paths[:pathsLen-1]
+				break
+			}
+		}
+	}
+}
+
+// toIngressPaths converts the current rule paths into an slice of v1beta1.HTTPIngressPath.
 func (r *rule) toIngressPaths() []v1beta1.HTTPIngressPath {
 	var result []v1beta1.HTTPIngressPath
 	for _, p := range r.paths {

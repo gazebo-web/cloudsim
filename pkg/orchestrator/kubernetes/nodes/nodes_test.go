@@ -4,6 +4,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/waiter"
+	"gitlab.com/ignitionrobotics/web/ign-go"
 	apiv1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes/fake"
@@ -14,7 +15,7 @@ import (
 
 func TestNewNodeNodes(t *testing.T) {
 	client := fake.NewSimpleClientset()
-	nm := NewNodes(client)
+	nm := NewNodes(client, ign.NewLoggerNoRollbar("TestNodes", ign.VerbosityDebug))
 	assert.NotNil(t, nm)
 }
 
@@ -146,7 +147,7 @@ func TestWait_WaitForNodesToBeReady(t *testing.T) {
 		},
 	}
 	cli := fake.NewSimpleClientset(&node)
-	nm := NewNodes(cli)
+	nm := NewNodes(cli, ign.NewLoggerNoRollbar("TestNodes", ign.VerbosityDebug))
 
 	n := NewNodeResource("test", "default", "test=app")
 	r := nm.WaitForCondition(n, orchestrator.ReadyCondition)
@@ -186,7 +187,7 @@ func TestWait_ErrWhenNodesArentReady(t *testing.T) {
 		},
 	}
 	cli := fake.NewSimpleClientset(&node)
-	nm := NewNodes(cli)
+	nm := NewNodes(cli, ign.NewLoggerNoRollbar("TestNodes", ign.VerbosityDebug))
 
 	n := NewNodeResource("test", "default", "test=app")
 	r := nm.WaitForCondition(n, orchestrator.ReadyCondition)

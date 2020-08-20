@@ -13,6 +13,7 @@ type Rule interface {
 	Host() string
 	Paths() []Path
 	UpsertPaths(paths []Path)
+	RemovePaths(paths []Path)
 	ToOutput() interface{}
 }
 
@@ -44,5 +45,5 @@ type Endpoint struct {
 type IngressRules interface {
 	Get(resource Resource, host string) (Rule, error)
 	Upsert(rule Rule, paths ...Path) error
-	Remove(host string, paths ...Path) error
+	Remove(rule Rule, paths ...Path) error
 }
