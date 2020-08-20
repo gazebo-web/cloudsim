@@ -29,7 +29,7 @@ func (p *pods) Exec(pod orchestrator.Resource) orchestrator.Executor {
 // Reader creates a new reader.
 func (p *pods) Reader(pod orchestrator.Resource) orchestrator.Reader {
 	p.Logger.Debug(fmt.Sprintf("Creating new reader for pod [%s]", pod.Name()))
-	return newReader(p.API, pod, p.SPDY)
+	return newReader(p.API, pod, p.SPDY, p.Logger)
 }
 
 // WaitForCondition creates a new wait request that will be used to wait for a resource to match a certain condition.
