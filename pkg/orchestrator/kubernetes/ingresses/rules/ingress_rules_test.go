@@ -28,7 +28,7 @@ func TestRule_GetRuleReturnsIngressRule(t *testing.T) {
 	assert.Equal(t, int32(3333), rule.Paths()[0].Endpoint.Port)
 }
 
-func TestRule_GetRuleReturnsErrorWhenIngressDoesntExist(t *testing.T) {
+func TestRule_GetRuleReturnsErrorWhenIngressDoesNotExist(t *testing.T) {
 	client := fake.NewSimpleClientset()
 	m := NewIngressRules(client, nil)
 
@@ -36,7 +36,7 @@ func TestRule_GetRuleReturnsErrorWhenIngressDoesntExist(t *testing.T) {
 	assert.Error(t, err)
 }
 
-func TestRule_UpsertRulesReturnsErrorIfIngressDoesntExist(t *testing.T) {
+func TestRule_UpsertRulesReturnsErrorIfIngressDoesNotExist(t *testing.T) {
 	client := fake.NewSimpleClientset()
 	logger := ign.NewLoggerNoRollbar("TestRules", ign.VerbosityDebug)
 	m := NewIngressRules(client, logger)
@@ -53,7 +53,7 @@ func TestRule_UpsertRulesReturnsErrorIfIngressDoesntExist(t *testing.T) {
 	assert.Error(t, err)
 }
 
-func TestRule_UpsertRulesReturnsErrorIfRuleDoesntExist(t *testing.T) {
+func TestRule_UpsertRulesReturnsErrorIfRuleDoesNotExist(t *testing.T) {
 	ing := newTestIngress()
 	client := fake.NewSimpleClientset(&ing)
 	logger := ign.NewLoggerNoRollbar("TestRules", ign.VerbosityDebug)
@@ -96,6 +96,35 @@ func TestRule_UpsertRulesReturnsNoError(t *testing.T) {
 	result, err := m.Get(resource, "test.com")
 	assert.NoError(t, err)
 	assert.Len(t, result.Paths(), 2)
+}
+
+func TestRule_RemovePathsReturnsNoError(t *testing.T) {
+	ing := newTestIngress()
+
+	k8sIngressPathToRemove := v1beta1.HTTPIngressPath{
+		Path:    "delete-me",
+		Backend: v1beta1.IngressBackend{},
+	}
+
+	ing.Spec.Rules[0].HTTP.Paths = append(ing.Spec.Rules[0].HTTP.Paths, k8sIngressPathToRemove)
+
+	client := fake.NewSimpleClientset(&ing)
+	logger := ign.NewLoggerNoRollbar("TestRules", ign.VerbosityDebug)
+	m := NewIngressRules(client, logger)
+
+	resource := ingresses.NewIngress("test", "default")
+	r, err := m.Get(resource, "test.com")
+	assert.NoError(t, err)
+	assert.Len(t, r.Paths(), 2)
+
+	pathsToRemove := NewPaths([]v1beta1.HTTPIngressPath{k8sIngressPathToRemove})
+
+	err = m.Remove(r, pathsToRemove...)
+	assert.NoError(t, err)
+
+	r, err = m.Get(resource, "test.com")
+	assert.NoError(t, err)
+	assert.Len(t, r.Paths(), 1)
 }
 
 func newTestIngress() v1beta1.Ingress {

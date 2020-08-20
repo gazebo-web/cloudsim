@@ -85,8 +85,36 @@ func (m *ingressRules) Upsert(rule orchestrator.Rule, paths ...orchestrator.Path
 }
 
 // Remove removes a set of paths from the given host's rule.
-func (m *ingressRules) Remove(host string, paths ...orchestrator.Path) error {
-	panic("implement me")
+func (m *ingressRules) Remove(rule orchestrator.Rule, paths ...orchestrator.Path) error {
+	m.Logger.Debug(fmt.Sprintf("Removing rule paths from host [%s] ", rule.Host()))
+	ingress, err := m.API.ExtensionsV1beta1().Ingresses(rule.Resource().Namespace()).Get(rule.Resource().Name(), metav1.GetOptions{})
+	if err != nil {
+		return err
+	}
+	updateRules := ingress.Spec.Rules
+	position := -1
+	for i, ingressRule := range updateRules {
+		if ingressRule.Host == rule.Host() {
+			position = i
+		}
+	}
+	if position == -1 {
+		return orchestrator.ErrRuleNotFound
+	}
+
+	rule.RemovePaths(paths)
+
+	outputRules := rule.ToOutput()
+	ingressRulesInput := outputRules.(v1beta1.IngressRule)
+	ingress.Spec.Rules[position] = ingressRulesInput
+
+	_, err = m.API.ExtensionsV1beta1().Ingresses(rule.Resource().Namespace()).Update(ingress)
+	if err != nil {
+		m.Logger.Debug(fmt.Sprintf("Error while removing rule paths from host [%s] ", rule.Host()))
+		return err
+	}
+	m.Logger.Debug(fmt.Sprintf("Paths from rule host [%s] have been removed. Current paths: [%+v]", rule.Host(), rule.Paths()))
+	return nil
 }
 
 // NewIngressRules initializes a new orchestrator.IngressRules implementation using Kubernetes.
