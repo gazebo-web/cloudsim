@@ -99,6 +99,10 @@ func (m *ingressRules) Remove(rule orchestrator.Rule, paths ...orchestrator.Path
 		}
 	}
 	if position == -1 {
+		m.Logger.Debug(fmt.Sprintf(
+			"Error while removing rule paths from host [%s]. Error: %s",
+			rule.Host(), orchestrator.ErrRuleNotFound),
+		)
 		return orchestrator.ErrRuleNotFound
 	}
 
@@ -110,7 +114,10 @@ func (m *ingressRules) Remove(rule orchestrator.Rule, paths ...orchestrator.Path
 
 	_, err = m.API.ExtensionsV1beta1().Ingresses(rule.Resource().Namespace()).Update(ingress)
 	if err != nil {
-		m.Logger.Debug(fmt.Sprintf("Error while removing rule paths from host [%s] ", rule.Host()))
+		m.Logger.Debug(fmt.Sprintf(
+			"Error while removing rule paths from host [%s]. Error: %s",
+			rule.Host(), orchestrator.ErrRuleNotFound),
+		)
 		return err
 	}
 	m.Logger.Debug(fmt.Sprintf("Paths from rule host [%s] have been removed. Current paths: [%+v]", rule.Host(), rule.Paths()))
