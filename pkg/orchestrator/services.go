@@ -23,8 +23,11 @@ type CreateServiceInput struct {
 	Ports map[string]int32
 }
 
-// Services groups a set of methods for managing Services.
-// Services abstract a group of pods behind a single endpoint.
+// Services groups a set of methods for managing services like Load Balancers.
+// services are usually used to abstract a group of pods behind a single endpoint.
 type Services interface {
 	Create(input CreateServiceInput) error
+	Get(name, namespace string) (Resource, error)
+	GetAllBySelector(namespace string, selector Selector) ([]Resource, error)
+	Remove(resource Resource) error
 }

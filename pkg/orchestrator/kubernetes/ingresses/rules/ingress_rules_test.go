@@ -3,7 +3,7 @@ package rules
 import (
 	"github.com/stretchr/testify/assert"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/kubernetes/ingresses"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/kubernetes/types"
 	"gitlab.com/ignitionrobotics/web/ign-go"
 	"k8s.io/api/extensions/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -19,7 +19,9 @@ func TestRule_GetRuleReturnsIngressRule(t *testing.T) {
 	logger := ign.NewLoggerNoRollbar("TestRules", ign.VerbosityDebug)
 	ir := NewIngressRules(client, logger)
 
-	rule, err := ir.Get(ingresses.NewIngress("test", "default"), "test.com")
+	selector := types.NewSelector(nil)
+	res := types.NewResource("test", "default", selector)
+	rule, err := ir.Get(res, "test.com")
 	assert.NoError(t, err)
 	assert.Equal(t, "test.com", rule.Host())
 	assert.Len(t, rule.Paths(), 1)
@@ -30,9 +32,10 @@ func TestRule_GetRuleReturnsIngressRule(t *testing.T) {
 
 func TestRule_GetRuleReturnsErrorWhenIngressDoesNotExist(t *testing.T) {
 	client := fake.NewSimpleClientset()
-	m := NewIngressRules(client, nil)
-
-	_, err := m.Get(ingresses.NewIngress("test", "default"), "test.com")
+	m := NewIngressRules(client, ign.NewLoggerNoRollbar("TestRule", ign.VerbosityDebug))
+	selector := types.NewSelector(nil)
+	res := types.NewResource("test", "default", selector)
+	_, err := m.Get(res, "test.com")
 	assert.Error(t, err)
 }
 
@@ -47,8 +50,9 @@ func TestRule_UpsertRulesReturnsErrorIfIngressDoesNotExist(t *testing.T) {
 			Port: 80,
 		},
 	}
-	resource := ingresses.NewIngress("test", "default")
-	rule := NewRule(resource, "test.org", []orchestrator.Path{})
+	selector := types.NewSelector(nil)
+	res := types.NewResource("test", "default", selector)
+	rule := NewRule(res, "test.org", []orchestrator.Path{})
 	err := m.Upsert(rule, path)
 	assert.Error(t, err)
 }
@@ -65,8 +69,9 @@ func TestRule_UpsertRulesReturnsErrorIfRuleDoesNotExist(t *testing.T) {
 			Port: 80,
 		},
 	}
-	resource := ingresses.NewIngress("test", "default")
-	rule := NewRule(resource, "test.org", []orchestrator.Path{})
+	selector := types.NewSelector(nil)
+	res := types.NewResource("test", "default", selector)
+	rule := NewRule(res, "test.org", []orchestrator.Path{})
 	err := m.Upsert(rule, path)
 	assert.Error(t, err)
 	assert.Equal(t, orchestrator.ErrRuleNotFound, err)
@@ -78,9 +83,10 @@ func TestRule_UpsertRulesReturnsNoError(t *testing.T) {
 	logger := ign.NewLoggerNoRollbar("TestRules", ign.VerbosityDebug)
 	m := NewIngressRules(client, logger)
 
-	resource := ingresses.NewIngress("test", "default")
+	selector := types.NewSelector(nil)
+	res := types.NewResource("test", "default", selector)
 
-	r, err := m.Get(resource, "test.com")
+	r, err := m.Get(res, "test.com")
 	assert.NoError(t, err)
 
 	path := orchestrator.Path{
@@ -93,7 +99,7 @@ func TestRule_UpsertRulesReturnsNoError(t *testing.T) {
 	err = m.Upsert(r, path)
 	assert.NoError(t, err)
 
-	result, err := m.Get(resource, "test.com")
+	result, err := m.Get(res, "test.com")
 	assert.NoError(t, err)
 	assert.Len(t, result.Paths(), 2)
 }
@@ -112,8 +118,9 @@ func TestRule_RemovePathsReturnsNoError(t *testing.T) {
 	logger := ign.NewLoggerNoRollbar("TestRules", ign.VerbosityDebug)
 	m := NewIngressRules(client, logger)
 
-	resource := ingresses.NewIngress("test", "default")
-	r, err := m.Get(resource, "test.com")
+	selector := types.NewSelector(nil)
+	res := types.NewResource("test", "default", selector)
+	r, err := m.Get(res, "test.com")
 	assert.NoError(t, err)
 	assert.Len(t, r.Paths(), 2)
 
@@ -122,7 +129,7 @@ func TestRule_RemovePathsReturnsNoError(t *testing.T) {
 	err = m.Remove(r, pathsToRemove...)
 	assert.NoError(t, err)
 
-	r, err = m.Get(resource, "test.com")
+	r, err = m.Get(res, "test.com")
 	assert.NoError(t, err)
 	assert.Len(t, r.Paths(), 1)
 }

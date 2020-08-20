@@ -23,7 +23,7 @@ func (m *nodes) WaitForCondition(resource orchestrator.Resource, condition orche
 		fmt.Sprintf("Creating wait for condition [%+v] request on nodes matching the following selector: [%s]",
 			condition, resource.Selector()))
 	opts := metav1.ListOptions{
-		LabelSelector: resource.Selector(),
+		LabelSelector: resource.Selector().String(),
 	}
 	job := func() (bool, error) {
 		var nodesNotReady []*apiv1.Node
@@ -38,7 +38,6 @@ func (m *nodes) WaitForCondition(resource orchestrator.Resource, condition orche
 				nodesNotReady = append(nodesNotReady, node)
 			}
 		}
-		m.Logger.Debug("Nodes not ready: ", len(nodesNotReady))
 		return len(nodesNotReady) == 0, nil
 	}
 	m.Logger.Debug(

@@ -36,7 +36,7 @@ func (p *pods) Reader(pod orchestrator.Resource) orchestrator.Reader {
 // The wait request won't be triggered until the method Wait has been called.
 func (p *pods) WaitForCondition(resource orchestrator.Resource, condition orchestrator.Condition) waiter.Waiter {
 	opts := metav1.ListOptions{
-		LabelSelector: resource.Selector(),
+		LabelSelector: resource.Selector().String(),
 	}
 	var podsNotReady []*apiv1.Pod
 	job := func() (bool, error) {
