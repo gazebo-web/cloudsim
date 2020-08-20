@@ -77,6 +77,10 @@ const (
 	// A predefined const to refer to the SubT Application type
 	// This will be used to know which Pods and services launch.
 	applicationSubT           string = "subt"
+	CircuitNIOSHSRConfigA     string = "NIOSH SR Config A"
+	CircuitNIOSHSRConfigB     string = "NIOSH SR Config B"
+	CircuitNIOSHEXConfigA     string = "NIOSH EX Config A"
+	CircuitNIOSHEXConfigB     string = "NIOSH EX Config B"
 	CircuitVirtualStix        string = "Virtual Stix"
 	CircuitTunnelCircuit      string = "Tunnel Circuit"
 	CircuitTunnelPractice1    string = "Tunnel Practice 1"

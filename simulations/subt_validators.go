@@ -536,6 +536,10 @@ func loadSubTRobotTypes(cfg *subTSpecificsConfig) {
 
 // SubTCircuits holds the list of available circuits in SubT.
 var SubTCircuits = []string{
+	CircuitNIOSHSRConfigA,
+	CircuitNIOSHSRConfigB,
+	CircuitNIOSHEXConfigA,
+	CircuitNIOSHEXConfigB,
 	CircuitVirtualStix,
 	CircuitTunnelPractice1,
 	CircuitTunnelPractice2,
