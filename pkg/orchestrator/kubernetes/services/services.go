@@ -92,7 +92,7 @@ func (s *services) Remove(resource orchestrator.Resource) error {
 	if err != nil {
 		s.Logger.Debug(fmt.Sprintf(
 			"Removing service with name [%s] in namespace [%s] that match the following selectors: [%s] failed. Error: %s",
-			resource.Name(), resource.Namespace(), resource.Selector().String()), err.Error(),
+			resource.Name(), resource.Namespace(), resource.Selector().String(), err.Error()),
 		)
 		return err
 	}
