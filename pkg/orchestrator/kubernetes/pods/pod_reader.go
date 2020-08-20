@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/kubernetes/spdy"
+	"gitlab.com/ignitionrobotics/web/ign-go"
 	"io"
 	apiv1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/kubernetes"
@@ -15,6 +16,7 @@ type reader struct {
 	API      kubernetes.Interface
 	pod      orchestrator.Resource
 	spdyInit spdy.Initializer
+	logger   ign.Logger
 }
 
 // File is used to read a file from the given paths.
