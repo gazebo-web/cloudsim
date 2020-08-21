@@ -15,7 +15,7 @@ type ingresses struct {
 	Logger ign.Logger
 }
 
-// Get returns an Resource with the given
+// Get returns an ingress with the given name.
 func (m *ingresses) Get(name string, namespace string) (orchestrator.Resource, error) {
 	m.Logger.Debug(fmt.Sprintf("Getting ingress with name [%s] in namespace [%s]", name, namespace))
 	out, err := m.API.ExtensionsV1beta1().Ingresses(name).Get(namespace, metav1.GetOptions{})
