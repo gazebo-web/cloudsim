@@ -44,7 +44,7 @@ func (s *services) Create(input orchestrator.CreateServiceInput) error {
 		s.Logger.Debug(fmt.Sprintf("Creating new Service %s failed. Error: %+v", input.Name, err))
 		return err
 	}
-	s.Logger.Debug(fmt.Sprintf("Creating new Service %s succeded.", input.Name))
+	s.Logger.Debug(fmt.Sprintf("Creating new Service %s succeeded.", input.Name))
 	return nil
 }
 
