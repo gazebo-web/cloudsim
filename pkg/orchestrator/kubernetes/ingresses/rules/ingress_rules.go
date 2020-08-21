@@ -71,9 +71,7 @@ func (m *ingressRules) Upsert(rule orchestrator.Rule, paths ...orchestrator.Path
 
 	rule.UpsertPaths(paths)
 
-	outputRules := rule.ToOutput()
-	ingressRules := outputRules.(v1beta1.IngressRule)
-	ingress.Spec.Rules[position] = ingressRules
+	ingress.Spec.Rules[position] = rule.ToOutput().(v1beta1.IngressRule)
 
 	_, err = m.API.ExtensionsV1beta1().Ingresses(rule.Resource().Namespace()).Update(ingress)
 	if err != nil {
