@@ -103,8 +103,7 @@ type TerminateMachinesInput struct {
 // CountMachinesInput is the input for the Machines.Count operation.
 // It will be used to count the number of machines that match a certain list of filters.
 type CountMachinesInput struct {
-	MaxResults *int64
-	Filters    map[string][]string
+	Filters map[string][]string
 }
 
 // Machines requests physical instances from a cloud provider on which to deploy applications
