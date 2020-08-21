@@ -55,7 +55,7 @@ func (s *services) Get(name, namespace string) (orchestrator.Resource, error) {
 		s.Logger.Debug(fmt.Sprintf("Getting service with name [%s] in namespace [%s] failed. Error: %s", name, namespace, err))
 		return nil, err
 	}
-	s.Logger.Debug(fmt.Sprintf("Getting service with name [%s] in namespace [%s] succeded.", name, namespace))
+	s.Logger.Debug(fmt.Sprintf("Getting service with name [%s] in namespace [%s] succeeded.", name, namespace))
 	return types.NewResource(name, namespace, types.NewSelector(output.Labels)), nil
 }
 
