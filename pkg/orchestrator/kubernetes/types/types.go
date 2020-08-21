@@ -59,10 +59,8 @@ func (s selector) String() string {
 // NewSelector initializes a new orchestrator.Selector from the given map.
 // If `nil` is passed as input, an empty selector will be returned.
 func NewSelector(input map[string]string) orchestrator.Selector {
-	var output selector
-	if input == nil {
+        if input == nil {
 		input = map[string]string{}
 	}
-	output = input
-	return &output
+	return selector(input)
 }
