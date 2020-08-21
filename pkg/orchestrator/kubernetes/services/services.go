@@ -77,7 +77,7 @@ func (s *services) GetAllBySelector(namespace string, selector orchestrator.Sele
 		output = append(output, types.NewResource(srv.Name, srv.Namespace, selector))
 	}
 	s.Logger.Debug(fmt.Sprintf(
-		"Getting all services matching selector: [%s] succeded. Output: %+v",
+		"Getting all services matching selector: [%s] succeeded. Output: %+v",
 		selector.String(), output),
 	)
 	return output, nil
