@@ -108,9 +108,7 @@ func (m *ingressRules) Remove(rule orchestrator.Rule, paths ...orchestrator.Path
 
 	rule.RemovePaths(paths)
 
-	outputRules := rule.ToOutput()
-	ingressRulesInput := outputRules.(v1beta1.IngressRule)
-	ingress.Spec.Rules[position] = ingressRulesInput
+	ingress.Spec.Rules[position] = rule.ToOutput().(v1beta1.IngressRule)
 
 	_, err = m.API.ExtensionsV1beta1().Ingresses(rule.Resource().Namespace()).Update(ingress)
 	if err != nil {
