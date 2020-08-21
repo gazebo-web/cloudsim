@@ -252,21 +252,11 @@ func (m machines) createFilters(input map[string][]string) []*ec2.Filter {
 }
 
 // Count counts EC2 machines.
-// If cloud.CountMachinesInput.MaxResults is greater than 1000. It will be set to 1000.
-// If cloud.CountMachinesInput MaxResults is less than 5. It will be set to 100.
 func (m machines) Count(input cloud.CountMachinesInput) int {
 	m.Logger.Debug(fmt.Sprintf("Counting machines with the following parameters: %+v", input))
-	if input.MaxResults != nil {
-		if *input.MaxResults > 1000 {
-			*input.MaxResults = 1000
-		}
-		if *input.MaxResults < 5 {
-			*input.MaxResults = 100
-		}
-	}
 	filters := m.createFilters(input.Filters)
 	out, err := m.API.DescribeInstances(&ec2.DescribeInstancesInput{
-		MaxResults: input.MaxResults,
+		MaxResults: aws.Int64(1000),
 		Filters:    filters,
 	})
 	if err != nil {
