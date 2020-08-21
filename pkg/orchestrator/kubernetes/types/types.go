@@ -5,7 +5,7 @@ import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator"
 )
 
-// resource is an orchestrator.Resource implementation of Kubernetes Services.
+// resource is an orchestrator.Resource implementation of Kubernetes resources.
 type resource struct {
 	// name represents the name of the service.
 	name string
