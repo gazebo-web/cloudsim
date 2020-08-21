@@ -19,6 +19,8 @@ type Action struct {
 	// Name contains the action name.
 	// This field can be left empty as it will be filled in by a service when registering this action.
 	Name string
+	// Context is used to pass the components needed to run jobs.
+	Context Context
 	// Jobs contains the sequence of jobs processed to perform this action.
 	Jobs Jobs
 }

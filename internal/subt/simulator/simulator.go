@@ -1,6 +1,7 @@
 package simulator
 
 import (
+	"context"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/actions"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/platform"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
@@ -13,11 +14,12 @@ type subTSimulator struct {
 }
 
 // Start returns an action that will be in charge of launching a simulation with the given Group ID.
-func (s *subTSimulator) Start(groupID simulations.GroupID) (*actions.Action, error) {
-	var jobs actions.Jobs
-	jobs = append(jobs, s.createCheckPendingStatusJob(groupID))
-	jobs = append(jobs, s.createCheckSimulationIsParentJob(groupID))
-	jobs = append(jobs, s.createCheckParentSimulationWithErrorJob(groupID))
+func (s *subTSimulator) Start(ctx context.Context) (*actions.Action, error) {
+	jobs := actions.Jobs{
+		JobCheckPendingStatus,
+		JobCheckSimulationParenthood,
+		JobCheckParentSimulationWithError,
+	}
 	action, err := actions.NewAction(jobs)
 	if err != nil {
 		return nil, err
@@ -26,12 +28,12 @@ func (s *subTSimulator) Start(groupID simulations.GroupID) (*actions.Action, err
 }
 
 // Stop returns an action that will be in charge of stopping a simulation with the given Group ID.
-func (s *subTSimulator) Stop(groupID simulations.GroupID) (*actions.Action, error) {
+func (s *subTSimulator) Stop(ctx context.Context) (*actions.Action, error) {
 	panic("implement me")
 }
 
 // Restart returns an action that will be in charge of restarting a simulation with the given Group ID.
-func (s *subTSimulator) Restart(groupID simulations.GroupID) (*actions.Action, error) {
+func (s *subTSimulator) Restart(ctx context.Context) (*actions.Action, error) {
 	panic("implement me")
 }
 

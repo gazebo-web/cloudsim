@@ -1,8 +1,8 @@
 package platform
 
 import (
-	"github.com/marcoshuck/cloudsim-refactor-proposal/pkg/platform/orchestrator"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/cloud"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator"
 )
 
 // Platform groups a set of components for creating simulations.
@@ -10,7 +10,10 @@ import (
 // The cloudsim team provides a default Kubernetes and AWS implementation of this Platform.
 // Other combinations could be implemented after adding their respective subcomponents.
 type Platform interface {
+	// Storage returns a cloud.Storage component.
 	Storage() cloud.Storage
+	// Machines returns a cloud.Machines component.
 	Machines() cloud.Machines
-	Orchestrator() orchestrator.Orchestrator
+	// Orchestrator returns a orchestrator.Cluster component.
+	Orchestrator() orchestrator.Cluster
 }
