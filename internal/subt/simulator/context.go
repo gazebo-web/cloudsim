@@ -14,14 +14,14 @@ var (
 	// contextServices is the key used to get the services from the context.
 	contextServices = "subt_services"
 
-	// ErrCtxInvalidPlatform is returned as a panic when casting a platform retrieved from context fails.
+	// ErrCtxInvalidPlatform is returned as a panic error when casting a platform retrieved from context fails.
 	ErrCtxInvalidPlatform = errors.New("invalid platform from context")
 
-	// ErrCtxInvalidAppServices is returned as a panic when casting a group of services retrieved from context fails.
+	// ErrCtxInvalidAppServices is returned as a panic error when casting a group of services retrieved from context fails.
 	ErrCtxInvalidAppServices = errors.New("invalid application services from context")
 )
 
-// Context is an action's context wrapper that exposes the methods needed to be accessed during jobs.
+// Context is an action's context wrapper that exposes the methods needed for the different jobs.
 type Context interface {
 	actions.Context
 	// Platform returns the platform from context.
