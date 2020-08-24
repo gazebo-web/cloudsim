@@ -9,11 +9,18 @@ var (
 
 // Rule is used to return a list of available paths to access a certain service.
 type Rule interface {
+	// Resource returns the resource that implements this rule.
 	Resource() Resource
+	// Host returns the host where this rule is being applied to.
 	Host() string
+	// Paths returns the paths that this rule has.
 	Paths() []Path
+	// UpsertPaths insert and updates underlying list of paths with the given paths.
 	UpsertPaths(paths []Path)
+	// RemovePaths removes the given paths from the underlying list of paths.
 	RemovePaths(paths []Path)
+	// ToOutput converts this rule into a implementation-specific type of rule.
+	// In Kubernetes, ToOutput is used to return a v1beta1.IngressRule.
 	ToOutput() interface{}
 }
 
