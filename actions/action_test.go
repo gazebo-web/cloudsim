@@ -16,7 +16,7 @@ func TestNewAction(t *testing.T) {
 	for i := 0; i < len(jobs); i++ {
 		jobs[i] = &Job{
 			Name: fmt.Sprintf("job_%d", i+1),
-			Execute: func(tx *gorm.DB, deployment *Deployment, value interface{}) (interface{}, error) {
+			Execute: func(ctx Context, tx *gorm.DB, deployment *Deployment, value interface{}) (interface{}, error) {
 				return nil, nil
 			},
 			InputType:  GetJobDataType(&TestStruct{}),
