@@ -17,7 +17,7 @@ type TestResource struct {
 
 func setupTest(t *testing.T) *TestResource {
 	ctx := NewContext(goctx.Background())
-	logger := ign.LoggerFromContext(ctx.Ctx())
+	logger := ign.LoggerFromContext(ctx)
 
 	// Get the db config
 	var dbConfig ign.DatabaseConfig
