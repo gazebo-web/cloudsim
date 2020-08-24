@@ -31,6 +31,9 @@ var (
 
 	// StatusRejected is used when a simulation has been rejected.
 	StatusRejected Status = "rejected"
+
+	// StatusLaunchingNodes is used when a simulation has entered the launching nodes phase.
+	StatusLaunchingNodes Status = "launching-nodes"
 )
 
 // Kind is used to identify if a Simulation is a single simulation or a multisim.
