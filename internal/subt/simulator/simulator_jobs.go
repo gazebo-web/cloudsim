@@ -6,6 +6,16 @@ import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
 )
 
+var JobsStartSimulation = actions.Jobs{
+	JobCheckPendingStatus,
+	JobCheckSimulationParenthood,
+	JobCheckParentSimulationWithError,
+}
+
+var JobsStopSimulation = actions.Jobs{}
+
+var JobsRestartSimulation = actions.Jobs{}
+
 //----------------------------------------------------------------------------------------------------------------------
 
 // JobCheckPendingStatus is used to check that a certain simulation has pending status.
