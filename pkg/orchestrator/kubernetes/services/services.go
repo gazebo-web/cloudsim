@@ -44,7 +44,7 @@ func (s *services) Create(input orchestrator.CreateServiceInput) error {
 		s.Logger.Debug(fmt.Sprintf("Creating new Service %s failed. Error: %+v", input.Name, err))
 		return err
 	}
-	s.Logger.Debug(fmt.Sprintf("Creating new Service %s succeded.", input.Name))
+	s.Logger.Debug(fmt.Sprintf("Creating new Service %s succeeded.", input.Name))
 	return nil
 }
 
@@ -55,7 +55,7 @@ func (s *services) Get(name, namespace string) (orchestrator.Resource, error) {
 		s.Logger.Debug(fmt.Sprintf("Getting service with name [%s] in namespace [%s] failed. Error: %s", name, namespace, err))
 		return nil, err
 	}
-	s.Logger.Debug(fmt.Sprintf("Getting service with name [%s] in namespace [%s] succeded.", name, namespace))
+	s.Logger.Debug(fmt.Sprintf("Getting service with name [%s] in namespace [%s] succeeded.", name, namespace))
 	return types.NewResource(name, namespace, types.NewSelector(output.Labels)), nil
 }
 
@@ -77,7 +77,7 @@ func (s *services) GetAllBySelector(namespace string, selector orchestrator.Sele
 		output = append(output, types.NewResource(srv.Name, srv.Namespace, selector))
 	}
 	s.Logger.Debug(fmt.Sprintf(
-		"Getting all services matching selector: [%s] succeded. Output: %+v",
+		"Getting all services matching selector: [%s] succeeded. Output: %+v",
 		selector.String(), output),
 	)
 	return output, nil
