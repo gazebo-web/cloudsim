@@ -1,6 +1,9 @@
 package simulations
 
-import "errors"
+import (
+	"errors"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/cloud"
+)
 
 var (
 	// ErrInvalidGroupID is returned when a group id is invalid.
@@ -57,10 +60,16 @@ type Error string
 type Simulation interface {
 	// GroupID returns the current simulation's group id.
 	GroupID() GroupID
+
 	// Status returns the current simulation's status.
 	Status() Status
+
 	// Kind returns the current simulation's kind.
 	Kind() Kind
+
 	// Error returns the current simulation's error. It returns nil if the simulation doesn't have an error.
 	Error() *Error
+
+	// ToCreateMachinesInput returns the slice of create machines request needed to run this simulation.
+	ToCreateMachinesInput() []cloud.CreateMachinesInput
 }

@@ -3,6 +3,7 @@ package simulator
 import (
 	"github.com/jinzhu/gorm"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/actions"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/cloud"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
 )
 
@@ -137,6 +138,44 @@ func updateSimulationStatusToLaunchNodes(ctx actions.Context, tx *gorm.DB, deplo
 	}
 
 	err := simCtx.Services().Simulations().UpdateStatus(gid, simulations.StatusLaunchingNodes)
+	if err != nil {
+		return nil, err
+	}
+	return gid, nil
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+
+// JobLaunchNodes is used to launch the required nodes to run a simulation.
+var JobLaunchNodes = &actions.Job{
+	Name:       "launch-nodes",
+	Execute:    launchNodes,
+	InputType:  actions.GetJobDataType(simulations.GroupID("")),
+	OutputType: actions.GetJobDataType(cloud.CreateMachinesOutput{}),
+}
+
+// launchNodes is the main process executed by JobLaunchNodes.
+func launchNodes(ctx actions.Context, tx *gorm.DB, deployment *actions.Deployment, value interface{}) (interface{}, error) {
+	simCtx := NewContext(ctx)
+
+	gid, ok := value.(simulations.GroupID)
+	if !ok {
+		return nil, simulations.ErrInvalidGroupID
+	}
+
+	sim, err := simCtx.Services().Simulations().Get(gid)
+	if err != nil {
+		return nil, err
+	}
+
+	output, err := simCtx.Platform().Machines().Create(sim.ToCreateMachinesInput())
+	deployment.SetJobData(tx, &deployment.CurrentJob, actions.GetJobDataType(cloud.CreateMachinesOutput{}), output)
+
+	if err != nil {
+		return nil, err
+	}
+
+	err = simCtx.Services().Simulations().Update(gid, sim)
 	if err != nil {
 		return nil, err
 	}

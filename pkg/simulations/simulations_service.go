@@ -13,4 +13,7 @@ type Service interface {
 
 	// UpdateStatus updates the simulation status with the given groupID.
 	UpdateStatus(groupID GroupID, status Status) error
+
+	// Update updates the simulation matching the given groupID with the given simulation data.
+	Update(groupID GroupID, simulation Simulation) error
 }

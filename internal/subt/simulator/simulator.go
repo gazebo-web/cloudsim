@@ -2,6 +2,7 @@ package simulator
 
 import (
 	"context"
+	"errors"
 	"github.com/jinzhu/gorm"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/actions"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/application"
@@ -17,6 +18,11 @@ const (
 	actionNameStopSimulation = "stop-simulation"
 	// actionNameRestartSimulation is the name used to register the restart simulation action.
 	actionNameRestartSimulation = "restart-simulation"
+)
+
+var (
+	// ErrNotEnoughSimulationNodes is returned when the created simulation nodes mismatch the amount of required nodes.
+	ErrNotEnoughSimulationNodes = errors.New("not enough simulation nodes")
 )
 
 // subTSimulator is a simulator.Simulator implementation.
