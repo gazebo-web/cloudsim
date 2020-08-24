@@ -1,11 +1,11 @@
 package types
 
 import (
-	"fmt"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// resource is an orchestrator.Resource implementation of Kubernetes Services.
+// resource is an orchestrator.Resource implementation of Kubernetes resources.
 type resource struct {
 	// name represents the name of the service.
 	name string
@@ -44,25 +44,15 @@ type selector map[string]string
 
 // String returns the kubernetes selector in string format.
 func (s selector) String() string {
-	var out string
-	count := len(s)
-	for key, value := range s {
-		out += fmt.Sprintf("%s=%s", key, value)
-		count--
-		if count > 1 {
-			out += ","
-		}
-	}
-	return out
+	out := metav1.LabelSelector{MatchLabels: s}
+	return out.String()
 }
 
 // NewSelector initializes a new orchestrator.Selector from the given map.
 // If `nil` is passed as input, an empty selector will be returned.
 func NewSelector(input map[string]string) orchestrator.Selector {
-	var output selector
 	if input == nil {
 		input = map[string]string{}
 	}
-	output = input
-	return &output
+	return selector(input)
 }

@@ -19,12 +19,16 @@ type nodes struct {
 // WaitForCondition creates a new wait request that will be used to wait for a resource to match a certain condition.
 // The wait request won't be triggered until the method Wait has been called.
 func (m *nodes) WaitForCondition(resource orchestrator.Resource, condition orchestrator.Condition) waiter.Waiter {
-	m.Logger.Debug(
-		fmt.Sprintf("Creating wait for condition [%+v] request on nodes matching the following selector: [%s]",
-			condition, resource.Selector()))
+	m.Logger.Debug(fmt.Sprintf("Creating wait for condition [%+v] request on nodes matching the following selector: [%s]",
+		condition, resource.Selector(),
+	))
+
+	// Prepare options
 	opts := metav1.ListOptions{
 		LabelSelector: resource.Selector().String(),
 	}
+
+	// Create job
 	job := func() (bool, error) {
 		var nodesNotReady []*apiv1.Node
 		nodes, err := m.API.CoreV1().Nodes().List(opts)
@@ -40,10 +44,13 @@ func (m *nodes) WaitForCondition(resource orchestrator.Resource, condition orche
 		}
 		return len(nodesNotReady) == 0, nil
 	}
-	m.Logger.Debug(
-		fmt.Sprintf("Wait for condition [%+v] request on nodes matching the following selector: [%s] was created.",
-			condition, resource.Selector()),
-	)
+
+	m.Logger.Debug(fmt.Sprintf(
+		"Wait for condition [%+v] request on nodes matching the following selector: [%s] was created.",
+		condition, resource.Selector(),
+	))
+
+	// Return new wait request with the created job
 	return waiter.NewWaitRequest(job)
 }
 

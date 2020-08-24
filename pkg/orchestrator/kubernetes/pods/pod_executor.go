@@ -21,13 +21,19 @@ type executor struct {
 // Cmd is used to run a command in a container inside a resource.
 func (e *executor) Cmd(command []string) error {
 	e.logger.Debug(fmt.Sprintf("Running command [%s] on pod [%s]", command, e.pod.Name()))
+
+	// Prepare buffers
 	var stdout, stderr bytes.Buffer
+
+	// Prepare options for SPDY
 	options := remotecommand.StreamOptions{
 		Stdin:  nil,
 		Stdout: &stdout,
 		Stderr: &stderr,
 		Tty:    false,
 	}
+
+	// Run command
 	err := runExec(runExecInput{
 		kubernetes: e.API,
 		namespace:  e.pod.Namespace(),
@@ -36,11 +42,13 @@ func (e *executor) Cmd(command []string) error {
 		options:    options,
 		spdy:       e.spdyInit,
 	})
+
 	if err == nil {
 		e.logger.Debug(fmt.Sprintf("Command [%s] on pod [%s] sucessfully run.", command, e.pod.Name()))
 		return nil
 	}
 	err = parseExecError(err, &stdout, &stderr)
+
 	e.logger.Debug(fmt.Sprintf("Running ommand [%s] on pod [%s] failed. Error: %s", command, e.pod.Name(), err.Error()))
 	return err
 }
