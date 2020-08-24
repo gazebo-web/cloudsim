@@ -10,6 +10,15 @@ import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulator"
 )
 
+const (
+	// actionNameStartSimulation is the name used to register the start simulation action.
+	actionNameStartSimulation = "start-simulation"
+	// actionNameStopSimulation is the name used to register the stop simulation action.
+	actionNameStopSimulation = "stop-simulation"
+	// actionNameRestartSimulation is the name used to register the restart simulation action.
+	actionNameRestartSimulation = "restart-simulation"
+)
+
 // subTSimulator is a simulator.Simulator implementation.
 type subTSimulator struct {
 	applicationName string
@@ -25,7 +34,7 @@ func (s *subTSimulator) Start(ctx context.Context, groupID simulations.GroupID) 
 	ctx = context.WithValue(ctx, contextServices, s.services)
 	execInput := &actions.ExecuteInput{
 		ApplicationName: &s.applicationName,
-		ActionName:      "startSimulation",
+		ActionName:      actionNameStartSimulation,
 	}
 	err := s.actions.Execute(s.db, execInput, groupID)
 	if err != nil {
@@ -40,7 +49,7 @@ func (s *subTSimulator) Stop(ctx context.Context, groupID simulations.GroupID) e
 	ctx = context.WithValue(ctx, contextServices, s.services)
 	execInput := &actions.ExecuteInput{
 		ApplicationName: &s.applicationName,
-		ActionName:      "stopSimulation",
+		ActionName:      actionNameStopSimulation,
 	}
 	err := s.actions.Execute(s.db, execInput, groupID)
 	if err != nil {
@@ -55,7 +64,7 @@ func (s *subTSimulator) Restart(ctx context.Context, groupID simulations.GroupID
 	ctx = context.WithValue(ctx, contextServices, s.services)
 	execInput := &actions.ExecuteInput{
 		ApplicationName: &s.applicationName,
-		ActionName:      "restartSimulation",
+		ActionName:      actionNameRestartSimulation,
 	}
 	err := s.actions.Execute(s.db, execInput, groupID)
 	if err != nil {
@@ -75,43 +84,45 @@ type Config struct {
 
 // NewSimulator initializes a new Simulator implementation for SubT.
 func NewSimulator(config Config) simulator.Simulator {
-	// [START SIMULATION] Create action
-	startSimulation, err := actions.NewAction(JobsStartSimulation)
-	if err != nil {
-		panic(err)
-	}
-	// [START SIMULATION] Register action
-	err = config.ActionService.RegisterAction(&config.ApplicationName, "startSimulation", startSimulation)
-	if err != nil {
-		panic(err)
-	}
-
-	// [STOP SIMULATION] Create action
-	stopSimulation, err := actions.NewAction(JobsStopSimulation)
-	if err != nil {
-		panic(err)
-	}
-	// [STOP SIMULATION] Register action
-	err = config.ActionService.RegisterAction(&config.ApplicationName, "stopSimulation", stopSimulation)
-	if err != nil {
-		panic(err)
-	}
-
-	// [RESTART SIMULATION] Create action
-	restartSimulation, err := actions.NewAction(JobsRestartSimulation)
-	if err != nil {
-		panic(err)
-	}
-	// [RESTART SIMULATION] Register action
-	err = config.ActionService.RegisterAction(&config.ApplicationName, "restartSimulation", restartSimulation)
-	if err != nil {
-		panic(err)
-	}
-
+	registerActions(config.ApplicationName, config.ActionService)
 	return &subTSimulator{
 		platform:        config.Platform,
 		applicationName: config.ApplicationName,
 		services:        config.ApplicationServices,
 		actions:         config.ActionService,
 	}
+}
+
+// registerActions register a set of actions into the given service with the given application's name.
+// It panics whenever an action could not be registered.
+func registerActions(name string, service actions.Servicer) {
+	err := registerAction(name, service, actionNameStartSimulation, JobsStartSimulation)
+	if err != nil {
+		panic(err)
+	}
+
+	err = registerAction(name, service, actionNameStopSimulation, JobsStopSimulation)
+	if err != nil {
+		panic(err)
+	}
+
+	err = registerAction(name, service, actionNameRestartSimulation, JobsRestartSimulation)
+	if err != nil {
+		panic(err)
+	}
+}
+
+// registerAction registers the given jobs as a new action called actionName.
+// The action gets registered into the given service for the given application name.
+func registerAction(applicationName string, service actions.Servicer, actionName string, jobs actions.Jobs) error {
+	action, err := actions.NewAction(jobs)
+	if err != nil {
+		return err
+	}
+
+	err = service.RegisterAction(&applicationName, actionName, action)
+	if err != nil {
+		return err
+	}
+	return nil
 }
