@@ -35,12 +35,18 @@ func (p *pods) Reader(pod orchestrator.Resource) orchestrator.Reader {
 // WaitForCondition creates a new wait request that will be used to wait for a resource to match a certain condition.
 // The wait request won't be triggered until the method Wait has been called.
 func (p *pods) WaitForCondition(resource orchestrator.Resource, condition orchestrator.Condition) waiter.Waiter {
+	p.Logger.Debug(fmt.Sprintf("Creating wait for condition [%+v] request on pods matching the following selector: [%s]",
+		condition, resource.Selector(),
+	))
+
+	// Prepare options
 	opts := metav1.ListOptions{
 		LabelSelector: resource.Selector().String(),
 	}
-	var podsNotReady []*apiv1.Pod
+
+	// Create job
 	job := func() (bool, error) {
-		podsNotReady = nil
+		var podsNotReady []*apiv1.Pod
 		po, err := p.API.CoreV1().Pods(resource.Namespace()).List(opts)
 		if err != nil {
 			return false, err
@@ -60,6 +66,12 @@ func (p *pods) WaitForCondition(resource orchestrator.Resource, condition orches
 		}
 		return len(podsNotReady) == 0, nil
 	}
+
+	p.Logger.Debug(fmt.Sprintf(
+		"Wait for condition [%+v] request on pods matching the following selector: [%s] was created.",
+		condition, resource.Selector(),
+	))
+
 	return waiter.NewWaitRequest(job)
 }
 

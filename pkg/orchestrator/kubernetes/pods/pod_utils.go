@@ -47,6 +47,7 @@ func runExec(input runExecInput) (err error) {
 	if err := apiv1.AddToScheme(scheme); err != nil {
 		return err
 	}
+
 	parameterCodec := runtime.NewParameterCodec(scheme)
 	req.VersionedParams(&apiv1.PodExecOptions{
 		Command:   input.command,
@@ -61,6 +62,7 @@ func runExec(input runExecInput) (err error) {
 	if err != nil {
 		return err
 	}
+
 	err = ex.Stream(input.options)
 	if err != nil {
 		return err

@@ -19,6 +19,8 @@ type services struct {
 // Create creates a new service defined by the given input.
 func (s *services) Create(input orchestrator.CreateServiceInput) error {
 	s.Logger.Debug(fmt.Sprintf("Creating new Service. Input: %+v", input))
+
+	// Create service port from input
 	var ports []corev1.ServicePort
 	for key, value := range input.Ports {
 		ports = append(ports, corev1.ServicePort{Name: key, Port: value})
@@ -44,6 +46,7 @@ func (s *services) Create(input orchestrator.CreateServiceInput) error {
 		s.Logger.Debug(fmt.Sprintf("Creating new Service %s failed. Error: %+v", input.Name, err))
 		return err
 	}
+
 	s.Logger.Debug(fmt.Sprintf("Creating new Service %s succeeded.", input.Name))
 	return nil
 }
