@@ -12,7 +12,7 @@ type handlerWithUser func(user *fuel.User, w http.ResponseWriter, r *http.Reques
 
 // WithUser is a middleware that checks for a valid user from the JWT and passes
 // the user to the handlerWithUser.
-func WithUser(service users.IService, handler handlerWithUser) ign.HandlerWithResult {
+func WithUser(service users.Service, handler handlerWithUser) ign.HandlerWithResult {
 	return func(tx *gorm.DB, w http.ResponseWriter, r *http.Request) (interface{}, *ign.ErrMsg) {
 		// Get JWT user. Fail if invalid or missing
 		user, ok, em := service.UserFromJWT(r)

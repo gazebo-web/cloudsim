@@ -9,7 +9,7 @@ import (
 func (app *SubT) RegisterTasks() []monitors.Task {
 	return []monitors.Task{
 		{
-			Job:  func() {
+			Job: func() {
 
 			},
 			Date: time.Time{},

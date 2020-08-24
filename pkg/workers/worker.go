@@ -2,7 +2,8 @@ package workers
 
 import "fmt"
 
-// Worker
+// Worker is a function that will run in a separated thread.
+// The worker will be waiting for a given payload, and will perform an operation on it.
 type Worker func(payload interface{})
 
 // Launch is a worker that launches a simulation. It receives a LaunchInput as a payload.

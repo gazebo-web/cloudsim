@@ -1,0 +1,24 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: $APPLICATION_NAME
+  namespace: $APPLICATION_ENVIRONMENT
+  annotations:
+    # Use HTTP to talk to the backend.
+    service.beta.kubernetes.io/aws-load-balancer-backend-protocol: http
+    # Amazon (AMC) certificate ARN
+    service.beta.kubernetes.io/aws-load-balancer-ssl-cert: $AWS_SSL_CERTIFICATE_ARN
+    # Only run SSL on the port named "https" below.
+    service.beta.kubernetes.io/aws-load-balancer-ssl-ports: "https"
+spec:
+  type: LoadBalancer
+  ports:
+    - name: http
+      port: 80
+      targetPort: 8001
+    - name: https
+      port: 443
+      targetPort: 8001
+  selector:
+    app: $APPLICATION_NAME
+    environment: $CI_ENVIRONMENT_SLUG

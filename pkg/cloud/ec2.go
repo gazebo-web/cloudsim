@@ -14,7 +14,7 @@ import (
 	"time"
 )
 
-type IAmazonEC2 interface {
+type AmazonEC2 interface {
 	CountInstances(ctx context.Context) int
 	TerminateInstances(ctx context.Context, instances []*string) (*ec2.TerminateInstancesOutput, error)
 	NewRunInstancesInput(config RunInstancesConfig) ec2.RunInstancesInput
@@ -22,16 +22,16 @@ type IAmazonEC2 interface {
 	RunInstances(ctx context.Context, inputs []*ec2.RunInstancesInput) (reservations []*ec2.Reservation, err error)
 }
 
-// AmazonEC2 wraps the AWS EC2 API.
-type AmazonEC2 struct {
+// amazonEC2 wraps the AWS EC2 API.
+type amazonEC2 struct {
 	API        ec2iface.EC2API
 	Retries    int
 	NamePrefix string
 }
 
-// NewAmazonEC2 returns a new AmazonEC2 instance by the given AWS session and configuration.
-func NewAmazonEC2(p client.ConfigProvider, cfgs ...*aws.Config) IAmazonEC2 {
-	var instance AmazonEC2
+// NewAmazonEC2 returns a new amazonEC2 instance by the given AWS session and configuration.
+func NewAmazonEC2(p client.ConfigProvider, cfgs ...*aws.Config) AmazonEC2 {
+	var instance amazonEC2
 	if !reflect.ValueOf(p).IsNil() {
 		instance.API = ec2.New(p, cfgs...)
 	}
@@ -39,7 +39,7 @@ func NewAmazonEC2(p client.ConfigProvider, cfgs ...*aws.Config) IAmazonEC2 {
 }
 
 // CountInstances returns the number of instances that are in both running and pending status.
-func (ec *AmazonEC2) CountInstances(ctx context.Context) int {
+func (ec *amazonEC2) CountInstances(ctx context.Context) int {
 	input := &ec2.DescribeInstancesInput{
 		MaxResults: aws.Int64(1000),
 		Filters: []*ec2.Filter{
@@ -68,7 +68,7 @@ func (ec *AmazonEC2) CountInstances(ctx context.Context) int {
 }
 
 // TerminateInstances terminates a set of EC2 instances by the given instances IDs.
-func (ec *AmazonEC2) TerminateInstances(ctx context.Context, instances []*string) (*ec2.TerminateInstancesOutput, error) {
+func (ec *amazonEC2) TerminateInstances(ctx context.Context, instances []*string) (*ec2.TerminateInstancesOutput, error) {
 	input := &ec2.TerminateInstancesInput{
 		InstanceIds: instances,
 	}
@@ -109,7 +109,7 @@ type RunInstancesConfig struct {
 }
 
 // NewRunInstancesInput initializes a new RunInstancesInput from the given config.
-func (ec *AmazonEC2) NewRunInstancesInput(config RunInstancesConfig) ec2.RunInstancesInput {
+func (ec *amazonEC2) NewRunInstancesInput(config RunInstancesConfig) ec2.RunInstancesInput {
 	var tags []*ec2.Tag
 
 	for key, v := range config.Tags {
@@ -134,7 +134,7 @@ func (ec *AmazonEC2) NewRunInstancesInput(config RunInstancesConfig) ec2.RunInst
 }
 
 // RunInstance requests a single new EC2 instance to AWS.
-func (ec *AmazonEC2) RunInstance(ctx context.Context, input *ec2.RunInstancesInput) (*ec2.Reservation, error) {
+func (ec *amazonEC2) RunInstance(ctx context.Context, input *ec2.RunInstancesInput) (*ec2.Reservation, error) {
 	input.SetDryRun(true)
 	for try := 1; try <= ec.Retries; try++ {
 		_, err := ec.API.RunInstances(input)
@@ -170,7 +170,7 @@ func (ec *AmazonEC2) RunInstance(ctx context.Context, input *ec2.RunInstancesInp
 
 // RunInstances requests a set of new EC2 instances to AWS.
 // If there is an error in the middle of the operation, it will return the current reservations as well as the error.
-func (ec *AmazonEC2) RunInstances(ctx context.Context, inputs []*ec2.RunInstancesInput) (reservations []*ec2.Reservation, err error) {
+func (ec *amazonEC2) RunInstances(ctx context.Context, inputs []*ec2.RunInstancesInput) (reservations []*ec2.Reservation, err error) {
 	var reservation *ec2.Reservation
 	for _, input := range inputs {
 		reservation, err = ec.RunInstance(ctx, input)
@@ -181,4 +181,3 @@ func (ec *AmazonEC2) RunInstances(ctx context.Context, inputs []*ec2.RunInstance
 	}
 	return reservations, err
 }
-

@@ -6,11 +6,11 @@ import (
 	"gitlab.com/ignitionrobotics/web/ign-go"
 )
 
-// IRepository represents a set of methods of a Data Access Object for Simulations.
-type IRepository interface {
+// Repository represents a set of methods of a Data Access Object for Simulations.
+type Repository interface {
 	GetDB() *gorm.DB
 	SetDB(db *gorm.DB)
-	Create(simulation *Simulation) (*Simulation, error)
+	Create(simulation RepositoryCreateInput) (ServiceCreateOutput, error)
 	Get(groupID string) (*Simulation, error)
 	GetAllPaginated(input GetAllPaginatedInput) (*Simulations, *ign.PaginationResult, error)
 	GetAllByOwner(owner string, statusFrom, statusTo Status) (*Simulations, error)
@@ -20,55 +20,50 @@ type IRepository interface {
 	Reject(simulation *Simulation) (*Simulation, error)
 }
 
-// Repository is the IRepository implementation
-type Repository struct {
-	Application string
-	Db *gorm.DB
+// repository is the Repository implementation
+type repository struct {
+	Platform    *string
+	Application *string
+	Db          *gorm.DB
 }
 
 // NewRepository
-func NewRepository(db *gorm.DB, application string) IRepository {
-	var r IRepository
-	r = &Repository{
-		Db: db,
+func NewRepository(db *gorm.DB, platform, application *string) Repository {
+	var r Repository
+	r = &repository{
+		Db:          db,
+		Platform:    platform,
 		Application: application,
 	}
 	return r
 }
 
 // GetDB
-func (r *Repository) GetDB() *gorm.DB {
+func (r *repository) GetDB() *gorm.DB {
 	return r.Db
 }
 
 // SetDB
-func (r *Repository) SetDB(db *gorm.DB) {
+func (r *repository) SetDB(db *gorm.DB) {
 	r.Db = db
 }
 
-func (r *Repository) BeingTX() *gorm.DB {
-	return r.Db.Begin()
-}
-
-func (r *Repository) CommitTX() *gorm.DB {
-	return r.Db.Commit()
-}
-
-func (r *Repository) Create(simulation *Simulation) (*Simulation, error) {
+func (r *repository) Create(simulationCreate RepositoryCreateInput) (ServiceCreateOutput, error) {
+	simulation := simulationCreate.Input()
 	if err := r.Db.Create(simulation).Error; err != nil {
 		return nil, err
 	}
 	return simulation, nil
 }
 
-func (r *Repository) Update(groupID string, simulation *Simulation) (*Simulation, error) {
+func (r *repository) Update(groupID string, simulation *Simulation) (*Simulation, error) {
 	panic("implement me")
 }
 
-func (r *Repository) Reject(simulation *Simulation) (*Simulation, error) {
+func (r *repository) Reject(simulation *Simulation) (*Simulation, error) {
 	if err := r.Db.Model(simulation).Update(Simulation{
-		Status: StatusRejected.ToIntPtr(),
-		ErrorStatus:      ErrRejected.ToStringPtr(),
+		Status:      StatusRejected.ToIntPtr(),
+		ErrorStatus: ErrRejected.ToStringPtr(),
 	}).Delete(simulation).Error; err != nil {
 		return nil, err
 	}
@@ -79,31 +74,38 @@ func (r *Repository) Reject(simulation *Simulation) (*Simulation, error) {
 
 // Get gets a simulation deployment record by its GroupID
 // Fails if not found.
-func (r *Repository) Get(groupID string) (*Simulation, error) {
+func (r *repository) Get(groupID string) (*Simulation, error) {
 	var sim Simulation
-	if err := r.Db.Model(&Simulation{}).
-		Where("group_id = ? AND application = ?", groupID, r.Application).
-		First(&sim).Error; err != nil {
+	q := r.Db.Model(&Simulation{}).Where("group_id = ?", groupID)
+
+	if r.Platform != nil {
+		q = q.Where("platform = ?", *r.Platform)
+	}
+
+	if r.Application != nil {
+		q = q.Where("application = ?", *r.Application)
+	}
+	if err := q.First(&sim).Error; err != nil {
 		return nil, err
 	}
 	return &sim, nil
 }
 
 type GetAllPaginatedInput struct {
-	PaginationRequest *ign.PaginationRequest
-	ByStatus *Status
-	InvertStatus bool
-	ByErrorStatus *ErrorStatus
-	InvertErrorStatus bool
-	IncludeChildren bool
-	CanPerformWithRole bool
+	PaginationRequest          *ign.PaginationRequest
+	ByStatus                   *Status
+	InvertStatus               bool
+	ByErrorStatus              *ErrorStatus
+	InvertErrorStatus          bool
+	IncludeChildren            bool
+	CanPerformWithRole         bool
 	QueryForResourceVisibility func(q *gorm.DB, owner *string, user *fuel.User) *gorm.DB
-	User *fuel.User
+	User                       *fuel.User
 }
 
-func (r *Repository) GetAllPaginated(input GetAllPaginatedInput) (*Simulations, *ign.PaginationResult, error)  {
+func (r *repository) GetAllPaginated(input GetAllPaginatedInput) (*Simulations, *ign.PaginationResult, error) {
 	var sims Simulations
-	q := r.Db.Order("created_at desc, id", true).Where("application = ?", r.Application)
+	q := r.Db.Order("created_at desc, id", true).Where("platform = ?", r.Platform)
 
 	if !input.IncludeChildren {
 		// TODO: Replace 2 with multisimChild value.
@@ -141,14 +143,14 @@ func (r *Repository) GetAllPaginated(input GetAllPaginatedInput) (*Simulations, 
 // GetAllByOwner gets a list of simulation deployment records for given application
 // filtered by the given owner. The returned set will only contain simulations whose
 // Status is between the given statuses range.
-func (r *Repository) GetAllByOwner(owner string, statusFrom, statusTo Status) (*Simulations, error) {
+func (r *repository) GetAllByOwner(owner string, statusFrom, statusTo Status) (*Simulations, error) {
 	var sims Simulations
 	if err := r.Db.Model(&Simulation{}).
-		Where("application = ?", r.Application).
+		Where("platform = ?", r.Platform).
 		Where("owner = ?", owner).
 		Where("status BETWEEN ? AND ?", int(statusFrom), int(statusTo)).
 		Find(&sims).Error; err != nil {
-			return nil, err
+		return nil, err
 	}
 	return &sims, nil
 }
@@ -156,10 +158,10 @@ func (r *Repository) GetAllByOwner(owner string, statusFrom, statusTo Status) (*
 // GetChildren returns the child simulation of a given
 // GroupID. The returned set will only contain children simulations whose
 // deploymentStatus is within the given statuses range, and with NO Error status.
-func (r *Repository) GetChildren(groupID string, statusFrom, statusTo Status) (*Simulations, error) {
+func (r *repository) GetChildren(groupID string, statusFrom, statusTo Status) (*Simulations, error) {
 	var sims Simulations
 	if err := r.Db.Model(&Simulation{}).
-		Where("application = ?", r.Application).
+		Where("platform = ?", r.Platform).
 		Where("parent_group_id = ?", groupID).
 		Where("multi_sim = ?", 2). // TODO: Replace 2 with multiSimChild value.
 		Where("error_status IS NULL").
@@ -173,10 +175,10 @@ func (r *Repository) GetChildren(groupID string, statusFrom, statusTo Status) (*
 // GetAllParents returns all the "parent" simulations.
 // The returned set will only contain simulations whose status is between the given statuses range,
 // and with within the validErrors.
-func (r *Repository) GetAllParents(statusFrom, statusTo Status, validErrors []ErrorStatus) (*Simulations, error) {
+func (r *repository) GetAllParents(statusFrom, statusTo Status, validErrors []ErrorStatus) (*Simulations, error) {
 	var sims Simulations
 	if err := r.Db.Model(&Simulation{}).
-		Where("application = ?", r.Application).
+		Where("platform = ?", r.Platform).
 		Where("multi_sim = ?", 1). // TODO: Replace 1 with multiSimParent value.
 		Where("(error_status IS NULL OR error_status IN (?))", validErrors).
 		Where("deployment_status BETWEEN ? AND ?", int(statusFrom), int(statusTo)).

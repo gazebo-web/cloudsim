@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/go-playground/form"
+	"github.com/jinzhu/gorm"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/cloud"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/email"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/handlers"
@@ -21,115 +22,246 @@ import (
 	"gopkg.in/go-playground/validator.v9"
 )
 
-// IPlatform defines the set of methods of a platform.
-type IPlatform interface {
+// Platform defines the set of methods of a platform.
+type Platform interface {
+	Metadata
+	Control
+	Launcher
+	Terminator
+	Components
+	RegisterRoutes() ign.Routes
+	Setup
+	Services() Services
+	Controllers() Controllers
+}
+
+// Metadata groups the methods to represent the Platform metadata.
+type Metadata interface {
 	Name() string
+}
+
+// Control groups the methods to start and stop the platform's execution.
+type Control interface {
 	Start(ctx context.Context) error
 	Stop(ctx context.Context) error
+}
+
+// Launcher groups the methods to request a simulation to be launched.
+type Launcher interface {
 	RequestLaunch(ctx context.Context, groupID string)
+}
+
+// Terminator groups the methods to request a simulation to be terminated.
+type Terminator interface {
 	RequestTermination(ctx context.Context, groupID string)
 }
 
-// Platform represents a set of components to run applications.
-type Platform struct {
-	Server           *ign.Server
-	Logger           ign.Logger
-	Context          context.Context
-	Email            *email.Email
-	Validator        *validator.Validate
-	FormDecoder      *form.Decoder
-	Transport        *transport.Transport
-	Orchestrator     *orchestrator.Kubernetes
-	CloudProvider    *cloud.AmazonWS
-	Permissions      *permissions.Permissions
-	UserService      users.IService
+// Components groups the methods to return the components that are registered in the platform.
+type Components interface {
+	Logger() ign.Logger
+	Context() context.Context
+	Scheduler() scheduler.TaskScheduler
+	Email() email.Email
+	Validator() *validator.Validate
+	FormDecoder() *form.Decoder
+	Transport() *transport.Transport
+	Simulator() simulator.Simulator
+	Database() *gorm.DB
+	Server() *ign.Server
+	Permissions() *permissions.Permissions
+	AWS() cloud.AmazonWS
+	K8S() orchestrator.Kubernetes
+}
+
+// platform represents a set of components to run applications.
+type platform struct {
+	server           *ign.Server
+	logger           ign.Logger
+	context          context.Context
+	email            email.Email
+	validator        *validator.Validate
+	formDecoder      *form.Decoder
+	transport        *transport.Transport
+	k8s              orchestrator.Kubernetes
+	aws              cloud.AmazonWS
+	permissions      *permissions.Permissions
+	services         *services
 	Config           Config
-	Simulator        simulator.ISimulator
+	simulator        simulator.Simulator
 	PoolFactory      pool.Factory
-	Scheduler        *scheduler.Scheduler
-	LaunchQueue      queue.IQueue
+	scheduler        scheduler.TaskScheduler
+	LaunchQueue      queue.Queue
 	TerminationQueue chan workers.TerminateInput
-	LaunchPool       pool.IPool
-	TerminationPool  pool.IPool
-	Controllers      controllers
+	LaunchPool       pool.Pool
+	TerminationPool  pool.Pool
+	controllers      *controllers
+}
+
+func (p *platform) Services() Services {
+	return p.services
+}
+
+func (p *platform) Controllers() Controllers {
+	return p.controllers
+}
+
+func (p *platform) Database() *gorm.DB {
+	return p.server.Db
+}
+
+func (p *platform) Server() *ign.Server {
+	return p.server
+}
+
+func (p *platform) Validator() *validator.Validate {
+	return p.validator
+}
+
+func (p *platform) FormDecoder() *form.Decoder {
+	return p.formDecoder
+}
+
+func (p *platform) Transport() *transport.Transport {
+	return p.transport
+}
+
+func (p *platform) Simulator() simulator.Simulator {
+	return p.simulator
+}
+
+func (p *platform) Scheduler() scheduler.TaskScheduler {
+	return p.scheduler
+}
+
+func (p *platform) Logger() ign.Logger {
+	return p.logger
+}
+
+func (p *platform) Context() context.Context {
+	return p.context
+}
+
+func (p *platform) Email() email.Email {
+	return p.email
+}
+
+func (p *platform) K8S() orchestrator.Kubernetes {
+	return p.k8s
+}
+
+func (p *platform) Permissions() *permissions.Permissions {
+	return p.permissions
+}
+
+func (p *platform) AWS() cloud.AmazonWS {
+	return p.aws
+}
+
+// Controllers group the methods to return the platform controllers
+type Controllers interface {
+	Queue() queue.Controller
 }
 
 // TODO: Add initializer for queue controller.
 type controllers struct {
-	Queue queue.IController
+	queue queue.Controller
+}
+
+// Queue returns the queue controller
+func (c *controllers) Queue() queue.Controller {
+	return c.queue
+}
+
+// Services groups the methods to return the platform services.
+type Services interface {
+	User() users.Service
+}
+
+// services is the Services interface implementation.
+type services struct {
+	user users.Service
+}
+
+// User returns the User service
+func (s *services) User() users.Service {
+	return s.user
 }
 
 // Name returns the platform's name
-func (p *Platform) Name() string {
+func (p *platform) Name() string {
 	return "cloudsim"
 }
 
 // NewSimulator returns a new platform from the given configuration.
-func New(config Config) IPlatform {
-	p := Platform{}
+func New(config Config) Platform {
+	p := platform{}
 	p.Config = config
+	p.services = new(services)
 
 	p.setupLogger()
-	p.Logger.Debug("[INIT] Logger initialized.")
+	p.Logger().Debug("[INIT] Logger initialized.")
 
 	// TODO: Decide where the score generation should go
 
 	p.setupContext()
-	p.Logger.Debug("[INIT] Context initialized.")
+	p.Logger().Debug("[INIT] Context initialized.")
 
 	p.setupServer()
-	p.Logger.Debug(fmt.Sprintf("[INIT] Server initialized using HTTP port [%s] and SSL port [%s].", p.Server.HTTPPort, p.Server.SSLport))
-	p.Logger.Debug(fmt.Sprintf("[INIT] Database [%s] initialized", p.Server.DbConfig.Name))
+	p.Logger().Debug(fmt.Sprintf("[INIT] Server initialized using HTTP port [%s] and SSL port [%s].", p.Server().HTTPPort, p.Server().SSLport))
+	p.Logger().Debug(fmt.Sprintf("[INIT] Database [%s] initialized", p.Server().DbConfig.Name))
 
 	p.setupRouter()
-	p.Logger.Debug("[INIT] Router initialized.")
+	p.Logger().Debug("[INIT] Router initialized.")
 
 	// TODO: Decide where should the custom validators should go
 	p.setupValidator()
-	p.Logger.Debug("[INIT] Validators initialized.")
+	p.Logger().Debug("[INIT] Validators initialized.")
 
 	p.setupFormDecoder()
-	p.Logger.Debug("[INIT] Form decoder initialized.")
+	p.Logger().Debug("[INIT] Form decoder initialized.")
 
 	p.setupPermissions()
-	p.Logger.Debug("[INIT] Permissions initialized.")
+	p.Logger().Debug("[INIT] Permissions initialized.")
 
 	p.setupUserService()
-	p.Logger.Debug("[INIT] User service initialized")
+	p.Logger().Debug("[INIT] User service initialized")
 
 	p.setupDatabase()
-	p.Logger.Debug("[INIT] Database configured: Migration, default data and custom indexes.")
+	p.Logger().Debug("[INIT] Database configured: Migration, default data and custom indexes.")
 
 	p.setupCloudProvider()
-	p.Logger.Debug("[INIT] Cloud provider initialized: AWS.")
+	p.Logger().Debug("[INIT] Cloud provider initialized: AWS.")
 
 	p.setupOrchestrator()
-	p.Logger.Debug("[INIT] Orchestrator initialized: Kubernetes.")
+	p.Logger().Debug("[INIT] k8s initialized: k8s.")
 
 	p.setupSimulator()
-	p.Logger.Debug("[INIT] Simulator initialized. Using: AWS and Kubernetes.")
+	p.Logger().Debug("[INIT] simulator initialized. Using: AWS and k8s.")
 
 	p.setupScheduler()
-	p.Logger.Debug("[INIT] Scheduler initialized.")
+	p.Logger().Debug("[INIT] scheduler initialized.")
 
 	p.setupQueues()
-	p.Logger.Debug("[INIT] RequestLaunch and termination queues have been initialized.")
+	p.Logger().Debug("[INIT] RequestLaunch and termination queues have been initialized.")
 
 	p.setupPoolFactory()
 	if _, err := p.setupWorkers(); err != nil {
-		p.Logger.Critical("[INIT|CRITICAL] Could not initialize workers.")
+		p.Logger().Critical("[INIT|CRITICAL] Could not initialize workers.")
 	}
-	p.Logger.Debug("[INIT] RequestLaunch and termination workers have been initialized.")
+	p.Logger().Debug("[INIT] RequestLaunch and termination workers have been initialized.")
 
 	if _, err := p.setupTransport(); err != nil {
-		p.Logger.Critical("[INIT|CRITICAL] Could not initialize transport.")
+		p.Logger().Critical("[INIT|CRITICAL] Could not initialize transport.")
 	}
-	p.Logger.Debug("[INIT] Transport initialized. Using: IGN Transport.")
+	p.Logger().Debug("[INIT] transport initialized. Using: IGN transport.")
+
+	p.setupControllers()
+
 	return &p
 }
 
 // Launch starts the platform.
-func (p *Platform) Start(ctx context.Context) error {
+func (p *platform) Start(ctx context.Context) error {
 	go func() {
 		for {
 			var element interface{}
@@ -143,36 +275,36 @@ func (p *Platform) Start(ctx context.Context) error {
 				continue
 			}
 
-			p.Logger.Info(fmt.Sprintf("[QUEUE|LAUNCH] About to process launch action. Group ID: [%s]", dto.GroupID))
+			p.Logger().Info(fmt.Sprintf("[QUEUE|LAUNCH] About to process launch action. Group ID: [%s]", dto.GroupID))
 			if err := p.LaunchPool.Serve(dto); err != nil {
-				p.Logger.Error(fmt.Sprintf("[QUEUE|LAUNCH] Error while serving launch action. Group ID: [%s]. Error: [%v]", dto.GroupID, err))
+				p.Logger().Error(fmt.Sprintf("[QUEUE|LAUNCH] Error while serving launch action. Group ID: [%s]. Error: [%v]", dto.GroupID, err))
 				continue
 			}
-			p.Logger.Info(fmt.Sprintf("[QUEUE|LAUNCH] The launch action was successfully served to the worker pool. Group ID: [%s]", dto.GroupID))
+			p.Logger().Info(fmt.Sprintf("[QUEUE|LAUNCH] The launch action was successfully served to the worker pool. Group ID: [%s]", dto.GroupID))
 		}
 	}()
 
 	go func() {
 		for dto := range p.TerminationQueue {
-			p.Logger.Info(fmt.Sprintf("[QUEUE|TERMINATE] About to process terminate action. Group ID: [%s]", dto.GroupID))
+			p.Logger().Info(fmt.Sprintf("[QUEUE|TERMINATE] About to process terminate action. Group ID: [%s]", dto.GroupID))
 			if err := p.TerminationPool.Serve(dto); err != nil {
-				p.Logger.Error(fmt.Sprintf("[QUEUE|TERMINATE] Error while serving terminate action. Group ID: [%s]. Error: [%v]", dto.GroupID, err))
+				p.Logger().Error(fmt.Sprintf("[QUEUE|TERMINATE] Error while serving terminate action. Group ID: [%s]. Error: [%v]", dto.GroupID, err))
 				continue
 			}
-			p.Logger.Info(fmt.Sprintf("[QUEUE|TERMINATE] The terminate action was successfully served to the worker pool. Group ID: [%s]", dto.GroupID))
+			p.Logger().Info(fmt.Sprintf("[QUEUE|TERMINATE] The terminate action was successfully served to the worker pool. Group ID: [%s]", dto.GroupID))
 		}
 	}()
 	return nil
 }
 
 // Stop stops the platform.
-func (p *Platform) Stop(ctx context.Context) error {
+func (p *platform) Stop(ctx context.Context) error {
 	close(p.TerminationQueue)
 	return nil
 }
 
 // RequestLaunch enqueues a launch action to launch a simulation from the given Group ID.
-func (p *Platform) RequestLaunch(ctx context.Context, groupID string) {
+func (p *platform) RequestLaunch(ctx context.Context, groupID string) {
 	job := workers.LaunchInput{
 		GroupID: groupID,
 		Action:  nil,
@@ -181,7 +313,7 @@ func (p *Platform) RequestLaunch(ctx context.Context, groupID string) {
 }
 
 // RequestTermination enqueues a termination action to terminate a simulation from the given Group ID.
-func (p *Platform) RequestTermination(ctx context.Context, groupID string) {
+func (p *platform) RequestTermination(ctx context.Context, groupID string) {
 	job := workers.TerminateInput{
 		GroupID: groupID,
 		Action:  nil,
@@ -189,11 +321,13 @@ func (p *Platform) RequestTermination(ctx context.Context, groupID string) {
 	p.TerminationQueue <- job
 }
 
-func (p *Platform) registerRoutes() {
-	router.ConfigureRoutes(p.Server, "2.0", "", p.getLaunchQueueRoutes())
+// registerRoutes register the routes provided by the platform into the web server.
+func (p *platform) registerRoutes() {
+	router.ConfigureRoutes(p.Server(), "2.0", "", p.getLaunchQueueRoutes())
 }
 
-func (p *Platform) getLaunchQueueRoutes() ign.Routes {
+// getLaunchQueueRoutes returns the queue routes.
+func (p *platform) getLaunchQueueRoutes() ign.Routes {
 	return ign.Routes{
 		ign.Route{
 			Name:        "Get all elements from queue",
@@ -208,7 +342,7 @@ func (p *Platform) getLaunchQueueRoutes() ign.Routes {
 					Handlers: ign.FormatHandlers{
 						ign.FormatHandler{
 							Extension: "",
-							Handler:   ign.JSONResult(handlers.WithUser(p.UserService, p.Controllers.Queue.GetAll)),
+							Handler:   ign.JSONResult(handlers.WithUser(p.Services().User(), p.Controllers().Queue().GetAll)),
 						},
 					},
 				},
@@ -228,7 +362,7 @@ func (p *Platform) getLaunchQueueRoutes() ign.Routes {
 					Handlers: ign.FormatHandlers{
 						ign.FormatHandler{
 							Extension: "",
-							Handler:   ign.JSONResult(handlers.WithUser(p.UserService, p.Controllers.Queue.Count)),
+							Handler:   ign.JSONResult(handlers.WithUser(p.Services().User(), p.Controllers().Queue().Count)),
 						},
 					},
 				},
@@ -248,7 +382,7 @@ func (p *Platform) getLaunchQueueRoutes() ign.Routes {
 					Handlers: ign.FormatHandlers{
 						ign.FormatHandler{
 							Extension: "",
-							Handler:   ign.JSONResult(handlers.WithUser(p.UserService, p.Controllers.Queue.Swap)),
+							Handler:   ign.JSONResult(handlers.WithUser(p.Services().User(), p.Controllers().Queue().Swap)),
 						},
 					},
 				},
@@ -268,7 +402,7 @@ func (p *Platform) getLaunchQueueRoutes() ign.Routes {
 					Handlers: ign.FormatHandlers{
 						ign.FormatHandler{
 							Extension: "",
-							Handler:   ign.JSONResult(handlers.WithUser(p.UserService, p.Controllers.Queue.MoveToFront)),
+							Handler:   ign.JSONResult(handlers.WithUser(p.Services().User(), p.Controllers().Queue().MoveToFront)),
 						},
 					},
 				},
@@ -288,7 +422,7 @@ func (p *Platform) getLaunchQueueRoutes() ign.Routes {
 					Handlers: ign.FormatHandlers{
 						ign.FormatHandler{
 							Extension: "",
-							Handler:   ign.JSONResult(handlers.WithUser(p.UserService, p.Controllers.Queue.MoveToBack)),
+							Handler:   ign.JSONResult(handlers.WithUser(p.Services().User(), p.Controllers().Queue().MoveToBack)),
 						},
 					},
 				},
@@ -308,7 +442,7 @@ func (p *Platform) getLaunchQueueRoutes() ign.Routes {
 					Handlers: ign.FormatHandlers{
 						ign.FormatHandler{
 							Extension: "",
-							Handler:   ign.JSONResult(handlers.WithUser(p.UserService, p.Controllers.Queue.Remove)),
+							Handler:   ign.JSONResult(handlers.WithUser(p.Services().User(), p.Controllers().Queue().Remove)),
 						},
 					},
 				},

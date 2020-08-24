@@ -20,9 +20,9 @@ type conf struct {
 	sysAdmin              string
 }
 
-// IService is used by the cloudsim server to remotely get Users and their membership
+// Service is used by the cloudsim server to remotely get Users and their membership
 // to Organizations.
-type IService interface {
+type Service interface {
 	// UserFromJWT returns the User associated to the http request's JWT token.
 	// This function can return ErrorAuthJWTInvalid if the token cannot be
 	// read, or ErrorAuthNoUser no user with such identity exists in the db.
@@ -62,8 +62,8 @@ type IService interface {
 }
 
 // TODO: Implement repository for users.
-// Service is the default implementation of IService interface.
-type Service struct {
+// service is the default implementation of Service interface.
+type service struct {
 	// The IUserAccessor config. Read from environment variables
 	cfg conf
 	// Global database interface to Users db
@@ -76,7 +76,7 @@ type Service struct {
 }
 
 // NewUserAccessor initializes a new IUserAccessor.
-func NewService(resourcePermissions *per.Permissions, sysAdmin string) (IService, error) {
+func NewService(resourcePermissions *per.Permissions, sysAdmin string) (Service, error) {
 	dbConfig, err := newDbConfig()
 	if err != nil {
 		return nil, err
@@ -99,19 +99,19 @@ func NewService(resourcePermissions *per.Permissions, sysAdmin string) (IService
 	p := &per.Permissions{}
 	p.InitWithEnforcerAndAdapter(enforcer, adapter, sysAdmin)
 
-	var ua IService
-	ua = &Service{
+	var ua Service
+	ua = &service{
 		Db:                  usersDb,
 		resourcePermissions: resourcePermissions,
 		cfg:                 cfg,
-		syncedEnforcer: enforcer,
-		p: p,
+		syncedEnforcer:      enforcer,
+		p:                   p,
 	}
 	return ua, nil
 }
 
 // StartAutoLoadPolicy starts the auto load remote policy
-func (u *Service) StartAutoLoadPolicy() {
+func (u *service) StartAutoLoadPolicy() {
 	// Auto load remote policy
 	u.syncedEnforcer.StartAutoLoadPolicy(time.Duration(u.cfg.AutoLoadPolicySeconds) * time.Second)
 }
@@ -119,7 +119,7 @@ func (u *Service) StartAutoLoadPolicy() {
 // UserFromJWT returns the User associated to the http request's JWT token.
 // This function can return ErrorAuthJWTInvalid if the token cannot be
 // read, or ErrorAuthNoUser no user with such identity exists in the db.
-func (u *Service) UserFromJWT(r *http.Request) (*users.User, bool, *ign.ErrMsg) {
+func (u *service) UserFromJWT(r *http.Request) (*users.User, bool, *ign.ErrMsg) {
 	return getUserFromToken(u.Db, r)
 }
 
@@ -160,7 +160,7 @@ func getUserFromToken(tx *gorm.DB, r *http.Request) (*users.User, bool, *ign.Err
 // permission in the organization. If the 'owner' is a user, it verifies that the
 // 'user' arg is the same as the owner.
 // Dev note: this is an alternative implementation of ign-fuelserver UserService's VerifyOwner.
-func (u *Service) VerifyOwner(owner, user string, p per.Action) (bool, *ign.ErrMsg) {
+func (u *service) VerifyOwner(owner, user string, p per.Action) (bool, *ign.ErrMsg) {
 	// check if owner is an organization
 	org, em := users.ByOrganizationName(u.Db, owner, false)
 	if org != nil && em == nil {
@@ -186,7 +186,7 @@ func (u *Service) VerifyOwner(owner, user string, p per.Action) (bool, *ign.ErrM
 // the owner.
 // As a third alternative, if 'owner' is nil then it checks if the 'user' is part
 // of the System Admins.
-func (u *Service) CanPerformWithRole(owner *string, user string, role per.Role) (bool, *ign.ErrMsg) {
+func (u *service) CanPerformWithRole(owner *string, user string, role per.Role) (bool, *ign.ErrMsg) {
 	if owner == nil {
 		ok := u.p.IsSystemAdmin(user)
 		if !ok {
@@ -215,7 +215,7 @@ func (u *Service) CanPerformWithRole(owner *string, user string, role per.Role) 
 // QueryForResourceVisibility checks the relationship between requestor (user)
 // and the resource owner to formulate a database query to determine whether a
 // resource is visible to the user
-func (u *Service) QueryForResourceVisibility(q *gorm.DB, owner *string, user *users.User) *gorm.DB {
+func (u *service) QueryForResourceVisibility(q *gorm.DB, owner *string, user *users.User) *gorm.DB {
 	// Check resource visibility
 	publicOnly := false
 	// if owner is specified
@@ -264,7 +264,7 @@ func (u *Service) QueryForResourceVisibility(q *gorm.DB, owner *string, user *us
 
 // IsAuthorizedForResource checks if user has the permission to perform an action on a
 // resource.
-func (u *Service) IsAuthorizedForResource(user, resource string, action per.Action) (bool, *ign.ErrMsg) {
+func (u *service) IsAuthorizedForResource(user, resource string, action per.Action) (bool, *ign.ErrMsg) {
 	ok, _ := u.resourcePermissions.IsAuthorized(user, resource, action)
 	if ok {
 		return true, nil
@@ -283,13 +283,13 @@ func (u *Service) IsAuthorizedForResource(user, resource string, action per.Acti
 }
 
 // AddResourcePermission adds a user (or group) permission on a resource
-func (u *Service) AddResourcePermission(user, resource string, action per.Action) (bool, *ign.ErrMsg) {
+func (u *service) AddResourcePermission(user, resource string, action per.Action) (bool, *ign.ErrMsg) {
 	return u.resourcePermissions.AddPermission(user, resource, action)
 }
 
 // AddScore creates a new score entry for an owner in a competition circuit
 // TODO HACK This is accessing Fuel's database directly
-func (u *Service) AddScore(groupID *string, competition *string, circuit *string, owner *string,
+func (u *service) AddScore(groupID *string, competition *string, circuit *string, owner *string,
 	score *float64, sources *string) *ign.ErrMsg {
 	entry := subt.CompetitionScore{
 		GroupID:     groupID,
@@ -307,12 +307,12 @@ func (u *Service) AddScore(groupID *string, competition *string, circuit *string
 }
 
 // IsSystemAdmin returns a bool indicating if the given user is a system admin.
-func (u *Service) IsSystemAdmin(user string) bool {
+func (u *service) IsSystemAdmin(user string) bool {
 	return u.resourcePermissions.IsSystemAdmin(user)
 }
 
 // GetUserFromUsername gets the user database entry from the username
-func (u *Service) GetUserFromUsername(username string) (*users.User, *ign.ErrMsg) {
+func (u *service) GetUserFromUsername(username string) (*users.User, *ign.ErrMsg) {
 	user := &users.User{}
 	if err := u.Db.
 		Model(user).
@@ -326,7 +326,7 @@ func (u *Service) GetUserFromUsername(username string) (*users.User, *ign.ErrMsg
 }
 
 // GetOrganization gets a user's organization database entry from the username
-func (u *Service) GetOrganization(name string) (*users.Organization, *ign.ErrMsg) {
+func (u *service) GetOrganization(name string) (*users.Organization, *ign.ErrMsg) {
 	org := &users.Organization{}
 	if err := u.Db.
 		Model(org).

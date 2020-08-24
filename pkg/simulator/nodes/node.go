@@ -14,14 +14,14 @@ const (
 // Node represents a machine that will be used to run a simulation
 type Node struct {
 	gorm.Model
-	Name        string `json:"name"`
-	GroupID     string `json:"group_id"`
-	Platform    string `json:"platform"`
-	Application string `json:"application"`
-	PrivateKey  string `json:"private_key"`
-	IAM         string `json:"iam"`
-	Region      string `json:"region"`
-	Zone        string `json:"zone"`
+	Name           string   `json:"name"`
+	GroupID        string   `json:"group_id"`
+	Platform       string   `json:"platform"`
+	Application    string   `json:"application"`
+	PrivateKey     string   `json:"private_key"`
+	IAM            string   `json:"iam"`
+	Region         string   `json:"region"`
+	Zone           string   `json:"zone"`
 	InstanceID     string   `json:"instance_id" gorm:"not null;unique"`
 	Type           string   `json:"type"`
 	Subnet         string   `json:"subnet"`

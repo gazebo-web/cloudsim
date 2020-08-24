@@ -7,7 +7,7 @@ import (
 
 func TestNew(t *testing.T) {
 	aws := New()
-	assert.NotNil(t, aws.session)
-	assert.NotNil(t, aws.EC2)
-	assert.NotNil(t, aws.S3)
+	assert.NotNil(t, aws.Session())
+	assert.NotNil(t, aws.EC2())
+	assert.NotNil(t, aws.S3())
 }

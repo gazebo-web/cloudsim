@@ -13,20 +13,20 @@ import (
 	"reflect"
 )
 
-type IAmazonS3 interface {
+type AmazonS3 interface {
 	GetAddress(bucket string, key string) string
 	Upload(bucket string, key string, file []byte) (*s3.PutObjectOutput, error)
 	GetLogKey(groupID string, owner string) string
 }
 
-// AmazonS3 wraps the AWS S3 API.
-type AmazonS3 struct {
+// amazonS3 wraps the AWS S3 API.
+type amazonS3 struct {
 	API s3iface.S3API
 }
 
-// NewAmazonS3 returns a new AmazonS3 instance by the given AWS session and configuration.
-func NewAmazonS3(p client.ConfigProvider, cfgs ...*aws.Config) IAmazonS3 {
-	var instance AmazonS3
+// NewAmazonS3 returns a new amazonS3 instance by the given AWS session and configuration.
+func NewAmazonS3(p client.ConfigProvider, cfgs ...*aws.Config) AmazonS3 {
+	var instance amazonS3
 	if !reflect.ValueOf(p).IsNil() {
 		instance.API = s3.New(p, cfgs...)
 	}
@@ -34,12 +34,13 @@ func NewAmazonS3(p client.ConfigProvider, cfgs ...*aws.Config) IAmazonS3 {
 }
 
 // GetAddress returns a S3 address from the given bucket and key.
-func (s *AmazonS3) GetAddress(bucket string, key string) string {
+func (s *amazonS3) GetAddress(bucket string, key string) string {
 	return fmt.Sprintf("s3://%s", filepath.Join(bucket, key))
 }
+
 // Upload receives a bucket, a key and a file, and tries to upload that object to S3.
 // Returns the response from the S3 API PutObject method.
-func (s *AmazonS3) Upload(bucket string, key string, file []byte) (*s3.PutObjectOutput, error) {
+func (s *amazonS3) Upload(bucket string, key string, file []byte) (*s3.PutObjectOutput, error) {
 	return s.API.PutObject(&s3.PutObjectInput{
 		Bucket:               &bucket,
 		Key:                  &key,
@@ -53,7 +54,7 @@ func (s *AmazonS3) Upload(bucket string, key string, file []byte) (*s3.PutObject
 }
 
 // GetLogKey returns the path to the gz logs by the given GroupID and Owner.
-func (s *AmazonS3) GetLogKey(groupID string, owner string) string {
+func (s *amazonS3) GetLogKey(groupID string, owner string) string {
 	escaped := url.PathEscape(owner)
 	return fmt.Sprintf("/gz-logs/%s/%s/", escaped, groupID)
 }

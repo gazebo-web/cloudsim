@@ -6,7 +6,7 @@ import (
 )
 
 type IService interface {
-	GetAllConfigs() (*map[string]RobotConfig, *ign.ErrMsg)
+	GetAllConfigs() (*[]RobotConfig, *ign.ErrMsg)
 	GetConfigByType(robotType string) (*RobotConfig, error)
 	IsValidRobotType(fl validator.FieldLevel) bool
 }
@@ -21,7 +21,7 @@ func NewService() IService {
 	return s
 }
 
-func (s *Service) GetAllConfigs() (*map[string]RobotConfig, *ign.ErrMsg) {
+func (s *Service) GetAllConfigs() (*[]RobotConfig, *ign.ErrMsg) {
 	robotCfgs, err := s.repository.GetAllConfigs()
 	if err != nil {
 		// TODO: Change error type

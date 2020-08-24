@@ -13,14 +13,14 @@ import (
 
 // NodeWaitForReady function waits (blocks) until the identified nodes are ready, or until there
 // is a timeout or error.
-func (kc Kubernetes) NodeWaitForReady(ctx context.Context, namespace string, groupIDLabel string, timeout time.Duration) error {
+func (kc *k8s) NodeWaitForReady(ctx context.Context, namespace string, groupIDLabel string, timeout time.Duration) error {
 	opts := metav1.ListOptions{LabelSelector: groupIDLabel}
 	return kc.NodeWaitToMatchCondition(ctx, namespace, opts, timeout)
 }
 
 // NodeWaitToMatchCondition finds match Nodes based on the input ListOptions.
 // Waits and checks if all matched nodes are in the given PodCondition
-func (kc Kubernetes) NodeWaitToMatchCondition(ctx context.Context, namespace string, opts metav1.ListOptions, timeout time.Duration) error {
+func (kc *k8s) NodeWaitToMatchCondition(ctx context.Context, namespace string, opts metav1.ListOptions, timeout time.Duration) error {
 	logger.Logger(ctx).Info(fmt.Sprintf("Waiting up to %v for match nodes to be ready", timeout))
 
 	maxAllowedNotReadyNodes := 0

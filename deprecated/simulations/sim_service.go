@@ -25,7 +25,7 @@ import (
 )
 
 /*
-	The Simulations Service is in charge of launching and terminating Gazebo simulations. And,
+	The Simulations service is in charge of launching and terminating Gazebo simulations. And,
 	in case of an error, it is responsible of rolling back the failed operation.
 
 	To do this and handle some concurrency without exhausting the host, it has
@@ -36,7 +36,7 @@ import (
 	In addition, the SimService has a background go routine that checks for expired
 	simulations and send those to automatic termination.
 
-	The Simulations Service interacts with a given NodeManager to start and terminate
+	The Simulations service interacts with a given NodeManager to start and terminate
 	Nodes in the Kubernetes cluster.
 	Some examples of NodeManager implementations are EC2Client and LocalNodes.
 
@@ -117,7 +117,7 @@ const (
 	launcherRelaunchNeeded = "relaunch"
 )
 
-// Service is the main struct exported by this Simulations service.
+// service is the main struct exported by this Simulations service.
 type Service struct {
 	// Whether this service will automatically requeue instances that failed with
 	// ErrorLaunchingCloudInstanceNotEnoughResources error. True by default.
@@ -155,13 +155,13 @@ type Service struct {
 	multisimStatusUpdater     *time.Ticker
 	multisimStatusUpdaterDone chan bool
 	applications              map[string]ApplicationType
-	// The Service to check for Users/Orgs permissions
+	// The service to check for Users/Orgs permissions
 	userAccessor             useracc.UserAccessor
 	poolNotificationCallback PoolNotificationCallback
 	scheduler                *scheduler.Scheduler
 }
 
-// SimServImpl holds the instance of the Simulations Service. It is set at initialization.
+// SimServImpl holds the instance of the Simulations service. It is set at initialization.
 var SimServImpl SimService
 
 type simServConfig struct {
@@ -393,7 +393,7 @@ func (s *Service) Start(ctx context.Context) error {
 	return nil
 }
 
-// Stop stops this Simulations Service
+// Stop stops this Simulations service
 func (s *Service) Stop(ctx context.Context) error {
 	s.StopExpiredSimulationsCleaner()
 	s.StopMultiSimStatusUpdater()
@@ -404,7 +404,7 @@ func (s *Service) Stop(ctx context.Context) error {
 
 // RegisterApplication registers a new application type.
 func (s *Service) RegisterApplication(ctx context.Context, app ApplicationType) {
-	logger(ctx).Info(fmt.Sprintf("Sim Service - Registered new Application [%s]", app.getApplicationName()))
+	logger(ctx).Info(fmt.Sprintf("Sim service - Registered new Application [%s]", app.getApplicationName()))
 	s.applications[app.getApplicationName()] = app
 }
 
@@ -892,7 +892,7 @@ func (s *Service) registerError(ctx context.Context, tx *gorm.DB, simDep *Simula
 
 // ///////////////////////////////////////////////////////////////////////
 // ///////////////////////////////////////////////////////////////////////
-// 	Service API
+// 	service API
 // ///////////////////////////////////////////////////////////////////////
 // ///////////////////////////////////////////////////////////////////////
 

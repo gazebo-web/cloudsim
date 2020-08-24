@@ -1,11 +1,11 @@
 package users
 
 import (
+	"context"
+	"github.com/jinzhu/gorm"
 	fuelusers "gitlab.com/ignitionrobotics/web/fuelserver/bundles/users"
 	per "gitlab.com/ignitionrobotics/web/fuelserver/permissions"
 	"gitlab.com/ignitionrobotics/web/ign-go"
-	"context"
-	"github.com/jinzhu/gorm"
 	"log"
 	"strings"
 )
@@ -40,7 +40,7 @@ import (
 
 // TODO these methods should be part of ign-fuelserver to avoid duplicating this initialization code.
 
-// UserAccessorDataMock allows us to configure the Service with mock data used in tests.
+// UserAccessorDataMock allows us to configure the service with mock data used in tests.
 type UserAccessorDataMock struct {
 	ua              *UserAccessorImpl
 	sysadminIdentiy string

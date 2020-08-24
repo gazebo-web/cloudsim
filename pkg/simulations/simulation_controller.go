@@ -12,8 +12,8 @@ import (
 	"strconv"
 )
 
-// IController represents a group of methods to expose in the API Rest.
-type IController interface {
+// Controller represents a group of methods to expose in the API Rest.
+type Controller interface {
 	Start(user *fuel.User, w http.ResponseWriter, r *http.Request) (interface{}, *ign.ErrMsg)
 	LaunchHeld(user *fuel.User, w http.ResponseWriter, r *http.Request) (interface{}, *ign.ErrMsg)
 	Restart(user *fuel.User, w http.ResponseWriter, r *http.Request) (interface{}, *ign.ErrMsg)
@@ -24,42 +24,41 @@ type IController interface {
 	GetLiveLogs(user *fuel.User, w http.ResponseWriter, r *http.Request) (interface{}, *ign.ErrMsg)
 }
 
-// Controller is an IController implementation.
-type Controller struct {
+// controller is an Controller implementation. This implementation serves as an example for the different applications.
+type controller struct {
 	services    services
 	formDecoder *form.Decoder
 	validator   *validator.Validate
 }
 
-// NewControllerInput is the input needed to create a new IController implementation.
+// NewControllerInput is the input needed to create a new Controller implementation.
 type NewControllerInput struct {
-	SimulationService IService
-	UserService       users.IService
-	FormDecoder       *form.Decoder
-	Validator         *validator.Validate
+	Services    services
+	FormDecoder *form.Decoder
+	Validator   *validator.Validate
 }
 
-// NewController receives a NewControllerInput to initialize a new IController implementation.
-func NewController(input NewControllerInput) IController {
-	var c IController
+// NewController receives a NewControllerInput to initialize a new Controller implementation.
+func NewController(input NewControllerInput) Controller {
+	var c Controller
 
-	if input.SimulationService == nil {
-		panic("SimulationService should not be nil")
+	if input.Services.Simulation == nil {
+		panic("Simulation Service should not be nil")
 	}
-	if input.UserService == nil {
+	if input.Services.User == nil {
 		panic("UserService should not be nil")
 	}
 	if input.FormDecoder == nil {
-		panic("FormDecoder should not be nil")
+		panic("formDecoder should not be nil")
 	}
 	if input.Validator == nil {
-		panic("Validator should not be nil")
+		panic("validator should not be nil")
 	}
 
-	c = &Controller{
+	c = &controller{
 		services: services{
-			Simulation: input.SimulationService,
-			User:       input.UserService,
+			Simulation: input.Services.Simulation,
+			User:       input.Services.User,
 		},
 		formDecoder: input.FormDecoder,
 		validator:   input.Validator,
@@ -67,14 +66,14 @@ func NewController(input NewControllerInput) IController {
 	return c
 }
 
-// services represents a set of services used by the Controller.
+// services represents a set of services used by the controller.
 type services struct {
-	Simulation IService
-	User       users.IService
+	Simulation Service
+	User       users.Service
 }
 
 // Start is the handler to create a new simulation.
-func (c *Controller) Start(user *fuel.User, w http.ResponseWriter, r *http.Request) (interface{}, *ign.ErrMsg) {
+func (c *controller) Start(user *fuel.User, w http.ResponseWriter, r *http.Request) (interface{}, *ign.ErrMsg) {
 	if err := r.ParseMultipartForm(0); err != nil {
 		return nil, ign.NewErrorMessageWithBase(ign.ErrorForm, err)
 	}
@@ -94,7 +93,7 @@ func (c *Controller) Start(user *fuel.User, w http.ResponseWriter, r *http.Reque
 }
 
 // LaunchHeld is the handler to launch a given held simulation.
-func (c *Controller) LaunchHeld(user *fuel.User, w http.ResponseWriter, r *http.Request) (interface{}, *ign.ErrMsg) {
+func (c *controller) LaunchHeld(user *fuel.User, w http.ResponseWriter, r *http.Request) (interface{}, *ign.ErrMsg) {
 	groupID, ok := mux.Vars(r)["group"]
 	if !ok {
 		return nil, ign.NewErrorMessage(ign.ErrorIDNotInRequest)
@@ -103,7 +102,7 @@ func (c *Controller) LaunchHeld(user *fuel.User, w http.ResponseWriter, r *http.
 }
 
 // Restart is the handler to restart a given simulation.
-func (c *Controller) Restart(user *fuel.User, w http.ResponseWriter, r *http.Request) (interface{}, *ign.ErrMsg) {
+func (c *controller) Restart(user *fuel.User, w http.ResponseWriter, r *http.Request) (interface{}, *ign.ErrMsg) {
 	groupID, ok := mux.Vars(r)["group"]
 	if !ok {
 		return nil, ign.NewErrorMessage(ign.ErrorIDNotInRequest)
@@ -112,7 +111,7 @@ func (c *Controller) Restart(user *fuel.User, w http.ResponseWriter, r *http.Req
 }
 
 // Shutdown is the handler to stop a given simulation.
-func (c *Controller) Shutdown(user *fuel.User, w http.ResponseWriter, r *http.Request) (interface{}, *ign.ErrMsg) {
+func (c *controller) Shutdown(user *fuel.User, w http.ResponseWriter, r *http.Request) (interface{}, *ign.ErrMsg) {
 	groupID, ok := mux.Vars(r)["group"]
 	if !ok {
 		return nil, ign.NewErrorMessage(ign.ErrorIDNotInRequest)
@@ -120,7 +119,7 @@ func (c *Controller) Shutdown(user *fuel.User, w http.ResponseWriter, r *http.Re
 	return c.services.Simulation.Shutdown(r.Context(), groupID, user)
 }
 
-func (c *Controller) GetAll(user *fuel.User, w http.ResponseWriter, r *http.Request) (interface{}, *ign.ErrMsg) {
+func (c *controller) GetAll(user *fuel.User, w http.ResponseWriter, r *http.Request) (interface{}, *ign.ErrMsg) {
 	// Prepare pagination
 	pr, em := ign.NewPaginationRequest(r)
 	if em != nil {
@@ -184,15 +183,20 @@ func (c *Controller) GetAll(user *fuel.User, w http.ResponseWriter, r *http.Requ
 	return sims, nil
 }
 
-func (c *Controller) Get(user *fuel.User, w http.ResponseWriter, r *http.Request) (interface{}, *ign.ErrMsg) {
-	panic("Not implemented")
+func (c *controller) Get(user *fuel.User, w http.ResponseWriter, r *http.Request) (interface{}, *ign.ErrMsg) {
+	groupID, ok := mux.Vars(r)["group"]
+	if !ok {
+		return nil, ign.NewErrorMessage(ign.ErrorIDNotInRequest)
+	}
+
+	return c.services.Simulation.Get(groupID, user)
 }
 
-func (c *Controller) GetDownloadableLogs(user *fuel.User, w http.ResponseWriter, r *http.Request) (interface{}, *ign.ErrMsg) {
+func (c *controller) GetDownloadableLogs(user *fuel.User, w http.ResponseWriter, r *http.Request) (interface{}, *ign.ErrMsg) {
 	panic("Not implemented")
 
 }
 
-func (c *Controller) GetLiveLogs(user *fuel.User, w http.ResponseWriter, r *http.Request) (interface{}, *ign.ErrMsg) {
+func (c *controller) GetLiveLogs(user *fuel.User, w http.ResponseWriter, r *http.Request) (interface{}, *ign.ErrMsg) {
 	panic("Not implemented")
 }

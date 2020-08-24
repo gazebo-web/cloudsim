@@ -18,23 +18,23 @@ func TestQueueIntegration(t *testing.T) {
 
 type queueTestSuite struct {
 	suite.Suite
-	userService *users.ServiceMock
+	userService   *users.ServiceMock
 	adminUsername string
-	admin fuel.User
-	queue IQueue
-	service IService
-	controller IController
-	router *mux.Router
-	recorder *httptest.ResponseRecorder
+	admin         fuel.User
+	queue         Queue
+	service       Service
+	controller    Controller
+	router        *mux.Router
+	recorder      *httptest.ResponseRecorder
 }
 
 func (suite *queueTestSuite) SetupTest() {
 	suite.userService = users.NewServiceMock()
 	suite.adminUsername = "root"
 	suite.admin = fuel.User{
-		Name:             tools.Sptr("Admin Root"),
-		Username:         &suite.adminUsername,
-		Email:            tools.Sptr("root@admin.com"),
+		Name:     tools.Sptr("Admin Root"),
+		Username: &suite.adminUsername,
+		Email:    tools.Sptr("root@admin.com"),
 	}
 	suite.queue = NewQueue()
 	suite.service = NewService(suite.queue, suite.userService)
@@ -42,7 +42,6 @@ func (suite *queueTestSuite) SetupTest() {
 	suite.recorder = httptest.NewRecorder()
 	suite.controller = NewController(suite.service)
 }
-
 
 func (suite *queueTestSuite) TestGetAll() {
 	suite.userService.On("GetUserFromUsername", *suite.admin.Username).Return(suite.admin, nil)
@@ -117,8 +116,6 @@ func (suite *queueTestSuite) TestMoveToFront() {
 	suite.Equal(response, casted)
 }
 
-
-
 func (suite *queueTestSuite) TestMoveToBack() {
 	suite.userService.On("GetUserFromUsername", *suite.admin.Username).Return(suite.admin, nil)
 	suite.userService.On("IsSystemAdmin", *suite.admin.Username).Return(true)
@@ -158,8 +155,6 @@ func (suite *queueTestSuite) TestMoveToBack() {
 	suite.Equal(response, casted)
 }
 
-
-
 func (suite *queueTestSuite) TestCount() {
 	suite.userService.On("GetUserFromUsername", *suite.admin.Username).Return(suite.admin, nil)
 	suite.userService.On("IsSystemAdmin", *suite.admin.Username).Return(true)
@@ -196,8 +191,6 @@ func (suite *queueTestSuite) TestCount() {
 	suite.Equal(count, response)
 }
 
-
-
 func (suite *queueTestSuite) TestRemove() {
 	suite.userService.On("GetUserFromUsername", *suite.admin.Username).Return(suite.admin, nil)
 	suite.userService.On("IsSystemAdmin", *suite.admin.Username).Return(true)
@@ -221,7 +214,7 @@ func (suite *queueTestSuite) TestRemove() {
 
 	req, err := http.NewRequest(http.MethodDelete, "/queue/1", nil)
 	if err != nil {
-		suite.Errorf(err,"Error creating HTTP Request.")
+		suite.Errorf(err, "Error creating HTTP Request.")
 	}
 
 	suite.router.ServeHTTP(suite.recorder, req)

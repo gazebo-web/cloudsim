@@ -20,9 +20,14 @@ func (Robot) TableName() string {
 }
 
 type RobotConfig struct {
+	gorm.Model
 	Name      string `json:"name"`
 	Owner     string `json:"owner"`
 	Type      string `json:"type"`
 	Credits   int    `json:"credits"`
 	Thumbnail string `json:"thumbnail"`
+}
+
+func (RobotConfig) TableName() string {
+	return "subt_robot_configs"
 }

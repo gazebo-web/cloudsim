@@ -47,5 +47,3 @@ func (ec *AmazonEC2Mock) RunInstances(ctx context.Context, inputs []*ec2.RunInst
 	err = args.Error(1)
 	return
 }
-
-

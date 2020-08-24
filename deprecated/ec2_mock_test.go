@@ -1,12 +1,12 @@
 package main
 
 import (
-	"gitlab.com/ignitionrobotics/web/cloudsim/simulations"
 	"fmt"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/aws/aws-sdk-go/service/ec2/ec2iface"
 	uuid "github.com/satori/go.uuid"
+	"gitlab.com/ignitionrobotics/web/cloudsim/simulations"
 )
 
 const (
@@ -172,4 +172,12 @@ func (m *EC2Mock) WaitUntilInstanceStatusOk(input *ec2.DescribeInstanceStatusInp
 		return err
 	}
 	return nil
+}
+
+// ModifyInstanceAttribute mocks the EC2 API operation to return successfully.
+// Mocking return values for this method is not currently supported.
+// Modifies an EC2 instance attribute.
+func (m *EC2Mock) ModifyInstanceAttribute(input *ec2.ModifyInstanceAttributeInput) (*ec2.ModifyInstanceAttributeOutput,
+	error) {
+	return nil, nil
 }

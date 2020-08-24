@@ -20,6 +20,7 @@ type SubTCreateSimulation struct {
 	RobotType []string `json:"robot_type" validate:"lenEqFieldLen=RobotName,dive,isrobottype" form:"robot_type"`
 	// Override the CreateSimulation Image field
 	RobotImage []string `json:"robot_image" validate:"lenEqFieldLen=RobotName" form:"robot_image"`
+	Marsupial  []string `json:"marsupial" form:"marsupial"`
 	Circuit    string   `json:"circuit" validate:"required,iscircuit" form:"circuit"`
 }
 
@@ -52,6 +53,12 @@ type SubTRobot struct {
 	Credits int
 }
 
+// SubTMarsupial is an internal type used to describe marsupial vehicles in SubT.
+type SubTMarsupial struct {
+	Parent string
+	Child  string
+}
+
 // metadataSubT is a struct use to hold the Metadata information added by SubT to
 // show to the user.
 type metadataSubT struct {
@@ -63,9 +70,10 @@ type metadataSubT struct {
 // SimulationDeployments DB records. If new internal fields are added, they should
 // be removed inside GetSimulationDeployment() method.
 type ExtraInfoSubT struct {
-	Circuit    string      `json:"circuit,omitempty"`
-	WorldIndex *int        `json:"world_index,omitempty"`
-	Robots     []SubTRobot `json:"robots,omitempty"`
+	Circuit    string          `json:"circuit,omitempty"`
+	WorldIndex *int            `json:"world_index,omitempty"`
+	Robots     []SubTRobot     `json:"robots,omitempty"`
+	Marsupials []SubTMarsupial `json:"marsupials,omitempty"`
 	// Which "simulation run" number is this? It is computed based on the number of worlds in the circuit and
 	// how many time to run them. For multiSims, the RunIndex can be seen as the child index.
 	RunIndex *int `json:"run_index,omitempty"`
