@@ -33,7 +33,7 @@ func getTestData(t *testing.T) testData {
 	createJob := func(name string) *Job {
 		return &Job{
 			Name: name,
-			Execute: func(tx *gorm.DB, deployment *Deployment, value interface{}) (interface{}, error) {
+			Execute: func(ctx Context, tx *gorm.DB, deployment *Deployment, value interface{}) (interface{}, error) {
 				return value, nil
 			},
 			InputType:  NilJobDataType,

@@ -11,6 +11,7 @@ import (
 	"github.com/johannesboyne/gofakes3/backend/s3mem"
 	"github.com/stretchr/testify/suite"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/cloud"
+	"gitlab.com/ignitionrobotics/web/ign-go"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -58,7 +59,8 @@ func (s *s3StorageTestSuite) SetupTest() {
 	}
 
 	s.api = s3.New(s.s3.Session)
-	s.storage = NewStorage(s.api)
+	logger := ign.NewLoggerNoRollbar("s3StorageTestSuite", ign.VerbosityDebug)
+	s.storage = NewStorage(s.api, logger)
 }
 
 func (s *s3StorageTestSuite) AfterTest() {
@@ -67,7 +69,8 @@ func (s *s3StorageTestSuite) AfterTest() {
 
 func (s *s3StorageTestSuite) TestNewStorage() {
 	api := s3.New(s.s3.Session)
-	st := NewStorage(api)
+	logger := ign.NewLoggerNoRollbar("s3StorageTestSuite", ign.VerbosityDebug)
+	st := NewStorage(api, logger)
 	obj, ok := st.(*storage)
 	s.True(ok)
 	s.NotNil(obj.API)
