@@ -14,20 +14,16 @@ import (
 // recover after an unexpected stop (e.g. server restart), while context is lost. The context should only be used to
 // pass application-specific values used by jobs, and can be used to support a simple dependency injection scheme.
 type Context interface {
-	Ctx() ctx.Context
+	ctx.Context
 }
 
 type context struct {
-	ctx ctx.Context
-}
-
-func (c *context) Ctx() ctx.Context {
-	return c.ctx
+	ctx.Context
 }
 
 // NewContext returns a new Context to pass context information to action jobs.
 func NewContext(ctx ctx.Context) Context {
 	return &context{
-		ctx: ctx,
+		Context: ctx,
 	}
 }
