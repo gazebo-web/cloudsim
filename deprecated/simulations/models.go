@@ -1,9 +1,9 @@
 package simulations
 
 import (
-	"gitlab.com/ignitionrobotics/web/ign-go"
 	"encoding/json"
 	"github.com/jinzhu/gorm"
+	"gitlab.com/ignitionrobotics/web/ign-go"
 	"strconv"
 	"strings"
 	"time"
@@ -69,7 +69,8 @@ type SimulationDeployment struct {
 	Robots *string `gorm:"size:1000" json:"robots"`
 	// TODO: This is a field specific to SubT. This is a temporary field that should be
 	//  extracted from the SimulationDeployment struct.
-	Held bool `json:"held"`
+	Held      bool `json:"held"`
+	Processed bool `json:"-"`
 }
 
 // GetSimulationDeployment gets a simulation deployment record by its GroupID
@@ -190,6 +191,16 @@ func (dep *SimulationDeployment) Clone() *SimulationDeployment {
 // UpdateHeldStatus returns an error if the SimulationDeployment held field failed to update.
 func (dep *SimulationDeployment) UpdateHeldStatus(tx *gorm.DB, state bool) error {
 	dep.Held = state
+	if err := tx.Save(&dep).Error; err != nil {
+		return err
+	}
+	return nil
+}
+
+// UpdateProcessed sets the given state in the Processed value.
+// Returns an error if the SimulationDeployment Processed field failed to update.
+func (dep *SimulationDeployment) UpdateProcessed(tx *gorm.DB, state bool) error {
+	dep.Processed = state
 	if err := tx.Save(&dep).Error; err != nil {
 		return err
 	}

@@ -17,19 +17,17 @@ import (
 )
 
 func main() {
-	var cloudsim *platform.Platform
-	var applications map[string]application.IApplication
+	var applications map[string]application.Application
 
 	config := platform.NewConfig()
-	p := platform.New(config)
-	cloudsim = p.(*platform.Platform)
+	cloudsim := platform.New(config)
 
 	RegisterApplications(cloudsim, &applications)
 
-	if err := cloudsim.Start(cloudsim.Context); err != nil {
-		cloudsim.Logger.Critical(fmt.Sprintf("[CLOUDSIM|CRITICAL] Error when initializing cloudsim\n%v", err))
+	if err := cloudsim.Start(cloudsim.Context()); err != nil {
+		cloudsim.Logger().Critical(fmt.Sprintf("[CLOUDSIM|CRITICAL] Error when initializing cloudsim\n%v", err))
 		for name := range applications {
-			cloudsim.Logger.Info(fmt.Sprintf("\tRunning with application [%s]", name))
+			cloudsim.Logger().Info(fmt.Sprintf("\tRunning with application [%s]", name))
 		}
 		panic(err)
 	}
@@ -39,13 +37,13 @@ func main() {
 	ScheduleTasks(cloudsim, applications)
 	RebuildState(cloudsim, applications)
 
-	cloudsim.Server.Run()
+	cloudsim.Server().Run()
 
 	ShutdownApplications(cloudsim, applications)
 
-	err := cloudsim.Stop(cloudsim.Context)
+	err := cloudsim.Stop(cloudsim.Context())
 	if err != nil {
-		cloudsim.Logger.Critical(fmt.Sprintf("[CLOUDSIM|CRITICAL] Error on shutdown\n%v", err))
+		cloudsim.Logger().Critical(fmt.Sprintf("[CLOUDSIM|CRITICAL] Error on shutdown\n%v", err))
 	}
-	cloudsim.Transport.Stop()
+	cloudsim.Transport().Stop()
 }

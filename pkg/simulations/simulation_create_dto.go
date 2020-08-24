@@ -1,5 +1,9 @@
 package simulations
 
+type ServiceCreateInput interface {
+	Input() *SimulationCreate
+}
+
 type SimulationCreate struct {
 	Name  string `json:"name" validate:"required,min=3,alphanum" form:"name"`
 	Owner string `json:"owner" form:"owner"`
@@ -21,4 +25,16 @@ type SimulationCreate struct {
 	//  ExtraSelector should reside.
 	// Contains the names of all robots in the simulation in a comma-separated list.
 	Robots *string `form:"-"`
+}
+
+func (sc *SimulationCreate) Input() *SimulationCreate {
+	return sc
+}
+
+type RepositoryCreateInput interface {
+	Input() *Simulation
+}
+
+type ServiceCreateOutput interface {
+	Output() *Simulation
 }

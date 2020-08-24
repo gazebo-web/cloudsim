@@ -15,12 +15,6 @@ package main
 
 // Import this file's dependencies
 import (
-	"gitlab.com/ignitionrobotics/web/fuelserver/permissions"
-	"gitlab.com/ignitionrobotics/web/ign-go"
-	"gitlab.com/ignitionrobotics/web/cloudsim/globals"
-	igntran "gitlab.com/ignitionrobotics/web/cloudsim/ign-transport"
-	sim "gitlab.com/ignitionrobotics/web/cloudsim/simulations"
-	useracc "gitlab.com/ignitionrobotics/web/cloudsim/users"
 	"context"
 	"flag"
 	"fmt"
@@ -29,6 +23,12 @@ import (
 	"github.com/go-playground/form"
 	"github.com/joho/godotenv"
 	"github.com/pkg/errors"
+	"gitlab.com/ignitionrobotics/web/cloudsim/globals"
+	igntran "gitlab.com/ignitionrobotics/web/cloudsim/ign-transport"
+	sim "gitlab.com/ignitionrobotics/web/cloudsim/simulations"
+	useracc "gitlab.com/ignitionrobotics/web/cloudsim/users"
+	"gitlab.com/ignitionrobotics/web/fuelserver/permissions"
+	"gitlab.com/ignitionrobotics/web/ign-go"
 	"gopkg.in/go-playground/validator.v9"
 	"k8s.io/client-go/kubernetes"
 	"log"
@@ -159,7 +159,7 @@ func init() {
 	userAccessor, err := initUserAccessor(logCtx, cfg)
 	if err != nil {
 		// Log and shutdown the app , if there is an error during startup
-		logger.Critical("Critical error trying to create Service", err)
+		logger.Critical("Critical error trying to create service", err)
 		log.Fatalf("%+v\n", err)
 	}
 	globals.UserAccessor = userAccessor
@@ -229,7 +229,7 @@ func init() {
 		log.Fatalf("%+v\n", err)
 	}
 
-	// Create the Simulations Service instance
+	// Create the Simulations service instance
 	// First initialize the Jobs Pool factory, if needed
 	var pFactory sim.PoolFactory
 	if cfg.isGoTest {
@@ -261,7 +261,7 @@ func initIgnTransport(cfg appConfig) {
 func main() {
 	// Launch the server
 	globals.Server.Run()
-	// Destroy Sim Service
+	// Destroy Sim service
 	sim.SimServImpl.Stop(context.Background())
 	if ecNm != nil {
 		ecNm.Stop()

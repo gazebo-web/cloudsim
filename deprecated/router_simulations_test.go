@@ -1,10 +1,6 @@
 package main
 
 import (
-	"gitlab.com/ignitionrobotics/web/ign-go"
-	"gitlab.com/ignitionrobotics/web/ign-go/testhelpers"
-	"gitlab.com/ignitionrobotics/web/cloudsim/globals"
-	sim "gitlab.com/ignitionrobotics/web/cloudsim/simulations"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -12,6 +8,10 @@ import (
 	uuid "github.com/satori/go.uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"gitlab.com/ignitionrobotics/web/cloudsim/globals"
+	sim "gitlab.com/ignitionrobotics/web/cloudsim/simulations"
+	"gitlab.com/ignitionrobotics/web/ign-go"
+	"gitlab.com/ignitionrobotics/web/ign-go/testhelpers"
 	"strings"
 	"testing"
 )

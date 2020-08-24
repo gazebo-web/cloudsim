@@ -19,53 +19,55 @@ import (
 	"path"
 )
 
-type IApplication interface {
-	application.IApplication
+type Application interface {
+	application.Application
 	isSimulationHeld(ctx context.Context, simulation *simulations.Simulation) *ign.ErrMsg
 	UploadSummary(sim *sim.Simulation, score stats.Score) *ign.ErrMsg
 }
 
-// SubT is an IApplication implementation
+// SubT is an Application implementation
 type SubT struct {
-	application.IApplication
+	application.Application
 	Services    services
 	Controllers controllers
 	Validator   *validator.Validate
 }
 
 type controllers struct {
-	Simulation sim.IController
+	Simulation sim.Controller
 }
 
 type services struct {
 	application.Services
 	Simulation sim.IService
-	Circuit    circuits.IService
+	Circuit    circuits.Service
 	Robot      robots.IService
 }
 
 // New creates a new SubT application.
-func New(p *platform.Platform) IApplication {
-	simulationRepository := sim.NewRepository(p.Server.Db)
+func New(p platform.Platform) Application {
+	simulationRepository := sim.NewRepository(p.Database(), p.Name())
 	simulationService := sim.NewService(simulationRepository)
-	baseApp := application.New(p, simulationService.Parent(), p.UserService)
+
+	baseApp := application.New(p, simulationService, p.Services().User())
+
 	validate := validator.New()
 	subt := &SubT{
-		IApplication: baseApp,
+		Application: baseApp,
 		Services: services{
 			Services: application.Services{
-				Simulation: simulationService.Parent(),
-				User:       p.UserService,
+				Simulation: simulationService,
+				User:       p.Services().User(),
 			},
 			Simulation: simulationService,
 		},
 		Controllers: controllers{
 			Simulation: sim.NewController(sim.NewControllerInput{
 				Service:     simulationService,
-				Decoder:     p.FormDecoder,
+				Decoder:     p.FormDecoder(),
 				Validator:   validate,
-				Permissions: p.Permissions,
-				UserService: p.UserService,
+				Permissions: p.Permissions(),
+				UserService: p.Services().User(),
 			}),
 		},
 		Validator: validate,
@@ -95,7 +97,7 @@ func (app *SubT) getGazeboConfig(sim *simulations.Simulation) simulator.GazeboCo
 
 // ValidateLaunch runs a set of checks before launching a simulation. It will return an error if one of those checks fail.
 func (app *SubT) ValidateLaunch(ctx context.Context, simulation *simulations.Simulation) *ign.ErrMsg {
-	if err := app.IApplication.ValidateLaunch(ctx, simulation); err != nil {
+	if err := app.Application.Requester().Launch().Validate(ctx, simulation); err != nil {
 		return err
 	}
 
@@ -117,7 +119,7 @@ func (app *SubT) isSimulationHeld(ctx context.Context, simulation *simulations.S
 }
 
 // Register runs a set of instructions to initialize an application for the given platform.
-func Register(p *platform.Platform) application.IApplication {
+func Register(p platform.Platform) application.Application {
 	subt := New(p)
 	return subt
 }
@@ -134,10 +136,10 @@ func (app *SubT) UploadSummary(sim *sim.Simulation, score stats.Score) *ign.ErrM
 	}
 
 	fileName := tools.GenerateSummaryFilename(*sim.GroupID)
-	key := path.Join(app.Platform().CloudProvider.S3.GetLogKey(*sim.GroupID, *sim.Base.Owner), fileName)
+	key := path.Join(app.Platform().AWS().S3().GetLogKey(*sim.GroupID, *sim.Base.Owner), fileName)
 
 	// TODO: Add AWS_GZ_LOGS_BUCKET env var.
-	_, err = app.Platform().CloudProvider.S3.Upload("AWS_GZ_LOGS_BUCKET", key, b)
+	_, err = app.Platform().AWS().S3().Upload("AWS_GZ_LOGS_BUCKET", key, b)
 	if err != nil {
 		return ign.NewErrorMessageWithBase(ign.ErrorUnexpected, err)
 	}

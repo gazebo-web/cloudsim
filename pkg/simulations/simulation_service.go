@@ -2,8 +2,8 @@ package simulations
 
 import (
 	"context"
-	uuid "github.com/satori/go.uuid"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/users"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/uuid"
 	fuel "gitlab.com/ignitionrobotics/web/fuelserver/bundles/users"
 	per "gitlab.com/ignitionrobotics/web/fuelserver/permissions"
 	"gitlab.com/ignitionrobotics/web/ign-go"
@@ -11,23 +11,23 @@ import (
 	"time"
 )
 
-// IService
-type IService interface {
-	GetRepository() IRepository
-	SetRepository(repository IRepository)
-	Get(groupID string) (*Simulation, error)
+// Service
+type Service interface {
+	GetRepository() Repository
+	SetRepository(repository Repository)
+	Get(groupID string, user *fuel.User) (*Simulation, *ign.ErrMsg)
 	GetAll(ctx context.Context, input GetAllInput) (*Simulations, *ign.PaginationResult, *ign.ErrMsg)
 	GetAllByOwner(owner string, statusFrom, statusTo Status) (*Simulations, error)
 	GetChildren(groupID string, statusFrom, statusTo Status) (*Simulations, error)
 	GetAllParents(statusFrom, statusTo Status) (*Simulations, error)
 	GetAllParentsWithErrors(statusFrom, statusTo Status, errors []ErrorStatus) (*Simulations, error)
 	GetParent(groupID string) (*Simulation, error)
-	Create(ctx context.Context, simulation *SimulationCreate, user *fuel.User) (*Simulation, *ign.ErrMsg)
+	Create(ctx context.Context, input ServiceCreateInput, user *fuel.User) (ServiceCreateOutput, *ign.ErrMsg)
 	create(sim Simulation) (*Simulation, *ign.ErrMsg)
 	Launch(ctx context.Context, groupID string, user *fuel.User) (*Simulation, *ign.ErrMsg)
 	Restart(ctx context.Context, groupID string, user *fuel.User) (*Simulation, *ign.ErrMsg)
 	Shutdown(ctx context.Context, groupID string, user *fuel.User) (*Simulation, *ign.ErrMsg)
-	Update(ctx context.Context, groupID string, simulationUpdate SimulationUpdate) (*Simulation, *ign.ErrMsg)
+	Update(ctx context.Context, groupID string, simulationUpdateInput SimulationUpdateInput, user *fuel.User) (*Simulation, *ign.ErrMsg)
 	UpdateParentFromChildren(parent *Simulation) (*Simulation, *ign.ErrMsg)
 	Reject(ctx context.Context, simulation *Simulation) (*Simulation, *ign.ErrMsg)
 	addPermissionsToOwner(resourceID string, permissions []per.Action, owner string) (bool, *ign.ErrMsg)
@@ -35,16 +35,19 @@ type IService interface {
 	Prepare(ctx context.Context, sim *Simulation) (Simulations, *ign.ErrMsg)
 }
 
-// Service
-type Service struct {
-	repository  IRepository
-	userService users.IService
+// service
+type service struct {
+	repository  Repository
+	userService users.Service
 	config      ServiceConfig
+	uuid        uuid.UUID
 }
 
 type NewServiceInput struct {
-	Repository IRepository
-	Config     ServiceConfig
+	UserService users.Service
+	Repository  Repository
+	Config      ServiceConfig
+	UUID        uuid.UUID
 }
 
 type ServiceConfig struct {
@@ -54,41 +57,48 @@ type ServiceConfig struct {
 }
 
 // NewService
-func NewService(repository IRepository) IService {
-	var s IService
-	s = &Service{
-		repository: repository,
+func NewService(input NewServiceInput) Service {
+	var s Service
+	s = &service{
+		userService: input.UserService,
+		repository:  input.Repository,
+		config:      input.Config,
+		uuid:        input.UUID,
 	}
 	return s
 }
 
 // GetRepository
-func (s *Service) GetRepository() IRepository {
+func (s *service) GetRepository() Repository {
 	return s.repository
 }
 
 // SetRepository
-func (s *Service) SetRepository(repository IRepository) {
+func (s *service) SetRepository(repository Repository) {
 	s.repository = repository
 }
 
 // Get
-func (s *Service) Get(groupID string) (*Simulation, error) {
-	panic("Not implemented")
-}
+func (s *service) Get(groupID string, user *fuel.User) (*Simulation, *ign.ErrMsg) {
+	if user != nil {
+		if ok, em := s.userService.IsAuthorizedForResource(*user.Username, groupID, per.Read); !ok {
+			return nil, em
+		}
+	}
 
-type GetAllInput struct {
-	p               *ign.PaginationRequest
-	byStatus        *Status
-	invertStatus    bool
-	byErrStatus     *ErrorStatus
-	invertErrStatus bool
-	user            *fuel.User
-	includeChildren bool
+	var sim *Simulation
+	var err error
+
+	sim, err = s.repository.Get(groupID)
+	if err != nil {
+		return nil, ign.NewErrorMessageWithBase(ign.ErrorSimGroupNotFound, err)
+	}
+
+	return sim, nil
 }
 
 // GetAll
-func (s *Service) GetAll(ctx context.Context, input GetAllInput) (*Simulations, *ign.PaginationResult, *ign.ErrMsg) {
+func (s *service) GetAll(ctx context.Context, input GetAllInput) (*Simulations, *ign.PaginationResult, *ign.ErrMsg) {
 	canPerformWithRole, _ := s.userService.CanPerformWithRole(&s.config.Application, *input.user.Username, per.Member)
 
 	includeChildren := false
@@ -120,32 +130,34 @@ func (s *Service) GetAll(ctx context.Context, input GetAllInput) (*Simulations, 
 }
 
 // GetAllByOwner
-func (s *Service) GetAllByOwner(owner string, statusFrom, statusTo Status) (*Simulations, error) {
+func (s *service) GetAllByOwner(owner string, statusFrom, statusTo Status) (*Simulations, error) {
 	panic("Not implemented")
 
 }
 
 // GetChildren
-func (s *Service) GetChildren(groupID string, statusFrom, statusTo Status) (*Simulations, error) {
+func (s *service) GetChildren(groupID string, statusFrom, statusTo Status) (*Simulations, error) {
 	panic("Not implemented")
 }
 
 // GetAllParents
-func (s *Service) GetAllParents(statusFrom, statusTo Status) (*Simulations, error) {
+func (s *service) GetAllParents(statusFrom, statusTo Status) (*Simulations, error) {
 	panic("Not implemented")
 }
 
 // GetAllParentsWithErrors
-func (s *Service) GetAllParentsWithErrors(statusFrom, statusTo Status, errors []ErrorStatus) (*Simulations, error) {
+func (s *service) GetAllParentsWithErrors(statusFrom, statusTo Status, errors []ErrorStatus) (*Simulations, error) {
 	panic("Not implemented")
 }
 
 // GetParent
-func (s *Service) GetParent(groupID string) (*Simulation, error) {
+func (s *service) GetParent(groupID string) (*Simulation, error) {
 	panic("implement me")
 }
 
-func (s *Service) Create(ctx context.Context, createSimulation *SimulationCreate, user *fuel.User) (*Simulation, *ign.ErrMsg) {
+func (s *service) Create(ctx context.Context, input ServiceCreateInput, user *fuel.User) (ServiceCreateOutput, *ign.ErrMsg) {
+	createSimulation := input.Input()
+
 	if createSimulation.Platform == "" {
 		createSimulation.Platform = s.config.Platform
 	}
@@ -183,7 +195,7 @@ func (s *Service) Create(ctx context.Context, createSimulation *SimulationCreate
 	}
 
 	// Create and assign a new GroupID
-	groupID := uuid.NewV4().String()
+	groupID := s.uuid.Generate()
 
 	// Create the SimulationDeployment record in DB. Set initial status.
 	creator := *user.Username
@@ -212,11 +224,13 @@ func (s *Service) Create(ctx context.Context, createSimulation *SimulationCreate
 	return s.create(sim)
 }
 
-func (s *Service) create(sim Simulation) (*Simulation, *ign.ErrMsg)  {
-	createdSim, err := s.repository.Create(&sim)
+func (s *service) create(sim Simulation) (*Simulation, *ign.ErrMsg) {
+	output, err := s.repository.Create(&sim)
 	if err != nil {
 		return nil, ign.NewErrorMessageWithBase(ign.ErrorDbSave, err)
 	}
+
+	createdSim := output.Output()
 
 	// Set read and write permissions to owner (eg, the team) and to the Application
 	// organizing team (eg. subt).
@@ -226,26 +240,26 @@ func (s *Service) create(sim Simulation) (*Simulation, *ign.ErrMsg)  {
 	return createdSim, nil
 }
 
-func (s *Service) Restart(ctx context.Context, groupID string, user *fuel.User) (*Simulation, *ign.ErrMsg) {
+func (s *service) Restart(ctx context.Context, groupID string, user *fuel.User) (*Simulation, *ign.ErrMsg) {
 	panic("implement me")
 }
 
-func (s *Service) Launch(ctx context.Context, groupID string, user *fuel.User) (*Simulation, *ign.ErrMsg) {
+func (s *service) Launch(ctx context.Context, groupID string, user *fuel.User) (*Simulation, *ign.ErrMsg) {
 	panic("implement me")
 }
 
-func (s *Service) Shutdown(ctx context.Context, groupID string, user *fuel.User) (*Simulation, *ign.ErrMsg) {
+func (s *service) Shutdown(ctx context.Context, groupID string, user *fuel.User) (*Simulation, *ign.ErrMsg) {
 	panic("Not implemented")
 }
 
 // Update
-func (s *Service) Update(ctx context.Context, groupID string, simulationUpdate SimulationUpdate) (*Simulation, *ign.ErrMsg) {
-	var simulation *Simulation
-	var err error
+func (s *service) Update(ctx context.Context, groupID string, simulationUpdateInput SimulationUpdateInput, user *fuel.User) (*Simulation, *ign.ErrMsg) {
 
-	simulation, err = s.Get(groupID)
-	if err != nil {
-		return nil, ign.NewErrorMessageWithBase(ign.ErrorDbSave, err)
+	simulationUpdate := simulationUpdateInput.Input()
+
+	simulation, em := s.Get(groupID, user)
+	if em != nil {
+		return nil, em
 	}
 
 	if simulationUpdate.Held != nil {
@@ -265,11 +279,11 @@ func (s *Service) Update(ctx context.Context, groupID string, simulationUpdate S
 }
 
 // UpdateParentFromChildren
-func (s *Service) UpdateParentFromChildren(parent *Simulation) (*Simulation, *ign.ErrMsg) {
+func (s *service) UpdateParentFromChildren(parent *Simulation) (*Simulation, *ign.ErrMsg) {
 	panic("implement me")
 }
 
-func (s *Service) Reject(ctx context.Context, simulation *Simulation) (*Simulation, *ign.ErrMsg) {
+func (s *service) Reject(ctx context.Context, simulation *Simulation) (*Simulation, *ign.ErrMsg) {
 	var err error
 	if simulation, err = s.repository.Reject(simulation); err != nil {
 		return nil, ign.NewErrorMessageWithBase(ign.ErrorDbSave, err)
@@ -277,7 +291,7 @@ func (s *Service) Reject(ctx context.Context, simulation *Simulation) (*Simulati
 	return simulation, nil
 }
 
-func (s *Service) addPermissionsToOwner(resourceID string, permissions []per.Action, owner string) (bool, *ign.ErrMsg) {
+func (s *service) addPermissionsToOwner(resourceID string, permissions []per.Action, owner string) (bool, *ign.ErrMsg) {
 	var ok bool
 	var em *ign.ErrMsg
 	for _, p := range permissions {
@@ -289,7 +303,7 @@ func (s *Service) addPermissionsToOwner(resourceID string, permissions []per.Act
 	return ok, em
 }
 
-func (s *Service) addPermissionsToOwners(resourceID string, permissions []per.Action, owners ...string) *ign.ErrMsg {
+func (s *service) addPermissionsToOwners(resourceID string, permissions []per.Action, owners ...string) *ign.ErrMsg {
 	for _, owner := range owners {
 		ok, err := s.addPermissionsToOwner(resourceID, permissions, owner)
 		if !ok {
@@ -299,6 +313,6 @@ func (s *Service) addPermissionsToOwners(resourceID string, permissions []per.Ac
 	return nil
 }
 
-func (s *Service) Prepare(ctx context.Context, sim *Simulation) (Simulations, *ign.ErrMsg) {
+func (s *service) Prepare(ctx context.Context, sim *Simulation) (Simulations, *ign.ErrMsg) {
 	panic("implement me")
 }

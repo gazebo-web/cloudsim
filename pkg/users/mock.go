@@ -10,7 +10,7 @@ import (
 )
 
 // TODO: Implement repository for users.
-// Service is the default implementation of IService interface.
+// service is the default implementation of Service interface.
 type ServiceMock struct {
 	*mock.Mock
 }

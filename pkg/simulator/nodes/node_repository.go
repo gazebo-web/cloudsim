@@ -5,26 +5,25 @@ import (
 	"github.com/pkg/errors"
 )
 
-// IRepository
-type IRepository interface{
+// Repository
+type Repository interface {
 	Create(node Node) (*Node, error)
 }
 
-// Repository
-type Repository struct{
+// repository
+type repository struct {
 	db *gorm.DB
-
 }
 
 // NewRepository
-func NewRepository(db *gorm.DB) IRepository {
-	return &Repository{
+func NewRepository(db *gorm.DB) Repository {
+	return &repository{
 		db: db,
 	}
 }
 
 // Create
-func (r *Repository) Create(node Node) (*Node, error) {
+func (r *repository) Create(node Node) (*Node, error) {
 	if pk := r.db.NewRecord(node); !pk {
 		return nil, errors.New("Node already exists")
 	}

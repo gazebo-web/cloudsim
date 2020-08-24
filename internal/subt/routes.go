@@ -36,7 +36,7 @@ func (app *SubT) RegisterRoutes() ign.Routes {
 							Handler: ign.JSONResultNoTx(
 								handlers.AfterFn(
 									handlers.WithUser(app.Services.User, app.Controllers.Simulation.Start),
-									app.Launch,
+									app.Requester().Start().Do,
 								),
 							),
 						},
@@ -70,7 +70,7 @@ func (app *SubT) RegisterRoutes() ign.Routes {
 							Handler: ign.JSONResultNoTx(
 								handlers.AfterFn(
 									handlers.WithUser(app.Services.User, app.Controllers.Simulation.Shutdown),
-									app.Shutdown,
+									app.Requester().Shutdown().Do,
 								),
 							),
 						},
@@ -93,7 +93,7 @@ func (app *SubT) RegisterRoutes() ign.Routes {
 							Handler: ign.JSONResultNoTx(
 								handlers.AfterFn(
 									handlers.WithUser(app.Services.User, app.Controllers.Simulation.LaunchHeld),
-									app.LaunchHeld,
+									app.Requester().Launch().Do,
 								),
 							),
 						},

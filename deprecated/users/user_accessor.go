@@ -1,15 +1,15 @@
 package users
 
 import (
-	"gitlab.com/ignitionrobotics/web/fuelserver/bundles/subt"
-	"gitlab.com/ignitionrobotics/web/fuelserver/bundles/users"
-	per "gitlab.com/ignitionrobotics/web/fuelserver/permissions"
-	"gitlab.com/ignitionrobotics/web/ign-go"
 	"context"
 	"github.com/caarlos0/env"
 	"github.com/casbin/casbin"
 	"github.com/casbin/gorm-adapter"
 	"github.com/jinzhu/gorm"
+	"gitlab.com/ignitionrobotics/web/fuelserver/bundles/subt"
+	"gitlab.com/ignitionrobotics/web/fuelserver/bundles/users"
+	per "gitlab.com/ignitionrobotics/web/fuelserver/permissions"
+	"gitlab.com/ignitionrobotics/web/ign-go"
 	"net/http"
 	"strings"
 	"time"
@@ -20,7 +20,7 @@ type userAccessorConf struct {
 	sysAdmin              string
 }
 
-// Deprecated: Service is used by the cloudsim server to remotely get Users and their membership
+// Deprecated: service is used by the cloudsim server to remotely get Users and their membership
 // to Organizations.
 type UserAccessor interface {
 	// UserFromJWT returns the User associated to the http request's JWT token.
@@ -61,9 +61,9 @@ type UserAccessor interface {
 	GetOrganization(username string) (*users.Organization, *ign.ErrMsg)
 }
 
-// UserAccessorImpl is the default implementation of Service interface.
+// UserAccessorImpl is the default implementation of service interface.
 type UserAccessorImpl struct {
-	// The Service config. Read from environment variables
+	// The service config. Read from environment variables
 	cfg userAccessorConf
 	// Global database interface to Users DB
 	Db *gorm.DB
@@ -74,7 +74,7 @@ type UserAccessorImpl struct {
 	resourcePermissions *per.Permissions
 }
 
-// NewUserAccessor initializes a new Service.
+// NewUserAccessor initializes a new service.
 func NewUserAccessor(ctx context.Context, resourcePermissions *per.Permissions, usersDb *gorm.DB, sysAdmin string) (*UserAccessorImpl, error) {
 
 	ua := UserAccessorImpl{}

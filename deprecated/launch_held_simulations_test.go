@@ -1,13 +1,13 @@
 package main
 
 import (
-	"gitlab.com/ignitionrobotics/web/ign-go"
-	igntest "gitlab.com/ignitionrobotics/web/ign-go/testhelpers"
-	sim "gitlab.com/ignitionrobotics/web/cloudsim/simulations"
 	"encoding/json"
 	"fmt"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	sim "gitlab.com/ignitionrobotics/web/cloudsim/simulations"
+	"gitlab.com/ignitionrobotics/web/ign-go"
+	igntest "gitlab.com/ignitionrobotics/web/ign-go/testhelpers"
 	"testing"
 )
 

@@ -1,36 +1,41 @@
 package circuits
 
 import (
-	"errors"
 	"github.com/jinzhu/gorm"
+	"time"
 )
 
-type IRepository interface {
+type Repository interface {
 	GetByName(name string) (*Circuit, error)
+	GetPending() ([]Circuit, error)
 }
 
-type Repository struct {
-	Db        *gorm.DB
-	whitelist map[string]bool
+type repository struct {
+	Db *gorm.DB
 }
 
-func NewRepository(db *gorm.DB) IRepository {
-	var r IRepository
-	r = &Repository{
-		Db:        db,
-		whitelist: generateWhitelist(),
+func NewRepository(db *gorm.DB) Repository {
+	var r Repository
+	r = &repository{
+		Db: db,
 	}
 	return r
 }
 
-func (r *Repository) GetByName(name string) (*Circuit, error) {
-	panic("implement me")
+func (r *repository) GetByName(name string) (*Circuit, error) {
+	var c Circuit
+	err := r.Db.Model(&Circuit{}).Where("circuit = ?", name).First(&c).Error
+	if err != nil {
+		return nil, err
+	}
+	return &c, nil
 }
 
-func (r *Repository) GetFromWhitelist(name string) (*string, *bool, error) {
-	allowed, ok := r.whitelist[name]
-	if !ok {
-		return nil, nil, errors.New("circuit doesn't exist")
+func (r *repository) GetPending() ([]Circuit, error) {
+	var cs []Circuit
+	err := r.Db.Model(&Circuit{}).Where("competition_date >= ?", time.Now()).Find(&cs).Error
+	if err != nil {
+		return nil, err
 	}
-	return &name, &allowed, nil
+	return cs, nil
 }

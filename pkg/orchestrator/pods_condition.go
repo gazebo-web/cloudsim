@@ -7,7 +7,7 @@ import (
 	"k8s.io/kubernetes/pkg/client/conditions"
 )
 
-// PodCondition is a function type that returns the pod condition or error by the given Kubernetes Pod.
+// PodCondition is a function type that returns the pod condition or error by the given k8s Pod.
 type PodCondition func(ctx context.Context, pod *apiv1.Pod) (bool, error)
 
 // podRunningAndReady checks if a pod by name is running. This function is used

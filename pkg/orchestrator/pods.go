@@ -27,18 +27,18 @@ const (
 	launcherRelaunchNeeded = "relaunch"
 )
 
-// Pod wraps the Kubernetes Pod to aggregate two field related to simulations.
+// Pod wraps the k8s Pod to aggregate two field related to simulations.
 type Pod struct {
 	apiv1.Pod
 	IsRunning bool
-	GroupID string
+	GroupID   string
 }
 
 type Pods []Pod
 
 // PodExec creates a command for a specific kubernetes pod. stdin, stdout and stderr io can be defined
 // through the options parameter.
-func (kc Kubernetes) PodExec(ctx context.Context, namespace string, podName string, container string, command []string, options *remotecommand.StreamOptions) (opts *remotecommand.StreamOptions, err error) {
+func (kc *k8s) PodExec(ctx context.Context, namespace string, podName string, container string, command []string, options *remotecommand.StreamOptions) (opts *remotecommand.StreamOptions, err error) {
 	// Handle panics if pod exec cannot be run
 	defer func() {
 		if r := recover(); r != nil {
@@ -98,7 +98,7 @@ func (kc Kubernetes) PodExec(ctx context.Context, namespace string, podName stri
 }
 
 // PodGetLog returns the log from a pod
-func (kc Kubernetes) PodGetLog(ctx context.Context, namespace string, podName string, container string, lines int64) (log *string, err error) {
+func (kc *k8s) PodGetLog(ctx context.Context, namespace string, podName string, container string, lines int64) (log *string, err error) {
 	// Handle panics if get pod logs cannot be run
 	defer func() {
 		if r := recover(); r != nil {
@@ -139,7 +139,7 @@ func (kc Kubernetes) PodGetLog(ctx context.Context, namespace string, podName st
 }
 
 // GetAllPods returns a set of Pods that match the given label
-func (kc Kubernetes) GetAllPods(label *string) (Pods, error) {
+func (kc *k8s) GetAllPods(label *string) (Pods, error) {
 	if label == nil {
 		label = tools.Sptr(cloudsimTagLabel)
 	}

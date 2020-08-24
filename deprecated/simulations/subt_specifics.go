@@ -29,6 +29,7 @@ import (
 	"k8s.io/kubernetes/pkg/client/conditions"
 	"net/http"
 	"net/url"
+	"os"
 	"path"
 	"path/filepath"
 	"strconv"
@@ -95,6 +96,10 @@ const (
 	CircuitCaveSimple2        string = "Cave Simple 2"
 	CircuitCaveSimple3        string = "Cave Simple 3"
 	CircuitCaveQual           string = "Cave Qualification"
+	CircuitCavePractice1      string = "Cave Practice 1"
+	CircuitCavePractice2      string = "Cave Practice 2"
+	CircuitCavePractice3      string = "Cave Practice 3"
+
 	// Container names
 	GazeboServerContainerName    string = "gzserver-container"
 	CommsBridgeContainerName     string = "comms-bridge"
@@ -166,6 +171,7 @@ func NewSubTApplication(ctx context.Context, s3Svc s3iface.S3API) (*SubTApplicat
 
 	s.cfg = subTSpecificsConfig{}
 	// Read configuration from environment
+	logger(ctx).Info("Parsing Subt config")
 	if err := env.Parse(&s.cfg); err != nil {
 		return nil, err
 	}
@@ -175,10 +181,12 @@ func NewSubTApplication(ctx context.Context, s3Svc s3iface.S3API) (*SubTApplicat
 	// We allow the user to define the desired IP using the IGN_IP env var. Otherwise,
 	// we use one of the IP addresses of this host.
 	if s.cfg.IgnIP == "" {
+		logger(ctx).Warning(fmt.Print("No IGN_IP config found. Env var value:", os.Getenv("IGN_IP")))
 		if s.cfg.IgnIP, err = getLocalIPAddressString(); err != nil {
 			return nil, err
 		}
 	}
+	logger(ctx).Warning(fmt.Println("Using IGN_IP value", s.cfg.IgnIP))
 
 	s.s3Svc = s3Svc
 
@@ -302,6 +310,40 @@ func (sa *SubTApplication) customizeSimulationRequest(ctx context.Context,
 		robotNames = append(robotNames, robot.Name)
 	}
 
+	marsupials := make([]SubTMarsupial, 0)
+	// Process the marsupial parameters.
+	for _, mar := range subtSim.Marsupial {
+		// A marsupial pair is specified as a string of the form "<parent>:<child>"
+		parts := strings.Split(mar, ":")
+
+		// Make sure there is both a parent and a child.
+		if len(parts) != 2 {
+			return NewErrorMessageWithBase(ErrorInvalidMarsupialSpecification, err)
+		}
+
+		// Try to find the parent and child in the set of robots.
+		var foundParent = false
+		var foundChild = false
+		for _, robot := range robots {
+			if robot.Name == parts[0] {
+				foundParent = true
+			}
+			if robot.Name == parts[1] {
+				foundChild = true
+			}
+		}
+		// Make sure both the parent and child were found.
+		if !foundParent || !foundChild {
+			return NewErrorMessageWithBase(ErrorInvalidMarsupialSpecification, err)
+		}
+
+		marsupial := SubTMarsupial{
+			Parent: parts[0],
+			Child:  parts[1],
+		}
+		marsupials = append(marsupials, marsupial)
+	}
+
 	rules, err = GetCircuitRules(tx, subtSim.Circuit)
 	if err != nil {
 		return NewErrorMessageWithBase(ErrorCircuitRuleNotFound, err)
@@ -325,8 +367,9 @@ func (sa *SubTApplication) customizeSimulationRequest(ctx context.Context,
 	}
 
 	extra := &ExtraInfoSubT{
-		Circuit: subtSim.Circuit,
-		Robots:  robots,
+		Circuit:    subtSim.Circuit,
+		Robots:     robots,
+		Marsupials: marsupials,
 	}
 	createSim.ExtraSelector = &subtSim.Circuit
 
@@ -835,6 +878,12 @@ func (sa *SubTApplication) launchApplication(ctx context.Context, s *Service, tx
 	for i, robot := range extra.Robots {
 		gzRunCommand = append(gzRunCommand, fmt.Sprintf("robotName%d:=%s", i+1, robot.Name), fmt.Sprintf("robotConfig%d:=%s", i+1, robot.Type))
 	}
+
+	// Pass marsupial names to the gzserver Pod.
+	// marsupialN:=<parent>:<child>
+	for i, marsupial := range extra.Marsupials {
+		gzRunCommand = append(gzRunCommand, fmt.Sprintf("marsupial%d:=%s:%s", i+1, marsupial.Parent, marsupial.Child))
+	}
 	logger(ctx).Info(fmt.Sprintf("gzRunCommand to use: %v", gzRunCommand))
 
 	// Done to log the details into rollbar
@@ -933,6 +982,10 @@ func (sa *SubTApplication) launchApplication(ctx context.Context, s *Service, tx
 						{
 							Name:  "USE_XVFB",
 							Value: "1",
+						},
+						{
+							Name:  "IGN_RELAY",
+							Value: sa.cfg.IgnIP,
 						},
 						{
 							Name:  "IGN_PARTITION",
@@ -1478,7 +1531,7 @@ func (sa *SubTApplication) createNetworkPolicy(ctx context.Context, npName strin
 				MatchLabels: matchingPodLabels,
 			},
 			Ingress: []networkingv1.NetworkPolicyIngressRule{
-				// Dev note: Important -- the IP addresses listed here should be from Weave network.
+				// Dev note: Important -- the IP addresses listed here should be the IP of the Cloudsim pod.
 				{
 					From: []networkingv1.NetworkPolicyPeer{
 						{
@@ -1491,7 +1544,7 @@ func (sa *SubTApplication) createNetworkPolicy(ctx context.Context, npName strin
 				},
 			},
 			Egress: []networkingv1.NetworkPolicyEgressRule{
-				// Dev note: Important -- the IP addresses listed here should be from Weave network.
+				// Dev note: Important -- the IP addresses listed here should be the IP of the Cloudsim pod.
 				{
 					To: []networkingv1.NetworkPolicyPeer{
 						{
@@ -1656,6 +1709,10 @@ func (sa *SubTApplication) createS3CopyPod(ctx context.Context, s *Service, dep 
 func (sa *SubTApplication) processSimulationResults(ctx context.Context, s *Service, tx *gorm.DB,
 	dep *SimulationDeployment) *ign.ErrMsg {
 
+	if dep.Processed {
+		return nil
+	}
+
 	values := SimulationDeploymentsSubTValue{
 		SimulationDeployment: dep,
 		GroupID:              dep.GroupID,
@@ -1732,6 +1789,10 @@ func (sa *SubTApplication) processSimulationResults(ctx context.Context, s *Serv
 			}
 			SendSimulationSummaryEmail(dep, summary)
 		}
+	}
+
+	if !dep.Processed {
+		dep.UpdateProcessed(tx, true)
 	}
 
 	return nil
@@ -1832,8 +1893,13 @@ func (sa *SubTApplication) setupEC2InstanceSpecifics(ctx context.Context, s *Ec2
 		return nil, err
 	}
 
-	// AMI name: cloudsim-ubuntu-18_04-CUDA_10_1-nvidia-docker_2-kubernetes_1_14.10-v0.2.2
-	gzInput.ImageId = aws.String("ami-063fd908b66e4c2fd")
+	// AMI: cloudsim-worker-node-eks-gpu-optimized-1.0.0
+	// Modified version of Amazon EKS-optimized AMI with GPU support
+	// https://docs.aws.amazon.com/eks/latest/userguide/gpu-ami.html
+	// /aws/service/eks/optimized-ami/1.14/amazon-linux-2-gpu/recommended/image_id
+	imageID := aws.String("ami-08861f7e7b409ed0c")
+
+	gzInput.ImageId = imageID
 	gzInput.InstanceType = aws.String("g3.4xlarge")
 
 	// Add the new Input to the result array
@@ -1850,8 +1916,8 @@ func (sa *SubTApplication) setupEC2InstanceSpecifics(ctx context.Context, s *Ec2
 		if err != nil {
 			return nil, err
 		}
-		// AMI name: cloudsim-ubuntu-18_04-CUDA_10_1-nvidia-docker_2-kubernetes_1_14.10-v0.2.2
-		fcInput.ImageId = aws.String("ami-063fd908b66e4c2fd")
+
+		fcInput.ImageId = imageID
 		fcInput.InstanceType = aws.String("g3.4xlarge")
 		userData, _ := s.buildUserDataString(*dep.GroupID,
 			labelAndValue(nodeLabelKeyCloudsimNodeType, "field-computer"),
@@ -2009,7 +2075,7 @@ func (sa *SubTApplication) updateMultiSimStatuses(ctx context.Context, tx *gorm.
 	// Note: simDep is a Parent in a multi-sim
 
 	// Only proceed if the simulation terminated successfully. Get the aggregated values from all children
-	if simDep.IsRunning() || simDep.ErrorStatus != nil {
+	if simDep.IsRunning() || simDep.ErrorStatus != nil || simDep.Processed {
 		return nil
 	}
 
@@ -2058,6 +2124,10 @@ func (sa *SubTApplication) updateMultiSimStatuses(ctx context.Context, tx *gorm.
 	// Send an email with the summary to the competitor
 	if !globals.DisableSummaryEmails {
 		SendSimulationSummaryEmail(simDep, *summary)
+	}
+
+	if !simDep.Processed {
+		simDep.UpdateProcessed(tx, true)
 	}
 
 	return nil

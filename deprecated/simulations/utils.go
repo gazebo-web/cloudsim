@@ -1,12 +1,12 @@
 package simulations
 
 import (
-	"gitlab.com/ignitionrobotics/web/ign-go"
-	"gitlab.com/ignitionrobotics/web/cloudsim/globals"
 	"context"
 	"encoding/json"
 	"fmt"
 	"github.com/go-playground/form"
+	"gitlab.com/ignitionrobotics/web/cloudsim/globals"
+	"gitlab.com/ignitionrobotics/web/ign-go"
 	"gopkg.in/go-playground/validator.v9"
 	"net"
 	"net/http"

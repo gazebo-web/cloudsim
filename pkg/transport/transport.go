@@ -10,7 +10,7 @@ type config struct {
 	Topic string `env:"IGN_TRANSPORT_TEST_TOPIC" envDefault:"/foo"`
 }
 
-// Transport
+// transport
 type Transport struct {
 	Node  *igntransport.GoIgnTransportNode
 	Topic string

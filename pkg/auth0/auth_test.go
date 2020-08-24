@@ -6,11 +6,6 @@ import (
 	"testing"
 )
 
-func TestNew_Null(t *testing.T) {
-	auth := New()
-	assert.Zero(t, auth.PublicKey)
-}
-
 func TestNew_Empty(t *testing.T) {
 	os.Setenv("AUTH0_RSA256_PUBLIC_KEY", "")
 

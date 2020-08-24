@@ -1,48 +1,63 @@
 package simulations
 
 import (
+	"errors"
 	"github.com/jinzhu/gorm"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
+	"gitlab.com/ignitionrobotics/web/cloudsim/tools"
 )
 
-type Repository struct {
-	*simulations.Repository
+type repository struct {
+	simulations.Repository
 }
 
-type IRepository interface {
-	simulations.IRepository
+type Repository interface {
+	simulations.Repository
 	CountByOwnerAndCircuit(owner, circuit string) (int, error)
-	GetAggregated(groupID string) (*Simulation, error)
-	CreateAggregated(sim *simulations.Simulation) (*Simulation, error)
+	Aggregate(simulation *Simulation) (*Simulation, error)
 }
 
-func NewRepository(db *gorm.DB) IRepository {
-	var r IRepository
-	parent := simulations.NewRepository(db, "subt")
-	repository := parent.(*simulations.Repository)
-	r = &Repository{
-		Repository: repository,
+func NewRepository(db *gorm.DB, platform string) Repository {
+	parent := simulations.NewRepository(db, &platform, tools.Sptr("subt"))
+	r := parent.(simulations.Repository)
+	return &repository{
+		Repository: r,
 	}
-	return r
 }
 
-func (r *Repository) CountByOwnerAndCircuit(owner, circuit string) (int, error) {
+func (r *repository) Create(simulation simulations.RepositoryCreateInput) (simulations.ServiceCreateOutput, error) {
+	subtInput, ok := simulation.(RepositoryCreateInput)
+	if !ok {
+		return nil, errors.New("error casting")
+	}
+
+	sim := subtInput.Input()
+
+	output, err := r.Repository.Create(sim)
+	if err != nil {
+		return nil, err
+	}
+
+	subtSim := subtInput.ChildInput()
+
+	subtSim.GroupID = sim.GroupID
+	subtSim.Base = sim
+
+	_, err = r.Aggregate(subtSim)
+	if err != nil {
+		return nil, err
+	}
+	return output, nil
+}
+
+func (r *repository) CountByOwnerAndCircuit(owner, circuit string) (int, error) {
 	panic("Not implemented")
 }
 
-func (r *Repository) GetAggregated(groupID string) (*Simulation, error) {
-	panic("Not implemented")
-}
-
-func (r *Repository) CreateAggregated(sim *simulations.Simulation) (*Simulation, error) {
-	subtSim := &Simulation{
-		Base:                sim,
-		GroupID:             sim.GroupID,
-		Score:               nil,
-		SimTimeDurationSec:  0,
-		RealTimeDurationSec: 0,
-		ModelCount:          0,
+func (r *repository) Aggregate(simulation *Simulation) (*Simulation, error) {
+	err := r.GetDB().Create(simulation).Error
+	if err != nil {
+		return nil, err
 	}
-
-	return subtSim, nil
+	return simulation, nil
 }

@@ -1,0 +1,40 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: $APPLICATION_NAME
+  namespace: $APPLICATION_ENVIRONMENT
+  labels:
+    app: $APPLICATION_NAME
+    environment: $CI_ENVIRONMENT_SLUG
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: $APPLICATION_NAME
+      environment: $CI_ENVIRONMENT_SLUG
+  template:
+    metadata:
+      labels:
+        app: $APPLICATION_NAME
+        environment: $CI_ENVIRONMENT_SLUG
+      annotations:
+        configHash: " "
+    spec:
+      containers:
+        - name: $APPLICATION_NAME
+          image: $CONTAINER_IMAGE
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8001
+          env:
+            - name: IGN_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
+          envFrom:
+            - configMapRef:
+                name: cloudsim-config
+      nodeSelector:
+        server: "true"
