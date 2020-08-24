@@ -491,11 +491,55 @@ func loadSubTRobotTypes(cfg *subTSpecificsConfig) {
 			"ROBOTIKA_FREYJA_SENSOR_CONFIG_2",
 			170,
 		),
+		"CSIRO_DATA61_OZBOT_ATR_SENSOR_CONFIG_1": generateSubTRobotType(
+			cfg,
+			"openrobotics",
+			"CSIRO_DATA61_OZBOT_ATR_SENSOR_CONFIG_1",
+			"CSIRO_DATA61_OZBOT_ATR",
+			"CSIRO_DATA61_OZBOT_ATR_SENSOR_CONFIG_1",
+			235,
+		),
+		"CSIRO_DATA61_OZBOT_ATR_SENSOR_CONFIG_2": generateSubTRobotType(
+			cfg,
+			"openrobotics",
+			"CSIRO_DATA61_OZBOT_ATR_SENSOR_CONFIG_2",
+			"CSIRO_DATA61_OZBOT_ATR",
+			"CSIRO_DATA61_OZBOT_ATR_SENSOR_CONFIG_2",
+			260,
+		),
+		"CTU_CRAS_NORLAB_ABSOLEM_SENSOR_CONFIG_1": generateSubTRobotType(
+			cfg,
+			"openrobotics",
+			"CTU_CRAS_NORLAB_ABSOLEM_SENSOR_CONFIG_1",
+			"CTU_CRAS_NORLAB_ABSOLEM",
+			"CTU_CRAS_NORLAB_ABSOLEM_SENSOR_CONFIG_1",
+			155,
+		),
+		"CTU_CRAS_NORLAB_ABSOLEM_SENSOR_CONFIG_2": generateSubTRobotType(
+			cfg,
+			"openrobotics",
+			"CTU_CRAS_NORLAB_ABSOLEM_SENSOR_CONFIG_2",
+			"CTU_CRAS_NORLAB_ABSOLEM",
+			"CTU_CRAS_NORLAB_ABSOLEM_SENSOR_CONFIG_2",
+			180,
+		),
+		"CERBERUS_GAGARIN_SENSOR_CONFIG_1": generateSubTRobotType(
+			cfg,
+			"openrobotics",
+			"CERBERUS_GAGARIN_SENSOR_CONFIG_1",
+			"CERBERUS_GAGARIN",
+			"CERBERUS_GAGARIN_SENSOR_CONFIG_1",
+			115,
+		),
 	}
 }
 
 // SubTCircuits holds the list of available circuits in SubT.
 var SubTCircuits = []string{
+	CircuitNIOSHSRConfigA,
+	CircuitNIOSHSRConfigB,
+	CircuitNIOSHEXConfigA,
+	CircuitNIOSHEXConfigB,
 	CircuitVirtualStix,
 	CircuitTunnelPractice1,
 	CircuitTunnelPractice2,

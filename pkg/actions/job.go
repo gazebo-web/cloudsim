@@ -18,10 +18,11 @@ var (
 )
 
 // JobFunc is the function signature used by job hooks and Execute function.
-type JobFunc func(tx *gorm.DB, deployment *Deployment, value interface{}) (interface{}, error)
+type JobFunc func(ctx Context, tx *gorm.DB, deployment *Deployment, value interface{}) (interface{}, error)
 
 // JobErrorHandler is the job function type called when an error occurs in a job.
-type JobErrorHandler func(tx *gorm.DB, deployment *Deployment, value interface{}, err error) (interface{}, error)
+type JobErrorHandler func(ctx Context, tx *gorm.DB, deployment *Deployment, value interface{},
+	err error) (interface{}, error)
 
 // JobDataType is used to store Job input and output data types.
 type JobDataType reflect.Type
@@ -137,7 +138,7 @@ func GetJobDataTypeName(value interface{}) string {
 
 // Extend customizes this job by modifying its hooks and error handlers.
 // The extension cannot replace the Execute function. If you need to change the Execute function, you should create a
-// new job instead of extending one.
+// new job instead.
 func (j *Job) Extend(extension Job) (*Job, error) {
 	// The extension name should match the
 	// Ensure that the Execute function is not changed
@@ -168,7 +169,7 @@ func (j *Job) validate() error {
 }
 
 // Run runs the job. It calls the job's pre-hooks, followed by its Execute method, and finally its post-hooks.
-func (j *Job) Run(tx *gorm.DB, deployment *Deployment, value interface{}) (interface{}, error) {
+func (j *Job) Run(ctx Context, tx *gorm.DB, deployment *Deployment, value interface{}) (interface{}, error) {
 	var err error
 	// Ensure there is an Execute function
 	if j.Execute == nil {
@@ -176,17 +177,17 @@ func (j *Job) Run(tx *gorm.DB, deployment *Deployment, value interface{}) (inter
 	}
 
 	// Process pre-hooks
-	if value, err = j.processHooks(tx, deployment, value, &j.PreHooks); err != nil {
+	if value, err = j.processHooks(ctx, tx, deployment, value, &j.PreHooks); err != nil {
 		return nil, err
 	}
 
 	// Execute job
-	if value, err = callJobFunc(j.Execute, tx, deployment, value); err != nil {
+	if value, err = callJobFunc(j.Execute, ctx, tx, deployment, value); err != nil {
 		return nil, err
 	}
 
 	// Process post-hooks
-	if value, err = j.processHooks(tx, deployment, value, &j.PostHooks); err != nil {
+	if value, err = j.processHooks(ctx, tx, deployment, value, &j.PostHooks); err != nil {
 		return nil, err
 	}
 
@@ -194,13 +195,13 @@ func (j *Job) Run(tx *gorm.DB, deployment *Deployment, value interface{}) (inter
 }
 
 // processHooks receives an input value and processes it using a sequence of hook functions.
-func (j *Job) processHooks(tx *gorm.DB, deployment *Deployment, value interface{},
+func (j *Job) processHooks(ctx Context, tx *gorm.DB, deployment *Deployment, value interface{},
 	hooks *[]JobFunc) (interface{}, error) {
 
 	var err error
 	for _, hook := range *hooks {
 		// Process the values
-		if value, err = callJobFunc(hook, tx, deployment, value); err != nil {
+		if value, err = callJobFunc(hook, ctx, tx, deployment, value); err != nil {
 			return nil, err
 		}
 	}
@@ -209,14 +210,16 @@ func (j *Job) processHooks(tx *gorm.DB, deployment *Deployment, value interface{
 }
 
 // callJobFunc calls a function of type JobFunc and checks that the output is valid.
-func callJobFunc(jobFunc JobFunc, tx *gorm.DB, deployment *Deployment, value interface{}) (interface{}, error) {
+func callJobFunc(jobFunc JobFunc, ctx Context, tx *gorm.DB, deployment *Deployment,
+	value interface{}) (interface{}, error) {
+
 	// Job functions should never return `nil`, as other jobs may need the value received from previous jobs.
 	// The only case where returning `nil` is acceptable is if the input was `nil` to begin with.
 	inputValueIsNil := value == nil
 
 	// Process the values
 	var err error
-	if value, err = jobFunc(tx, deployment, value); err != nil {
+	if value, err = jobFunc(ctx, tx, deployment, value); err != nil {
 		return nil, err
 	}
 

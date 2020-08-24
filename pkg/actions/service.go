@@ -106,7 +106,7 @@ func (s *Service) RegisterAction(applicationName *string, actionName string, act
 // Execute executes an action by running each job in the action's job sequence.
 // Executing an action includes running an action from scratch, restarting an action (e.g. due to a server restart) and
 // handling errors that may come up while running actions.
-func (s *Service) Execute(tx *gorm.DB, executeInput ExecuteInputer, jobInput interface{}) (err error) {
+func (s *Service) Execute(ctx Context, tx *gorm.DB, executeInput ExecuteInputer, jobInput interface{}) (err error) {
 	// input contains generic execution information necessary such as the action, the deployment and current job index
 	input := executeInput.getExecuteInput()
 
@@ -147,12 +147,12 @@ func (s *Service) Execute(tx *gorm.DB, executeInput ExecuteInputer, jobInput int
 
 	// Process the sequence of jobs
 	if deployment.isRunning() {
-		err = s.processJobs(tx, action, executeInput, jobInput)
+		err = s.processJobs(ctx, tx, action, executeInput, jobInput)
 	}
 
 	// Rollback if the deployment has been marked for rollback
 	if deployment.isRollingBack() {
-		return s.rollback(tx, action, executeInput, err)
+		return s.rollback(ctx, tx, action, executeInput, err)
 	}
 
 	return nil
@@ -163,7 +163,7 @@ func (s *Service) Execute(tx *gorm.DB, executeInput ExecuteInputer, jobInput int
 // If the `executeInput`'s deployment is not new, this method will only process the current job onwards.
 // `jobInput` is also automatically loaded from persistent storage (and overwritten) if the `executeInput`'s
 // deployment is not new.
-func (s *Service) processJobs(tx *gorm.DB, action *Action, executeInput ExecuteInputer,
+func (s *Service) processJobs(ctx Context, tx *gorm.DB, action *Action, executeInput ExecuteInputer,
 	jobInput interface{}) (err error) {
 	// input contains generic execution information necessary such as the action, the deployment and current job index
 	input := executeInput.getExecuteInput()
@@ -196,7 +196,7 @@ func (s *Service) processJobs(tx *gorm.DB, action *Action, executeInput ExecuteI
 		}
 
 		// Run the job
-		jobInput, err = job.Run(tx, deployment, jobInput)
+		jobInput, err = job.Run(ctx, tx, deployment, jobInput)
 		// If an error was found, add it to the deployment and return
 		if err != nil {
 			if err := deployment.addJobError(tx, nil, err); err != nil {
@@ -212,7 +212,7 @@ func (s *Service) processJobs(tx *gorm.DB, action *Action, executeInput ExecuteI
 // rollback rolls back an execution, releasing any resources taken (e.g. cloud instances, orchestration resources,
 // etc.) and undoing any changes that may affect other executions.
 // All error handlers for the current and previous jobs will be executed, to allow them to reset resources.
-func (s *Service) rollback(tx *gorm.DB, action *Action, executeInput ExecuteInputer, err error) error {
+func (s *Service) rollback(ctx Context, tx *gorm.DB, action *Action, executeInput ExecuteInputer, err error) error {
 	// input contains generic execution information necessary such as the action, the deployment and current job index
 	input := executeInput.getExecuteInput()
 	deployment := executeInput.getDeployment()
@@ -233,7 +233,7 @@ func (s *Service) rollback(tx *gorm.DB, action *Action, executeInput ExecuteInpu
 
 		// Run rollback logic for the current job if defined
 		if job.RollbackHandler != nil {
-			_, handlerErr := job.RollbackHandler(tx, deployment, nil, err)
+			_, handlerErr := job.RollbackHandler(ctx, tx, deployment, nil, err)
 
 			// If an error was found, add it to the deployment and return
 			if handlerErr != nil {

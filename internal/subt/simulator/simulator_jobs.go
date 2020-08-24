@@ -1,40 +1,18 @@
 package simulator
 
 import (
+	"github.com/jinzhu/gorm"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/actions"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
 )
 
+//----------------------------------------------------------------------------------------------------------------------
+
 // JobCheckPendingStatus is used to check that a certain simulation has pending status.
 var JobCheckPendingStatus = &actions.Job{
-	Name:     "check-pending-status",
-	PreHooks: nil,
-	// TODO: Use checkPendingStatus.
-	Execute:         nil,
-	PostHooks:       nil,
-	RollbackHandler: nil,
-	InputType:       actions.GetJobDataType(simulations.GroupID("")),
-	OutputType:      actions.GetJobDataType(simulations.GroupID("")),
-}
-
-// JobCheckSimulationParenthood is used to check that a simulation is not of kind simulations.SimParent.
-var JobCheckSimulationParenthood = &actions.Job{
-	Name:     "check-simulation-parenthood",
-	PreHooks: nil,
-	// TODO: Use checkSimulationIsParent.
-	Execute:         nil,
-	PostHooks:       nil,
-	RollbackHandler: nil,
-	InputType:       actions.GetJobDataType(simulations.GroupID("")),
-	OutputType:      actions.GetJobDataType(simulations.GroupID("")),
-}
-
-// JobCheckParentSimulationWithError is used to check if a parent simulation of a certain children simulation has an error.
-var JobCheckParentSimulationWithError = &actions.Job{
-	Name:     "check-parent-simulation-with-error",
-	PreHooks: nil,
-	// TODO: Use checkParentSimulationWithError.
-	Execute:         nil,
+	Name:            "check-pending-status",
+	PreHooks:        nil,
+	Execute:         checkPendingStatus,
 	PostHooks:       nil,
 	RollbackHandler: nil,
 	InputType:       actions.GetJobDataType(simulations.GroupID("")),
@@ -42,12 +20,13 @@ var JobCheckParentSimulationWithError = &actions.Job{
 }
 
 // checkPendingStatus is the main process executed by JobCheckSimulationParenthood.
-func checkPendingStatus(ctx actions.Context, value interface{}) (interface{}, error) {
+func checkPendingStatus(ctx actions.Context, tx *gorm.DB, deployment *actions.Deployment, value interface{}) (interface{}, error) {
+	simCtx := NewContext(ctx)
 	gid, ok := value.(simulations.GroupID)
 	if !ok {
 		return nil, simulations.ErrInvalidGroupID
 	}
-	sim, err := ctx.Services().Simulations().Get(gid)
+	sim, err := simCtx.Services().Simulations().Get(gid)
 	if err != nil {
 		return nil, err
 	}
@@ -57,18 +36,32 @@ func checkPendingStatus(ctx actions.Context, value interface{}) (interface{}, er
 	return gid, nil
 }
 
+//----------------------------------------------------------------------------------------------------------------------
+
+// JobCheckSimulationParenthood is used to check that a simulation is not of kind simulations.SimParent.
+var JobCheckSimulationParenthood = &actions.Job{
+	Name:            "check-simulation-parenthood",
+	PreHooks:        nil,
+	Execute:         checkSimulationIsParent,
+	PostHooks:       nil,
+	RollbackHandler: nil,
+	InputType:       actions.GetJobDataType(simulations.GroupID("")),
+	OutputType:      actions.GetJobDataType(simulations.GroupID("")),
+}
+
 // checkSimulationIsParent is the main process executed by JobCheckPendingStatus.
-func checkSimulationIsParent(ctx actions.Context, value interface{}) (interface{}, error) {
+func checkSimulationIsParent(ctx actions.Context, tx *gorm.DB, deployment *actions.Deployment, value interface{}) (interface{}, error) {
+	simCtx := NewContext(ctx)
 	gid, ok := value.(simulations.GroupID)
 	if !ok {
 		return nil, simulations.ErrInvalidGroupID
 	}
-	sim, err := ctx.Services().Simulations().Get(gid)
+	sim, err := simCtx.Services().Simulations().Get(gid)
 	if err != nil {
 		return nil, err
 	}
 	if sim.Kind() == simulations.SimParent {
-		_, err := ctx.Services().Simulations().Reject(gid)
+		_, err := simCtx.Services().Simulations().Reject(gid)
 		if err != nil {
 			return nil, err
 		}
@@ -77,20 +70,34 @@ func checkSimulationIsParent(ctx actions.Context, value interface{}) (interface{
 	return gid, nil
 }
 
+//----------------------------------------------------------------------------------------------------------------------
+
+// JobCheckParentSimulationWithError is used to check if a parent simulation of a certain children simulation has an error.
+var JobCheckParentSimulationWithError = &actions.Job{
+	Name:            "check-parent-simulation-with-error",
+	PreHooks:        nil,
+	Execute:         checkParentSimulationWithError,
+	PostHooks:       nil,
+	RollbackHandler: nil,
+	InputType:       actions.GetJobDataType(simulations.GroupID("")),
+	OutputType:      actions.GetJobDataType(simulations.GroupID("")),
+}
+
 // checkParentSimulationWithError is the main process executed by JobCheckParentSimulationWithError.
-func checkParentSimulationWithError(ctx actions.Context, value interface{}) (interface{}, error) {
+func checkParentSimulationWithError(ctx actions.Context, tx *gorm.DB, deployment *actions.Deployment, value interface{}) (interface{}, error) {
+	simCtx := NewContext(ctx)
 	gid, ok := value.(simulations.GroupID)
 	if !ok {
 		return nil, simulations.ErrInvalidGroupID
 	}
-	sim, err := ctx.Services().Simulations().Get(gid)
+	sim, err := simCtx.Services().Simulations().Get(gid)
 	if err != nil {
 		return nil, err
 	}
 	if sim.Kind() != simulations.SimChild {
 		return gid, nil
 	}
-	parent, err := ctx.Services().Simulations().GetParent(gid)
+	parent, err := simCtx.Services().Simulations().GetParent(gid)
 	if err != nil {
 		return nil, err
 	}
@@ -99,3 +106,5 @@ func checkParentSimulationWithError(ctx actions.Context, value interface{}) (int
 	}
 	return gid, nil
 }
+
+//----------------------------------------------------------------------------------------------------------------------
