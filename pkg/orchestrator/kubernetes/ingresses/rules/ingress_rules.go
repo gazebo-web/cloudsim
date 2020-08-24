@@ -68,12 +68,7 @@ func (m *ingressRules) Upsert(rule orchestrator.Rule, paths ...orchestrator.Path
 	updateRules := ingress.Spec.Rules
 
 	// Find host
-	position := -1
-	for i, ingressRule := range updateRules {
-		if ingressRule.Host == rule.Host() {
-			position = i
-		}
-	}
+	position := findRule(rule, updateRules)
 
 	// Return error if host wasn't found
 	if position == -1 {
@@ -112,15 +107,10 @@ func (m *ingressRules) Remove(rule orchestrator.Rule, paths ...orchestrator.Path
 	}
 
 	// Get rules from ingress
-	updateRules := ingress.Spec.Rules
+	removeRules := ingress.Spec.Rules
 
 	// Find host
-	position := -1
-	for i, ingressRule := range updateRules {
-		if ingressRule.Host == rule.Host() {
-			position = i
-		}
-	}
+	position := findRule(rule, removeRules)
 
 	// Return an error if the host wasn't found.
 	if position == -1 {
@@ -149,6 +139,20 @@ func (m *ingressRules) Remove(rule orchestrator.Rule, paths ...orchestrator.Path
 
 	m.Logger.Debug(fmt.Sprintf("Paths from rule host [%s] have been removed. Current paths: [%+v]", rule.Host(), rule.Paths()))
 	return nil
+}
+
+// findRule finds the given rule in the provided slice of searchRules.
+// It returns the position of the given rule.
+// It returns -1 if it didn't find the rule.
+func findRule(rule orchestrator.Rule, searchRules []v1beta1.IngressRule) int {
+	position := -1
+	for i, ingressRule := range searchRules {
+		if ingressRule.Host == rule.Host() {
+			position = i
+			break
+		}
+	}
+	return position
 }
 
 // NewIngressRules initializes a new orchestrator.IngressRules implementation using Kubernetes.
