@@ -37,9 +37,9 @@ var serviceTestData = struct {
 	getJobDataCount         func(t *testing.T, db *gorm.DB, deployment *Deployment) int
 	getDeploymentErrorCount func(t *testing.T, db *gorm.DB, deployment *Deployment) int
 	createJobs              func(t *testing.T, rollbackHandlerCalls *[]int) Jobs
-	execute                 func(t *testing.T, ctx Context, db *gorm.DB, service *Service, jobs Jobs,
+	execute                 func(t *testing.T, ctx Context, db *gorm.DB, service *service, jobs Jobs,
 		executeInput *ExecuteInput, jobInput interface{}, errorExpected bool) *Deployment
-	processJobs func(t *testing.T, tr *TestResource, service *Service, executeInput *ExecuteInput,
+	processJobs func(t *testing.T, tr *TestResource, service *service, executeInput *ExecuteInput,
 		jobInput interface{}, jobs Jobs) (*ExecuteInput, error)
 }{
 	// Errors
@@ -85,7 +85,7 @@ var serviceTestData = struct {
 	},
 
 	// processJobs runs service.processJobs on a slice of jobs
-	processJobs: func(t *testing.T, tr *TestResource, service *Service, executeInput *ExecuteInput,
+	processJobs: func(t *testing.T, tr *TestResource, service *service, executeInput *ExecuteInput,
 		jobInput interface{}, jobs Jobs) (*ExecuteInput, error) {
 		if executeInput == nil {
 			executeInput = &ExecuteInput{}
@@ -187,7 +187,7 @@ var serviceTestData = struct {
 	},
 
 	// execute performs setup operations and calls service.Execute
-	execute: func(t *testing.T, ctx Context, db *gorm.DB, service *Service, jobs Jobs, executeInput *ExecuteInput,
+	execute: func(t *testing.T, ctx Context, db *gorm.DB, service *service, jobs Jobs, executeInput *ExecuteInput,
 		jobInput interface{}, errorExpected bool) *Deployment {
 
 		td := getTestData(t)
@@ -219,10 +219,10 @@ var serviceTestData = struct {
 }
 
 // newTestService creates a new service containing the test action
-func newTestService(t *testing.T) *Service {
+func newTestService(t *testing.T) *service {
 	td := getTestData(t)
 
-	service := NewService()
+	service := NewService().(*service)
 
 	if err := service.RegisterAction(&td.applicationName, td.actionName, td.action); err != nil {
 		panic(fmt.Sprintf("failed to register action %s", td.actionName))
