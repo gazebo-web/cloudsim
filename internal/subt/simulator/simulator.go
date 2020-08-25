@@ -38,6 +38,7 @@ type subTSimulator struct {
 func (s *subTSimulator) Start(ctx context.Context, groupID simulations.GroupID) error {
 	ctx = context.WithValue(ctx, contextPlatform, s.platform)
 	ctx = context.WithValue(ctx, contextServices, s.services)
+
 	execInput := &actions.ExecuteInput{
 		ApplicationName: &s.applicationName,
 		ActionName:      actionNameStartSimulation,

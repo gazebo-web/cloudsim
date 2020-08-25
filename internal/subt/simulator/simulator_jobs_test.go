@@ -36,14 +36,10 @@ func (s *jobsTestSuite) SetupTest() {
 		s.FailNow(err.Error())
 	}
 
-	s.db.DropTableIfExists(&actions.Deployment{})
-	s.db.DropTableIfExists(&actions.DeploymentDataSet{})
-	s.db.DropTableIfExists(&actions.DeploymentError{})
-
-	s.db.AutoMigrate(&actions.Deployment{})
-	s.db.AutoMigrate(&actions.DeploymentDataSet{})
-	s.db.AutoMigrate(&actions.DeploymentError{})
-
+	err = actions.MigrateDB(s.db, true)
+	if err != nil {
+		s.FailNow(err.Error())
+	}
 }
 
 func (s *jobsTestSuite) TestCheckPendingStatusSuccessWhenStatusIsPending() {
@@ -86,7 +82,6 @@ func (s *jobsTestSuite) TestCheckPendingStatusFailsWhenStatusIsNotPending() {
 }
 
 func (s *jobsTestSuite) prepareActions(jobs ...*actions.Job) actions.Context {
-
 	// Set up action with jobs
 	action, err := actions.NewAction(jobs)
 	s.NoError(err)

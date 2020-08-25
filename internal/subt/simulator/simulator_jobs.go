@@ -34,14 +34,17 @@ var JobCheckPendingStatus = &actions.Job{
 // checkPendingStatus is the main process executed by JobCheckSimulationParenthood.
 func checkPendingStatus(ctx actions.Context, tx *gorm.DB, deployment *actions.Deployment, value interface{}) (interface{}, error) {
 	simCtx := NewContext(ctx)
+
 	gid, ok := value.(simulations.GroupID)
 	if !ok {
 		return nil, simulations.ErrInvalidGroupID
 	}
+
 	sim, err := simCtx.Services().Simulations().Get(gid)
 	if err != nil {
 		return nil, err
 	}
+
 	if sim.Status() != simulations.StatusPending {
 		return nil, simulations.ErrIncorrectStatus
 	}
@@ -61,14 +64,17 @@ var JobCheckSimulationParenthood = &actions.Job{
 // checkSimulationIsParent is the main process executed by JobCheckPendingStatus.
 func checkSimulationIsParent(ctx actions.Context, tx *gorm.DB, deployment *actions.Deployment, value interface{}) (interface{}, error) {
 	simCtx := NewContext(ctx)
+
 	gid, ok := value.(simulations.GroupID)
 	if !ok {
 		return nil, simulations.ErrInvalidGroupID
 	}
+
 	sim, err := simCtx.Services().Simulations().Get(gid)
 	if err != nil {
 		return nil, err
 	}
+
 	if sim.Kind() == simulations.SimParent {
 		_, err := simCtx.Services().Simulations().Reject(gid)
 		if err != nil {
@@ -76,6 +82,7 @@ func checkSimulationIsParent(ctx actions.Context, tx *gorm.DB, deployment *actio
 		}
 		return nil, simulations.ErrIncorrectKind
 	}
+
 	return gid, nil
 }
 
@@ -149,28 +156,28 @@ func updateSimulationStatusToLaunchNodes(ctx actions.Context, tx *gorm.DB, deplo
 // JobLaunchNodes is used to launch the required nodes to run a simulation.
 var JobLaunchNodes = &actions.Job{
 	Name:       "launch-nodes",
+	PreHooks:   []actions.JobFunc{preLaunchNodes},
 	Execute:    launchNodes,
 	InputType:  actions.GetJobDataType(simulations.GroupID("")),
-	OutputType: actions.GetJobDataType(cloud.CreateMachinesOutput{}),
+	OutputType: actions.GetJobDataType(simulations.GroupID("")),
+}
+
+func preLaunchNodes(ctx actions.Context, tx *gorm.DB, deployment *actions.Deployment, value interface{}) (interface{}, error) {
+	simCtx := NewContext(ctx)
+	simCtx.Services().ConfigStore()
+	return nil, nil
 }
 
 // launchNodes is the main process executed by JobLaunchNodes.
 func launchNodes(ctx actions.Context, tx *gorm.DB, deployment *actions.Deployment, value interface{}) (interface{}, error) {
 	simCtx := NewContext(ctx)
 
-	gid, ok := value.(simulations.GroupID)
+	createMachineInput, ok := value.([]cloud.CreateMachinesInput)
 	if !ok {
 		return nil, simulations.ErrInvalidGroupID
 	}
 
-	sim, err := simCtx.Services().Simulations().Get(gid)
-	if err != nil {
-		return nil, err
-	}
-
-	// output, err := simCtx.Platform().Machines().Create(sim.ToCreateMachinesInput())
-	// deployment.SetJobData(tx, &deployment.CurrentJob, actions.GetJobDataType(cloud.CreateMachinesOutput{}), output)
-
+	output, err := simCtx.Platform().Machines().Create(createMachineInput)
 	if err != nil {
 		return nil, err
 	}

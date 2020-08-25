@@ -39,7 +39,7 @@ func (f fakeSimulation) ToCreateMachinesInput() []cloud.CreateMachinesInput {
 				},
 			},
 			InitScript: nil,
-			Retries:    0,
+			Retries:    10,
 		},
 		{
 			InstanceProfile: &instanceProfile,
