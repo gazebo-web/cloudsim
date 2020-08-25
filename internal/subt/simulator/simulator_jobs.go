@@ -168,8 +168,8 @@ func launchNodes(ctx actions.Context, tx *gorm.DB, deployment *actions.Deploymen
 		return nil, err
 	}
 
-	output, err := simCtx.Platform().Machines().Create(sim.ToCreateMachinesInput())
-	deployment.SetJobData(tx, &deployment.CurrentJob, actions.GetJobDataType(cloud.CreateMachinesOutput{}), output)
+	// output, err := simCtx.Platform().Machines().Create(sim.ToCreateMachinesInput())
+	// deployment.SetJobData(tx, &deployment.CurrentJob, actions.GetJobDataType(cloud.CreateMachinesOutput{}), output)
 
 	if err != nil {
 		return nil, err

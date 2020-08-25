@@ -1,11 +1,11 @@
 package platform
 
 import (
-	"github.com/marcoshuck/cloudsim-refactor-proposal/pkg/platform/orchestrator"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/cloud"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/cloud/aws"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/cloud/aws/ec2"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/cloud/aws/s3"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/kubernetes"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/kubernetes/spdy"
 	"gitlab.com/ignitionrobotics/web/ign-go"
@@ -14,7 +14,7 @@ import (
 type k8sAwsPlatform struct {
 	storage      cloud.Storage
 	machines     cloud.Machines
-	orchestrator orchestrator.Orchestrator
+	orchestrator orchestrator.Cluster
 }
 
 func (p *k8sAwsPlatform) Storage() cloud.Storage {
@@ -25,7 +25,7 @@ func (p *k8sAwsPlatform) Machines() cloud.Machines {
 	return p.machines
 }
 
-func (p *k8sAwsPlatform) Orchestrator() orchestrator.Orchestrator {
+func (p *k8sAwsPlatform) Orchestrator() orchestrator.Cluster {
 	return p.orchestrator
 }
 
@@ -43,7 +43,7 @@ func initializeAWS(logger ign.Logger) (cloud.Storage, cloud.Machines, error) {
 }
 
 // initializeKubernetes initializes a new Kubernetes orchestrator.
-func initializeKubernetes(logger ign.Logger) (orchestrator.Orchestrator, error) {
+func initializeKubernetes(logger ign.Logger) (orchestrator.Cluster, error) {
 	config, err := kubernetes.GetConfig()
 	if err != nil {
 		return nil, err

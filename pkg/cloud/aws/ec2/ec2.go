@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
+	"github.com/aws/aws-sdk-go/aws/client"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/aws/aws-sdk-go/service/ec2/ec2iface"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/cloud"
@@ -27,6 +28,11 @@ const (
 	// longSubnetLength specifies the length of a v2 AWS subnet ID.
 	longSubnetLength = 24
 )
+
+// GetClient returns an EC2 client from the given config provider.
+func GetClient(config client.ConfigProvider) ec2iface.EC2API {
+	return ec2.New(config)
+}
 
 // machines is a cloud.Machines implementation.
 type machines struct {
