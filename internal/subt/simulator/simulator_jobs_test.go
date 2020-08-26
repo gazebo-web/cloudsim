@@ -5,11 +5,13 @@ import (
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/sqlite"
 	"github.com/stretchr/testify/suite"
+	"gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/env"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/actions"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/application"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/platform"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations/fake"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/store"
 	"testing"
 )
 
@@ -24,13 +26,15 @@ type jobsTestSuite struct {
 	appServices       application.Services
 	db                *gorm.DB
 	simulationService *fake.Service
+	store             store.Store
 }
 
 func (s *jobsTestSuite) SetupTest() {
 	var err error
 	s.actionService = actions.NewService()
 	s.simulationService = fake.NewService()
-	s.appServices = application.NewServices(s.simulationService)
+	s.store = env.NewStore()
+	s.appServices = application.NewServices(s.simulationService, s.store)
 	s.db, err = gorm.Open("sqlite3", "file::memory:?cache=shared")
 	if err != nil {
 		s.FailNow(err.Error())

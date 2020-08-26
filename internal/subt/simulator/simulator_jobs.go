@@ -177,17 +177,17 @@ func preLaunchNodes(ctx actions.Context, tx *gorm.DB, deployment *actions.Deploy
 	}
 
 	input := cloud.CreateMachinesInput{
-		InstanceProfile: simCtx.Services().ConfigStore().Machines().InstanceProfile(),
-		KeyName:         simCtx.Services().ConfigStore().Machines().KeyName(),
-		Type:            simCtx.Services().ConfigStore().Machines().Type(),
+		InstanceProfile: simCtx.Services().Store().Machines().InstanceProfile(),
+		KeyName:         simCtx.Services().Store().Machines().KeyName(),
+		Type:            simCtx.Services().Store().Machines().Type(),
 		Image:           sim.Image(),
-		MinCount:        simCtx.Services().ConfigStore().Machines().MinCount(),
-		MaxCount:        simCtx.Services().ConfigStore().Machines().MaxCount(),
-		FirewallRules:   simCtx.Services().ConfigStore().Machines().FirewallRules(),
-		SubnetID:        simCtx.Services().ConfigStore().Machines().Subnet()(),
-		Zone:            simCtx.Services().ConfigStore().Machines().Zone()(),
-		Tags:            simCtx.Services().ConfigStore().Machines().Tags(sim),
-		InitScript:      simCtx.Services().ConfigStore().Machines().InitScript(),
+		MinCount:        1,
+		MaxCount:        1,
+		FirewallRules:   simCtx.Services().Store().Machines().FirewallRules(),
+		SubnetID:        simCtx.Services().Store().Machines().Subnet(),
+		Zone:            simCtx.Services().Store().Machines().Zone(),
+		Tags:            simCtx.Services().Store().Machines().Tags(sim),
+		InitScript:      simCtx.Services().Store().Machines().InitScript(),
 		Retries:         10,
 	}
 

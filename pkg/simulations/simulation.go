@@ -75,4 +75,7 @@ type Simulation interface {
 
 	// ToCreateMachinesInput returns the slice of create machines request needed to run this simulation.
 	ToCreateMachinesInput() []cloud.CreateMachinesInput
+
+	// Image returns the simulation's docker image. This image is used as the solution image.
+	Image() string
 }
