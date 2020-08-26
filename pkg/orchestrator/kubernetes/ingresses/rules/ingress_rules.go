@@ -23,12 +23,6 @@ func (m *ingressRules) Get(resource orchestrator.Resource, host string) (orchest
 	))
 
 	// Get ingress from cluster
-	m.Logger.Debug(
-		fmt.Sprintf(
-			"Getting ingress rule with name [%s] in namespace [%s] and with the following selectors: [%s] ",
-			resource.Name(), resource.Namespace(), resource.Selector().String(),
-		),
-	)
 	ingress, err := m.API.ExtensionsV1beta1().Ingresses(resource.Namespace()).Get(resource.Name(), metav1.GetOptions{})
 	if err != nil {
 		m.Logger.Debug(fmt.Sprintf(
