@@ -21,7 +21,7 @@ func TestJobs(t *testing.T) {
 
 type jobsTestSuite struct {
 	suite.Suite
-	actionService     *actions.Service
+	actionService     actions.Servicer
 	platform          platform.Platform
 	appServices       application.Services
 	db                *gorm.DB

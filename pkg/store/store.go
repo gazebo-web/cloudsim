@@ -18,6 +18,7 @@ type Machines interface {
 	FirewallRules() []string
 	Subnet() string
 	Zone() string
-	Tags(simulation simulations.Simulation) []cloud.Tag
+	Tags(simulation simulations.Simulation, nodeType string) []cloud.Tag
 	InitScript() *string
+	BaseImage() string
 }

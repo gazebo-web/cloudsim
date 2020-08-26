@@ -180,7 +180,7 @@ func preLaunchNodes(ctx actions.Context, tx *gorm.DB, deployment *actions.Deploy
 		InstanceProfile: simCtx.Services().Store().Machines().InstanceProfile(),
 		KeyName:         simCtx.Services().Store().Machines().KeyName(),
 		Type:            simCtx.Services().Store().Machines().Type(),
-		Image:           sim.Image(),
+		Image:           simCtx.Services().Store().Machines().BaseImage(),
 		MinCount:        1,
 		MaxCount:        1,
 		FirewallRules:   simCtx.Services().Store().Machines().FirewallRules(),

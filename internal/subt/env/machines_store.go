@@ -1,6 +1,7 @@
 package env
 
 import (
+	"fmt"
 	"github.com/caarlos0/env"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/cloud"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
@@ -15,7 +16,14 @@ type machineEnvStore struct {
 	SubnetsValue         []string `env:"SUBT_MACHINES_SUBNETS,required" envSeparator:","`
 	ZonesValue           []string `env:"SUBT_MACHINES_ZONES,required" envSeparator:","`
 	MachinesLimitValue   int      `env:"SUBT_MACHINES_LIMIT" envDefault:"-1"`
+	BaseImageValue       string   `env:"SUBT_MACHINES_BASE_IMAGE" envDefault:"ami-08861f7e7b409ed0c"`
+	NamePrefixValue      string   `env:"SUBT_MACHINES_NAME_PREFIX,required" envDefault:"cloudsim-subt-node"`
+	ClusterNameValue     string   `env:"SUBT_MACHINES_CLUSTER_NAME,required"`
 	createdMachines      int
+}
+
+func (m *machineEnvStore) BaseImage() string {
+	return m.BaseImageValue
 }
 
 func (m *machineEnvStore) InstanceProfile() *string {
@@ -44,8 +52,25 @@ func (m *machineEnvStore) Zone() string {
 	return m.SubnetsValue[i]
 }
 
-func (m *machineEnvStore) Tags(simulation simulations.Simulation) []cloud.Tag {
-	return nil
+func (m *machineEnvStore) Tags(simulation simulations.Simulation, nodeType string) []cloud.Tag {
+	name := fmt.Sprintf("%s-%s-%s", m.NamePrefixValue, simulation.GroupID(), nodeType)
+	clusterKey := fmt.Sprintf("kubernetes.io/cluster/%s", m.ClusterNameValue)
+	return []cloud.Tag{
+		{
+			Resource: "instance",
+			Map: map[string]string{
+				"Name":                       name,
+				"CloudsimGroupID":            string(simulation.GroupID()),
+				"project":                    "cloudsim",
+				"Cloudsim":                   "True",
+				"SubT":                       "True",
+				"cloudsim-application":       "SubT",
+				"cloudsim-simulation-worker": m.NamePrefixValue,
+				"cloudsim_node_type":         nodeType,
+				clusterKey:                   "owned",
+			},
+		},
+	}
 }
 
 func (m *machineEnvStore) InitScript() *string {

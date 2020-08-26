@@ -43,7 +43,7 @@ func (s *subTSimulator) Start(ctx context.Context, groupID simulations.GroupID) 
 		ApplicationName: &s.applicationName,
 		ActionName:      actionNameStartSimulation,
 	}
-	err := s.actions.Execute(s.db, execInput, groupID)
+	err := s.actions.Execute(actions.NewContext(ctx), s.db, execInput, groupID)
 	if err != nil {
 		return err
 	}
@@ -58,7 +58,7 @@ func (s *subTSimulator) Stop(ctx context.Context, groupID simulations.GroupID) e
 		ApplicationName: &s.applicationName,
 		ActionName:      actionNameStopSimulation,
 	}
-	err := s.actions.Execute(s.db, execInput, groupID)
+	err := s.actions.Execute(actions.NewContext(ctx), s.db, execInput, groupID)
 	if err != nil {
 		return err
 	}
@@ -73,7 +73,7 @@ func (s *subTSimulator) Restart(ctx context.Context, groupID simulations.GroupID
 		ApplicationName: &s.applicationName,
 		ActionName:      actionNameRestartSimulation,
 	}
-	err := s.actions.Execute(s.db, execInput, groupID)
+	err := s.actions.Execute(actions.NewContext(ctx), s.db, execInput, groupID)
 	if err != nil {
 		return err
 	}
