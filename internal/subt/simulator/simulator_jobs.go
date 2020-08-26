@@ -1,6 +1,7 @@
 package simulator
 
 import (
+	"fmt"
 	"github.com/jinzhu/gorm"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/actions"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/cloud"
@@ -176,25 +177,46 @@ func preLaunchNodes(ctx actions.Context, tx *gorm.DB, deployment *actions.Deploy
 		return nil, err
 	}
 
-	input := cloud.CreateMachinesInput{
-		InstanceProfile: simCtx.Services().Store().Machines().InstanceProfile(),
-		KeyName:         simCtx.Services().Store().Machines().KeyName(),
-		Type:            simCtx.Services().Store().Machines().Type(),
-		Image:           simCtx.Services().Store().Machines().BaseImage(),
-		MinCount:        1,
-		MaxCount:        1,
-		FirewallRules:   simCtx.Services().Store().Machines().FirewallRules(),
-		SubnetID:        simCtx.Services().Store().Machines().Subnet(),
-		Zone:            simCtx.Services().Store().Machines().Zone(),
-		Tags:            simCtx.Services().Store().Machines().Tags(sim),
-		InitScript:      simCtx.Services().Store().Machines().InitScript(),
-		Retries:         10,
+	robots, err := simCtx.Services().Simulations().GetRobots(gid)
+
+	input := []cloud.CreateMachinesInput{
+		{
+			InstanceProfile: simCtx.Services().Store().Machines().InstanceProfile(),
+			KeyName:         simCtx.Services().Store().Machines().KeyName(),
+			Type:            simCtx.Services().Store().Machines().Type(),
+			Image:           simCtx.Services().Store().Machines().BaseImage(),
+			MinCount:        1,
+			MaxCount:        1,
+			FirewallRules:   simCtx.Services().Store().Machines().FirewallRules(),
+			SubnetID:        simCtx.Services().Store().Machines().Subnet(),
+			Zone:            simCtx.Services().Store().Machines().Zone(),
+			Tags:            simCtx.Services().Store().Machines().Tags(sim, "gzserver", "gzserver"),
+			InitScript:      simCtx.Services().Store().Machines().InitScript(),
+			Retries:         10,
+		},
+	}
+
+	for _, r := range robots {
+		input = append(input, cloud.CreateMachinesInput{
+			InstanceProfile: simCtx.Services().Store().Machines().InstanceProfile(),
+			KeyName:         simCtx.Services().Store().Machines().KeyName(),
+			Type:            simCtx.Services().Store().Machines().Type(),
+			Image:           simCtx.Services().Store().Machines().BaseImage(),
+			MinCount:        1,
+			MaxCount:        1,
+			FirewallRules:   simCtx.Services().Store().Machines().FirewallRules(),
+			SubnetID:        simCtx.Services().Store().Machines().Subnet(),
+			Zone:            simCtx.Services().Store().Machines().Zone(),
+			Tags:            simCtx.Services().Store().Machines().Tags(sim, "field-computer", fmt.Sprintf("fc-%s", r.Name())),
+			InitScript:      simCtx.Services().Store().Machines().InitScript(),
+			Retries:         10,
+		})
 	}
 
 	return map[string]interface{}{
-		"groupID":             gid,
-		"simulation":          sim,
-		"createMachinesInput": input,
+		"groupID":              gid,
+		"simulation":           sim,
+		"createMachinesInputs": input,
 	}, nil
 }
 
@@ -209,7 +231,7 @@ func launchNodes(ctx actions.Context, tx *gorm.DB, deployment *actions.Deploymen
 		return nil, simulations.ErrInvalidGroupID
 	}
 
-	createMachineInput, ok := inputMap["createMachinesInput"].([]cloud.CreateMachinesInput)
+	createMachineInputs, ok := inputMap["createMachinesInputs"].([]cloud.CreateMachinesInput)
 	if !ok {
 		return nil, simulations.ErrInvalidInput
 	}
@@ -219,7 +241,7 @@ func launchNodes(ctx actions.Context, tx *gorm.DB, deployment *actions.Deploymen
 		return nil, simulations.ErrInvalidInput
 	}
 
-	output, err := simCtx.Platform().Machines().Create(createMachineInput)
+	output, err := simCtx.Platform().Machines().Create(createMachineInputs)
 	if err != nil {
 		if dataErr := deployment.SetJobData(tx, &deployment.CurrentJob, "machine-list", output); dataErr != nil {
 			return nil, dataErr
