@@ -94,6 +94,14 @@ func (m *machineEnvStore) Tags(simulation simulations.Simulation, nodeType strin
 	}
 }
 
+func (m *machineEnvStore) NamePrefix() string {
+	return m.NamePrefixValue
+}
+
+func (m *machineEnvStore) Limit() int {
+	return m.MachinesLimitValue
+}
+
 func (m *machineEnvStore) InitScript() *string {
 	return nil
 }

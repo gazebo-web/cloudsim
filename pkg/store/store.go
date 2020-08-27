@@ -23,4 +23,6 @@ type Machines interface {
 	BaseImage() string
 	Timeout() time.Duration
 	PollFrequency() time.Duration
+	Limit() int
+	NamePrefix() string
 }

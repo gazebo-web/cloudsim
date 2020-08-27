@@ -7,6 +7,7 @@ import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/cloud"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
+	"time"
 )
 
 // JobsStartSimulation groups the jobs needed to start a simulation.
@@ -36,7 +37,9 @@ var JobCheckPendingStatus = &actions.Job{
 }
 
 // checkPendingStatus is the main process executed by JobCheckSimulationParenthood.
-func checkPendingStatus(ctx actions.Context, tx *gorm.DB, deployment *actions.Deployment, value interface{}) (interface{}, error) {
+func checkPendingStatus(ctx actions.Context, tx *gorm.DB, deployment *actions.Deployment,
+	value interface{}) (interface{}, error) {
+
 	gid, ok := value.(simulations.GroupID)
 	if !ok {
 		return nil, simulations.ErrInvalidGroupID
@@ -66,7 +69,9 @@ var JobCheckSimulationParenthood = &actions.Job{
 }
 
 // checkSimulationIsParent is the main process executed by JobCheckPendingStatus.
-func checkSimulationIsParent(ctx actions.Context, tx *gorm.DB, deployment *actions.Deployment, value interface{}) (interface{}, error) {
+func checkSimulationIsParent(ctx actions.Context, tx *gorm.DB, deployment *actions.Deployment,
+	value interface{}) (interface{}, error) {
+
 	gid, ok := value.(simulations.GroupID)
 	if !ok {
 		return nil, simulations.ErrInvalidGroupID
@@ -101,7 +106,9 @@ var JobCheckParentSimulationWithError = &actions.Job{
 }
 
 // checkParentSimulationWithError is the main process executed by JobCheckParentSimulationWithError.
-func checkParentSimulationWithError(ctx actions.Context, tx *gorm.DB, deployment *actions.Deployment, value interface{}) (interface{}, error) {
+func checkParentSimulationWithError(ctx actions.Context, tx *gorm.DB, deployment *actions.Deployment,
+	value interface{}) (interface{}, error) {
+
 	gid, ok := value.(simulations.GroupID)
 	if !ok {
 		return nil, simulations.ErrInvalidGroupID
@@ -181,14 +188,17 @@ func rollbackUpdateSimulationStatusToPending(ctx actions.Context, tx *gorm.DB, d
 // JobLaunchNodes is used to launch the required nodes to run a simulation.
 var JobLaunchNodes = &actions.Job{
 	Name:            "launch-nodes",
-	PreHooks:        []actions.JobFunc{preLaunchNodes},
+	PreHooks:        []actions.JobFunc{createMachineInputs, checkNodeAvailability},
 	Execute:         launchNodes,
 	RollbackHandler: rollbackLaunchNodes,
 	InputType:       actions.GetJobDataType(simulations.GroupID("")),
 	OutputType:      actions.GetJobDataType(map[string]interface{}{}),
 }
 
-func preLaunchNodes(ctx actions.Context, tx *gorm.DB, deployment *actions.Deployment, value interface{}) (interface{}, error) {
+// createMachineInputs creates the needed input for launchNodes.
+func createMachineInputs(ctx actions.Context, tx *gorm.DB, deployment *actions.Deployment,
+	value interface{}) (interface{}, error) {
+
 	gid, ok := value.(simulations.GroupID)
 	if !ok {
 		return nil, simulations.ErrInvalidGroupID
@@ -251,8 +261,56 @@ func preLaunchNodes(ctx actions.Context, tx *gorm.DB, deployment *actions.Deploy
 	}, nil
 }
 
+// checkNodeAvailability checks if the required amount of machines are available to be launched.
+func checkNodeAvailability(ctx actions.Context, tx *gorm.DB, deployment *actions.Deployment,
+	value interface{}) (interface{}, error) {
+	simCtx := NewContext(ctx)
+
+	inputMap := value.(map[string]interface{})
+	createMachineInputs, ok := inputMap["createMachinesInputs"].([]cloud.CreateMachinesInput)
+	if !ok {
+		return nil, simulations.ErrInvalidInput
+	}
+
+	var minRequested int
+	for _, c := range createMachineInputs {
+		minRequested += int(c.MinCount)
+	}
+
+	reserved := simCtx.Platform().Machines().Count(cloud.CountMachinesInput{
+		Filters: map[string][]string{
+			"tag:cloudsim-simulation-worker": {
+				simCtx.Platform().Store().Machines().NamePrefix(),
+			},
+			"instance-state-name": {
+				"pending",
+				"running",
+			},
+		},
+	})
+
+	for minRequested < simCtx.Platform().Store().Machines().Limit()-reserved {
+		reserved = simCtx.Platform().Machines().Count(cloud.CountMachinesInput{
+			Filters: map[string][]string{
+				"tag:cloudsim-simulation-worker": {
+					simCtx.Platform().Store().Machines().NamePrefix(),
+				},
+				"instance-state-name": {
+					"pending",
+					"running",
+				},
+			},
+		})
+		time.Sleep(simCtx.Platform().Store().Machines().PollFrequency())
+	}
+
+	return value, nil
+}
+
 // launchNodes is the main process executed by JobLaunchNodes.
-func launchNodes(ctx actions.Context, tx *gorm.DB, deployment *actions.Deployment, value interface{}) (interface{}, error) {
+func launchNodes(ctx actions.Context, tx *gorm.DB, deployment *actions.Deployment,
+	value interface{}) (interface{}, error) {
+
 	simCtx := NewContext(ctx)
 
 	inputMap := value.(map[string]interface{})
@@ -273,7 +331,7 @@ func launchNodes(ctx actions.Context, tx *gorm.DB, deployment *actions.Deploymen
 	}
 
 	output, err := simCtx.Platform().Machines().Create(createMachineInputs)
-	if err != nil {
+	if len(output) != 0 && err != nil {
 		if dataErr := deployment.SetJobData(tx, &deployment.CurrentJob, "machine-list", output); dataErr != nil {
 			return nil, dataErr
 		}
@@ -285,13 +343,14 @@ func launchNodes(ctx actions.Context, tx *gorm.DB, deployment *actions.Deploymen
 		return nil, err
 	}
 	return map[string]interface{}{
-		"groupID":               gid,
-		"createMachinesOutputs": output,
+		"groupID": gid,
 	}, nil
 }
 
 // rollbackLaunchNodes is the process in charge of terminating the machine instances that were created in launchNodes.
-func rollbackLaunchNodes(ctx actions.Context, tx *gorm.DB, deployment *actions.Deployment, value interface{}, err error) (interface{}, error) {
+func rollbackLaunchNodes(ctx actions.Context, tx *gorm.DB, deployment *actions.Deployment,
+	value interface{}, err error) (interface{}, error) {
+
 	if err != cloud.ErrUnknown && err != cloud.ErrInsufficientMachines && err != cloud.ErrRequestsLimitExceeded {
 		return nil, nil
 	}
@@ -326,7 +385,9 @@ var JobWaitForNodes = &actions.Job{
 }
 
 // waitForNodes is the main process executed by JobWaitForNodes.
-func waitForNodes(ctx actions.Context, tx *gorm.DB, deployment *actions.Deployment, value interface{}) (interface{}, error) {
+func waitForNodes(ctx actions.Context, tx *gorm.DB, deployment *actions.Deployment,
+	value interface{}) (interface{}, error) {
+
 	simCtx := NewContext(ctx)
 
 	gid, ok := value.(simulations.GroupID)
@@ -341,7 +402,6 @@ func waitForNodes(ctx actions.Context, tx *gorm.DB, deployment *actions.Deployme
 	req := simCtx.Platform().Orchestrator().Nodes().WaitForCondition(res, orchestrator.ReadyCondition)
 
 	timeout := simCtx.Platform().Store().Machines().Timeout()
-
 	pollFreq := simCtx.Platform().Store().Machines().PollFrequency()
 
 	err := req.Wait(timeout, pollFreq)
