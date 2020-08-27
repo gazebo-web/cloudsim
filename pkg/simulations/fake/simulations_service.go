@@ -10,6 +10,7 @@ type Service struct {
 	*mock.Mock
 }
 
+// GetRobots is a mock for the GetRobots method.
 func (s *Service) GetRobots(groupID simulations.GroupID) ([]simulations.Robot, error) {
 	args := s.Called(groupID)
 	robots := args.Get(0).([]simulations.Robot)

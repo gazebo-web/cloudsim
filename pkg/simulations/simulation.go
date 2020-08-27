@@ -2,7 +2,6 @@ package simulations
 
 import (
 	"errors"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/cloud"
 )
 
 var (
@@ -72,9 +71,6 @@ type Simulation interface {
 
 	// Error returns the current simulation's error. It returns nil if the simulation doesn't have an error.
 	Error() *Error
-
-	// ToCreateMachinesInput returns the slice of create machines request needed to run this simulation.
-	ToCreateMachinesInput() []cloud.CreateMachinesInput
 
 	// Image returns the simulation's docker image. This image is used as the solution image.
 	Image() string

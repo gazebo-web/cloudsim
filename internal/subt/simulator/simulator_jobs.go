@@ -323,8 +323,6 @@ func checkNodeAvailability(ctx actions.Context, tx *gorm.DB, deployment *actions
 func launchNodes(ctx actions.Context, tx *gorm.DB, deployment *actions.Deployment,
 	value interface{}) (interface{}, error) {
 
-	simCtx := NewContext(ctx)
-
 	inputMap := value.(map[string]interface{})
 
 	gid, ok := inputMap["groupID"].(simulations.GroupID)
@@ -341,6 +339,8 @@ func launchNodes(ctx actions.Context, tx *gorm.DB, deployment *actions.Deploymen
 	if !ok {
 		return nil, simulations.ErrInvalidInput
 	}
+
+	simCtx := NewContext(ctx)
 
 	output, err := simCtx.Platform().Machines().Create(createMachineInputs)
 	if len(output) != 0 && err != nil {
