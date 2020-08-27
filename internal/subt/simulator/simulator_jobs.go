@@ -5,6 +5,7 @@ import (
 	"github.com/jinzhu/gorm"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/actions"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/cloud"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
 )
 
@@ -14,6 +15,8 @@ var JobsStartSimulation = actions.Jobs{
 	JobCheckSimulationParenthood,
 	JobCheckParentSimulationWithError,
 	JobUpdateSimulationStatusToLaunchNodes,
+	JobLaunchNodes,
+	JobWaitForNodes,
 }
 
 // JobsStopSimulation groups the jobs needed to stop a simulation.
@@ -161,7 +164,7 @@ var JobLaunchNodes = &actions.Job{
 	Execute:         launchNodes,
 	RollbackHandler: rollbackLaunchNodes,
 	InputType:       actions.GetJobDataType(simulations.GroupID("")),
-	OutputType:      actions.GetJobDataType(simulations.GroupID("")),
+	OutputType:      actions.GetJobDataType(map[string]interface{}{}),
 }
 
 func preLaunchNodes(ctx actions.Context, tx *gorm.DB, deployment *actions.Deployment, value interface{}) (interface{}, error) {
@@ -176,8 +179,6 @@ func preLaunchNodes(ctx actions.Context, tx *gorm.DB, deployment *actions.Deploy
 	if err != nil {
 		return nil, err
 	}
-
-	robots, err := simCtx.Services().Simulations().GetRobots(gid)
 
 	subnet, zone := simCtx.Platform().Store().Machines().SubnetAndZone()
 
@@ -198,7 +199,14 @@ func preLaunchNodes(ctx actions.Context, tx *gorm.DB, deployment *actions.Deploy
 		},
 	}
 
+	robots, err := simCtx.Services().Simulations().GetRobots(gid)
 	for _, r := range robots {
+		tags := simCtx.
+			Platform().
+			Store().
+			Machines().
+			Tags(sim, "field-computer", fmt.Sprintf("fc-%s", r.Name()))
+
 		input = append(input, cloud.CreateMachinesInput{
 			InstanceProfile: simCtx.Platform().Store().Machines().InstanceProfile(),
 			KeyName:         simCtx.Platform().Store().Machines().KeyName(),
@@ -209,7 +217,7 @@ func preLaunchNodes(ctx actions.Context, tx *gorm.DB, deployment *actions.Deploy
 			FirewallRules:   simCtx.Platform().Store().Machines().FirewallRules(),
 			SubnetID:        subnet,
 			Zone:            zone,
-			Tags:            simCtx.Platform().Store().Machines().Tags(sim, "field-computer", fmt.Sprintf("fc-%s", r.Name())),
+			Tags:            tags,
 			InitScript:      simCtx.Platform().Store().Machines().InitScript(),
 			Retries:         10,
 		})
@@ -255,7 +263,10 @@ func launchNodes(ctx actions.Context, tx *gorm.DB, deployment *actions.Deploymen
 	if err != nil {
 		return nil, err
 	}
-	return gid, nil
+	return map[string]interface{}{
+		"groupID":               gid,
+		"createMachinesOutputs": output,
+	}, nil
 }
 
 // rollbackLaunchNodes is the process in charge of terminating the machine instances that were created in launchNodes.
@@ -284,3 +295,38 @@ func rollbackLaunchNodes(ctx actions.Context, tx *gorm.DB, deployment *actions.D
 }
 
 //----------------------------------------------------------------------------------------------------------------------
+
+// JobWaitForNodes is used to wait until all required nodes are ready.
+var JobWaitForNodes = &actions.Job{
+	Name:       "wait-for-nodes",
+	Execute:    waitForNodes,
+	InputType:  actions.GetJobDataType(simulations.GroupID("")),
+	OutputType: actions.GetJobDataType(simulations.GroupID("")),
+}
+
+// waitForNodes is the main process executed by JobWaitForNodes.
+func waitForNodes(ctx actions.Context, tx *gorm.DB, deployment *actions.Deployment, value interface{}) (interface{}, error) {
+	simCtx := NewContext(ctx)
+
+	gid, ok := value.(simulations.GroupID)
+	if !ok {
+		return nil, simulations.ErrInvalidGroupID
+	}
+
+	res := orchestrator.NewResource("", "", orchestrator.NewSelector(map[string]string{
+		"cloudsim_groupid": string(gid),
+	}))
+
+	req := simCtx.Platform().Orchestrator().Nodes().WaitForCondition(res, orchestrator.ReadyCondition)
+
+	timeout := simCtx.Platform().Store().Machines().Timeout()
+
+	pollFreq := simCtx.Platform().Store().Machines().PollFrequency()
+
+	err := req.Wait(timeout, pollFreq)
+	if err != nil {
+		return nil, err
+	}
+
+	return gid, nil
+}

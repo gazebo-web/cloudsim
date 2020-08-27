@@ -6,6 +6,7 @@ import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/cloud"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/store"
+	"time"
 )
 
 // machineEnvStore is a store.Machines implementation.
@@ -21,13 +22,8 @@ type machineEnvStore struct {
 	BaseImageValue       string   `env:"CLOUDISM_MACHINES_BASE_IMAGE" envDefault:"ami-08861f7e7b409ed0c"`
 	NamePrefixValue      string   `env:"CLOUDISM_MACHINES_NAME_PREFIX,required" envDefault:"cloudsim-subt-node"`
 	ClusterNameValue     string   `env:"CLOUDISM_MACHINES_CLUSTER_NAME,required"`
+	NodeReadyTimeout     uint     `env:"CLOUDSIM_MACHINES_NODE_READY_TIMEOUT_SECONDS" envDefault:"300"`
 	subnetZoneIndex      int
-}
-
-func (m *machineEnvStore) SubnetAndZone() (string, string) {
-	subnet, zone := m.subnet(), m.zone()
-	m.subnetZoneIndex++
-	return subnet, zone
 }
 
 // BaseImage returns the base image value.
@@ -62,6 +58,20 @@ func (m *machineEnvStore) zone() string {
 	return m.SubnetsValue[i]
 }
 
+func (m *machineEnvStore) Timeout() time.Duration {
+	return time.Duration(m.NodeReadyTimeout) * time.Second
+}
+
+func (m *machineEnvStore) PollFrequency() time.Duration {
+	return 2 * time.Second
+}
+
+func (m *machineEnvStore) SubnetAndZone() (string, string) {
+	subnet, zone := m.subnet(), m.zone()
+	m.subnetZoneIndex++
+	return subnet, zone
+}
+
 func (m *machineEnvStore) Tags(simulation simulations.Simulation, nodeType string, nameSuffix string) []cloud.Tag {
 	name := fmt.Sprintf("%s-%s-%s", m.NamePrefixValue, simulation.GroupID(), nameSuffix)
 	clusterKey := fmt.Sprintf("kubernetes.io/cluster/%s", m.ClusterNameValue)
@@ -70,6 +80,7 @@ func (m *machineEnvStore) Tags(simulation simulations.Simulation, nodeType strin
 			Resource: "instance",
 			Map: map[string]string{
 				"Name":                       name,
+				"cloudsim_groupid":           string(simulation.GroupID()),
 				"CloudsimGroupID":            string(simulation.GroupID()),
 				"project":                    "cloudsim",
 				"Cloudsim":                   "True",
