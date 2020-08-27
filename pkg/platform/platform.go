@@ -3,6 +3,7 @@ package platform
 import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/cloud"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/store"
 )
 
 // Platform groups a set of components for creating simulations.
@@ -16,4 +17,6 @@ type Platform interface {
 	Machines() cloud.Machines
 	// Orchestrator returns a orchestrator.Cluster component.
 	Orchestrator() orchestrator.Cluster
+	// Store returns a store.Store component.
+	Store() store.Store
 }
