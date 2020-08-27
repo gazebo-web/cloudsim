@@ -1,13 +1,14 @@
 package simulator
 
 import (
+	"errors"
 	"fmt"
 	"github.com/jinzhu/gorm"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/actions"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/cloud"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
-	"time"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/waiter"
 )
 
 // JobsStartSimulation groups the jobs needed to start a simulation.
@@ -289,7 +290,7 @@ func checkNodeAvailability(ctx actions.Context, tx *gorm.DB, deployment *actions
 		},
 	})
 
-	for minRequested < simCtx.Platform().Store().Machines().Limit()-reserved {
+	req := waiter.NewWaitRequest(func() (bool, error) {
 		reserved = simCtx.Platform().Machines().Count(cloud.CountMachinesInput{
 			Filters: map[string][]string{
 				"tag:cloudsim-simulation-worker": {
@@ -301,7 +302,18 @@ func checkNodeAvailability(ctx actions.Context, tx *gorm.DB, deployment *actions
 				},
 			},
 		})
-		time.Sleep(simCtx.Platform().Store().Machines().PollFrequency())
+		if reserved == -1 {
+			return false, errors.New("error waiting for")
+		}
+		return minRequested > simCtx.Platform().Store().Machines().Limit()-reserved, nil
+	})
+
+	timeout := simCtx.Platform().Store().Machines().Timeout()
+	pollFreq := simCtx.Platform().Store().Machines().PollFrequency()
+
+	err := req.Wait(timeout, pollFreq)
+	if err != nil {
+		return nil, err
 	}
 
 	return value, nil
