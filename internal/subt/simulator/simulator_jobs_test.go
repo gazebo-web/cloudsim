@@ -2,16 +2,25 @@ package simulator
 
 import (
 	"context"
+	"github.com/aws/aws-sdk-go/service/ec2/ec2iface"
+	"github.com/aws/aws-sdk-go/service/s3/s3iface"
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/sqlite"
 	"github.com/stretchr/testify/suite"
-	"gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/env"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/actions"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/application"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/cloud"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/cloud/aws/ec2"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/cloud/aws/s3"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/env"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/kubernetes"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/kubernetes/spdy"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/platform"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations/fake"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/store"
+	"gitlab.com/ignitionrobotics/web/ign-go"
 	"testing"
 )
 
@@ -27,6 +36,11 @@ type jobsTestSuite struct {
 	db                *gorm.DB
 	simulationService *fake.Service
 	store             store.Store
+	logger            ign.Logger
+	ec2               cloud.Machines
+	s3                cloud.Storage
+	k8s               orchestrator.Cluster
+	spdyInit          *spdy.Fake
 }
 
 func (s *jobsTestSuite) SetupTest() {
@@ -34,7 +48,15 @@ func (s *jobsTestSuite) SetupTest() {
 	s.actionService = actions.NewService()
 	s.simulationService = fake.NewService()
 	s.store = env.NewStore()
-	s.appServices = application.NewServices(s.simulationService, s.store)
+	s.logger = ign.NewLoggerNoRollbar("SimulatorJobsTest", ign.VerbosityDebug)
+
+	s.ec2 = ec2.NewMachines(&ec2TestMock{}, s.logger)
+	s.s3 = s3.NewStorage(&s3TestMock{}, s.logger)
+	s.k8s = kubernetes.NewFakeKubernetes(s.logger)
+
+	s.platform = platform.NewAmazonWebServicesKubernetesPlatform(s.ec2, s.s3, s.k8s, s.store)
+	s.appServices = application.NewServices(s.simulationService)
+
 	s.db, err = gorm.Open("sqlite3", "file::memory:?cache=shared")
 	if err != nil {
 		s.FailNow(err.Error())
@@ -100,4 +122,12 @@ func (s *jobsTestSuite) prepareActions(jobs ...*actions.Job) actions.Context {
 	ctx = context.WithValue(ctx, contextServices, s.appServices)
 	actCtx := actions.NewContext(ctx)
 	return actCtx
+}
+
+type ec2TestMock struct {
+	ec2iface.EC2API
+}
+
+type s3TestMock struct {
+	s3iface.S3API
 }

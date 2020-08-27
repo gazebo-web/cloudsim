@@ -10,6 +10,12 @@ type Service struct {
 	*mock.Mock
 }
 
+func (s *Service) GetRobots(groupID simulations.GroupID) ([]simulations.Robot, error) {
+	args := s.Called(groupID)
+	robots := args.Get(0).([]simulations.Robot)
+	return robots, args.Error(1)
+}
+
 // Reject is a mock for the Reject method.
 func (s *Service) Reject(groupID simulations.GroupID) (simulations.Simulation, error) {
 	args := s.Called(groupID)

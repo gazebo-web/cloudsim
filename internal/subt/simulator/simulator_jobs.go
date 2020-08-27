@@ -179,36 +179,38 @@ func preLaunchNodes(ctx actions.Context, tx *gorm.DB, deployment *actions.Deploy
 
 	robots, err := simCtx.Services().Simulations().GetRobots(gid)
 
+	subnet, zone := simCtx.Platform().Store().Machines().SubnetAndZone()
+
 	input := []cloud.CreateMachinesInput{
 		{
-			InstanceProfile: simCtx.Services().Store().Machines().InstanceProfile(),
-			KeyName:         simCtx.Services().Store().Machines().KeyName(),
-			Type:            simCtx.Services().Store().Machines().Type(),
-			Image:           simCtx.Services().Store().Machines().BaseImage(),
+			InstanceProfile: simCtx.Platform().Store().Machines().InstanceProfile(),
+			KeyName:         simCtx.Platform().Store().Machines().KeyName(),
+			Type:            simCtx.Platform().Store().Machines().Type(),
+			Image:           simCtx.Platform().Store().Machines().BaseImage(),
 			MinCount:        1,
 			MaxCount:        1,
-			FirewallRules:   simCtx.Services().Store().Machines().FirewallRules(),
-			SubnetID:        simCtx.Services().Store().Machines().Subnet(),
-			Zone:            simCtx.Services().Store().Machines().Zone(),
-			Tags:            simCtx.Services().Store().Machines().Tags(sim, "gzserver", "gzserver"),
-			InitScript:      simCtx.Services().Store().Machines().InitScript(),
+			FirewallRules:   simCtx.Platform().Store().Machines().FirewallRules(),
+			SubnetID:        subnet,
+			Zone:            zone,
+			Tags:            simCtx.Platform().Store().Machines().Tags(sim, "gzserver", "gzserver"),
+			InitScript:      simCtx.Platform().Store().Machines().InitScript(),
 			Retries:         10,
 		},
 	}
 
 	for _, r := range robots {
 		input = append(input, cloud.CreateMachinesInput{
-			InstanceProfile: simCtx.Services().Store().Machines().InstanceProfile(),
-			KeyName:         simCtx.Services().Store().Machines().KeyName(),
-			Type:            simCtx.Services().Store().Machines().Type(),
-			Image:           simCtx.Services().Store().Machines().BaseImage(),
+			InstanceProfile: simCtx.Platform().Store().Machines().InstanceProfile(),
+			KeyName:         simCtx.Platform().Store().Machines().KeyName(),
+			Type:            simCtx.Platform().Store().Machines().Type(),
+			Image:           simCtx.Platform().Store().Machines().BaseImage(),
 			MinCount:        1,
 			MaxCount:        1,
-			FirewallRules:   simCtx.Services().Store().Machines().FirewallRules(),
-			SubnetID:        simCtx.Services().Store().Machines().Subnet(),
-			Zone:            simCtx.Services().Store().Machines().Zone(),
-			Tags:            simCtx.Services().Store().Machines().Tags(sim, "field-computer", fmt.Sprintf("fc-%s", r.Name())),
-			InitScript:      simCtx.Services().Store().Machines().InitScript(),
+			FirewallRules:   simCtx.Platform().Store().Machines().FirewallRules(),
+			SubnetID:        subnet,
+			Zone:            zone,
+			Tags:            simCtx.Platform().Store().Machines().Tags(sim, "field-computer", fmt.Sprintf("fc-%s", r.Name())),
+			InitScript:      simCtx.Platform().Store().Machines().InitScript(),
 			Retries:         10,
 		})
 	}

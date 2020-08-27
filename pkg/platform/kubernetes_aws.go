@@ -8,6 +8,7 @@ import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/kubernetes"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/kubernetes/spdy"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/store"
 	"gitlab.com/ignitionrobotics/web/ign-go"
 )
 
@@ -15,6 +16,11 @@ type k8sAwsPlatform struct {
 	storage      cloud.Storage
 	machines     cloud.Machines
 	orchestrator orchestrator.Cluster
+	store        store.Store
+}
+
+func (p *k8sAwsPlatform) Store() store.Store {
+	return p.store
 }
 
 func (p *k8sAwsPlatform) Storage() cloud.Storage {
@@ -29,10 +35,9 @@ func (p *k8sAwsPlatform) Orchestrator() orchestrator.Cluster {
 	return p.orchestrator
 }
 
-// initializeAWS initializes the components from Amazon Web Services.
-func initializeAWS(logger ign.Logger) (cloud.Storage, cloud.Machines, error) {
-	// TODO: Read Region from env vars.
-	config := aws.Config{Region: "us-east-1"}
+// InitializeAWS initializes the components from Amazon Web Services.
+func InitializeAWS(region string, logger ign.Logger) (cloud.Storage, cloud.Machines, error) {
+	config := aws.Config{Region: region}
 	cp, err := aws.GetConfigProvider(config)
 	if err != nil {
 		return nil, nil, err
@@ -42,8 +47,8 @@ func initializeAWS(logger ign.Logger) (cloud.Storage, cloud.Machines, error) {
 	return s3.NewStorage(s3API, logger), ec2.NewMachines(ec2API, logger), nil
 }
 
-// initializeKubernetes initializes a new Kubernetes orchestrator.
-func initializeKubernetes(logger ign.Logger) (orchestrator.Cluster, error) {
+// InitializeKubernetes initializes a new Kubernetes orchestrator.
+func InitializeKubernetes(logger ign.Logger) (orchestrator.Cluster, error) {
 	config, err := kubernetes.GetConfig()
 	if err != nil {
 		return nil, err
@@ -57,18 +62,11 @@ func initializeKubernetes(logger ign.Logger) (orchestrator.Cluster, error) {
 }
 
 // NewAmazonWebServicesKubernetesPlatform initializes a new platform that uses AWS and Kubernetes.
-func NewAmazonWebServicesKubernetesPlatform(logger ign.Logger) (Platform, error) {
-	storage, machines, err := initializeAWS(logger)
-	if err != nil {
-		return nil, err
-	}
-	k8s, err := initializeKubernetes(logger)
-	if err != nil {
-		return nil, err
-	}
+func NewAmazonWebServicesKubernetesPlatform(ec2 cloud.Machines, s3 cloud.Storage, k8s orchestrator.Cluster, store store.Store) Platform {
 	return &k8sAwsPlatform{
-		storage:      storage,
-		machines:     machines,
+		storage:      s3,
+		machines:     ec2,
 		orchestrator: k8s,
-	}, nil
+		store:        store,
+	}
 }
