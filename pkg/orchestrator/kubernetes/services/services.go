@@ -3,7 +3,6 @@ package services
 import (
 	"fmt"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/kubernetes/types"
 	"gitlab.com/ignitionrobotics/web/ign-go"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -62,7 +61,7 @@ func (s *services) Get(name, namespace string) (orchestrator.Resource, error) {
 	}
 
 	s.Logger.Debug(fmt.Sprintf("Getting service with name [%s] in namespace [%s] succeeded.", name, namespace))
-	return types.NewResource(name, namespace, types.NewSelector(output.Labels)), nil
+	return orchestrator.NewResource(name, namespace, orchestrator.NewSelector(output.Labels)), nil
 }
 
 func (s *services) GetAllBySelector(namespace string, selector orchestrator.Selector) ([]orchestrator.Resource, error) {
@@ -83,8 +82,8 @@ func (s *services) GetAllBySelector(namespace string, selector orchestrator.Sele
 	var output []orchestrator.Resource
 
 	for _, srv := range list.Items {
-		selector := types.NewSelector(srv.Labels)
-		output = append(output, types.NewResource(srv.Name, srv.Namespace, selector))
+		selector := orchestrator.NewSelector(srv.Labels)
+		output = append(output, orchestrator.NewResource(srv.Name, srv.Namespace, selector))
 	}
 
 	s.Logger.Debug(fmt.Sprintf(

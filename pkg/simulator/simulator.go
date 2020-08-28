@@ -2,7 +2,13 @@ package simulator
 
 import (
 	"context"
+	"errors"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
+)
+
+var (
+	// ErrInvalidInput is returned when an invalid input is provided.
+	ErrInvalidInput = errors.New("invalid input")
 )
 
 // Simulator groups a set of methods to perform different operations with simulations.
