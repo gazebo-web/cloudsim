@@ -14,10 +14,15 @@ import (
 const (
 	// actionNameStartSimulation is the name used to register the start simulation action.
 	actionNameStartSimulation = "start-simulation"
+
 	// actionNameStopSimulation is the name used to register the stop simulation action.
 	actionNameStopSimulation = "stop-simulation"
+
 	// actionNameRestartSimulation is the name used to register the restart simulation action.
 	actionNameRestartSimulation = "restart-simulation"
+
+	// applicationName is the name of the current simulator's application.
+	applicationName = "subt"
 )
 
 // subTSimulator is a simulator.Simulator implementation.
@@ -82,7 +87,6 @@ func (s *subTSimulator) setupContext(ctx context.Context) context.Context {
 // Config is used to initialize a new simulator for SubT.
 type Config struct {
 	DB                  *gorm.DB
-	ApplicationName     string
 	Platform            platform.Platform
 	ApplicationServices application.Services
 	ActionService       actions.Servicer
@@ -90,10 +94,10 @@ type Config struct {
 
 // NewSimulator initializes a new Simulator implementation for SubT.
 func NewSimulator(config Config) simulator.Simulator {
-	registerActions(config.ApplicationName, config.ActionService)
+	registerActions(applicationName, config.ActionService)
 	return &subTSimulator{
 		platform:        config.Platform,
-		applicationName: config.ApplicationName,
+		applicationName: applicationName,
 		services:        config.ApplicationServices,
 		actions:         config.ActionService,
 	}
