@@ -80,8 +80,8 @@ func TestPods_WaitForPodsToBeReady(t *testing.T) {
 	f := spdy.NewSPDYFakeInitializer()
 	logger := ign.NewLoggerNoRollbar("TestPods", ign.VerbosityDebug)
 	m := NewPods(client, f, logger)
-	selector := types.NewSelector(map[string]string{"test": "app"})
-	res := types.NewResource("test", "default", selector)
+	selector := orchestrator.NewSelector(map[string]string{"test": "app"})
+	res := orchestrator.NewResource("test", "default", selector)
 	r := m.WaitForCondition(res, orchestrator.ReadyCondition)
 
 	var wg sync.WaitGroup
@@ -127,8 +127,8 @@ func TestPods_WaitForPodsErrWhenPodStateSucceeded(t *testing.T) {
 	f := spdy.NewSPDYFakeInitializer()
 	logger := ign.NewLoggerNoRollbar("TestPods", ign.VerbosityDebug)
 	m := NewPods(client, f, logger)
-	selector := types.NewSelector(map[string]string{"test": "app"})
-	res := types.NewResource("test", "default", selector)
+	selector := orchestrator.NewSelector(map[string]string{"test": "app"})
+	res := orchestrator.NewResource("test", "default", selector)
 	r := m.WaitForCondition(res, orchestrator.ReadyCondition)
 
 	var wg sync.WaitGroup
@@ -166,8 +166,8 @@ func TestPods_WaitForPodsErrWhenPodStateFailed(t *testing.T) {
 	logger := ign.NewLoggerNoRollbar("TestPods", ign.VerbosityDebug)
 	m := NewPods(client, f, logger)
 
-	selector := types.NewSelector(map[string]string{"test": "app"})
-	res := types.NewResource("test", "default", selector)
+	selector := orchestrator.NewSelector(map[string]string{"test": "app"})
+	res := orchestrator.NewResource("test", "default", selector)
 	r := m.WaitForCondition(res, orchestrator.ReadyCondition)
 
 	var wg sync.WaitGroup

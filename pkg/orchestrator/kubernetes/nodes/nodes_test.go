@@ -148,8 +148,8 @@ func TestWait_WaitForNodesToBeReady(t *testing.T) {
 	}
 	cli := fake.NewSimpleClientset(&node)
 	nm := NewNodes(cli, ign.NewLoggerNoRollbar("TestNodes", ign.VerbosityDebug))
-	selector := types.NewSelector(map[string]string{"test": "app"})
-	res := types.NewResource("test", "default", selector)
+	selector := orchestrator.NewSelector(map[string]string{"test": "app"})
+	res := orchestrator.NewResource("test", "default", selector)
 	r := nm.WaitForCondition(res, orchestrator.ReadyCondition)
 
 	var wg sync.WaitGroup
@@ -189,8 +189,8 @@ func TestWait_ErrWhenNodesArentReady(t *testing.T) {
 	cli := fake.NewSimpleClientset(&node)
 	nm := NewNodes(cli, ign.NewLoggerNoRollbar("TestNodes", ign.VerbosityDebug))
 
-	selector := types.NewSelector(map[string]string{"test": "app"})
-	res := types.NewResource("test", "default", selector)
+	selector := orchestrator.NewSelector(map[string]string{"test": "app"})
+	res := orchestrator.NewResource("test", "default", selector)
 	r := nm.WaitForCondition(res, orchestrator.ReadyCondition)
 
 	var wg sync.WaitGroup
