@@ -12,22 +12,44 @@ import (
 // machineEnvStore is a store.Machines implementation.
 // It contains all the information needed by application jobs for creating machines.
 type machineEnvStore struct {
-	InstanceProfileValue string   `env:"CLOUDISM_MACHINES_INSTANCE_PROFILE" envDefault:"arn:aws:iam::200670743174:instance-profile/aws-eks-role-cloudsim-worker"`
-	KeyNameValue         string   `env:"CLOUDISM_MACHINES_KEY_NAME" envDefault:"ignitionFuel"`
-	MachineTypeValue     string   `env:"CLOUDISM_MACHINES_TYPE" envDefault:"g3.4xlarge"`
-	FirewallRulesValue   []string `env:"CLOUDISM_MACHINES_FIREWALL_RULES" envSeparator:"," envDefault:"sg-0c5c791266694a3ca"`
-	SubnetsValue         []string `env:"CLOUDISM_MACHINES_SUBNETS,required" envSeparator:","`
-	ZonesValue           []string `env:"CLOUDISM_MACHINES_ZONES,required" envSeparator:","`
-	MachinesLimitValue   int      `env:"CLOUDISM_MACHINES_LIMIT" envDefault:"-1"`
-	BaseImageValue       string   `env:"CLOUDISM_MACHINES_BASE_IMAGE" envDefault:"ami-08861f7e7b409ed0c"`
-	NamePrefixValue      string   `env:"CLOUDISM_MACHINES_NAME_PREFIX,required" envDefault:"cloudsim-subt-node"`
-	ClusterNameValue     string   `env:"CLOUDISM_MACHINES_CLUSTER_NAME,required"`
-	NodeReadyTimeout     uint     `env:"CLOUDSIM_MACHINES_NODE_READY_TIMEOUT_SECONDS" envDefault:"300"`
-	subnetZoneIndex      int
+	InstanceProfileValue string `env:"CLOUDISM_MACHINES_INSTANCE_PROFILE" envDefault:"arn:aws:iam::200670743174:instance-profile/aws-eks-role-cloudsim-worker"`
+
+	// KeyNameValue is the name of the SSH key used for a new instance.
+	KeyNameValue string `env:"CLOUDISM_MACHINES_KEY_NAME" envDefault:"ignitionFuel"`
+
+	// MachineTypeValue is the type of instance that will be created.
+	MachineTypeValue string `env:"CLOUDISM_MACHINES_TYPE" envDefault:"g3.4xlarge"`
+
+	// FirewallRulesValue is a set of firewall rules that will be applied to a new instance.
+	FirewallRulesValue []string `env:"CLOUDISM_MACHINES_FIREWALL_RULES" envSeparator:"," envDefault:"sg-0c5c791266694a3ca"`
+
+	// SubnetsValue is a slice of AWS subnet IDs where to launch simulations (Example: subnet-1270518251)
+	SubnetsValue []string `env:"CLOUDISM_MACHINES_SUBNETS,required" envSeparator:","`
+
+	// ZonesValue is a slice of AWS availability zones where to launch simulations. (Example: us-east-1a)
+	ZonesValue []string `env:"CLOUDISM_MACHINES_ZONES,required" envSeparator:","`
+
+	// MachinesLimitValue is the maximum number of machines that Cloudsim can have running at the same time.
+	MachinesLimitValue int `env:"CLOUDISM_MACHINES_LIMIT" envDefault:"-1"`
+
+	// BaseImageValue is the Amazon Machine Image name that is used as base image for the a new instance.
+	BaseImageValue string `env:"CLOUDISM_MACHINES_BASE_IMAGE" envDefault:"ami-08861f7e7b409ed0c"`
+
+	// NamePrefixValue is the prefix used when naming a new instance.
+	NamePrefixValue string `env:"CLOUDISM_MACHINES_NAME_PREFIX,required" envDefault:"cloudsim-subt-node"`
+
+	// ClusterNameValue contains the name of the cluster EC2 instances will join.
+	ClusterNameValue string `env:"CLOUDISM_MACHINES_CLUSTER_NAME,required"`
+
+	// NodeReadyTimeout is the total amount of time in seconds that the machine creation process will wait.
+	NodeReadyTimeout uint `env:"CLOUDSIM_MACHINES_NODE_READY_TIMEOUT_SECONDS" envDefault:"300"`
+
+	// subnetZoneIndex is used as round robin index for setting different subnets and zones to different machines.
+	subnetZoneIndex int
 }
 
 // BaseImage returns the base image value read from env vars.
-// In SubT, the base image is the Amazon
+// In AWS, the base image is the Amazon Machine Image (AMI).
 func (m *machineEnvStore) BaseImage() string {
 	return m.BaseImageValue
 }
