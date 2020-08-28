@@ -31,8 +31,7 @@ type subTSimulator struct {
 
 // Start triggers the action that will be in charge of launching a simulation with the given Group ID.
 func (s *subTSimulator) Start(ctx context.Context, groupID simulations.GroupID) error {
-	ctx = context.WithValue(ctx, simctx.CtxPlatform, s.platform)
-	ctx = context.WithValue(ctx, simctx.CtxServices, s.services)
+	ctx = s.setupContext(ctx)
 
 	execInput := &actions.ExecuteInput{
 		ApplicationName: &s.applicationName,
@@ -47,8 +46,7 @@ func (s *subTSimulator) Start(ctx context.Context, groupID simulations.GroupID) 
 
 // Stop triggers the action that will be in charge of stopping a simulation with the given Group ID.
 func (s *subTSimulator) Stop(ctx context.Context, groupID simulations.GroupID) error {
-	ctx = context.WithValue(ctx, simctx.CtxPlatform, s.platform)
-	ctx = context.WithValue(ctx, simctx.CtxServices, s.services)
+	ctx = s.setupContext(ctx)
 	execInput := &actions.ExecuteInput{
 		ApplicationName: &s.applicationName,
 		ActionName:      actionNameStopSimulation,
@@ -62,8 +60,7 @@ func (s *subTSimulator) Stop(ctx context.Context, groupID simulations.GroupID) e
 
 // Restart triggers the action that will be in charge of restarting a simulation with the given Group ID.
 func (s *subTSimulator) Restart(ctx context.Context, groupID simulations.GroupID) error {
-	ctx = context.WithValue(ctx, simctx.CtxPlatform, s.platform)
-	ctx = context.WithValue(ctx, simctx.CtxServices, s.services)
+	ctx = s.setupContext(ctx)
 	execInput := &actions.ExecuteInput{
 		ApplicationName: &s.applicationName,
 		ActionName:      actionNameRestartSimulation,
@@ -73,6 +70,13 @@ func (s *subTSimulator) Restart(ctx context.Context, groupID simulations.GroupID
 		return err
 	}
 	return nil
+}
+
+// setupContext is in charge of setting up the context for jobs.
+func (s *subTSimulator) setupContext(ctx context.Context) context.Context {
+	ctx = context.WithValue(ctx, simctx.CtxPlatform, s.platform)
+	ctx = context.WithValue(ctx, simctx.CtxServices, s.services)
+	return ctx
 }
 
 // Config is used to initialize a new simulator for SubT.
