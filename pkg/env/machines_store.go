@@ -10,7 +10,7 @@ import (
 )
 
 // machineEnvStore is a store.Machines implementation.
-// It contains all the information needed by the SubT jobs related to machines.
+// It contains all the information needed by application jobs for creating machines.
 type machineEnvStore struct {
 	InstanceProfileValue string   `env:"CLOUDISM_MACHINES_INSTANCE_PROFILE" envDefault:"arn:aws:iam::200670743174:instance-profile/aws-eks-role-cloudsim-worker"`
 	KeyNameValue         string   `env:"CLOUDISM_MACHINES_KEY_NAME" envDefault:"ignitionFuel"`
