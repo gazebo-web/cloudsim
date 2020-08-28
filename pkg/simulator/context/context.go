@@ -1,4 +1,4 @@
-package simulator
+package context
 
 import (
 	"errors"
@@ -8,11 +8,11 @@ import (
 )
 
 var (
-	// contextPlatform is the key used to get the platform from the context.
-	contextPlatform = "cloudsim_platform"
+	// CtxPlatform is the key used to get the platform from the context.
+	CtxPlatform = "cloudsim_platform"
 
-	// contextServices is the key used to get the services from the context.
-	contextServices = "subt_services"
+	// CtxServices is the key used to get the services from the context.
+	CtxServices = "app_services"
 
 	// ErrCtxInvalidPlatform is returned as a panic error when casting a platform retrieved from context fails.
 	ErrCtxInvalidPlatform = errors.New("invalid platform from context")
@@ -39,7 +39,7 @@ type simulatorContext struct {
 // Platform gets the platform from context and returns it.
 // It panics if the casting fails.
 func (ctx *simulatorContext) Platform() platform.Platform {
-	value := ctx.Value(contextPlatform)
+	value := ctx.Value(CtxPlatform)
 	output, ok := value.(platform.Platform)
 	if !ok {
 		panic(ErrCtxInvalidPlatform)
@@ -50,7 +50,7 @@ func (ctx *simulatorContext) Platform() platform.Platform {
 // Services gets the services from context and returns it.
 // It panics if the casting fails.
 func (ctx *simulatorContext) Services() application.Services {
-	value := ctx.Value(contextServices)
+	value := ctx.Value(CtxServices)
 	output, ok := value.(application.Services)
 	if !ok {
 		panic(ErrCtxInvalidAppServices)

@@ -9,6 +9,7 @@ import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/platform"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulator"
+	simctx "gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulator/context"
 )
 
 const (
@@ -36,8 +37,8 @@ type subTSimulator struct {
 
 // Start triggers the action that will be in charge of launching a simulation with the given Group ID.
 func (s *subTSimulator) Start(ctx context.Context, groupID simulations.GroupID) error {
-	ctx = context.WithValue(ctx, contextPlatform, s.platform)
-	ctx = context.WithValue(ctx, contextServices, s.services)
+	ctx = context.WithValue(ctx, simctx.CtxPlatform, s.platform)
+	ctx = context.WithValue(ctx, simctx.CtxServices, s.services)
 
 	execInput := &actions.ExecuteInput{
 		ApplicationName: &s.applicationName,
@@ -52,8 +53,8 @@ func (s *subTSimulator) Start(ctx context.Context, groupID simulations.GroupID) 
 
 // Stop triggers the action that will be in charge of stopping a simulation with the given Group ID.
 func (s *subTSimulator) Stop(ctx context.Context, groupID simulations.GroupID) error {
-	ctx = context.WithValue(ctx, contextPlatform, s.platform)
-	ctx = context.WithValue(ctx, contextServices, s.services)
+	ctx = context.WithValue(ctx, simctx.CtxPlatform, s.platform)
+	ctx = context.WithValue(ctx, simctx.CtxServices, s.services)
 	execInput := &actions.ExecuteInput{
 		ApplicationName: &s.applicationName,
 		ActionName:      actionNameStopSimulation,
@@ -67,8 +68,8 @@ func (s *subTSimulator) Stop(ctx context.Context, groupID simulations.GroupID) e
 
 // Restart triggers the action that will be in charge of restarting a simulation with the given Group ID.
 func (s *subTSimulator) Restart(ctx context.Context, groupID simulations.GroupID) error {
-	ctx = context.WithValue(ctx, contextPlatform, s.platform)
-	ctx = context.WithValue(ctx, contextServices, s.services)
+	ctx = context.WithValue(ctx, simctx.CtxPlatform, s.platform)
+	ctx = context.WithValue(ctx, simctx.CtxServices, s.services)
 	execInput := &actions.ExecuteInput{
 		ApplicationName: &s.applicationName,
 		ActionName:      actionNameRestartSimulation,
