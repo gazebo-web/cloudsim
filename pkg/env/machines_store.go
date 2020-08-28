@@ -10,7 +10,7 @@ import (
 )
 
 // machineEnvStore is a store.Machines implementation.
-// It contains all the information needed by application jobs for creating machines.
+// It contains all the information needed by application jobs to launch simulations.
 type machineEnvStore struct {
 	InstanceProfileValue string `env:"CLOUDSIM_MACHINES_INSTANCE_PROFILE" envDefault:"arn:aws:iam::200670743174:instance-profile/aws-eks-role-cloudsim-worker"`
 
