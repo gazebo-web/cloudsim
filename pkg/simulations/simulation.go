@@ -16,9 +16,6 @@ var (
 
 	// ErrParentSimulationWithError is returned when a parent simulation has an error.
 	ErrParentSimulationWithError = errors.New("parent simulation with error")
-
-	// ErrInvalidInput is returned when an invalid input is provided.
-	ErrInvalidInput = errors.New("invalid input")
 )
 
 // GroupID is an universally unique identifier that identifies a Simulation.
