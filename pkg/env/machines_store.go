@@ -26,52 +26,63 @@ type machineEnvStore struct {
 	subnetZoneIndex      int
 }
 
-// BaseImage returns the base image value.
+// BaseImage returns the base image value read from env vars.
 // In SubT, the base image is the Amazon
 func (m *machineEnvStore) BaseImage() string {
 	return m.BaseImageValue
 }
 
+// InstanceProfile returns the instance profile value read from env vars.
 func (m *machineEnvStore) InstanceProfile() *string {
 	return &m.InstanceProfileValue
 }
 
+// KeyName returns the key name value read from env vars.
 func (m *machineEnvStore) KeyName() string {
 	return m.KeyNameValue
 }
 
+// Type returns the type value read from env vars.
 func (m *machineEnvStore) Type() string {
 	return m.MachineTypeValue
 }
 
+// FirewallRules returns the firewall rules value read from env vars.
 func (m *machineEnvStore) FirewallRules() []string {
 	return m.FirewallRulesValue
 }
 
+// subnet calculates and returns the subnet id for the current subnetZoneIndex.
 func (m *machineEnvStore) subnet() string {
 	i := m.subnetZoneIndex % len(m.SubnetsValue)
 	return m.SubnetsValue[i]
 }
 
+// zone calculates and returns the zone id for the current subnetZoneIndex.
 func (m *machineEnvStore) zone() string {
 	i := m.subnetZoneIndex % len(m.ZonesValue)
 	return m.SubnetsValue[i]
 }
 
+// Timeout calculates the time duration in seconds for the current NodeReadyTimeout value.
 func (m *machineEnvStore) Timeout() time.Duration {
 	return time.Duration(m.NodeReadyTimeout) * time.Second
 }
 
+//PollFrequency returns a time duration of 2 seconds.
 func (m *machineEnvStore) PollFrequency() time.Duration {
 	return 2 * time.Second
 }
 
+// SubnetAndZone returns the subnet and zone.
+// It performs a round robin operation incrementing the subnetZoneIndex.
 func (m *machineEnvStore) SubnetAndZone() (string, string) {
 	subnet, zone := m.subnet(), m.zone()
 	m.subnetZoneIndex++
 	return subnet, zone
 }
 
+// Tags creates a set of tags for a certain machine using the given simulation, nodeType and nameSuffix.
 func (m *machineEnvStore) Tags(simulation simulations.Simulation, nodeType string, nameSuffix string) []cloud.Tag {
 	name := fmt.Sprintf("%s-%s-%s", m.NamePrefixValue, simulation.GroupID(), nameSuffix)
 	clusterKey := fmt.Sprintf("kubernetes.io/cluster/%s", m.ClusterNameValue)
@@ -94,18 +105,23 @@ func (m *machineEnvStore) Tags(simulation simulations.Simulation, nodeType strin
 	}
 }
 
+// NamePrefix returns the name prefix value.
 func (m *machineEnvStore) NamePrefix() string {
 	return m.NamePrefixValue
 }
 
+// Limit returns the maximum amount of machines that can be created.
 func (m *machineEnvStore) Limit() int {
 	return m.MachinesLimitValue
 }
 
+// InitScript returns the script that will be run when the machine gets created.
+// TODO: Address this function when implementing the corresponding job.
 func (m *machineEnvStore) InitScript() *string {
 	return nil
 }
 
+// newMachinesStore initializes a new store.Machines implementation using machineEnvStore.
 func newMachinesStore() store.Machines {
 	var m machineEnvStore
 	if err := env.Parse(&m); err != nil {
