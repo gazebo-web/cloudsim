@@ -23,3 +23,41 @@ type Platform interface {
 	// Store returns a store.Store component.
 	Store() store.Store
 }
+
+// NewPlatform initializes a new platform using the given components.
+func NewPlatform(machines cloud.Machines, storage cloud.Storage, cluster orchestrator.Cluster, store store.Store) Platform {
+	return &platform{
+		storage:      storage,
+		machines:     machines,
+		orchestrator: cluster,
+		store:        store,
+	}
+}
+
+// platform is a Platform implementation.
+type platform struct {
+	storage      cloud.Storage
+	machines     cloud.Machines
+	orchestrator orchestrator.Cluster
+	store        store.Store
+}
+
+// Store returns a store.Store implementation.
+func (p *platform) Store() store.Store {
+	return p.store
+}
+
+// Storage returns a cloud.Storage implementation.
+func (p *platform) Storage() cloud.Storage {
+	return p.storage
+}
+
+// Machines returns a cloud.Machines implementation.
+func (p *platform) Machines() cloud.Machines {
+	return p.machines
+}
+
+// Orchestrator returns an orchestrator.Cluster implementation.
+func (p *platform) Orchestrator() orchestrator.Cluster {
+	return p.orchestrator
+}
