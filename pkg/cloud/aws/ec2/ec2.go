@@ -29,8 +29,8 @@ const (
 	longSubnetLength = 24
 )
 
-// GetClient returns an EC2 client from the given config provider.
-func GetClient(config client.ConfigProvider) ec2iface.EC2API {
+// NewAPI returns an EC2 client from the given config provider.
+func NewAPI(config client.ConfigProvider) ec2iface.EC2API {
 	return ec2.New(config)
 }
 

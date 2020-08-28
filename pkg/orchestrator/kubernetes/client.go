@@ -19,8 +19,8 @@ func GetConfig() (*rest.Config, error) {
 	return config, nil
 }
 
-// GetClient returns a client object to access a kubernetes master.
-func GetClient(config *rest.Config) (*kubernetes.Clientset, error) {
+// NewAPI returns a client object to access a kubernetes master.
+func NewAPI(config *rest.Config) (*kubernetes.Clientset, error) {
 	clientset, err := kubernetes.NewForConfig(config)
 	if err != nil {
 		return nil, err

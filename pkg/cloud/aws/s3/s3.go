@@ -12,8 +12,8 @@ import (
 	"time"
 )
 
-// GetClient returns an S3 client from the given config provider.
-func GetClient(config client.ConfigProvider) s3iface.S3API {
+// NewAPI returns an S3 client from the given config provider.
+func NewAPI(config client.ConfigProvider) s3iface.S3API {
 	return s3.New(config)
 }
 

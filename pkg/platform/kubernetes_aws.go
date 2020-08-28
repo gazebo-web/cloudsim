@@ -47,8 +47,8 @@ func InitializeAWS(region string, logger ign.Logger) (cloud.Storage, cloud.Machi
 	if err != nil {
 		return nil, nil, err
 	}
-	s3API := s3.GetClient(cp)
-	ec2API := ec2.GetClient(cp)
+	s3API := s3.NewAPI(cp)
+	ec2API := ec2.NewAPI(cp)
 	return s3.NewStorage(s3API, logger), ec2.NewMachines(ec2API, logger), nil
 }
 
@@ -58,7 +58,7 @@ func InitializeKubernetes(logger ign.Logger) (orchestrator.Cluster, error) {
 	if err != nil {
 		return nil, err
 	}
-	client, err := kubernetes.GetClient(config)
+	client, err := kubernetes.NewAPI(config)
 	if err != nil {
 		return nil, err
 	}
