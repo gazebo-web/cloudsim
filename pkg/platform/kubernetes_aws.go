@@ -12,6 +12,7 @@ import (
 	"gitlab.com/ignitionrobotics/web/ign-go"
 )
 
+// k8sAwsPlatform is a platform implementation using AWS and Kubernetes.
 type k8sAwsPlatform struct {
 	storage      cloud.Storage
 	machines     cloud.Machines
@@ -19,18 +20,22 @@ type k8sAwsPlatform struct {
 	store        store.Store
 }
 
+// Store returns a store.Store implementation.
 func (p *k8sAwsPlatform) Store() store.Store {
 	return p.store
 }
 
+// Storage returns a cloud.Storage implementation.
 func (p *k8sAwsPlatform) Storage() cloud.Storage {
 	return p.storage
 }
 
+// Machines returns a cloud.Machines implementation.
 func (p *k8sAwsPlatform) Machines() cloud.Machines {
 	return p.machines
 }
 
+// Orchestrator returns an orchestrator.Cluster implementation.
 func (p *k8sAwsPlatform) Orchestrator() orchestrator.Cluster {
 	return p.orchestrator
 }

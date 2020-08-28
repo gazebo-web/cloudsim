@@ -13,10 +13,13 @@ import (
 type Platform interface {
 	// Storage returns a cloud.Storage component.
 	Storage() cloud.Storage
+
 	// Machines returns a cloud.Machines component.
 	Machines() cloud.Machines
+
 	// Orchestrator returns a orchestrator.Cluster component.
 	Orchestrator() orchestrator.Cluster
+
 	// Store returns a store.Store component.
 	Store() store.Store
 }
