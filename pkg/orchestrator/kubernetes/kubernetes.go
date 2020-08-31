@@ -4,6 +4,7 @@ import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/kubernetes/ingresses"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/kubernetes/ingresses/rules"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/kubernetes/network"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/kubernetes/nodes"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/kubernetes/pods"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/kubernetes/services"
@@ -28,7 +29,8 @@ type k8s struct {
 	services orchestrator.Services
 
 	// ingresses has a reference to an orchestrator.Ingresses implementation.
-	ingresses orchestrator.Ingresses
+	ingresses       orchestrator.Ingresses
+	networkPolicies orchestrator.NetworkPolicies
 }
 
 // IngressRules returns the Kubernetes orchestrator.IngressRules implementation.
@@ -56,25 +58,32 @@ func (k k8s) Ingresses() orchestrator.Ingresses {
 	return k.ingresses
 }
 
+// NetworkPolicies returns the Kubernetes orchestrator.NetworkPolicies implementation.
+func (k k8s) NetworkPolicies() orchestrator.NetworkPolicies {
+	return k.networkPolicies
+}
+
 // Config is used to group the inputs for NewCustomKubernetes.
 // It includes all the needed subcomponents for Kubernetes.
 type Config struct {
-	Nodes        orchestrator.Nodes
-	Pods         orchestrator.Pods
-	Ingresses    orchestrator.Ingresses
-	IngressRules orchestrator.IngressRules
-	Services     orchestrator.Services
+	Nodes           orchestrator.Nodes
+	Pods            orchestrator.Pods
+	Ingresses       orchestrator.Ingresses
+	IngressRules    orchestrator.IngressRules
+	Services        orchestrator.Services
+	NetworkPolicies orchestrator.NetworkPolicies
 }
 
 // NewCustomKubernetes returns a orchestrator.Cluster implementation using Kubernetes.
 // All the subcomponents provided by the Config should be already initialized.
 func NewCustomKubernetes(config Config) orchestrator.Cluster {
 	return &k8s{
-		nodes:        config.Nodes,
-		pods:         config.Pods,
-		ingresses:    config.Ingresses,
-		ingressRules: config.IngressRules,
-		services:     config.Services,
+		nodes:           config.Nodes,
+		pods:            config.Pods,
+		ingresses:       config.Ingresses,
+		ingressRules:    config.IngressRules,
+		services:        config.Services,
+		networkPolicies: config.NetworkPolicies,
 	}
 }
 
@@ -82,11 +91,12 @@ func NewCustomKubernetes(config Config) orchestrator.Cluster {
 // the given kubernetes client api, spdy initializer and logger.
 func NewDefaultKubernetes(api kubernetes.Interface, spdyInit spdy.Initializer, logger ign.Logger) orchestrator.Cluster {
 	return &k8s{
-		nodes:        nodes.NewNodes(api, logger),
-		pods:         pods.NewPods(api, spdyInit, logger),
-		ingressRules: rules.NewIngressRules(api, logger),
-		services:     services.NewServices(api, logger),
-		ingresses:    ingresses.NewIngresses(api, logger),
+		nodes:           nodes.NewNodes(api, logger),
+		pods:            pods.NewPods(api, spdyInit, logger),
+		ingressRules:    rules.NewIngressRules(api, logger),
+		services:        services.NewServices(api, logger),
+		ingresses:       ingresses.NewIngresses(api, logger),
+		networkPolicies: network.NewNetworkPolicies(api, logger),
 	}
 }
 
@@ -95,10 +105,11 @@ func NewFakeKubernetes(logger ign.Logger) orchestrator.Cluster {
 	api := fake.NewSimpleClientset()
 	spdyInit := spdy.NewSPDYFakeInitializer()
 	return &k8s{
-		nodes:        nodes.NewNodes(api, logger),
-		pods:         pods.NewPods(api, spdyInit, logger),
-		ingressRules: rules.NewIngressRules(api, logger),
-		services:     services.NewServices(api, logger),
-		ingresses:    ingresses.NewIngresses(api, logger),
+		nodes:           nodes.NewNodes(api, logger),
+		pods:            pods.NewPods(api, spdyInit, logger),
+		ingressRules:    rules.NewIngressRules(api, logger),
+		services:        services.NewServices(api, logger),
+		ingresses:       ingresses.NewIngresses(api, logger),
+		networkPolicies: network.NewNetworkPolicies(api, logger),
 	}
 }
