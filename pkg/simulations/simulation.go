@@ -21,7 +21,7 @@ var (
 // GroupID is an universally unique identifier that identifies a Simulation.
 type GroupID string
 
-// Status defines the latest stage that a Simulation has reached.
+// Status represents a stage a Simulation can be in.
 type Status string
 
 var (
