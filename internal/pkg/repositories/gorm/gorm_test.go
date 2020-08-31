@@ -78,7 +78,7 @@ func (s testRepositorySuite) TestGetByName() {
 	result, err := s.repository.getByName("Test1")
 	s.NoError(err, "Should not throw an error when getting by name.")
 	s.Equal(uint(1), result.ID, "First database entry should be ID=1")
-	s.Equal("Test1", result.Name, "Instances should match")
+	s.Equal("Test1", result.Name, "Names should match")
 }
 
 func (s testRepositorySuite) TestGetByValue() {
