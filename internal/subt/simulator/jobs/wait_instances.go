@@ -10,7 +10,7 @@ import (
 
 // WaitForInstances is used to wait until all required instances are ready.
 var WaitForInstances = &actions.Job{
-	Name:       "wait-for-kubernetes-nodes",
+	Name:       "wait-for-instances",
 	Execute:    waitForInstances,
 	InputType:  actions.GetJobDataType(simulations.GroupID("")),
 	OutputType: actions.GetJobDataType(simulations.GroupID("")),

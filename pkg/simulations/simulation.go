@@ -34,8 +34,20 @@ var (
 	// StatusRejected is used when a simulation has been rejected.
 	StatusRejected Status = "rejected"
 
-	// StatusLaunchingNodes is used when a simulation has entered the launching nodes phase.
-	StatusLaunchingNodes Status = "launching-nodes"
+	// StatusLaunchingInstances is used when the simulation instances are being launched.
+	StatusLaunchingInstances Status = "launching-instances"
+
+	// StatusWaitingInstances is used when a simulation is waiting for the instances to be ready.
+	StatusWaitingInstances Status = "waiting-instances"
+
+	// StatusInstancesReady is used when the simulation instances are ready.
+	StatusInstancesReady Status = "instances-ready"
+
+	// StatusWaitingNodes is used when a simulation is waiting for the nodes to be ready.
+	StatusWaitingNodes Status = "waiting-nodes"
+
+	// StatusNodesReady is used when the simulation nodes are ready.
+	StatusNodesReady Status = "nodes-ready"
 )
 
 // Kind is used to identify if a Simulation is a single simulation or a multisim.

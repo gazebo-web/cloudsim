@@ -10,9 +10,14 @@ var JobsStartSimulation = actions.Jobs{
 	jobs.CheckPendingStatus,
 	jobs.CheckSimulationParenthood,
 	jobs.CheckParentSimulationWithError,
+	jobs.UpdateSimulationStatusToLaunchInstances,
 	jobs.LaunchInstances,
+	jobs.UpdateSimulationStatusToWaitInstances,
 	jobs.WaitForInstances,
+	jobs.UpdateSimulationStatusToInstancesReady,
+	jobs.UpdateSimulationStatusToWaitNodes,
 	jobs.WaitForKubernetesNodes,
+	jobs.UpdateSimulationStatusToNodesReady,
 }
 
 // JobsStopSimulation groups the jobs needed to stop a simulation.
