@@ -55,7 +55,7 @@ func (s *startJobsTestSuite) SetupTest() {
 	s.s3 = s3.NewStorage(&s3TestMock{}, s.logger)
 	s.k8s = kubernetes.NewFakeKubernetes(s.logger)
 
-	s.platform = platform.NewAmazonWebServicesKubernetesPlatform(s.ec2, s.s3, s.k8s, s.store)
+	s.platform = platform.NewPlatform(s.ec2, s.s3, s.k8s, s.store)
 	s.appServices = application.NewServices(s.simulationService)
 
 	s.db, err = gorm.Open("sqlite3", "file::memory:?cache=shared")
@@ -70,7 +70,7 @@ func (s *startJobsTestSuite) SetupTest() {
 }
 
 func (s *startJobsTestSuite) TestCheckPendingStatusSuccessWhenStatusIsPending() {
-	ctx := s.prepareActions(JobCheckPendingStatus)
+	ctx := s.prepareActions(CheckPendingStatus)
 
 	// Prepare simulation
 	sim := fake.NewSimulation("test-group-id", simulations.StatusPending, simulations.SimSingle, nil, "test")
@@ -89,7 +89,7 @@ func (s *startJobsTestSuite) TestCheckPendingStatusSuccessWhenStatusIsPending() 
 }
 
 func (s *startJobsTestSuite) TestCheckPendingStatusFailsWhenStatusIsNotPending() {
-	ctx := s.prepareActions(JobCheckPendingStatus)
+	ctx := s.prepareActions(CheckPendingStatus)
 
 	// Prepare simulation
 	sim := fake.NewSimulation("test-group-id", simulations.StatusRunning, simulations.SimSingle, nil, "test")
