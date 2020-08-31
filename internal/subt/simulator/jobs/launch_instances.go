@@ -15,7 +15,7 @@ import (
 // LaunchInstances is used to launch the required instances to run a simulation.
 var LaunchInstances = &actions.Job{
 	Name:            "launch-instances",
-	PreHooks:        []actions.JobFunc{createMachineInputs, checkInstancesAvailability},
+	PreHooks:        []actions.JobFunc{createMachineInputs},
 	Execute:         launchInstances,
 	RollbackHandler: rollbackLaunchInstances,
 	InputType:       actions.GetJobDataType(simulations.GroupID("")),
@@ -88,22 +88,35 @@ func createMachineInputs(ctx actions.Context, tx *gorm.DB, deployment *actions.D
 	}, nil
 }
 
-// checkInstancesAvailability checks if the required amount of machines are available to be launched.
-func checkInstancesAvailability(ctx actions.Context, tx *gorm.DB, deployment *actions.Deployment,
+// launchInstances is the main process executed by LaunchInstances.
+func launchInstances(ctx actions.Context, tx *gorm.DB, deployment *actions.Deployment,
 	value interface{}) (interface{}, error) {
+
+	// Get map from prehook
 	inputMap := value.(map[string]interface{})
+
+	// Parse group id
+	gid, ok := inputMap["groupID"].(simulations.GroupID)
+	if !ok {
+		return nil, simulations.ErrInvalidGroupID
+	}
+
+	// Parse create machines input
 	createMachineInputs, ok := inputMap["createMachinesInputs"].([]cloud.CreateMachinesInput)
 	if !ok {
 		return nil, simulator.ErrInvalidInput
 	}
 
+	// Set the minimum amount of machines that are required to launch the simulation
 	var minRequested int
 	for _, c := range createMachineInputs {
 		minRequested += int(c.MinCount)
 	}
 
+	// Initialize sim context
 	simCtx := context.NewContext(ctx)
 
+	// Get the amount of reserved machines at the moment.
 	reserved := simCtx.Platform().Machines().Count(cloud.CountMachinesInput{
 		Filters: map[string][]string{
 			"tag:cloudsim-simulation-worker": {
@@ -116,6 +129,7 @@ func checkInstancesAvailability(ctx actions.Context, tx *gorm.DB, deployment *ac
 		},
 	})
 
+	// Create new wait request to check instances availability.
 	req := waiter.NewWaitRequest(func() (bool, error) {
 		reserved = simCtx.Platform().Machines().Count(cloud.CountMachinesInput{
 			Filters: map[string][]string{
@@ -129,60 +143,50 @@ func checkInstancesAvailability(ctx actions.Context, tx *gorm.DB, deployment *ac
 			},
 		})
 		if reserved == -1 {
-			return false, errors.New("error waiting for")
+			return false, errors.New("error waiting for instances")
 		}
 		return minRequested > simCtx.Platform().Store().Machines().Limit()-reserved, nil
 	})
 
+	// Get timeout and poll frequency from store
 	timeout := simCtx.Platform().Store().Machines().Timeout()
 	pollFreq := simCtx.Platform().Store().Machines().PollFrequency()
 
+	// Execute request
 	err := req.Wait(timeout, pollFreq)
 	if err != nil {
 		return nil, err
 	}
 
-	return value, nil
-}
-
-// launchInstances is the main process executed by LaunchInstances.
-func launchInstances(ctx actions.Context, tx *gorm.DB, deployment *actions.Deployment,
-	value interface{}) (interface{}, error) {
-
-	inputMap := value.(map[string]interface{})
-
-	gid, ok := inputMap["groupID"].(simulations.GroupID)
-	if !ok {
-		return nil, simulations.ErrInvalidGroupID
-	}
-
-	createMachineInputs, ok := inputMap["createMachinesInputs"].([]cloud.CreateMachinesInput)
-	if !ok {
-		return nil, simulator.ErrInvalidInput
-	}
-
+	// Get simulation from input.
 	sim, ok := inputMap["simulation"].(simulations.Simulation)
 	if !ok {
 		return nil, simulator.ErrInvalidInput
 	}
 
-	simCtx := context.NewContext(ctx)
-
+	// Create instances
 	output, err := simCtx.Platform().Machines().Create(createMachineInputs)
+
+	// If there is an error, add the list of machines to the deployment
+	// This data will be used by the rollback handler.
 	if len(output) != 0 && err != nil {
-		if dataErr := deployment.SetJobData(tx, &deployment.CurrentJob, "machine-list", output); dataErr != nil {
+		if dataErr := deployment.SetJobData(tx, nil, "machine-list", output); dataErr != nil {
 			return nil, dataErr
 		}
 		return nil, err
 	}
 
+	// Add machine list to context
+	simCtx = context.WithValue(simCtx, "machine-list", output)
+
+	// Update simulation
+	// TODO: What needs to be updated?
 	err = simCtx.Services().Simulations().Update(gid, sim)
 	if err != nil {
 		return nil, err
 	}
-	return map[string]interface{}{
-		"groupID": gid,
-	}, nil
+
+	return gid, nil
 }
 
 // rollbackLaunchInstances is the process in charge of terminating the machine instances that were created in launchInstances.

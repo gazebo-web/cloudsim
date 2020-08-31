@@ -14,7 +14,7 @@ import (
 // fields and validations for SubT application.
 type SubTCreateSimulation struct {
 	CreateSimulation `json:"-"`
-	// Robot Names . Note the validate tag with the "dive" validation to validate each item
+	// Robot Instances . Note the validate tag with the "dive" validation to validate each item
 	// TODO Reenable notinblacklist validator for Name
 	RobotName []string `json:"robot_name" validate:"gt=0,unique,dive,required,min=2,max=24,alphanum" form:"robot_name"`
 	RobotType []string `json:"robot_type" validate:"lenEqFieldLen=RobotName,dive,isrobottype" form:"robot_type"`

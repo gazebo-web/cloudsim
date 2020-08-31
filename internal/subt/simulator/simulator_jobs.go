@@ -11,6 +11,7 @@ var JobsStartSimulation = actions.Jobs{
 	jobs.CheckSimulationParenthood,
 	jobs.CheckParentSimulationWithError,
 	jobs.LaunchInstances,
+	jobs.WaitForInstances,
 	jobs.WaitForKubernetesNodes,
 }
 
