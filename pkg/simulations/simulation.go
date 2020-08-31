@@ -48,6 +48,9 @@ var (
 
 	// StatusNodesReady is used when the simulation nodes are ready.
 	StatusNodesReady Status = "nodes-ready"
+
+	// StatusLaunchingPods is used when the simulation pods are launched.
+	StatusLaunchingPods Status = "launching-pods"
 )
 
 // Kind is used to identify if a Simulation is a single simulation or a multisim.

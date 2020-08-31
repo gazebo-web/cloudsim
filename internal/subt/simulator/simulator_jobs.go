@@ -18,6 +18,7 @@ var JobsStartSimulation = actions.Jobs{
 	jobs.UpdateSimulationStatusToWaitNodes,
 	jobs.WaitForKubernetesNodes,
 	jobs.UpdateSimulationStatusToNodesReady,
+	jobs.UpdateSimulationStatusToLaunchPods,
 }
 
 // JobsStopSimulation groups the jobs needed to stop a simulation.
