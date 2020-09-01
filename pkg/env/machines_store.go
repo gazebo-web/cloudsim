@@ -91,7 +91,7 @@ func (m *machineEnvStore) Timeout() time.Duration {
 	return time.Duration(m.NodeReadyTimeout) * time.Second
 }
 
-//PollFrequency returns a time duration of 2 seconds.
+// PollFrequency returns a time duration of 2 seconds.
 func (m *machineEnvStore) PollFrequency() time.Duration {
 	return 2 * time.Second
 }
