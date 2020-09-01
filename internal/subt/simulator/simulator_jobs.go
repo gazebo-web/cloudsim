@@ -16,9 +16,23 @@ var JobsStartSimulation = actions.Jobs{
 	jobs.WaitForInstances,
 	jobs.UpdateSimulationStatusToInstancesReady,
 	jobs.UpdateSimulationStatusToWaitNodes,
-	jobs.WaitForKubernetesNodes,
+	jobs.WaitForOrchestratorNodes,
 	jobs.UpdateSimulationStatusToNodesReady,
 	jobs.UpdateSimulationStatusToLaunchPods,
+	/* Future jobs.
+	jobs.LaunchGazeboServerPod,
+	jobs.LaunchGazeboServerStoragePod,
+	jobs.LaunchCommsBridgePods,
+	jobs.LaunchFieldComputerPods,
+	jobs.CreateGazeboServerNetworkPolicy,
+	jobs.CreateRobotsNetworkPolicy,
+	jobs.InitializeWebsocketService,
+	jobs.InitializeWebsocketIngress,
+	jobs.UpdateSimulationStatusToWaitPods,
+	jobs.WaitForOrchestratorPods,
+	jobs.UpdateSimulationStatusToPodsReady,
+	jobs.UpdateSimulationStatusToRunning,
+	*/
 }
 
 // JobsStopSimulation groups the jobs needed to stop a simulation.

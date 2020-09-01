@@ -3,10 +3,69 @@ package orchestrator
 import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/waiter"
 	"io"
+	"time"
 )
+
+// Volume represents a storage that will be used to persist data from a certain Container.
+type Volume struct {
+	// Name is the name of the volume.
+	Name string
+	// Path is the mounting path.
+	Path string
+}
+
+// Container is a represents of a standard unit of software.
+type Container struct {
+	// Name is the container's name.
+	Name string
+
+	// Image is the image running inside the container.
+	Image string
+
+	// Args are the commands passed to the container.
+	Args []string
+
+	// Privileged defines if the container should run in privileged mode.
+	Privileged *bool
+
+	// AllowPrivilegeEscalation is used to define if the container is allowed to scale its privileges.
+	AllowPrivilegeEscalation *bool
+
+	// Ports is the list of ports that should be opened.
+	Ports []int32
+
+	// Volumes is the list of volumes that should be mounted in the container.
+	Volumes []Volume
+
+	// EnvVars is the list of env vars that should be passed into the container.
+	EnvVars map[string]string
+}
+
+// CreatePodInput is the input of Pods.Create method.
+type CreatePodInput struct {
+	// Name is the name of the pod that will be created.
+	Name string
+	// Namespace is the namespace where the pod will live in.
+	Namespace string
+	// Labels are the map of labels that will be applied to the pod.
+	Labels map[string]string
+	// RestartPolicy defines how the pod should react after an error.
+	RestartPolicy string
+	// TerminationGracePeriodSeconds is the time duration in seconds the pod needs to terminate gracefully.
+	TerminationGracePeriodSeconds time.Duration
+	// NodeSelector defines the node where the pod should run in.
+	NodeSelector Selector
+	// Containers is the list of containers that should be created inside the pod.
+	Containers []Container
+	// Volumes are the list of volumes that will be created to persist the data from the Container.Volumes.
+	Volumes []Volume
+	// Nameservers are the list of DNS Nameservers that will be used to expose the pod to the internet.
+	Nameservers []string
+}
 
 // Pods groups a set of methods to perform an operation with a Pod.
 type Pods interface {
+	Create(input CreatePodInput) (Resource, error)
 	Exec(resource Resource) Executor
 	Reader(resource Resource) Reader
 	WaitForCondition(resource Resource, condition Condition) waiter.Waiter

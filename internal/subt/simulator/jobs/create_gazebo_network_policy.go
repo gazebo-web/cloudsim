@@ -1,6 +1,7 @@
 package jobs
 
 import (
+	"fmt"
 	"github.com/jinzhu/gorm"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/actions"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator"
@@ -25,16 +26,31 @@ func createGazeboNetworkPolicy(ctx actions.Context, tx *gorm.DB, deployment *act
 
 	simCtx := context.NewContext(ctx)
 
-	input := orchestrator.CreateNetworkPolicyInput{
-		Name:        "",
-		Labels:      map[string]string{},
-		PodSelector: orchestrator.Selector(),
+	sim, err := simCtx.Services().Simulations().Get(gid)
+	if err != nil {
+		return nil, err
 	}
 
-	simCtx.Platform().Orchestrator().NetworkPolicies().Create(input)
+	input := orchestrator.CreateNetworkPolicyInput{
+		Name: fmt.Sprintf("%s-%s-%s", "network-policy", sim.GroupID(), "gzserver"),
+		// Namespace:     simCtx.Platform().Store().Cluster().Namespace(),
+		Labels:      nil,
+		PodSelector: nil,
+		// CIDR:          simCtx.Platform().Store().Ignition().IP(),
+		WebsocketPort: 0,
+		PeersFrom:     nil,
+		PeersTo:       nil,
+	}
 
+	_, err = simCtx.Platform().Orchestrator().NetworkPolicies().Create(input)
+	if err != nil {
+
+		return nil, err
+	}
+	return gid, nil
 }
 
 func rollbackCreateGazeboNetworkPolicy(ctx actions.Context, tx *gorm.DB, deployment *actions.Deployment, value interface{}, err error) (interface{}, error) {
-
+	// TODO: Remove network policy.
+	return value, nil
 }
