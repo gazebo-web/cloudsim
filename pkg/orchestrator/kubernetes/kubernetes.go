@@ -113,3 +113,17 @@ func NewFakeKubernetes(logger ign.Logger) orchestrator.Cluster {
 		networkPolicies: network.NewNetworkPolicies(api, logger),
 	}
 }
+
+// InitializeKubernetes initializes a new Kubernetes orchestrator.
+func InitializeKubernetes(logger ign.Logger) (orchestrator.Cluster, error) {
+	config, err := GetConfig()
+	if err != nil {
+		return nil, err
+	}
+	client, err := NewAPI(config)
+	if err != nil {
+		return nil, err
+	}
+	spdyInit := spdy.NewSPDYInitializer(config)
+	return NewDefaultKubernetes(client, spdyInit, logger), nil
+}

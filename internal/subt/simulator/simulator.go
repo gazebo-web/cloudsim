@@ -106,19 +106,17 @@ func NewSimulator(config Config) simulator.Simulator {
 // registerActions register a set of actions into the given service with the given application's name.
 // It panics whenever an action could not be registered.
 func registerActions(name string, service actions.Servicer) {
-	err := registerAction(name, service, actionNameStartSimulation, JobsStartSimulation)
-	if err != nil {
-		panic(err)
+	actions := map[string]actions.Jobs{
+		actionNameStartSimulation:   JobsStartSimulation,
+		actionNameStopSimulation:    JobsStopSimulation,
+		actionNameRestartSimulation: JobsRestartSimulation,
 	}
 
-	err = registerAction(name, service, actionNameStopSimulation, JobsStopSimulation)
-	if err != nil {
-		panic(err)
-	}
-
-	err = registerAction(name, service, actionNameRestartSimulation, JobsRestartSimulation)
-	if err != nil {
-		panic(err)
+	for actionName, jobs := range actions {
+		err := registerAction(name, service, actionName, jobs)
+		if err != nil {
+			panic(err)
+		}
 	}
 }
 

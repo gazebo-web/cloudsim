@@ -23,10 +23,10 @@ type machineEnvStore struct {
 	// FirewallRulesValue is a set of firewall rules that will be applied to a new instance.
 	FirewallRulesValue []string `env:"CLOUDSIM_MACHINES_FIREWALL_RULES" envSeparator:"," envDefault:"sg-0c5c791266694a3ca"`
 
-	// SubnetsValue is a slice of AWS subnet IDs where to launch simulations (Example: subnet-1270518251)
+	// SubnetsValue is a slice of AWS subnet IDs to launch simulations in. (Example: subnet-1270518251)
 	SubnetsValue []string `env:"CLOUDSIM_MACHINES_SUBNETS,required" envSeparator:","`
 
-	// ZonesValue is a slice of AWS availability zones where to launch simulations. (Example: us-east-1a)
+	// ZonesValue is a slice of AWS availability zones to launch simulations in. (Example: us-east-1a)
 	ZonesValue []string `env:"CLOUDSIM_MACHINES_ZONES,required" envSeparator:","`
 
 	// MachinesLimitValue is the maximum number of machines that Cloudsim can have running at the same time.
@@ -91,7 +91,7 @@ func (m *machineEnvStore) Timeout() time.Duration {
 	return time.Duration(m.NodeReadyTimeout) * time.Second
 }
 
-//PollFrequency returns a time duration of 2 seconds.
+// PollFrequency returns a time duration of 2 seconds.
 func (m *machineEnvStore) PollFrequency() time.Duration {
 	return 2 * time.Second
 }
