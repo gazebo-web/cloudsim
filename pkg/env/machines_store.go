@@ -26,7 +26,7 @@ type machineEnvStore struct {
 	// SubnetsValue is a slice of AWS subnet IDs to launch simulations in. (Example: subnet-1270518251)
 	SubnetsValue []string `env:"CLOUDSIM_MACHINES_SUBNETS,required" envSeparator:","`
 
-	// ZonesValue is a slice of AWS availability zones where to launch simulations. (Example: us-east-1a)
+	// ZonesValue is a slice of AWS availability zones to launch simulations in. (Example: us-east-1a)
 	ZonesValue []string `env:"CLOUDSIM_MACHINES_ZONES,required" envSeparator:","`
 
 	// MachinesLimitValue is the maximum number of machines that Cloudsim can have running at the same time.
