@@ -15,7 +15,7 @@ type services struct {
 	simulation simulations.Service
 }
 
-// Simulations returns the underlying Simulation's service.
+// Simulations returns the underlying Simulation service.
 func (s *services) Simulations() simulations.Service {
 	return s.simulation
 }
