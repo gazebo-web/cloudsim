@@ -3,6 +3,7 @@ package s3
 import (
 	"fmt"
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/client"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3iface"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/cloud"
@@ -10,6 +11,11 @@ import (
 	"net/http"
 	"time"
 )
+
+// NewAPI returns an S3 client from the given config provider.
+func NewAPI(config client.ConfigProvider) s3iface.S3API {
+	return s3.New(config)
+}
 
 // storage is a cloud.Storage implementation.
 type storage struct {

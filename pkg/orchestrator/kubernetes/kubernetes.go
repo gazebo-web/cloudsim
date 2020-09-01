@@ -10,6 +10,7 @@ import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/kubernetes/spdy"
 	"gitlab.com/ignitionrobotics/web/ign-go"
 	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/kubernetes/fake"
 )
 
 // k8s is a orchestrator.Cluster implementation.
@@ -87,4 +88,31 @@ func NewDefaultKubernetes(api kubernetes.Interface, spdyInit spdy.Initializer, l
 		services:     services.NewServices(api, logger),
 		ingresses:    ingresses.NewIngresses(api, logger),
 	}
+}
+
+// NewFakeKubernetes initializes the set of Kubernetes subcomponents using fake implementations.
+func NewFakeKubernetes(logger ign.Logger) orchestrator.Cluster {
+	api := fake.NewSimpleClientset()
+	spdyInit := spdy.NewSPDYFakeInitializer()
+	return &k8s{
+		nodes:        nodes.NewNodes(api, logger),
+		pods:         pods.NewPods(api, spdyInit, logger),
+		ingressRules: rules.NewIngressRules(api, logger),
+		services:     services.NewServices(api, logger),
+		ingresses:    ingresses.NewIngresses(api, logger),
+	}
+}
+
+// InitializeKubernetes initializes a new Kubernetes orchestrator.
+func InitializeKubernetes(logger ign.Logger) (orchestrator.Cluster, error) {
+	config, err := GetConfig()
+	if err != nil {
+		return nil, err
+	}
+	client, err := NewAPI(config)
+	if err != nil {
+		return nil, err
+	}
+	spdyInit := spdy.NewSPDYInitializer(config)
+	return NewDefaultKubernetes(client, spdyInit, logger), nil
 }

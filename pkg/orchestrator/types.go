@@ -1,8 +1,7 @@
-package types
+package orchestrator
 
 import (
 	"fmt"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator"
 )
 
 // resource is an orchestrator.Resource implementation of Kubernetes resources.
@@ -10,7 +9,7 @@ type resource struct {
 	// name represents the name of the service.
 	name string
 	// selector defines a set of key-value pairs that identifies this resource.
-	selector orchestrator.Selector
+	selector Selector
 	// namespace is the environment where the resource is currently running.
 	namespace string
 }
@@ -21,7 +20,7 @@ func (s *resource) Name() string {
 }
 
 // Selector returns the resource's selector.
-func (s *resource) Selector() orchestrator.Selector {
+func (s *resource) Selector() Selector {
 	return s.selector
 }
 
@@ -31,7 +30,7 @@ func (s *resource) Namespace() string {
 }
 
 // NewResource initializes a new orchestrator.Resource using a kubernetes service implementation.
-func NewResource(name, namespace string, selector orchestrator.Selector) orchestrator.Resource {
+func NewResource(name, namespace string, selector Selector) Resource {
 	return &resource{
 		name:      name,
 		namespace: namespace,
@@ -58,7 +57,7 @@ func (s selector) String() string {
 
 // NewSelector initializes a new orchestrator.Selector from the given map.
 // If `nil` is passed as input, an empty selector will be returned.
-func NewSelector(input map[string]string) orchestrator.Selector {
+func NewSelector(input map[string]string) Selector {
 	if input == nil {
 		input = map[string]string{}
 	}

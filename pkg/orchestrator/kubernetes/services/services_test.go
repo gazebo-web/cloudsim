@@ -3,7 +3,6 @@ package services
 import (
 	"github.com/stretchr/testify/assert"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/kubernetes/types"
 	"gitlab.com/ignitionrobotics/web/ign-go"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -138,7 +137,7 @@ func TestGetAllServicesSuccess(t *testing.T) {
 	})
 	assert.NoError(t, err)
 
-	result, err := s.GetAllBySelector("default", types.NewSelector(map[string]string{"service": "test"}))
+	result, err := s.GetAllBySelector("default", orchestrator.NewSelector(map[string]string{"service": "test"}))
 	assert.NoError(t, err)
 	assert.Len(t, result, 2)
 }
@@ -179,7 +178,7 @@ func TestGetAllServicesFailsWhenUsingWrongLabels(t *testing.T) {
 	})
 	assert.NoError(t, err)
 
-	result, err := s.GetAllBySelector("default", types.NewSelector(map[string]string{"another": "test"}))
+	result, err := s.GetAllBySelector("default", orchestrator.NewSelector(map[string]string{"another": "test"}))
 	assert.NoError(t, err)
 	assert.Len(t, result, 0)
 }
@@ -188,7 +187,7 @@ func TestGetAllServicesFailsWhenNoServicesDoesNotExist(t *testing.T) {
 	client := fake.NewSimpleClientset()
 	s := NewServices(client, ign.NewLoggerNoRollbar("TestService", ign.VerbosityDebug))
 
-	result, err := s.GetAllBySelector("default", types.NewSelector(map[string]string{"some": "test"}))
+	result, err := s.GetAllBySelector("default", orchestrator.NewSelector(map[string]string{"some": "test"}))
 	assert.NoError(t, err)
 	assert.Len(t, result, 0)
 }
@@ -224,7 +223,7 @@ func TestRemoveServiceFailsWhenServiceDoesNotExist(t *testing.T) {
 	client := fake.NewSimpleClientset()
 	s := NewServices(client, ign.NewLoggerNoRollbar("TestService", ign.VerbosityDebug))
 
-	res := types.NewResource("test", "default", types.NewSelector(nil))
+	res := orchestrator.NewResource("test", "default", orchestrator.NewSelector(nil))
 
 	err := s.Remove(res)
 	assert.Error(t, err)
