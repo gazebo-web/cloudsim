@@ -23,7 +23,7 @@ type machineEnvStore struct {
 	// FirewallRulesValue is a set of firewall rules that will be applied to a new instance.
 	FirewallRulesValue []string `env:"CLOUDSIM_MACHINES_FIREWALL_RULES" envSeparator:"," envDefault:"sg-0c5c791266694a3ca"`
 
-	// SubnetsValue is a slice of AWS subnet IDs where to launch simulations (Example: subnet-1270518251)
+	// SubnetsValue is a slice of AWS subnet IDs to launch simulations in. (Example: subnet-1270518251)
 	SubnetsValue []string `env:"CLOUDSIM_MACHINES_SUBNETS,required" envSeparator:","`
 
 	// ZonesValue is a slice of AWS availability zones where to launch simulations. (Example: us-east-1a)
