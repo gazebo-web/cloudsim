@@ -19,8 +19,8 @@ var JobsStartSimulation = actions.Jobs{
 	jobs.WaitForOrchestratorNodes,
 	jobs.UpdateSimulationStatusToNodesReady,
 	jobs.UpdateSimulationStatusToLaunchPods,
-	/* Future jobs.
 	jobs.LaunchGazeboServerPod,
+	/* Future jobs.
 	jobs.LaunchGazeboServerStoragePod,
 	jobs.LaunchCommsBridgePods,
 	jobs.LaunchFieldComputerPods,
