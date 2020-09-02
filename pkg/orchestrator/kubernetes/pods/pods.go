@@ -35,7 +35,7 @@ func (p *pods) Create(input orchestrator.CreatePodInput) (orchestrator.Resource,
 		for _, v := range c.Volumes {
 			volumeMounts = append(volumeMounts, apiv1.VolumeMount{
 				Name:      v.Name,
-				MountPath: v.Path,
+				MountPath: v.MountPath,
 			})
 		}
 
@@ -76,7 +76,7 @@ func (p *pods) Create(input orchestrator.CreatePodInput) (orchestrator.Resource,
 			Name: v.Name,
 			VolumeSource: apiv1.VolumeSource{
 				HostPath: &apiv1.HostPathVolumeSource{
-					Path: v.Path,
+					Path: v.HostPath,
 				},
 			},
 		})

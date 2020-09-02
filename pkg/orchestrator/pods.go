@@ -6,12 +6,17 @@ import (
 	"time"
 )
 
+// RestartPolicy defines a restart policy used for pods.
+type RestartPolicy string
+
 // Volume represents a storage that will be used to persist data from a certain Container.
 type Volume struct {
 	// Name is the name of the volume.
 	Name string
-	// Path is the mounting path.
-	Path string
+	// HostPath is the mounting path.
+	HostPath string
+
+	MountPath string
 }
 
 // Container is a represents of a standard unit of software.
@@ -50,7 +55,7 @@ type CreatePodInput struct {
 	// Labels are the map of labels that will be applied to the pod.
 	Labels map[string]string
 	// RestartPolicy defines how the pod should react after an error.
-	RestartPolicy string
+	RestartPolicy RestartPolicy
 	// TerminationGracePeriodSeconds is the time duration in seconds the pod needs to terminate gracefully.
 	TerminationGracePeriodSeconds time.Duration
 	// NodeSelector defines the node where the pod should run in.
