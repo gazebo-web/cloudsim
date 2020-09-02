@@ -32,11 +32,11 @@ func createGazeboNetworkPolicy(ctx actions.Context, tx *gorm.DB, deployment *act
 	}
 
 	input := orchestrator.CreateNetworkPolicyInput{
-		Name: fmt.Sprintf("%s-%s-%s", "network-policy", sim.GroupID(), "gzserver"),
-		// Namespace:     simCtx.Platform().Store().Cluster().Namespace(),
-		Labels:      nil,
-		PodSelector: nil,
-		// CIDR:          simCtx.Platform().Store().Ignition().IP(),
+		Name:          fmt.Sprintf("%s-%s-%s", "network-policy", sim.GroupID(), "gzserver"),
+		Namespace:     simCtx.Platform().Store().Cluster().Namespace(),
+		Labels:        nil,
+		PodSelector:   nil,
+		CIDR:          simCtx.Platform().Store().Ignition().IP(),
 		WebsocketPort: 0,
 		PeersFrom:     nil,
 		PeersTo:       nil,

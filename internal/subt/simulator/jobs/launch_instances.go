@@ -166,25 +166,18 @@ func launchInstances(ctx actions.Context, tx *gorm.DB, deployment *actions.Deplo
 
 	// Create instances
 	output, err := simCtx.Platform().Machines().Create(createMachineInputs)
-
-	// If there is an error, add the list of machines to the deployment
-	// This data will be used by the rollback handler.
-	if len(output) != 0 && err != nil {
+	if len(output) > 0 {
 		if dataErr := deployment.SetJobData(tx, nil, "machine-list", output); dataErr != nil {
 			return nil, dataErr
 		}
+	}
+	if err != nil {
 		return nil, err
 	}
 
 	// Add machine list to context
+	// TODO: Create constant for 'machine-list'
 	simCtx = context.WithValue(simCtx, "machine-list", output)
-
-	// Update simulation
-	// TODO: What needs to be updated?
-	err = simCtx.Services().Simulations().Update(gid, sim)
-	if err != nil {
-		return nil, err
-	}
 
 	return gid, nil
 }
@@ -192,11 +185,6 @@ func launchInstances(ctx actions.Context, tx *gorm.DB, deployment *actions.Deplo
 // rollbackLaunchInstances is the process in charge of terminating the machine instances that were created in launchInstances.
 func rollbackLaunchInstances(ctx actions.Context, tx *gorm.DB, deployment *actions.Deployment,
 	value interface{}, err error) (interface{}, error) {
-
-	if err != cloud.ErrUnknown && err != cloud.ErrInsufficientMachines && err != cloud.ErrRequestsLimitExceeded {
-		return nil, nil
-	}
-
 	jobData, dataErr := deployment.GetJobData(tx, &deployment.CurrentJob, "machine-list")
 	if dataErr != nil {
 		return nil, err

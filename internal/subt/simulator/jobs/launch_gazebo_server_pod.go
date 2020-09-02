@@ -34,10 +34,14 @@ func launchGazeboServerPod(ctx actions.Context, tx *gorm.DB, deployment *actions
 
 	// Set up namespace
 	namespace := "default"
-	// namespace := simCtx.Platform().Store().Platform().Namespace()
+	// namespace := simCtx.Platform().Store().Cluster().Namespace()
 
 	// Set up node selector
-	nodeSelector := orchestrator.NewSelector(map[string]string{})
+	nodeSelector := orchestrator.NewSelector(map[string]string{
+		// TODO: Make keys constant
+		"cloudsim_groupid":   string(gid),
+		"cloudsim_node_type": "gzserver",
+	})
 
 	// Set up pod labels
 	labels := map[string]string{
@@ -76,7 +80,7 @@ func launchGazeboServerPod(ctx actions.Context, tx *gorm.DB, deployment *actions
 	terminationGracePeriod := simCtx.Platform().Store().Orchestrator().TerminationGracePeriod()
 
 	// Run gz command
-	runCommand := []string{""}
+	runCommand := createGazeboRunCommand(dto)
 
 	privileged := true
 	allowPrivilegeEscalation := true
@@ -86,7 +90,7 @@ func launchGazeboServerPod(ctx actions.Context, tx *gorm.DB, deployment *actions
 	volumes := []orchestrator.Volume{
 		{
 			Name:      "logs",
-			MountPath: simCtx.Platform().Store().Gazebo().LogsMountPath(),
+			MountPath: simCtx.Platform().Store().Ignition().LogsMountPath(),
 			HostPath:  "/tmp",
 		},
 		{
@@ -116,15 +120,12 @@ func launchGazeboServerPod(ctx actions.Context, tx *gorm.DB, deployment *actions
 		"QT_X11_NO_MITSHM": "1",
 		"XAUTHORITY":       "/tmp/.docker.xauth",
 		"USE_XVFB":         "1",
-		"IGN_RELAY":        simCtx.Platform().Store().Ignition().RelayIP(),
+		"IGN_RELAY":        simCtx.Platform().Store().Ignition().RelayIP(), // IP Cloudsim
 		"IGN_PARTITION":    string(gid),
 		"IGN_VERBOSE":      simCtx.Platform().Store().Ignition().Verbosity(),
 	}
 
-	nameservers := []string{
-		"8.8.8.8",
-		"1.1.1.1",
-	}
+	nameservers := simCtx.Platform().Store().Cluster().Nameservers()
 
 	// Create the input for the operation
 	input := orchestrator.CreatePodInput{
@@ -166,6 +167,11 @@ func launchGazeboServerPod(ctx actions.Context, tx *gorm.DB, deployment *actions
 	}
 
 	return gid, nil
+}
+
+func createGazeboRunCommand(dto interface{}) []string {
+
+	return []string{}
 }
 
 func rollbackLaunchGazeboServerPod(ctx actions.Context, tx *gorm.DB, deployment *actions.Deployment, value interface{}, err error) (interface{}, error) {

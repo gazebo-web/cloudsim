@@ -1,5 +1,15 @@
 package orchestrator
 
+type NetworkIngressRule struct {
+	Ports    []int32
+	IPBlocks []string
+}
+
+type NetworkEgress struct {
+	Ports    []int32
+	IPBlocks []string
+}
+
 // CreateNetworkPolicyInput is the input for creating a new network policy.
 // TODO: Make this struct more generic.
 type CreateNetworkPolicyInput struct {
@@ -19,6 +29,10 @@ type CreateNetworkPolicyInput struct {
 	PeersFrom []Selector
 	// PeersTo is the group of pod selectors that the pods covered by this network policy are allowed to access to.
 	PeersTo []Selector
+
+	Ingresses NetworkIngressRule
+
+	Egresses NetworkIngressRule
 }
 
 // NetworkPolicies groups a set of methods to manage network policies.

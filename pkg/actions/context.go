@@ -2,6 +2,7 @@ package actions
 
 import (
 	ctx "context"
+	"gitlab.com/ignitionrobotics/web/ign-go"
 )
 
 // Context is used to send context data to jobs. Context should be used to provide access to platforms, services,
@@ -15,15 +16,23 @@ import (
 // pass application-specific values used by jobs, and can be used to support a simple dependency injection scheme.
 type Context interface {
 	ctx.Context
+	Logger() ign.Logger
 }
 
 type context struct {
 	ctx.Context
+	logger ign.Logger
+}
+
+// TODO: Open branch to add logger
+func (c *context) Logger() ign.Logger {
+	return c.logger
 }
 
 // NewContext returns a new Context to pass context information to action jobs.
-func NewContext(ctx ctx.Context) Context {
+func NewContext(ctx ctx.Context, logger ign.Logger) Context {
 	return &context{
 		Context: ctx,
+		logger:  logger,
 	}
 }
