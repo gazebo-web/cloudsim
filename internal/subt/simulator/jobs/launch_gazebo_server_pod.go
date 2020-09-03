@@ -3,6 +3,7 @@ package jobs
 import (
 	"github.com/jinzhu/gorm"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/actions"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/gazebo"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/kubernetes"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
@@ -13,13 +14,14 @@ import (
 // LaunchGazeboServerPod is used to launch the gazebo server pods for a simulation.
 var LaunchGazeboServerPod = &actions.Job{
 	Name:            "launch-gazebo-server-pod",
+	PreHooks:        []actions.JobFunc{prepareGazeboServerPodConfig},
 	Execute:         launchGazeboServerPod,
 	RollbackHandler: rollbackLaunchGazeboServerPod,
 	InputType:       actions.GetJobDataType(simulations.GroupID("")),
 	OutputType:      actions.GetJobDataType(simulations.GroupID("")),
 }
 
-func launchGazeboServerPod(ctx actions.Context, tx *gorm.DB, deployment *actions.Deployment, value interface{}) (interface{}, error) {
+func prepareGazeboServerPodConfig(ctx actions.Context, tx *gorm.DB, deployment *actions.Deployment, value interface{}) (interface{}, error) {
 	// Parse group id
 	gid, ok := value.(simulations.GroupID)
 	if !ok {
@@ -79,8 +81,20 @@ func launchGazeboServerPod(ctx actions.Context, tx *gorm.DB, deployment *actions
 	// Get terminate grace period
 	terminationGracePeriod := simCtx.Platform().Store().Orchestrator().TerminationGracePeriod()
 
-	// Run gz command
-	runCommand := createGazeboRunCommand(dto)
+	// Generate gazebo command args
+	runCommand, err := gazebo.GenerateLaunchArgs(gazebo.LaunchParams{
+		Worlds:                  "",
+		WorldMaxSimSeconds:      "",
+		Seeds:                   nil,
+		RunIndex:                nil,
+		AuthorizationToken:      nil,
+		MaxWebsocketConnections: 0,
+		Robots:                  nil,
+		Marsupials:              nil,
+	})
+	if err != nil {
+		return nil, err
+	}
 
 	privileged := true
 	allowPrivilegeEscalation := true
@@ -150,28 +164,68 @@ func launchGazeboServerPod(ctx actions.Context, tx *gorm.DB, deployment *actions
 		Volumes:     volumes,
 		Nameservers: nameservers,
 	}
+	return map[string]interface{}{
+		"groupID":        gid,
+		"createPodInput": input,
+		"labels":         labels,
+		"podName":        podName,
+		"namespace":      namespace,
+	}, nil
+}
+
+func launchGazeboServerPod(ctx actions.Context, tx *gorm.DB, deployment *actions.Deployment, value interface{}) (interface{}, error) {
+	// Create ctx
+	simCtx := context.NewContext(ctx)
+
+	// Parse input
+	inputMap, ok := value.(map[string]interface{})
+	if !ok {
+		return nil, simulator.ErrInvalidInput
+	}
+
+	createPodInput, ok := inputMap["createPodInput"].(orchestrator.CreatePodInput)
+	if !ok {
+		return nil, simulator.ErrInvalidInput
+	}
+
+	gid, ok := inputMap["groupID"].(simulations.GroupID)
+	if !ok {
+		return nil, simulator.ErrInvalidInput
+	}
+
+	labels, ok := inputMap["labels"].([]map[string]string)
+	if !ok {
+		return nil, simulator.ErrInvalidInput
+	}
+
+	podName, ok := inputMap["podName"].(string)
+	if !ok {
+		return nil, simulator.ErrInvalidInput
+	}
+
+	namespace, ok := inputMap["namespace"].(string)
+	if !ok {
+		return nil, simulator.ErrInvalidInput
+	}
 
 	// Create pod
-	_, err = simCtx.Platform().Orchestrator().Pods().Create(input)
+	_, err := simCtx.Platform().Orchestrator().Pods().Create(createPodInput)
+
+	if dataErr := deployment.SetJobData(tx, nil, "gz-server-pod-labels", labels); dataErr != nil {
+		return nil, dataErr
+	}
+	if dataErr := deployment.SetJobData(tx, nil, "gz-server-pod-name", podName); dataErr != nil {
+		return nil, dataErr
+	}
+	if dataErr := deployment.SetJobData(tx, nil, "gz-server-pod-namespace", namespace); dataErr != nil {
+		return nil, dataErr
+	}
+
 	if err != nil {
-		if dataErr := deployment.SetJobData(tx, nil, "gz-server-pod-labels", labels); dataErr != nil {
-			return nil, dataErr
-		}
-		if dataErr := deployment.SetJobData(tx, nil, "gz-server-pod-name", podName); dataErr != nil {
-			return nil, dataErr
-		}
-		if dataErr := deployment.SetJobData(tx, nil, "gz-server-pod-namespace", namespace); dataErr != nil {
-			return nil, dataErr
-		}
 		return nil, err
 	}
 
 	return gid, nil
-}
-
-func createGazeboRunCommand(dto interface{}) []string {
-
-	return []string{}
 }
 
 func rollbackLaunchGazeboServerPod(ctx actions.Context, tx *gorm.DB, deployment *actions.Deployment, value interface{}, err error) (interface{}, error) {
