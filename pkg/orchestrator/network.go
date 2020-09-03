@@ -12,7 +12,6 @@ type NetworkEgressRule struct {
 }
 
 // CreateNetworkPolicyInput is the input for creating a new network policy.
-// TODO: Make this struct more generic.
 type CreateNetworkPolicyInput struct {
 	// Name is the name of the network policy.
 	Name string
@@ -22,17 +21,13 @@ type CreateNetworkPolicyInput struct {
 	Labels map[string]string
 	// PodSelector are the labels of the pods that this policy should match to.
 	PodSelector Selector
-	// CIDR is the range of ips that this network policy will be applied to.
-	CIDR string
-	// WebsocketPort is the port where the websocket server will listen from.
-	WebsocketPort int32
 	// PeersFrom is the group of pod selectors that are allowed to access the pods covered by this network policy.
 	PeersFrom []Selector
 	// PeersTo is the group of pod selectors that the pods covered by this network policy are allowed to access to.
 	PeersTo []Selector
-
+	// Ingresses groups the set of rules to apply to the ingress policy.
 	Ingresses NetworkIngressRule
-
+	// Egresses groups the set of rules to apply to the egress policy.
 	Egresses NetworkEgressRule
 }
 
