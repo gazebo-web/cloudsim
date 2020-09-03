@@ -121,7 +121,7 @@ func (s *startJobsTestSuite) prepareActions(jobs ...*actions.Job) actions.Contex
 	ctx := context.Background()
 	ctx = context.WithValue(ctx, simctx.CtxPlatform, s.platform)
 	ctx = context.WithValue(ctx, simctx.CtxServices, s.appServices)
-	actCtx := actions.NewContext(ctx)
+	actCtx := actions.NewContext(ctx, s.logger)
 	return actCtx
 }
 
