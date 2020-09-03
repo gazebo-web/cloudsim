@@ -17,10 +17,13 @@ type networkPolicies struct {
 
 // Create creates a network policy.
 func (np *networkPolicies) Create(input orchestrator.CreateNetworkPolicyInput) (orchestrator.Resource, error) {
+	// Prepare ingress spec
 	specIngress := np.createIngressSpec(input.Ingresses, input.PeersFrom)
 
+	// Prepare egress spec
 	specEgress := np.createEgressSpec(input.Egresses, input.PeersTo)
 
+	// Prepare input for Kubernetes
 	createNetworkPolicy := &networkingv1.NetworkPolicy{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:   input.Name,
@@ -36,6 +39,7 @@ func (np *networkPolicies) Create(input orchestrator.CreateNetworkPolicyInput) (
 		},
 	}
 
+	// Create network policy
 	_, err := np.API.NetworkingV1().NetworkPolicies(input.Namespace).Create(createNetworkPolicy)
 	if err != nil {
 		return nil, err
@@ -48,10 +52,13 @@ func (np *networkPolicies) Create(input orchestrator.CreateNetworkPolicyInput) (
 func (np *networkPolicies) createEgressSpec(egressRule orchestrator.NetworkEgressRule,
 	to []orchestrator.Selector) []networkingv1.NetworkPolicyEgressRule {
 
+	// Calculate NetworkPolicyEgressRule slice size
 	size := len(egressRule.Ports) + len(egressRule.IPBlocks) + len(to)
 
+	// Define specEgress slice
 	specEgress := make([]networkingv1.NetworkPolicyEgressRule, size)
 
+	// Add ports
 	for _, port := range egressRule.Ports {
 		specEgress = append(specEgress, networkingv1.NetworkPolicyEgressRule{
 			Ports: []networkingv1.NetworkPolicyPort{
@@ -65,6 +72,7 @@ func (np *networkPolicies) createEgressSpec(egressRule orchestrator.NetworkEgres
 		})
 	}
 
+	// Add IP Blocks
 	for _, cidr := range egressRule.IPBlocks {
 		specEgress = append(specEgress, networkingv1.NetworkPolicyEgressRule{
 			To: []networkingv1.NetworkPolicyPeer{
@@ -75,6 +83,7 @@ func (np *networkPolicies) createEgressSpec(egressRule orchestrator.NetworkEgres
 		})
 	}
 
+	// Add peers that will point to this pod
 	for _, t := range to {
 		specEgress = append(specEgress, networkingv1.NetworkPolicyEgressRule{
 			To: []networkingv1.NetworkPolicyPeer{
@@ -87,6 +96,7 @@ func (np *networkPolicies) createEgressSpec(egressRule orchestrator.NetworkEgres
 		})
 	}
 
+	// Allow outbound traffic to enable connection to the internet on this pod.
 	if egressRule.AllowOutbound {
 		specEgress = append(specEgress, networkingv1.NetworkPolicyEgressRule{})
 	}
@@ -98,10 +108,13 @@ func (np *networkPolicies) createEgressSpec(egressRule orchestrator.NetworkEgres
 func (np *networkPolicies) createIngressSpec(ingressRule orchestrator.NetworkIngressRule,
 	from []orchestrator.Selector) []networkingv1.NetworkPolicyIngressRule {
 
+	// Calculate NetworkPolicyIngressRule slice size
 	size := len(ingressRule.Ports) + len(ingressRule.IPBlocks) + len(from)
 
+	// Define slice with the given size
 	specIngress := make([]networkingv1.NetworkPolicyIngressRule, size)
 
+	// Add ports
 	for _, port := range ingressRule.Ports {
 		specIngress = append(specIngress, networkingv1.NetworkPolicyIngressRule{
 			Ports: []networkingv1.NetworkPolicyPort{
@@ -115,6 +128,7 @@ func (np *networkPolicies) createIngressSpec(ingressRule orchestrator.NetworkIng
 		})
 	}
 
+	// Add ip blocks
 	for _, cidr := range ingressRule.IPBlocks {
 		specIngress = append(specIngress, networkingv1.NetworkPolicyIngressRule{
 			From: []networkingv1.NetworkPolicyPeer{
@@ -125,6 +139,7 @@ func (np *networkPolicies) createIngressSpec(ingressRule orchestrator.NetworkIng
 		})
 	}
 
+	// Add peers that will point from this pod.
 	for _, f := range from {
 		specIngress = append(specIngress, networkingv1.NetworkPolicyIngressRule{
 			From: []networkingv1.NetworkPolicyPeer{
