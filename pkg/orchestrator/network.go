@@ -5,9 +5,10 @@ type NetworkIngressRule struct {
 	IPBlocks []string
 }
 
-type NetworkEgress struct {
-	Ports    []int32
-	IPBlocks []string
+type NetworkEgressRule struct {
+	Ports         []int32
+	IPBlocks      []string
+	AllowOutbound bool
 }
 
 // CreateNetworkPolicyInput is the input for creating a new network policy.
@@ -32,7 +33,7 @@ type CreateNetworkPolicyInput struct {
 
 	Ingresses NetworkIngressRule
 
-	Egresses NetworkIngressRule
+	Egresses NetworkEgressRule
 }
 
 // NetworkPolicies groups a set of methods to manage network policies.
