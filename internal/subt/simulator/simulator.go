@@ -9,6 +9,7 @@ import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulator"
 	simctx "gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulator/context"
+	"gitlab.com/ignitionrobotics/web/ign-go"
 )
 
 const (
@@ -32,6 +33,7 @@ type subTSimulator struct {
 	services        application.Services
 	actions         actions.Servicer
 	db              *gorm.DB
+	logger          ign.Logger
 }
 
 // Start triggers the action that will be in charge of launching a simulation with the given Group ID.
@@ -42,7 +44,7 @@ func (s *subTSimulator) Start(ctx context.Context, groupID simulations.GroupID) 
 		ApplicationName: &s.applicationName,
 		ActionName:      actionNameStartSimulation,
 	}
-	err := s.actions.Execute(actions.NewContext(ctx), s.db, execInput, groupID)
+	err := s.actions.Execute(actions.NewContext(ctx, s.logger), s.db, execInput, groupID)
 	if err != nil {
 		return err
 	}
@@ -56,7 +58,7 @@ func (s *subTSimulator) Stop(ctx context.Context, groupID simulations.GroupID) e
 		ApplicationName: &s.applicationName,
 		ActionName:      actionNameStopSimulation,
 	}
-	err := s.actions.Execute(actions.NewContext(ctx), s.db, execInput, groupID)
+	err := s.actions.Execute(actions.NewContext(ctx, s.logger), s.db, execInput, groupID)
 	if err != nil {
 		return err
 	}
@@ -70,7 +72,7 @@ func (s *subTSimulator) Restart(ctx context.Context, groupID simulations.GroupID
 		ApplicationName: &s.applicationName,
 		ActionName:      actionNameRestartSimulation,
 	}
-	err := s.actions.Execute(actions.NewContext(ctx), s.db, execInput, groupID)
+	err := s.actions.Execute(actions.NewContext(ctx, s.logger), s.db, execInput, groupID)
 	if err != nil {
 		return err
 	}
@@ -90,6 +92,7 @@ type Config struct {
 	Platform            platform.Platform
 	ApplicationServices application.Services
 	ActionService       actions.Servicer
+	Logger              ign.Logger
 }
 
 // NewSimulator initializes a new Simulator implementation for SubT.
@@ -100,6 +103,7 @@ func NewSimulator(config Config) simulator.Simulator {
 		applicationName: applicationName,
 		services:        config.ApplicationServices,
 		actions:         config.ActionService,
+		logger:          config.Logger,
 	}
 }
 
