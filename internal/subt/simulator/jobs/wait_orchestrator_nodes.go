@@ -11,13 +11,13 @@ import (
 // WaitForOrchestratorNodes is used to wait until all required kubernetes nodes are ready.
 var WaitForOrchestratorNodes = &actions.Job{
 	Name:       "wait-for-kubernetes-nodes",
-	Execute:    waitForOrchestratorNodes,
+	PreHooks:   []actions.JobFunc{createWaitRequestForOrchestratorNodes},
 	InputType:  actions.GetJobDataType(simulations.GroupID("")),
 	OutputType: actions.GetJobDataType(simulations.GroupID("")),
 }
 
 // waitForOrchestratorNodes is the main process executed by WaitForOrchestratorNodes.
-func waitForOrchestratorNodes(ctx actions.Context, tx *gorm.DB, deployment *actions.Deployment,
+func createWaitRequestForOrchestratorNodes(ctx actions.Context, tx *gorm.DB, deployment *actions.Deployment,
 	value interface{}) (interface{}, error) {
 
 	simCtx := context.NewContext(ctx)
@@ -36,10 +36,10 @@ func waitForOrchestratorNodes(ctx actions.Context, tx *gorm.DB, deployment *acti
 	timeout := simCtx.Platform().Store().Machines().Timeout()
 	pollFreq := simCtx.Platform().Store().Machines().PollFrequency()
 
-	err := req.Wait(timeout, pollFreq)
-	if err != nil {
-		return nil, err
-	}
-
-	return gid, nil
+	return WaitInput{
+		GroupID:       gid,
+		Request:       req,
+		PollFrequency: pollFreq,
+		Timeout:       timeout,
+	}, nil
 }
