@@ -71,7 +71,6 @@ func GenerateLaunchArgs(params LaunchParams) ([]string, error) {
 	}
 
 	// Set the authorization token if it exists
-	// TODO: Confirm parameter name
 	if params.AuthorizationToken != nil {
 		cmd = append(cmd, fmt.Sprintf("%s:=%s", keyWebsocketAuthKey, *params.AuthorizationToken))
 		cmd = append(cmd, fmt.Sprintf("%s:=%s", keyWebsocketAdminAuthKey, *params.AuthorizationToken))
