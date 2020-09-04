@@ -12,6 +12,8 @@ import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/waiter"
 )
 
+const dataMachineListKey = "machine-list"
+
 // LaunchInstances is used to launch the required instances to run a simulation.
 var LaunchInstances = &actions.Job{
 	Name:            "launch-instances",
@@ -83,7 +85,6 @@ func createMachineInputs(ctx actions.Context, tx *gorm.DB, deployment *actions.D
 
 	return map[string]interface{}{
 		"groupID":              gid,
-		"simulation":           sim,
 		"createMachinesInputs": input,
 	}, nil
 }
@@ -158,20 +159,14 @@ func launchInstances(ctx actions.Context, tx *gorm.DB, deployment *actions.Deplo
 		return nil, err
 	}
 
-	// Get simulation from input.
-	sim, ok := inputMap["simulation"].(simulations.Simulation)
-	if !ok {
-		return nil, simulator.ErrInvalidInput
-	}
-
 	// Create instances
 	output, err := simCtx.Platform().Machines().Create(createMachineInputs)
 
 	// Persist machine list if there are more than 0.
 	if len(output) > 0 {
 		// TODO: Create constant for 'machine-list'
-		simCtx = context.WithValue(simCtx, "machine-list", output)
-		if dataErr := deployment.SetJobData(tx, nil, "machine-list", output); dataErr != nil {
+		simCtx = context.WithValue(simCtx, dataMachineListKey, output)
+		if dataErr := deployment.SetJobData(tx, nil, dataMachineListKey, output); dataErr != nil {
 			return nil, dataErr
 		}
 	}
