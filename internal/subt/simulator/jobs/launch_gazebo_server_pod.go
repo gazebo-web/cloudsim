@@ -2,6 +2,8 @@ package jobs
 
 import (
 	"github.com/jinzhu/gorm"
+	"gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/application"
+	subt "gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/simulations"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/actions"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/gazebo"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator"
@@ -10,6 +12,10 @@ import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulator"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulator/context"
 )
+
+const dataGzServerPodLabelsKey = "gz-server-pod-labels"
+const dataGzServerPodNameKey = "gz-server-pod-name"
+const dataGzServerNamespaceKey = "gz-server-pod-namespace"
 
 // LaunchGazeboServerPod is used to launch the gazebo server pods for a simulation.
 var LaunchGazeboServerPod = &actions.Job{
@@ -59,15 +65,18 @@ func prepareGazeboServerPodConfig(ctx actions.Context, tx *gorm.DB, deployment *
 		return nil, err
 	}
 
+	subtSim, ok := sim.(subt.Simulation)
+
 	// Get track name
-	trackName := sim.Track()
-	track, err := simCtx.Services().Tracks().GetByName(trackName)
+	trackName := subtSim.Track()
+	subtSimService := simCtx.Services().(application.Services)
+	track, err := subtSimService.Tracks().Get(trackName)
 	if err != nil {
 		return nil, err
 	}
 
 	// Assign track's image as container image.
-	containerImage := track.Image()
+	containerImage := track.Image
 
 	// If simulation is child, add another label with the parent's group id.
 	if sim.Kind() == simulations.SimChild {
@@ -134,12 +143,12 @@ func prepareGazeboServerPodConfig(ctx actions.Context, tx *gorm.DB, deployment *
 		"QT_X11_NO_MITSHM": "1",
 		"XAUTHORITY":       "/tmp/.docker.xauth",
 		"USE_XVFB":         "1",
-		"IGN_RELAY":        simCtx.Platform().Store().Ignition().RelayIP(), // IP Cloudsim
+		"IGN_RELAY":        simCtx.Platform().Store().Ignition().IP(), // IP Cloudsim
 		"IGN_PARTITION":    string(gid),
 		"IGN_VERBOSE":      simCtx.Platform().Store().Ignition().Verbosity(),
 	}
 
-	nameservers := simCtx.Platform().Store().Cluster().Nameservers()
+	nameservers := simCtx.Platform().Store().Orchestrator().Nameservers()
 
 	// Create the input for the operation
 	input := orchestrator.CreatePodInput{
@@ -211,13 +220,15 @@ func launchGazeboServerPod(ctx actions.Context, tx *gorm.DB, deployment *actions
 	// Create pod
 	_, err := simCtx.Platform().Orchestrator().Pods().Create(createPodInput)
 
-	if dataErr := deployment.SetJobData(tx, nil, "gz-server-pod-labels", labels); dataErr != nil {
+	if dataErr := deployment.SetJobData(tx, nil, dataGzServerPodLabelsKey, labels); dataErr != nil {
 		return nil, dataErr
 	}
-	if dataErr := deployment.SetJobData(tx, nil, "gz-server-pod-name", podName); dataErr != nil {
+
+	if dataErr := deployment.SetJobData(tx, nil, dataGzServerPodNameKey, podName); dataErr != nil {
 		return nil, dataErr
 	}
-	if dataErr := deployment.SetJobData(tx, nil, "gz-server-pod-namespace", namespace); dataErr != nil {
+
+	if dataErr := deployment.SetJobData(tx, nil, dataGzServerNamespaceKey, namespace); dataErr != nil {
 		return nil, dataErr
 	}
 
@@ -233,7 +244,7 @@ func rollbackLaunchGazeboServerPod(ctx actions.Context, tx *gorm.DB, deployment 
 	simCtx := context.NewContext(ctx)
 
 	// Get pod name
-	jobDataPodName, dataErr := deployment.GetJobData(tx, &deployment.CurrentJob, "gz-server-pod-name")
+	jobDataPodName, dataErr := deployment.GetJobData(tx, &deployment.CurrentJob, dataGzServerPodNameKey)
 	if dataErr != nil {
 		return nil, dataErr
 	}
@@ -244,7 +255,7 @@ func rollbackLaunchGazeboServerPod(ctx actions.Context, tx *gorm.DB, deployment 
 	}
 
 	// Get namespace
-	jobDataNamespace, dataErr := deployment.GetJobData(tx, &deployment.CurrentJob, "gz-server-pod-namespace")
+	jobDataNamespace, dataErr := deployment.GetJobData(tx, &deployment.CurrentJob, dataGzServerNamespaceKey)
 	if dataErr != nil {
 		return nil, dataErr
 	}
@@ -255,7 +266,7 @@ func rollbackLaunchGazeboServerPod(ctx actions.Context, tx *gorm.DB, deployment 
 	}
 
 	// Get labels
-	jobDataLabels, dataErr := deployment.GetJobData(tx, &deployment.CurrentJob, "gz-server-pod-labels")
+	jobDataLabels, dataErr := deployment.GetJobData(tx, &deployment.CurrentJob, dataGzServerPodLabelsKey)
 	if dataErr != nil {
 		return nil, dataErr
 	}

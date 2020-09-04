@@ -57,8 +57,12 @@ type Machines interface {
 
 type Orchestrator interface {
 	Namespace() string
+	TerminationGracePeriod() time.Duration
+	Nameservers() []string
 }
 
 type Ignition interface {
 	IP() string
+	LogsMountPath() string
+	Verbosity() string
 }
