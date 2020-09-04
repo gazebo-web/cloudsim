@@ -96,7 +96,7 @@ func (np *networkPolicies) createEgressSpec(egressRule orchestrator.NetworkEgres
 		})
 	}
 
-	// Allow outbound traffic to enable connection to the internet on this pod.
+	// Allow outbound traffic enabling connection to the internet on this pod.
 	if egressRule.AllowOutbound {
 		specEgress = append(specEgress, networkingv1.NetworkPolicyEgressRule{})
 	}

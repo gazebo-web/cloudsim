@@ -15,7 +15,7 @@ type NetworkEgressRule struct {
 	Ports []int32
 	// IPBlocks are all the IP blocks that the resource can communicate to.
 	IPBlocks []string
-	// AllowOutbound ...
+	// AllowOutbound allows outbound traffic to the internet on this pod.
 	AllowOutbound bool
 }
 
