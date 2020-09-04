@@ -21,6 +21,7 @@ type Cluster interface {
 	Services() Services
 	Ingresses() Ingresses
 	IngressRules() IngressRules
+	NetworkPolicies() NetworkPolicies
 }
 
 // Selector is used to identify a certain resource.
