@@ -825,10 +825,19 @@ func (sa *SubTApplication) getSimulationScore(ctx context.Context, s *Service,
 		return &score, nil
 	}
 
-	podName := sa.getGazeboPodName(getSimulationPodNamePrefix(*dep.GroupID))
-	path := fmt.Sprintf("%s/logs/score.yml", sa.cfg.GazeboLogsVolumeMountPath)
+	podName := sa.getCopyPodName(
+		sa.getGazeboPodName(getSimulationPodNamePrefix(*dep.GroupID)),
+	)
+	filepath := fmt.Sprintf("%s/score.yml", sa.cfg.SidecarContainerLogsVolumeMountPath)
 
-	out, err := KubernetesPodReadFile(ctx, s.clientset, s.cfg.KubernetesNamespace, podName, GazeboServerContainerName, path)
+	out, err := KubernetesPodReadFile(
+		ctx,
+		s.clientset,
+		s.cfg.KubernetesNamespace,
+		podName,
+		CopyToS3SidecarContainerName,
+		filepath,
+	)
 	if err != nil {
 		return nil, ign.NewErrorMessageWithBase(int64(ErrorInvalidScore), err)
 	}
@@ -858,10 +867,19 @@ func (sa *SubTApplication) getSimulationStatistics(ctx context.Context, s *Servi
 		}, nil
 	}
 
-	podName := sa.getGazeboPodName(getSimulationPodNamePrefix(*dep.GroupID))
-	path := fmt.Sprintf("%s/logs/summary.yml", sa.cfg.GazeboLogsVolumeMountPath)
+	podName := sa.getCopyPodName(
+		sa.getGazeboPodName(getSimulationPodNamePrefix(*dep.GroupID)),
+	)
+	filepath := fmt.Sprintf("%s/summary.yml", sa.cfg.SidecarContainerLogsVolumeMountPath)
 
-	out, err := KubernetesPodReadFile(ctx, s.clientset, s.cfg.KubernetesNamespace, podName, GazeboServerContainerName, path)
+	out, err := KubernetesPodReadFile(
+		ctx,
+		s.clientset,
+		s.cfg.KubernetesNamespace,
+		podName,
+		CopyToS3SidecarContainerName,
+		filepath,
+	)
 	if err != nil {
 		return nil, ign.NewErrorMessageWithBase(int64(ErrorInvalidSummary), err)
 	}
