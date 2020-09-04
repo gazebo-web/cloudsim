@@ -36,7 +36,7 @@ type CreateNetworkPolicyInput struct {
 	// PeersFrom is the group of pod selectors that are allowed to access the pods covered by this network policy.
 	PeersFrom []Selector
 
-	// PeersTo is the group of pod selectors that the pods covered by this network policy are allowed to access to.
+	// PeersTo is the group of pod selectors that the pods covered by this network policy are allowed to access.
 	PeersTo []Selector
 
 	// Ingresses groups the set of rules to apply to the ingress policy.
