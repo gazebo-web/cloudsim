@@ -65,7 +65,7 @@ func prepareGazeboNetworkPolicyInput(ctx actions.Context, tx *gorm.DB, deploymen
 
 	input := orchestrator.CreateNetworkPolicyInput{
 		Name:        fmt.Sprintf("%s-%s-%s", "network-policy", sim.GroupID(), "gzserver"),
-		Namespace:   simCtx.Platform().Store().Cluster().Namespace(),
+		Namespace:   simCtx.Platform().Store().Orchestrator().Namespace(),
 		Labels:      baseLabels,
 		PodSelector: podSelector,
 		Ingresses: orchestrator.NetworkIngressRule{
