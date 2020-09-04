@@ -9,6 +9,8 @@ import (
 // Store provides a set of components to store data that needs to be accessed by different services.
 type Store interface {
 	Machines() Machines
+	Orchestrator() Orchestrator
+	Ignition() Ignition
 }
 
 // Machines provides different information for creating machines.
@@ -51,4 +53,12 @@ type Machines interface {
 
 	// NamePrefix returns the name prefix that should be used when creating a machine.
 	NamePrefix() string
+}
+
+type Orchestrator interface {
+	Namespace() string
+}
+
+type Ignition interface {
+	IP() string
 }
