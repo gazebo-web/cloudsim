@@ -53,10 +53,10 @@ func (np *networkPolicies) createEgressSpec(egressRule orchestrator.NetworkEgres
 	to []orchestrator.Selector) []networkingv1.NetworkPolicyEgressRule {
 
 	// Calculate NetworkPolicyEgressRule slice size
-	size := len(egressRule.Ports) + len(egressRule.IPBlocks) + len(to)
+	size := len(egressRule.Ports) + len(egressRule.IPBlocks) + len(to) + 1
 
 	// Define specEgress slice
-	specEgress := make([]networkingv1.NetworkPolicyEgressRule, size)
+	specEgress := make([]networkingv1.NetworkPolicyEgressRule, 0, size)
 
 	// Add ports
 	for _, port := range egressRule.Ports {
