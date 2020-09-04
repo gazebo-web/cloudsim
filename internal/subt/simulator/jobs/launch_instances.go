@@ -166,7 +166,11 @@ func launchInstances(ctx actions.Context, tx *gorm.DB, deployment *actions.Deplo
 
 	// Create instances
 	output, err := simCtx.Platform().Machines().Create(createMachineInputs)
+
+	// Persist machine list if there are more than 0.
 	if len(output) > 0 {
+		// TODO: Create constant for 'machine-list'
+		simCtx = context.WithValue(simCtx, "machine-list", output)
 		if dataErr := deployment.SetJobData(tx, nil, "machine-list", output); dataErr != nil {
 			return nil, dataErr
 		}
@@ -174,10 +178,6 @@ func launchInstances(ctx actions.Context, tx *gorm.DB, deployment *actions.Deplo
 	if err != nil {
 		return nil, err
 	}
-
-	// Add machine list to context
-	// TODO: Create constant for 'machine-list'
-	simCtx = context.WithValue(simCtx, "machine-list", output)
 
 	return gid, nil
 }
