@@ -30,7 +30,7 @@ type CreateNetworkPolicyInput struct {
 	// Labels is the group of key-value pairs that will identify this policy.
 	Labels map[string]string
 
-	// PodSelector are the labels of the pods that this policy should match to.
+	// PodSelector are the labels of the pods that this policy applies to.
 	PodSelector Selector
 
 	// PeersFrom is the group of pod selectors that are allowed to access the pods covered by this network policy.
