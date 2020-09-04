@@ -1,7 +1,6 @@
 package actions
 
 import (
-	"errors"
 	"fmt"
 	"github.com/imdario/mergo"
 	"github.com/jinzhu/gorm"
@@ -12,9 +11,6 @@ import (
 var (
 	// NilJobDataType is used to indicate that a Job Input or Output does not receive or return data.
 	NilJobDataType = reflect.TypeOf(struct{}{})
-
-	// ErrJobExtendReplacesExecute is returned when job.Extend attempts to change the Execute function.
-	ErrJobExtendReplacesExecute = errors.New("extend cannot replace execute, create a new job instead")
 )
 
 // JobFunc is the function signature used by job hooks and Execute function.
@@ -139,11 +135,11 @@ func GetJobDataTypeName(value interface{}) string {
 // Extend customizes this job by modifying its hooks and error handlers.
 // The extension cannot replace the Execute function. If you need to change the Execute function, you should create a
 // new job instead.
-func (j *Job) Extend(extension Job) (*Job, error) {
+func (j *Job) Extend(extension Job) *Job {
 	// The extension name should match the
 	// Ensure that the Execute function is not changed
 	if extension.Execute != nil {
-		return nil, ErrJobExtendReplacesExecute
+		panic(fmt.Sprintf("extend cannot replace %s execute, create a new job instead", j.Name))
 	}
 
 	// Make the extended job name the same as the job name
@@ -151,10 +147,10 @@ func (j *Job) Extend(extension Job) (*Job, error) {
 
 	// Create the extended job
 	if err := mergo.Merge(&extension, *j); err != nil {
-		return nil, err
+		panic(fmt.Sprintf("extend for %s failed to merge definitions: %s", j.Name, err.Error()))
 	}
 
-	return &extension, nil
+	return &extension
 }
 
 // registerTypes registers types used by this job in a registry.
