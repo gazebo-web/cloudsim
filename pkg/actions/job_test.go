@@ -304,15 +304,25 @@ func TestExtendJob(t *testing.T) {
 		return reflect.ValueOf(fn).Pointer()
 	}
 
+	// Replacing the execute function should panic
+
+	require.Panics(t, func() {
+		extension := Job{
+			Execute: func(ctx Context, tx *gorm.DB, deployment *Deployment, value interface{}) (interface{}, error) {
+				return true, nil
+			},
+		}
+		jobVar.Extend(extension)
+	})
+
 	// Create the extension
 	hook := func(ctx Context, tx *gorm.DB, deployment *Deployment, value interface{}) (interface{}, error) {
 		return nil, nil
 	}
-	extendedJob, err := jobVar.Extend(Job{
+	extendedJob := jobVar.Extend(Job{
 		PreHooks:  []JobFunc{hook},
 		PostHooks: []JobFunc{hook},
 	})
-	require.NoError(t, err)
 
 	// Ensure that the name and Execute functions remain the same
 	require.Equal(t, jobVar.Name, extendedJob.Name)
