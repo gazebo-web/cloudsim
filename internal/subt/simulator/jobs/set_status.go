@@ -10,6 +10,8 @@ import (
 
 const dataPreviousStatusKey = "previous-status"
 
+// UpdateSimulationStatusInput is the input used by the UpdateSimulationStatus execute function.
+// The specific applications should use this input to pass data to the main process from prehooks.
 type UpdateSimulationStatusInput struct {
 	GroupID        simulations.GroupID
 	Status         simulations.Status
