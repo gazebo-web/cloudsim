@@ -21,12 +21,15 @@ type Cluster interface {
 	Services() Services
 	Ingresses() Ingresses
 	IngressRules() IngressRules
+	NetworkPolicies() NetworkPolicies
 }
 
 // Selector is used to identify a certain resource.
 type Selector interface {
 	// String returns the selector represented in string format.
 	String() string
+	// Map returns the underlying selector's map.
+	Map() map[string]string
 }
 
 // Resource groups a set of method to identify a resource in a cluster.
