@@ -10,20 +10,8 @@ import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/kubernetes/services"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/kubernetes/spdy"
 	"gitlab.com/ignitionrobotics/web/ign-go"
-	apiv1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/kubernetes/fake"
-)
-
-var (
-	// RestartPolicyNever describes that the container should be never restarted.
-	RestartPolicyNever = orchestrator.RestartPolicy(apiv1.RestartPolicyNever)
-
-	// RestartPolicyAlways describes that the container should be always restarted.
-	RestartPolicyAlways = orchestrator.RestartPolicy(apiv1.RestartPolicyAlways)
-
-	// RestartPolicyOnFailure describes that the container should be restarted on failures.
-	RestartPolicyOnFailure = orchestrator.RestartPolicy(apiv1.RestartPolicyOnFailure)
 )
 
 // k8s is a orchestrator.Cluster implementation.
@@ -41,7 +29,9 @@ type k8s struct {
 	services orchestrator.Services
 
 	// ingresses has a reference to an orchestrator.Ingresses implementation.
-	ingresses       orchestrator.Ingresses
+	ingresses orchestrator.Ingresses
+
+	// networkPolicies has a reference to an orchestrator.NetworkPolicies implementation.
 	networkPolicies orchestrator.NetworkPolicies
 }
 
@@ -67,7 +57,6 @@ func (k k8s) Services() orchestrator.Services {
 
 // Ingresses returns the Kubernetes orchestrator.Ingresses implementation.
 func (k k8s) Ingresses() orchestrator.Ingresses {
-
 	return k.ingresses
 }
 
