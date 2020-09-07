@@ -22,15 +22,40 @@ const (
 
 // LaunchConfig includes the information to create the launch command arguments needed to launch gazebo server.
 type LaunchConfig struct {
-	Worlds                  string
-	WorldMaxSimSeconds      time.Duration
-	Seeds                   []int
-	WorldIndex              *int
-	RunIndex                *int
-	AuthorizationToken      *string
+	// Worlds is a comma separated list of gazebo worlds with parameters.
+	// Example:
+	// 		tunnel_circuit_practice.ign;worldName:=tunnel_circuit_practice_01,
+	//		tunnel_circuit_practice.ign;worldName:=tunnel_circuit_practice_02
+	Worlds string
+
+	// WorldIndex defines what world should be used from Worlds.
+	// If no WorldIndex is provided, the first world will be used instead.
+	WorldIndex *int
+
+	// WorldMaxSimSeconds is the total amount of seconds that a simulation can run.
+	WorldMaxSimSeconds time.Duration
+
+	// Seeds are used to randomly generate worlds.
+	// If no seeds are provided, gazebo will generate its own seeds.
+	// If seeds are provided, RunIndex should be provided as well.
+	Seeds []int
+
+	// RunIndex defines what seed should be used from the Seeds slice.
+	RunIndex *int
+
+	// AuthorizationToken has the token used for the gazebo websocket server.
+	AuthorizationToken *string
+
+	// MaxWebsocketConnections determines the maximum amount of connections that can be established with
+	// the websocket server.
 	MaxWebsocketConnections int
-	Robots                  []simulations.Robot
-	Marsupials              []simulations.Marsupial
+
+	// Robots is a group of robots that will be used for this simulation.
+	Robots []simulations.Robot
+
+	// Marsupials is a group of parent-child pair robots. The robots used as parent and child should be in the
+	// Robots slice as well.
+	Marsupials []simulations.Marsupial
 }
 
 // Generate generates the needed arguments to initialize Gazebo server.
