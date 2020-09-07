@@ -9,6 +9,17 @@ import (
 // RestartPolicy defines a restart policy used for pods.
 type RestartPolicy string
 
+var (
+	// RestartPolicyNever is used to indicate that a pod won't be restarted.
+	RestartPolicyNever RestartPolicy = "Never"
+
+	// RestartPolicyAlways is used to indicate that a pod always will be restarted.
+	RestartPolicyAlways RestartPolicy = "Always"
+
+	// RestartPolicyOnFailure is used to indicate that a pod will be restarted only on failures.
+	RestartPolicyOnFailure RestartPolicy = "OnFailure"
+)
+
 // Volume represents a storage that will be used to persist data from a certain Container.
 type Volume struct {
 	// Name is the name of the volume.

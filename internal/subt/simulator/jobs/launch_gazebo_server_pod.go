@@ -7,15 +7,12 @@ import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/actions"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/gazebo"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/kubernetes"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulator"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulator/context"
 )
 
-const dataGzServerPodLabelsKey = "gz-server-pod-labels"
-const dataGzServerPodNameKey = "gz-server-pod-name"
-const dataGzServerNamespaceKey = "gz-server-pod-namespace"
+const dataGzServerCreationKey = "gz-server-creation"
 
 // LaunchGazeboServerPod is used to launch the gazebo server pods for a simulation.
 var LaunchGazeboServerPod = &actions.Job{
@@ -155,7 +152,7 @@ func prepareGazeboServerPodConfig(ctx actions.Context, tx *gorm.DB, deployment *
 		Name:                          podName,
 		Namespace:                     namespace,
 		Labels:                        labels,
-		RestartPolicy:                 kubernetes.RestartPolicyNever,
+		RestartPolicy:                 orchestrator.RestartPolicyNever,
 		TerminationGracePeriodSeconds: terminationGracePeriod,
 		NodeSelector:                  nodeSelector,
 		Containers: []orchestrator.Container{
@@ -202,12 +199,36 @@ func launchGazeboServerPod(ctx actions.Context, tx *gorm.DB, deployment *actions
 		return nil, simulator.ErrInvalidInput
 	}
 
-	labels, ok := inputMap["labels"].([]map[string]string)
+	// Create pod
+	_, err := simCtx.Platform().Orchestrator().Pods().Create(createPodInput)
+	if dataErr := deployment.SetJobData(tx, nil, dataGzServerCreationKey, value); dataErr != nil {
+		return nil, dataErr
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	return gid, nil
+}
+
+func rollbackLaunchGazeboServerPod(ctx actions.Context, tx *gorm.DB, deployment *actions.Deployment, value interface{}, err error) (interface{}, error) {
+
+	// Create ctx
+	simCtx := context.NewContext(ctx)
+
+	// Get pod name
+	jobCreationData, dataErr := deployment.GetJobData(tx, &deployment.CurrentJob, dataGzServerCreationKey)
+	if dataErr != nil {
+		return nil, dataErr
+	}
+
+	// Parse input
+	inputMap, ok := jobCreationData.(map[string]interface{})
 	if !ok {
 		return nil, simulator.ErrInvalidInput
 	}
 
-	podName, ok := inputMap["podName"].(string)
+	name, ok := inputMap["podName"].(string)
 	if !ok {
 		return nil, simulator.ErrInvalidInput
 	}
@@ -217,61 +238,7 @@ func launchGazeboServerPod(ctx actions.Context, tx *gorm.DB, deployment *actions
 		return nil, simulator.ErrInvalidInput
 	}
 
-	// Create pod
-	_, err := simCtx.Platform().Orchestrator().Pods().Create(createPodInput)
-
-	if dataErr := deployment.SetJobData(tx, nil, dataGzServerPodLabelsKey, labels); dataErr != nil {
-		return nil, dataErr
-	}
-
-	if dataErr := deployment.SetJobData(tx, nil, dataGzServerPodNameKey, podName); dataErr != nil {
-		return nil, dataErr
-	}
-
-	if dataErr := deployment.SetJobData(tx, nil, dataGzServerNamespaceKey, namespace); dataErr != nil {
-		return nil, dataErr
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	return gid, nil
-}
-
-func rollbackLaunchGazeboServerPod(ctx actions.Context, tx *gorm.DB, deployment *actions.Deployment, value interface{}, err error) (interface{}, error) {
-	// Create ctx
-	simCtx := context.NewContext(ctx)
-
-	// Get pod name
-	jobDataPodName, dataErr := deployment.GetJobData(tx, &deployment.CurrentJob, dataGzServerPodNameKey)
-	if dataErr != nil {
-		return nil, dataErr
-	}
-
-	name, ok := jobDataPodName.(string)
-	if !ok {
-		return nil, simulator.ErrInvalidInput
-	}
-
-	// Get namespace
-	jobDataNamespace, dataErr := deployment.GetJobData(tx, &deployment.CurrentJob, dataGzServerNamespaceKey)
-	if dataErr != nil {
-		return nil, dataErr
-	}
-
-	namespace, ok := jobDataNamespace.(string)
-	if !ok {
-		return nil, simulator.ErrInvalidInput
-	}
-
-	// Get labels
-	jobDataLabels, dataErr := deployment.GetJobData(tx, &deployment.CurrentJob, dataGzServerPodLabelsKey)
-	if dataErr != nil {
-		return nil, dataErr
-	}
-
-	labels, ok := jobDataLabels.(map[string]string)
+	labels, ok := inputMap["labels"].(map[string]string)
 	if !ok {
 		return nil, simulator.ErrInvalidInput
 	}
