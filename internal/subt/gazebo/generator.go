@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
 	"gitlab.com/ignitionrobotics/web/ign-go"
-	"strconv"
 	"strings"
+	"time"
 )
 
 const (
@@ -20,11 +20,11 @@ const (
 	keyMarsupial             = "marsupial"
 )
 
-// LaunchParams includes the information to create the launch command arguments needed to launch gazebo server.
-type LaunchParams struct {
+// LaunchConfig includes the information to create the launch command arguments needed to launch gazebo server.
+type LaunchConfig struct {
 	Worlds                  string
-	WorldMaxSimSeconds      string
-	Seeds                   *string
+	WorldMaxSimSeconds      time.Duration
+	Seeds                   []int
 	WorldIndex              *int
 	RunIndex                *int
 	AuthorizationToken      *string
@@ -33,8 +33,8 @@ type LaunchParams struct {
 	Marsupials              []simulations.Marsupial
 }
 
-// GenerateLaunchArgs generates the needed arguments to initialize Gazebo server.
-func GenerateLaunchArgs(params LaunchParams) ([]string, error) {
+// Generate generates the needed arguments to initialize Gazebo server.
+func Generate(params LaunchConfig) []string {
 	worlds := ign.StrToSlice(params.Worlds)
 
 	launchWorldName := worlds[0]
@@ -48,23 +48,16 @@ func GenerateLaunchArgs(params LaunchParams) ([]string, error) {
 	cmd = strings.Split(launchWorldName, ";")
 
 	// Set the simulation time limit
-	cmd = append(cmd, fmt.Sprintf("%s:=%s", keyDurationSec, params.WorldMaxSimSeconds))
+	cmd = append(cmd, fmt.Sprintf("%s:=%d", keyDurationSec, int(params.WorldMaxSimSeconds.Seconds())))
 
 	// Set headless
 	cmd = append(cmd, fmt.Sprintf("%s:=%s", keyHeadless, "true"))
 
-	// Get the configured Seed for this run
-	if params.Seeds != nil {
-		seeds, err := SplitInt(*params.Seeds, ",")
-		if err != nil {
-			return nil, err
-		}
-
-		var seed int
-
-		seed = seeds[0]
+	// Get the Seed for this run
+	if len(params.Seeds) > 0 {
+		seed := params.Seeds[0]
 		if params.RunIndex != nil {
-			seed = seeds[*params.RunIndex]
+			seed = params.Seeds[*params.RunIndex]
 		}
 
 		cmd = append(cmd, fmt.Sprintf("%s:=%d", keySeed, seed))
@@ -86,7 +79,7 @@ func GenerateLaunchArgs(params LaunchParams) ([]string, error) {
 	for i, robot := range params.Robots {
 		cmd = append(cmd,
 			fmt.Sprintf("%s%d:=%s", keyRobotName, i+1, robot.Name()),
-			fmt.Sprintf("%s%d:=%s", keyRobotConfig, i+1, robot.Type()),
+			fmt.Sprintf("%s%d:=%s", keyRobotConfig, i+1, robot.Kind()),
 		)
 	}
 
@@ -96,26 +89,5 @@ func GenerateLaunchArgs(params LaunchParams) ([]string, error) {
 		cmd = append(cmd, fmt.Sprintf("%s%d:=%s:%s", keyMarsupial, i+1, marsupial.Parent().Name(), marsupial.Child().Name()))
 	}
 
-	return cmd, nil
-}
-
-// SplitInt splits the given string by the given separator. It also parses all the content to int.
-// It will return an error if the parse fails.
-func SplitInt(s string, sep string) ([]int, error) {
-	if s == "" {
-		return nil, nil
-	}
-	noSpaces := strings.TrimSpace(s)
-	noSpaces = strings.TrimPrefix(noSpaces, sep)
-	noSpaces = strings.TrimSuffix(noSpaces, sep)
-	var result []int
-	for _, numStr := range strings.Split(noSpaces, ",") {
-		numStr = strings.TrimSpace(numStr)
-		num, err := strconv.Atoi(numStr)
-		if err != nil {
-			return nil, err
-		}
-		result = append(result, num)
-	}
-	return result, nil
+	return cmd
 }
