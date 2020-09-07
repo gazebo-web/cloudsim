@@ -52,11 +52,11 @@ func (np *networkPolicies) Create(input orchestrator.CreateNetworkPolicyInput) (
 func (np *networkPolicies) createEgressSpec(egressRule orchestrator.NetworkEgressRule,
 	to []orchestrator.Selector) []networkingv1.NetworkPolicyEgressRule {
 
-	// Calculate NetworkPolicyEgressRule slice size
-	size := len(egressRule.Ports) + len(egressRule.IPBlocks) + len(to) + 1
+	// Calculate NetworkPolicyEgressRule slice capacity
+	capacity := len(egressRule.Ports) + len(egressRule.IPBlocks) + len(to) + 1
 
-	// Define specEgress slice
-	specEgress := make([]networkingv1.NetworkPolicyEgressRule, 0, size)
+	// Define specEgress slice with given capacity
+	specEgress := make([]networkingv1.NetworkPolicyEgressRule, 0, capacity)
 
 	// Add ports
 	for _, port := range egressRule.Ports {
@@ -107,12 +107,11 @@ func (np *networkPolicies) createEgressSpec(egressRule orchestrator.NetworkEgres
 // createIngressSpec creates all the ingress rules needed by the networkPolicies.Create method.
 func (np *networkPolicies) createIngressSpec(ingressRule orchestrator.NetworkIngressRule,
 	from []orchestrator.Selector) []networkingv1.NetworkPolicyIngressRule {
+	// Calculate NetworkPolicyIngressRule slice capacity
+	capacity := len(ingressRule.Ports) + len(ingressRule.IPBlocks) + len(from)
 
-	// Calculate NetworkPolicyIngressRule slice size
-	size := len(ingressRule.Ports) + len(ingressRule.IPBlocks) + len(from)
-
-	// Define slice with the given size
-	specIngress := make([]networkingv1.NetworkPolicyIngressRule, size)
+	// Define slice with the given capacity
+	specIngress := make([]networkingv1.NetworkPolicyIngressRule, 0, capacity)
 
 	// Add ports
 	for _, port := range ingressRule.Ports {

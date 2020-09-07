@@ -79,3 +79,77 @@ func (s *networkPoliciesTestSuite) TestCreateEgressSpec() {
 
 	}
 }
+
+func (s *networkPoliciesTestSuite) TestCreateIngressSpec() {
+	ingressRule := orchestrator.NetworkIngressRule{
+		Ports:    []int32{1111, 2222, 3333},
+		IPBlocks: []string{"10.0.0.3/24"},
+	}
+	labels := map[string]string{
+		"app2": "test",
+	}
+	to := orchestrator.NewSelector(labels)
+	output := s.networkPolicies.createIngressSpec(ingressRule, []orchestrator.Selector{to})
+	s.Len(output, 5)
+	for i, r := range output {
+		switch i {
+		case 0:
+			s.Equal(int32(1111), r.Ports[0].Port.IntVal)
+			break
+		case 1:
+			s.Equal(int32(2222), r.Ports[0].Port.IntVal)
+			break
+		case 2:
+			s.Equal(int32(3333), r.Ports[0].Port.IntVal)
+			break
+		case 3:
+			s.Equal("10.0.0.3/24", r.From[0].IPBlock.CIDR)
+			break
+		case 4:
+			s.Equal(labels, r.From[0].PodSelector.MatchLabels)
+			break
+		}
+	}
+}
+
+func (s *networkPoliciesTestSuite) TestCreateNetworkPolicy() {
+	res, err := s.networkPolicies.Create(orchestrator.CreateNetworkPolicyInput{
+		Name:      "test-np",
+		Namespace: "default",
+		Labels: map[string]string{
+			"app": "test",
+			"np":  "true",
+		},
+		PodSelector: orchestrator.NewSelector(s.pod.Labels),
+		PeersFrom: []orchestrator.Selector{
+			orchestrator.NewSelector(map[string]string{
+				"app": "test",
+			}),
+		},
+		PeersTo: []orchestrator.Selector{
+			orchestrator.NewSelector(map[string]string{
+				"app": "test",
+			}),
+		},
+		Ingresses: orchestrator.NetworkIngressRule{
+			Ports:    []int32{1111, 2222, 3333},
+			IPBlocks: []string{"10.0.0.3/24"},
+		},
+		Egresses: orchestrator.NetworkEgressRule{
+			Ports:         []int32{1111, 2222, 3333},
+			IPBlocks:      []string{"10.0.0.3/24"},
+			AllowOutbound: true,
+		},
+	})
+	s.NoError(err)
+	s.Equal("test-np", res.Name())
+	s.Equal("default", res.Namespace())
+	s.Equal(map[string]string{
+		"app": "test",
+		"np":  "true",
+	}, res.Selector().Map())
+
+	np, err := s.client.NetworkingV1().NetworkPolicies(res.Namespace()).Get("test-np", metav1.GetOptions{})
+	s.NoError(err)
+	s.Equal(res.Name(), np.Name)
+}
