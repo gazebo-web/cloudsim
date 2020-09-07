@@ -19,10 +19,7 @@ type WaitInput struct {
 
 // Wait is a job that is in charge of waiting for a certain process to happen.
 var Wait = &actions.Job{
-	Name:       "wait",
-	Execute:    wait,
-	InputType:  actions.GetJobDataType(simulations.GroupID("")),
-	OutputType: actions.GetJobDataType(simulations.GroupID("")),
+	Execute: wait,
 }
 
 // wait is the Wait execute function. It's used to trigger the Wait method in the Request passed inside the WaitInput

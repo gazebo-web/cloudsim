@@ -28,6 +28,7 @@ func prepareGazeboNetworkPolicyInput(ctx actions.Context, tx *gorm.DB, deploymen
 
 	simCtx := context.NewContext(ctx)
 
+	// Get simulation
 	sim, err := simCtx.Services().Simulations().Get(gid)
 	if err != nil {
 		return nil, err
