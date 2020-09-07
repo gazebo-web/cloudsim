@@ -9,6 +9,8 @@ import (
 // Store provides a set of components to store data that needs to be accessed by different services.
 type Store interface {
 	Machines() Machines
+	Orchestrator() Orchestrator
+	Ignition() Ignition
 }
 
 // Machines provides different information for creating machines.
@@ -51,4 +53,28 @@ type Machines interface {
 
 	// NamePrefix returns the name prefix that should be used when creating a machine.
 	NamePrefix() string
+}
+
+// Orchestrator provides different information to manage a cluster.
+type Orchestrator interface {
+	// Namespace returns the base namespace that should be used for simulations.
+	Namespace() string
+
+	// TerminationGracePeriod is the maximum amount of time that kubernetes resources can live.
+	TerminationGracePeriod() time.Duration
+
+	// Nameservers returns a slice of the nameservers used to expose simulations to the internet.
+	Nameservers() []string
+}
+
+// Ignition provides general information about cloudsim and ignition gazebo.
+type Ignition interface {
+	// IP returns the current server's ip.
+	IP() string
+
+	// LogsMountPath returns the path of the logs from gazebo server containers.
+	LogsMountPath() string
+
+	// Verbosity returns the level of verbosity that should be used for gazebo.
+	Verbosity() string
 }
