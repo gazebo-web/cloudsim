@@ -12,14 +12,14 @@ func TestDefaultExecutePanics(t *testing.T) {
 	j := &Job{}
 
 	// The default job should panic
-	assert.Panics(t, func() { _, _ = j.Execute(nil, nil, struct{}{}) })
+	assert.Panics(t, func() { _, _ = j.Execute(nil, nil, nil, struct{}{}) })
 }
 
 func TestDefaultRunPanics(t *testing.T) {
 	j := &Job{}
 
 	// The default job should panic
-	assert.Panics(t, func() { _, _ = j.Run(nil, nil, struct{}{}) })
+	assert.Panics(t, func() { _, _ = j.Run(nil, nil, nil, struct{}{}) })
 }
 
 func TestRegisterTypes(t *testing.T) {
@@ -58,18 +58,18 @@ func TestProcessHooksPass(t *testing.T) {
 
 	// TestResource hooks
 	j.PreHooks = []JobFunc{
-		func(tx *gorm.DB, deployment *Deployment, value interface{}) (interface{}, error) {
+		func(ctx Context, tx *gorm.DB, deployment *Deployment, value interface{}) (interface{}, error) {
 			return value.(int) + 1, nil
 		},
-		func(tx *gorm.DB, deployment *Deployment, value interface{}) (interface{}, error) {
+		func(ctx Context, tx *gorm.DB, deployment *Deployment, value interface{}) (interface{}, error) {
 			return value.(int) + 2, nil
 		},
-		func(tx *gorm.DB, deployment *Deployment, value interface{}) (interface{}, error) {
+		func(ctx Context, tx *gorm.DB, deployment *Deployment, value interface{}) (interface{}, error) {
 			return value.(int) + 3, nil
 		},
 	}
 
-	value, err := j.processHooks(nil, nil, 0, &j.PreHooks)
+	value, err := j.processHooks(nil, nil, nil, 0, &j.PreHooks)
 	assert.NoError(t, err)
 	assert.Equal(t, value, 6)
 }
@@ -79,32 +79,32 @@ func TestProcessHooksFail(t *testing.T) {
 
 	// Test hooks
 	j.PreHooks = []JobFunc{
-		func(tx *gorm.DB, deployment *Deployment, value interface{}) (interface{}, error) {
+		func(ctx Context, tx *gorm.DB, deployment *Deployment, value interface{}) (interface{}, error) {
 			return value.(int) + 1, nil
 		},
-		func(tx *gorm.DB, deployment *Deployment, value interface{}) (interface{}, error) {
+		func(ctx Context, tx *gorm.DB, deployment *Deployment, value interface{}) (interface{}, error) {
 			return value.(int) + 2, assert.AnError
 		},
-		func(tx *gorm.DB, deployment *Deployment, value interface{}) (interface{}, error) {
+		func(ctx Context, tx *gorm.DB, deployment *Deployment, value interface{}) (interface{}, error) {
 			return value.(int) + 3, nil
 		},
 	}
 
-	value, err := j.processHooks(nil, nil, 0, &j.PreHooks)
+	value, err := j.processHooks(nil, nil, nil, 0, &j.PreHooks)
 	assert.Nil(t, value)
 	assert.EqualError(t, err, assert.AnError.Error())
 }
 
 func TestCallJobFunc(t *testing.T) {
-	valueFunc := func(tx *gorm.DB, deployment *Deployment, value interface{}) (interface{}, error) {
+	valueFunc := func(ctx Context, tx *gorm.DB, deployment *Deployment, value interface{}) (interface{}, error) {
 		return value, nil
 	}
-	nilFunc := func(tx *gorm.DB, deployment *Deployment, value interface{}) (interface{}, error) {
+	nilFunc := func(ctx Context, tx *gorm.DB, deployment *Deployment, value interface{}) (interface{}, error) {
 		return nil, nil
 	}
 
 	test := func(jobFunc JobFunc, value interface{}, error bool) {
-		value, err := callJobFunc(jobFunc, nil, nil, value)
+		value, err := callJobFunc(jobFunc, nil, nil, nil, value)
 		if error {
 			require.Error(t, err)
 		} else {
@@ -120,12 +120,12 @@ func TestCallJobFunc(t *testing.T) {
 
 func TestTestJobExecute(t *testing.T) {
 	j := &Job{
-		Execute: func(tx *gorm.DB, deployment *Deployment, value interface{}) (interface{}, error) {
+		Execute: func(ctx Context, tx *gorm.DB, deployment *Deployment, value interface{}) (interface{}, error) {
 			return value, nil
 		},
 	}
 	val := 1
-	value, err := j.Execute(nil, nil, val)
+	value, err := j.Execute(nil, nil, nil, val)
 
 	// The test job should not panic and return the same value it receives
 	assert.NoError(t, err)
@@ -137,11 +137,11 @@ func TestTestJobRun(t *testing.T) {
 	j := &Job{
 		PreHooks: []JobFunc{
 			// Multiply the input value by two
-			func(tx *gorm.DB, deployment *Deployment, value interface{}) (interface{}, error) {
+			func(ctx Context, tx *gorm.DB, deployment *Deployment, value interface{}) (interface{}, error) {
 				return value.(int) * 2, nil
 			},
 			// Check that the input value is now two times val
-			func(tx *gorm.DB, deployment *Deployment, value interface{}) (interface{}, error) {
+			func(ctx Context, tx *gorm.DB, deployment *Deployment, value interface{}) (interface{}, error) {
 				var err error
 				if value.(int) != val*2 {
 					err = assert.AnError
@@ -150,7 +150,7 @@ func TestTestJobRun(t *testing.T) {
 			},
 		},
 		// Check that the input value is two times val
-		Execute: func(tx *gorm.DB, deployment *Deployment, value interface{}) (interface{}, error) {
+		Execute: func(ctx Context, tx *gorm.DB, deployment *Deployment, value interface{}) (interface{}, error) {
 			var err error
 			if value.(int) != val*2 {
 				err = assert.AnError
@@ -160,7 +160,7 @@ func TestTestJobRun(t *testing.T) {
 		// Divide output value by two
 		PostHooks: []JobFunc{
 			// Check that the output value is two times val
-			func(tx *gorm.DB, deployment *Deployment, value interface{}) (interface{}, error) {
+			func(ctx Context, tx *gorm.DB, deployment *Deployment, value interface{}) (interface{}, error) {
 				var err error
 				if value.(int) != val*2 {
 					err = assert.AnError
@@ -168,11 +168,11 @@ func TestTestJobRun(t *testing.T) {
 				return value, err
 			},
 			// Divide the output value by two
-			func(tx *gorm.DB, deployment *Deployment, value interface{}) (interface{}, error) {
+			func(ctx Context, tx *gorm.DB, deployment *Deployment, value interface{}) (interface{}, error) {
 				return value.(int) / 2, nil
 			},
 			// Check that the output value is now val
-			func(tx *gorm.DB, deployment *Deployment, value interface{}) (interface{}, error) {
+			func(ctx Context, tx *gorm.DB, deployment *Deployment, value interface{}) (interface{}, error) {
 				var err error
 				if value.(int) != val {
 					err = assert.AnError
@@ -182,7 +182,7 @@ func TestTestJobRun(t *testing.T) {
 		},
 	}
 
-	value, err := j.Run(nil, nil, val)
+	value, err := j.Run(nil, nil, nil, val)
 
 	// The test job should not return an error and should return the same
 	// value it receives
@@ -281,7 +281,7 @@ func TestJobsValidate(t *testing.T) {
 	data := "test"
 	job := &Job{
 		Name: "test",
-		Execute: func(tx *gorm.DB, deployment *Deployment, value interface{}) (interface{}, error) {
+		Execute: func(ctx Context, tx *gorm.DB, deployment *Deployment, value interface{}) (interface{}, error) {
 			return nil, nil
 		},
 		// Nil type input
@@ -295,7 +295,7 @@ func TestExtendJob(t *testing.T) {
 	jobName := "test_job"
 	jobVar := &Job{
 		Name: jobName,
-		Execute: func(tx *gorm.DB, deployment *Deployment, value interface{}) (interface{}, error) {
+		Execute: func(ctx Context, tx *gorm.DB, deployment *Deployment, value interface{}) (interface{}, error) {
 			return jobName, nil
 		},
 	}
@@ -304,15 +304,25 @@ func TestExtendJob(t *testing.T) {
 		return reflect.ValueOf(fn).Pointer()
 	}
 
+	// Replacing the execute function should panic
+
+	require.Panics(t, func() {
+		extension := Job{
+			Execute: func(ctx Context, tx *gorm.DB, deployment *Deployment, value interface{}) (interface{}, error) {
+				return true, nil
+			},
+		}
+		jobVar.Extend(extension)
+	})
+
 	// Create the extension
-	hook := func(tx *gorm.DB, deployment *Deployment, value interface{}) (interface{}, error) {
+	hook := func(ctx Context, tx *gorm.DB, deployment *Deployment, value interface{}) (interface{}, error) {
 		return nil, nil
 	}
-	extendedJob, err := jobVar.Extend(Job{
+	extendedJob := jobVar.Extend(Job{
 		PreHooks:  []JobFunc{hook},
 		PostHooks: []JobFunc{hook},
 	})
-	require.NoError(t, err)
 
 	// Ensure that the name and Execute functions remain the same
 	require.Equal(t, jobVar.Name, extendedJob.Name)

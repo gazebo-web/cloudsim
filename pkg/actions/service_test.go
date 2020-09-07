@@ -37,9 +37,9 @@ var serviceTestData = struct {
 	getJobDataCount         func(t *testing.T, db *gorm.DB, deployment *Deployment) int
 	getDeploymentErrorCount func(t *testing.T, db *gorm.DB, deployment *Deployment) int
 	createJobs              func(t *testing.T, rollbackHandlerCalls *[]int) Jobs
-	execute                 func(t *testing.T, db *gorm.DB, service *Service, jobs Jobs, executeInput *ExecuteInput,
-		jobInput interface{}, errorExpected bool) *Deployment
-	processJobs func(t *testing.T, tr *TestResource, service *Service, executeInput *ExecuteInput,
+	execute                 func(t *testing.T, ctx Context, db *gorm.DB, service *service, jobs Jobs,
+		executeInput *ExecuteInput, jobInput interface{}, errorExpected bool) *Deployment
+	processJobs func(t *testing.T, tr *TestResource, service *service, executeInput *ExecuteInput,
 		jobInput interface{}, jobs Jobs) (*ExecuteInput, error)
 }{
 	// Errors
@@ -85,7 +85,7 @@ var serviceTestData = struct {
 	},
 
 	// processJobs runs service.processJobs on a slice of jobs
-	processJobs: func(t *testing.T, tr *TestResource, service *Service, executeInput *ExecuteInput,
+	processJobs: func(t *testing.T, tr *TestResource, service *service, executeInput *ExecuteInput,
 		jobInput interface{}, jobs Jobs) (*ExecuteInput, error) {
 		if executeInput == nil {
 			executeInput = &ExecuteInput{}
@@ -100,20 +100,23 @@ var serviceTestData = struct {
 		require.NoError(t, executeInput.initialize(tr.db, action))
 
 		// Process jobs
-		err := service.processJobs(tr.db, action, executeInput, jobInput)
+		err := service.processJobs(tr.ctx, tr.db, action, executeInput, jobInput)
 
 		return executeInput, err
 	},
 
 	// createJob returns a test job that modifies and returns ServiceTestStruct type input
+	// A pointer to an empty slice can be passed to rollbackHandlerCalls to record rollback calls of jobs created by
+	// this function.
 	createJobs: func(t *testing.T, rollbackHandlerCalls *[]int) Jobs {
 		td := getTestData(t)
 		createJob := func(jobIndex int, name string) *Job {
 			// Prepare the rollback handler if necessary
 			var rollbackHandler JobErrorHandler
 			if rollbackHandlerCalls != nil {
-				rollbackHandler = func(tx *gorm.DB, deployment *Deployment, value interface{}, err error) (interface{},
-					error) {
+				rollbackHandler = func(ctx Context, tx *gorm.DB, deployment *Deployment, value interface{},
+					err error) (interface{}, error) {
+
 					// The error received should be the test rollback error
 					require.Equal(t, errors.New("rollback"), err)
 
@@ -138,7 +141,7 @@ var serviceTestData = struct {
 			return &Job{
 				Name: name,
 				PreHooks: []JobFunc{
-					func(tx *gorm.DB, deployment *Deployment, value interface{}) (interface{}, error) {
+					func(ctx Context, tx *gorm.DB, deployment *Deployment, value interface{}) (interface{}, error) {
 						input := value.(*ServiceTestStruct)
 
 						input.PreHook++
@@ -148,7 +151,7 @@ var serviceTestData = struct {
 					},
 				},
 
-				Execute: func(tx *gorm.DB, deployment *Deployment, value interface{}) (interface{}, error) {
+				Execute: func(ctx Context, tx *gorm.DB, deployment *Deployment, value interface{}) (interface{}, error) {
 					input := value.(*ServiceTestStruct)
 
 					input.Execute++
@@ -158,7 +161,7 @@ var serviceTestData = struct {
 				},
 
 				PostHooks: []JobFunc{
-					func(tx *gorm.DB, deployment *Deployment, value interface{}) (interface{}, error) {
+					func(ctx Context, tx *gorm.DB, deployment *Deployment, value interface{}) (interface{}, error) {
 						input := value.(*ServiceTestStruct)
 
 						input.PostHook++
@@ -184,8 +187,9 @@ var serviceTestData = struct {
 	},
 
 	// execute performs setup operations and calls service.Execute
-	execute: func(t *testing.T, db *gorm.DB, service *Service, jobs Jobs, executeInput *ExecuteInput,
+	execute: func(t *testing.T, ctx Context, db *gorm.DB, service *service, jobs Jobs, executeInput *ExecuteInput,
 		jobInput interface{}, errorExpected bool) *Deployment {
+
 		td := getTestData(t)
 
 		// Create and register the action
@@ -203,7 +207,7 @@ var serviceTestData = struct {
 		deployment := executeInput.getDeployment()
 
 		// Execute the action
-		err = service.Execute(db, executeInput, jobInput)
+		err = service.Execute(ctx, db, executeInput, jobInput)
 		if errorExpected {
 			require.Error(t, err)
 		} else {
@@ -215,10 +219,10 @@ var serviceTestData = struct {
 }
 
 // newTestService creates a new service containing the test action
-func newTestService(t *testing.T) *Service {
+func newTestService(t *testing.T) *service {
 	td := getTestData(t)
 
-	service := NewService()
+	service := NewService().(*service)
 
 	if err := service.RegisterAction(&td.applicationName, td.actionName, td.action); err != nil {
 		panic(fmt.Sprintf("failed to register action %s", td.actionName))
@@ -401,11 +405,11 @@ func TestProcessJobsFailedJobErrorHandler(t *testing.T) {
 		PreHooks: []JobFunc{
 			WrapErrorHandler(
 				// Fun
-				func(tx *gorm.DB, deployment *Deployment, value interface{}) (interface{}, error) {
+				func(ctx Context, tx *gorm.DB, deployment *Deployment, value interface{}) (interface{}, error) {
 					return value, errors.New("prehooks")
 				},
 				// Handler
-				func(tx *gorm.DB, deployment *Deployment, value interface{}, err error) (interface{}, error) {
+				func(ctx Context, tx *gorm.DB, deployment *Deployment, value interface{}, err error) (interface{}, error) {
 					input := value.(*ServiceTestStruct)
 
 					input.PreHook++
@@ -416,11 +420,11 @@ func TestProcessJobsFailedJobErrorHandler(t *testing.T) {
 		},
 		Execute: WrapErrorHandler(
 			// Fn
-			func(tx *gorm.DB, deployment *Deployment, value interface{}) (interface{}, error) {
+			func(ctx Context, tx *gorm.DB, deployment *Deployment, value interface{}) (interface{}, error) {
 				return value, errors.New("execute")
 			},
 			// Handler
-			func(tx *gorm.DB, deployment *Deployment, value interface{}, err error) (interface{}, error) {
+			func(ctx Context, tx *gorm.DB, deployment *Deployment, value interface{}, err error) (interface{}, error) {
 				input := value.(*ServiceTestStruct)
 
 				input.Execute++
@@ -431,11 +435,11 @@ func TestProcessJobsFailedJobErrorHandler(t *testing.T) {
 		PostHooks: []JobFunc{
 			WrapErrorHandler(
 				// Fun
-				func(tx *gorm.DB, deployment *Deployment, value interface{}) (interface{}, error) {
+				func(ctx Context, tx *gorm.DB, deployment *Deployment, value interface{}) (interface{}, error) {
 					return value, testErr
 				},
 				// Handler
-				func(tx *gorm.DB, deployment *Deployment, value interface{}, err error) (interface{}, error) {
+				func(ctx Context, tx *gorm.DB, deployment *Deployment, value interface{}, err error) (interface{}, error) {
 					input := value.(*ServiceTestStruct)
 
 					input.PostHook++
@@ -488,7 +492,7 @@ func TestProcessJobsNilOutput(t *testing.T) {
 
 	// Job that returns nil and no error
 	jobNil := &Job{
-		Execute: func(tx *gorm.DB, deployment *Deployment, value interface{}) (interface{}, error) {
+		Execute: func(ctx Context, tx *gorm.DB, deployment *Deployment, value interface{}) (interface{}, error) {
 			return nil, nil
 		},
 	}
@@ -497,7 +501,7 @@ func TestProcessJobsNilOutput(t *testing.T) {
 	// Job that returns nil and an error
 	testErr := errors.New("test")
 	jobTestErr := &Job{
-		Execute: func(tx *gorm.DB, deployment *Deployment, value interface{}) (interface{}, error) {
+		Execute: func(ctx Context, tx *gorm.DB, deployment *Deployment, value interface{}) (interface{}, error) {
 			return nil, testErr
 		},
 	}
@@ -577,9 +581,9 @@ func testServiceUpdateJobsForRollback(t *testing.T, jobs Jobs) {
 	// Make the last posthook fail
 	hookFn := jobs[jobCount-1].PostHooks[0]
 	jobs[jobCount-1].PostHooks = []JobFunc{
-		func(tx *gorm.DB, deployment *Deployment, value interface{}) (interface{}, error) {
+		func(ctx Context, tx *gorm.DB, deployment *Deployment, value interface{}) (interface{}, error) {
 			// Execute the posthook logic as usual and return an error
-			_, err := hookFn(tx, deployment, value)
+			_, err := hookFn(ctx, tx, deployment, value)
 			require.NoError(t, err)
 
 			return nil, std.errRollback
@@ -588,9 +592,10 @@ func testServiceUpdateJobsForRollback(t *testing.T, jobs Jobs) {
 
 	// Make the rollback handler from Job 1 fail
 	rollbackHandler := jobs[0].RollbackHandler
-	jobs[0].RollbackHandler = func(tx *gorm.DB, deployment *Deployment, value interface{},
+	jobs[0].RollbackHandler = func(ctx Context, tx *gorm.DB, deployment *Deployment, value interface{},
 		err error) (interface{}, error) {
-		_, err = rollbackHandler(tx, deployment, value, err)
+
+		_, err = rollbackHandler(ctx, tx, deployment, value, err)
 		require.NoError(t, err)
 		return nil, std.errRollback
 	}
@@ -607,7 +612,7 @@ func TestExecuteInvalidAction(t *testing.T) {
 	executeInput := &ExecuteInput{
 		ActionName: "invalid_action",
 	}
-	err := service.Execute(tr.db, executeInput, nil)
+	err := service.Execute(tr.ctx, tr.db, executeInput, nil)
 	require.Error(t, ErrActionNotFound, err)
 }
 
@@ -625,7 +630,7 @@ func TestExecute(t *testing.T) {
 
 	// Execute the action
 	jobInput := std.job1InputData
-	deployment := std.execute(t, tr.db, service, jobs, nil, &jobInput, false)
+	deployment := std.execute(t, tr.ctx, tr.db, service, jobs, nil, &jobInput, false)
 
 	// Verify that the values were processed as expected
 	require.Equal(t, 3, jobInput.PreHook)
@@ -665,7 +670,7 @@ func TestExecuteResumeAction(t *testing.T) {
 	require.NoError(t, deployment.SetJobData(tr.db, &td.jobName2, deploymentJobInput, &std.job2InputData))
 	require.NoError(t, deployment.setJob(tr.db, td.jobName2, nil))
 
-	deployment = std.execute(t, tr.db, service, jobs, executeInput, nil, false)
+	deployment = std.execute(t, tr.ctx, tr.db, service, jobs, executeInput, nil, false)
 
 	testServiceValidateExecute(t, tr.db, deployment, jobCount)
 }
@@ -678,7 +683,7 @@ func TestExecuteRollback(t *testing.T) {
 	// Reset the job data type registry
 	jobDataTypeRegistry = newDataTypeRegistry()
 
-	// rollbackHandlerCalls keeps track of the rollback handlers called
+	// rollbackHandlerCalls keeps track of called rollback handlers
 	rollbackHandlerCalls := make([]int, 0)
 
 	// Create the set of jobs
@@ -689,7 +694,7 @@ func TestExecuteRollback(t *testing.T) {
 
 	// Execute the action
 	jobInput := std.job1InputData
-	deployment := std.execute(t, tr.db, service, jobs, nil, &jobInput, true)
+	deployment := std.execute(t, tr.ctx, tr.db, service, jobs, nil, &jobInput, true)
 
 	// Verify that the values were processed as expected
 	require.Equal(t, 3, jobInput.PreHook)
@@ -718,7 +723,7 @@ func TestExecuteResumeRollback(t *testing.T) {
 	testServiceUpdateJobsForRollback(t, jobs)
 
 	// The first job's functions should not run
-	jobs[0].Execute = func(tx *gorm.DB, deployment *Deployment, value interface{}) (interface{}, error) {
+	jobs[0].Execute = func(ctx Context, tx *gorm.DB, deployment *Deployment, value interface{}) (interface{}, error) {
 		t.Log("Job 1 Execute function was called instead of rolling back.")
 		t.Fail()
 		return nil, nil
@@ -751,7 +756,7 @@ func TestExecuteResumeRollback(t *testing.T) {
 	require.NoError(t, deployment.SetJobData(tr.db, &td.jobName3, deploymentJobData, &std.jobRollbackJobData))
 
 	// Execute the action
-	deployment = std.execute(t, tr.db, service, jobs, executeInput, nil, true)
+	deployment = std.execute(t, tr.ctx, tr.db, service, jobs, executeInput, nil, true)
 
 	testServiceValidateRollbackExecute(t, tr.db, deployment, jobCount)
 }
