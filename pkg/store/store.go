@@ -60,7 +60,7 @@ type Orchestrator interface {
 	// Namespace returns the base namespace that should be used for simulations.
 	Namespace() string
 
-	// TerminationGracePeriod is the maximum amount of time that kubernetes resources can live.
+	// TerminationGracePeriod duration that pods need to terminate gracefully.
 	TerminationGracePeriod() time.Duration
 
 	// Nameservers returns a slice of the nameservers used to expose simulations to the internet.
@@ -72,8 +72,14 @@ type Ignition interface {
 	// IP returns the current server's ip.
 	IP() string
 
-	// LogsMountPath returns the path of the logs from gazebo server containers.
-	LogsMountPath() string
+	// GazeboServerLogsPath returns the path of the logs from gazebo server containers.
+	GazeboServerLogsPath() string
+
+	// ROSLogsPath returns the path of the logs from bridge containers.
+	ROSLogsPath() string
+
+	// SidecarContainerLogsPath returns the path of the logs from sidecar containers.
+	SidecarContainerLogsPath() string
 
 	// Verbosity returns the level of verbosity that should be used for gazebo.
 	Verbosity() string
