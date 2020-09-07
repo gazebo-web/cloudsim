@@ -38,10 +38,15 @@ func NewResource(name, namespace string, selector Selector) Resource {
 	}
 }
 
-// selector is a kubernetes resource selector.
+// selector is a group of key-pair values that identify a resource.
 type selector map[string]string
 
-// String returns the kubernetes selector in string format.
+// Map returns the selector in map format.
+func (s selector) Map() map[string]string {
+	return s
+}
+
+// String returns the selector in string format.
 func (s selector) String() string {
 	var out string
 	count := len(s)
