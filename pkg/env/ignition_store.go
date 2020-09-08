@@ -7,11 +7,26 @@ import (
 
 // ignitionEnvStore is the implementation of store.Ignition using env vars.
 type ignitionEnvStore struct {
-	GazeboServerLogsPathValue     string `env:"CLOUDSIM_IGN_GZSERVER_LOGS_VOLUME_MOUNT_PATH" envDefault:"/tmp/ign"`
-	IgnIPValue                    string `env:"CLOUDSIM_IGN_IP"`
-	VerbosityValue                string `env:"CLOUDSIM_IGN_VERBOSITY"`
-	ROSLogsPathValue              string `env:"CLOUDSIM_IGN_BRIDGE_LOGS_VOLUME_MOUNT_PATH" envDefault:"/home/developer/.ros"`
+	// GazeboServerLogsPathValue is the path inside the container where the `gz-logs` Volume will be mounted.
+	// eg. '/tmp/ign'.
+	// Important: it is important that gazebo is configured to record its logs to a child folder of the
+	// passed mount location (eg. following the above example, '/var/log/gzserver/logs'), otherwise gazebo
+	// will 'mkdir' and override the mounted folder.
+	// See the "gzserver-container" Container Spec below to see the code.
+	GazeboServerLogsPathValue string `env:"CLOUDSIM_IGN_GZSERVER_LOGS_VOLUME_MOUNT_PATH" envDefault:"/tmp/ign"`
+
+	// ROSLogsPathValue is the path inside the ROS container where the ros logs Volume will be mounted.
+	ROSLogsPathValue string `env:"CLOUDSIM_IGN_BRIDGE_LOGS_VOLUME_MOUNT_PATH" envDefault:"/home/developer/.ros"`
+
+	// SidecarContainerLogsPathValue is the path inside the sidecar container where the logs volume will be mounted.
 	SidecarContainerLogsPathValue string `env:"CLOUDSIM_IGN_SIDECAR_CONTAINER_LOGS_VOLUME_MOUNT_PATH" envDefault:"/tmp/logs"`
+
+	// IgnIPValue is the Cloudsim server's IP address to use when creating NetworkPolicies.
+	// See 'docker-entrypoint.sh' script located at the root folder of this project.
+	IgnIPValue string `env:"CLOUDSIM_IGN_IP"`
+
+	// VerbosityValue is the IGN_VERBOSE value that will be passed to Pods launched for SubT.
+	VerbosityValue string `env:"CLOUDSIM_IGN_VERBOSITY"`
 }
 
 // ROSLogsPath returns the path of the logs from bridge containers.
