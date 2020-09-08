@@ -16,9 +16,11 @@ func TestGenerate(t *testing.T) {
 	maxConn := 500
 	seeds := []int{1234, 5678, 91011}
 
-	worlds := "cloudsim_sim.ign;worldName:=tunnel_circuit_practice_01," +
-		"cloudsim_sim.ign;worldName:=tunnel_circuit_practice_02," +
-		"cloudsim_sim.ign;worldName:=tunnel_circuit_practice_03,"
+	worlds := []string{
+		"cloudsim_sim.ign;worldName:=tunnel_circuit_practice_01,",
+		"cloudsim_sim.ign;worldName:=tunnel_circuit_practice_02",
+		"cloudsim_sim.ign;worldName:=tunnel_circuit_practice_03",
+	}
 
 	fakeRobotA := fake.NewRobot("testA", "X1")
 	fakeRobotB := fake.NewRobot("testB", "X2")
