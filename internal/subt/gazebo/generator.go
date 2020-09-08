@@ -3,7 +3,6 @@ package gazebo
 import (
 	"fmt"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
-	"gitlab.com/ignitionrobotics/web/ign-go"
 	"strings"
 	"time"
 )
@@ -22,14 +21,17 @@ const (
 
 // LaunchConfig includes the information to create the launch command arguments needed to launch gazebo server.
 type LaunchConfig struct {
-	// Worlds is a comma separated list of gazebo worlds with parameters.
+	// Worlds is a slice of gazebo worlds with parameters.
+	// Worlds should have a length >= 1.
 	// Example:
-	// 		tunnel_circuit_practice.ign;worldName:=tunnel_circuit_practice_01,
-	//		tunnel_circuit_practice.ign;worldName:=tunnel_circuit_practice_02
-	Worlds string
+	// 		[
+	//			"tunnel_circuit_practice.ign;worldName:=tunnel_circuit_practice_01",
+	//			"tunnel_circuit_practice.ign;worldName:=tunnel_circuit_practice_02",
+	//		]
+	Worlds []string
 
-	// WorldIndex defines what world should be used from Worlds.
-	// If no WorldIndex is provided, the first world will be used instead.
+	// WorldIndex defines which world should be used from Worlds.
+	// If no WorldIndex is provided, the first (Worlds[0]) world will be used instead.
 	WorldIndex *int
 
 	// WorldMaxSimSeconds is the total amount of seconds that a simulation can run.
@@ -60,11 +62,9 @@ type LaunchConfig struct {
 
 // Generate generates the needed arguments to initialize Gazebo server.
 func Generate(params LaunchConfig) []string {
-	worlds := ign.StrToSlice(params.Worlds)
-
-	launchWorldName := worlds[0]
+	launchWorldName := params.Worlds[0]
 	if params.WorldIndex != nil {
-		launchWorldName = worlds[*params.WorldIndex]
+		launchWorldName = params.Worlds[*params.WorldIndex]
 	}
 
 	// We split by ";" (semicolon), in case the configured worldToLaunch string has arguments.
