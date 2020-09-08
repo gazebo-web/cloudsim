@@ -42,7 +42,7 @@ func createWaitRequestForGzServerPod(ctx actions.Context, tx *gorm.DB, deploymen
 	res := orchestrator.NewResource("", namespace, orchestrator.NewSelector(labels))
 
 	// Create wait for condition request
-	req := simCtx.Platform().Orchestrator().Pods().WaitForCondition(res, orchestrator.ReadyCondition)
+	req := simCtx.Platform().Orchestrator().Pods().WaitForCondition(res, orchestrator.HasIPStatusCondition)
 
 	// Get timeout and poll frequency from store
 	timeout := simCtx.Platform().Store().Machines().Timeout()
