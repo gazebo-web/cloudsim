@@ -8,8 +8,11 @@ import (
 
 // Store provides a set of components to store data that needs to be accessed by different services.
 type Store interface {
+	// Machines provides access to a set of configurations for creating machines.
 	Machines() Machines
+	// Orchestrator provides access to a set of configurations for cluster management.
 	Orchestrator() Orchestrator
+	// Ignition provides access to a set of common cloudsim configurations.
 	Ignition() Ignition
 }
 
