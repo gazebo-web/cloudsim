@@ -9,9 +9,11 @@ import (
 type orchestratorEnvStore struct {
 	// TerminationGracePeriodSecondsValue is the amount of time in seconds that a simulation needs to terminate.
 	TerminationGracePeriodSecondsValue int `env:"CLOUDSIM_ORCHESTRATOR_TERMINATION_GRACE_SECONDS" envDefault:"120"`
+
 	// NameserverValues is a comma separated list of nameservers that will be used to allow simulations
 	// to access the internet to upload logs.
 	NameserverValues []string `env:"CLOUDSIM_ORCHESTRATOR_NAMESERVERS" envDefault:"8.8.8.8,1.1.1.1" envSeparator:","`
+
 	// NamespaceValue is the orchestrator namespace where simulations should be launched.
 	NamespaceValue string `env:"CLOUDSIM_ORCHESTRATOR_NAMESPACE" envDefault:"default"`
 }
