@@ -34,6 +34,7 @@ func (i *ignitionEnvStore) ROSLogsPath() string {
 	return i.ROSLogsPathValue
 }
 
+// SidecarContainerLogsPath returns the path of the logs from sidecar containers.
 func (i *ignitionEnvStore) SidecarContainerLogsPath() string {
 	return i.SidecarContainerLogsPathValue
 }
