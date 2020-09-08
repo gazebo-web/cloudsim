@@ -19,18 +19,18 @@ var JobsStartSimulation = actions.Jobs{
 	jobs.UpdateSimulationStatusToLaunchPods,
 	jobs.CreateGazeboServerNetworkPolicy,
 	jobs.LaunchGazeboServerPod,
-	/* Future jobs.
 	jobs.WaitForGazeboServerPod,
-	jobs.LaunchGazeboServerStoragePod,
-	jobs.CreateRobotsNetworkPolicy,
-	jobs.LaunchCommsBridgePods,
-	jobs.LaunchFieldComputerPods,
-	jobs.InitializeWebsocketService,
-	jobs.InitializeWebsocketIngress,
-	jobs.UpdateSimulationStatusToWaitPods,
-	jobs.WaitForOrchestratorPods,
-	jobs.UpdateSimulationStatusToPodsReady,
-	jobs.UpdateSimulationStatusToRunning,
+	/*
+		jobs.LaunchGazeboServerStoragePod,
+		jobs.CreateRobotsNetworkPolicy,
+		jobs.LaunchCommsBridgePods,
+		jobs.LaunchFieldComputerPods,
+		jobs.InitializeWebsocketService,
+		jobs.InitializeWebsocketIngress,
+		jobs.UpdateSimulationStatusToWaitPods,
+		jobs.WaitForOrchestratorPods,
+		jobs.UpdateSimulationStatusToPodsReady,
+		jobs.UpdateSimulationStatusToRunning,
 	*/
 }
 
