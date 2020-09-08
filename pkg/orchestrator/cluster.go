@@ -12,6 +12,11 @@ var (
 		Type:   "Ready",
 		Status: "True",
 	}
+
+	HasIPStatusCondition = Condition{
+		Type:   "Has IP status",
+		Status: "True",
+	}
 )
 
 // Cluster groups a set of methods for managing a cluster.
