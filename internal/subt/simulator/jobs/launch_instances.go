@@ -19,6 +19,7 @@ var LaunchInstances = &actions.Job{
 	Name:            "launch-instances",
 	PreHooks:        []actions.JobFunc{createMachineInputs},
 	Execute:         launchInstances,
+	PostHooks:       []actions.JobFunc{launchInstancesPostHook},
 	RollbackHandler: rollbackLaunchInstances,
 	InputType:       actions.GetJobDataType(simulations.GroupID("")),
 	OutputType:      actions.GetJobDataType(simulations.GroupID("")),
@@ -28,14 +29,11 @@ var LaunchInstances = &actions.Job{
 func createMachineInputs(ctx actions.Context, tx *gorm.DB, deployment *actions.Deployment,
 	value interface{}) (interface{}, error) {
 
-	gid, ok := value.(simulations.GroupID)
-	if !ok {
-		return nil, simulations.ErrInvalidGroupID
-	}
-
 	simCtx := context.NewContext(ctx)
 
-	sim, err := simCtx.Services().Simulations().Get(gid)
+	storeData := simCtx.Store().Get().(*StartSimulationData)
+
+	sim, err := simCtx.Services().Simulations().Get(storeData.GroupID)
 	if err != nil {
 		return nil, err
 	}
@@ -59,7 +57,7 @@ func createMachineInputs(ctx actions.Context, tx *gorm.DB, deployment *actions.D
 		},
 	}
 
-	robots, err := simCtx.Services().Simulations().GetRobots(gid)
+	robots, err := simCtx.Services().Simulations().GetRobots(storeData.GroupID)
 	for _, r := range robots {
 		tags := simCtx.
 			Platform().
@@ -83,10 +81,14 @@ func createMachineInputs(ctx actions.Context, tx *gorm.DB, deployment *actions.D
 		})
 	}
 
-	return map[string]interface{}{
-		"groupID":              gid,
-		"createMachinesInputs": input,
-	}, nil
+	storeData.CreateMachinesInputs = input
+
+	err = simCtx.Store().Set(storeData)
+	if err != nil {
+		return nil, err
+	}
+
+	return input, nil
 }
 
 // launchInstances is the main process executed by LaunchInstances.
@@ -94,106 +96,115 @@ func launchInstances(ctx actions.Context, tx *gorm.DB, deployment *actions.Deplo
 	value interface{}) (interface{}, error) {
 
 	// Get map from prehook
-	inputMap := value.(map[string]interface{})
-
-	// Parse group id
-	gid, ok := inputMap["groupID"].(simulations.GroupID)
-	if !ok {
-		return nil, simulations.ErrInvalidGroupID
-	}
-
-	// Parse create machines input
-	createMachineInputs, ok := inputMap["createMachinesInputs"].([]cloud.CreateMachinesInput)
+	input, ok := value.([]cloud.CreateMachinesInput)
 	if !ok {
 		return nil, simulator.ErrInvalidInput
 	}
 
 	// Set the minimum amount of machines that are required to launch the simulation
 	var minRequested int
-	for _, c := range createMachineInputs {
+	for _, c := range input {
 		minRequested += int(c.MinCount)
 	}
 
 	// Initialize sim context
 	simCtx := context.NewContext(ctx)
 
+	// Initialize filters
+	filters := map[string][]string{
+		"tag:cloudsim-simulation-worker": {
+			simCtx.Platform().Store().Machines().NamePrefix(),
+		},
+		"instance-state-name": {
+			"pending",
+			"running",
+		},
+	}
+
 	// Get the amount of reserved machines at the moment.
 	reserved := simCtx.Platform().Machines().Count(cloud.CountMachinesInput{
-		Filters: map[string][]string{
-			"tag:cloudsim-simulation-worker": {
-				simCtx.Platform().Store().Machines().NamePrefix(),
-			},
-			"instance-state-name": {
-				"pending",
-				"running",
-			},
-		},
+		Filters: filters,
 	})
 
+	if minRequested <= simCtx.Platform().Store().Machines().Limit()-reserved {
+		err := waitForMinRequestedInstances(simCtx, filters, minRequested)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	// Create instances
+	output, err := simCtx.Platform().Machines().Create(input)
+
+	return map[string]interface{}{
+		"output": output,
+		"error":  err,
+	}, nil
+}
+
+func waitForMinRequestedInstances(ctx context.Context, filters map[string][]string, minRequested int) error {
 	// Create new wait request to check instances availability.
 	req := waiter.NewWaitRequest(func() (bool, error) {
-		reserved = simCtx.Platform().Machines().Count(cloud.CountMachinesInput{
-			Filters: map[string][]string{
-				"tag:cloudsim-simulation-worker": {
-					simCtx.Platform().Store().Machines().NamePrefix(),
-				},
-				"instance-state-name": {
-					"pending",
-					"running",
-				},
-			},
+		reserved := ctx.Platform().Machines().Count(cloud.CountMachinesInput{
+			Filters: filters,
 		})
 		if reserved == -1 {
 			return false, errors.New("error waiting for instances")
 		}
-		return minRequested > simCtx.Platform().Store().Machines().Limit()-reserved, nil
+		return minRequested > ctx.Platform().Store().Machines().Limit()-reserved, nil
 	})
 
 	// Get timeout and poll frequency from store
-	timeout := simCtx.Platform().Store().Machines().Timeout()
-	pollFreq := simCtx.Platform().Store().Machines().PollFrequency()
+	timeout := ctx.Platform().Store().Machines().Timeout()
+	pollFreq := ctx.Platform().Store().Machines().PollFrequency()
 
 	// Execute request
 	err := req.Wait(timeout, pollFreq)
 	if err != nil {
-		return nil, err
+		return err
 	}
+	return nil
+}
 
-	// Create instances
-	output, err := simCtx.Platform().Machines().Create(createMachineInputs)
+func launchInstancesPostHook(ctx actions.Context, tx *gorm.DB, deployment *actions.Deployment, value interface{}) (interface{}, error) {
+	data := ctx.Store().Get().(*StartSimulationData)
+
+	execMap := value.(map[string]interface{})
+
+	output := execMap["output"].([]cloud.CreateMachinesOutput)
+	err := execMap["error"].(error)
 
 	// Persist machine list if there are more than 0.
 	if len(output) > 0 {
-		// TODO: Create constant for 'machine-list'
-		simCtx = context.WithValue(simCtx, dataMachineListKey, output)
-		if dataErr := deployment.SetJobData(tx, nil, dataMachineListKey, output); dataErr != nil {
-			return nil, dataErr
+		if err := persistMachineList(ctx, data, output); err != nil {
+			return nil, err
 		}
 	}
 	if err != nil {
 		return nil, err
 	}
 
-	return gid, nil
+	return data.GroupID, nil
+}
+
+func persistMachineList(ctx actions.Context, data *StartSimulationData, machineList []cloud.CreateMachinesOutput) error {
+	data.CreateMachinesOutputs = machineList
+	if err := ctx.Store().Set(data); err != nil {
+		return err
+	}
+	return nil
 }
 
 // rollbackLaunchInstances is the process in charge of terminating the machine instances that were created in launchInstances.
 func rollbackLaunchInstances(ctx actions.Context, tx *gorm.DB, deployment *actions.Deployment,
 	value interface{}, err error) (interface{}, error) {
-	jobData, dataErr := deployment.GetJobData(tx, &deployment.CurrentJob, "machine-list")
-	if dataErr != nil {
-		return nil, err
-	}
 
-	machineList, ok := jobData.([]cloud.CreateMachinesOutput)
-	if !ok {
-		return nil, simulator.ErrInvalidInput
-	}
+	data := ctx.Store().Get().(*StartSimulationData)
 
 	simCtx := context.NewContext(ctx)
-	for _, m := range machineList {
-		if m.ToTerminateMachinesInput() != nil {
-			_ = simCtx.Platform().Machines().Terminate(*m.ToTerminateMachinesInput())
+	for _, output := range data.CreateMachinesOutputs {
+		if output.ToTerminateMachinesInput() != nil {
+			_ = simCtx.Platform().Machines().Terminate(*output.ToTerminateMachinesInput())
 		}
 	}
 	return nil, nil

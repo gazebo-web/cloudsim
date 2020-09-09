@@ -43,7 +43,7 @@ type JobDataType reflect.Type
 // To create new jobs for an application, instance this struct. If an existing Job is to be fitted for an
 // application, Job.Extend can be used to get an application-specific version of the Job.
 //
-// If a Job function (PreHook, Execute Funcion, PostHook) returns an error, the error is logged and the execution of
+// If a Job function (PreHook, Execute Function, PostHook) returns an error, the error is logged and the execution of
 // the sequence of jobs stops and is rolled back. Job functions can handle errors by wrapping functions with error
 // handlers by calling WrapErrorHandler. Job functions with error handlers allow logging errors and recovering from
 // them. If a function or error-handled function returns an error, this will trigger a rollback of the entire job

@@ -3,6 +3,7 @@ package simulator
 import (
 	"context"
 	"github.com/jinzhu/gorm"
+	"gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/simulator/jobs"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/actions"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/actions/fake"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/application"
@@ -120,7 +121,7 @@ func registerActions(name string, service actions.Servicer) {
 	actions := map[string]registerActionInput{
 		actionNameStartSimulation: {
 			Jobs:  JobsStartSimulation,
-			Store: fake.NewFakeStore(new(startSimulationData)),
+			Store: fake.NewFakeStore(new(jobs.StartSimulationData)),
 		},
 		actionNameStopSimulation: {
 			Jobs:  JobsStopSimulation,
@@ -153,17 +154,4 @@ func registerAction(applicationName string, service actions.Servicer, actionName
 		return err
 	}
 	return nil
-}
-
-// startSimulationData has all the information needed to start a simulation.
-// It's used as the data type for the action's store.
-type startSimulationData struct {
-	GroupID             simulations.GroupID
-	GazeboServerPodName string
-	MachineList         []string
-	GazeboServerPodIP   string
-	BaseLabels          map[string]string
-	GazeboLabels        map[string]string
-	BridgeLabels        map[string]string
-	FieldComputerLabels map[string]string
 }
