@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/jinzhu/gorm"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/actions"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/actions/fake"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/application"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/platform"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
@@ -127,7 +128,10 @@ func registerActions(name string, service actions.Servicer) {
 // registerAction registers the given jobs as a new action called actionName.
 // The action gets registered into the given service for the given application name.
 func registerAction(applicationName string, service actions.Servicer, actionName string, jobs actions.Jobs) error {
-	action, err := actions.NewAction(jobs)
+	// TODO: Replace fake store with actual implementation.
+	store := fake.NewFakeStore(new(startSimulationData))
+
+	action, err := actions.NewAction(jobs, store)
 	if err != nil {
 		return err
 	}
@@ -137,4 +141,17 @@ func registerAction(applicationName string, service actions.Servicer, actionName
 		return err
 	}
 	return nil
+}
+
+// startSimulationData has all the information needed to start a simulation.
+// It's used as the data type for the action's store.
+type startSimulationData struct {
+	GroupID             simulations.GroupID
+	GazeboServerPodName string
+	MachineList         []string
+	GazeboServerPodIP   string
+	BaseLabels          map[string]string
+	GazeboLabels        map[string]string
+	BridgeLabels        map[string]string
+	FieldComputerLabels map[string]string
 }
