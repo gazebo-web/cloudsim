@@ -91,7 +91,7 @@ func prepareGazeboServerPodConfig(ctx actions.Context, tx *gorm.DB, deployment *
 	volumes := []orchestrator.Volume{
 		{
 			Name:      "logs",
-			MountPath: simCtx.Platform().Store().Ignition().LogsMountPath(),
+			MountPath: simCtx.Platform().Store().Ignition().GazeboServerLogsPath(),
 			HostPath:  "/tmp",
 		},
 		{
