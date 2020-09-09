@@ -19,6 +19,7 @@ var LaunchGazeboServerPod = &actions.Job{
 	Name:            "launch-gazebo-server-pod",
 	PreHooks:        []actions.JobFunc{prepareGazeboServerPodConfig},
 	Execute:         launchGazeboServerPod,
+	PostHooks:       []actions.JobFunc{launchGazeboServerPodPostHook},
 	RollbackHandler: rollbackLaunchGazeboServerPod,
 	InputType:       actions.GetJobDataType(simulations.GroupID("")),
 	OutputType:      actions.GetJobDataType(simulations.GroupID("")),
@@ -41,27 +42,13 @@ func prepareGazeboServerPodConfig(ctx actions.Context, tx *gorm.DB, deployment *
 	namespace := "default"
 	// namespace := simCtx.Platform().Store().Cluster().Namespace()
 
-	// Set up node selector
-	nodeSelector := orchestrator.NewSelector(map[string]string{
-		// TODO: Make keys constant
-		"cloudsim_groupid":   string(gid),
-		"cloudsim_node_type": "gzserver",
-	})
-
-	// Set up pod labels
-	labels := map[string]string{
-		"cloudsim":          "true",
-		"pod-group":         podName,
-		"cloudsim-group-id": string(gid),
-		"gzserver":          "true",
-	}
-
 	// Get simulation
 	sim, err := simCtx.Services().Simulations().Get(gid)
 	if err != nil {
 		return nil, err
 	}
 
+	// Parse to subt simulation
 	subtSim, ok := sim.(subt.Simulation)
 
 	// Get track name
@@ -75,19 +62,11 @@ func prepareGazeboServerPodConfig(ctx actions.Context, tx *gorm.DB, deployment *
 	// Assign track's image as container image.
 	containerImage := track.Image
 
-	// If simulation is child, add another label with the parent's group id.
-	if sim.Kind() == simulations.SimChild {
-		parent, err := simCtx.Services().Simulations().GetParent(gid)
-		if err != nil {
-			return nil, err
-		}
-		labels["parent-group-id"] = string(parent.GroupID())
-	}
-
 	// Get terminate grace period
 	terminationGracePeriod := simCtx.Platform().Store().Orchestrator().TerminationGracePeriod()
 
 	// Generate gazebo command args
+	// TODO: Fill LaunchParams with requested information
 	runCommand, err := gazebo.GenerateLaunchArgs(gazebo.LaunchParams{
 		Worlds:                  "",
 		WorldMaxSimSeconds:      "",
@@ -102,9 +81,11 @@ func prepareGazeboServerPodConfig(ctx actions.Context, tx *gorm.DB, deployment *
 		return nil, err
 	}
 
+	// Set up container configuration
 	privileged := true
 	allowPrivilegeEscalation := true
 
+	// TODO: Get ports from Ignition Store
 	ports := []int32{11345, 11311}
 
 	volumes := []orchestrator.Volume{
@@ -147,11 +128,15 @@ func prepareGazeboServerPodConfig(ctx actions.Context, tx *gorm.DB, deployment *
 
 	nameservers := simCtx.Platform().Store().Orchestrator().Nameservers()
 
+	data := simCtx.Store().Get().(*StartSimulationData)
+
+	nodeSelector := orchestrator.NewSelector(data.GazeboNodeSelector)
+
 	// Create the input for the operation
 	input := orchestrator.CreatePodInput{
 		Name:                          podName,
 		Namespace:                     namespace,
-		Labels:                        labels,
+		Labels:                        data.GazeboLabels,
 		RestartPolicy:                 orchestrator.RestartPolicyNever,
 		TerminationGracePeriodSeconds: terminationGracePeriod,
 		NodeSelector:                  nodeSelector,
@@ -170,13 +155,7 @@ func prepareGazeboServerPodConfig(ctx actions.Context, tx *gorm.DB, deployment *
 		Volumes:     volumes,
 		Nameservers: nameservers,
 	}
-	return map[string]interface{}{
-		"groupID":        gid,
-		"createPodInput": input,
-		"labels":         labels,
-		"podName":        podName,
-		"namespace":      namespace,
-	}, nil
+	return input, nil
 }
 
 func launchGazeboServerPod(ctx actions.Context, tx *gorm.DB, deployment *actions.Deployment, value interface{}) (interface{}, error) {
@@ -184,68 +163,48 @@ func launchGazeboServerPod(ctx actions.Context, tx *gorm.DB, deployment *actions
 	simCtx := context.NewContext(ctx)
 
 	// Parse input
-	inputMap, ok := value.(map[string]interface{})
-	if !ok {
-		return nil, simulator.ErrInvalidInput
-	}
-
-	createPodInput, ok := inputMap["createPodInput"].(orchestrator.CreatePodInput)
-	if !ok {
-		return nil, simulator.ErrInvalidInput
-	}
-
-	gid, ok := inputMap["groupID"].(simulations.GroupID)
+	createPodInput, ok := value.(orchestrator.CreatePodInput)
 	if !ok {
 		return nil, simulator.ErrInvalidInput
 	}
 
 	// Create pod
-	_, err := simCtx.Platform().Orchestrator().Pods().Create(createPodInput)
-	if dataErr := deployment.SetJobData(tx, nil, dataGzServerCreationKey, value); dataErr != nil {
-		return nil, dataErr
-	}
-	if err != nil {
-		return nil, err
-	}
+	res, err := simCtx.Platform().Orchestrator().Pods().Create(createPodInput)
 
-	return gid, nil
+	return map[string]interface{}{
+		"output": res,
+		"error":  err,
+	}, nil
 }
 
-func rollbackLaunchGazeboServerPod(ctx actions.Context, tx *gorm.DB, deployment *actions.Deployment, value interface{}, err error) (interface{}, error) {
+func launchGazeboServerPodPostHook(ctx actions.Context, tx *gorm.DB, deployment *actions.Deployment, value interface{}) (interface{}, error) {
+	data := ctx.Store().Get().(*StartSimulationData)
 
-	// Create ctx
-	simCtx := context.NewContext(ctx)
+	execMap := value.(map[string]interface{})
 
-	// Get pod name
-	jobCreationData, dataErr := deployment.GetJobData(tx, &deployment.CurrentJob, dataGzServerCreationKey)
+	// Save resource
+	res := execMap["output"].(orchestrator.Resource)
+	data.GazeboPodResource = res
+	dataErr := ctx.Store().Set(data)
 	if dataErr != nil {
 		return nil, dataErr
 	}
 
-	// Parse input
-	inputMap, ok := jobCreationData.(map[string]interface{})
-	if !ok {
-		return nil, simulator.ErrInvalidInput
+	// Check error
+	err := execMap["error"].(error)
+	if err != nil {
+		return nil, err
 	}
 
-	name, ok := inputMap["podName"].(string)
-	if !ok {
-		return nil, simulator.ErrInvalidInput
-	}
+	return data.GroupID, nil
+}
 
-	namespace, ok := inputMap["namespace"].(string)
-	if !ok {
-		return nil, simulator.ErrInvalidInput
-	}
+func rollbackLaunchGazeboServerPod(ctx actions.Context, tx *gorm.DB, deployment *actions.Deployment, value interface{}, err error) (interface{}, error) {
+	simCtx := context.NewContext(ctx)
 
-	labels, ok := inputMap["labels"].(map[string]string)
-	if !ok {
-		return nil, simulator.ErrInvalidInput
-	}
+	data := simCtx.Store().Get().(*StartSimulationData)
 
-	res := orchestrator.NewResource(name, namespace, orchestrator.NewSelector(labels))
-
-	delErr := simCtx.Platform().Orchestrator().Pods().Delete(res)
+	delErr := simCtx.Platform().Orchestrator().Pods().Delete(data.GazeboPodResource)
 	if delErr != nil {
 		return nil, delErr
 	}

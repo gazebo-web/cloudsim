@@ -2,6 +2,7 @@ package jobs
 
 import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/cloud"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
 )
 
@@ -17,4 +18,6 @@ type StartSimulationData struct {
 	GazeboLabels          map[string]string
 	BridgeLabels          map[string]string
 	FieldComputerLabels   map[string]string
+	GazeboNodeSelector    map[string]string
+	GazeboPodResource     orchestrator.Resource
 }
