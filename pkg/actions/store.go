@@ -5,12 +5,10 @@ package actions
 type Store interface {
 	// Get gets the data from the action.
 	Get() interface{}
-	// Set sets the data in the action.
+	// Set sets the data in the action and persists the state of the stored data.
 	Set(interface{}) error
 	// Load loads the data from a persistent storage into the store.
 	Load() error
-	// Save saves the data from the store into a persistent storage.
-	Save() error
 }
 
 // store is a Store implementation.
@@ -28,11 +26,6 @@ func (s store) Set(i interface{}) error {
 
 // Load loads the data from a persistent storage into the store.
 func (s store) Load() error {
-	panic("implement me")
-}
-
-// Save saves the data from the store into a persistent storage.
-func (s store) Save() error {
 	panic("implement me")
 }
 

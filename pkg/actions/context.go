@@ -15,15 +15,22 @@ import (
 // pass application-specific values used by jobs, and can be used to support a simple dependency injection scheme.
 type Context interface {
 	ctx.Context
+	Store() Store
 }
 
 type context struct {
 	ctx.Context
+	store Store
+}
+
+func (c *context) Store() Store {
+	return c.store
 }
 
 // NewContext returns a new Context to pass context information to action jobs.
-func NewContext(ctx ctx.Context) Context {
+func NewContext(ctx ctx.Context, store Store) Context {
 	return &context{
 		Context: ctx,
+		store:   store,
 	}
 }
