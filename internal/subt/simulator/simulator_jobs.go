@@ -22,7 +22,6 @@ var JobsStartSimulation = actions.Jobs{
 	jobs.LaunchGazeboServerPod,
 	jobs.WaitForGazeboServerPod,
 	/*
-		jobs.LaunchGazeboServerStoragePod,
 		jobs.CreateRobotsNetworkPolicy,
 		jobs.LaunchCommsBridgePods,
 		jobs.LaunchFieldComputerPods,

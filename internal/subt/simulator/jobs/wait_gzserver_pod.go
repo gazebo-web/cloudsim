@@ -18,31 +18,13 @@ var WaitForGazeboServerPod = Wait.Extend(actions.Job{
 
 // createWaitRequestForGzServerPod is the prehook in charge of passing the needed input to the Wait job.
 func createWaitRequestForGzServerPod(ctx actions.Context, tx *gorm.DB, deployment *actions.Deployment, value interface{}) (interface{}, error) {
-	// Parse group id
-	gid, ok := value.(simulations.GroupID)
-	if !ok {
-		return nil, simulations.ErrInvalidGroupID
-	}
-
-	// Generate gzserver labels
-	labels := map[string]string{
-		"cloudsim":          "true",
-		"cloudsim-group-id": string(gid),
-		"gzserver":          "true",
-	}
-
 	// Get context
 	simCtx := context.NewContext(ctx)
 
-	// Get default namespace
-	namespace := simCtx.Platform().Store().Orchestrator().Namespace()
-
-	// Create resource
-	// TODO: Add name
-	res := orchestrator.NewResource("", namespace, orchestrator.NewSelector(labels))
+	data := simCtx.Store().Get().(StartSimulationData)
 
 	// Create wait for condition request
-	req := simCtx.Platform().Orchestrator().Pods().WaitForCondition(res, orchestrator.HasIPStatusCondition)
+	req := simCtx.Platform().Orchestrator().Pods().WaitForCondition(data.GazeboPodResource, orchestrator.HasIPStatusCondition)
 
 	// Get timeout and poll frequency from store
 	timeout := simCtx.Platform().Store().Machines().Timeout()
@@ -50,7 +32,7 @@ func createWaitRequestForGzServerPod(ctx actions.Context, tx *gorm.DB, deploymen
 
 	// Return new wait input
 	return WaitInput{
-		GroupID:       gid,
+		GroupID:       data.GroupID,
 		Request:       req,
 		PollFrequency: pollFreq,
 		Timeout:       timeout,

@@ -8,22 +8,18 @@ import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/gazebo"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulator"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulator/context"
 )
 
-const dataGzServerCreationKey = "gz-server-creation"
-
 // LaunchGazeboServerPod is used to launch the gazebo server pods for a simulation.
-var LaunchGazeboServerPod = &actions.Job{
+var LaunchGazeboServerPod = LaunchPod.Extend(actions.Job{
 	Name:            "launch-gazebo-server-pod",
 	PreHooks:        []actions.JobFunc{prepareGazeboServerPodConfig},
-	Execute:         launchGazeboServerPod,
 	PostHooks:       []actions.JobFunc{launchGazeboServerPodPostHook},
 	RollbackHandler: rollbackLaunchGazeboServerPod,
 	InputType:       actions.GetJobDataType(simulations.GroupID("")),
 	OutputType:      actions.GetJobDataType(simulations.GroupID("")),
-}
+})
 
 func prepareGazeboServerPodConfig(ctx actions.Context, tx *gorm.DB, deployment *actions.Deployment, value interface{}) (interface{}, error) {
 	// Parse group id
@@ -158,42 +154,21 @@ func prepareGazeboServerPodConfig(ctx actions.Context, tx *gorm.DB, deployment *
 	return input, nil
 }
 
-func launchGazeboServerPod(ctx actions.Context, tx *gorm.DB, deployment *actions.Deployment, value interface{}) (interface{}, error) {
-	// Create ctx
-	simCtx := context.NewContext(ctx)
-
-	// Parse input
-	createPodInput, ok := value.(orchestrator.CreatePodInput)
-	if !ok {
-		return nil, simulator.ErrInvalidInput
-	}
-
-	// Create pod
-	res, err := simCtx.Platform().Orchestrator().Pods().Create(createPodInput)
-
-	return map[string]interface{}{
-		"output": res,
-		"error":  err,
-	}, nil
-}
-
 func launchGazeboServerPodPostHook(ctx actions.Context, tx *gorm.DB, deployment *actions.Deployment, value interface{}) (interface{}, error) {
 	data := ctx.Store().Get().(*StartSimulationData)
 
-	execMap := value.(map[string]interface{})
+	output := value.(LaunchPodOutput)
 
 	// Save resource
-	res := execMap["output"].(orchestrator.Resource)
-	data.GazeboPodResource = res
+	data.GazeboPodResource = output.Resource
 	dataErr := ctx.Store().Set(data)
 	if dataErr != nil {
 		return nil, dataErr
 	}
 
 	// Check error
-	err := execMap["error"].(error)
-	if err != nil {
-		return nil, err
+	if output.Error != nil {
+		return nil, output.Error
 	}
 
 	return data.GroupID, nil
