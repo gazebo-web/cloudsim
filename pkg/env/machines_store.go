@@ -12,6 +12,7 @@ import (
 // machineEnvStore is a store.Machines implementation.
 // It contains all the information needed by application jobs to launch simulations.
 type machineEnvStore struct {
+	// InstanceProfileValue is the ARN used to configure EC2 machines.
 	InstanceProfileValue string `env:"CLOUDSIM_MACHINES_INSTANCE_PROFILE" envDefault:"arn:aws:iam::200670743174:instance-profile/aws-eks-role-cloudsim-worker"`
 
 	// KeyNameValue is the name of the SSH key used for a new instance.

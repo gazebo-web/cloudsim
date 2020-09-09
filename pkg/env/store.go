@@ -9,10 +9,12 @@ type envStore struct {
 	ignition     store.Ignition
 }
 
+// Orchestrator returns a store.Orchestrator implementation that reads configuration from env vars.
 func (e *envStore) Orchestrator() store.Orchestrator {
 	return e.orchestrator
 }
 
+// Ignition returns a store.Ignition implementation that reads configuration from env vars.
 func (e *envStore) Ignition() store.Ignition {
 	return e.ignition
 }

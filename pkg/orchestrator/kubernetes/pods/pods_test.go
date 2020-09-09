@@ -182,3 +182,139 @@ func TestPods_WaitForPodsErrWhenPodStateFailed(t *testing.T) {
 	assert.Error(t, err)
 	assert.Equal(t, conditions.ErrPodCompleted, err)
 }
+
+func TestPods_CreateSuccess(t *testing.T) {
+	client := fake.NewSimpleClientset()
+	f := spdy.NewSPDYFakeInitializer()
+	logger := ign.NewLoggerNoRollbar("TestPods", ign.VerbosityDebug)
+	p := NewPods(client, f, logger)
+
+	res, err := p.Create(orchestrator.CreatePodInput{
+		Name:                          "test",
+		Namespace:                     "default",
+		Labels:                        map[string]string{"app": "test"},
+		RestartPolicy:                 orchestrator.RestartPolicyNever,
+		TerminationGracePeriodSeconds: time.Second * 5,
+		NodeSelector:                  nil,
+		Containers: []orchestrator.Container{
+			{
+				Name:                     "test",
+				Image:                    "ignition/test",
+				Args:                     nil,
+				Privileged:               nil,
+				AllowPrivilegeEscalation: nil,
+				Ports:   nil,
+				Volumes: nil,
+				EnvVars: nil,
+			},
+		},
+		Volumes:     nil,
+		Nameservers: nil,
+	})
+
+	assert.NoError(t, err)
+
+	createdPod, err := client.CoreV1().Pods(res.Namespace()).Get(res.Name(), metav1.GetOptions{})
+	assert.NoError(t, err)
+	assert.Equal(t, res.Name(), createdPod.Name)
+	assert.Equal(t, res.Namespace(), createdPod.Namespace)
+	assert.Equal(t, res.Selector().Map(), createdPod.GetLabels())
+	assert.Equal(t, apiv1.RestartPolicyNever, createdPod.Spec.RestartPolicy)
+	assert.Len(t, createdPod.Spec.Containers, 1)
+	assert.Equal(t, "ignition/test", createdPod.Spec.Containers[0].Image)
+}
+
+func TestPods_CreateFailsWhenPodAlreadyExists(t *testing.T) {
+	pod := &apiv1.Pod{
+		TypeMeta: metav1.TypeMeta{},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "test",
+			Namespace: "default",
+			Labels: map[string]string{
+				"test": "app",
+			},
+		},
+		Spec: apiv1.PodSpec{},
+		Status: apiv1.PodStatus{
+			Conditions: []apiv1.PodCondition{},
+			Phase:      apiv1.PodFailed,
+		},
+	}
+
+	client := fake.NewSimpleClientset(pod)
+	f := spdy.NewSPDYFakeInitializer()
+	logger := ign.NewLoggerNoRollbar("TestPods", ign.VerbosityDebug)
+	p := NewPods(client, f, logger)
+
+	_, err := p.Create(orchestrator.CreatePodInput{
+		Name:                          "test",
+		Namespace:                     "default",
+		Labels:                        map[string]string{"app": "test"},
+		RestartPolicy:                 orchestrator.RestartPolicyNever,
+		TerminationGracePeriodSeconds: time.Second * 5,
+		NodeSelector:                  nil,
+		Containers: []orchestrator.Container{
+			{
+				Name:                     "test",
+				Image:                    "ignition/test",
+				Args:                     nil,
+				Privileged:               nil,
+				AllowPrivilegeEscalation: nil,
+				Ports:   nil,
+				Volumes: nil,
+				EnvVars: nil,
+			},
+		},
+		Volumes:     nil,
+		Nameservers: nil,
+	})
+
+	assert.Error(t, err)
+}
+
+func TestPods_DeleteFailsWhenPodDoesNotExist(t *testing.T) {
+	client := fake.NewSimpleClientset()
+	f := spdy.NewSPDYFakeInitializer()
+	logger := ign.NewLoggerNoRollbar("TestPods", ign.VerbosityDebug)
+	p := NewPods(client, f, logger)
+
+	_, err := p.Delete(
+		orchestrator.NewResource("test", "default", orchestrator.NewSelector(map[string]string{})),
+	)
+
+	assert.Error(t, err)
+}
+
+func TestPods_DeleteSuccess(t *testing.T) {
+	pod := &apiv1.Pod{
+		TypeMeta: metav1.TypeMeta{},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "test",
+			Namespace: "default",
+			Labels: map[string]string{
+				"app": "test",
+			},
+		},
+		Spec: apiv1.PodSpec{},
+		Status: apiv1.PodStatus{
+			Conditions: []apiv1.PodCondition{},
+			Phase:      apiv1.PodFailed,
+		},
+	}
+
+	client := fake.NewSimpleClientset(pod)
+	f := spdy.NewSPDYFakeInitializer()
+	logger := ign.NewLoggerNoRollbar("TestPods", ign.VerbosityDebug)
+	p := NewPods(client, f, logger)
+
+	_, err := p.Delete(
+		orchestrator.NewResource("test", "default", orchestrator.NewSelector(map[string]string{
+			"app": "test",
+		})),
+	)
+
+	assert.NoError(t, err)
+
+	_, err = client.CoreV1().Pods("default").Get("test", metav1.GetOptions{})
+	assert.Error(t, err)
+}

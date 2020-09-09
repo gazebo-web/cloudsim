@@ -24,9 +24,10 @@ var (
 type Volume struct {
 	// Name is the name of the volume.
 	Name string
-	// HostPath is the mounting path.
+	// HostPath represents a pre-existing file or directory on the host
+	// machine that is directly exposed to the container.
 	HostPath string
-
+	// MountPath is the path within the container at which the volume should be mounted.
 	MountPath string
 }
 
@@ -85,6 +86,7 @@ type Pods interface {
 	Exec(resource Resource) Executor
 	Reader(resource Resource) Reader
 	WaitForCondition(resource Resource, condition Condition) waiter.Waiter
+	Delete(resource Resource) (Resource, error)
 }
 
 // Executor groups a set of methods to run commands and scripts inside a Pod.

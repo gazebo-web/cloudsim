@@ -20,10 +20,9 @@ type pods struct {
 	Logger ign.Logger
 }
 
+// Create creates a new pod with the information given in orchestrator.CreatePodInput.
 func (p *pods) Create(input orchestrator.CreatePodInput) (orchestrator.Resource, error) {
 	p.Logger.Debug(fmt.Sprintf("Creating new pod. Input: %+v", input))
-
-	terminationGracePeriod := int64(input.TerminationGracePeriodSeconds.Seconds())
 
 	// Set up containers for pod.
 	var containers []apiv1.Container
@@ -69,6 +68,8 @@ func (p *pods) Create(input orchestrator.CreatePodInput) (orchestrator.Resource,
 		})
 	}
 
+	p.Logger.Debug(fmt.Sprintf("List of containers: %+v", containers))
+
 	// Set up volumes
 	var volumes []apiv1.Volume
 	for _, v := range input.Volumes {
@@ -82,6 +83,11 @@ func (p *pods) Create(input orchestrator.CreatePodInput) (orchestrator.Resource,
 		})
 	}
 
+	p.Logger.Debug(fmt.Sprintf("List of volumes: %+v", volumes))
+
+	// Parse termination grace period config.
+	terminationGracePeriod := int64(input.TerminationGracePeriodSeconds.Seconds())
+
 	// Configure pod with previous settings
 	pod := &apiv1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
@@ -91,7 +97,6 @@ func (p *pods) Create(input orchestrator.CreatePodInput) (orchestrator.Resource,
 		Spec: apiv1.PodSpec{
 			RestartPolicy:                 apiv1.RestartPolicy(input.RestartPolicy),
 			TerminationGracePeriodSeconds: &terminationGracePeriod,
-			NodeSelector:                  input.NodeSelector.Map(),
 			Containers:                    containers,
 			Volumes:                       volumes,
 			// These DNS servers provide alternative DNS server from the internet
@@ -102,10 +107,14 @@ func (p *pods) Create(input orchestrator.CreatePodInput) (orchestrator.Resource,
 		},
 	}
 
+	if input.NodeSelector != nil {
+		pod.Spec.NodeSelector = input.NodeSelector.Map()
+	}
+
 	// Create pod in Kubernetes
 	_, err := p.API.CoreV1().Pods(input.Namespace).Create(pod)
 	if err != nil {
-		p.Logger.Debug(fmt.Sprintf("Creating new failed. Input: %+v. Error: %s", input, err))
+		p.Logger.Debug(fmt.Sprintf("Creating new pod failed. Input: %+v. Error: %s", input, err))
 		return nil, err
 	}
 
@@ -114,6 +123,29 @@ func (p *pods) Create(input orchestrator.CreatePodInput) (orchestrator.Resource,
 
 	p.Logger.Debug(fmt.Sprintf("Creating new pod succeeded. Name: %s. Namespace: %s", res.Name(), res.Namespace()))
 	return res, nil
+}
+
+// Delete deletes the pod identified by the given resource.
+func (p *pods) Delete(resource orchestrator.Resource) (orchestrator.Resource, error) {
+	p.Logger.Debug(
+		fmt.Sprintf("Deleting pod with name [%s] in namespace [%s]", resource.Name(), resource.Namespace()),
+	)
+
+	err := p.API.CoreV1().Pods(resource.Namespace()).Delete(resource.Name(), &metav1.DeleteOptions{})
+	if err != nil {
+		p.Logger.Debug(fmt.Sprintf(
+			"Deleting pod with name [%s] in namespace [%s] failed. Error: %+v.",
+			resource.Name(), resource.Namespace(), err,
+		))
+		return nil, err
+	}
+
+	p.Logger.Debug(fmt.Sprintf(
+		"Deleting pod with name [%s] in namespace [%s] succeeded.",
+		resource.Name(), resource.Namespace(),
+	))
+
+	return resource, nil
 }
 
 // Exec creates a new executor.

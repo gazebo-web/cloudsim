@@ -204,7 +204,7 @@ func rollbackLaunchGazeboServerPod(ctx actions.Context, tx *gorm.DB, deployment 
 
 	data := simCtx.Store().Get().(*StartSimulationData)
 
-	delErr := simCtx.Platform().Orchestrator().Pods().Delete(data.GazeboPodResource)
+	_, delErr := simCtx.Platform().Orchestrator().Pods().Delete(data.GazeboPodResource)
 	if delErr != nil {
 		return nil, delErr
 	}
