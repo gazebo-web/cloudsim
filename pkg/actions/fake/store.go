@@ -2,7 +2,6 @@ package fake
 
 import (
 	"errors"
-	"fmt"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/actions"
 	"reflect"
 	"sync"
@@ -13,7 +12,6 @@ type store struct {
 	value     interface{}
 	lockValue sync.RWMutex
 	valueType reflect.Type
-	persisted bool
 	data      interface{}
 }
 
@@ -23,26 +21,24 @@ func (s *store) Get() interface{} {
 	return s.value
 }
 
-func (s *store) set(value interface{}) error {
-	inputType := reflect.TypeOf(value)
-
-	if !inputType.AssignableTo(s.valueType) {
-		return errors.New("input type is not assignable to underlying data type")
-	}
-
+func (s *store) set(value interface{}) {
 	s.value = value
+}
 
-	return nil
+func (s *store) isAssignable(value interface{}) bool {
+	inputType := reflect.TypeOf(value)
+	return inputType.AssignableTo(s.valueType)
 }
 
 func (s *store) Set(value interface{}) error {
 	s.lockValue.Lock()
 	defer s.lockValue.Unlock()
 
-	err := s.set(value)
-	if err != nil {
-		return fmt.Errorf("invalid error data type received on Set value. Error: %+v", err)
+	if !s.isAssignable(value) {
+		return errors.New("value type received on Set input is not assignable to the underlying value")
 	}
+
+	s.set(value)
 
 	return nil
 }
@@ -50,18 +46,7 @@ func (s *store) Set(value interface{}) error {
 func (s *store) Load() error {
 	s.lockValue.Lock()
 	defer s.lockValue.Unlock()
-	err := s.set(s.data)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-func (s *store) Save() error {
-	s.lockValue.RLock()
-	defer s.lockValue.RUnlock()
-	s.persisted = true
-	s.data = s.value
+	s.set(s.data)
 	return nil
 }
 

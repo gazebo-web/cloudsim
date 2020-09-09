@@ -1,6 +1,7 @@
 package actions
 
 import (
+	goctx "context"
 	"errors"
 	"fmt"
 	"github.com/jinzhu/gorm"
@@ -13,8 +14,12 @@ var (
 	ErrActionIsNil = errors.New("action is nil")
 	// ErrActionExists is raised when an action is registered but it already exists.
 	ErrActionExists = errors.New("action already exists")
+	// ErrStoreExists is raised when a store is registered but it already exists.
+	ErrStoreExists = errors.New("store already exists")
 	// ErrActionNotFound is raised when a requested action is not registered in the service.
 	ErrActionNotFound = errors.New("action not found")
+	// ErrStoreNotFound is raised when a requested store is not registered in the service.
+	ErrStoreNotFound = errors.New("store not found")
 	// ErrJobNilOutput is raised when a job returns nil
 	ErrJobNilOutput = errors.New("job cannot return nil, pass through the input value instead")
 	// ErrExecutionStopped is raised when the execution is forcibly stopped by a user command.
@@ -24,21 +29,22 @@ var (
 // Servicer is the interface for action services.
 type Servicer interface {
 	// RegisterAction registers an action for a specific application.
-	RegisterAction(applicationName *string, actionName string, action *Action) error
+	RegisterAction(applicationName *string, actionName string, action *Action, store Store) error
 	// Execute executes an action.
-	Execute(ctx Context, tx *gorm.DB, executeInput ExecuteInputer, jobInput interface{}) error
+	Execute(ctx goctx.Context, tx *gorm.DB, executeInput ExecuteInputer, jobInput interface{}) error
 }
 
 // service provides operations to register and execute actions.
 type service struct {
 	actions map[string]*Action
+	stores  map[string]Store
 }
 
 // NewService returns a pointer to an action Servicer implementation.
 func NewService() Servicer {
 	service := &service{}
 	service.actions = make(map[string]*Action, 0)
-
+	service.stores = make(map[string]Store, 0)
 	return service
 }
 
@@ -76,11 +82,30 @@ func (s *service) getAction(applicationName *string, actionName string) (*Action
 	return action, nil
 }
 
+// getStore gets a store based on the application and action names.
+// actionName cannot be an empty string.
+func (s *service) getStore(applicationName *string, actionName string) (Store, error) {
+	// Get the application-specific action name
+	applicationActionName, err := generateApplicationActionName(applicationName, actionName)
+	if err != nil {
+		return nil, err
+	}
+
+	// Get the store
+	var store Store
+	var exists bool
+	if store, exists = s.stores[applicationActionName]; !exists {
+		return nil, ErrStoreNotFound
+	}
+
+	return store, nil
+}
+
 // RegisterAction registers an action for a specific application.
 // Actions for an application have the application name prefixed to the action.
 // actionName cannot be an empty string.
 // action cannot be `nil`.
-func (s *service) RegisterAction(applicationName *string, actionName string, action *Action) error {
+func (s *service) RegisterAction(applicationName *string, actionName string, action *Action, store Store) error {
 	// Make sure the action is not nil
 	if action == nil {
 		return ErrActionIsNil
@@ -97,8 +122,15 @@ func (s *service) RegisterAction(applicationName *string, actionName string, act
 		return ErrActionExists
 	}
 
+	if _, exists := s.stores[applicationActionName]; exists {
+		return ErrStoreExists
+	}
+
 	// Register the action
 	s.actions[applicationActionName] = action
+
+	// Register the store
+	s.stores[applicationActionName] = store
 
 	return nil
 }
@@ -106,7 +138,7 @@ func (s *service) RegisterAction(applicationName *string, actionName string, act
 // Execute executes an action by running each job in the action's job sequence.
 // Executing an action includes running an action from scratch, restarting an action (e.g. due to a server restart) and
 // handling errors that may come up while running actions.
-func (s *service) Execute(ctx Context, tx *gorm.DB, executeInput ExecuteInputer, jobInput interface{}) (err error) {
+func (s *service) Execute(ctx goctx.Context, tx *gorm.DB, executeInput ExecuteInputer, jobInput interface{}) (err error) {
 	// input contains generic execution information necessary such as the action, the deployment and current job index
 	input := executeInput.getExecuteInput()
 
@@ -115,6 +147,15 @@ func (s *service) Execute(ctx Context, tx *gorm.DB, executeInput ExecuteInputer,
 	if err != nil {
 		return err
 	}
+
+	// Get the store for this action
+	store, err := s.getStore(input.ApplicationName, input.ActionName)
+	if err != nil {
+		return err
+	}
+
+	// Initialize action context
+	actionCtx := NewContext(ctx, store)
 
 	// Initialize the execution input.
 	// This step ensures that the ExecuteInput contains a valid Deployment:
@@ -147,12 +188,12 @@ func (s *service) Execute(ctx Context, tx *gorm.DB, executeInput ExecuteInputer,
 
 	// Process the sequence of jobs
 	if deployment.isRunning() {
-		err = s.processJobs(ctx, tx, action, executeInput, jobInput)
+		err = s.processJobs(actionCtx, tx, action, executeInput, jobInput)
 	}
 
 	// Rollback if the deployment has been marked for rollback
 	if deployment.isRollingBack() {
-		return s.rollback(ctx, tx, action, executeInput, err)
+		return s.rollback(actionCtx, tx, action, executeInput, err)
 	}
 
 	return nil

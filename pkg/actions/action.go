@@ -21,16 +21,13 @@ type Action struct {
 	Name string
 	// Jobs contains the sequence of jobs processed to perform this action.
 	Jobs Jobs
-	// Store contains a reference to a store to pass data across jobs.
-	Store Store
 }
 
 // NewAction creates a new Action containing a sequence of jobs.
-func NewAction(jobs Jobs, store Store) (*Action, error) {
+func NewAction(jobs Jobs) (*Action, error) {
 	// Create the action
 	action := &Action{
-		Jobs:  jobs,
-		Store: store,
+		Jobs: jobs,
 	}
 
 	// Validate the sequence of jobs

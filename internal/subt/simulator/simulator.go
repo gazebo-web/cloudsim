@@ -45,7 +45,7 @@ func (s *subTSimulator) Start(ctx context.Context, groupID simulations.GroupID) 
 		ApplicationName: &s.applicationName,
 		ActionName:      actionNameStartSimulation,
 	}
-	err := s.actions.Execute(actions.NewContext(ctx, s.logger), s.db, execInput, groupID)
+	err := s.actions.Execute(ctx, s.db, execInput, groupID)
 	if err != nil {
 		return err
 	}
@@ -59,7 +59,7 @@ func (s *subTSimulator) Stop(ctx context.Context, groupID simulations.GroupID) e
 		ApplicationName: &s.applicationName,
 		ActionName:      actionNameStopSimulation,
 	}
-	err := s.actions.Execute(actions.NewContext(ctx, s.logger), s.db, execInput, groupID)
+	err := s.actions.Execute(ctx, s.db, execInput, groupID)
 	if err != nil {
 		return err
 	}
@@ -73,7 +73,7 @@ func (s *subTSimulator) Restart(ctx context.Context, groupID simulations.GroupID
 		ApplicationName: &s.applicationName,
 		ActionName:      actionNameRestartSimulation,
 	}
-	err := s.actions.Execute(actions.NewContext(ctx, s.logger), s.db, execInput, groupID)
+	err := s.actions.Execute(ctx, s.db, execInput, groupID)
 	if err != nil {
 		return err
 	}
@@ -108,17 +108,32 @@ func NewSimulator(config Config) simulator.Simulator {
 	}
 }
 
+// registerActionInput is used as the input for the registerAction function.
+type registerActionInput struct {
+	Jobs  actions.Jobs
+	Store actions.Store
+}
+
 // registerActions register a set of actions into the given service with the given application's name.
 // It panics whenever an action could not be registered.
 func registerActions(name string, service actions.Servicer) {
-	actions := map[string]actions.Jobs{
-		actionNameStartSimulation:   JobsStartSimulation,
-		actionNameStopSimulation:    JobsStopSimulation,
-		actionNameRestartSimulation: JobsRestartSimulation,
+	actions := map[string]registerActionInput{
+		actionNameStartSimulation: {
+			Jobs:  JobsStartSimulation,
+			Store: fake.NewFakeStore(new(startSimulationData)),
+		},
+		actionNameStopSimulation: {
+			Jobs:  JobsStopSimulation,
+			Store: nil,
+		},
+		actionNameRestartSimulation: {
+			Jobs:  JobsRestartSimulation,
+			Store: nil,
+		},
 	}
 
-	for actionName, jobs := range actions {
-		err := registerAction(name, service, actionName, jobs)
+	for actionName, input := range actions {
+		err := registerAction(name, service, actionName, input)
 		if err != nil {
 			panic(err)
 		}
@@ -127,16 +142,13 @@ func registerActions(name string, service actions.Servicer) {
 
 // registerAction registers the given jobs as a new action called actionName.
 // The action gets registered into the given service for the given application name.
-func registerAction(applicationName string, service actions.Servicer, actionName string, jobs actions.Jobs) error {
-	// TODO: Replace fake store with actual implementation.
-	store := fake.NewFakeStore(new(startSimulationData))
-
-	action, err := actions.NewAction(jobs, store)
+func registerAction(applicationName string, service actions.Servicer, actionName string, input registerActionInput) error {
+	action, err := actions.NewAction(input.Jobs)
 	if err != nil {
 		return err
 	}
 
-	err = service.RegisterAction(&applicationName, actionName, action)
+	err = service.RegisterAction(&applicationName, actionName, action, input.Store)
 	if err != nil {
 		return err
 	}

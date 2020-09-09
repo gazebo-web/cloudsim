@@ -195,7 +195,7 @@ var serviceTestData = struct {
 		// Create and register the action
 		action, err := NewAction(jobs)
 		require.NoError(t, err)
-		require.NoError(t, service.RegisterAction(nil, td.actionName, action))
+		require.NoError(t, service.RegisterAction(nil, td.actionName, action, nil))
 
 		// Initialize the input
 		if executeInput == nil {
@@ -224,7 +224,7 @@ func newTestService(t *testing.T) *service {
 
 	service := NewService().(*service)
 
-	if err := service.RegisterAction(&td.applicationName, td.actionName, td.action); err != nil {
+	if err := service.RegisterAction(&td.applicationName, td.actionName, td.action, nil); err != nil {
 		panic(fmt.Sprintf("failed to register action %s", td.actionName))
 	}
 
@@ -255,22 +255,21 @@ func TestServiceRegisterAction(t *testing.T) {
 	}
 
 	// Generic action
-	assert.NoError(t, service.RegisterAction(nil, actionName, &action))
+	assert.NoError(t, service.RegisterAction(nil, actionName, &action, nil))
 	_, err := service.getAction(nil, actionName)
 	assert.NoError(t, err)
 
 	// Application-specific action
-	assert.NoError(t, service.RegisterAction(&applicationName, actionName, &action))
+	assert.NoError(t, service.RegisterAction(&applicationName, actionName, &action, nil))
 	_, err = service.getAction(nil, actionName)
 	assert.NoError(t, err)
 }
 
 func TestServiceRegisterExistingAction(t *testing.T) {
 	td := getTestData(t)
-
 	service := newTestService(t)
 
-	assert.Error(t, service.RegisterAction(&td.applicationName, td.actionName, td.action))
+	assert.Error(t, service.RegisterAction(&td.applicationName, td.actionName, td.action, nil))
 }
 
 func TestServiceRegisterActionNoAction(t *testing.T) {
@@ -278,7 +277,7 @@ func TestServiceRegisterActionNoAction(t *testing.T) {
 
 	td := getTestData(t)
 
-	assert.Error(t, service.RegisterAction(&td.applicationName, td.actionName, nil))
+	assert.Error(t, service.RegisterAction(&td.applicationName, td.actionName, nil, nil))
 }
 
 func TestServiceRegisterActionNoActionName(t *testing.T) {
@@ -286,7 +285,7 @@ func TestServiceRegisterActionNoActionName(t *testing.T) {
 
 	service := newTestService(t)
 
-	assert.Error(t, service.RegisterAction(&td.applicationName, "", td.action))
+	assert.Error(t, service.RegisterAction(&td.applicationName, "", td.action, nil))
 }
 
 func TestServiceGetExistingAction(t *testing.T) {
