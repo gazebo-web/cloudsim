@@ -121,7 +121,7 @@ func registerActions(name string, service actions.Servicer) {
 	actions := map[string]registerActionInput{
 		actionNameStartSimulation: {
 			Jobs:  JobsStartSimulation,
-			Store: fake.NewFakeStore(new(jobs.StartSimulationData)),
+			Store: fake.NewFakeStore(&jobs.StartSimulationData{}),
 		},
 		actionNameStopSimulation: {
 			Jobs:  JobsStopSimulation,

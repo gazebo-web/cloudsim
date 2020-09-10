@@ -161,6 +161,7 @@ func launchGazeboServerPodPostHook(ctx actions.Context, tx *gorm.DB, deployment 
 
 	// Save resource
 	data.GazeboPodResource = output.Resource
+
 	dataErr := ctx.Store().Set(data)
 	if dataErr != nil {
 		return nil, dataErr

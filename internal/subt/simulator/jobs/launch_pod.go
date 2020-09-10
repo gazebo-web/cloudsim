@@ -13,13 +13,12 @@ type LaunchPodOutput struct {
 	Error    error
 }
 
-// UpdateSimulationStatus is generic to job to update the status of a certain simulation.
+// UpdateSimulationStatus is generic to job to launch simulation pods.
 var LaunchPod = &actions.Job{
-	Name:            "launch-pod",
-	Execute:         launchPod,
-	RollbackHandler: rollbackUpdateSimulationStatus,
-	InputType:       actions.GetJobDataType(orchestrator.CreatePodInput{}),
-	OutputType:      actions.GetJobDataType(LaunchPodOutput{}),
+	Name:       "launch-pod",
+	Execute:    launchPod,
+	InputType:  actions.GetJobDataType(orchestrator.CreatePodInput{}),
+	OutputType: actions.GetJobDataType(LaunchPodOutput{}),
 }
 
 func launchPod(ctx actions.Context, tx *gorm.DB, deployment *actions.Deployment, value interface{}) (interface{}, error) {
@@ -34,6 +33,9 @@ func launchPod(ctx actions.Context, tx *gorm.DB, deployment *actions.Deployment,
 
 	// Create pod
 	res, err := simCtx.Platform().Orchestrator().Pods().Create(createPodInput)
+	if err != nil {
+		return nil, err
+	}
 
 	return LaunchPodOutput{
 		Resource: res,

@@ -6,19 +6,18 @@ import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/actions"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulator"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulator/context"
 )
 
 // CreateGazeboServerNetworkPolicy is used to create a network policy in the orchestrator.Cluster for the gazebo server.
-var CreateGazeboServerNetworkPolicy = &actions.Job{
+var CreateGazeboServerNetworkPolicy = CreateNetworkPolicy.Extend(actions.Job{
 	Name:            "create-gazebo-network-policy",
 	PreHooks:        []actions.JobFunc{prepareGazeboNetworkPolicyInput},
-	Execute:         createGazeboNetworkPolicy,
+	PostHooks:       []actions.JobFunc{createGazeboServerNetworkPolicyPostHook},
 	RollbackHandler: rollbackCreateGazeboNetworkPolicy,
 	InputType:       actions.GetJobDataType(simulations.GroupID("")),
 	OutputType:      actions.GetJobDataType(simulations.GroupID("")),
-}
+})
 
 func prepareGazeboNetworkPolicyInput(ctx actions.Context, tx *gorm.DB, deployment *actions.Deployment, value interface{}) (interface{}, error) {
 	gid, ok := value.(simulations.GroupID)
@@ -28,6 +27,8 @@ func prepareGazeboNetworkPolicyInput(ctx actions.Context, tx *gorm.DB, deploymen
 
 	simCtx := context.NewContext(ctx)
 
+	data := simCtx.Store().Get().(*StartSimulationData)
+
 	// Get simulation
 	sim, err := simCtx.Services().Simulations().Get(gid)
 	if err != nil {
@@ -35,40 +36,15 @@ func prepareGazeboNetworkPolicyInput(ctx actions.Context, tx *gorm.DB, deploymen
 	}
 
 	// Set up pod name
-	podName := "prefix-groupid-gzserver"
-
-	// Set up labels
-	baseLabels := map[string]string{
-		"cloudsim":          "true",
-		"pod-group":         podName,
-		"cloudsim-group-id": string(gid),
-		"SubT":              "true",
-	}
-
-	gzServerLabels := map[string]string{
-		"cloudsim":          "true",
-		"pod-group":         podName,
-		"cloudsim-group-id": string(gid),
-		"SubT":              "true",
-		"gzserver":          "true",
-	}
-	podSelector := orchestrator.NewSelector(gzServerLabels)
-
-	bridgeLabels := map[string]string{
-		"cloudsim":          "true",
-		"pod-group":         podName,
-		"cloudsim-group-id": string(gid),
-		"SubT":              "true",
-		"comms-bridge":      "true",
-	}
+	podName := "%s-%s-gzserver"
 
 	cidr := fmt.Sprintf("%s/32", simCtx.Platform().Store().Ignition().IP())
 
 	input := orchestrator.CreateNetworkPolicyInput{
 		Name:        fmt.Sprintf("%s-%s-%s", "network-policy", sim.GroupID(), "gzserver"),
 		Namespace:   simCtx.Platform().Store().Orchestrator().Namespace(),
-		Labels:      baseLabels,
-		PodSelector: podSelector,
+		Labels:      data.BaseLabels,
+		PodSelector: data.GazeboPodResource.Selector(),
 		Ingresses: orchestrator.NetworkIngressRule{
 			Ports:    []int32{9002},
 			IPBlocks: []string{cidr},
@@ -79,47 +55,50 @@ func prepareGazeboNetworkPolicyInput(ctx actions.Context, tx *gorm.DB, deploymen
 			AllowOutbound: true,
 		},
 		PeersFrom: []orchestrator.Selector{
-			orchestrator.NewSelector(bridgeLabels),
+			orchestrator.NewSelector(data.BridgeLabels),
 		},
 		PeersTo: []orchestrator.Selector{
-			orchestrator.NewSelector(bridgeLabels),
+			orchestrator.NewSelector(data.BridgeLabels),
 		},
 	}
 
-	return map[string]interface{}{
-		"groupID":                  gid,
-		"createNetworkPolicyInput": input,
-	}, nil
+	return input, nil
 }
 
-func createGazeboNetworkPolicy(ctx actions.Context, tx *gorm.DB, deployment *actions.Deployment, value interface{}) (interface{}, error) {
-	// Parse input
-	inputMap, ok := value.(map[string]interface{})
-	if !ok {
-		return nil, simulator.ErrInvalidInput
-	}
+func createGazeboServerNetworkPolicyPostHook(ctx actions.Context, tx *gorm.DB, deployment *actions.Deployment, value interface{}) (interface{}, error) {
+	// Parse execute function output
+	output := value.(CreateNetworkPolicyOutput)
 
-	createPolicyInput, ok := inputMap["createNetworkPolicyInput"].(orchestrator.CreateNetworkPolicyInput)
-	if !ok {
-		return nil, simulator.ErrInvalidInput
-	}
+	// Get data from action store
+	data := ctx.Store().Get().(StartSimulationData)
 
-	gid, ok := inputMap["groupID"].(simulations.GroupID)
-	if !ok {
-		return nil, simulator.ErrInvalidInput
-	}
+	// Assign output resource to the store
+	data.GazeboNetworkPolicyResource = output.Resource
 
-	simCtx := context.NewContext(ctx)
-
-	_, err := simCtx.Platform().Orchestrator().NetworkPolicies().Create(createPolicyInput)
+	// Persist data
+	err := ctx.Store().Set(data)
 	if err != nil {
-
 		return nil, err
 	}
-	return gid, nil
+
+	// Check if the execute function returned an error
+	if output.Error != nil {
+		return nil, err
+	}
+
+	return data.GroupID, nil
 }
 
 func rollbackCreateGazeboNetworkPolicy(ctx actions.Context, tx *gorm.DB, deployment *actions.Deployment, value interface{}, err error) (interface{}, error) {
-	// TODO: Remove network policy.
-	return value, nil
+	simCtx := context.NewContext(ctx)
+
+	// Get data from action store
+	data := simCtx.Store().Get().(*StartSimulationData)
+
+	_, delErr := simCtx.Platform().Orchestrator().NetworkPolicies().Delete(data.GazeboNetworkPolicyResource)
+	if delErr != nil {
+		return nil, delErr
+	}
+
+	return data.GroupID, nil
 }

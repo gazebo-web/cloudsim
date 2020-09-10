@@ -21,7 +21,7 @@ func createWaitRequestForGzServerPod(ctx actions.Context, tx *gorm.DB, deploymen
 	// Get context
 	simCtx := context.NewContext(ctx)
 
-	data := simCtx.Store().Get().(StartSimulationData)
+	data := simCtx.Store().Get().(*StartSimulationData)
 
 	// Create wait for condition request
 	req := simCtx.Platform().Orchestrator().Pods().WaitForCondition(data.GazeboPodResource, orchestrator.HasIPStatusCondition)
