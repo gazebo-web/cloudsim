@@ -22,6 +22,7 @@ var LaunchPod = &actions.Job{
 	Execute: launchPod,
 }
 
+// launchPod is the main function executed by the LaunchPod job.
 func launchPod(ctx actions.Context, tx *gorm.DB, deployment *actions.Deployment, value interface{}) (interface{}, error) {
 	// Create ctx
 	simCtx := context.NewContext(ctx)
