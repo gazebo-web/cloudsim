@@ -9,13 +9,16 @@ import (
 	"time"
 )
 
-// WaitInput is the input used by the Wait execute function.
+// WaitInput is the input of the Wait job.
 type WaitInput struct {
 	GroupID       simulations.GroupID
 	Request       waiter.Waiter
 	PollFrequency time.Duration
 	Timeout       time.Duration
 }
+
+// WaitOutput is the output of the Wait job.
+type WaitOutput simulations.GroupID
 
 // Wait is a job that is in charge of waiting for a certain process to happen.
 var Wait = &actions.Job{
@@ -36,5 +39,5 @@ func wait(ctx actions.Context, tx *gorm.DB, deployment *actions.Deployment, valu
 		return nil, err
 	}
 
-	return input.GroupID, nil
+	return WaitOutput(input.GroupID), nil
 }
