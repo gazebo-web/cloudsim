@@ -67,7 +67,7 @@ func NewContext(ctx actions.Context) Context {
 }
 
 // WithValue add a value to the given context.
-func WithValue(ctx Context, key string, value interface{}) Context {
+func WithValue(ctx Context, key interface{}, value interface{}) Context {
 	baseCtx := context.WithValue(ctx, key, value)
 	actionContext := actions.NewContext(baseCtx)
 	return NewContext(actionContext)
