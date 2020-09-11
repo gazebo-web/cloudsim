@@ -1,6 +1,7 @@
 package context
 
 import (
+	"context"
 	"errors"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/actions"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/application"
@@ -63,4 +64,11 @@ func NewContext(ctx actions.Context) Context {
 	return &simulatorContext{
 		Context: ctx,
 	}
+}
+
+// WithValue add a value to the given context.
+func WithValue(ctx Context, key string, value interface{}) Context {
+	baseCtx := context.WithValue(ctx, key, value)
+	actionContext := actions.NewContext(baseCtx)
+	return NewContext(actionContext)
 }
