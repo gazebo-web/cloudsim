@@ -27,7 +27,7 @@ func (s *ec2TerminateMachinesTestSuite) SetupTest() {
 
 func (s *ec2TerminateMachinesTestSuite) TestTerminate_ErrorWhenNilMachineNames() {
 	err := s.machines.Terminate(cloud.TerminateMachinesInput{
-		Names: nil,
+		Instances: nil,
 	})
 	s.Error(err)
 	s.Equal(cloud.ErrMissingMachineNames, err)
@@ -36,7 +36,7 @@ func (s *ec2TerminateMachinesTestSuite) TestTerminate_ErrorWhenNilMachineNames()
 
 func (s *ec2TerminateMachinesTestSuite) TestTerminate_ErrorWhenEmptyMachineNames() {
 	err := s.machines.Terminate(cloud.TerminateMachinesInput{
-		Names: []string{},
+		Instances: []string{},
 	})
 	s.Error(err)
 	s.Equal(cloud.ErrMissingMachineNames, err)
@@ -45,7 +45,7 @@ func (s *ec2TerminateMachinesTestSuite) TestTerminate_ErrorWhenEmptyMachineNames
 
 func (s *ec2TerminateMachinesTestSuite) TestTerminate_Valid() {
 	err := s.machines.Terminate(cloud.TerminateMachinesInput{
-		Names: []string{"machine-id"},
+		Instances: []string{"machine-id"},
 	})
 	s.NoError(err)
 	s.Equal(1, s.ec2API.TerminateInstancesCalls)
