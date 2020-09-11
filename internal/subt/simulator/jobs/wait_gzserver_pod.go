@@ -44,5 +44,5 @@ func createWaitRequestForGzServerPod(ctx actions.Context, tx *gorm.DB, deploymen
 
 // waitGazeboServerPodPostHook is the post hook in charge of returning the start simulation data.
 func waitGazeboServerPodPostHook(ctx actions.Context, tx *gorm.DB, deployment *actions.Deployment, value interface{}) (interface{}, error) {
-	return getDataFromJob(ctx, deployment)
+	return getStartDataFromJob(ctx, deployment)
 }
