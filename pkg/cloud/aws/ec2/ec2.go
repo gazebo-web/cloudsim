@@ -277,6 +277,7 @@ func (m *machines) Count(input cloud.CountMachinesInput) int {
 	return count
 }
 
+// WaitOK waits for EC2 machines to be in the OK status.
 func (m *machines) WaitOK(input []cloud.WaitMachinesOKInput) error {
 	m.Logger.Debug(fmt.Sprintf("Waiting for machines to be OK: %+v", input))
 
