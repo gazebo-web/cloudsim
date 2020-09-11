@@ -104,6 +104,7 @@ func (c *CreateMachinesOutput) ToWaitMachinesOKInput() *WaitMachinesOKInput {
 // TerminateMachinesInput is the input for the Machines.Terminate operation.
 // It will be used to terminate machines.
 type TerminateMachinesInput struct {
+	// Instances has the list of machine ids.
 	Instances []string
 }
 
@@ -115,6 +116,7 @@ type CountMachinesInput struct {
 
 // WaitMachinesOKInput represents a set of machines that need to be waited until they are ready.
 type WaitMachinesOKInput struct {
+	// Instances has the list of machine ids.
 	Instances []string
 }
 
