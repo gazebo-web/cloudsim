@@ -90,14 +90,22 @@ func (c *CreateMachinesOutput) Length() int {
 // ToTerminateMachinesInput converts the content of CreateMachinesOutput into TerminateMachinesInput.
 func (c *CreateMachinesOutput) ToTerminateMachinesInput() *TerminateMachinesInput {
 	return &TerminateMachinesInput{
-		Names: c.Instances,
+		Instances: c.Instances,
+	}
+}
+
+// ToWaitMachinesOKInput converts the content of CreateMachinesOutput into WaitMachinesOKInput.
+func (c *CreateMachinesOutput) ToWaitMachinesOKInput() *WaitMachinesOKInput {
+	return &WaitMachinesOKInput{
+		Instances: c.Instances,
 	}
 }
 
 // TerminateMachinesInput is the input for the Machines.Terminate operation.
 // It will be used to terminate machines.
 type TerminateMachinesInput struct {
-	Names []string
+	// Instances has the list of machine ids.
+	Instances []string
 }
 
 // CountMachinesInput is the input for the Machines.Count operation.
@@ -106,14 +114,25 @@ type CountMachinesInput struct {
 	Filters map[string][]string
 }
 
+// WaitMachinesOKInput represents a set of machines that need to be waited until they are ready.
+type WaitMachinesOKInput struct {
+	// Instances has the list of machine ids.
+	Instances []string
+}
+
 // Machines requests physical instances from a cloud provider on which to deploy applications
 type Machines interface {
 	// Create creates a set of cloud machines with a certain configuration.
 	Create(input []CreateMachinesInput) ([]CreateMachinesOutput, error)
+
 	// Terminate terminates a set of cloud machines that match a set of names.
 	// The names are automatically created by the cloud provider.
 	Terminate(input TerminateMachinesInput) error
+
 	// Count returns the number of cloud machines that match a set of selectors.
 	// The selectors should have been defined when creating the machines.
 	Count(input CountMachinesInput) int
+
+	// WaitOK is used to wait for the given machines input to be OK.
+	WaitOK(input []WaitMachinesOKInput) error
 }
