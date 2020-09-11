@@ -8,7 +8,7 @@ import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulator/jobs"
 )
 
-// WaitForGazeboServerPod extends the Wait job to fill the input data needed by Wait's execute function.
+// WaitForGazeboServerPod waits for the simulation Gazebo pod to finish launching.
 var WaitForGazeboServerPod = jobs.Wait.Extend(actions.Job{
 	Name:       "wait-gazebo-server-pod",
 	PreHooks:   []actions.JobFunc{createWaitRequestForGzServerPod},
