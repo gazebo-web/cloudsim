@@ -13,6 +13,7 @@ var (
 		Status: "True",
 	}
 
+	// HasIPStatusCondition is used to indicate that Pods have an IP assigned.
 	HasIPStatusCondition = Condition{
 		Type:   "Has IP status",
 		Status: "True",
