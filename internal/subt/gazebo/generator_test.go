@@ -39,6 +39,7 @@ func TestGenerate(t *testing.T) {
 		Marsupials: []simulations.Marsupial{
 			simulations.NewMarsupial(fakeRobotA, fakeRobotB),
 		},
+		RosEnabled: true,
 	})
 
 	assert.Equal(t, "cloudsim_sim.ign", cmd[0])
@@ -57,4 +58,6 @@ func TestGenerate(t *testing.T) {
 	assert.Equal(t, fmt.Sprintf("robotConfig2:=%s", fakeRobotB.Kind()), cmd[11])
 
 	assert.Equal(t, fmt.Sprintf("marsupial1:=%s:%s", fakeRobotA.Name(), fakeRobotB.Name()), cmd[12])
+
+	assert.Equal(t, fmt.Sprintf("ros:=%t", true), cmd[13])
 }
