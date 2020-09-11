@@ -12,6 +12,7 @@ import (
 type LaunchPodInput orchestrator.CreatePodInput
 
 // LaunchPodOutput is the output of the LaunchPod job.
+// This struct was set in place to let the post-hook handle errors.
 type LaunchPodOutput struct {
 	Resource orchestrator.Resource
 	Error    error
