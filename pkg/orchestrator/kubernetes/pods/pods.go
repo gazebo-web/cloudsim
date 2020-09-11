@@ -180,7 +180,8 @@ func (p *pods) WaitForCondition(resource orchestrator.Resource, condition orches
 			return false, err
 		}
 		for _, i := range po.Items {
-			if condition == orchestrator.ReadyCondition {
+			switch condition {
+			case orchestrator.ReadyCondition:
 				ready, err := p.isPodReady(&i)
 				if err != nil {
 					return false, err
@@ -190,6 +191,15 @@ func (p *pods) WaitForCondition(resource orchestrator.Resource, condition orches
 					*pod = i
 					podsNotReady = append(podsNotReady, pod)
 				}
+				break
+			case orchestrator.HasIPStatusCondition:
+				hasIP := p.podHasIP(&i)
+				if !hasIP {
+					pod := new(apiv1.Pod)
+					*pod = i
+					podsNotReady = append(podsNotReady, pod)
+				}
+				break
 			}
 		}
 		return len(podsNotReady) == 0, nil
@@ -209,6 +219,10 @@ func (p *pods) isPodReady(pod *apiv1.Pod) (bool, error) {
 		return false, conditions.ErrPodCompleted
 	}
 	return podutil.IsPodReady(pod), nil
+}
+
+func (p *pods) podHasIP(pod *apiv1.Pod) bool {
+	return pod.Status.PodIP != ""
 }
 
 // NewPods initializes a new orchestrator.Pods implementation for managing Kubernetes Pods.
