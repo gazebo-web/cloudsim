@@ -73,9 +73,9 @@ var ecNm *sim.Ec2Client
 /////////////////////////////////////////////////
 /// Initialize this package
 func init() {
-	
+
 	cfg := appConfig{}
-	cfg.isGoTest = flag.Lookup("test.v") != nil
+	cfg.isGoTest = flag.Lookup("v") != nil
 
 	// Using ENV approach to allow multiple layers of configuration.
 	// See https://github.com/joho/godotenv
@@ -344,10 +344,7 @@ func initUserAccessor(ctx context.Context, cfg appConfig) (useracc.UserAccessor,
 	if cfg.isGoTest {
 		ignDbCfg.Name = ignDbCfg.Name + "_test"
 		// Parse verbose setting, and adjust logging accordingly
-		if !flag.Parsed() {
-			flag.Parse()
-		}
-		v := flag.Lookup("test.v")
+		v := flag.Lookup("v")
 		isTestVerbose := v.Value.String() == "true"
 		if isTestVerbose {
 			ignDbCfg.EnableLog = true

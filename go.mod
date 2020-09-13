@@ -71,6 +71,7 @@ require (
 	golang.org/x/time v0.0.0-20191024005414-555d28b269f0
 	google.golang.org/appengine v1.4.0
 	google.golang.org/protobuf v1.25.0
+	gopkg.in/go-playground/assert.v1 v1.2.1 // indirect
 	gopkg.in/go-playground/validator.v9 v9.26.0
 	gopkg.in/inf.v0 v0.9.1
 	gopkg.in/src-d/go-billy.v4 v4.2.0
