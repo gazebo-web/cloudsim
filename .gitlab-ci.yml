@@ -1,5 +1,4 @@
-# TODO Update to tagged image once the cloudsim-pipelines MR is merged.
-image: registry.gitlab.com/ignitionrobotics/web/images/cloudsim-pipelines:feature-go_1_15_remove_dep
+image: registry.gitlab.com/ignitionrobotics/web/images/cloudsim-pipelines:1.1.0
 
 
 variables:
