@@ -12,6 +12,7 @@ variables:
 
 .setup_project: &setup_project
   - cd /builds/ignitionrobotics/web/cloudsim
+  - mkdir -p -v $GOPATH/src/$PKG_NAME
   - mv -f * $GOPATH/src/$PKG_NAME
   - cd $GOPATH/src/$PKG_NAME
 
