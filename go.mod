@@ -30,7 +30,7 @@ require (
 	github.com/howeyc/gopass v0.0.0-20170109162249-bf9dde6d0d2c
 	github.com/imdario/mergo v0.3.7
 	github.com/jbenet/go-context v0.0.0-20150711004518-d14ea06fba99
-	github.com/jinzhu/gorm v1.9.12
+	github.com/jinzhu/gorm v1.9.16
 	github.com/jinzhu/inflection v1.0.0
 	github.com/jmespath/go-jmespath v0.3.0
 	github.com/joho/godotenv v1.3.0
