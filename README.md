@@ -58,9 +58,9 @@ apt-get install -y libignition-transport7-dev
 
 ## Install Go
 
-Go version 1.10 or above (NOTE: we are currently using 1.10.3)
+Go version 1.15 or above (NOTE: we are currently using 1.15.2)
 -    Follow instructions from: https://golang.org/doc/install#install
-- `curl -O https://dl.google.com/go/go1.10.3.linux-amd64.tar.gz && tar -C /usr/local -xzf go1.10.3.linux-amd64.tar.gz`
+- `curl -O https://dl.google.com/go/go1.15.2.linux-amd64.tar.gz && tar -C /usr/local -xzf go1.15.2.linux-amd64.tar.gz`
 
 
 1. Make a workspace (if needed), for example:
