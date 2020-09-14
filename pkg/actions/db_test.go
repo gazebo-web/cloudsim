@@ -10,7 +10,7 @@ import (
 
 // TestResource contains resources used for testing.
 type TestResource struct {
-	ctx    Context
+	store  Store
 	logger *ign.Logger
 	db     *gorm.DB
 }
@@ -35,7 +35,7 @@ func setupTest(t *testing.T) *TestResource {
 
 	// Create the test resource container
 	testResources := TestResource{
-		ctx:    ctx,
+		store:  CreateStore(nil, nil),
 		logger: &logger,
 		db:     db,
 	}
