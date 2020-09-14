@@ -29,6 +29,9 @@ variables:
 .download_modules: &download_modules
   - go mod download
 
+.clean_modules: &clean_modules
+  - rm -rf $GOPATH/src/$PKG_NAME/vendor
+
 .cache_modules: &cache_modules
   - mkdir -p -v /builds/ignitionrobotics/web/cloudsim/vendor
   - mv /go/pkg/mod
@@ -214,6 +217,7 @@ docker:
     DOCKER_HOST: tcp://docker:2375
     DOCKER_DRIVER: overlay2
   before_script:
+    - *clean_modules
     - docker version
     - docker info
     - "docker login -u gitlab-ci-token -p $CI_BUILD_TOKEN $CI_REGISTRY"
@@ -239,6 +243,7 @@ docker:next:
     DOCKER_HOST: tcp://docker:2375
     DOCKER_DRIVER: overlay2
   before_script:
+    - *clean_modules
     - docker version
     - docker info
     - "docker login -u gitlab-ci-token -p $CI_BUILD_TOKEN $CI_REGISTRY"
@@ -266,6 +271,7 @@ docker:latest:
     DOCKER_DRIVER: overlay2
     DOCKER_TLS_CERTDIR: ""
   before_script:
+    - *clean_modules
     - docker version
     - docker info
     - "docker login -u gitlab-ci-token -p $CI_BUILD_TOKEN $CI_REGISTRY"
