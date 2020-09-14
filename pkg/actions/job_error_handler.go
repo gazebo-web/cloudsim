@@ -9,10 +9,10 @@ import (
 // If `fn` returns an error, the error is handled by the `errorHandler` function.
 // If the handler returns an error, the error is considered critical and triggers an action execution rollback.
 func WrapErrorHandler(fn JobFunc, errorHandler JobErrorHandler) JobFunc {
-	return func(ctx Context, tx *gorm.DB, deployment *Deployment, value interface{}) (interface{}, error) {
+	return func(store Store, tx *gorm.DB, deployment *Deployment, value interface{}) (interface{}, error) {
 
 		var err error
-		value, err = fn(ctx, tx, deployment, value)
+		value, err = fn(store, tx, deployment, value)
 		if err != nil {
 			// Add the error
 			if err := deployment.addJobError(tx, nil, err); err != nil {
@@ -21,7 +21,7 @@ func WrapErrorHandler(fn JobFunc, errorHandler JobErrorHandler) JobFunc {
 
 			// Try to handle the error
 			var handlerErr error
-			value, handlerErr = errorHandler(ctx, tx, deployment, value, err)
+			value, handlerErr = errorHandler(store, tx, deployment, value, err)
 
 			// If the handler returned an error, only add it if it differs from the fn error or the same error will be
 			// added twice.
@@ -41,7 +41,7 @@ func WrapErrorHandler(fn JobFunc, errorHandler JobErrorHandler) JobFunc {
 }
 
 // ErrorHandlerIgnoreError ignores errors returned by a function and continues execution.
-func ErrorHandlerIgnoreError(ctx Context, tx *gorm.DB, deployment *Deployment, value interface{},
+func ErrorHandlerIgnoreError(store Store, tx *gorm.DB, deployment *Deployment, value interface{},
 	err error) (interface{}, error) {
 
 	return value, nil
