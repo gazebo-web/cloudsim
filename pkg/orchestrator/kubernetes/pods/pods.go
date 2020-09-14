@@ -175,31 +175,35 @@ func (p *pods) WaitForCondition(resource orchestrator.Resource, condition orches
 	// Create job
 	job := func() (bool, error) {
 		var podsNotReady []*apiv1.Pod
+
+		// Get list of pods
 		po, err := p.API.CoreV1().Pods(resource.Namespace()).List(opts)
 		if err != nil {
 			return false, err
 		}
+
+		// Iterate over list of pods
 		for _, i := range po.Items {
+			var ready bool
+
+			// Check that pod doesn't match the given condition.
 			switch condition {
 			case orchestrator.ReadyCondition:
-				ready, err := p.isPodReady(&i)
+				ready, err = p.isPodReady(&i)
 				if err != nil {
 					return false, err
 				}
-				if !ready {
-					pod := new(apiv1.Pod)
-					*pod = i
-					podsNotReady = append(podsNotReady, pod)
-				}
 				break
 			case orchestrator.HasIPStatusCondition:
-				hasIP := p.podHasIP(&i)
-				if !hasIP {
-					pod := new(apiv1.Pod)
-					*pod = i
-					podsNotReady = append(podsNotReady, pod)
-				}
+				ready = p.podHasIP(&i)
 				break
+			}
+
+			// Add pod to list if pod isn't ready.
+			if !ready {
+				pod := new(apiv1.Pod)
+				*pod = i
+				podsNotReady = append(podsNotReady, pod)
 			}
 		}
 		return len(podsNotReady) == 0, nil
