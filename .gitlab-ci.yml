@@ -20,6 +20,9 @@ variables:
   - git config --global user.name "ign-cloudsim"
   - git config --global user.email "ign-cloudsim@test.org"
 
+.download_modules: &download_modules
+  - go mod download
+
 .setup_db: &setup_db
   - mysql -u root -proot -h mysql -e "CREATE DATABASE usersdb_test"
 
@@ -38,7 +41,10 @@ variables:
 # Cache configuration
 
 cache:
+  untracked: true
   key: ${CI_COMMIT_REF_SLUG}
+  paths:
+    - /go/pkg/mod
 
 ##########################################################
 # Stages
@@ -65,6 +71,16 @@ proto:
     expire_in: 1 month
   tags:
     - gitlab-org
+
+mods:
+  stage: install
+  before_script:
+    - *setup_project
+  script:
+    - *download_modules
+  tags:
+    - gitlab-org
+
 
 ##########################################################
 # Formatting stage
