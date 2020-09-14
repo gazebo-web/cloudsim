@@ -16,7 +16,6 @@ variables:
   - mv -f vendor/ $GOPATH/mod/pkg
 
 .setup_project: &setup_project
-  - *setup_modules
   - cd /builds/ignitionrobotics/web/cloudsim
   - mkdir -p -v $GOPATH/mod/pkg
   - mkdir -p -v $GOPATH/src/$PKG_NAME
@@ -100,6 +99,7 @@ mods:
 fmt:
   stage: format
   before_script:
+    - *setup_modules
     - *setup_project
     - *setup_git_credentials
   script:
@@ -110,6 +110,7 @@ fmt:
 lint:
   stage: format
   before_script:
+    - *setup_modules
     - *setup_project
     - *setup_git_credentials
   script:
@@ -125,6 +126,7 @@ vet:
   dependencies:
     - proto
   before_script:
+    - *setup_modules
     - *setup_project
     - *setup_git_credentials
     - *setup_db
@@ -142,6 +144,7 @@ test:
   dependencies:
     - proto
   before_script:
+    - *setup_modules
     - *setup_project
     - *setup_git_credentials
     - *setup_db
@@ -159,6 +162,7 @@ race:
   dependencies:
     - proto
   before_script:
+    - *setup_modules
     - *setup_project
     - *setup_git_credentials
     - *setup_db
@@ -177,6 +181,7 @@ coverage:
   dependencies:
     - proto
   before_script:
+    - *setup_modules
     - *setup_project
     - *setup_git_credentials
     - *setup_db
