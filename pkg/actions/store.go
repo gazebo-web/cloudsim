@@ -36,7 +36,7 @@ type store struct {
 
 // State returns the store's state.
 func (s *store) State() State {
-	panic("implement me")
+	return s.state
 }
 
 // Dispatch dispatches a mutation identified by the given key.
