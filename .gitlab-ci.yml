@@ -30,6 +30,7 @@ variables:
   - go mod download
 
 .clean_modules: &clean_modules
+  - rm -rf /builds/ignitionrobotics/web/cloudsim/vendor
   - rm -rf $GOPATH/src/$PKG_NAME/vendor
 
 .cache_modules: &cache_modules
