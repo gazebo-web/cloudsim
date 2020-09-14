@@ -386,7 +386,7 @@ func TestGetRemainingSubmissionsRoute(t *testing.T) {
 	// simulation is created before each rule insertion to increase the
 	// owner's number of submissions in order to check the number decreases.
 	for i, test := range customRules {
-		t.Run(testRoute.testDesc+string(i), func(t *testing.T) {
+		t.Run(fmt.Sprintf("%s-%d", testRoute.testDesc, i), func(t *testing.T) {
 			// Create a fake simulation
 			globals.Server.Db.Create(&sim.SimulationDeployment{
 				Owner:         sptr(owner),
