@@ -10,11 +10,16 @@ variables:
 ##########################################################
 # Aliases
 
+.setup_modules: &setup_modules
+  - cd /builds/ignitionrobotics/web/cloudsim
+  - mkdir -p -v $GOPATH/mod/pkg
+  - mv -f vendor/ $GOPATH/mod/pkg
+
 .setup_project: &setup_project
+  - *setup_modules
   - cd /builds/ignitionrobotics/web/cloudsim
   - mkdir -p -v $GOPATH/mod/pkg
   - mkdir -p -v $GOPATH/src/$PKG_NAME
-  - mv -f vendor/ $GOPATH/mod/pkg
   - mv -f * $GOPATH/src/$PKG_NAME
   - cd $GOPATH/src/$PKG_NAME
 
@@ -84,6 +89,8 @@ mods:
     - *setup_project
   script:
     - *download_modules
+  after_script:
+    - *cache_modules
   tags:
     - gitlab-org
 
