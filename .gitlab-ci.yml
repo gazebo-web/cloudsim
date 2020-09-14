@@ -54,7 +54,8 @@ cache:
   untracked: true
   key: ${CI_COMMIT_REF_SLUG}
   paths:
-    - /go/pkg/mod
+    - /builds/ignitionrobotics/web/cloudsim/vendor/
+    - /go/src/gitlab.com/ignitionrobotics/web/cloudsim/vendor/
 
 ##########################################################
 # Stages
