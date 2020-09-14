@@ -22,7 +22,7 @@ func TestWaitForGazeboServerPod(t *testing.T) {
 	ctx := context.Background()
 	logger := ign.NewLoggerNoRollbar("TestWaitForGazeboServerPod", ign.VerbosityDebug)
 	storeMachines := sfake.NewFakeMachines()
-	sfake.NewFakeStore(storeMachines, nil, nil)
+	fakeStore := sfake.NewFakeStore(storeMachines, nil, nil)
 	spdyInit := spdy.NewSPDYFakeInitializer()
 	initialPod := &apiv1.Pod{
 		TypeMeta: metav1.TypeMeta{},
@@ -49,7 +49,7 @@ func TestWaitForGazeboServerPod(t *testing.T) {
 		NetworkPolicies: nil,
 	})
 
-	p := platform.NewPlatform(nil, nil, ks, nil)
+	p := platform.NewPlatform(nil, nil, ks, fakeStore)
 	ctx = context.WithValue(ctx, "cloudsim_platform", p)
 
 	input := &StartSimulationData{
