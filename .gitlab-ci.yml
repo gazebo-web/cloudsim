@@ -12,7 +12,9 @@ variables:
 
 .setup_project: &setup_project
   - cd /builds/ignitionrobotics/web/cloudsim
+  - mkdir -p -v $GOPATH/mod/pkg
   - mkdir -p -v $GOPATH/src/$PKG_NAME
+  - mv -f vendor/ $GOPATH/mod/pkg
   - mv -f * $GOPATH/src/$PKG_NAME
   - cd $GOPATH/src/$PKG_NAME
 
@@ -22,6 +24,10 @@ variables:
 
 .download_modules: &download_modules
   - go mod download
+
+.cache_modules: &cache_modules
+  - mkdir -p -v /builds/ignitionrobotics/web/cloudsim/vendor
+  - mv /go/pkg/mod
 
 .setup_db: &setup_db
   - mysql -u root -proot -h mysql -e "CREATE DATABASE usersdb_test"
