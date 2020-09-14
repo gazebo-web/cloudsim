@@ -1,4 +1,4 @@
-image: registry.gitlab.com/ignitionrobotics/web/images/cloudsim-pipelines
+image: registry.gitlab.com/ignitionrobotics/web/images/cloudsim-pipelines:1.1.0
 
 
 variables:
@@ -12,21 +12,13 @@ variables:
 
 .setup_project: &setup_project
   - cd /builds/ignitionrobotics/web/cloudsim
-  - mkdir -p -v $GOPATH/src/$PKG_NAME/vendor
+  - mkdir -p -v $GOPATH/src/$PKG_NAME
   - mv -f * $GOPATH/src/$PKG_NAME
   - cd $GOPATH/src/$PKG_NAME
 
 .gitlab_credentials: &setup_git_credentials
   - git config --global user.name "ign-cloudsim"
   - git config --global user.email "ign-cloudsim@test.org"
-
-.dep_ensure: &dep_ensure
-  - $GOPATH/bin/dep ensure -vendor-only
-  - $GOPATH/bin/dep status
-
-.dep_ensure_post: &dep_ensure_post
-  - mkdir -p -v /builds/ignitionrobotics/web/cloudsim/vendor
-  - mv /go/src/gitlab.com/ignitionrobotics/web/cloudsim/vendor/* /builds/ignitionrobotics/web/cloudsim/vendor/
 
 .setup_db: &setup_db
   - mysql -u root -proot -h mysql -e "CREATE DATABASE usersdb_test"
@@ -46,11 +38,7 @@ variables:
 # Cache configuration
 
 cache:
-  untracked: true
   key: ${CI_COMMIT_REF_SLUG}
-  paths:
-    - /builds/ignitionrobotics/web/cloudsim/vendor/
-    - /go/src/gitlab.com/ignitionrobotics/web/cloudsim/vendor/
 
 ##########################################################
 # Stages
@@ -78,16 +66,6 @@ proto:
   tags:
     - gitlab-org
 
-dep:
-  stage: install
-  before_script:
-    - *setup_project
-  script:
-    - *dep_ensure
-    - *dep_ensure_post
-  tags:
-    - gitlab-org
-
 ##########################################################
 # Formatting stage
 
@@ -97,7 +75,7 @@ fmt:
     - *setup_project
     - *setup_git_credentials
   script:
-    - go fmt $(go list ./... | grep -v /vendor/)
+    - go fmt $(go list ./...)
   tags:
     - gitlab-org
 
@@ -107,7 +85,7 @@ lint:
     - *setup_project
     - *setup_git_credentials
   script:
-    - golint -set_exit_status $(go list ./... | grep -v /vendor/)
+    - golint -set_exit_status $(go list ./...)
   tags:
     - gitlab-org
 
@@ -121,10 +99,9 @@ vet:
   before_script:
     - *setup_project
     - *setup_git_credentials
-    - *dep_ensure
     - *setup_db
   script:
-    - go vet $(go list ./... | grep -v /vendor/)
+    - go vet $(go list ./...)
   services:
     - mysql:5.7
   environment:
@@ -139,10 +116,9 @@ test:
   before_script:
     - *setup_project
     - *setup_git_credentials
-    - *dep_ensure
     - *setup_db
   script:
-    - go test $(go list ./... | grep -v /vendor/)
+    - go test $(go list ./...)
   services:
     - mysql:5.7
   environment:
@@ -157,10 +133,9 @@ race:
   before_script:
     - *setup_project
     - *setup_git_credentials
-    - *dep_ensure
     - *setup_db
   script:
-    - go test -race $(go list ./... | grep -v /vendor/)
+    - go test -race $(go list ./...)
   services:
     - mysql:5.7
   environment:
@@ -176,7 +151,6 @@ coverage:
   before_script:
     - *setup_project
     - *setup_git_credentials
-    - *dep_ensure
     - *setup_db
   script:
     - go test -covermode=atomic -coverprofile=coverage.tx
