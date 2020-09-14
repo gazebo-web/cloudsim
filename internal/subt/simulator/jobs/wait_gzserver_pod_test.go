@@ -15,13 +15,14 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes/fake"
 	"testing"
+	"time"
 )
 
 func TestWaitForGazeboServerPod(t *testing.T) {
 	ctx := context.Background()
 	logger := ign.NewLoggerNoRollbar("TestWaitForGazeboServerPod", ign.VerbosityDebug)
-	storeOrchestrator := sfake.NewFakeOrchestrator()
-	sfake.NewFakeStore(nil, storeOrchestrator, nil)
+	storeMachines := sfake.NewFakeMachines()
+	sfake.NewFakeStore(storeMachines, nil, nil)
 	spdyInit := spdy.NewSPDYFakeInitializer()
 	initialPod := &apiv1.Pod{
 		TypeMeta: metav1.TypeMeta{},
@@ -32,8 +33,10 @@ func TestWaitForGazeboServerPod(t *testing.T) {
 				"app": "test",
 			},
 		},
-		Spec:   apiv1.PodSpec{},
-		Status: apiv1.PodStatus{},
+		Spec: apiv1.PodSpec{},
+		Status: apiv1.PodStatus{
+			PodIP: "127.0.0.1",
+		},
 	}
 	client := fake.NewSimpleClientset(initialPod)
 	po := pods.NewPods(client, spdyInit, logger)
@@ -59,6 +62,9 @@ func TestWaitForGazeboServerPod(t *testing.T) {
 			}),
 		),
 	}
+
+	storeMachines.On("Timeout").Return(1 * time.Second)
+	storeMachines.On("PollFrequency").Return(1 * time.Second)
 
 	result, err := WaitForGazeboServerPod.Run(ctx, nil, &actions.Deployment{
 		CurrentJob: "test",
