@@ -17,6 +17,7 @@ const (
 	keyRobotName             = "robotName"
 	keyRobotConfig           = "robotConfig"
 	keyMarsupial             = "marsupial"
+	keyRos                   = "ros"
 )
 
 // LaunchConfig includes the information to create the launch command arguments needed to launch gazebo server.
@@ -58,6 +59,9 @@ type LaunchConfig struct {
 	// Marsupials is a group of parent-child pair robots. The robots used as parent and child should be in the
 	// Robots slice as well.
 	Marsupials []simulations.Marsupial
+
+	// RosEnabled is used to enable ros when launching gazebo server.
+	RosEnabled bool
 }
 
 // Generate generates the needed arguments to initialize Gazebo server.
@@ -112,6 +116,8 @@ func Generate(params LaunchConfig) []string {
 	for i, marsupial := range params.Marsupials {
 		cmd = append(cmd, fmt.Sprintf("%s%d:=%s:%s", keyMarsupial, i+1, marsupial.Parent().Name(), marsupial.Child().Name()))
 	}
+
+	cmd = append(cmd, fmt.Sprintf("%s:=%t", keyRos, params.RosEnabled))
 
 	return cmd
 }
