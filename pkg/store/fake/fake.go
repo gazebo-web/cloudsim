@@ -75,8 +75,8 @@ func (f *Ign) Verbosity() string {
 	return args.String(0)
 }
 
-// newFakeIgnition initializes a fake store.Ignition implementation.
-func newFakeIgnition() *Ign {
+// NewFakeIgnition initializes a fake store.Ignition implementation.
+func NewFakeIgnition() *Ign {
 	return &Ign{
 		Mock: new(mock.Mock),
 	}
