@@ -100,7 +100,7 @@ var serviceTestData = struct {
 		require.NoError(t, executeInput.initialize(tr.db, action))
 
 		// Process jobs
-		err := service.processJobs(tr.ctx, tr.db, action, executeInput, jobInput)
+		err := service.processJobs(tr.store, tr.db, action, executeInput, jobInput)
 
 		return executeInput, err
 	},
@@ -612,7 +612,7 @@ func TestExecuteInvalidAction(t *testing.T) {
 	executeInput := &ExecuteInput{
 		ActionName: "invalid_action",
 	}
-	err := service.Execute(tr.ctx, tr.db, executeInput, nil)
+	err := service.Execute(tr.store, tr.db, executeInput, nil)
 	require.Error(t, ErrActionNotFound, err)
 }
 
@@ -630,7 +630,7 @@ func TestExecute(t *testing.T) {
 
 	// Execute the action
 	jobInput := std.job1InputData
-	deployment := std.execute(t, tr.ctx, tr.db, service, jobs, nil, &jobInput, false)
+	deployment := std.execute(t, tr.store, tr.db, service, jobs, nil, &jobInput, false)
 
 	// Verify that the values were processed as expected
 	require.Equal(t, 3, jobInput.PreHook)
@@ -670,7 +670,7 @@ func TestExecuteResumeAction(t *testing.T) {
 	require.NoError(t, deployment.SetJobData(tr.db, &td.jobName2, deploymentJobInput, &std.job2InputData))
 	require.NoError(t, deployment.setJob(tr.db, td.jobName2, nil))
 
-	deployment = std.execute(t, tr.ctx, tr.db, service, jobs, executeInput, nil, false)
+	deployment = std.execute(t, tr.store, tr.db, service, jobs, executeInput, nil, false)
 
 	testServiceValidateExecute(t, tr.db, deployment, jobCount)
 }
@@ -694,7 +694,7 @@ func TestExecuteRollback(t *testing.T) {
 
 	// Execute the action
 	jobInput := std.job1InputData
-	deployment := std.execute(t, tr.ctx, tr.db, service, jobs, nil, &jobInput, true)
+	deployment := std.execute(t, tr.store, tr.db, service, jobs, nil, &jobInput, true)
 
 	// Verify that the values were processed as expected
 	require.Equal(t, 3, jobInput.PreHook)
@@ -756,7 +756,7 @@ func TestExecuteResumeRollback(t *testing.T) {
 	require.NoError(t, deployment.SetJobData(tr.db, &td.jobName3, deploymentJobData, &std.jobRollbackJobData))
 
 	// Execute the action
-	deployment = std.execute(t, tr.ctx, tr.db, service, jobs, executeInput, nil, true)
+	deployment = std.execute(t, tr.store, tr.db, service, jobs, executeInput, nil, true)
 
 	testServiceValidateRollbackExecute(t, tr.db, deployment, jobCount)
 }

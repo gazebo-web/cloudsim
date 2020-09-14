@@ -68,7 +68,7 @@ func TestJobFuncWrapErrorHandler(t *testing.T) {
 
 	totalErrCount := 0
 	test := func(fn JobFunc, expectedErr error, expectedErrCount int) {
-		_, err := fn(tr.ctx, tr.db, deployment, nil)
+		_, err := fn(tr.store, tr.db, deployment, nil)
 		if expectedErr != nil {
 			require.NotNil(t, err)
 			require.Equal(t, expectedErr.Error(), err.Error())
@@ -104,7 +104,7 @@ func TestErrorHandlerIgnoreError(t *testing.T) {
 
 	test := func(fn JobFunc) {
 		wrappedFn := WrapErrorHandler(fn, ErrorHandlerIgnoreError)
-		_, err := wrappedFn(tr.ctx, tr.db, deployment, nil)
+		_, err := wrappedFn(tr.store, tr.db, deployment, nil)
 		require.NoError(t, err)
 	}
 	test(setd.fn)
@@ -120,7 +120,7 @@ func TestJobRunErrorHandler(t *testing.T) {
 	require.NoError(t, err)
 
 	test := func(job *Job, expectedErr error) {
-		_, err := job.Run(tr.ctx, tr.db, deployment, nil)
+		_, err := job.Run(tr.store, tr.db, deployment, nil)
 
 		// Check error
 		if expectedErr != nil {
