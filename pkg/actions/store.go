@@ -14,7 +14,7 @@ var (
 // State represents the store states. It's used to save data, artifacts and dependencies that will be used across jobs.
 type State interface{}
 
-// Mutation represents a change in the store's state. It returns an error if performing the change failed.
+// Mutation represents a change in the store's state. It returns an error if performing the change fails.
 type Mutation func(state State, value interface{}) error
 
 // Store groups a set of methods to interact with the state and trigger mutations on it.
