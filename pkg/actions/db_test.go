@@ -1,10 +1,10 @@
 package actions
 
 import (
-	goctx "context"
 	"github.com/jinzhu/gorm"
 	"github.com/stretchr/testify/require"
 	"gitlab.com/ignitionrobotics/web/ign-go"
+	"golang.org/x/net/context"
 	"testing"
 )
 
@@ -16,7 +16,7 @@ type TestResource struct {
 }
 
 func setupTest(t *testing.T) *TestResource {
-	ctx := NewContext(goctx.Background())
+	ctx := context.Background()
 	logger := ign.LoggerFromContext(ctx)
 
 	// Get the db config

@@ -32,21 +32,21 @@ var jobErrorTestData = struct {
 	handlerErr: errors.New("handler"),
 
 	// Job functions
-	fn: func(ctx Context, tx *gorm.DB, deployment *Deployment, value interface{}) (interface{}, error) {
+	fn: func(store Store, tx *gorm.DB, deployment *Deployment, value interface{}) (interface{}, error) {
 		return value, nil
 	},
-	failingFn: func(ctx Context, tx *gorm.DB, deployment *Deployment, value interface{}) (interface{}, error) {
+	failingFn: func(store Store, tx *gorm.DB, deployment *Deployment, value interface{}) (interface{}, error) {
 		return value, errors.New("fn")
 	},
 
 	// Job error handlers
-	errHandler: func(ctx Context, tx *gorm.DB, deployment *Deployment, value interface{}, err error) (interface{}, error) {
+	errHandler: func(store Store, tx *gorm.DB, deployment *Deployment, value interface{}, err error) (interface{}, error) {
 		return value, nil
 	},
-	passthroughErrHandler: func(ctx Context, tx *gorm.DB, deployment *Deployment, value interface{}, err error) (interface{}, error) {
+	passthroughErrHandler: func(store Store, tx *gorm.DB, deployment *Deployment, value interface{}, err error) (interface{}, error) {
 		return value, err
 	},
-	failingErrHandler: func(ctx Context, tx *gorm.DB, deployment *Deployment, value interface{}, err error) (interface{}, error) {
+	failingErrHandler: func(store Store, tx *gorm.DB, deployment *Deployment, value interface{}, err error) (interface{}, error) {
 		return value, errors.New("handler")
 	},
 
