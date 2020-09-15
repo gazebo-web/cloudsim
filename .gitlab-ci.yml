@@ -193,6 +193,7 @@ dependencies:
 
 docker:
   stage: package
+  extends: .go-cache
   image: docker
   services:
     - docker:dind
