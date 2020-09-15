@@ -11,9 +11,10 @@ variables:
 # Aliases
 
 .setup_modules: &setup_modules
-  - cd /builds/ignitionrobotics/web/cloudsim
-  - mkdir -p -v $GOPATH/mod/pkg
-  - mv -f vendor/ $GOPATH/mod/pkg
+  - mkdir -p -v $GOPKGPATH
+
+.download_modules: &download_modules
+  - go mod download
 
 .setup_project: &setup_project
   - cd /builds/ignitionrobotics/web/cloudsim
@@ -26,16 +27,9 @@ variables:
   - git config --global user.name "ign-cloudsim"
   - git config --global user.email "ign-cloudsim@test.org"
 
-.download_modules: &download_modules
-  - go mod download
-
 .clean_modules: &clean_modules
   - rm -rf /builds/ignitionrobotics/web/cloudsim/vendor
   - rm -rf $GOPATH/src/$PKG_NAME/vendor
-
-.cache_modules: &cache_modules
-  - mkdir -p -v /builds/ignitionrobotics/web/cloudsim/vendor
-  - mv /go/pkg/mod
 
 .setup_db: &setup_db
   - mysql -u root -proot -h mysql -e "CREATE DATABASE usersdb_test"
@@ -54,303 +48,302 @@ variables:
 ##########################################################
 # Cache configuration
 
-cache:
-  untracked: true
-  key: ${CI_COMMIT_REF_SLUG}
-  paths:
-    - /builds/ignitionrobotics/web/cloudsim/vendor/
-    - /go/src/gitlab.com/ignitionrobotics/web/cloudsim/vendor/
+.go-cache:
+  variables:
+    GOPKGPATH: $GOPATH/mod/pkg
+  before_script:
+    - *setup_modules
+  cache:
+    paths:
+      - $GOPKGPATH
 
 ##########################################################
 # Stages
 
 stages:
   - install
-  - format
-  - test
-  - package
-  - deploy
+#  - format
+#  - test
+#  - package
+#  - deploy
 
 ##########################################################
 # Installing stage
 
-proto:
-  stage: install
-  before_script:
-    - cd ./ign-transport/proto/
-  script:
-    - protoc --proto_path=. --go_out=. ignition/msgs/*.proto
-  artifacts:
-    paths:
-      - /builds/ignitionrobotics/web/cloudsim/ign-transport/proto/ignition/msgs/*.go
-    expire_in: 1 month
-  tags:
-    - gitlab-org
+#proto:
+#  stage: install
+#  before_script:
+#    - cd ./ign-transport/proto/
+#  script:
+#    - protoc --proto_path=. --go_out=. ignition/msgs/*.proto
+#  artifacts:
+#    paths:
+#      - /builds/ignitionrobotics/web/cloudsim/ign-transport/proto/ignition/msgs/*.go
+#    expire_in: 1 month
+#  tags:
+#    - gitlab-org
 
-mods:
+dependencies:
   stage: install
-  before_script:
-    - *setup_project
+  extends: .go-cache
   script:
     - *download_modules
-  after_script:
-    - *cache_modules
   tags:
     - gitlab-org
 
 ##########################################################
 # Formatting stage
 
-fmt:
-  stage: format
-  before_script:
-    - *setup_modules
-    - *setup_project
-    - *setup_git_credentials
-  script:
-    - go fmt $(go list ./...)
-  tags:
-    - gitlab-org
-
-lint:
-  stage: format
-  before_script:
-    - *setup_modules
-    - *setup_project
-    - *setup_git_credentials
-  script:
-    - golint -set_exit_status $(go list ./...)
-  tags:
-    - gitlab-org
-
-##########################################################
-# Testing stage
-
-vet:
-  stage: test
-  dependencies:
-    - proto
-  before_script:
-    - *setup_modules
-    - *setup_project
-    - *setup_git_credentials
-    - *setup_db
-  script:
-    - go vet $(go list ./...)
-  services:
-    - mysql:5.7
-  environment:
-    name: testing
-  tags:
-    - gitlab-org
-
-test:
-  stage: test
-  dependencies:
-    - proto
-  before_script:
-    - *setup_modules
-    - *setup_project
-    - *setup_git_credentials
-    - *setup_db
-  script:
-    - go test $(go list ./...)
-  services:
-    - mysql:5.7
-  environment:
-    name: testing
-  tags:
-    - gitlab-org
-
-race:
-  stage: test
-  dependencies:
-    - proto
-  before_script:
-    - *setup_modules
-    - *setup_project
-    - *setup_git_credentials
-    - *setup_db
-  script:
-    - go test -race $(go list ./...)
-  services:
-    - mysql:5.7
-  environment:
-    name: testing
-  allow_failure: true
-  tags:
-    - gitlab-org
-
-coverage:
-  stage: test
-  dependencies:
-    - proto
-  before_script:
-    - *setup_modules
-    - *setup_project
-    - *setup_git_credentials
-    - *setup_db
-  script:
-    - go test -covermode=atomic -coverprofile=coverage.tx
-    - go tool cover -func=coverage.tx
-    - bash <(curl -s https://codecov.io/bash)
-  services:
-    - mysql:5.7
-  environment:
-    name: testing
-  tags:
-    - gitlab-org
-
-##########################################################
-# Packaging stage
-
-docker:
-  stage: package
-  image: docker
-  services:
-    - docker:dind
-  except:
-    - develop
-    - master
-  dependencies:
-    - proto
-  variables:
-    DOCKER_HOST: tcp://docker:2375
-    DOCKER_DRIVER: overlay2
-  before_script:
-    - *clean_modules
-    - docker version
-    - docker info
-    - "docker login -u gitlab-ci-token -p $CI_BUILD_TOKEN $CI_REGISTRY"
-  script:
-    - "docker pull $CI_REGISTRY_IMAGE:next || true"
-    - "docker build --cache-from $CI_REGISTRY_IMAGE:next --tag $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA ."
-    - "docker push $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA"
-  after_script:
-    - "docker logout ${CI_REGISTRY}"
-  tags:
-    - docker
-
-docker:next:
-  stage: package
-  image: docker
-  only:
-    - develop
-  services:
-    - docker:dind
-  dependencies:
-    - proto
-  variables:
-    DOCKER_HOST: tcp://docker:2375
-    DOCKER_DRIVER: overlay2
-  before_script:
-    - *clean_modules
-    - docker version
-    - docker info
-    - "docker login -u gitlab-ci-token -p $CI_BUILD_TOKEN $CI_REGISTRY"
-  script:
-    - "docker pull $CI_REGISTRY_IMAGE || true"
-    - "docker build --cache-from $CI_REGISTRY_IMAGE --tag $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA --tag $CI_REGISTRY_IMAGE:next ."
-    - "docker push $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA"
-    - "docker push $CI_REGISTRY_IMAGE:next"
-  after_script:
-    - "docker logout ${CI_REGISTRY}"
-  tags:
-    - docker
-
-docker:latest:
-  stage: package
-  image: docker
-  only:
-    - master
-  services:
-    - docker:dind
-  dependencies:
-    - proto
-  variables:
-    DOCKER_HOST: tcp://docker:2375
-    DOCKER_DRIVER: overlay2
-    DOCKER_TLS_CERTDIR: ""
-  before_script:
-    - *clean_modules
-    - docker version
-    - docker info
-    - "docker login -u gitlab-ci-token -p $CI_BUILD_TOKEN $CI_REGISTRY"
-  script:
-    - "docker pull $CI_REGISTRY_IMAGE || true"
-    - "docker build --cache-from $CI_REGISTRY_IMAGE --tag $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA --tag $CI_REGISTRY_IMAGE:latest ."
-    - "docker push $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA"
-    - "docker push $CI_REGISTRY_IMAGE:latest"
-  after_script:
-    - "docker logout ${CI_REGISTRY}"
-  tags:
-    - docker
-
-##########################################################
-# Deploying stage
-
-integration:
-  image: registry.gitlab.com/ignitionrobotics/web/images/kubectl:latest
-  stage: deploy
-  dependencies:
-    - docker
-  script:
-    - *deploy_kubernetes
-  tags:
-    - testing
-    - kubernetes
-  environment:
-    name: integration
-  except:
-    - master
-    - develop
-  when: manual
-
-integration_1:
-  image: registry.gitlab.com/ignitionrobotics/web/images/kubectl:latest
-  stage: deploy
-  dependencies:
-    - docker
-  script:
-    - *deploy_kubernetes
-  tags:
-    - testing
-    - kubernetes
-  environment:
-    name: integration-1
-  except:
-    - master
-    - develop
-  when: manual
-
-staging:
-  image: registry.gitlab.com/ignitionrobotics/web/images/kubectl:latest
-  stage: deploy
-  dependencies:
-    - docker:next
-  script:
-    - *deploy_kubernetes
-  tags:
-    - testing
-    - kubernetes
-  environment:
-    name: staging
-  only:
-    - develop
-  when: manual
-
-production:
-  image: registry.gitlab.com/ignitionrobotics/web/images/kubectl:latest
-  stage: deploy
-  dependencies:
-    - docker:latest
-  script:
-    - *deploy_kubernetes
-  tags:
-    - kubernetes
-    - production
-  environment:
-    name: production
-  only:
-    - master
-  when: manual
+#fmt:
+#  stage: format
+#  before_script:
+#    - *setup_modules
+#    - *setup_project
+#    - *setup_git_credentials
+#  script:
+#    - go fmt $(go list ./...)
+#  tags:
+#    - gitlab-org
+#
+#lint:
+#  stage: format
+#  before_script:
+#    - *setup_modules
+#    - *setup_project
+#    - *setup_git_credentials
+#  script:
+#    - golint -set_exit_status $(go list ./...)
+#  tags:
+#    - gitlab-org
+#
+###########################################################
+## Testing stage
+#
+#vet:
+#  stage: test
+#  dependencies:
+#    - proto
+#  before_script:
+#    - *setup_modules
+#    - *setup_project
+#    - *setup_git_credentials
+#    - *setup_db
+#  script:
+#    - go vet $(go list ./...)
+#  services:
+#    - mysql:5.7
+#  environment:
+#    name: testing
+#  tags:
+#    - gitlab-org
+#
+#test:
+#  stage: test
+#  dependencies:
+#    - proto
+#  before_script:
+#    - *setup_modules
+#    - *setup_project
+#    - *setup_git_credentials
+#    - *setup_db
+#  script:
+#    - go test $(go list ./...)
+#  services:
+#    - mysql:5.7
+#  environment:
+#    name: testing
+#  tags:
+#    - gitlab-org
+#
+#race:
+#  stage: test
+#  dependencies:
+#    - proto
+#  before_script:
+#    - *setup_modules
+#    - *setup_project
+#    - *setup_git_credentials
+#    - *setup_db
+#  script:
+#    - go test -race $(go list ./...)
+#  services:
+#    - mysql:5.7
+#  environment:
+#    name: testing
+#  allow_failure: true
+#  tags:
+#    - gitlab-org
+#
+#coverage:
+#  stage: test
+#  dependencies:
+#    - proto
+#  before_script:
+#    - *setup_modules
+#    - *setup_project
+#    - *setup_git_credentials
+#    - *setup_db
+#  script:
+#    - go test -covermode=atomic -coverprofile=coverage.tx
+#    - go tool cover -func=coverage.tx
+#    - bash <(curl -s https://codecov.io/bash)
+#  services:
+#    - mysql:5.7
+#  environment:
+#    name: testing
+#  tags:
+#    - gitlab-org
+#
+###########################################################
+## Packaging stage
+#
+#docker:
+#  stage: package
+#  image: docker
+#  services:
+#    - docker:dind
+#  except:
+#    - develop
+#    - master
+#  dependencies:
+#    - proto
+#  variables:
+#    DOCKER_HOST: tcp://docker:2375
+#    DOCKER_DRIVER: overlay2
+#  before_script:
+#    - *clean_modules
+#    - docker version
+#    - docker info
+#    - "docker login -u gitlab-ci-token -p $CI_BUILD_TOKEN $CI_REGISTRY"
+#  script:
+#    - "docker pull $CI_REGISTRY_IMAGE:next || true"
+#    - "docker build --cache-from $CI_REGISTRY_IMAGE:next --tag $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA ."
+#    - "docker push $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA"
+#  after_script:
+#    - "docker logout ${CI_REGISTRY}"
+#  tags:
+#    - docker
+#
+#docker:next:
+#  stage: package
+#  image: docker
+#  only:
+#    - develop
+#  services:
+#    - docker:dind
+#  dependencies:
+#    - proto
+#  variables:
+#    DOCKER_HOST: tcp://docker:2375
+#    DOCKER_DRIVER: overlay2
+#  before_script:
+#    - *clean_modules
+#    - docker version
+#    - docker info
+#    - "docker login -u gitlab-ci-token -p $CI_BUILD_TOKEN $CI_REGISTRY"
+#  script:
+#    - "docker pull $CI_REGISTRY_IMAGE || true"
+#    - "docker build --cache-from $CI_REGISTRY_IMAGE --tag $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA --tag $CI_REGISTRY_IMAGE:next ."
+#    - "docker push $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA"
+#    - "docker push $CI_REGISTRY_IMAGE:next"
+#  after_script:
+#    - "docker logout ${CI_REGISTRY}"
+#  tags:
+#    - docker
+#
+#docker:latest:
+#  stage: package
+#  image: docker
+#  only:
+#    - master
+#  services:
+#    - docker:dind
+#  dependencies:
+#    - proto
+#  variables:
+#    DOCKER_HOST: tcp://docker:2375
+#    DOCKER_DRIVER: overlay2
+#    DOCKER_TLS_CERTDIR: ""
+#  before_script:
+#    - *clean_modules
+#    - docker version
+#    - docker info
+#    - "docker login -u gitlab-ci-token -p $CI_BUILD_TOKEN $CI_REGISTRY"
+#  script:
+#    - "docker pull $CI_REGISTRY_IMAGE || true"
+#    - "docker build --cache-from $CI_REGISTRY_IMAGE --tag $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA --tag $CI_REGISTRY_IMAGE:latest ."
+#    - "docker push $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA"
+#    - "docker push $CI_REGISTRY_IMAGE:latest"
+#  after_script:
+#    - "docker logout ${CI_REGISTRY}"
+#  tags:
+#    - docker
+#
+###########################################################
+## Deploying stage
+#
+#integration:
+#  image: registry.gitlab.com/ignitionrobotics/web/images/kubectl:latest
+#  stage: deploy
+#  dependencies:
+#    - docker
+#  script:
+#    - *deploy_kubernetes
+#  tags:
+#    - testing
+#    - kubernetes
+#  environment:
+#    name: integration
+#  except:
+#    - master
+#    - develop
+#  when: manual
+#
+#integration_1:
+#  image: registry.gitlab.com/ignitionrobotics/web/images/kubectl:latest
+#  stage: deploy
+#  dependencies:
+#    - docker
+#  script:
+#    - *deploy_kubernetes
+#  tags:
+#    - testing
+#    - kubernetes
+#  environment:
+#    name: integration-1
+#  except:
+#    - master
+#    - develop
+#  when: manual
+#
+#staging:
+#  image: registry.gitlab.com/ignitionrobotics/web/images/kubectl:latest
+#  stage: deploy
+#  dependencies:
+#    - docker:next
+#  script:
+#    - *deploy_kubernetes
+#  tags:
+#    - testing
+#    - kubernetes
+#  environment:
+#    name: staging
+#  only:
+#    - develop
+#  when: manual
+#
+#production:
+#  image: registry.gitlab.com/ignitionrobotics/web/images/kubectl:latest
+#  stage: deploy
+#  dependencies:
+#    - docker:latest
+#  script:
+#    - *deploy_kubernetes
+#  tags:
+#    - kubernetes
+#    - production
+#  environment:
+#    name: production
+#  only:
+#    - master
+#  when: manual
