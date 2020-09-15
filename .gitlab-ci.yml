@@ -49,7 +49,7 @@ variables:
     - *setup_modules
   cache:
     paths:
-      - $GOPKGPATH
+      - $GOPKGPATH/
 
 ##########################################################
 # Stages
@@ -57,31 +57,32 @@ variables:
 stages:
   - install
 #  - format
-  - test
+#  - test
 #  - package
 #  - deploy
 
 ##########################################################
 # Installing stage
 
-proto:
-  stage: install
-  before_script:
-    - cd ./ign-transport/proto/
-  script:
-    - protoc --proto_path=. --go_out=. ignition/msgs/*.proto
-  artifacts:
-    paths:
-      - /builds/ignitionrobotics/web/cloudsim/ign-transport/proto/ignition/msgs/*.go
-    expire_in: 1 month
-  tags:
-    - gitlab-org
+#proto:
+#  stage: install
+#  before_script:
+#    - cd ./ign-transport/proto/
+#  script:
+#    - protoc --proto_path=. --go_out=. ignition/msgs/*.proto
+#  artifacts:
+#    paths:
+#      - /builds/ignitionrobotics/web/cloudsim/ign-transport/proto/ignition/msgs/*.go
+#    expire_in: 1 month
+#  tags:
+#    - gitlab-org
 
 dependencies:
   stage: install
   extends: .go-cache
   script:
     - *download_modules
+    - ls $GOPATH/pkg/mod
   tags:
     - gitlab-org
 
@@ -131,22 +132,22 @@ dependencies:
 #  tags:
 #    - gitlab-org
 
-test:
-  stage: test
-  extends: .go-cache
-  dependencies:
-    - proto
-  before_script:
-    - *setup_git_credentials
-    - *setup_db
-  script:
-    - go test $(go list ./...)
-  services:
-    - mysql:5.7
-  environment:
-    name: testing
-  tags:
-    - gitlab-org
+#test:
+#  stage: test
+#  extends: .go-cache
+#  dependencies:
+#    - proto
+#  before_script:
+#    - *setup_git_credentials
+#    - *setup_db
+#  script:
+#    - go test $(go list ./...)
+#  services:
+#    - mysql:5.7
+#  environment:
+#    name: testing
+#  tags:
+#    - gitlab-org
 
 #race:
 #  stage: test
