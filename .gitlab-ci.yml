@@ -43,7 +43,7 @@ variables:
 
 .go-cache:
   variables:
-    GOPATH: /go
+    GOPATH: $CI_PROJECT_DIR/.go
     GOPKGPATH: $GOPATH/mod/pkg
   before_script:
     - *setup_modules
@@ -82,7 +82,7 @@ dependencies:
   extends: .go-cache
   script:
     - *download_modules
-    - ls $GOPATH/pkg/mod
+    - ls $GOPKGPATH
   tags:
     - gitlab-org
 
