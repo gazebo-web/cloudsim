@@ -944,6 +944,11 @@ func (s *Service) StartSimulationAsync(ctx context.Context,
 		}
 	}
 
+  // Check that the owner is a participant.
+  if !s.userAccessor.IsParticipant("subt", owner) {
+    return nil, ign.NewErrorMessage(ign.ErrorUnauthorized)
+  }
+
 	private := true
 	if createSim.Private != nil {
 		private = *createSim.Private
