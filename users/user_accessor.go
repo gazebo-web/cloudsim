@@ -278,12 +278,12 @@ func (u *UserAccessorImpl) AddResourcePermission(user, resource string, action p
 
 // IsParticipant returns true if the owner is a participant in the competition.
 func (u *UserAccessorImpl) IsParticipant(competition, owner string) bool {
-    var participant subt.CompetitionParticipant
-  if err := u.Db.Where("competition = ? AND owner = ?", competition, owner).First(&participant).Error; err != nil {
-    return false
-  }
+	var participant subt.CompetitionParticipant
+	if err := u.Db.Where("competition = ? AND owner = ?", competition, owner).First(&participant).Error; err != nil {
+		return false
+	}
 
-  return true
+	return true
 }
 
 // AddScore creates a new score entry for an owner in a competition circuit

@@ -73,7 +73,7 @@ var ecNm *sim.Ec2Client
 /////////////////////////////////////////////////
 /// Initialize this package
 func init() {
-	
+
 	cfg := appConfig{}
 	cfg.isGoTest = flag.Lookup("test.v") != nil
 
