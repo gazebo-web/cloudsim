@@ -16,13 +16,6 @@ variables:
 .download_modules: &download_modules
   - go mod download
 
-.setup_project: &setup_project
-  - cd /builds/ignitionrobotics/web/cloudsim
-  - mkdir -p -v $GOPATH/mod/pkg
-  - mkdir -p -v $GOPATH/src/$PKG_NAME
-  - mv -f * $GOPATH/src/$PKG_NAME
-  - cd $GOPATH/src/$PKG_NAME
-
 .gitlab_credentials: &setup_git_credentials
   - git config --global user.name "ign-cloudsim"
   - git config --global user.email "ign-cloudsim@test.org"
@@ -50,6 +43,7 @@ variables:
 
 .go-cache:
   variables:
+    GOPATH: /go
     GOPKGPATH: $GOPATH/mod/pkg
   before_script:
     - *setup_modules
@@ -63,7 +57,7 @@ variables:
 stages:
   - install
 #  - format
-#  - test
+  - test
 #  - package
 #  - deploy
 
@@ -136,25 +130,24 @@ dependencies:
 #    name: testing
 #  tags:
 #    - gitlab-org
-#
-#test:
-#  stage: test
-#  dependencies:
-#    - proto
-#  before_script:
-#    - *setup_modules
-#    - *setup_project
-#    - *setup_git_credentials
-#    - *setup_db
-#  script:
-#    - go test $(go list ./...)
-#  services:
-#    - mysql:5.7
-#  environment:
-#    name: testing
-#  tags:
-#    - gitlab-org
-#
+
+test:
+  stage: test
+  extends: .go-cache
+  dependencies:
+    - proto
+  before_script:
+    - *setup_git_credentials
+    - *setup_db
+  script:
+    - go test $(go list ./...)
+  services:
+    - mysql:5.7
+  environment:
+    name: testing
+  tags:
+    - gitlab-org
+
 #race:
 #  stage: test
 #  dependencies:
