@@ -5,7 +5,7 @@ import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/actions"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulator"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulator/context"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulator/state"
 )
 
 // LaunchPodInput is the input of the LaunchPod job.
@@ -24,9 +24,8 @@ var LaunchPod = &actions.Job{
 }
 
 // launchPod is the main function executed by the LaunchPod job.
-func launchPod(ctx actions.Context, tx *gorm.DB, deployment *actions.Deployment, value interface{}) (interface{}, error) {
-	// Create ctx
-	simCtx := context.NewContext(ctx)
+func launchPod(store actions.Store, tx *gorm.DB, deployment *actions.Deployment, value interface{}) (interface{}, error) {
+	s := store.State().(state.PodLauncher)
 
 	// Parse input
 	input, ok := value.(LaunchPodInput)
@@ -37,7 +36,7 @@ func launchPod(ctx actions.Context, tx *gorm.DB, deployment *actions.Deployment,
 	createPodInput := orchestrator.CreatePodInput(input)
 
 	// Create pod
-	res, err := simCtx.Platform().Orchestrator().Pods().Create(createPodInput)
+	res, err := s.Platform().Orchestrator().Pods().Create(createPodInput)
 	if err != nil {
 		return nil, err
 	}

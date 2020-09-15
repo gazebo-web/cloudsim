@@ -8,7 +8,16 @@ import (
 
 // StopSimulation is the state of the action that stops a simulation.
 type StopSimulation struct {
-	Platform platform.Platform
-	Services application.Services
+	platform platform.Platform
+	services application.Services
 	GroupID  simulations.GroupID
+}
+
+// NewStopSimulation initializes a new state for stopping simulations.
+func NewStopSimulation(platform platform.Platform, services application.Services, groupID simulations.GroupID) *RestartSimulation {
+	return &RestartSimulation{
+		platform: platform,
+		services: services,
+		GroupID:  groupID,
+	}
 }

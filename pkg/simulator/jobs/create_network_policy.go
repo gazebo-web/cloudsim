@@ -4,8 +4,7 @@ import (
 	"github.com/jinzhu/gorm"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/actions"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulator"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulator/context"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulator/state"
 )
 
 // JobCreateNetworkPolicyInput is the input for the CreateNetworkPolicy job.
@@ -26,16 +25,13 @@ var CreateNetworkPolicy = &actions.Job{
 }
 
 // createNetworkPolicy is used by the CreateNetworkPolicy job as the execute function.
-func createNetworkPolicy(ctx actions.Context, tx *gorm.DB, deployment *actions.Deployment, value interface{}) (interface{}, error) {
-	input, ok := value.(JobCreateNetworkPolicyInput)
-	if !ok {
-		return nil, simulator.ErrInvalidInput
-	}
+func createNetworkPolicy(store actions.Store, tx *gorm.DB, deployment *actions.Deployment, value interface{}) (interface{}, error) {
+	s := store.State().(state.NetworkPolicyCreator)
 
-	simCtx := context.NewContext(ctx)
+	input := value.(JobCreateNetworkPolicyInput)
 
 	createInput := orchestrator.CreateNetworkPolicyInput(input)
-	res, err := simCtx.Platform().Orchestrator().NetworkPolicies().Create(createInput)
+	res, err := s.Platform().Orchestrator().NetworkPolicies().Create(createInput)
 
 	return JobCreateNetworkPolicyOutput{
 		Resource: res,

@@ -36,11 +36,7 @@ type subTSimulator struct {
 
 // Start triggers the action that will be in charge of launching a simulation with the given Group ID.
 func (s *subTSimulator) Start(ctx context.Context, groupID simulations.GroupID) error {
-	store := actions.NewStore(&state.StartSimulation{
-		Platform: s.platform,
-		Services: s.services,
-		GroupID:  groupID,
-	})
+	store := actions.NewStore(state.NewStartSimulation(s.platform, s.services, groupID))
 
 	execInput := &actions.ExecuteInput{
 		ApplicationName: &s.applicationName,
@@ -57,11 +53,7 @@ func (s *subTSimulator) Start(ctx context.Context, groupID simulations.GroupID) 
 
 // Stop triggers the action that will be in charge of stopping a simulation with the given Group ID.
 func (s *subTSimulator) Stop(ctx context.Context, groupID simulations.GroupID) error {
-	store := actions.NewStore(&state.StopSimulation{
-		Platform: s.platform,
-		Services: s.services,
-		GroupID:  groupID,
-	})
+	store := actions.NewStore(state.NewStopSimulation(s.platform, s.services, groupID))
 
 	execInput := &actions.ExecuteInput{
 		ApplicationName: &s.applicationName,
@@ -77,11 +69,7 @@ func (s *subTSimulator) Stop(ctx context.Context, groupID simulations.GroupID) e
 
 // Restart triggers the action that will be in charge of restarting a simulation with the given Group ID.
 func (s *subTSimulator) Restart(ctx context.Context, groupID simulations.GroupID) error {
-	store := actions.NewStore(&state.RestartSimulation{
-		Platform: s.platform,
-		Services: s.services,
-		GroupID:  groupID,
-	})
+	store := actions.NewStore(state.NewRestartSimulation(s.platform, s.services, groupID))
 
 	execInput := &actions.ExecuteInput{
 		ApplicationName: &s.applicationName,
