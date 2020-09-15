@@ -18,6 +18,7 @@ type store struct {
 	state State
 }
 
+// SetState replaces the store's state with the given state.
 func (s *store) SetState(state State) {
 	s.state = state
 }
