@@ -1075,6 +1075,9 @@ func (sa *SubTApplication) launchApplication(ctx context.Context, s *Service, tx
 	// Set the simulation time limit
 	gzRunCommand = append(gzRunCommand, fmt.Sprintf("durationSec:=%s", *rules.WorldMaxSimSeconds))
 
+	// Enable ROS on the simulation instance
+	gzRunCommand = append(gzRunCommand, "ros:=true")
+
 	// Set headless
 	gzRunCommand = append(gzRunCommand, "headless:=true")
 
