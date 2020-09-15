@@ -4,6 +4,7 @@ import (
 	"github.com/jinzhu/gorm"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/actions"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulator"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulator/context"
 )
 
@@ -19,14 +20,14 @@ var CheckPendingStatus = &actions.Job{
 func checkPendingStatus(ctx actions.Context, tx *gorm.DB, deployment *actions.Deployment,
 	value interface{}) (interface{}, error) {
 
-	gid, ok := value.(simulations.GroupID)
+	data, ok := value.(*StartSimulationData)
 	if !ok {
-		return nil, simulations.ErrInvalidGroupID
+		return nil, simulator.ErrInvalidInput
 	}
 
 	simCtx := context.NewContext(ctx)
 
-	sim, err := simCtx.Services().Simulations().Get(gid)
+	sim, err := simCtx.Services().Simulations().Get(data.GroupID)
 	if err != nil {
 		return nil, err
 	}
@@ -34,5 +35,5 @@ func checkPendingStatus(ctx actions.Context, tx *gorm.DB, deployment *actions.De
 	if sim.Status() != simulations.StatusPending {
 		return nil, simulations.ErrIncorrectStatus
 	}
-	return gid, nil
+	return data, nil
 }
