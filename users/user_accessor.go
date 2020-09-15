@@ -53,6 +53,8 @@ type UserAccessor interface {
 	// AddScore creates a score entry for a simulation.
 	AddScore(groupID *string, competition *string, circuit *string, owner *string, score *float64,
 		sources *string) *ign.ErrMsg
+	// IsParticipant returns true if the owner is a participant in the competition.
+	IsParticipant(competition, owner string) bool
 	// IsSystemAdmin returns a bool indicating if the given user is a system admin.
 	IsSystemAdmin(user string) bool
 	// GetUserFromUsername returns the user database entry from the username
