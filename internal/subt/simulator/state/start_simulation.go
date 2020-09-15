@@ -18,6 +18,11 @@ func (s *StartSimulation) Platform() platform.Platform {
 	return s.platform
 }
 
+// Services returns the underlying application services.
+func (s *StartSimulation) Services() application.Services {
+	return s.services
+}
+
 // NewStartSimulation initializes a new state for starting simulations.
 func NewStartSimulation(platform platform.Platform, services application.Services, groupID simulations.GroupID) *StartSimulation {
 	return &StartSimulation{

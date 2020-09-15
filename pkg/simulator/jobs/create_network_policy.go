@@ -26,7 +26,7 @@ var CreateNetworkPolicy = &actions.Job{
 
 // createNetworkPolicy is used by the CreateNetworkPolicy job as the execute function.
 func createNetworkPolicy(store actions.Store, tx *gorm.DB, deployment *actions.Deployment, value interface{}) (interface{}, error) {
-	s := store.State().(state.NetworkPolicyCreator)
+	s := store.State().(state.Platform)
 
 	input := value.(JobCreateNetworkPolicyInput)
 
