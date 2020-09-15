@@ -20,10 +20,6 @@ variables:
   - git config --global user.name "ign-cloudsim"
   - git config --global user.email "ign-cloudsim@test.org"
 
-.clean_modules: &clean_modules
-  - rm -rf /builds/ignitionrobotics/web/cloudsim/vendor
-  - rm -rf $GOPATH/src/$PKG_NAME/vendor
-
 .setup_db: &setup_db
   - mysql -u root -proot -h mysql -e "CREATE DATABASE usersdb_test"
 
@@ -89,31 +85,29 @@ dependencies:
 ##########################################################
 # Formatting stage
 
-#fmt:
-#  stage: format
-#  before_script:
-#    - *setup_modules
-#    - *setup_project
-#    - *setup_git_credentials
-#  script:
-#    - go fmt $(go list ./...)
-#  tags:
-#    - gitlab-org
-#
-#lint:
-#  stage: format
-#  before_script:
-#    - *setup_modules
-#    - *setup_project
-#    - *setup_git_credentials
-#  script:
-#    - golint -set_exit_status $(go list ./...)
-#  tags:
-#    - gitlab-org
-#
+fmt:
+  stage: format
+  extends: .go-cache
+  before_script:
+    - *setup_git_credentials
+  script:
+    - go fmt $(go list ./...)
+  tags:
+    - gitlab-org
+
+lint:
+  stage: format
+  extends: .go-cache
+  before_script:
+    - *setup_git_credentials
+  script:
+    - golint -set_exit_status $(go list ./...)
+  tags:
+    - gitlab-org
+
 ###########################################################
 ## Testing stage
-#
+
 #vet:
 #  stage: test
 #  dependencies:
@@ -131,7 +125,7 @@ dependencies:
 #    name: testing
 #  tags:
 #    - gitlab-org
-
+#
 #test:
 #  stage: test
 #  extends: .go-cache
@@ -148,7 +142,7 @@ dependencies:
 #    name: testing
 #  tags:
 #    - gitlab-org
-
+#
 #race:
 #  stage: test
 #  dependencies:
@@ -187,92 +181,61 @@ dependencies:
 #    name: testing
 #  tags:
 #    - gitlab-org
-#
+
 ###########################################################
 ## Packaging stage
 
-docker:
+.docker:
   stage: package
-  extends: .go-cache
   image: docker
   services:
     - docker:dind
-  except:
-    - develop
-    - master
   dependencies:
     - proto
   variables:
     DOCKER_HOST: tcp://docker:2375
     DOCKER_DRIVER: overlay2
   before_script:
-    - *clean_modules
     - docker version
     - docker info
     - "docker login -u gitlab-ci-token -p $CI_BUILD_TOKEN $CI_REGISTRY"
-  script:
-    - "docker pull $CI_REGISTRY_IMAGE:next || true"
-    - "docker build --cache-from $CI_REGISTRY_IMAGE:next --tag $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA ."
-    - "docker push $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA"
   after_script:
     - "docker logout ${CI_REGISTRY}"
   tags:
     - docker
 
-#docker:next:
-#  stage: package
-#  image: docker
-#  only:
-#    - develop
-#  services:
-#    - docker:dind
-#  dependencies:
-#    - proto
-#  variables:
-#    DOCKER_HOST: tcp://docker:2375
-#    DOCKER_DRIVER: overlay2
-#  before_script:
-#    - *clean_modules
-#    - docker version
-#    - docker info
-#    - "docker login -u gitlab-ci-token -p $CI_BUILD_TOKEN $CI_REGISTRY"
-#  script:
-#    - "docker pull $CI_REGISTRY_IMAGE || true"
-#    - "docker build --cache-from $CI_REGISTRY_IMAGE --tag $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA --tag $CI_REGISTRY_IMAGE:next ."
-#    - "docker push $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA"
-#    - "docker push $CI_REGISTRY_IMAGE:next"
-#  after_script:
-#    - "docker logout ${CI_REGISTRY}"
-#  tags:
-#    - docker
-#
-#docker:latest:
-#  stage: package
-#  image: docker
-#  only:
-#    - master
-#  services:
-#    - docker:dind
-#  dependencies:
-#    - proto
-#  variables:
-#    DOCKER_HOST: tcp://docker:2375
-#    DOCKER_DRIVER: overlay2
-#    DOCKER_TLS_CERTDIR: ""
-#  before_script:
-#    - *clean_modules
-#    - docker version
-#    - docker info
-#    - "docker login -u gitlab-ci-token -p $CI_BUILD_TOKEN $CI_REGISTRY"
-#  script:
-#    - "docker pull $CI_REGISTRY_IMAGE || true"
-#    - "docker build --cache-from $CI_REGISTRY_IMAGE --tag $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA --tag $CI_REGISTRY_IMAGE:latest ."
-#    - "docker push $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA"
-#    - "docker push $CI_REGISTRY_IMAGE:latest"
-#  after_script:
-#    - "docker logout ${CI_REGISTRY}"
-#  tags:
-#    - docker
+docker:
+  stage: package
+  extends: .docker
+  except:
+    - develop
+    - master
+  script:
+    - "docker pull $CI_REGISTRY_IMAGE:next || true"
+    - "docker build --cache-from $CI_REGISTRY_IMAGE:next --tag $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA ."
+    - "docker push $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA"
+
+docker:next:
+  stage: package
+  extends: .docker
+  only:
+    - develop
+  script:
+    - "docker pull $CI_REGISTRY_IMAGE || true"
+    - "docker build --cache-from $CI_REGISTRY_IMAGE --tag $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA --tag $CI_REGISTRY_IMAGE:next ."
+    - "docker push $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA"
+    - "docker push $CI_REGISTRY_IMAGE:next"
+
+docker:latest:
+  stage: package
+  extends: .docker
+  only:
+    - master
+  script:
+    - "docker pull $CI_REGISTRY_IMAGE || true"
+    - "docker build --cache-from $CI_REGISTRY_IMAGE --tag $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA --tag $CI_REGISTRY_IMAGE:latest ."
+    - "docker push $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA"
+    - "docker push $CI_REGISTRY_IMAGE:latest"
 
 ###########################################################
 ## Deploying stage
