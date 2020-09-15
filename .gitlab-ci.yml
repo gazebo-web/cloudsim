@@ -64,18 +64,18 @@ stages:
 ##########################################################
 # Installing stage
 
-#proto:
-#  stage: install
-#  before_script:
-#    - cd ./ign-transport/proto/
-#  script:
-#    - protoc --proto_path=. --go_out=. ignition/msgs/*.proto
-#  artifacts:
-#    paths:
-#      - /builds/ignitionrobotics/web/cloudsim/ign-transport/proto/ignition/msgs/*.go
-#    expire_in: 1 month
-#  tags:
-#    - gitlab-org
+proto:
+  stage: install
+  before_script:
+    - cd ./ign-transport/proto/
+  script:
+    - protoc --proto_path=. --go_out=. ignition/msgs/*.proto
+  artifacts:
+    paths:
+      - /builds/ignitionrobotics/web/cloudsim/ign-transport/proto/ignition/msgs/*.go
+    expire_in: 1 month
+  tags:
+    - gitlab-org
 
 dependencies:
   stage: install
@@ -190,34 +190,34 @@ dependencies:
 #
 ###########################################################
 ## Packaging stage
-#
-#docker:
-#  stage: package
-#  image: docker
-#  services:
-#    - docker:dind
-#  except:
-#    - develop
-#    - master
-#  dependencies:
-#    - proto
-#  variables:
-#    DOCKER_HOST: tcp://docker:2375
-#    DOCKER_DRIVER: overlay2
-#  before_script:
-#    - *clean_modules
-#    - docker version
-#    - docker info
-#    - "docker login -u gitlab-ci-token -p $CI_BUILD_TOKEN $CI_REGISTRY"
-#  script:
-#    - "docker pull $CI_REGISTRY_IMAGE:next || true"
-#    - "docker build --cache-from $CI_REGISTRY_IMAGE:next --tag $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA ."
-#    - "docker push $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA"
-#  after_script:
-#    - "docker logout ${CI_REGISTRY}"
-#  tags:
-#    - docker
-#
+
+docker:
+  stage: package
+  image: docker
+  services:
+    - docker:dind
+  except:
+    - develop
+    - master
+  dependencies:
+    - proto
+  variables:
+    DOCKER_HOST: tcp://docker:2375
+    DOCKER_DRIVER: overlay2
+  before_script:
+    - *clean_modules
+    - docker version
+    - docker info
+    - "docker login -u gitlab-ci-token -p $CI_BUILD_TOKEN $CI_REGISTRY"
+  script:
+    - "docker pull $CI_REGISTRY_IMAGE:next || true"
+    - "docker build --cache-from $CI_REGISTRY_IMAGE:next --tag $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA ."
+    - "docker push $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA"
+  after_script:
+    - "docker logout ${CI_REGISTRY}"
+  tags:
+    - docker
+
 #docker:next:
 #  stage: package
 #  image: docker
