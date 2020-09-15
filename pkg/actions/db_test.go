@@ -39,7 +39,7 @@ func setupTest(t *testing.T) *TestResource {
 
 	// Create the test resource container
 	testResources := TestResource{
-		store:  CreateStore(&storeTestData{}, nil),
+		store:  NewStore(&storeTestData{}, nil),
 		logger: &logger,
 		db:     db,
 	}

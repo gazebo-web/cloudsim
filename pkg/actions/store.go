@@ -27,8 +27,8 @@ func (s *store) State() State {
 	return s.state
 }
 
-// CreateStore initializes a new store with the given initial state.
-func CreateStore(initialState State) Store {
+// NewStore initializes a new store with the given initial state.
+func NewStore(initialState State) Store {
 	if initialState == nil {
 		panic("no initial state")
 	}
