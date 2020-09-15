@@ -52,7 +52,7 @@ variables:
 
 stages:
   - install
-#  - format
+  - format
 #  - test
   - package
 #  - deploy
