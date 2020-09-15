@@ -15,7 +15,7 @@ type TestResource struct {
 	db     *gorm.DB
 }
 
-type testData struct {
+type storeTestData struct {
 	value int
 }
 
@@ -39,7 +39,7 @@ func setupTest(t *testing.T) *TestResource {
 
 	// Create the test resource container
 	testResources := TestResource{
-		store:  CreateStore(&testData{}, nil),
+		store:  CreateStore(&storeTestData{}, nil),
 		logger: &logger,
 		db:     db,
 	}
