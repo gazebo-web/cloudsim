@@ -3,12 +3,12 @@ package simulator
 import (
 	"context"
 	"github.com/jinzhu/gorm"
+	"gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/simulator/state"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/actions"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/application"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/platform"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulator"
-	simctx "gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulator/context"
 )
 
 const (
@@ -36,27 +36,39 @@ type subTSimulator struct {
 
 // Start triggers the action that will be in charge of launching a simulation with the given Group ID.
 func (s *subTSimulator) Start(ctx context.Context, groupID simulations.GroupID) error {
-	ctx = s.setupContext(ctx)
+	store := actions.NewStore(&state.StartSimulation{
+		Platform: s.platform,
+		Services: s.services,
+		GroupID:  groupID,
+	})
 
 	execInput := &actions.ExecuteInput{
 		ApplicationName: &s.applicationName,
 		ActionName:      actionNameStartSimulation,
 	}
-	err := s.actions.Execute(actions.NewContext(ctx), s.db, execInput, groupID)
+
+	err := s.actions.Execute(store, s.db, execInput, groupID)
 	if err != nil {
 		return err
 	}
+
 	return nil
 }
 
 // Stop triggers the action that will be in charge of stopping a simulation with the given Group ID.
 func (s *subTSimulator) Stop(ctx context.Context, groupID simulations.GroupID) error {
-	ctx = s.setupContext(ctx)
+	store := actions.NewStore(&state.StopSimulation{
+		Platform: s.platform,
+		Services: s.services,
+		GroupID:  groupID,
+	})
+
 	execInput := &actions.ExecuteInput{
 		ApplicationName: &s.applicationName,
 		ActionName:      actionNameStopSimulation,
 	}
-	err := s.actions.Execute(actions.NewContext(ctx), s.db, execInput, groupID)
+
+	err := s.actions.Execute(store, s.db, execInput, groupID)
 	if err != nil {
 		return err
 	}
@@ -65,23 +77,22 @@ func (s *subTSimulator) Stop(ctx context.Context, groupID simulations.GroupID) e
 
 // Restart triggers the action that will be in charge of restarting a simulation with the given Group ID.
 func (s *subTSimulator) Restart(ctx context.Context, groupID simulations.GroupID) error {
-	ctx = s.setupContext(ctx)
+	store := actions.NewStore(&state.RestartSimulation{
+		Platform: s.platform,
+		Services: s.services,
+		GroupID:  groupID,
+	})
+
 	execInput := &actions.ExecuteInput{
 		ApplicationName: &s.applicationName,
 		ActionName:      actionNameRestartSimulation,
 	}
-	err := s.actions.Execute(actions.NewContext(ctx), s.db, execInput, groupID)
+
+	err := s.actions.Execute(store, s.db, execInput, groupID)
 	if err != nil {
 		return err
 	}
 	return nil
-}
-
-// setupContext is in charge of setting up the context for jobs.
-func (s *subTSimulator) setupContext(ctx context.Context) context.Context {
-	ctx = context.WithValue(ctx, simctx.CtxPlatform, s.platform)
-	ctx = context.WithValue(ctx, simctx.CtxServices, s.services)
-	return ctx
 }
 
 // Config is used to initialize a new simulator for SubT.
