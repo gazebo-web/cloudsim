@@ -2,38 +2,34 @@ package jobs
 
 import (
 	"github.com/jinzhu/gorm"
+	"gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/simulator/state"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/actions"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulator"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulator/context"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulator/jobs"
 )
 
 // CheckPendingStatus is used to check that a certain simulation has pending status.
-var CheckPendingStatus = &actions.Job{
-	Name:       "check-pending-status",
-	Execute:    checkPendingStatus,
-	InputType:  actions.GetJobDataType(simulations.GroupID("")),
-	OutputType: actions.GetJobDataType(simulations.GroupID("")),
-}
+var CheckPendingStatus = jobs.CheckStatus.Extend(actions.Job{
+	Name:            "check-pending-status",
+	PreHooks:        []actions.JobFunc{createCheckStatusInput},
+	PostHooks:       []actions.JobFunc{returnState},
+	RollbackHandler: nil,
+	InputType:       nil,
+	OutputType:      nil,
+})
 
-// checkPendingStatus is the main process executed by CheckPendingStatus.
-func checkPendingStatus(ctx actions.Context, tx *gorm.DB, deployment *actions.Deployment,
-	value interface{}) (interface{}, error) {
+func createCheckStatusInput(store actions.Store, tx *gorm.DB, deployment *actions.Deployment, value interface{}) (interface{}, error) {
+	s := value.(*state.StartSimulation)
 
-	data, ok := value.(*StartSimulationData)
-	if !ok {
-		return nil, simulator.ErrInvalidInput
-	}
-
-	simCtx := context.NewContext(ctx)
-
-	sim, err := simCtx.Services().Simulations().Get(data.GroupID)
+	sim, err := s.Services().Simulations().Get(s.GroupID)
 	if err != nil {
 		return nil, err
 	}
 
-	if sim.Status() != simulations.StatusPending {
-		return nil, simulations.ErrIncorrectStatus
-	}
-	return data, nil
+	store.SetState(s)
+
+	return jobs.CheckStatusInput{
+		Simulation: sim,
+		Status:     simulations.StatusPending,
+	}, nil
 }
