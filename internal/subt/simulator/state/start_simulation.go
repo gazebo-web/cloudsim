@@ -8,7 +8,21 @@ import (
 
 // StartSimulation is the state of the action that starts a simulation.
 type StartSimulation struct {
-	Platform platform.Platform
-	Services application.Services
+	platform platform.Platform
+	services application.Services
 	GroupID  simulations.GroupID
+}
+
+// Platform returns the underlying platform.
+func (s *StartSimulation) Platform() platform.Platform {
+	return s.platform
+}
+
+// NewStartSimulation initializes a new state for starting simulations.
+func NewStartSimulation(platform platform.Platform, services application.Services, groupID simulations.GroupID) *RestartSimulation {
+	return &RestartSimulation{
+		platform: platform,
+		services: services,
+		GroupID:  groupID,
+	}
 }

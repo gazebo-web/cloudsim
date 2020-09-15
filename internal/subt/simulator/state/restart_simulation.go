@@ -8,7 +8,16 @@ import (
 
 // RestartSimulation is the state of the action that restarts a simulation.
 type RestartSimulation struct {
-	Platform platform.Platform
-	Services application.Services
+	platform platform.Platform
+	services application.Services
 	GroupID  simulations.GroupID
+}
+
+// NewRestartSimulation initializes a new state for restarting simulations.
+func NewRestartSimulation(platform platform.Platform, services application.Services, groupID simulations.GroupID) *RestartSimulation {
+	return &RestartSimulation{
+		platform: platform,
+		services: services,
+		GroupID:  groupID,
+	}
 }
