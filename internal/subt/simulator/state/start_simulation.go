@@ -18,6 +18,7 @@ func (s *StartSimulation) Platform() platform.Platform {
 	return s.platform
 }
 
+// Services returns the underlying application services.
 func (s *StartSimulation) Services() application.Services {
 	return s.services
 }
