@@ -6,23 +6,23 @@ import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
 )
 
-// CheckKindInput is the input of the CheckKind job.
-type CheckKindInput struct {
+// CheckSimulationKindInput is the input of the CheckSimulationKind job.
+type CheckSimulationKindInput struct {
 	Simulation simulations.Simulation
 	Kind       simulations.Kind
 }
 
-// CheckKindOutput is the output of the CheckKind job.
-type CheckKindOutput bool
+// CheckSimulationKindOutput is the output of the CheckSimulationKind job.
+type CheckSimulationKindOutput bool
 
-// CheckKind is used to check that a certain simulation has a specific kind.
-var CheckKind = &actions.Job{
+// CheckSimulationKind is used to check that a certain simulation has a specific kind.
+var CheckSimulationKind = &actions.Job{
 	Name:    "check-kind",
-	Execute: checkKind,
+	Execute: checkSimulationKind,
 }
 
-// checkKind is the execution of the CheckKind job.
-func checkKind(store actions.Store, tx *gorm.DB, deployment *actions.Deployment, value interface{}) (interface{}, error) {
-	input := value.(CheckKindInput)
+// checkSimulationKind is the execution of the CheckSimulationKind job.
+func checkSimulationKind(store actions.Store, tx *gorm.DB, deployment *actions.Deployment, value interface{}) (interface{}, error) {
+	input := value.(CheckSimulationKindInput)
 	return input.Simulation.Kind() == input.Kind, nil
 }

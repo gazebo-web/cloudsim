@@ -14,12 +14,12 @@ func TestCheckKind_Success(t *testing.T) {
 
 	sim := fake.NewSimulation("test-group-id", simulations.StatusPending, simulations.SimParent, nil, "test")
 
-	input := CheckKindInput{
+	input := CheckSimulationKindInput{
 		Simulation: sim,
 		Kind:       simulations.SimParent,
 	}
 
-	result, err := CheckKind.Run(s, nil, &actions.Deployment{CurrentJob: "test"}, input)
+	result, err := CheckSimulationKind.Run(s, nil, &actions.Deployment{CurrentJob: "test"}, input)
 	assert.NoError(t, err)
 
 	output, ok := result.(bool)
@@ -33,12 +33,12 @@ func TestCheckKind_ReturnsFalseWhenKindDoesNotMatch(t *testing.T) {
 
 	sim := fake.NewSimulation("test-group-id", simulations.StatusPending, simulations.SimChild, nil, "test")
 
-	input := CheckKindInput{
+	input := CheckSimulationKindInput{
 		Simulation: sim,
 		Kind:       simulations.SimParent,
 	}
 
-	result, err := CheckKind.Run(s, nil, &actions.Deployment{CurrentJob: "test"}, input)
+	result, err := CheckSimulationKind.Run(s, nil, &actions.Deployment{CurrentJob: "test"}, input)
 	assert.NoError(t, err)
 	output, ok := result.(bool)
 	assert.True(t, ok)
