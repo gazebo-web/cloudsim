@@ -14,17 +14,17 @@ func TestCheckStatus_Success(t *testing.T) {
 
 	sim := fake.NewSimulation("test-group-id", simulations.StatusPending, simulations.SimChild, nil, "test")
 
-	input := CheckStatusInput{
+	input := CheckSimulationStatusInput{
 		Simulation: sim,
 		Status:     simulations.StatusPending,
 	}
 
-	result, err := CheckStatus.Run(s, nil, &actions.Deployment{CurrentJob: "test"}, input)
+	result, err := CheckSimulationStatus.Run(s, nil, &actions.Deployment{CurrentJob: "test"}, input)
 	assert.NoError(t, err)
 
-	output, ok := result.(CheckStatusOutput)
+	output, ok := result.(CheckSimulationStatusOutput)
 	assert.True(t, ok)
-	assert.Equal(t, input.Simulation, output)
+	assert.True(t, bool(output))
 }
 
 func TestCheckStatus_ErrWhenStatusDoesNotMatch(t *testing.T) {
@@ -33,13 +33,15 @@ func TestCheckStatus_ErrWhenStatusDoesNotMatch(t *testing.T) {
 
 	sim := fake.NewSimulation("test-group-id", simulations.StatusRunning, simulations.SimChild, nil, "test")
 
-	input := CheckStatusInput{
+	input := CheckSimulationStatusInput{
 		Simulation: sim,
 		Status:     simulations.StatusPending,
 	}
 
-	result, err := CheckStatus.Run(s, nil, &actions.Deployment{CurrentJob: "test"}, input)
-	assert.Error(t, err)
-	assert.Equal(t, simulations.ErrIncorrectStatus, err)
-	assert.Nil(t, result)
+	result, err := CheckSimulationStatus.Run(s, nil, &actions.Deployment{CurrentJob: "test"}, input)
+	assert.NoError(t, err)
+
+	output, ok := result.(CheckSimulationStatusOutput)
+	assert.True(t, ok)
+	assert.False(t, bool(output))
 }
