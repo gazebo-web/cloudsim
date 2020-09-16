@@ -41,7 +41,7 @@ variables:
   # Paths in the cache need to be in the build directory or Gitlab will ignore them
   variables:
     GOPATH: $CI_PROJECT_DIR/.go
-    GOPKGPATH: $GOPATH/mod/pkg
+    GOPKGPATH: $CI_PROJECT_DIR/.go/mod/pkg
   cache:
     paths:
       - $GOPKGPATH/
