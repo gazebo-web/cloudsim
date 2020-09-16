@@ -17,7 +17,6 @@ type CheckSimulationKindOutput bool
 
 // CheckSimulationKind is used to check that a certain simulation has a specific kind.
 var CheckSimulationKind = &actions.Job{
-	Name:    "check-kind",
 	Execute: checkSimulationKind,
 }
 
