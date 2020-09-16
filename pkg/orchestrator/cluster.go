@@ -12,6 +12,11 @@ var (
 		Type:   "Ready",
 		Status: "True",
 	}
+	// HasIPStatusCondition is used to indicate that pods have ips available.
+	HasIPStatusCondition = Condition{
+		Type:   "HasIPStatus",
+		Status: "True",
+	}
 )
 
 // Cluster groups a set of methods for managing a cluster.

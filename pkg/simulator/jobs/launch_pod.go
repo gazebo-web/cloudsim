@@ -25,7 +25,7 @@ var LaunchPod = &actions.Job{
 
 // launchPod is the main function executed by the LaunchPod job.
 func launchPod(store actions.Store, tx *gorm.DB, deployment *actions.Deployment, value interface{}) (interface{}, error) {
-	s := store.State().(state.PodLauncher)
+	s := store.State().(state.Platform)
 
 	// Parse input
 	input, ok := value.(LaunchPodInput)
