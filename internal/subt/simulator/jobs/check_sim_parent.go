@@ -8,8 +8,8 @@ import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulator/jobs"
 )
 
-// CheckSimulationParent is a job in charge of checking if a simulation is parent.
-var CheckSimulationParent = jobs.CheckKind.Extend(actions.Job{
+// CheckSimulationIsParent is a job in charge of checking if a simulation is parent.
+var CheckSimulationIsParent = jobs.CheckSimulationKind.Extend(actions.Job{
 	Name:            "check-parent",
 	PreHooks:        []actions.JobFunc{createCheckKindInput},
 	PostHooks:       []actions.JobFunc{assertIsParent, returnState},
@@ -18,9 +18,9 @@ var CheckSimulationParent = jobs.CheckKind.Extend(actions.Job{
 	OutputType:      nil,
 })
 
-// assertIsParent evaluates if the value returned by CheckKind is true for the CheckSimulationParent job.
+// assertIsParent evaluates if the value returned by CheckKind is true for the CheckSimulationIsParent job.
 func assertIsParent(store actions.Store, tx *gorm.DB, deployment *actions.Deployment, value interface{}) (interface{}, error) {
-	isParent := value.(bool)
+	isParent := value.(jobs.CheckSimulationKindOutput)
 	if isParent {
 		return nil, simulations.ErrIncorrectKind
 	}
@@ -38,7 +38,7 @@ func createCheckKindInput(store actions.Store, tx *gorm.DB, deployment *actions.
 		return nil, err
 	}
 
-	return jobs.CheckKindInput{
+	return jobs.CheckSimulationKindInput{
 		Simulation: sim,
 		Kind:       simulations.SimParent,
 	}, nil
