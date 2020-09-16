@@ -11,7 +11,7 @@ import (
 type WaitForInstancesInput []cloud.CreateMachinesOutput
 
 // WaitForInstancesOutput is the output of the WaitForInstances job.
-type WaitForInstancesOutput WaitForInstancesInput
+type WaitForInstancesOutput []cloud.CreateMachinesOutput
 
 // WaitForInstances is used to wait until all required instances are ready.
 var WaitForInstances = &actions.Job{
