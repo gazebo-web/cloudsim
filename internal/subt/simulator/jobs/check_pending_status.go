@@ -9,16 +9,17 @@ import (
 )
 
 // CheckPendingStatus is used to check that a certain simulation has pending status.
-var CheckPendingStatus = jobs.CheckStatus.Extend(actions.Job{
+var CheckPendingStatus = jobs.CheckSimulationStatus.Extend(actions.Job{
 	Name:            "check-pending-status",
-	PreHooks:        []actions.JobFunc{createCheckStatusInput},
-	PostHooks:       []actions.JobFunc{returnState},
+	PreHooks:        []actions.JobFunc{createCheckPendingStatusInput},
+	PostHooks:       []actions.JobFunc{assertPendingStatus, returnState},
 	RollbackHandler: nil,
 	InputType:       nil,
 	OutputType:      nil,
 })
 
-func createCheckStatusInput(store actions.Store, tx *gorm.DB, deployment *actions.Deployment, value interface{}) (interface{}, error) {
+// createCheckPendingStatusInput prepares the input for the check status job.
+func createCheckPendingStatusInput(store actions.Store, tx *gorm.DB, deployment *actions.Deployment, value interface{}) (interface{}, error) {
 	s := value.(*state.StartSimulation)
 
 	sim, err := s.Services().Simulations().Get(s.GroupID)
@@ -28,8 +29,17 @@ func createCheckStatusInput(store actions.Store, tx *gorm.DB, deployment *action
 
 	store.SetState(s)
 
-	return jobs.CheckStatusInput{
+	return jobs.CheckSimulationStatusInput{
 		Simulation: sim,
 		Status:     simulations.StatusPending,
 	}, nil
+}
+
+// assertPendingStatus validates that the simulation has the pending status.
+func assertPendingStatus(store actions.Store, tx *gorm.DB, deployment *actions.Deployment, value interface{}) (interface{}, error) {
+	isPending := value.(jobs.CheckSimulationStatusOutput)
+	if !isPending {
+		return nil, simulations.ErrIncorrectStatus
+	}
+	return value, nil
 }

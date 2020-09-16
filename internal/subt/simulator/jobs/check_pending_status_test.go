@@ -1,7 +1,6 @@
 package jobs
 
 import (
-	"errors"
 	"github.com/stretchr/testify/assert"
 	"gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/simulator/state"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/actions"
@@ -35,22 +34,21 @@ func TestCheckPendingStatus_Success(t *testing.T) {
 
 }
 
-func TestCheckPendingStatus_ErrSimDoesNotExist(t *testing.T) {
+func TestCheckPendingStatus_ErrSimNotPending(t *testing.T) {
 	// Initialize simulation
 	gid := simulations.GroupID("aaaa-bbbb-cccc-dddd")
-	sim := fake.NewSimulation("", "", 0, nil, "")
+	sim := fake.NewSimulation(gid, simulations.StatusRunning, simulations.SimSingle, nil, "test")
 
 	// Initialize fake simulation service
 	svc := fake.NewService()
-	err := errors.New("sim does not exist")
-	svc.On("Get", gid).Return(sim, err)
+	svc.On("Get", gid).Return(sim, nil)
 	app := application.NewServices(svc)
 
 	// Initialize job input and store
 	input := state.NewStartSimulation(nil, app, gid)
 	s := actions.NewStore(input)
 
-	_, jobErr := CheckPendingStatus.Run(s, nil, nil, input)
-	assert.Error(t, jobErr)
-	assert.Equal(t, err, jobErr)
+	_, err := CheckPendingStatus.Run(s, nil, nil, input)
+	assert.Error(t, err)
+	assert.Equal(t, simulations.ErrIncorrectStatus, err)
 }
