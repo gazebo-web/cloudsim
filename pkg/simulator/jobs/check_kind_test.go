@@ -22,9 +22,9 @@ func TestCheckKind_Success(t *testing.T) {
 	result, err := CheckSimulationKind.Run(s, nil, &actions.Deployment{CurrentJob: "test"}, input)
 	assert.NoError(t, err)
 
-	output, ok := result.(bool)
+	output, ok := result.(CheckSimulationKindOutput)
 	assert.True(t, ok)
-	assert.True(t, output)
+	assert.True(t, bool(output))
 }
 
 func TestCheckKind_ReturnsFalseWhenKindDoesNotMatch(t *testing.T) {
@@ -40,7 +40,7 @@ func TestCheckKind_ReturnsFalseWhenKindDoesNotMatch(t *testing.T) {
 
 	result, err := CheckSimulationKind.Run(s, nil, &actions.Deployment{CurrentJob: "test"}, input)
 	assert.NoError(t, err)
-	output, ok := result.(bool)
+	output, ok := result.(CheckSimulationKindOutput)
 	assert.True(t, ok)
-	assert.False(t, output)
+	assert.False(t, bool(output))
 }
