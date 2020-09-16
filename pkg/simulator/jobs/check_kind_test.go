@@ -22,12 +22,12 @@ func TestCheckKind_Success(t *testing.T) {
 	result, err := CheckKind.Run(s, nil, &actions.Deployment{CurrentJob: "test"}, input)
 	assert.NoError(t, err)
 
-	output, ok := result.(CheckKindOutput)
+	output, ok := result.(bool)
 	assert.True(t, ok)
-	assert.Equal(t, input.Simulation, output)
+	assert.True(t, output)
 }
 
-func TestCheckKind_ErrWhenKindDoesNotMatch(t *testing.T) {
+func TestCheckKind_ReturnsFalseWhenKindDoesNotMatch(t *testing.T) {
 	var state int
 	s := actions.NewStore(&state)
 
@@ -39,7 +39,8 @@ func TestCheckKind_ErrWhenKindDoesNotMatch(t *testing.T) {
 	}
 
 	result, err := CheckKind.Run(s, nil, &actions.Deployment{CurrentJob: "test"}, input)
-	assert.Error(t, err)
-	assert.Equal(t, simulations.ErrIncorrectKind, err)
-	assert.Nil(t, result)
+	assert.NoError(t, err)
+	output, ok := result.(bool)
+	assert.True(t, ok)
+	assert.False(t, output)
 }

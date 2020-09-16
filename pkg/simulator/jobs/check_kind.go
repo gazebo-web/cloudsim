@@ -13,7 +13,7 @@ type CheckKindInput struct {
 }
 
 // CheckKindOutput is the output of the CheckKind job.
-type CheckKindOutput simulations.Simulation
+type CheckKindOutput bool
 
 // CheckKind is used to check that a certain simulation has a specific kind.
 var CheckKind = &actions.Job{
@@ -24,8 +24,5 @@ var CheckKind = &actions.Job{
 // checkKind is the execution of the CheckKind job.
 func checkKind(store actions.Store, tx *gorm.DB, deployment *actions.Deployment, value interface{}) (interface{}, error) {
 	input := value.(CheckKindInput)
-	if input.Simulation.Kind() != input.Kind {
-		return nil, simulations.ErrIncorrectKind
-	}
-	return CheckKindOutput(input.Simulation), nil
+	return input.Simulation.Kind() == input.Kind, nil
 }
