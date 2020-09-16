@@ -6,26 +6,23 @@ import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
 )
 
-// CheckStatusInput is the input of the CheckStatus job.
-type CheckStatusInput struct {
+// CheckSimulationStatusInput is the input of the CheckSimulationStatus job.
+type CheckSimulationStatusInput struct {
 	Simulation simulations.Simulation
 	Status     simulations.Status
 }
 
-// CheckStatusOutput is the output of the CheckStatus job.
-type CheckStatusOutput simulations.Simulation
+// CheckSimulationStatusOutput is the output of the CheckSimulationStatus job.
+type CheckSimulationStatusOutput bool
 
-// CheckStatus is used to check that a certain simulation has a specific status.
-var CheckStatus = &actions.Job{
-	Name:    "check-status",
-	Execute: checkStatus,
+// CheckSimulationStatus is used to check that a certain simulation has a specific status.
+var CheckSimulationStatus = &actions.Job{
+	Execute: checkSimulationStatus,
 }
 
-// checkStatus is the execution of the CheckStatus job.
-func checkStatus(store actions.Store, tx *gorm.DB, deployment *actions.Deployment, value interface{}) (interface{}, error) {
-	input := value.(CheckStatusInput)
-	if input.Simulation.Status() != input.Status {
-		return nil, simulations.ErrIncorrectStatus
-	}
-	return CheckStatusOutput(input.Simulation), nil
+// checkSimulationStatus is the execute function of the CheckSimulationStatus job.
+func checkSimulationStatus(store actions.Store, tx *gorm.DB, deployment *actions.Deployment, value interface{}) (interface{}, error) {
+	input := value.(CheckSimulationStatusInput)
+	output := CheckSimulationStatusOutput(input.Simulation.Status() == input.Status)
+	return output, nil
 }
