@@ -18,7 +18,7 @@ type WaitInput struct {
 }
 
 // WaitOutput is the output of the Wait job.
-type WaitOutput error
+type WaitOutput WaitInput
 
 // Wait is a job that is in charge of waiting for a certain process to happen.
 var Wait = &actions.Job{
@@ -39,5 +39,5 @@ func wait(store actions.Store, tx *gorm.DB, deployment *actions.Deployment, valu
 		return nil, err
 	}
 
-	return WaitOutput(err), nil
+	return WaitOutput(input), nil
 }
