@@ -14,8 +14,8 @@ var CheckSimulationIsParent = jobs.CheckSimulationKind.Extend(actions.Job{
 	PreHooks:        []actions.JobFunc{createCheckKindInput},
 	PostHooks:       []actions.JobFunc{assertIsParent, returnState},
 	RollbackHandler: nil,
-	InputType:       nil,
-	OutputType:      nil,
+	InputType:       actions.GetJobDataType(&state.StartSimulation{}),
+	OutputType:      actions.GetJobDataType(&state.StartSimulation{}),
 })
 
 // assertIsParent evaluates if the value returned by CheckKind is true for the CheckSimulationIsParent job.
