@@ -32,21 +32,21 @@ var jobErrorTestData = struct {
 	handlerErr: errors.New("handler"),
 
 	// Job functions
-	fn: func(ctx Context, tx *gorm.DB, deployment *Deployment, value interface{}) (interface{}, error) {
+	fn: func(store Store, tx *gorm.DB, deployment *Deployment, value interface{}) (interface{}, error) {
 		return value, nil
 	},
-	failingFn: func(ctx Context, tx *gorm.DB, deployment *Deployment, value interface{}) (interface{}, error) {
+	failingFn: func(store Store, tx *gorm.DB, deployment *Deployment, value interface{}) (interface{}, error) {
 		return value, errors.New("fn")
 	},
 
 	// Job error handlers
-	errHandler: func(ctx Context, tx *gorm.DB, deployment *Deployment, value interface{}, err error) (interface{}, error) {
+	errHandler: func(store Store, tx *gorm.DB, deployment *Deployment, value interface{}, err error) (interface{}, error) {
 		return value, nil
 	},
-	passthroughErrHandler: func(ctx Context, tx *gorm.DB, deployment *Deployment, value interface{}, err error) (interface{}, error) {
+	passthroughErrHandler: func(store Store, tx *gorm.DB, deployment *Deployment, value interface{}, err error) (interface{}, error) {
 		return value, err
 	},
-	failingErrHandler: func(ctx Context, tx *gorm.DB, deployment *Deployment, value interface{}, err error) (interface{}, error) {
+	failingErrHandler: func(store Store, tx *gorm.DB, deployment *Deployment, value interface{}, err error) (interface{}, error) {
 		return value, errors.New("handler")
 	},
 
@@ -68,7 +68,7 @@ func TestJobFuncWrapErrorHandler(t *testing.T) {
 
 	totalErrCount := 0
 	test := func(fn JobFunc, expectedErr error, expectedErrCount int) {
-		_, err := fn(tr.ctx, tr.db, deployment, nil)
+		_, err := fn(tr.store, tr.db, deployment, nil)
 		if expectedErr != nil {
 			require.NotNil(t, err)
 			require.Equal(t, expectedErr.Error(), err.Error())
@@ -104,7 +104,7 @@ func TestErrorHandlerIgnoreError(t *testing.T) {
 
 	test := func(fn JobFunc) {
 		wrappedFn := WrapErrorHandler(fn, ErrorHandlerIgnoreError)
-		_, err := wrappedFn(tr.ctx, tr.db, deployment, nil)
+		_, err := wrappedFn(tr.store, tr.db, deployment, nil)
 		require.NoError(t, err)
 	}
 	test(setd.fn)
@@ -120,7 +120,7 @@ func TestJobRunErrorHandler(t *testing.T) {
 	require.NoError(t, err)
 
 	test := func(job *Job, expectedErr error) {
-		_, err := job.Run(tr.ctx, tr.db, deployment, nil)
+		_, err := job.Run(tr.store, tr.db, deployment, nil)
 
 		// Check error
 		if expectedErr != nil {

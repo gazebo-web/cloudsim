@@ -1,18 +1,14 @@
 # Builder
-FROM registry.gitlab.com/ignitionrobotics/web/images/cloudsim-base AS builder
+FROM registry.gitlab.com/ignitionrobotics/web/images/cloudsim-base:1.1.0 AS builder
 
 WORKDIR /go/src/gitlab.com/ignitionrobotics/web/cloudsim
 COPY . /go/src/gitlab.com/ignitionrobotics/web/cloudsim
 
-# Install the dependencies without checking for go code
-RUN dep ensure -vendor-only -v
-
 # Build app
 RUN go install
 
-
 # Runner
-FROM registry.gitlab.com/ignitionrobotics/web/images/cloudsim-base
+FROM registry.gitlab.com/ignitionrobotics/web/images/cloudsim-base:1.1.0
 
 WORKDIR /app
 COPY --from=builder /go/bin/cloudsim .
