@@ -93,8 +93,6 @@ fmt:
     - *setup_modules
     - *setup_git_credentials
   script:
-    - echo $GOPKGPATH
-    - ls $GOPKGPATH
     - go fmt $(go list ./...)
   tags:
     - gitlab-org
