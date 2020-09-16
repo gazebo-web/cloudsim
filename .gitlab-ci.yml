@@ -52,9 +52,9 @@ variables:
 stages:
   - install
   - format
-#  - test
+  - test
   - package
-#  - deploy
+  - deploy
 
 ##########################################################
 # Installing stage
