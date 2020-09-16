@@ -25,7 +25,7 @@ var deploymentTestData = struct {
 		Jobs: Jobs{
 			{
 				Name: "job_1",
-				Execute: func(ctx Context, tx *gorm.DB, deployment *Deployment, value interface{}) (interface{}, error) {
+				Execute: func(store Store, tx *gorm.DB, deployment *Deployment, value interface{}) (interface{}, error) {
 					return value, nil
 				},
 				InputType:  NilJobDataType,
@@ -33,7 +33,7 @@ var deploymentTestData = struct {
 			},
 			{
 				Name: "job_2",
-				Execute: func(ctx Context, tx *gorm.DB, deployment *Deployment, value interface{}) (interface{}, error) {
+				Execute: func(store Store, tx *gorm.DB, deployment *Deployment, value interface{}) (interface{}, error) {
 					return value, nil
 				},
 				InputType:  NilJobDataType,
@@ -41,7 +41,7 @@ var deploymentTestData = struct {
 			},
 			{
 				Name: "job_3",
-				Execute: func(ctx Context, tx *gorm.DB, deployment *Deployment, value interface{}) (interface{}, error) {
+				Execute: func(store Store, tx *gorm.DB, deployment *Deployment, value interface{}) (interface{}, error) {
 					return value, nil
 				},
 				InputType:  NilJobDataType,

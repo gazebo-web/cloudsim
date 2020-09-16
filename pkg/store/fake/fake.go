@@ -8,39 +8,39 @@ import (
 	"time"
 )
 
-// fake is a fake store.Store implementation.
-type fake struct {
+// Fake is a fake store.Store implementation.
+type Fake struct {
 	machines     store.Machines
 	orchestrator store.Orchestrator
 	ignition     store.Ignition
 }
 
 // Machines mocks the Machine namespace.
-func (f fake) Machines() store.Machines {
+func (f *Fake) Machines() store.Machines {
 	return f.machines
 }
 
 // Orchestrator mocks the Orchestrator namespace.
-func (f fake) Orchestrator() store.Orchestrator {
+func (f *Fake) Orchestrator() store.Orchestrator {
 	return f.orchestrator
 }
 
 // Ignition mocks the Ignition namespace.
-func (f fake) Ignition() store.Ignition {
+func (f *Fake) Ignition() store.Ignition {
 	return f.ignition
 }
 
 // NewFakeStore initializes a new fake store implementation using fake configuration providers.
 // This provider uses the mock library
-func NewFakeStore(machines *Machines, orchestrator *Orchestrator, ignition *Ign) *fake {
-	return &fake{
+func NewFakeStore(machines *Machines, orchestrator *Orchestrator, ignition *Ign) *Fake {
+	return &Fake{
 		machines:     machines,
 		orchestrator: orchestrator,
 		ignition:     ignition,
 	}
 }
 
-// FakeIgn is a fake store.Ignition implementation.
+// Ign is a fake store.Ignition implementation.
 type Ign struct {
 	*mock.Mock
 }
@@ -75,8 +75,8 @@ func (f *Ign) Verbosity() string {
 	return args.String(0)
 }
 
-// newFakeIgnition initializes a fake store.Ignition implementation.
-func newFakeIgnition() *Ign {
+// NewFakeIgnition initializes a fake store.Ignition implementation.
+func NewFakeIgnition() *Ign {
 	return &Ign{
 		Mock: new(mock.Mock),
 	}
