@@ -1,14 +1,15 @@
 package jobs
 
 import (
-	"context"
 	"github.com/stretchr/testify/assert"
+	"gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/simulator/state"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/actions"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/kubernetes"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/kubernetes/pods"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/kubernetes/spdy"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/platform"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
 	sfake "gitlab.com/ignitionrobotics/web/cloudsim/pkg/store/fake"
 	"gitlab.com/ignitionrobotics/web/ign-go"
 	apiv1 "k8s.io/api/core/v1"
@@ -19,7 +20,6 @@ import (
 )
 
 func TestWaitForGazeboServerPod(t *testing.T) {
-	ctx := context.Background()
 	logger := ign.NewLoggerNoRollbar("TestWaitForGazeboServerPod", ign.VerbosityDebug)
 	storeMachines := sfake.NewFakeMachines()
 	fakeStore := sfake.NewFakeStore(storeMachines, nil, nil)
@@ -50,30 +50,30 @@ func TestWaitForGazeboServerPod(t *testing.T) {
 	})
 
 	p := platform.NewPlatform(nil, nil, ks, fakeStore)
-	ctx = context.WithValue(ctx, "cloudsim_platform", p)
 
-	input := &StartSimulationData{
-		GroupID: "aaaa-bbbb-cccc-dddd",
-		GazeboServerPod: orchestrator.NewResource(
-			"test",
-			"default",
-			orchestrator.NewSelector(map[string]string{
-				"app": "test",
-			}),
-		),
-	}
+	gid := simulations.GroupID("aaaa-bbbb-cccc-dddd")
+	s := state.NewStartSimulation(p, nil, gid)
+	store := actions.NewStore(s)
+
+	// Mock gazebo server pod
+	s.GazeboServerPod = orchestrator.NewResource(
+		"test",
+		"default",
+		orchestrator.NewSelector(map[string]string{
+			"app": "test",
+		}),
+	)
+	store.SetState(s)
 
 	storeMachines.On("Timeout").Return(1 * time.Second)
 	storeMachines.On("PollFrequency").Return(1 * time.Second)
 
-	result, err := WaitForGazeboServerPod.Run(ctx, nil, &actions.Deployment{
-		CurrentJob: "test",
-	}, input)
+	result, err := WaitForGazeboServerPod.Run(store, nil, &actions.Deployment{CurrentJob: "test"}, s)
 	assert.NoError(t, err)
 
-	output, ok := result.(*StartSimulationData)
+	output, ok := result.(*state.StartSimulation)
 	assert.True(t, ok)
 
-	assert.Equal(t, input.GroupID, output.GroupID)
+	assert.Equal(t, gid, output.GroupID)
 	assert.NotNil(t, output.GazeboServerPod)
 }
