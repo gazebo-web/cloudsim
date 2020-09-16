@@ -12,7 +12,7 @@ import (
 var WaitForGazeboServerPod = jobs.Wait.Extend(actions.Job{
 	Name:       "wait-gazebo-server-pod",
 	PreHooks:   []actions.JobFunc{createWaitRequestForGzServerPod},
-	PostHooks:  []actions.JobFunc{waitGazeboServerPodPostHook},
+	PostHooks:  []actions.JobFunc{returnState},
 	InputType:  actions.GetJobDataType(&state.StartSimulation{}),
 	OutputType: actions.GetJobDataType(&state.StartSimulation{}),
 })
@@ -37,9 +37,4 @@ func createWaitRequestForGzServerPod(store actions.Store, tx *gorm.DB, deploymen
 		PollFrequency: pollFreq,
 		Timeout:       timeout,
 	}, nil
-}
-
-// waitGazeboServerPodPostHook is the post hook in charge of returning the start simulation data.
-func waitGazeboServerPodPostHook(store actions.Store, tx *gorm.DB, deployment *actions.Deployment, value interface{}) (interface{}, error) {
-	return getStartDataFromJob(store)
 }
