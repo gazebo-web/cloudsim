@@ -12,14 +12,14 @@ import (
 var CheckSimulationParent = jobs.CheckKind.Extend(actions.Job{
 	Name:            "check-parent",
 	PreHooks:        []actions.JobFunc{createCheckKindInput},
-	PostHooks:       []actions.JobFunc{assertKind, returnState},
+	PostHooks:       []actions.JobFunc{assertIsParent, returnState},
 	RollbackHandler: nil,
 	InputType:       nil,
 	OutputType:      nil,
 })
 
-// assertKind evaluates if the value returned by CheckKind is true.
-func assertKind(store actions.Store, tx *gorm.DB, deployment *actions.Deployment, value interface{}) (interface{}, error) {
+// assertIsParent evaluates if the value returned by CheckKind is true for the CheckSimulationParent job.
+func assertIsParent(store actions.Store, tx *gorm.DB, deployment *actions.Deployment, value interface{}) (interface{}, error) {
 	isParent := value.(bool)
 	if isParent {
 		return nil, simulations.ErrIncorrectKind
