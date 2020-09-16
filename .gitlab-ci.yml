@@ -38,11 +38,10 @@ variables:
 # Cache configuration
 
 .go-cache:
+  # Paths in the cache need to be in the build directory or Gitlab will ignore them
   variables:
     GOPATH: $CI_PROJECT_DIR/.go
     GOPKGPATH: $GOPATH/mod/pkg
-  before_script:
-    - *setup_modules
   cache:
     paths:
       - $GOPKGPATH/
@@ -76,6 +75,8 @@ proto:
 dependencies:
   stage: install
   extends: .go-cache
+  before_script:
+    - *setup_modules
   script:
     - *download_modules
     - ls $GOPKGPATH
@@ -89,8 +90,11 @@ fmt:
   stage: format
   extends: .go-cache
   before_script:
+    - *setup_modules
     - *setup_git_credentials
   script:
+    - echo $GOPKGPATH
+    - ls $GOPKGPATH
     - go fmt $(go list ./...)
   tags:
     - gitlab-org
@@ -99,6 +103,7 @@ lint:
   stage: format
   extends: .go-cache
   before_script:
+    - *setup_modules
     - *setup_git_credentials
   script:
     - golint -set_exit_status $(go list ./...)
@@ -108,79 +113,80 @@ lint:
 ###########################################################
 ## Testing stage
 
-#vet:
-#  stage: test
-#  dependencies:
-#    - proto
-#  before_script:
-#    - *setup_modules
-#    - *setup_project
-#    - *setup_git_credentials
-#    - *setup_db
-#  script:
-#    - go vet $(go list ./...)
-#  services:
-#    - mysql:5.7
-#  environment:
-#    name: testing
-#  tags:
-#    - gitlab-org
-#
-#test:
-#  stage: test
-#  extends: .go-cache
-#  dependencies:
-#    - proto
-#  before_script:
-#    - *setup_git_credentials
-#    - *setup_db
-#  script:
-#    - go test $(go list ./...)
-#  services:
-#    - mysql:5.7
-#  environment:
-#    name: testing
-#  tags:
-#    - gitlab-org
-#
-#race:
-#  stage: test
-#  dependencies:
-#    - proto
-#  before_script:
-#    - *setup_modules
-#    - *setup_project
-#    - *setup_git_credentials
-#    - *setup_db
-#  script:
-#    - go test -race $(go list ./...)
-#  services:
-#    - mysql:5.7
-#  environment:
-#    name: testing
-#  allow_failure: true
-#  tags:
-#    - gitlab-org
-#
-#coverage:
-#  stage: test
-#  dependencies:
-#    - proto
-#  before_script:
-#    - *setup_modules
-#    - *setup_project
-#    - *setup_git_credentials
-#    - *setup_db
-#  script:
-#    - go test -covermode=atomic -coverprofile=coverage.tx
-#    - go tool cover -func=coverage.tx
-#    - bash <(curl -s https://codecov.io/bash)
-#  services:
-#    - mysql:5.7
-#  environment:
-#    name: testing
-#  tags:
-#    - gitlab-org
+vet:
+  stage: test
+  extends: .go-cache
+  dependencies:
+    - proto
+  before_script:
+    - *setup_modules
+    - *setup_git_credentials
+    - *setup_db
+  script:
+    - go vet $(go list ./...)
+  services:
+    - mysql:5.7
+  environment:
+    name: testing
+  tags:
+    - gitlab-org
+
+test:
+  stage: test
+  extends: .go-cache
+  dependencies:
+    - proto
+  before_script:
+    - *setup_modules
+    - *setup_git_credentials
+    - *setup_db
+  script:
+    - go test $(go list ./...)
+  services:
+    - mysql:5.7
+  environment:
+    name: testing
+  tags:
+    - gitlab-org
+
+race:
+  stage: test
+  extends: .go-cache
+  dependencies:
+    - proto
+  before_script:
+    - *setup_modules
+    - *setup_git_credentials
+    - *setup_db
+  script:
+    - go test -race $(go list ./...)
+  services:
+    - mysql:5.7
+  environment:
+    name: testing
+  allow_failure: true
+  tags:
+    - gitlab-org
+
+coverage:
+  stage: test
+  extends: .go-cache
+  dependencies:
+    - proto
+  before_script:
+    - *setup_modules
+    - *setup_git_credentials
+    - *setup_db
+  script:
+    - go test -covermode=atomic -coverprofile=coverage.tx
+    - go tool cover -func=coverage.tx
+    - bash <(curl -s https://codecov.io/bash)
+  services:
+    - mysql:5.7
+  environment:
+    name: testing
+  tags:
+    - gitlab-org
 
 ###########################################################
 ## Packaging stage
@@ -239,69 +245,69 @@ docker:latest:
 
 ###########################################################
 ## Deploying stage
-#
-#integration:
-#  image: registry.gitlab.com/ignitionrobotics/web/images/kubectl:latest
-#  stage: deploy
-#  dependencies:
-#    - docker
-#  script:
-#    - *deploy_kubernetes
-#  tags:
-#    - testing
-#    - kubernetes
-#  environment:
-#    name: integration
-#  except:
-#    - master
-#    - develop
-#  when: manual
-#
-#integration_1:
-#  image: registry.gitlab.com/ignitionrobotics/web/images/kubectl:latest
-#  stage: deploy
-#  dependencies:
-#    - docker
-#  script:
-#    - *deploy_kubernetes
-#  tags:
-#    - testing
-#    - kubernetes
-#  environment:
-#    name: integration-1
-#  except:
-#    - master
-#    - develop
-#  when: manual
-#
-#staging:
-#  image: registry.gitlab.com/ignitionrobotics/web/images/kubectl:latest
-#  stage: deploy
-#  dependencies:
-#    - docker:next
-#  script:
-#    - *deploy_kubernetes
-#  tags:
-#    - testing
-#    - kubernetes
-#  environment:
-#    name: staging
-#  only:
-#    - develop
-#  when: manual
-#
-#production:
-#  image: registry.gitlab.com/ignitionrobotics/web/images/kubectl:latest
-#  stage: deploy
-#  dependencies:
-#    - docker:latest
-#  script:
-#    - *deploy_kubernetes
-#  tags:
-#    - kubernetes
-#    - production
-#  environment:
-#    name: production
-#  only:
-#    - master
-#  when: manual
+
+integration:
+  image: registry.gitlab.com/ignitionrobotics/web/images/kubectl:latest
+  stage: deploy
+  dependencies:
+    - docker
+  script:
+    - *deploy_kubernetes
+  tags:
+    - testing
+    - kubernetes
+  environment:
+    name: integration
+  except:
+    - master
+    - develop
+  when: manual
+
+integration_1:
+  image: registry.gitlab.com/ignitionrobotics/web/images/kubectl:latest
+  stage: deploy
+  dependencies:
+    - docker
+  script:
+    - *deploy_kubernetes
+  tags:
+    - testing
+    - kubernetes
+  environment:
+    name: integration-1
+  except:
+    - master
+    - develop
+  when: manual
+
+staging:
+  image: registry.gitlab.com/ignitionrobotics/web/images/kubectl:latest
+  stage: deploy
+  dependencies:
+    - docker:next
+  script:
+    - *deploy_kubernetes
+  tags:
+    - testing
+    - kubernetes
+  environment:
+    name: staging
+  only:
+    - develop
+  when: manual
+
+production:
+  image: registry.gitlab.com/ignitionrobotics/web/images/kubectl:latest
+  stage: deploy
+  dependencies:
+    - docker:latest
+  script:
+    - *deploy_kubernetes
+  tags:
+    - kubernetes
+    - production
+  environment:
+    name: production
+  only:
+    - master
+  when: manual
