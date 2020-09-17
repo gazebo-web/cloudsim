@@ -38,7 +38,7 @@ func createCheckSimulationNoErrorInput(store actions.Store, tx *gorm.DB, deploym
 
 	input = append(input, sim)
 
-	if sim.Kind() != simulations.SimChild {
+	if sim.Kind() != simulations.SimParent {
 		return input, nil
 	}
 
