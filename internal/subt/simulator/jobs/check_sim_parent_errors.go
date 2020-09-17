@@ -8,8 +8,9 @@ import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulator/jobs"
 )
 
+// CheckSimulationNoErrors checks that a group of simulations don't have errors.
 var CheckSimulationNoErrors = jobs.CheckSimulationNoError.Extend(actions.Job{
-	Name:            "check-parent-sim-no-errors",
+	Name:            "check-sim-no-errors",
 	PreHooks:        []actions.JobFunc{createCheckSimulationNoErrorInput},
 	PostHooks:       []actions.JobFunc{checkNoErrorOutput, returnState},
 	RollbackHandler: nil,
@@ -17,6 +18,7 @@ var CheckSimulationNoErrors = jobs.CheckSimulationNoError.Extend(actions.Job{
 	OutputType:      nil,
 })
 
+// checkNoErrorOutput checks that the simulations provided to the execute function have no errors.
 func checkNoErrorOutput(store actions.Store, tx *gorm.DB, deployment *actions.Deployment, value interface{}) (interface{}, error) {
 	hasErr := value.(jobs.CheckSimulationNoErrorOutput)
 	if hasErr {
@@ -25,28 +27,36 @@ func checkNoErrorOutput(store actions.Store, tx *gorm.DB, deployment *actions.De
 	return nil, nil
 }
 
+// createCheckSimulationNoErrorInput creates the input for the execute function.
 func createCheckSimulationNoErrorInput(store actions.Store, tx *gorm.DB, deployment *actions.Deployment, value interface{}) (interface{}, error) {
+	// Get input
 	s := value.(*state.StartSimulation)
+
+	// Set store state
 	store.SetState(s)
 
+	// Prepare input
 	var input jobs.CheckSimulationNoErrorInput
 
+	// Get simulation from the GroupID
 	sim, err := s.Services().Simulations().Get(s.GroupID)
 	if err != nil {
 		return nil, err
 	}
 
+	// Add simulation to the next job input.
 	input = append(input, sim)
 
+	// If the simulation isn't parent, trigger the next job.
 	if sim.Kind() != simulations.SimParent {
 		return input, nil
 	}
 
+	// If simulation is parent, add the parent to check for errors as well.
 	parent, err := s.Services().Simulations().GetParent(s.GroupID)
 	if err != nil {
 		return nil, err
 	}
-
 	input = append(input, parent)
 
 	return input, nil
