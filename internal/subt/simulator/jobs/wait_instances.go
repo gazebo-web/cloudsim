@@ -9,12 +9,11 @@ import (
 
 // WaitForInstances is the job in charge of waiting for instances to be OK.
 var WaitForInstances = jobs.WaitForInstances.Extend(actions.Job{
-	Name:            "wait-for-instances",
-	PreHooks:        []actions.JobFunc{createWaitForInstancesInput},
-	PostHooks:       []actions.JobFunc{returnState},
-	RollbackHandler: nil,
-	InputType:       actions.GetJobDataType(&state.StartSimulation{}),
-	OutputType:      actions.GetJobDataType(&state.StartSimulation{}),
+	Name:       "wait-for-instances",
+	PreHooks:   []actions.JobFunc{createWaitForInstancesInput},
+	PostHooks:  []actions.JobFunc{returnState},
+	InputType:  actions.GetJobDataType(&state.StartSimulation{}),
+	OutputType: actions.GetJobDataType(&state.StartSimulation{}),
 })
 
 // createWaitForInstancesInput is the pre hook in charge of passing the list of created instances to the execute function.
