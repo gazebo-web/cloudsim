@@ -4,13 +4,10 @@ import (
 	"github.com/jinzhu/gorm"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/actions"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulator/state"
 )
 
 // CheckSimulationNoErrorInput is the input of the CheckSimulationNoError job.
-type CheckSimulationNoErrorInput struct {
-	GroupID simulations.GroupID
-}
+type CheckSimulationNoErrorInput []simulations.Simulation
 
 // CheckSimulationNoErrorOutput is the output of the CheckSimulationNoError job.
 type CheckSimulationNoErrorOutput bool
@@ -24,12 +21,11 @@ var CheckSimulationNoError = &actions.Job{
 func checkSimulationNoError(store actions.Store, tx *gorm.DB, deployment *actions.Deployment, value interface{}) (interface{}, error) {
 	input := value.(CheckSimulationNoErrorInput)
 
-	s := store.State().(state.Services)
-
-	sim, err := s.Services().Simulations().Get(input.GroupID)
-	if err != nil {
-		return nil, err
+	for _, sim := range input {
+		if sim.Error() != nil {
+			return CheckSimulationNoErrorOutput(false), nil
+		}
 	}
 
-	return CheckSimulationNoErrorOutput(sim.Error() == nil), nil
+	return CheckSimulationNoErrorOutput(true), nil
 }
