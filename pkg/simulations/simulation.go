@@ -39,6 +39,9 @@ var (
 
 	// StatusLaunchingPods is used when the simulation pods are launched.
 	StatusLaunchingPods Status = "launching-pods"
+
+	// StatusLaunchingPods is used when the simulation pods are launched.
+	StatusWaitingInstances Status = "waiting-instances"
 )
 
 // Kind is used to identify if a Simulation is a single simulation or a multisim.
