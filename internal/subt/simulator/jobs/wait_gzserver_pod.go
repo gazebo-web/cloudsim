@@ -12,7 +12,7 @@ import (
 var WaitForGazeboServerPod = jobs.Wait.Extend(actions.Job{
 	Name:       "wait-gazebo-server-pod",
 	PreHooks:   []actions.JobFunc{createWaitRequestForGzServerPod},
-	PostHooks:  []actions.JobFunc{returnState},
+	PostHooks:  []actions.JobFunc{checkError, returnState},
 	InputType:  actions.GetJobDataType(&state.StartSimulation{}),
 	OutputType: actions.GetJobDataType(&state.StartSimulation{}),
 })
