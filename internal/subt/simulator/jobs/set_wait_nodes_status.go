@@ -12,6 +12,7 @@ import (
 var SetSimulationStatusToWaitNodes = jobs.SetSimulationStatus.Extend(actions.Job{
 	Name:       "set-simulation-status-wait-nodes",
 	PreHooks:   []actions.JobFunc{setWaitNodesStatus},
+	PostHooks:  []actions.JobFunc{returnState},
 	InputType:  actions.GetJobDataType(&state.StartSimulation{}),
 	OutputType: actions.GetJobDataType(&state.StartSimulation{}),
 })

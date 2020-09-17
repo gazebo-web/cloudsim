@@ -12,6 +12,7 @@ import (
 var SetSimulationStatusToWaitInstances = jobs.SetSimulationStatus.Extend(actions.Job{
 	Name:       "set-simulation-status-wait-instances",
 	PreHooks:   []actions.JobFunc{setWaitInstancesStatus},
+	PostHooks:  []actions.JobFunc{returnState},
 	InputType:  actions.GetJobDataType(&state.StartSimulation{}),
 	OutputType: actions.GetJobDataType(&state.StartSimulation{}),
 })

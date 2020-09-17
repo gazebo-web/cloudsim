@@ -12,6 +12,7 @@ import (
 var SetSimulationStatusToLaunchInstances = jobs.SetSimulationStatus.Extend(actions.Job{
 	Name:       "set-simulation-status-launch-instances",
 	PreHooks:   []actions.JobFunc{setLaunchInstancesStatus},
+	PostHooks:  []actions.JobFunc{returnState},
 	InputType:  actions.GetJobDataType(&state.StartSimulation{}),
 	OutputType: actions.GetJobDataType(&state.StartSimulation{}),
 })

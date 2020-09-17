@@ -12,6 +12,7 @@ import (
 var SetSimulationStatusToWaitPods = jobs.SetSimulationStatus.Extend(actions.Job{
 	Name:       "set-simulation-status-wait-pods",
 	PreHooks:   []actions.JobFunc{setWaitPodsStatus},
+	PostHooks:  []actions.JobFunc{returnState},
 	InputType:  actions.GetJobDataType(&state.StartSimulation{}),
 	OutputType: actions.GetJobDataType(&state.StartSimulation{}),
 })
