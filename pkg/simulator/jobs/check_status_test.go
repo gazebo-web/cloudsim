@@ -8,7 +8,7 @@ import (
 	"testing"
 )
 
-func TestCheckStatus_Success(t *testing.T) {
+func TestCheckSimulationStatus_Success(t *testing.T) {
 	var state int
 	s := actions.NewStore(&state)
 
