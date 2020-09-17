@@ -8,9 +8,9 @@ import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulator/jobs"
 )
 
-// SetSimulationStatusToWaitPods is used to set a simulation status to wait instances.
+// SetSimulationStatusToWaitPods is used to set a simulation status to wait pods.
 var SetSimulationStatusToWaitPods = jobs.SetSimulationStatus.Extend(actions.Job{
-	Name:       "set-simulation-status-launch-instances",
+	Name:       "set-simulation-status-wait-pods",
 	PreHooks:   []actions.JobFunc{setWaitPodsStatus},
 	InputType:  actions.GetJobDataType(&state.StartSimulation{}),
 	OutputType: actions.GetJobDataType(&state.StartSimulation{}),

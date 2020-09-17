@@ -10,7 +10,7 @@ import (
 
 // SetSimulationStatusToWaitInstances is used to set a simulation status to wait instances.
 var SetSimulationStatusToWaitInstances = jobs.SetSimulationStatus.Extend(actions.Job{
-	Name:       "set-simulation-status-launch-instances",
+	Name:       "set-simulation-status-wait-instances",
 	PreHooks:   []actions.JobFunc{setWaitInstancesStatus},
 	InputType:  actions.GetJobDataType(&state.StartSimulation{}),
 	OutputType: actions.GetJobDataType(&state.StartSimulation{}),
