@@ -3,7 +3,6 @@ package jobs
 import (
 	"github.com/jinzhu/gorm"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/actions"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulator"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/waiter"
 	"time"
@@ -11,7 +10,6 @@ import (
 
 // WaitInput is the input of the Wait job.
 type WaitInput struct {
-	GroupID       simulations.GroupID
 	Request       waiter.Waiter
 	PollFrequency time.Duration
 	Timeout       time.Duration
