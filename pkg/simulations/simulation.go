@@ -43,7 +43,10 @@ var (
 	// StatusWaitingInstances is used when a simulation is waiting for instances to be launched.
 	StatusWaitingInstances Status = "waiting-instances"
 
-	// StatusWaitingPods is used when a simulation is waiting for pods to be launched.
+	// StatusWaitingNodes is used when a simulation is waiting for nodes to be ready
+	StatusWaitingNodes Status = "waiting-nodes"
+
+	// StatusWaitingPods is used when a simulation is waiting for pods to be ready.
 	StatusWaitingPods Status = "waiting-pods"
 )
 
