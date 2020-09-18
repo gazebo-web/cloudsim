@@ -8,7 +8,7 @@ import (
 	"testing"
 )
 
-func TestCheckKind_Success(t *testing.T) {
+func TestCheckSimulationKind_Success(t *testing.T) {
 	var state int
 	s := actions.NewStore(&state)
 
@@ -27,7 +27,7 @@ func TestCheckKind_Success(t *testing.T) {
 	assert.True(t, bool(output))
 }
 
-func TestCheckKind_ReturnsFalseWhenKindDoesNotMatch(t *testing.T) {
+func TestCheckSimulationKind_ReturnsFalseWhenKindDoesNotMatch(t *testing.T) {
 	var state int
 	s := actions.NewStore(&state)
 
