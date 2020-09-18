@@ -33,7 +33,7 @@ func (s *Service) GetParent(groupID simulations.GroupID) (simulations.Simulation
 
 // UpdateStatus is a mock for the UpdateStatus method.
 func (s *Service) UpdateStatus(groupID simulations.GroupID, status simulations.Status) error {
-	args := s.Called(groupID)
+	args := s.Called(groupID, status)
 	return args.Error(0)
 }
 

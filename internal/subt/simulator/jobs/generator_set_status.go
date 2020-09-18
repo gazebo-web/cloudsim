@@ -8,10 +8,10 @@ import (
 )
 
 // GenerateSetSimulationStatusJob generates a job to set a simulation to a certain status.
-func GenerateSetSimulationStatusJob(name string, status simulations.Status, inputType, outputType interface{}, prehooks ...actions.JobFunc) *actions.Job {
+func GenerateSetSimulationStatusJob(name string, status simulations.Status, inputType, outputType interface{}, preHooks ...actions.JobFunc) *actions.Job {
 	return jobs.SetSimulationStatus.Extend(actions.Job{
 		Name:       name,
-		PreHooks:   append(prehooks, generateSetSimulationStatusInputPreHook(status)),
+		PreHooks:   append(preHooks, generateSetSimulationStatusInputPreHook(status)),
 		PostHooks:  []actions.JobFunc{returnState},
 		InputType:  actions.GetJobDataType(inputType),
 		OutputType: actions.GetJobDataType(outputType),

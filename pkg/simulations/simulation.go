@@ -83,4 +83,7 @@ type Simulation interface {
 
 	// Image returns the simulation's docker image. This image is used as the solution image.
 	Image() string
+
+	// SetStatus sets a given status to the simulation.
+	SetStatus(status Status)
 }
