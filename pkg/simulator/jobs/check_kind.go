@@ -8,11 +8,14 @@ import (
 
 // CheckSimulationKindInput is the input of the CheckSimulationKind job.
 type CheckSimulationKindInput struct {
+	// The simulation that will be checked.
 	Simulation simulations.Simulation
-	Kind       simulations.Kind
+	// The kind that the simulation should match.
+	Kind simulations.Kind
 }
 
 // CheckSimulationKindOutput is the output of the CheckSimulationKind job.
+// It will be true if the simulation is of the expected kind.
 type CheckSimulationKindOutput bool
 
 // CheckSimulationKind is used to check that a certain simulation has a specific kind.
