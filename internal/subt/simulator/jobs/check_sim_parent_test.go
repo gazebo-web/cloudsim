@@ -10,7 +10,7 @@ import (
 	"testing"
 )
 
-func TestCheckSimParent(t *testing.T) {
+func TestCheckSimIsParent(t *testing.T) {
 	// Initialize simulation
 	gid := simulations.GroupID("aaaa-bbbb-cccc-dddd")
 	sim := fake.NewSimulation(gid, simulations.StatusPending, simulations.SimSingle, nil, "test")
