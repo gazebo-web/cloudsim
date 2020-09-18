@@ -20,6 +20,6 @@ func setStartState(store actions.Store, tx *gorm.DB, deployment *actions.Deploym
 
 // returnGroupIDFromStartState parses the input value as the StartSimulation state and returns the group id.
 func returnGroupIDFromStartState(store actions.Store, tx *gorm.DB, deployment *actions.Deployment, value interface{}) (interface{}, error) {
-	s := value.(*state.StartSimulation)
+	s := store.State().(*state.StartSimulation)
 	return s.GroupID, nil
 }
