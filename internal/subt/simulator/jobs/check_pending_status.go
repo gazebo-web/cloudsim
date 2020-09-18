@@ -8,18 +8,17 @@ import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulator/jobs"
 )
 
-// CheckPendingStatus is used to check that a certain simulation has pending status.
-var CheckPendingStatus = jobs.CheckSimulationStatus.Extend(actions.Job{
-	Name:            "check-pending-status",
-	PreHooks:        []actions.JobFunc{createCheckPendingStatusInput},
-	PostHooks:       []actions.JobFunc{assertPendingStatus, returnState},
-	RollbackHandler: nil,
-	InputType:       nil,
-	OutputType:      nil,
+// CheckSimulationPendingStatus is used to check that a certain simulation has pending status.
+var CheckSimulationPendingStatus = jobs.CheckSimulationStatus.Extend(actions.Job{
+	Name:       "check-pending-status",
+	PreHooks:   []actions.JobFunc{createCheckSimulationStatusInput},
+	PostHooks:  []actions.JobFunc{assertPendingStatus, returnState},
+	InputType:  actions.GetJobDataType(&state.StartSimulation{}),
+	OutputType: actions.GetJobDataType(&state.StartSimulation{}),
 })
 
-// createCheckPendingStatusInput prepares the input for the check status job.
-func createCheckPendingStatusInput(store actions.Store, tx *gorm.DB, deployment *actions.Deployment, value interface{}) (interface{}, error) {
+// createCheckSimulationStatusInput prepares the input for the check status job.
+func createCheckSimulationStatusInput(store actions.Store, tx *gorm.DB, deployment *actions.Deployment, value interface{}) (interface{}, error) {
 	s := value.(*state.StartSimulation)
 
 	sim, err := s.Services().Simulations().Get(s.GroupID)

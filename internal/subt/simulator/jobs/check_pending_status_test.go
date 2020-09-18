@@ -10,7 +10,7 @@ import (
 	"testing"
 )
 
-func TestCheckPendingStatus_Success(t *testing.T) {
+func TestCheckSimulationPendingStatus_Success(t *testing.T) {
 	// Initialize simulation
 	gid := simulations.GroupID("aaaa-bbbb-cccc-dddd")
 	sim := fake.NewSimulation(gid, simulations.StatusPending, simulations.SimSingle, nil, "test")
@@ -24,7 +24,7 @@ func TestCheckPendingStatus_Success(t *testing.T) {
 	input := state.NewStartSimulation(nil, app, gid)
 	s := actions.NewStore(input)
 
-	result, err := CheckPendingStatus.Run(s, nil, nil, input)
+	result, err := CheckSimulationPendingStatus.Run(s, nil, nil, input)
 	assert.NoError(t, err)
 
 	output, ok := result.(*state.StartSimulation)
@@ -34,7 +34,7 @@ func TestCheckPendingStatus_Success(t *testing.T) {
 
 }
 
-func TestCheckPendingStatus_ErrSimNotPending(t *testing.T) {
+func TestCheckSimulationPendingStatus_ErrSimNotPending(t *testing.T) {
 	// Initialize simulation
 	gid := simulations.GroupID("aaaa-bbbb-cccc-dddd")
 	sim := fake.NewSimulation(gid, simulations.StatusRunning, simulations.SimSingle, nil, "test")
@@ -48,7 +48,7 @@ func TestCheckPendingStatus_ErrSimNotPending(t *testing.T) {
 	input := state.NewStartSimulation(nil, app, gid)
 	s := actions.NewStore(input)
 
-	_, err := CheckPendingStatus.Run(s, nil, nil, input)
+	_, err := CheckSimulationPendingStatus.Run(s, nil, nil, input)
 	assert.Error(t, err)
 	assert.Equal(t, simulations.ErrIncorrectStatus, err)
 }
