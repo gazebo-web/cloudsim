@@ -31,7 +31,7 @@ const (
 
 // MaxAWSRetries holds how many retries will be done against AWS. It is a var
 // to allow tests to change this value.
-var MaxAWSRetries int = 8
+var MaxAWSRetries = 8
 
 type awsConfig struct {
 	NamePrefix string `env:"AWS_INSTANCE_NAME_PREFIX,required"`
@@ -527,7 +527,16 @@ func (s *Ec2Client) launchNodes(ctx context.Context, tx *gorm.DB, dep *Simulatio
 	// There were some cases where the previous block succeeded but AWS was unable
 	// to grant instances. A sanity check for this is made in order to handle this
 	// situation.
-	noInstances := len(machines) == 0 || len(instanceIds) == 0
+
+	// Count how many machines were requested
+	var requestedMachines int
+	for _, input := range instanceInputs {
+		requestedMachines += int(*input.MinCount)
+	}
+
+	// Check if there are no machines available or the number of instances created does not match the amount
+	// of requested machines.
+	noInstances := len(machines) == 0 || len(instanceIds) == 0 || len(instanceIds) != requestedMachines
 	if err != nil || noInstances {
 		timeTrack(ctx, tstart, "launchNodes - launchInstances ended with error")
 
