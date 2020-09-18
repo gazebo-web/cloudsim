@@ -8,7 +8,7 @@ import (
 	"testing"
 )
 
-func TestCheckStatus_Success(t *testing.T) {
+func TestCheckSimulationStatus_Success(t *testing.T) {
 	var state int
 	s := actions.NewStore(&state)
 
@@ -27,7 +27,7 @@ func TestCheckStatus_Success(t *testing.T) {
 	assert.True(t, bool(output))
 }
 
-func TestCheckStatus_ErrWhenStatusDoesNotMatch(t *testing.T) {
+func TestCheckSimulationStatus_ErrWhenStatusDoesNotMatch(t *testing.T) {
 	var state int
 	s := actions.NewStore(&state)
 

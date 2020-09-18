@@ -8,14 +8,17 @@ import (
 
 // CheckSimulationStatusInput is the input of the CheckSimulationStatus job.
 type CheckSimulationStatusInput struct {
+	// Simulation is the simulation that will be checked.
 	Simulation simulations.Simulation
-	Status     simulations.Status
+	// Status is the status that the Simulation should match.
+	Status simulations.Status
 }
 
 // CheckSimulationStatusOutput is the output of the CheckSimulationStatus job.
 type CheckSimulationStatusOutput bool
 
 // CheckSimulationStatus is used to check that a certain simulation has a specific status.
+// It returns true if the simulation matches the given status.
 var CheckSimulationStatus = &actions.Job{
 	Execute: checkSimulationStatus,
 }
