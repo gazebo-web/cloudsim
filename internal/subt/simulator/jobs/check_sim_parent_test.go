@@ -34,7 +34,7 @@ func TestCheckSimParent(t *testing.T) {
 
 }
 
-func TestCheckPendingStatus_ErrSimIsParent(t *testing.T) {
+func TestCheckSimIsParent_ErrSimIsParent(t *testing.T) {
 	// Initialize simulation
 	gid := simulations.GroupID("aaaa-bbbb-cccc-dddd")
 	sim := fake.NewSimulation(gid, simulations.StatusPending, simulations.SimParent, nil, "test")
