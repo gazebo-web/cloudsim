@@ -14,8 +14,8 @@ var CheckSimulationNoErrors = jobs.CheckSimulationNoError.Extend(actions.Job{
 	PreHooks:        []actions.JobFunc{createCheckSimulationNoErrorInput},
 	PostHooks:       []actions.JobFunc{checkNoErrorOutput, returnState},
 	RollbackHandler: nil,
-	InputType:       nil,
-	OutputType:      nil,
+	InputType:  actions.GetJobDataType(&state.StartSimulation{}),
+	OutputType: actions.GetJobDataType(&state.StartSimulation{}),
 })
 
 // checkNoErrorOutput checks that the simulations provided to the execute function have no errors.
