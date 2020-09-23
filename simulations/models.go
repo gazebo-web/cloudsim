@@ -417,7 +417,7 @@ func (dep *SimulationDeployment) assertSimDepStatus(st DeploymentStatus) *ign.Er
 type MultiSimType int
 
 const (
-	// multiSimSingle represents a "single" simulation. Meaning it didn't spawned any other simulations.
+	// multiSimSingle represents a "single" simulation. Meaning it didn't spawn any other simulations.
 	// This is the default.
 	multiSimSingle MultiSimType = iota
 	// multiSimParent is used to tag the main simulation request, which was used to spawn the actual simulations.

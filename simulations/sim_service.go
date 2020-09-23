@@ -10,6 +10,7 @@ import (
 	"github.com/satori/go.uuid"
 	"gitlab.com/ignitionrobotics/web/cloudsim/globals"
 	"gitlab.com/ignitionrobotics/web/cloudsim/queues"
+	"gitlab.com/ignitionrobotics/web/cloudsim/simulations/gloo"
 	"gitlab.com/ignitionrobotics/web/cloudsim/transport"
 	ignws "gitlab.com/ignitionrobotics/web/cloudsim/transport/ign"
 	useracc "gitlab.com/ignitionrobotics/web/cloudsim/users"
@@ -129,6 +130,8 @@ type Service struct {
 	AllowRequeuing bool
 	// A reference to the kubernetes client
 	clientset kubernetes.Interface
+	// A reference to the Gloo client
+	glooClientset gloo.Clientset
 	// A reference to the nodes manager implementation
 	hostsSvc NodeManager
 	DB       *gorm.DB
@@ -172,6 +175,8 @@ var SimServImpl SimService
 type simServConfig struct {
 	// KubernetesNamespace is the Kubernetes namespace for simulation resources.
 	KubernetesNamespace string `env:"SIMSVC_KUBERNETES_NAMESPACE" envDefault:"default"`
+	// KubernetesGlooNamespace is the Gloo namespace in the Kubernetes cluster.
+	KubernetesGlooNamespace string `env:"SIMSVC_KUBERNETES_GLOO_NAMESPACE" envDefault:"gloo-system"`
 	// PoolSizeLaunchSim is the number of worker threads available to launch simulations.
 	PoolSizeLaunchSim int `env:"SIMSVC_POOL_LAUNCH_SIM" envDefault:"10"`
 	// PoolSizeTerminateSim is the number of worker threads available to terminate simulations.
@@ -244,8 +249,8 @@ type PoolFactory func(poolSize int, jobF func(interface{})) (JobPool, error)
 // ///////////////////////////////////////////////////////////////////////
 
 // NewSimulationsService creates a new simulations service
-func NewSimulationsService(ctx context.Context, db *gorm.DB, nm NodeManager,
-	kcli kubernetes.Interface, pf PoolFactory, ua useracc.UserAccessor, isTest bool) (SimService, error) {
+func NewSimulationsService(ctx context.Context, db *gorm.DB, nm NodeManager, kcli kubernetes.Interface,
+	gloo gloo.Clientset, pf PoolFactory, ua useracc.UserAccessor, isTest bool) (SimService, error) {
 
 	var err error
 	s := Service{}
@@ -253,6 +258,7 @@ func NewSimulationsService(ctx context.Context, db *gorm.DB, nm NodeManager,
 	s.DB = db
 	s.baseCtx = ctx
 	s.clientset = kcli
+	s.glooClientset = gloo
 	s.userAccessor = ua
 	s.hostsSvc = nm
 	s.runningSimulations = map[string]*RunningSimulation{}
