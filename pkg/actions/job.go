@@ -172,6 +172,10 @@ func (j *Job) Run(store Store, tx *gorm.DB, deployment *Deployment, value interf
 		panic(fmt.Sprintf("job %s does not have an execute function defined", j.Name))
 	}
 
+	// Job functions should never return `nil`, as other jobs may need the value received from previous jobs.
+	// The only case where returning `nil` is acceptable is if the input was `nil` to begin with.
+	inputValueIsNil := value == nil
+
 	// Process pre-hooks
 	if value, err = j.processHooks(store, tx, deployment, value, &j.PreHooks); err != nil {
 		return nil, err
@@ -185,6 +189,11 @@ func (j *Job) Run(store Store, tx *gorm.DB, deployment *Deployment, value interf
 	// Process post-hooks
 	if value, err = j.processHooks(store, tx, deployment, value, &j.PostHooks); err != nil {
 		return nil, err
+	}
+
+	// Check that a value other than `nil` was returned.
+	if !inputValueIsNil && value == nil {
+		return nil, ErrJobNilOutput
 	}
 
 	return value, nil
@@ -209,19 +218,10 @@ func (j *Job) processHooks(store Store, tx *gorm.DB, deployment *Deployment, val
 func callJobFunc(jobFunc JobFunc, store Store, tx *gorm.DB, deployment *Deployment,
 	value interface{}) (interface{}, error) {
 
-	// Job functions should never return `nil`, as other jobs may need the value received from previous jobs.
-	// The only case where returning `nil` is acceptable is if the input was `nil` to begin with.
-	inputValueIsNil := value == nil
-
 	// Process the values
 	var err error
 	if value, err = jobFunc(store, tx, deployment, value); err != nil {
 		return nil, err
-	}
-
-	// Check that a value other than `nil` was returned.
-	if !inputValueIsNil && value == nil {
-		return nil, ErrJobNilOutput
 	}
 
 	return value, nil

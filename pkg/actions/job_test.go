@@ -115,21 +115,43 @@ func TestCallJobFunc(t *testing.T) {
 	test(valueFunc, nil, false)
 	test(valueFunc, 1, false)
 	test(nilFunc, nil, false)
-	test(nilFunc, 1, true)
+	test(nilFunc, 1, false)
 }
 
 func TestTestJobExecute(t *testing.T) {
-	j := &Job{
-		Execute: func(store Store, tx *gorm.DB, deployment *Deployment, value interface{}) (interface{}, error) {
-			return value, nil
-		},
+	valueFunc := func(store Store, tx *gorm.DB, deployment *Deployment, value interface{}) (interface{}, error) {
+		return value, nil
 	}
-	val := 1
-	value, err := j.Execute(nil, nil, nil, val)
+	nilFunc := func(store Store, tx *gorm.DB, deployment *Deployment, value interface{}) (interface{}, error) {
+		return nil, nil
+	}
 
-	// The test job should not panic and return the same value it receives
-	assert.NoError(t, err)
-	assert.Equal(t, value.(int), val)
+	test := func(execute JobFunc, postHook JobFunc, value interface{}, error bool) {
+		// Prepare job
+		j := &Job{
+			Execute: execute,
+		}
+
+		// Optionally add post-hooks
+		if postHook != nil {
+			j.PostHooks = []JobFunc{postHook}
+		}
+
+		value, err := j.Execute(nil, nil, nil, value)
+
+		if error {
+			assert.NoError(t, err)
+		} else {
+			// The test job should not fail and return the same value it receives
+			assert.NoError(t, err)
+			assert.Equal(t, value.(int), value)
+		}
+	}
+
+	test(valueFunc, nil, 1, false)
+	test(nilFunc, nil, 1, true)
+	test(valueFunc, valueFunc, 1, false)
+	test(valueFunc, nilFunc, 1, true)
 }
 
 func TestTestJobRun(t *testing.T) {
