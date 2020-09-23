@@ -2,6 +2,7 @@ package state
 
 import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/application"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/cloud"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/platform"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
@@ -9,10 +10,11 @@ import (
 
 // StartSimulation is the state of the action that starts a simulation.
 type StartSimulation struct {
-	platform        platform.Platform
-	services        application.Services
-	GroupID         simulations.GroupID
-	GazeboServerPod orchestrator.Resource
+	platform         platform.Platform
+	services         application.Services
+	GroupID          simulations.GroupID
+	GazeboServerPod  orchestrator.Resource
+	CreatedInstances []cloud.CreateMachinesOutput
 }
 
 // Platform returns the underlying platform.
