@@ -14,10 +14,10 @@ var (
 )
 
 // JobFunc is the function signature used by job hooks and Execute function.
-type JobFunc func(ctx Context, tx *gorm.DB, deployment *Deployment, value interface{}) (interface{}, error)
+type JobFunc func(store Store, tx *gorm.DB, deployment *Deployment, value interface{}) (interface{}, error)
 
 // JobErrorHandler is the job function type called when an error occurs in a job.
-type JobErrorHandler func(ctx Context, tx *gorm.DB, deployment *Deployment, value interface{},
+type JobErrorHandler func(store Store, tx *gorm.DB, deployment *Deployment, value interface{},
 	err error) (interface{}, error)
 
 // JobDataType is used to store Job input and output data types.
@@ -165,39 +165,48 @@ func (j *Job) validate() error {
 }
 
 // Run runs the job. It calls the job's pre-hooks, followed by its Execute method, and finally its post-hooks.
-func (j *Job) Run(ctx Context, tx *gorm.DB, deployment *Deployment, value interface{}) (interface{}, error) {
+func (j *Job) Run(store Store, tx *gorm.DB, deployment *Deployment, value interface{}) (interface{}, error) {
 	var err error
 	// Ensure there is an Execute function
 	if j.Execute == nil {
 		panic(fmt.Sprintf("job %s does not have an execute function defined", j.Name))
 	}
 
+	// Job functions should never return `nil`, as other jobs may need the value received from previous jobs.
+	// The only case where returning `nil` is acceptable is if the input was `nil` to begin with.
+	inputValueIsNil := value == nil
+
 	// Process pre-hooks
-	if value, err = j.processHooks(ctx, tx, deployment, value, &j.PreHooks); err != nil {
+	if value, err = j.processHooks(store, tx, deployment, value, &j.PreHooks); err != nil {
 		return nil, err
 	}
 
 	// Execute job
-	if value, err = callJobFunc(j.Execute, ctx, tx, deployment, value); err != nil {
+	if value, err = callJobFunc(j.Execute, store, tx, deployment, value); err != nil {
 		return nil, err
 	}
 
 	// Process post-hooks
-	if value, err = j.processHooks(ctx, tx, deployment, value, &j.PostHooks); err != nil {
+	if value, err = j.processHooks(store, tx, deployment, value, &j.PostHooks); err != nil {
 		return nil, err
+	}
+
+	// Check that a value other than `nil` was returned.
+	if !inputValueIsNil && value == nil {
+		return nil, ErrJobNilOutput
 	}
 
 	return value, nil
 }
 
 // processHooks receives an input value and processes it using a sequence of hook functions.
-func (j *Job) processHooks(ctx Context, tx *gorm.DB, deployment *Deployment, value interface{},
+func (j *Job) processHooks(store Store, tx *gorm.DB, deployment *Deployment, value interface{},
 	hooks *[]JobFunc) (interface{}, error) {
 
 	var err error
 	for _, hook := range *hooks {
 		// Process the values
-		if value, err = callJobFunc(hook, ctx, tx, deployment, value); err != nil {
+		if value, err = callJobFunc(hook, store, tx, deployment, value); err != nil {
 			return nil, err
 		}
 	}
@@ -206,22 +215,13 @@ func (j *Job) processHooks(ctx Context, tx *gorm.DB, deployment *Deployment, val
 }
 
 // callJobFunc calls a function of type JobFunc and checks that the output is valid.
-func callJobFunc(jobFunc JobFunc, ctx Context, tx *gorm.DB, deployment *Deployment,
+func callJobFunc(jobFunc JobFunc, store Store, tx *gorm.DB, deployment *Deployment,
 	value interface{}) (interface{}, error) {
-
-	// Job functions should never return `nil`, as other jobs may need the value received from previous jobs.
-	// The only case where returning `nil` is acceptable is if the input was `nil` to begin with.
-	inputValueIsNil := value == nil
 
 	// Process the values
 	var err error
-	if value, err = jobFunc(ctx, tx, deployment, value); err != nil {
+	if value, err = jobFunc(store, tx, deployment, value); err != nil {
 		return nil, err
-	}
-
-	// Check that a value other than `nil` was returned.
-	if !inputValueIsNil && value == nil {
-		return nil, ErrJobNilOutput
 	}
 
 	return value, nil

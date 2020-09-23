@@ -14,7 +14,11 @@ import (
 	"github.com/caarlos0/env"
 	"github.com/jinzhu/gorm"
 	"github.com/pkg/errors"
+	gatewayapiv1 "github.com/solo-io/gloo/projects/gateway/pkg/api/v1"
+	gatewayv1 "github.com/solo-io/gloo/projects/gateway/pkg/api/v1/kube/apis/gateway.solo.io/v1"
+	"github.com/solo-io/gloo/projects/gloo/pkg/api/v1/core/matchers"
 	"gitlab.com/ignitionrobotics/web/cloudsim/globals"
+	"gitlab.com/ignitionrobotics/web/cloudsim/simulations/gloo"
 	useracc "gitlab.com/ignitionrobotics/web/cloudsim/users"
 	"gitlab.com/ignitionrobotics/web/fuelserver/bundles/users"
 	per "gitlab.com/ignitionrobotics/web/fuelserver/permissions"
@@ -261,7 +265,7 @@ func (sa *SubTApplication) getWebsocketServiceName(podNamePrefix string) string 
 ////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////
 
-// getGazeboPodName returns the name of the Gazebo pod for a simulation.
+// getSimulationIngressPath returns the request path for the websocket server of a simulation.
 func (sa *SubTApplication) getSimulationIngressPath(groupID string) string {
 	return fmt.Sprintf("/simulations/%s", groupID)
 }
@@ -1075,6 +1079,9 @@ func (sa *SubTApplication) launchApplication(ctx context.Context, s *Service, tx
 	// Set the simulation time limit
 	gzRunCommand = append(gzRunCommand, fmt.Sprintf("durationSec:=%s", *rules.WorldMaxSimSeconds))
 
+	// Enable ROS on the simulation instance
+	gzRunCommand = append(gzRunCommand, "ros:=true")
+
 	// Set headless
 	gzRunCommand = append(gzRunCommand, "headless:=true")
 
@@ -1343,7 +1350,7 @@ func (sa *SubTApplication) launchApplication(ctx context.Context, s *Service, tx
 	// Expose the Gazebo websocket server if an auth key is available
 	if dep.AuthorizationToken != nil && len(sa.cfg.IngressName) > 0 {
 		// Create and launch a service to expose the websocket server to the cluster
-		service, err := sa.createWebsocketService(
+		_, err := sa.createWebsocketService(
 			ctx,
 			s.clientset,
 			s.cfg.KubernetesNamespace,
@@ -1356,8 +1363,12 @@ func (sa *SubTApplication) launchApplication(ctx context.Context, s *Service, tx
 			logger(ctx).Error("[launchApplication] Failed to create websocket Kubernetes service.", err)
 			return nil, ign.NewErrorMessageWithBase(ign.ErrorK8Create, err)
 		}
-		// Create an ingress rule to allow traffic to the websocket service from the Internet
-		_, err = sa.createWebsocketIngress(ctx, s.clientset, s.cfg.KubernetesNamespace, dep, service)
+		// Add a Gloo route to allow traffic to the websocket service from the Internet
+		_, err = sa.CreateGlooVirtualServiceRoute(
+			ctx,
+			s,
+			dep,
+		)
 		if err != nil {
 			logger(ctx).Error("[launchApplication] Failed to create websocket Kubernetes ingress rule.", err)
 			return nil, ign.NewErrorMessageWithBase(ign.ErrorK8Create, err)
@@ -1661,7 +1672,7 @@ func (sa *SubTApplication) createWebsocketService(ctx context.Context, kc kubern
 }
 
 // createWebsocketIngress adds a rule to the environment's cluster ingress resource.
-// If an ingress controller is installedin the cluster, the creation of the ingress rule will trigger an ingress
+// If an ingress controller is installed in the cluster, the creation of the ingress rule will trigger an ingress
 // controller to configure a load balancer to redirect simulation websocket requests to the cluster service created
 // for the websocket server.
 func (sa *SubTApplication) createWebsocketIngress(ctx context.Context, kc kubernetes.Interface, namespace string,
@@ -1710,6 +1721,107 @@ func (sa *SubTApplication) createWebsocketIngress(ctx context.Context, kc kubern
 	}
 
 	return ingress, err
+}
+
+// GetGlooServiceUpstreamName gets the name of an upstream for a cluster service.
+// Upstreams are used by Gloo Virtual Service routes to direct traffic to a Kubernetes service.
+// `glooNamespace` is the Kubernetes namespace Gloo is running in.
+// `service` is the Kubernetes service the upstream points to.
+func (*SubTApplication) GetGlooServiceUpstreamName(gloo gloo.Clientset, glooNamespace string,
+	groupID string) (string, error) {
+
+	opts := metav1.ListOptions{
+		LabelSelector: labelAndValue(podLabelKeyGroupID, groupID),
+	}
+
+	upstreams, err := gloo.Gloo().Upstreams(glooNamespace).List(opts)
+	if err != nil {
+		return "", err
+	}
+	// There should only ever be a single upstream for the target service
+	if len(upstreams.Items) < 1 {
+		return "", errors.New("did not find a Gloo upstream for target Kubernetes service")
+	} else if len(upstreams.Items) > 1 {
+		return "", errors.New("found too many Gloo upstreams for target Kubernetes service")
+	}
+
+	return upstreams.Items[0].Name, nil
+}
+
+// CreateGlooVirtualServiceRoute creates a Gloo Route to redirect websocket simulation requests to a Kubernetes service.
+// TODO: Receive a generic application instead of a SubTApplication pointer.
+func (sa *SubTApplication) CreateGlooVirtualServiceRoute(ctx context.Context, s *Service,
+	dep *SimulationDeployment) (*gatewayv1.VirtualService, error) {
+
+	logger := logger(ctx)
+	logger.Info("Creating simulation websocket ingress rule.")
+
+	groupID := *dep.GroupID
+	retries := uint(9)
+	var err error
+
+	// Upstreams are Gloo's representation of services that can be routed to. An upstream can point to different things.
+	// For now we're only using Kubernetes services, so a Gloo upstream is synonymous with a Kubernetes service.
+	var upstream string
+	for i := uint(1); i < retries; i++ {
+		logger.Info(fmt.Sprintf("Getting service upstream in namespace %s with id %s", s.cfg.KubernetesGlooNamespace, groupID))
+		upstream, err = sa.GetGlooServiceUpstreamName(
+			s.glooClientset,
+			s.cfg.KubernetesGlooNamespace,
+			groupID,
+		)
+		logger.Info(fmt.Sprintf("Got upstream! Name: %s", upstream))
+		if err == nil {
+			break
+		} else if i < retries-1 {
+			logger.Info("Failed to get Kubernetes Service Gloo Upstream name. Retrying. Error:", err)
+		}
+
+		// If an error occurred, retry for up to 10 min with exponential backoff
+		Sleep(time.Duration(1<<i) * time.Second)
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	// Matchers define the criteria a request must match to route traffic to upstreams.
+	matcher := gloo.CreateVirtualHostRouteExactMatcher(sa.getSimulationIngressPath(groupID))
+
+	// Actions perform routing operations when executed.
+	// This particular action redirects traffic to a single target upstream.
+	action := gloo.CreateVirtualHostRouteAction(
+		s.cfg.KubernetesGlooNamespace,
+		upstream,
+	)
+
+	// Routes bind an upstream, a set of matchers and an action into an element used to configure the Gloo Envoy proxy.
+	route := gloo.CreateVirtualHostRoute(
+		groupID,
+		[]*matchers.Matcher{matcher},
+		action,
+	)
+
+	// Add the route to the Virtual Service
+	var virtualService *gatewayv1.VirtualService
+	for i := uint(1); i < retries; i++ {
+		virtualService, err = gloo.UpsertVirtualServiceRoute(
+			ctx,
+			s.glooClientset,
+			s.cfg.KubernetesGlooNamespace,
+			sa.cfg.IngressName,
+			route,
+		)
+		if err == nil {
+			break
+		} else if i < retries-1 {
+			logger.Info("Failed to create Gloo Virtual Service route. Retrying. Error:", err)
+		}
+
+		// If an error occurred, retry for up to 10 min with exponential backoff
+		Sleep(time.Duration(1<<i) * time.Second)
+	}
+
+	return virtualService, err
 }
 
 // createCommsBridgePod creates a basic comms-bridge pod. Callers should then
@@ -2242,20 +2354,16 @@ func (sa *SubTApplication) deleteApplication(ctx context.Context, s *Service, tx
 	}
 	logger(ctx).Info("Successfully deleted pods for groupID: " + groupID)
 
-	// Delete Ingress rules associated to the groupID.
-	if len(sa.cfg.IngressName) > 0 {
-		var host *string
-		if len(sa.cfg.WebsocketHost) > 0 {
-			host = &sa.cfg.WebsocketHost
-		}
-
-		_, err := removeIngressRule(
+	// Delete Gloo route associated to the groupID.
+	if len(sa.cfg.IngressName) > 0 && len(sa.cfg.WebsocketHost) > 0 {
+		_, err := gloo.RemoveVirtualServiceRoute(
 			ctx,
-			s.clientset,
-			s.cfg.KubernetesNamespace,
+			s.glooClientset,
+			s.cfg.KubernetesGlooNamespace,
 			sa.cfg.IngressName,
-			host,
-			sa.getSimulationIngressPath(groupID),
+			&gatewayapiv1.Route{
+				Name: groupID,
+			},
 		)
 
 		if err != nil {

@@ -25,13 +25,16 @@ import (
 	"github.com/pkg/errors"
 	"gitlab.com/ignitionrobotics/web/cloudsim/globals"
 	sim "gitlab.com/ignitionrobotics/web/cloudsim/simulations"
+	"gitlab.com/ignitionrobotics/web/cloudsim/simulations/gloo"
 	useracc "gitlab.com/ignitionrobotics/web/cloudsim/users"
 	"gitlab.com/ignitionrobotics/web/fuelserver/permissions"
 	"gitlab.com/ignitionrobotics/web/ign-go"
 	"gitlab.com/ignitionrobotics/web/ign-go/monitoring/prometheus"
 	"gopkg.in/go-playground/validator.v9"
 	"k8s.io/client-go/kubernetes"
+	restclient "k8s.io/client-go/rest"
 	"log"
+	"os"
 	"strconv"
 	"strings"
 )
@@ -73,9 +76,9 @@ var ecNm *sim.Ec2Client
 /////////////////////////////////////////////////
 /// Initialize this package
 func init() {
-	
+
 	cfg := appConfig{}
-	cfg.isGoTest = flag.Lookup("test.v") != nil
+	cfg.isGoTest = strings.Contains(os.Args[0], "test")
 
 	// Using ENV approach to allow multiple layers of configuration.
 	// See https://github.com/joho/godotenv
@@ -195,6 +198,28 @@ func init() {
 	kcli = sim.NewK8Factory(cfg.isGoTest, connectToCloudServices).NewK8(logCtx)
 	globals.KClientset = kcli
 
+	// Configure the Gloo client
+	var kubeconfig *restclient.Config
+	if !cfg.isGoTest {
+		kubeconfig, err = sim.GetKubernetesConfig(nil)
+		if err != nil {
+			logger.Critical("Critical error trying to get Kubernetes config from %s", err)
+			log.Fatalf("%+v\n", err)
+		}
+	}
+
+	glooConfig := &gloo.ClientsetConfig{
+		KubeConfig:             kubeconfig,
+		IsGoTest:               cfg.isGoTest,
+		ConnectToCloudServices: connectToCloudServices,
+	}
+
+	glooClientset, err := gloo.NewClientset(logCtx, glooConfig)
+	if err != nil {
+		logger.Critical("Critical error trying to create Gloo client", err)
+		log.Fatalf("%+v\n", err)
+	}
+
 	// Note: we were always creating the AWS session. And our logic relies on it.
 	// TODO: we need to change this to avoid creating the AWS session if using minikube.
 	cfg.awsSession = session.Must(session.NewSession())
@@ -244,7 +269,17 @@ func init() {
 	if cfg.isGoTest {
 		pFactory = sim.SynchronicPoolFactory
 	}
-	if sim.SimServImpl, err = sim.NewSimulationsService(logCtx, globals.Server.Db, nm, kcli, pFactory, userAccessor, cfg.isGoTest); err != nil {
+	sim.SimServImpl, err = sim.NewSimulationsService(
+		logCtx,
+		globals.Server.Db,
+		nm,
+		kcli,
+		glooClientset,
+		pFactory,
+		userAccessor,
+		cfg.isGoTest,
+	)
+	if err != nil {
 		// Log and shutdown the app , if there is an error during startup
 		logger.Critical("Critical error trying to create Simulations services", err)
 		log.Fatalf("%+v\n", err)
@@ -344,11 +379,8 @@ func initUserAccessor(ctx context.Context, cfg appConfig) (useracc.UserAccessor,
 	if cfg.isGoTest {
 		ignDbCfg.Name = ignDbCfg.Name + "_test"
 		// Parse verbose setting, and adjust logging accordingly
-		if !flag.Parsed() {
-			flag.Parse()
-		}
-		v := flag.Lookup("test.v")
-		isTestVerbose := v.Value.String() == "true"
+		v := flag.Lookup("v")
+		isTestVerbose := v != nil && v.Value.String() == "true"
 		if isTestVerbose {
 			ignDbCfg.EnableLog = true
 		}
