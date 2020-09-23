@@ -3,7 +3,6 @@ package jobs
 import (
 	"github.com/jinzhu/gorm"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/actions"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulator"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/waiter"
 	"time"
@@ -11,7 +10,6 @@ import (
 
 // WaitInput is the input of the Wait job.
 type WaitInput struct {
-	GroupID       simulations.GroupID
 	Request       waiter.Waiter
 	PollFrequency time.Duration
 	Timeout       time.Duration
@@ -30,6 +28,11 @@ var Wait = &actions.Job{
 // wait is the Wait execute function. It's used to trigger the Wait method in the Request passed inside the WaitInput
 // value with the given WaitInput.Timeout and WaitInput.PollFrequency.
 // It returns an error if the request fails.
+// wait will be used for any resource or event that implements the waiter interface.
+// Examples:
+// 		Waiting for nodes to be registered in the cluster
+// 		Waiting for pods to have an ip assigned.
+// 		Waiting for pods to be on the "Ready" state.
 func wait(store actions.Store, tx *gorm.DB, deployment *actions.Deployment, value interface{}) (interface{}, error) {
 	input, ok := value.(WaitInput)
 	if !ok {
