@@ -32,7 +32,6 @@ func createWaitRequestForGzServerPod(store actions.Store, tx *gorm.DB, deploymen
 
 	// Return new wait input
 	return jobs.WaitInput{
-		GroupID:       s.GroupID,
 		Request:       req,
 		PollFrequency: pollFreq,
 		Timeout:       timeout,
