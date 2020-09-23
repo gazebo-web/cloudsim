@@ -1,6 +1,7 @@
 package jobs
 
 import (
+	"fmt"
 	"github.com/jinzhu/gorm"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/actions"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
@@ -10,7 +11,9 @@ import (
 type CheckSimulationNoErrorInput []simulations.Simulation
 
 // CheckSimulationNoErrorOutput is the output of the CheckSimulationNoError job.
-type CheckSimulationNoErrorOutput bool
+type CheckSimulationNoErrorOutput struct {
+	Error error
+}
 
 // CheckSimulationNoError is in charge of checking that the simulation has no error status.
 var CheckSimulationNoError = &actions.Job{
@@ -23,9 +26,13 @@ func checkSimulationNoError(store actions.Store, tx *gorm.DB, deployment *action
 
 	for _, sim := range input {
 		if sim.Error() != nil {
-			return CheckSimulationNoErrorOutput(false), nil
+			return CheckSimulationNoErrorOutput{
+				Error: fmt.Errorf("simulation [%s] with error status [%s]", sim.GroupID(), *sim.Error()),
+			}, nil
 		}
 	}
 
-	return CheckSimulationNoErrorOutput(true), nil
+	return CheckSimulationNoErrorOutput{
+		Error: nil,
+	}, nil
 }
