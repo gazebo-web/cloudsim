@@ -12,7 +12,7 @@ type CheckSimulationNoErrorInput []simulations.Simulation
 // CheckSimulationNoErrorOutput is the output of the CheckSimulationNoError job.
 type CheckSimulationNoErrorOutput bool
 
-// CheckSimulationNoError is in charge of checking that the simulation has no errors.
+// CheckSimulationNoError is in charge of checking that the simulation has no error status.
 var CheckSimulationNoError = &actions.Job{
 	Execute: checkSimulationNoError,
 }
