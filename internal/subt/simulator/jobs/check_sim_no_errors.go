@@ -1,6 +1,7 @@
 package jobs
 
 import (
+	"fmt"
 	"github.com/jinzhu/gorm"
 	"gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/simulator/state"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/actions"
@@ -10,19 +11,18 @@ import (
 
 // CheckSimulationNoErrors checks that a group of simulations don't have errors.
 var CheckSimulationNoErrors = jobs.CheckSimulationNoError.Extend(actions.Job{
-	Name:            "check-sim-no-errors",
-	PreHooks:        []actions.JobFunc{createCheckSimulationNoErrorInput},
-	PostHooks:       []actions.JobFunc{checkNoErrorOutput, returnState},
-	RollbackHandler: nil,
+	Name:       "check-sim-no-errors",
+	PreHooks:   []actions.JobFunc{createCheckSimulationNoErrorInput},
+	PostHooks:  []actions.JobFunc{checkNoErrorOutput, returnState},
 	InputType:  actions.GetJobDataType(&state.StartSimulation{}),
 	OutputType: actions.GetJobDataType(&state.StartSimulation{}),
 })
 
 // checkNoErrorOutput checks that the simulations provided to the execute function have no errors.
 func checkNoErrorOutput(store actions.Store, tx *gorm.DB, deployment *actions.Deployment, value interface{}) (interface{}, error) {
-	hasErr := value.(jobs.CheckSimulationNoErrorOutput)
-	if hasErr {
-		return nil, simulations.ErrSimulationWithError
+	out := value.(jobs.CheckSimulationNoErrorOutput)
+	if out.Error != nil {
+		return nil, fmt.Errorf("error while checking if simulations have error status, base error: %w", out.Error)
 	}
 	return nil, nil
 }
