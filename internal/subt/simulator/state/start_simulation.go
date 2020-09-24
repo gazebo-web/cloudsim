@@ -19,7 +19,7 @@ type StartSimulation struct {
 	FieldComputerNodeLabels map[string]string
 	GazeboServerPodLabels   map[string]string
 	FieldComputerPodLabels  map[string]string
-	BridgeCommsPodLabels    map[string]string
+	CommsBridgePodLabels    map[string]string
 }
 
 // Platform returns the underlying platform.
