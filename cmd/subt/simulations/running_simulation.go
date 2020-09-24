@@ -3,9 +3,9 @@ package simulations
 import (
 	"context"
 	"fmt"
-	msgs "gitlab.com/ignitionrobotics/web/cloudsim/ign-transport/proto/ignition/msgs"
-	"gitlab.com/ignitionrobotics/web/cloudsim/transport"
-	ignws "gitlab.com/ignitionrobotics/web/cloudsim/transport/ign"
+	msgs "gitlab.com/ignitionrobotics/web/cloudsim/cmd/subt/ign-transport/proto/ignition/msgs"
+	"gitlab.com/ignitionrobotics/web/cloudsim/cmd/subt/transport"
+	ignws "gitlab.com/ignitionrobotics/web/cloudsim/cmd/subt/transport/ign"
 	"gitlab.com/ignitionrobotics/web/ign-go"
 	"sync"
 	"time"

@@ -4,7 +4,7 @@ import (
 	"github.com/golang/protobuf/proto"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	msgs "gitlab.com/ignitionrobotics/web/cloudsim/ign-transport/proto/ignition/msgs"
+	msgs "gitlab.com/ignitionrobotics/web/cloudsim/cmd/subt/ign-transport/proto/ignition/msgs"
 	"testing"
 )
 

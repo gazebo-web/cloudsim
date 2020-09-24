@@ -5,7 +5,7 @@ import (
 	"context"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/jinzhu/gorm"
-	sim "gitlab.com/ignitionrobotics/web/cloudsim/simulations"
+	sim "gitlab.com/ignitionrobotics/web/cloudsim/cmd/subt/simulations"
 	"log"
 )
 

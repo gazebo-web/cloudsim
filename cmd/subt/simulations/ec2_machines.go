@@ -31,7 +31,7 @@ const (
 
 // MaxAWSRetries holds how many retries will be done against AWS. It is a var
 // to allow tests to change this value.
-var MaxAWSRetries int = 8
+var MaxAWSRetries = 8
 
 type awsConfig struct {
 	NamePrefix string `env:"AWS_INSTANCE_NAME_PREFIX,required"`

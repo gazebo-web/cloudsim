@@ -1,33 +1,16 @@
 package main
 
 import (
-	"context"
-	"github.com/jinzhu/gorm"
-	"github.com/stretchr/testify/assert"
-	sim "gitlab.com/ignitionrobotics/web/cloudsim/simulations"
-	"gitlab.com/ignitionrobotics/web/ign-go"
+	"encoding/json"
+	"github.com/stretchr/testify/require"
+	sim "gitlab.com/ignitionrobotics/web/cloudsim/cmd/subt/simulations"
 	igntest "gitlab.com/ignitionrobotics/web/ign-go/testhelpers"
 	"testing"
 )
 
-func mockLaunchSimulation(launched *bool) func(s *sim.Service, ctx context.Context, tx *gorm.DB, dep *sim.SimulationDeployment) *ign.ErrMsg {
-	return func(s *sim.Service, ctx context.Context, tx *gorm.DB, dep *sim.SimulationDeployment) *ign.ErrMsg {
-		if em := s.GetApplications()[*dep.Application].ValidateSimulationLaunch(ctx, tx, dep); em != nil {
-			*launched = false
-			return em
-		}
-		return nil
-	}
-}
-
-func TestLaunchSimulationBeforeCompetitionDay(t *testing.T) {
+func TestTeamIsQualified(t *testing.T) {
 	// General test setup
 	setup()
-
-	launched := true
-
-	restoreFn := ReplaceValue(&sim.LaunchSimulation, mockLaunchSimulation(&launched))
-	defer restoreFn()
 
 	circuit := "Urban Circuit"
 	createSimURI := "/1.0/simulations"
@@ -44,7 +27,7 @@ func TestLaunchSimulationBeforeCompetitionDay(t *testing.T) {
 
 	test := createSimulationTest{
 		uriTest: uriTest{
-			testDesc:          "holdSubmission -- Don't launch simulation before competition day",
+			testDesc:          "teamQualification -- Team is qualified to participate in Urban Circuit",
 			URL:               createSimURI,
 			jwtGen:            teamAUser1,
 			expErrMsg:         nil,
@@ -59,28 +42,23 @@ func TestLaunchSimulationBeforeCompetitionDay(t *testing.T) {
 
 	t.Run(test.testDesc, func(t *testing.T) {
 		invokeURITestMultipartPOST(t, test.uriTest, createSubtForm, func(bslice *[]byte, resp *igntest.AssertResponse) {
-			assert.Equal(t, false, launched)
+			dep := sim.SimulationDeployment{}
+			require.NoError(t, json.Unmarshal(*bslice, &dep), "Unable to unmarshal response", string(*bslice))
 		})
-
 	})
 }
 
-func TestLaunchSimulationOnCompetitionDay(t *testing.T) {
+func TestTeamIsNotQualified(t *testing.T) {
 	// General test setup
 	setup()
 
-	launched := true
-
-	restoreFn := ReplaceValue(&sim.LaunchSimulation, mockLaunchSimulation(&launched))
-	defer restoreFn()
-
-	circuit := "Urban Practice 3"
+	circuit := "Urban Circuit"
 	createSimURI := "/1.0/simulations"
-	teamAUser1 := newJWT(createJWTForIdentity(t, "TeamAUser1"))
+	teamBUser1 := newJWT(createJWTForIdentity(t, "TeamBUser1"))
 
 	createSubtForm := map[string]string{
-		"name":        "sim1",
-		"owner":       "TeamA",
+		"name":        "sim2",
+		"owner":       "TeamB",
 		"circuit":     circuit,
 		"robot_name":  "X1",
 		"robot_type":  "X1_SENSOR_CONFIG_1",
@@ -89,22 +67,23 @@ func TestLaunchSimulationOnCompetitionDay(t *testing.T) {
 
 	test := createSimulationTest{
 		uriTest: uriTest{
-			testDesc:          "holdSubmission -- Launch simulation after competition day",
+			testDesc:          "teamQualification -- Team is not qualified to participate in Urban Circuit",
 			URL:               createSimURI,
-			jwtGen:            teamAUser1,
-			expErrMsg:         nil,
+			jwtGen:            teamBUser1,
+			expErrMsg:         sim.NewErrorMessage(sim.ErrorNotQualified),
 			ignoreErrorBody:   false,
 			ignoreOptionsCall: false,
 		},
 		circuit:    circuit,
-		owner:      "TeamA",
+		owner:      "TeamB",
 		robotName:  nil,
-		expCreator: "TeamAUser1",
+		expCreator: "TeamBUser1",
 	}
 
 	t.Run(test.testDesc, func(t *testing.T) {
 		invokeURITestMultipartPOST(t, test.uriTest, createSubtForm, func(bslice *[]byte, resp *igntest.AssertResponse) {
-			assert.Equal(t, true, launched)
+			dep := sim.SimulationDeployment{}
+			require.NoError(t, json.Unmarshal(*bslice, &dep), "Unable to unmarshal response", string(*bslice))
 		})
 	})
 }
