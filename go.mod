@@ -28,7 +28,7 @@ require (
 	github.com/solo-io/gloo v1.4.12
 	github.com/solo-io/solo-kit v0.13.8-patch4
 	github.com/stretchr/testify v1.5.1
-	gitlab.com/ignitionrobotics/web/fuelserver v0.0.0-20200923013150-65f675886be0
+	gitlab.com/ignitionrobotics/web/fuelserver v0.0.0-20200916210816-e30ab5ed9d47
 	gitlab.com/ignitionrobotics/web/ign-go v0.0.0-20200804201637-78fc7e089169
 	gitlab.com/ignitionrobotics/web/scheduler v0.5.1-0.20200114185916-4bd85f4ff2d6 // indirect
 	golang.org/x/crypto v0.0.0-20200820211705-5c72a883971a // indirect
