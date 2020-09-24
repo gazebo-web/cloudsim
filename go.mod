@@ -20,7 +20,6 @@ require (
 	github.com/johannesboyne/gofakes3 v0.0.0-20200716060623-6b2b4cb092cc
 	github.com/joho/godotenv v1.3.0
 	github.com/lib/pq v1.8.0 // indirect
-	github.com/mattn/go-pointer v0.0.0-20180825124634-49522c3f3791
 	github.com/panjf2000/ants v0.0.0-20190122063359-2ba69cd1384d
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/common v0.11.1 // indirect
