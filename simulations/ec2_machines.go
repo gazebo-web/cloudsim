@@ -536,12 +536,12 @@ func (s *Ec2Client) launchNodes(ctx context.Context, tx *gorm.DB, dep *Simulatio
 
 	// Check if there are no machines available or the number of instances created does not match the amount
 	// of requested machines.
-	noInstances := len(machines) == 0 || len(instanceIds) == 0 || len(instanceIds) != requestedMachines
-	if err != nil || noInstances {
+	invalidInstanceCount := len(instanceIds) != requestedMachines
+	if err != nil || invalidInstanceCount {
 		timeTrack(ctx, tstart, "launchNodes - launchInstances ended with error")
 
 		// Terminate launched EC2 instances
-		if !noInstances {
+		if !invalidInstanceCount {
 			s.terminateInstances(ctx, machines)
 		}
 
@@ -550,7 +550,7 @@ func (s *Ec2Client) launchNodes(ctx context.Context, tx *gorm.DB, dep *Simulatio
 		awsErr, ok := err.(awserr.Error)
 		retry := (ok && AWSErrorIsRetryable(awsErr)) ||
 			(err != nil && err.Error() == ign.NewErrorMessage(ign.ErrorLaunchingCloudInstanceNotEnoughResources).Msg) ||
-			noInstances
+			invalidInstanceCount
 		if retry {
 			errType = ign.ErrorLaunchingCloudInstanceNotEnoughResources
 		} else {
