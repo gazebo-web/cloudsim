@@ -541,7 +541,7 @@ func (s *Ec2Client) launchNodes(ctx context.Context, tx *gorm.DB, dep *Simulatio
 		timeTrack(ctx, tstart, "launchNodes - launchInstances ended with error")
 
 		// Terminate launched EC2 instances
-		if !invalidInstanceCount {
+		if len(instanceIds) > 0 {
 			s.terminateInstances(ctx, machines)
 		}
 
