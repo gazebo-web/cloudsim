@@ -2356,19 +2356,30 @@ func (sa *SubTApplication) deleteApplication(ctx context.Context, s *Service, tx
 
 	// Delete Gloo route associated to the groupID.
 	if len(sa.cfg.IngressName) > 0 && len(sa.cfg.WebsocketHost) > 0 {
-		_, err := gloo.RemoveVirtualServiceRoute(
-			ctx,
-			s.glooClientset,
-			s.cfg.KubernetesGlooNamespace,
-			sa.cfg.IngressName,
-			&gatewayapiv1.Route{
-				Name: groupID,
-			},
-		)
+		retries := uint(9)
+		for i := uint(1); i < retries; i++ {
+			_, err := gloo.RemoveVirtualServiceRoute(
+				ctx,
+				s.glooClientset,
+				s.cfg.KubernetesGlooNamespace,
+				sa.cfg.IngressName,
+				&gatewayapiv1.Route{
+					Name: groupID,
+				},
+			)
+			if err == nil {
+				break
+			} else if i < retries-1 {
+				logger(ctx).Info("Failed to delete Gloo Virtual Service route. Retrying. Error:", err)
+			}
+
+			// If an error occurred, retry for up to 10 min with exponential backoff
+			Sleep(time.Duration(1<<i) * time.Second)
+		}
 
 		if err != nil {
-			// There was an unexpected error deleting the Ingress rule and the simulation will be marked as failed,
-			// as this is an unexpected scenario.
+			// There was an unexpected error deleting the Gloo Virtual Service route and the simulation will be marked
+			// as failed, as this is an unexpected scenario.
 			em := ign.NewErrorMessageWithBase(ign.ErrorK8Delete, err)
 			errMsg := "Error while removing k8 Ingress rule. Make sure a sysadmin deletes the ingress rule manually."
 			logger(ctx).Error(errMsg, em)
