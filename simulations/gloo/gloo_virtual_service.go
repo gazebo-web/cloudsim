@@ -3,6 +3,7 @@ package gloo
 import (
 	"context"
 	"errors"
+	"fmt"
 	gatewayapiv1 "github.com/solo-io/gloo/projects/gateway/pkg/api/v1"
 	gatewayv1 "github.com/solo-io/gloo/projects/gateway/pkg/api/v1/kube/apis/gateway.solo.io/v1"
 	glooapiv1 "github.com/solo-io/gloo/projects/gloo/pkg/api/v1"
@@ -25,7 +26,12 @@ func updateVirtualService(ctx context.Context, gloo Clientset, glooNamespace str
 
 	virtualService, err := gloo.Gateway().VirtualServices(glooNamespace).Update(virtualService)
 	if err != nil {
-		errMsg := "failed to update ingress"
+		// Get the Virtual Service name
+		vsName := "nil"
+		if virtualService != nil {
+			vsName = virtualService.Name
+		}
+		errMsg := fmt.Sprintf("failed to update virtual service [%s] in namespace [%s]", vsName, glooNamespace)
 		ign.LoggerFromContext(ctx).Error(errMsg, err)
 		return nil, errors.New(errMsg)
 	}
