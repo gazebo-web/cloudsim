@@ -245,9 +245,9 @@ func (s *Ec2Client) checkNodeAvailability(ctx context.Context, simDep *Simulatio
 	// Count how many ec2 instances are running at the given time and
 	// compare it to the limit set by cloudsim
 	// and the amount of new instances it's trying to launch.
-	requestedInstances := 0
+	var requestedInstances int64
 	for _, input := range inputs {
-		requestedInstances += input.MinCount
+		requestedInstances += *input.MinCount
 	}
 
 	// Check if there are enough reservations to launch all simulations.
@@ -260,7 +260,7 @@ func (s *Ec2Client) checkNodeAvailability(ctx context.Context, simDep *Simulatio
 				*odcr,
 			)
 
-			if availableInstances < int64(requestedInstances) {
+			if availableInstances < requestedInstances {
 				return false, ign.NewErrorMessage(ign.ErrorLaunchingCloudInstanceNotEnoughResources)
 			}
 
@@ -281,7 +281,7 @@ func (s *Ec2Client) checkNodeAvailability(ctx context.Context, simDep *Simulatio
 		logger(ctx).Debug(fmt.Sprintf("checkNodeAvailability - [%d] Requested instances | [%d] Reserved instances | [%d] Available instances.", requestedInstances, reservedInstances, s.ec2Cfg.AvailableEC2Machines))
 
 		// Check if the number of required machines is greater than the current available amount of machines.
-		if requestedInstances > s.ec2Cfg.AvailableEC2Machines-reservedInstances {
+		if requestedInstances > int64(s.ec2Cfg.AvailableEC2Machines-reservedInstances) {
 			return false, ign.NewErrorMessage(ign.ErrorLaunchingCloudInstanceNotEnoughResources)
 		}
 	}
