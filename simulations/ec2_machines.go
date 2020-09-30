@@ -48,10 +48,8 @@ type ec2Config struct {
 	// Subnets is a slice of AWS subnet IDs where to launch simulations (Example: subnet-1270518251)
 	Subnets []string `env:"IGN_EC2_SUBNETS,required" envSeparator:","`
 	// AvailabilityZones is a slice of AWS availability zones where to launch simulations. (Example: us-east-1a)
-	AvailabilityZones []string `env:"IGN_EC2_AVAILABILITY_ZONES,required" envSeparator:","`
-	// CapacityReservationPerZone is a slice of the amount of machines that can be launched per availability zone
-	// using On-Demand Capacity Reservation.
-	CapacityReservationPerZone []int `env:"IGN_EC2_ODCR_AZ,required" envSeparator:","`
+	AvailabilityZones                  []string `env:"IGN_EC2_AVAILABILITY_ZONES,required" envSeparator:","`
+	OnDemandCapacityReservationEnabled bool     `env:"IGN_EC2_ODCR_ENABLED,required"`
 	// AvailableEC2Machines is the maximum number of machines that Cloudsim can have running at a single time.
 	AvailableEC2Machines int `env:"IGN_EC2_MACHINES_LIMIT" envDefault:"-1"`
 }
@@ -100,11 +98,6 @@ func NewEC2Client(ctx context.Context, kcli kubernetes.Interface, ec2Svc ec2ifac
 	avalabilityZoneSize := len(ec.ec2Cfg.AvailabilityZones)
 	if len(ec.ec2Cfg.Subnets) != avalabilityZoneSize {
 		return nil, errors.New("Subnet and AZ list length mismatch")
-	}
-
-	capacityReservationSize := len(ec.ec2Cfg.CapacityReservationPerZone)
-	if capacityReservationSize != 0 && capacityReservationSize != avalabilityZoneSize {
-		return nil, errors.New("ODCR and AZ list length mismatch")
 	}
 
 	ec.clientset = kcli
@@ -246,6 +239,8 @@ func (s *Ec2Client) checkNodeAvailability(ctx context.Context, simDep *Simulatio
 	// Count how many ec2 instances are running at the given time and
 	// compare it to the limit set by cloudsim
 	// and the amount of new instances it's trying to launch.
+	requestedInstances := len(inputs)
+
 	if s.ec2Cfg.AvailableEC2Machines >= 0 {
 		// Having 0 machines available stops launching new machines.
 		if s.ec2Cfg.AvailableEC2Machines == 0 {
@@ -253,13 +248,20 @@ func (s *Ec2Client) checkNodeAvailability(ctx context.Context, simDep *Simulatio
 		}
 
 		reservedInstances := s.countReservedEC2Machines(ctx)
-		requestedInstances := len(inputs)
 
 		logger(ctx).Debug(fmt.Sprintf("checkNodeAvailability - [%d] Requested instances | [%d] Reserved instances | [%d] Available instances.", requestedInstances, reservedInstances, s.ec2Cfg.AvailableEC2Machines))
 
 		// Check if the number of required machines is greater than the current available amount of machines.
 		if requestedInstances > s.ec2Cfg.AvailableEC2Machines-reservedInstances {
 			return false, ign.NewErrorMessage(ign.ErrorLaunchingCloudInstanceNotEnoughResources)
+		}
+	} else if s.ec2Cfg.OnDemandCapacityReservationEnabled {
+		for _, in := range inputs {
+			availableInstances := s.getOnDemandCapacityReservation(ctx, *in.InstanceType, *in.Placement.AvailabilityZone)
+
+			if availableInstances < int64(requestedInstances) {
+				return false, ign.NewErrorMessage(ign.ErrorLaunchingCloudInstanceNotEnoughResources)
+			}
 		}
 	}
 
@@ -754,4 +756,53 @@ func (s *Ec2Client) countReservedEC2Machines(ctx context.Context) (instances int
 		instances = len(describeInstancesOutput.Reservations)
 	}
 	return
+}
+
+// getZoneIDFromName receives a zone name like `us-east-1a` and returns the zone ID `use1-az1`.
+func (s *Ec2Client) getZoneIDFromName(name string) (string, error) {
+	out, err := s.ec2Svc.DescribeAvailabilityZones(&ec2.DescribeAvailabilityZonesInput{
+		ZoneNames: aws.StringSlice([]string{name}),
+	})
+
+	if err != nil {
+		return "", err
+	}
+
+	return *out.AvailabilityZones[0].ZoneId, nil
+}
+
+// getOnDemandCapacityReservation gets the amount of machines available to launch using On-Demand Capacity Reservation.
+func (s *Ec2Client) getOnDemandCapacityReservation(ctx context.Context, instanceType string, zone string) int64 {
+	zoneId, err := s.getZoneIDFromName(zone)
+	if err != nil {
+		return 0
+	}
+
+	input := &ec2.DescribeCapacityReservationsInput{
+		Filters: []*ec2.Filter{
+			{
+				Name: aws.String("instance-type"),
+				Values: []*string{
+					aws.String(instanceType),
+				},
+			},
+			{
+				Name: aws.String("availability-zone-id"),
+				Values: []*string{
+					aws.String(zoneId),
+				},
+			},
+		},
+	}
+
+	output, err := s.ec2Svc.DescribeCapacityReservations(input)
+	if err != nil {
+		return 0
+	}
+
+	var reservation int64
+	for _, r := range output.CapacityReservations {
+		reservation += *r.AvailableInstanceCount
+	}
+	return reservation
 }
