@@ -101,6 +101,11 @@ func NewEC2Client(ctx context.Context, kcli kubernetes.Interface, ec2Svc ec2ifac
 		return nil, errors.New("Subnet and AZ list length mismatch")
 	}
 
+	ocdrSize := len(ec.ec2Cfg.OnDemandCapacityReservations)
+	if ocdrSize > 0 && ocdrSize != avalabilityZoneSize {
+		return nil, errors.New("ocdr and AZ list length mismatch")
+	}
+
 	ec.clientset = kcli
 
 	ec.ec2Svc = ec2Svc
