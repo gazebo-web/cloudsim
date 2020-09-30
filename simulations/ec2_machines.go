@@ -49,6 +49,9 @@ type ec2Config struct {
 	Subnets []string `env:"IGN_EC2_SUBNETS,required" envSeparator:","`
 	// AvailabilityZones is a slice of AWS availability zones where to launch simulations. (Example: us-east-1a)
 	AvailabilityZones []string `env:"IGN_EC2_AVAILABILITY_ZONES,required" envSeparator:","`
+	// CapacityReservationPerZone is a slice of the amount of machines that can be launched per availability zone
+	// using On-Demand Capacity Reservation.
+	CapacityReservationPerZone []int `env:"IGN_EC2_ODCR_AZ,required" envSeparator:","`
 	// AvailableEC2Machines is the maximum number of machines that Cloudsim can have running at a single time.
 	AvailableEC2Machines int `env:"IGN_EC2_MACHINES_LIMIT" envDefault:"-1"`
 }
