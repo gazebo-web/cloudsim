@@ -260,6 +260,10 @@ func (s *Ec2Client) checkNodeAvailability(ctx context.Context, simDep *Simulatio
 			if availableInstances < int64(requestedInstances) {
 				return false, ign.NewErrorMessage(ign.ErrorLaunchingCloudInstanceNotEnoughResources)
 			}
+
+			in.CapacityReservationSpecification = &ec2.CapacityReservationSpecification{
+				CapacityReservationTarget: &ec2.CapacityReservationTarget{CapacityReservationId: odcr},
+			}
 		}
 	}
 
@@ -522,6 +526,11 @@ func (s *Ec2Client) launchNodes(ctx context.Context, tx *gorm.DB, dep *Simulatio
 		if len(s.ec2Cfg.OnDemandCapacityReservations) == len(s.ec2Cfg.AvailabilityZones) {
 			odcr = new(string)
 			*odcr = s.ec2Cfg.OnDemandCapacityReservations[s.availabilityZoneIndex]
+			ignlog.Debug(
+				fmt.Sprintf("launchNodes - using ODCR: [%s] on Availability zone: [%s].",
+					*odcr, s.ec2Cfg.AvailabilityZones[s.availabilityZoneIndex],
+				),
+			)
 		}
 
 		// Check there's enough instances available. If not, wait some time and retry
