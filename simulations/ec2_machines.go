@@ -775,7 +775,7 @@ func (s *Ec2Client) getZoneIDFromName(name string) (string, error) {
 // getOnDemandCapacityReservation gets the amount of machines available to launch using On-Demand Capacity Reservation.
 func (s *Ec2Client) getOnDemandCapacityReservation(ctx context.Context, instanceType string, zone string) int64 {
 	// Get the zone ID from the given zone name.
-	zoneId, err := s.getZoneIDFromName(zone)
+	zoneID, err := s.getZoneIDFromName(zone)
 	if err != nil {
 		logger(ctx).Warning("getOnDemandCapacityReservation - Invalid zone")
 		return 0
@@ -793,7 +793,7 @@ func (s *Ec2Client) getOnDemandCapacityReservation(ctx context.Context, instance
 			{
 				Name: aws.String("availability-zone-id"),
 				Values: []*string{
-					aws.String(zoneId),
+					aws.String(zoneID),
 				},
 			},
 		},
