@@ -520,6 +520,7 @@ func (s *Ec2Client) launchNodes(ctx context.Context, tx *gorm.DB, dep *Simulatio
 
 		var odcr *string
 		if len(s.ec2Cfg.OnDemandCapacityReservations) == len(s.ec2Cfg.AvailabilityZones) {
+			odcr = new(string)
 			*odcr = s.ec2Cfg.OnDemandCapacityReservations[s.availabilityZoneIndex]
 		}
 
