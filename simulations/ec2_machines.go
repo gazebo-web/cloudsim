@@ -773,11 +773,14 @@ func (s *Ec2Client) getZoneIDFromName(name string) (string, error) {
 
 // getOnDemandCapacityReservation gets the amount of machines available to launch using On-Demand Capacity Reservation.
 func (s *Ec2Client) getOnDemandCapacityReservation(ctx context.Context, instanceType string, zone string) int64 {
+	// Get the zone ID from the given zone name.
 	zoneId, err := s.getZoneIDFromName(zone)
 	if err != nil {
+		logger(ctx).Warning("getOnDemandCapacityReservation - Invalid zone")
 		return 0
 	}
 
+	// Create the input to describe capacity.
 	input := &ec2.DescribeCapacityReservationsInput{
 		Filters: []*ec2.Filter{
 			{
@@ -795,14 +798,19 @@ func (s *Ec2Client) getOnDemandCapacityReservation(ctx context.Context, instance
 		},
 	}
 
+	// Perform the CR request
 	output, err := s.ec2Svc.DescribeCapacityReservations(input)
 	if err != nil {
+		logger(ctx).Warning("getOnDemandCapacityReservation - Error while describing capacity reservation.")
 		return 0
 	}
 
+	// Count the amount of available instances for the given zone and with the given type.
 	var reservation int64
 	for _, r := range output.CapacityReservations {
 		reservation += *r.AvailableInstanceCount
 	}
+
+	// Return the amount of available instances.
 	return reservation
 }
