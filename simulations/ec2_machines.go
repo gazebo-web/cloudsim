@@ -307,8 +307,8 @@ func (s *Ec2Client) checkNodeAvailability(ctx context.Context, simDep *Simulatio
 	return true, nil
 }
 
-// runInstanceCallWithDryRun requests a single new EC2 instance to AWS.
-func (s *Ec2Client) runInstanceCallWithDryRun(ctx context.Context, input *ec2.RunInstancesInput) (runResult *ec2.Reservation,
+// runInstanceCall requests a single new EC2 instance to AWS.
+func (s *Ec2Client) runInstanceCall(ctx context.Context, input *ec2.RunInstancesInput) (runResult *ec2.Reservation,
 	err error) {
 	for try := 1; try <= MaxAWSRetries; try++ {
 		// First do a DryRun to check permissions etc.
@@ -370,7 +370,7 @@ func (s *Ec2Client) launchInstances(ctx context.Context, tx *gorm.DB, dep *Simul
 
 	for _, input := range instanceInputs {
 		var runResult *ec2.Reservation
-		runResult, err = s.runInstanceCallWithDryRun(ctx, input)
+		runResult, err = s.runInstanceCall(ctx, input)
 		// If the instance could not be started, stop launching new
 		// instances and terminate launched instances
 		if err != nil {
