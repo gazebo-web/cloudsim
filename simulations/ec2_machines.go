@@ -235,7 +235,7 @@ func (s *Ec2Client) setupInstanceSpecifics(ctx context.Context, tx *gorm.DB, dep
 // to launch a specific group of instances. `inputs` should contain a list of
 // all the instances required for a single simulation.
 func (s *Ec2Client) checkNodeAvailability(ctx context.Context, simDep *SimulationDeployment,
-	inputs []*ec2.RunInstancesInput, odcr string) (bool, *ign.ErrMsg) {
+	inputs []*ec2.RunInstancesInput, odcr *string) (bool, *ign.ErrMsg) {
 	// Sanity check
 	if len(inputs) == 0 {
 		logger(ctx).Warning("checkNodeAvailability - Attempted to check availability for 0 instances.\n")
@@ -248,13 +248,13 @@ func (s *Ec2Client) checkNodeAvailability(ctx context.Context, simDep *Simulatio
 	requestedInstances := len(inputs)
 
 	// Check if there are enough reservations to launch all simulations.
-	if len(s.ec2Cfg.OnDemandCapacityReservations) > 0 {
+	if odcr != nil {
 		for _, in := range inputs {
 			availableInstances := s.getOnDemandCapacityReservation(
 				ctx,
 				*in.InstanceType,
 				*in.Placement.AvailabilityZone,
-				odcr,
+				*odcr,
 			)
 
 			if availableInstances < int64(requestedInstances) {
@@ -518,8 +518,13 @@ func (s *Ec2Client) launchNodes(ctx context.Context, tx *gorm.DB, dep *Simulatio
 		// instances for this simulation
 		s.lockRunInstances.Lock()
 
+		var odcr *string
+		if len(s.ec2Cfg.OnDemandCapacityReservations) == len(s.ec2Cfg.AvailabilityZones) {
+			*odcr = s.ec2Cfg.OnDemandCapacityReservations[s.availabilityZoneIndex]
+		}
+
 		// Check there's enough instances available. If not, wait some time and retry
-		if ok, em := s.checkNodeAvailability(ctx, dep, instanceInputs, s.ec2Cfg.OnDemandCapacityReservations[s.availabilityZoneIndex]); ok {
+		if ok, em := s.checkNodeAvailability(ctx, dep, instanceInputs, odcr); ok {
 			// There are enough instances, launch instances and stop retrying
 			instanceIds, machines, err = s.launchInstances(ctx, tx, dep, instanceInputs)
 			break
