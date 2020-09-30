@@ -50,7 +50,7 @@ type ec2Config struct {
 	// AvailabilityZones is a slice of AWS availability zones where to launch simulations. (Example: us-east-1a)
 	AvailabilityZones []string `env:"IGN_EC2_AVAILABILITY_ZONES,required" envSeparator:","`
 	// OnDemandCapacityReservationEnabled enables the usage of ODCR when checking for node availability.
-	OnDemandCapacityReservationEnabled bool `env:"IGN_EC2_ODCR_ENABLED" envDefault:"false"`
+	OnDemandCapacityReservations []string `env:"IGN_EC2_ODCR" envSeparator:","`
 	// AvailableEC2Machines is the maximum number of machines that Cloudsim can have running at a single time.
 	AvailableEC2Machines int `env:"IGN_EC2_MACHINES_LIMIT" envDefault:"-1"`
 }
@@ -230,7 +230,7 @@ func (s *Ec2Client) setupInstanceSpecifics(ctx context.Context, tx *gorm.DB, dep
 // to launch a specific group of instances. `inputs` should contain a list of
 // all the instances required for a single simulation.
 func (s *Ec2Client) checkNodeAvailability(ctx context.Context, simDep *SimulationDeployment,
-	inputs []*ec2.RunInstancesInput) (bool, *ign.ErrMsg) {
+	inputs []*ec2.RunInstancesInput, odcr string) (bool, *ign.ErrMsg) {
 	// Sanity check
 	if len(inputs) == 0 {
 		logger(ctx).Warning("checkNodeAvailability - Attempted to check availability for 0 instances.\n")
@@ -241,6 +241,22 @@ func (s *Ec2Client) checkNodeAvailability(ctx context.Context, simDep *Simulatio
 	// compare it to the limit set by cloudsim
 	// and the amount of new instances it's trying to launch.
 	requestedInstances := len(inputs)
+
+	// Check if there are enough reservations to launch all simulations.
+	if len(s.ec2Cfg.OnDemandCapacityReservations) > 0 {
+		for _, in := range inputs {
+			availableInstances := s.getOnDemandCapacityReservation(
+				ctx,
+				*in.InstanceType,
+				*in.Placement.AvailabilityZone,
+				odcr,
+			)
+
+			if availableInstances < int64(requestedInstances) {
+				return false, ign.NewErrorMessage(ign.ErrorLaunchingCloudInstanceNotEnoughResources)
+			}
+		}
+	}
 
 	if s.ec2Cfg.AvailableEC2Machines >= 0 {
 		// Having 0 machines available stops launching new machines.
@@ -255,14 +271,6 @@ func (s *Ec2Client) checkNodeAvailability(ctx context.Context, simDep *Simulatio
 		// Check if the number of required machines is greater than the current available amount of machines.
 		if requestedInstances > s.ec2Cfg.AvailableEC2Machines-reservedInstances {
 			return false, ign.NewErrorMessage(ign.ErrorLaunchingCloudInstanceNotEnoughResources)
-		}
-	} else if s.ec2Cfg.OnDemandCapacityReservationEnabled {
-		for _, in := range inputs {
-			availableInstances := s.getOnDemandCapacityReservation(ctx, *in.InstanceType, *in.Placement.AvailabilityZone)
-
-			if availableInstances < int64(requestedInstances) {
-				return false, ign.NewErrorMessage(ign.ErrorLaunchingCloudInstanceNotEnoughResources)
-			}
 		}
 	}
 
@@ -506,7 +514,7 @@ func (s *Ec2Client) launchNodes(ctx context.Context, tx *gorm.DB, dep *Simulatio
 		s.lockRunInstances.Lock()
 
 		// Check there's enough instances available. If not, wait some time and retry
-		if ok, em := s.checkNodeAvailability(ctx, dep, instanceInputs); ok {
+		if ok, em := s.checkNodeAvailability(ctx, dep, instanceInputs, s.ec2Cfg.OnDemandCapacityReservations[s.availabilityZoneIndex]); ok {
 			// There are enough instances, launch instances and stop retrying
 			instanceIds, machines, err = s.launchInstances(ctx, tx, dep, instanceInputs)
 			break
@@ -759,30 +767,11 @@ func (s *Ec2Client) countReservedEC2Machines(ctx context.Context) (instances int
 	return
 }
 
-// getZoneIDFromName receives a zone name like `us-east-1a` and returns the zone ID `use1-az1`.
-func (s *Ec2Client) getZoneIDFromName(name string) (string, error) {
-	out, err := s.ec2Svc.DescribeAvailabilityZones(&ec2.DescribeAvailabilityZonesInput{
-		ZoneNames: aws.StringSlice([]string{name}),
-	})
-
-	if err != nil {
-		return "", err
-	}
-
-	return *out.AvailabilityZones[0].ZoneId, nil
-}
-
 // getOnDemandCapacityReservation gets the amount of machines available to launch using On-Demand Capacity Reservation.
-func (s *Ec2Client) getOnDemandCapacityReservation(ctx context.Context, instanceType string, zone string) int64 {
-	// Get the zone ID from the given zone name.
-	zoneID, err := s.getZoneIDFromName(zone)
-	if err != nil {
-		logger(ctx).Warning("getOnDemandCapacityReservation - Invalid zone")
-		return 0
-	}
-
+func (s *Ec2Client) getOnDemandCapacityReservation(ctx context.Context, instanceType, zone, odcr string) int64 {
 	// Create the input to describe capacity.
 	input := &ec2.DescribeCapacityReservationsInput{
+		CapacityReservationIds: aws.StringSlice([]string{odcr}),
 		Filters: []*ec2.Filter{
 			{
 				Name: aws.String("instance-type"),
@@ -791,9 +780,9 @@ func (s *Ec2Client) getOnDemandCapacityReservation(ctx context.Context, instance
 				},
 			},
 			{
-				Name: aws.String("availability-zone-id"),
+				Name: aws.String("availability-zone"),
 				Values: []*string{
-					aws.String(zoneID),
+					aws.String(zone),
 				},
 			},
 		},
