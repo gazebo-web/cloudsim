@@ -527,8 +527,7 @@ func (s *Ec2Client) launchNodes(ctx context.Context, tx *gorm.DB, dep *Simulatio
 
 		var odcr *string
 		if len(s.ec2Cfg.OnDemandCapacityReservations) == len(s.ec2Cfg.AvailabilityZones) {
-			odcr = new(string)
-			*odcr = s.ec2Cfg.OnDemandCapacityReservations[s.availabilityZoneIndex]
+			odcr = &s.ec2Cfg.OnDemandCapacityReservations[s.availabilityZoneIndex]
 			ignlog.Debug(
 				fmt.Sprintf("launchNodes - using ODCR: [%s] on Availability zone: [%s].",
 					*odcr, s.ec2Cfg.AvailabilityZones[s.availabilityZoneIndex],
