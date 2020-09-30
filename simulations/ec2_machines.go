@@ -245,7 +245,10 @@ func (s *Ec2Client) checkNodeAvailability(ctx context.Context, simDep *Simulatio
 	// Count how many ec2 instances are running at the given time and
 	// compare it to the limit set by cloudsim
 	// and the amount of new instances it's trying to launch.
-	requestedInstances := len(inputs)
+	requestedInstances := 0
+	for _, input := range inputs {
+		requestedInstances += input.MinCount
+	}
 
 	// Check if there are enough reservations to launch all simulations.
 	if odcr != nil {
