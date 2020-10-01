@@ -260,6 +260,7 @@ func (s *Ec2Client) checkNodeAvailability(ctx context.Context, simDep *Simulatio
 				*odcr,
 			)
 
+			// Stop assigning instances to the ODCR if there are no more available instances.
 			if availableInstances == 0 {
 				break
 			}
