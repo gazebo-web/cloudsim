@@ -276,7 +276,7 @@ func (s *Ec2Client) checkNodeAvailability(ctx context.Context, simDep *Simulatio
 	}
 
 	if s.ec2Cfg.AvailableEC2Machines >= 0 {
-		// Having 0 machines available stops laOnDemandCapacityReservationsunching new machines.
+		// Having 0 machines available stops launching new machines.
 		if s.ec2Cfg.AvailableEC2Machines == 0 {
 			return false, ign.NewErrorMessage(ign.ErrorLaunchingCloudInstanceNotEnoughResources)
 		}
