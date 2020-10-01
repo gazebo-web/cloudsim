@@ -260,6 +260,10 @@ func (s *Ec2Client) checkNodeAvailability(ctx context.Context, simDep *Simulatio
 				*odcr,
 			)
 
+			if availableInstances == 0 {
+				break
+			}
+
 			if availableInstances < requestedInstances {
 				return false, ign.NewErrorMessage(ign.ErrorLaunchingCloudInstanceNotEnoughResources)
 			}
@@ -271,7 +275,7 @@ func (s *Ec2Client) checkNodeAvailability(ctx context.Context, simDep *Simulatio
 	}
 
 	if s.ec2Cfg.AvailableEC2Machines >= 0 {
-		// Having 0 machines available stops launching new machines.
+		// Having 0 machines available stops laOnDemandCapacityReservationsunching new machines.
 		if s.ec2Cfg.AvailableEC2Machines == 0 {
 			return false, ign.NewErrorMessage(ign.ErrorLaunchingCloudInstanceNotEnoughResources)
 		}
