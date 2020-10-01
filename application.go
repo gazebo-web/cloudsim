@@ -18,6 +18,7 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/caarlos0/env"
 	"github.com/go-playground/form"
@@ -232,7 +233,10 @@ func init() {
 	s3Session := cfg.awsSession
 	// Create a session for the target S3 region if specified
 	if cfg.StorageRegion != "" {
-		s3Session = session.Must(session.NewSession())
+		awsCfg := &aws.Config{
+			Region: aws.String(cfg.StorageRegion),
+		}
+		s3Session = session.Must(session.NewSession(awsCfg))
 	}
 	s3Svc := awsFactory.NewS3Svc(s3Session)
 	globals.S3Svc = s3Svc
