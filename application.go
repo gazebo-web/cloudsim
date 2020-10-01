@@ -55,6 +55,7 @@ type appConfig struct {
 	SysAdminIdentityForTest string `env:"IGN_SYSTEM_ADMIN_IDENTITY_TEST"`
 	ConnectToCloud          bool   `env:"IGN_CLOUDSIM_CONNECT_TO_CLOUD"`
 	NodesManagerImpl        string `env:"IGN_CLOUDSIM_NODES_MGR_IMPL" envDefault:"ec2"`
+	StorageRegion           string `env:"IGN_CLOUDSIM_S3_REGION" envDefault:"us-east-1"`
 	IgnTransportTopic       string `env:"IGN_TRANSPORT_TEST_TOPIC" envDefault:"/foo"`
 	isGoTest                bool
 	logger                  ign.Logger
@@ -226,7 +227,14 @@ func init() {
 	awsFactory := sim.NewAWSFactory(cfg.isGoTest)
 	ec2Svc := awsFactory.NewEC2Svc(cfg.awsSession)
 	globals.EC2Svc = ec2Svc
-	s3Svc := awsFactory.NewS3Svc(cfg.awsSession)
+
+	// Prepare S3
+	s3Session := cfg.awsSession
+	// Create a session for the target S3 region if specified
+	if cfg.StorageRegion != "" {
+		s3Session = session.Must(session.NewSession())
+	}
+	s3Svc := awsFactory.NewS3Svc(s3Session)
 	globals.S3Svc = s3Svc
 
 	subT, err := sim.NewSubTApplication(logCtx, s3Svc)

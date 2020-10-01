@@ -134,6 +134,8 @@ type subTSpecificsConfig struct {
 	S3LogsCopyEnabled bool `env:"AWS_GZ_LOGS_ENABLED" envDefault:"true"`
 	// MaxDurationForSimulations is the maximum number of minutes a simulation can run in SubT.
 	MaxDurationForSimulations int `env:"SUBT_SIM_DURATION_MINUTES" envDefault:"60"`
+	// SimulationImage contains the AWS AMI that will be used to launch simulation instances.
+	SimulationImage string `env:"SUBT_SIM_SIMULATION_AWS_AMI"`
 	// MaxRobotModelCount is the maximum number of robots per model type. E.g. Up to 5 of any model: X1, X2, etc.
 	// Robot models are defined in SubTRobotType. A value of 0 means unlimited robots.
 	MaxRobotModelCount int `env:"SUBT_MAX_ROBOT_MODEL_COUNT" envDefault:"0"`
@@ -2465,7 +2467,7 @@ func (sa *SubTApplication) setupEC2InstanceSpecifics(ctx context.Context, s *Ec2
 	// Modified version of Amazon EKS-optimized AMI with GPU support
 	// https://docs.aws.amazon.com/eks/latest/userguide/gpu-ami.html
 	// /aws/service/eks/optimized-ami/1.14/amazon-linux-2-gpu/recommended/image_id
-	imageID := aws.String("ami-08861f7e7b409ed0c")
+	imageID := aws.String(sa.cfg.SimulationImage)
 
 	gzInput.ImageId = imageID
 	gzInput.InstanceType = aws.String("g3.4xlarge")
