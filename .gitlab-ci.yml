@@ -290,8 +290,6 @@ staging:
     - kubernetes
   environment:
     name: staging
-  only:
-    - develop
   when: manual
 
 production:

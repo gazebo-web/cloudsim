@@ -569,6 +569,9 @@ var SubTCircuits = []string{
 	CircuitCavePractice1,
 	CircuitCavePractice2,
 	CircuitCavePractice3,
+	CircuitCaveCircuit,
+	CircuitCaveCircuitDryRun1,
+	CircuitCaveCircuitDryRun2,
 }
 
 // isValidRobotType checks if the field value is a valid Robot Type.

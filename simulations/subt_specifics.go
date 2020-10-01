@@ -116,6 +116,9 @@ const (
 	CircuitCavePractice1      string = "Cave Practice 1"
 	CircuitCavePractice2      string = "Cave Practice 2"
 	CircuitCavePractice3      string = "Cave Practice 3"
+	CircuitCaveCircuit        string = "Cave Circuit"
+	CircuitCaveCircuitDryRun1 string = "Cave Circuit Dry Run 1"
+	CircuitCaveCircuitDryRun2 string = "Cave Circuit Dry Run 2"
 
 	// Container names
 	GazeboServerContainerName    string = "gzserver-container"
@@ -413,9 +416,9 @@ func (sa *SubTApplication) customizeSimulationRequest(ctx context.Context,
 			}
 		}
 
-		if !subtSim.robotImagesBelongToECROwner() {
-			return NewErrorMessage(ErrorInvalidRobotImage)
-		}
+		// if !subtSim.robotImagesBelongToECROwner() {
+		// 	return NewErrorMessage(ErrorInvalidRobotImage)
+		// }
 
 		if !sa.isQualified(subtSim.Owner, subtSim.Circuit, username) {
 			return NewErrorMessage(ErrorNotQualified)
