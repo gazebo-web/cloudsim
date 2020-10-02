@@ -1593,12 +1593,6 @@ func (s *Service) ShutdownSimulationAsync(ctx context.Context, tx *gorm.DB,
 		return nil, em
 	}
 
-	// Sanity checks
-	if mainDep.isMultiSimChild() {
-		err := errors.New("Cannot shutdown a gz simulation from a MultiSim child. Only top level simulations")
-		return nil, ign.NewErrorMessageWithBase(ign.ErrorSimGroupNotFound, err)
-	}
-
 	// Check the simulation has the correct status
 	if em := mainDep.assertSimDepStatus(simRunning); em != nil {
 		return nil, em
