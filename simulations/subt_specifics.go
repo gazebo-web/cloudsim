@@ -116,6 +116,7 @@ const (
 	CircuitCavePractice1      string = "Cave Practice 1"
 	CircuitCavePractice2      string = "Cave Practice 2"
 	CircuitCavePractice3      string = "Cave Practice 3"
+	CircuitCaveCircuit        string = "Cave Circuit"
 
 	// Container names
 	GazeboServerContainerName    string = "gzserver-container"
@@ -1770,8 +1771,8 @@ func (sa *SubTApplication) CreateGlooVirtualServiceRoute(ctx context.Context, s 
 			s.cfg.KubernetesGlooNamespace,
 			groupID,
 		)
-		logger.Info(fmt.Sprintf("Got upstream! Name: %s", upstream))
 		if err == nil {
+			logger.Info(fmt.Sprintf("Got upstream! Name: %s", upstream))
 			break
 		} else if i < retries-1 {
 			logger.Info("Failed to get Kubernetes Service Gloo Upstream name. Retrying. Error:", err)
