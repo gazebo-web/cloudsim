@@ -67,6 +67,8 @@ const (
 	// ErrorRobotModelLimitReached is triggered when attempting to launch a simulation with too many robots of a
 	// single model.
 	ErrorRobotModelLimitReached SimErrCode = 5522
+	// ErrorSubmissionDeadlineReached is triggered when a submission deadline for a certain circuit has been reached.
+	ErrorSubmissionDeadlineReached SimErrCode = 5523
 )
 
 // NewErrorMessageWithBase receives an error code and a root error
@@ -179,6 +181,10 @@ func ErrorMessage(err SimErrCode) ign.ErrMsg {
 	case ErrorRobotModelLimitReached:
 		em.Msg = "Too many robots of single model."
 		em.ErrCode = int(ErrorRobotModelLimitReached)
+		em.StatusCode = http.StatusBadRequest
+	case ErrorSubmissionDeadlineReached:
+		em.Msg = "Submission deadline reached."
+		em.ErrCode = int(ErrorSubmissionDeadlineReached)
 		em.StatusCode = http.StatusBadRequest
 	}
 

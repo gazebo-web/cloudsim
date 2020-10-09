@@ -421,6 +421,10 @@ func (sa *SubTApplication) customizeSimulationRequest(ctx context.Context,
 		if !sa.isQualified(subtSim.Owner, subtSim.Circuit, username) {
 			return NewErrorMessage(ErrorNotQualified)
 		}
+
+		if isSubmissionDeadlineReached(*rules) {
+			return NewErrorMessage(ErrorSubmissionDeadlineReached)
+		}
 	}
 
 	extra := &ExtraInfoSubT{
@@ -2777,4 +2781,10 @@ func (sa *SubTApplication) simulationIsHeld(ctx context.Context, tx *gorm.DB, de
 		return false
 	}
 	return true
+}
+
+// isSubmissionDeadlineReached checks if a certain circuit has reached its submission deadline.
+// It only returns true if the deadline is set and has been reached, in any other case it returns false.
+func isSubmissionDeadlineReached(circuit SubTCircuitRules) bool {
+	return circuit.SubmissionDeadline != nil && circuit.SubmissionDeadline.Before(time.Now())
 }
