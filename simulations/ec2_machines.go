@@ -352,13 +352,37 @@ func (s *Ec2Client) setSourceDestCheck(instanceID *string, value *bool) error {
 	return err
 }
 
+// getSimulationInstanceIDs gets the EC2 instance ids created for a simulation.
+func (s *Ec2Client) getSimulationInstanceIDs(ctx context.Context, dep *SimulationDeployment) ([]*string, error) {
+	instances, err := s.ec2Svc.DescribeInstances(&ec2.DescribeInstancesInput{
+		Filters: []*ec2.Filter{
+			{
+				Name:   aws.String(fmt.Sprintf("tag:%s", instanceTagGroupID)),
+				Values: []*string{dep.GroupID},
+			},
+		},
+	})
+	if err != nil {
+		logger(ctx).Error("failed to get ec2 instaces for termination:", err)
+		return nil, err
+	}
+	instanceIDs := make([]*string, 0)
+	for _, reservation := range instances.Reservations {
+		for _, instance := range reservation.Instances {
+			instanceIDs = append(instanceIDs, instance.InstanceId)
+		}
+	}
+
+	return instanceIDs, nil
+}
+
 // launchInstances starts a group of EC2 instances. The ids and machine info
 // of new instances are returned to be accessed later during the node launch
 // process.
 func (s *Ec2Client) launchInstances(ctx context.Context, tx *gorm.DB, dep *SimulationDeployment,
-	instanceInputs []*ec2.RunInstancesInput) (instanceIds []string, machines []MachineInstance, err error) {
+	instanceInputs []*ec2.RunInstancesInput) (instanceIds []string, machines MachineInstances, err error) {
 	instanceIds = make([]string, 0)
-	machines = make([]MachineInstance, 0)
+	machines = make(MachineInstances, 0)
 
 	for _, input := range instanceInputs {
 		var runResult *ec2.Reservation
@@ -394,28 +418,57 @@ func (s *Ec2Client) launchInstances(ctx context.Context, tx *gorm.DB, dep *Simul
 	return
 }
 
-// terminateInstances terminates a group of EC2 instances.
-func (s *Ec2Client) terminateInstances(ctx context.Context, tx *gorm.DB, machines []MachineInstance) {
-	// Get list of EC2 instances to terminate
-	terminateIds := make([]*string, 0)
-	for _, machine := range machines {
-		terminateIds = append(terminateIds, machine.InstanceID)
+func (s *Ec2Client) terminateInstances(ctx context.Context,
+	instanceIDs []*string) (*ec2.TerminateInstancesOutput, error) {
+
+	input := &ec2.TerminateInstancesInput{
+		DryRun:      aws.Bool(true),
+		InstanceIds: instanceIDs,
 	}
 
-	// Terminate EC2 instances
-	_, err := s.ec2Svc.TerminateInstances(&ec2.TerminateInstancesInput{
-		InstanceIds: terminateIds,
-	})
-	if err != nil {
-		errorMsg := err.Error()
-		if awsErr, ok := err.(awserr.Error); ok && awsErr != nil {
-			errorMsg = fmt.Sprintf("%s - %s", awsErr.Code(), awsErr.Message())
-		}
-		logger(ctx).Error(fmt.Sprintf(
-			"launchNodes - error while attempting to shutdown EC2 instances: %s\n",
-			errorMsg,
-		))
+	// Perform the termination in dry run mode
+	// If the error code is `DryRunOperation` it means we have the necessary permissions to go ahead
+	_, err := s.ec2Svc.TerminateInstances(input)
+	if awsErr, ok := err.(awserr.Error); ok && awsErr.Code() != AWSErrCodeDryRunOperation {
+		logger(ctx).Error("terminateSimulationInstances - Failed to terminate simulation instances.", err)
+		return nil, awsErr
 	}
+
+	// Terminate the instances
+	input.DryRun = aws.Bool(false)
+	output, err := s.ec2Svc.TerminateInstances(input)
+	if awsErr, ok := err.(awserr.Error); ok && awsErr.Code() != AWSErrCodeDryRunOperation {
+		logger(ctx).Error("terminateSimulationInstances - Failed to terminate simulation instances.", err)
+		return nil, awsErr
+	}
+
+	return output, err
+}
+
+// terminateMachineInstances terminates a group of EC2 instances based on MachineInstance records.
+func (s *Ec2Client) terminateMachineInstances(ctx context.Context,
+	machines []MachineInstance) (*ec2.TerminateInstancesOutput, error) {
+
+	// Prepare list of EC2 instance IDs to terminate
+	instanceIDs := make([]*string, len(machines))
+	for _, machine := range machines {
+		instanceIDs = append(instanceIDs, machine.InstanceID)
+	}
+
+	return s.terminateInstances(ctx, instanceIDs)
+}
+
+// terminateSimulationInstances terminates all EC2 instances created for a simulation.
+func (s *Ec2Client) terminateSimulationInstances(ctx context.Context,
+	dep *SimulationDeployment) (*ec2.TerminateInstancesOutput, error) {
+
+	// Get the list of EC2 instance IDs to terminate
+	instanceIDs, err := s.getSimulationInstanceIDs(ctx, dep)
+	if err != nil {
+		return nil, err
+	}
+
+	return s.terminateInstances(ctx, instanceIDs)
 }
 
 // launchNodes will try to launch new EC2 instances, and register them with the k8 master.
@@ -537,11 +590,15 @@ func (s *Ec2Client) launchNodes(ctx context.Context, tx *gorm.DB, dep *Simulatio
 	// of requested machines.
 	invalidInstanceCount := len(instanceIds) != requestedMachines
 	if err != nil || invalidInstanceCount {
-		timeTrack(ctx, tstart, "launchNodes - launchInstances ended with error")
+		timeTrack(ctx, tstart, "launchNodes - launchInstances ended with error.")
 
 		// Terminate launched EC2 instances
 		if len(instanceIds) > 0 {
-			s.terminateInstances(ctx, tx, machines)
+			_, err := s.terminateSimulationInstances(ctx, dep)
+			if err != nil {
+				ignlog.Warning("launchNodes - failed to terminate while handling error.", err)
+				return nil, ign.NewErrorMessageWithBase(ign.ErrorLaunchingCloudInstance, err)
+			}
 		}
 
 		// Set error type
@@ -664,70 +721,36 @@ func (s *Ec2Client) deleteHosts(ctx context.Context, tx *gorm.DB,
 
 	// Update each machine instance DB record to indicate that the termination process has started.
 	if em := machines.updateMachinesStatus(ctx, tx, macTerminating); em != nil {
-		logger(ctx).Error("failed to update machine instances status to terminating:", em)
+		logger(ctx).Error("Failed to update machine instances status to terminating:", em)
 		return nil, em
 	}
 
-	// Get the instance ids
-	instances, err := s.ec2Svc.DescribeInstances(&ec2.DescribeInstancesInput{
-		Filters: []*ec2.Filter{
-			{
-				Name:   aws.String(fmt.Sprintf("tag:%s", instanceTagGroupID)),
-				Values: []*string{dep.GroupID},
-			},
-		},
-	})
+	// Delete the EC2 instances
+	output, err := s.terminateSimulationInstances(ctx, dep)
 	if err != nil {
-		logger(ctx).Error("failed to get ec2 instaces for termination:", err)
+		logger(ctx).Error("Failed to terminate EC2 instances:", err)
 		return nil, ign.NewErrorMessageWithBase(ign.ErrorStoppingCloudInstance, err)
-	}
-	instanceIDs := make([]*string, 0)
-	for _, reservation := range instances.Reservations {
-		for _, instance := range reservation.Instances {
-			instanceIDs = append(instanceIDs, instance.InstanceId)
-		}
 	}
 
-	// Terminate or Stop EC2 instances
-	// Note: if the Simulation was marked with error then we Stop the instance, to allow further investigation.
-	var result interface{}
-	stopOnEnd := dep.StopOnEnd != nil && *dep.StopOnEnd
-	if s.awsCfg.ShouldTerminateInstances && !stopOnEnd {
-		input := &ec2.TerminateInstancesInput{
-			DryRun:      aws.Bool(true),
-			InstanceIds: instanceIDs,
-		}
-		result, err = s.ec2Svc.TerminateInstances(input)
-		if awsErr, ok := err.(awserr.Error); ok && awsErr.Code() == AWSErrCodeDryRunOperation {
-			// If the error code is `DryRunOperation` it means we have the necessary
-			// permissions to do the operation
-			input.DryRun = aws.Bool(false)
-			result, err = s.ec2Svc.TerminateInstances(input)
-		}
-	} else {
-		input := &ec2.StopInstancesInput{
-			DryRun:      aws.Bool(true),
-			InstanceIds: instanceIDs,
-		}
-		result, err = s.ec2Svc.StopInstances(input)
-		awsErr, ok := err.(awserr.Error)
-		if ok && awsErr.Code() == AWSErrCodeDryRunOperation {
-			input.DryRun = aws.Bool(false)
-			result, err = s.ec2Svc.StopInstances(input)
-		}
-	}
-	if err != nil {
-		return nil, ign.NewErrorMessageWithBase(ign.ErrorStoppingCloudInstance, err)
+	// Prepare list of deleted instances
+	instanceIDs := make([]string, len(output.TerminatingInstances))
+	for i, instanceStateChange := range output.TerminatingInstances {
+		instanceIDs[i] = fmt.Sprintf(
+			"%s: %s to %s",
+			*instanceStateChange.InstanceId,
+			*instanceStateChange.PreviousState.Name,
+			*instanceStateChange.CurrentState.Name,
+		)
 	}
 
 	// TODO there should be a watcher that marks machine DB records as "terminated"
 	// once the EC2 termination succeeds. At the time being, we just mark it as terminated.
 	if em := machines.updateMachinesStatus(ctx, tx, macTerminated); em != nil {
-		logger(ctx).Error("failed to update machine instances status to terminated:", em)
+		logger(ctx).Error("Failed to update machine instances status to terminated:", em)
 		return nil, em
 	}
 
-	logger(ctx).Info(fmt.Sprintf("Instances terminated: %s. Result: %v", instanceIDs, result))
+	logger(ctx).Info(fmt.Sprintf("Instances terminated: %s.", instanceIDs))
 	return machines, nil
 }
 
