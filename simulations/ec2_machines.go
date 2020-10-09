@@ -24,6 +24,7 @@ import (
 // records in the DB based on their status.
 
 const (
+	instanceTagGroupID           = "CloudsimGroupID"
 	nodeLabelKeyGroupID          = "cloudsim_groupid"
 	nodeLabelKeyCloudsimNodeType = "cloudsim_node_type"
 	nodeLabelKeySubTRobotName    = "robot_name"
@@ -355,9 +356,9 @@ func (s *Ec2Client) setSourceDestCheck(instanceID *string, value *bool) error {
 // of new instances are returned to be accessed later during the node launch
 // process.
 func (s *Ec2Client) launchInstances(ctx context.Context, tx *gorm.DB, dep *SimulationDeployment,
-	instanceInputs []*ec2.RunInstancesInput) (instanceIds []string, machines []*MachineInstance, err error) {
+	instanceInputs []*ec2.RunInstancesInput) (instanceIds []string, machines []MachineInstance, err error) {
 	instanceIds = make([]string, 0)
-	machines = make([]*MachineInstance, 0)
+	machines = make([]MachineInstance, 0)
 
 	for _, input := range instanceInputs {
 		var runResult *ec2.Reservation
@@ -381,17 +382,12 @@ func (s *Ec2Client) launchInstances(ctx context.Context, tx *gorm.DB, dep *Simul
 			}
 
 			// And create a DB record to track the machine instance in case of errors later
-			machine := MachineInstance{
+			machines = append(machines, MachineInstance{
 				InstanceID:      &iID,
 				LastKnownStatus: macInitializing.ToStringPtr(),
 				GroupID:         dep.GroupID,
 				Application:     dep.Application,
-			}
-			err = tx.Create(&machine).Error
-			if err != nil {
-				return
-			}
-			machines = append(machines, &machine)
+			})
 		}
 	}
 
@@ -399,11 +395,14 @@ func (s *Ec2Client) launchInstances(ctx context.Context, tx *gorm.DB, dep *Simul
 }
 
 // terminateInstances terminates a group of EC2 instances.
-func (s *Ec2Client) terminateInstances(ctx context.Context, machines []*MachineInstance) {
+func (s *Ec2Client) terminateInstances(ctx context.Context, tx *gorm.DB, machines []MachineInstance) {
+	// Get list of EC2 instances to terminate
 	terminateIds := make([]*string, 0)
 	for _, machine := range machines {
 		terminateIds = append(terminateIds, machine.InstanceID)
 	}
+
+	// Terminate EC2 instances
 	_, err := s.ec2Svc.TerminateInstances(&ec2.TerminateInstancesInput{
 		InstanceIds: terminateIds,
 	})
@@ -464,7 +463,7 @@ func (s *Ec2Client) launchNodes(ctx context.Context, tx *gorm.DB, dep *Simulatio
 				ResourceType: aws.String("instance"),
 				Tags: []*ec2.Tag{
 					{Key: aws.String("Name"), Value: aws.String(instanceName)},
-					{Key: aws.String("CloudsimGroupID"), Value: aws.String(groupID)},
+					{Key: aws.String(instanceTagGroupID), Value: aws.String(groupID)},
 					{Key: aws.String("project"), Value: aws.String("cloudsim")},
 					{Key: dep.Platform, Value: aws.String("True")},
 					s.buildClusterTag(),
@@ -486,7 +485,7 @@ func (s *Ec2Client) launchNodes(ctx context.Context, tx *gorm.DB, dep *Simulatio
 
 	// Now we try (and retry) to launch the EC2 instances needed for the simulation
 	var instanceIds []string
-	var machines []*MachineInstance
+	var machines MachineInstances
 	for try := 1; try <= MaxAWSRetries; try++ {
 		// Lock to ensure other worker threads don't claim EC2 instances after
 		// it's been determined there's enough resources available to launch all
@@ -542,7 +541,7 @@ func (s *Ec2Client) launchNodes(ctx context.Context, tx *gorm.DB, dep *Simulatio
 
 		// Terminate launched EC2 instances
 		if len(instanceIds) > 0 {
-			s.terminateInstances(ctx, machines)
+			s.terminateInstances(ctx, tx, machines)
 		}
 
 		// Set error type
@@ -560,10 +559,15 @@ func (s *Ec2Client) launchNodes(ctx context.Context, tx *gorm.DB, dep *Simulatio
 		return nil, ign.NewErrorMessageWithBase(errType, err)
 	}
 
+	// Create machine instance entries
+	if err := tx.Create(&machines).Error; err != nil {
+		return nil, ign.NewErrorMessageWithBase(ign.ErrorDbSave, err)
+	}
+
 	timeTrack(ctx, tstart, "launchNodes - launchInstances")
 	ignlog.Info(fmt.Sprintf("Launch instance requests succeeded. Instance Ids: %v", instanceIds))
 
-	// Use a waiter function to Block until the instances are initialized
+	// Use a waiter function to block until the instances are initialized
 	describeInstanceStatusInput := &ec2.DescribeInstanceStatusInput{
 		InstanceIds: aws.StringSlice(instanceIds),
 	}
@@ -574,10 +578,9 @@ func (s *Ec2Client) launchNodes(ctx context.Context, tx *gorm.DB, dep *Simulatio
 	timeTrack(ctx, tstart, "launchNodes - WaitUntilInstanceStatusOk")
 
 	// Mark the Machines in the DB as 'Running'.
-	for _, m := range machines {
-		if em := m.updateMachineStatus(tx, macRunning); em != nil {
-			return nil, em
-		}
+	if em := machines.updateMachinesStatus(ctx, tx, macRunning); em != nil {
+		logger(ctx).Error("failed to update machine instances status to running:", em)
+		return nil, em
 	}
 
 	ignlog.Info(fmt.Sprintf("Instances are now running: %v. Cloudsim GroupID: %s\n", instanceIds, groupID))
@@ -659,27 +662,40 @@ func (s *Ec2Client) deleteHosts(ctx context.Context, tx *gorm.DB,
 		return nil, ign.NewErrorMessageWithBase(ign.ErrorSimGroupNotFound, err)
 	}
 
-	var instIds []string
-	// Update each machine instance DB record, to mark the termination process as 'started'.
-	for _, m := range machines {
-		instIds = append(instIds, *m.InstanceID)
-		if em := m.updateMachineStatus(tx, macTerminating); em != nil {
-			return nil, em
+	// Update each machine instance DB record to indicate that the termination process has started.
+	if em := machines.updateMachinesStatus(ctx, tx, macTerminating); em != nil {
+		logger(ctx).Error("failed to update machine instances status to terminating:", em)
+		return nil, em
+	}
+
+	// Get the instance ids
+	instances, err := s.ec2Svc.DescribeInstances(&ec2.DescribeInstancesInput{
+		Filters: []*ec2.Filter{
+			{
+				Name:   aws.String(fmt.Sprintf("tag:%s", instanceTagGroupID)),
+				Values: []*string{dep.GroupID},
+			},
+		},
+	})
+	if err != nil {
+		logger(ctx).Error("failed to get ec2 instaces for termination:", err)
+		return nil, ign.NewErrorMessageWithBase(ign.ErrorStoppingCloudInstance, err)
+	}
+	instanceIDs := make([]*string, 0)
+	for _, reservation := range instances.Reservations {
+		for _, instance := range reservation.Instances {
+			instanceIDs = append(instanceIDs, instance.InstanceId)
 		}
 	}
 
-	instanceIds := aws.StringSlice(instIds)
+	// Terminate or Stop EC2 instances
+	// Note: if the Simulation was marked with error then we Stop the instance, to allow further investigation.
 	var result interface{}
-	var err error
-
-	// Terminate or Stop EC2 instances ?
-	// Note: if the Simulation was marked with error then we Stop the instance, to
-	// allow further investigation.
 	stopOnEnd := dep.StopOnEnd != nil && *dep.StopOnEnd
 	if s.awsCfg.ShouldTerminateInstances && !stopOnEnd {
 		input := &ec2.TerminateInstancesInput{
 			DryRun:      aws.Bool(true),
-			InstanceIds: instanceIds,
+			InstanceIds: instanceIDs,
 		}
 		result, err = s.ec2Svc.TerminateInstances(input)
 		if awsErr, ok := err.(awserr.Error); ok && awsErr.Code() == AWSErrCodeDryRunOperation {
@@ -691,7 +707,7 @@ func (s *Ec2Client) deleteHosts(ctx context.Context, tx *gorm.DB,
 	} else {
 		input := &ec2.StopInstancesInput{
 			DryRun:      aws.Bool(true),
-			InstanceIds: instanceIds,
+			InstanceIds: instanceIDs,
 		}
 		result, err = s.ec2Svc.StopInstances(input)
 		awsErr, ok := err.(awserr.Error)
@@ -706,13 +722,12 @@ func (s *Ec2Client) deleteHosts(ctx context.Context, tx *gorm.DB,
 
 	// TODO there should be a watcher that marks machine DB records as "terminated"
 	// once the EC2 termination succeeds. At the time being, we just mark it as terminated.
-	for _, m := range machines {
-		if em := m.updateMachineStatus(tx, macTerminated); em != nil {
-			return nil, em
-		}
+	if em := machines.updateMachinesStatus(ctx, tx, macTerminated); em != nil {
+		logger(ctx).Error("failed to update machine instances status to terminated:", em)
+		return nil, em
 	}
 
-	logger(ctx).Info(fmt.Sprintf("Instances terminated: %s. Result: %v", instIds, result))
+	logger(ctx).Info(fmt.Sprintf("Instances terminated: %s. Result: %v", instanceIDs, result))
 	return machines, nil
 }
 

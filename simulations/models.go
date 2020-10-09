@@ -1,6 +1,7 @@
 package simulations
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"github.com/jinzhu/gorm"
@@ -645,8 +646,43 @@ func (m *MachineInstance) updateMachineStatus(tx *gorm.DB, st MachineStatus) *ig
 	return nil
 }
 
-// MachineInstances is an slice of MachineInstance
+// MachineInstances is a MachineInstance slice
 type MachineInstances []MachineInstance
+
+func (m MachineInstances) getInstanceIDs() []*string {
+	instanceIDs := make([]*string, len(m))
+	for i, machine := range m {
+		instanceIDs[i] = machine.InstanceID
+	}
+
+	return instanceIDs
+}
+
+// updateMachinesStatus updates the status in DB of a given machine
+func (m MachineInstances) updateMachinesStatus(ctx context.Context, tx *gorm.DB, st MachineStatus) *ign.ErrMsg {
+	logger := logger(ctx)
+	if m == nil {
+		logger.Error("Attempted to update machine status for nil MachineInstances")
+		return ign.NewErrorMessage(ign.ErrorUnexpected)
+	} else if len(m) == 0 {
+		logger.Warning("Attempted to update machine status for MachineInstances with length 0")
+		return ign.NewErrorMessage(ign.ErrorUnexpected)
+	}
+
+	statusStr := st.ToStringPtr()
+
+	if err := tx.Model(&m).Update(MachineInstance{
+		LastKnownStatus: statusStr,
+	}).Error; err != nil {
+		return ign.NewErrorMessageWithBase(ign.ErrorDbSave, err)
+	}
+
+	for _, machine := range m {
+		machine.LastKnownStatus = statusStr
+	}
+
+	return nil
+}
 
 // MachineStatus is a status of Host machines/instances
 type MachineStatus string
