@@ -1290,6 +1290,8 @@ gitlab.com/ignitionrobotics/web/fuelserver v0.0.0-20200916210816-e30ab5ed9d47 h1
 gitlab.com/ignitionrobotics/web/fuelserver v0.0.0-20200916210816-e30ab5ed9d47/go.mod h1:PLjdv73lgSOtVqoGEAqsa59hy14dJfvERzgXT5xZHls=
 gitlab.com/ignitionrobotics/web/ign-go v0.0.0-20200804201637-78fc7e089169 h1:QuuRlXkvbfY4ZRy6HxsHS1uaXEkE4360lyFL+19GJHI=
 gitlab.com/ignitionrobotics/web/ign-go v0.0.0-20200804201637-78fc7e089169/go.mod h1:zfTiSMA+aWnzmQFGi8UgoozvCgEPPV1JqbPmPUucXIE=
+gitlab.com/ignitionrobotics/web/ign-go v0.0.0-20201013152111-8655ead5c276 h1:TTNxqbHIO68L14yBWkWQTevkqiWK7u6MC12jgtiCvjU=
+gitlab.com/ignitionrobotics/web/ign-go v0.0.0-20201013152111-8655ead5c276/go.mod h1:zfTiSMA+aWnzmQFGi8UgoozvCgEPPV1JqbPmPUucXIE=
 gitlab.com/ignitionrobotics/web/scheduler v0.5.0/go.mod h1:wSLPCGnC6TPQh7sFuonkhTUv4KnLdNOcy4ps77qffEQ=
 gitlab.com/ignitionrobotics/web/scheduler v0.5.1-0.20200114185916-4bd85f4ff2d6 h1:IdeZ0KiDTN+H6oWoRQMy3skNiAsozsheI33t9Sprw7Q=
 gitlab.com/ignitionrobotics/web/scheduler v0.5.1-0.20200114185916-4bd85f4ff2d6/go.mod h1:wSLPCGnC6TPQh7sFuonkhTUv4KnLdNOcy4ps77qffEQ=
