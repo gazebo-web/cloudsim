@@ -68,7 +68,7 @@ require (
 	github.com/urfave/negroni/v2 v2.0.2 // indirect
 	github.com/xanzy/ssh-agent v0.2.1 // indirect
 	gitlab.com/ignitionrobotics/web/fuelserver v0.0.0-20200916210816-e30ab5ed9d47
-	gitlab.com/ignitionrobotics/web/ign-go v0.0.0-20200804201637-78fc7e089169
+	gitlab.com/ignitionrobotics/web/ign-go v0.0.0-20201013152111-8655ead5c276
 	gitlab.com/ignitionrobotics/web/scheduler v0.5.1-0.20200114185916-4bd85f4ff2d6 // indirect
 	golang.org/x/crypto v0.0.0-20200820211705-5c72a883971a // indirect
 	golang.org/x/net v0.0.0-20200904194848-62affa334b73
