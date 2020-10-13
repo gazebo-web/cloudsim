@@ -617,8 +617,10 @@ func (s *Ec2Client) launchNodes(ctx context.Context, tx *gorm.DB, dep *Simulatio
 	}
 
 	// Create machine instance entries
-	if err := tx.Create(&machines).Error; err != nil {
-		return nil, ign.NewErrorMessageWithBase(ign.ErrorDbSave, err)
+	for _, machine := range machines {
+		if err := tx.Create(&machine).Error; err != nil {
+			return nil, ign.NewErrorMessageWithBase(ign.ErrorDbSave, err)
+		}
 	}
 
 	timeTrack(ctx, tstart, "launchNodes - launchInstances")
@@ -732,7 +734,7 @@ func (s *Ec2Client) deleteHosts(ctx context.Context, tx *gorm.DB,
 		return nil, ign.NewErrorMessageWithBase(ign.ErrorStoppingCloudInstance, err)
 	}
 
-	// Prepare list of deleted instances
+	// Prepare list of deletes instances
 	instanceIDs := make([]string, len(output.TerminatingInstances))
 	for i, instanceStateChange := range output.TerminatingInstances {
 		instanceIDs[i] = fmt.Sprintf(
