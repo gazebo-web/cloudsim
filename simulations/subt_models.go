@@ -107,6 +107,7 @@ func countSimulationsByCircuit(tx *gorm.DB, owner, circuit string) (*int, error)
 		Where("error_status IS NULL").
 		Where("owner = ?", owner).
 		Where("extra_selector = ?", circuit).
+		Not("deployment_status IN (?)", []int{simSuperseded.ToInt(), simRejected.ToInt()}).
 		Count(&count).Error; err != nil {
 		return nil, err
 	}

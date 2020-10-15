@@ -69,6 +69,8 @@ const (
 	ErrorRobotModelLimitReached SimErrCode = 5522
 	// ErrorSubmissionDeadlineReached is triggered when a submission deadline for a certain circuit has been reached.
 	ErrorSubmissionDeadlineReached SimErrCode = 5523
+	// ErrorLaunchSupersededSimulation is triggered when a held simulation is superseded.
+	ErrorLaunchSupersededSimulation SimErrCode = 5224
 )
 
 // NewErrorMessageWithBase receives an error code and a root error

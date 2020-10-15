@@ -326,3 +326,12 @@ func TestIsSubmissionDeadlineReached(t *testing.T) {
 		assert.True(t, isSubmissionDeadlineReached(c))
 	})
 }
+func TestIsCompetitionCircuit(t *testing.T) {
+	assert.True(t, IsCompetitionCircuit("Tunnel Circuit"))
+	assert.True(t, IsCompetitionCircuit("Urban Circuit"))
+	assert.True(t, IsCompetitionCircuit("Cave Circuit"))
+
+	assert.False(t, IsCompetitionCircuit("Tunnel Practice 1"))
+	assert.False(t, IsCompetitionCircuit("Urban Practice 1"))
+	assert.False(t, IsCompetitionCircuit("Cave Practice 1"))
+}
