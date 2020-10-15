@@ -641,7 +641,7 @@ type MachineInstance struct {
 	Application *string `json:"application,omitempty"`
 }
 
-// updateMachineStatus updates the status in DB of a given machine
+// updateMachineStatus updates the status of a given machine
 func (m *MachineInstance) updateMachineStatus(tx *gorm.DB, st MachineStatus) *ign.ErrMsg {
 	statusStr := st.ToStringPtr()
 	if err := tx.Model(&m).Update(MachineInstance{
@@ -665,14 +665,14 @@ func (m MachineInstances) getInstanceIDs() []*string {
 	return instanceIDs
 }
 
-// updateMachinesStatus updates the status in DB of a given machine
-func (m MachineInstances) updateMachinesStatus(ctx context.Context, tx *gorm.DB, st MachineStatus) *ign.ErrMsg {
+// updateMachineStatuses updates the status of this set of machines.
+func (m MachineInstances) updateMachineStatuses(ctx context.Context, tx *gorm.DB, st MachineStatus) *ign.ErrMsg {
 	logger := logger(ctx)
 	if m == nil {
-		logger.Error("Attempted to update machine status for nil MachineInstances")
+		logger.Error("Attempted to update machine statuses with nil MachineInstances")
 		return ign.NewErrorMessage(ign.ErrorUnexpected)
 	} else if len(m) == 0 {
-		logger.Warning("Attempted to update machine status for MachineInstances with length 0")
+		logger.Warning("Attempted to update machine statuses for MachineInstances with length 0")
 		return ign.NewErrorMessage(ign.ErrorUnexpected)
 	}
 

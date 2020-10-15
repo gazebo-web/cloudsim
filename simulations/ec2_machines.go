@@ -352,7 +352,7 @@ func (s *Ec2Client) setSourceDestCheck(instanceID *string, value *bool) error {
 	return err
 }
 
-// getSimulationInstanceIDs gets the EC2 instance ids created for a simulation.
+// getSimulationInstanceIDs gets the ids of the EC2 instances created for a simulation.
 func (s *Ec2Client) getSimulationInstanceIDs(ctx context.Context, dep *SimulationDeployment) ([]*string, error) {
 	instances, err := s.ec2Svc.DescribeInstances(&ec2.DescribeInstancesInput{
 		Filters: []*ec2.Filter{
@@ -637,7 +637,7 @@ func (s *Ec2Client) launchNodes(ctx context.Context, tx *gorm.DB, dep *Simulatio
 	timeTrack(ctx, tstart, "launchNodes - WaitUntilInstanceStatusOk")
 
 	// Mark the Machines in the DB as 'Running'.
-	if em := machines.updateMachinesStatus(ctx, tx, macRunning); em != nil {
+	if em := machines.updateMachineStatuses(ctx, tx, macRunning); em != nil {
 		logger(ctx).Error("failed to update machine instances status to running:", em)
 		return nil, em
 	}
@@ -722,7 +722,7 @@ func (s *Ec2Client) deleteHosts(ctx context.Context, tx *gorm.DB,
 	}
 
 	// Update each machine instance DB record to indicate that the termination process has started.
-	if em := machines.updateMachinesStatus(ctx, tx, macTerminating); em != nil {
+	if em := machines.updateMachineStatuses(ctx, tx, macTerminating); em != nil {
 		logger(ctx).Error("Failed to update machine instances status to terminating:", em)
 		return nil, em
 	}
@@ -747,7 +747,7 @@ func (s *Ec2Client) deleteHosts(ctx context.Context, tx *gorm.DB,
 
 	// TODO there should be a watcher that marks machine DB records as "terminated"
 	// once the EC2 termination succeeds. At the time being, we just mark it as terminated.
-	if em := machines.updateMachinesStatus(ctx, tx, macTerminated); em != nil {
+	if em := machines.updateMachineStatuses(ctx, tx, macTerminated); em != nil {
 		logger(ctx).Error("Failed to update machine instances status to terminated:", em)
 		return nil, em
 	}

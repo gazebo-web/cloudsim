@@ -129,7 +129,6 @@ func TestGetRemainingSubmissions(t *testing.T) {
 	assert.Equal(t, 0, *result)
 }
 
-
 func TestMachineInstanceTestSuite(t *testing.T) {
 	suite.Run(t, &MachineInstanceTestSuite{})
 }
@@ -220,7 +219,7 @@ func (suite *MachineInstanceTestSuite) TestMachineInstances_updateMachinesStatus
 	}
 
 	// Update machine status
-	suite.Nil(suite.machines.updateMachinesStatus(suite.ctx, suite.db, macRunning))
+	suite.Nil(suite.machines.updateMachineStatuses(suite.ctx, suite.db, macRunning))
 
 	// Validate new status
 	machines = suite.getMachineInstances()
