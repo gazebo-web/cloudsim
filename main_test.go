@@ -234,17 +234,21 @@ func createDBTablesAndData(ctx context.Context, worldStatsTopic, worldWarmupTopi
 			RequiresQualification: boolptr(true),
 		},
 	}
+
+	var availableCircuits []string
 	for _, circuit := range circuits {
 		globals.Server.Db.Create(circuit)
+		availableCircuits = append(availableCircuits, *circuit.Circuit)
 	}
 
 	// TODO: This code is specific to the simulations package
 	// Temporarily add previous competition circuits to the list of available circuits
-	addAvailableCircuits := []string{
-		sim.CircuitTunnelCircuit,
+	sim.SubTCompetitionCircuits = []string{
 		sim.CircuitUrbanCircuit,
+		sim.CircuitCaveCircuit,
 	}
-	for _, circuit := range addAvailableCircuits {
+
+	for _, circuit := range availableCircuits {
 		// We need to check that the circuit is not already in the list to avoid
 		// multiple tests from adding the same list of circuits
 		if !sim.StrSliceContains(circuit, sim.SubTCircuits) {
