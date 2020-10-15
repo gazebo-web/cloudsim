@@ -6,6 +6,11 @@ import (
 	"gitlab.com/ignitionrobotics/web/ign-go"
 )
 
+var (
+	// ErrEmptyDatabaseName is returned when a database configuration contains an empty database name
+	ErrEmptyDatabaseName = errors.New("db config contains empty database name")
+)
+
 // getDBConfigFromEnvVars reads environment variables to return a database connection configuration.
 // The environment variables used are:
 // * IGN_DB_ADDRESS Address of the DBMS.
@@ -22,7 +27,7 @@ func getDBConfigFromEnvVars() (*ign.DatabaseConfig, error) {
 		return nil, err
 	}
 	if len(dbConfig.Name) == 0 {
-		return nil, errors.New("db config contains empty database name")
+		return nil, ErrEmptyDatabaseName
 	}
 
 	return &dbConfig, nil
