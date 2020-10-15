@@ -2743,6 +2743,11 @@ func (sa *SubTApplication) ValidateSimulationLaunch(ctx context.Context, tx *gor
 	if err := sa.checkHeldSimulation(ctx, tx, dep); err != nil {
 		return err
 	}
+
+	if err := sa.checkSupersededSimulation(ctx, *dep.GroupID, *dep.DeploymentStatus); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -2752,6 +2757,15 @@ func (sa *SubTApplication) checkHeldSimulation(ctx context.Context, tx *gorm.DB,
 	if dep.Held {
 		logger(ctx).Warning(fmt.Sprintf("checkHeldSimulation - Cannot run a held simulation (Group ID: %s)", *dep.GroupID))
 		return NewErrorMessage(ErrorLaunchHeldSimulation)
+	}
+	return nil
+}
+
+// checkSupersededSimulation is a validator that returns an error if the given status equals to superseded.
+func (sa *SubTApplication) checkSupersededSimulation(ctx context.Context, groupID string, status int) *ign.ErrMsg {
+	if simSuperseded.Eq(status) {
+		logger(ctx).Warning(fmt.Sprintf("checkSupersededSimulation - Cannot run a Superseded simulation (Group ID: %s)", groupID))
+		return NewErrorMessage(ErrorLaunchSupersededSimulation)
 	}
 	return nil
 }
@@ -2787,4 +2801,15 @@ func (sa *SubTApplication) simulationIsHeld(ctx context.Context, tx *gorm.DB, de
 // It only returns true if the deadline is set and has been reached, in any other case it returns false.
 func isSubmissionDeadlineReached(circuit SubTCircuitRules) bool {
 	return circuit.SubmissionDeadline != nil && circuit.SubmissionDeadline.Before(time.Now())
+}
+
+// IsCompetitionCircuit checks if the given circuit is a competition circuit.
+// This is used to check if the given circuit is a Tunnel, Urban or Cave circuit.
+func IsCompetitionCircuit(circuit string) bool {
+	for _, c := range SubTCompetitionCircuits {
+		if c == circuit {
+			return true
+		}
+	}
+	return false
 }

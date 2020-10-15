@@ -572,6 +572,13 @@ var SubTCircuits = []string{
 	CircuitCaveCircuit,
 }
 
+// SubTCompetitionCircuits is the list of circuits that are used for competitions.
+var SubTCompetitionCircuits = []string{
+	CircuitTunnelCircuit,
+	CircuitUrbanCircuit,
+	CircuitCaveCircuit,
+}
+
 // isValidRobotType checks if the field value is a valid Robot Type.
 func isValidRobotType(fl validator.FieldLevel) bool {
 	_, ok := SubTRobotTypes[strings.ToUpper(fl.Field().String())]
