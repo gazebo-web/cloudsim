@@ -2,12 +2,14 @@ package simulations
 
 import (
 	"context"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 	"k8s.io/api/extensions/v1beta1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/client-go/kubernetes/fake"
 	"testing"
+	"time"
 )
 
 func TestIngressTestSuite(t *testing.T) {
@@ -304,4 +306,32 @@ func (suite *IngressTestSuite) TestUpsertIngressRuleRemoveIngressRule() {
 	// Remove multiple non-dummy path
 	ingress = remove(ingress, paths[0].path, "/non-existent", multiplePaths[1].path)
 	test(ingress, suite.ingressHostRuleIndex, 1, multiplePaths[2])
+}
+
+func TestIsSubmissionDeadlineReached(t *testing.T) {
+	t.Run("Should return false when submission deadline is not set", func(t *testing.T) {
+		c := SubTCircuitRules{SubmissionDeadline: nil}
+		assert.False(t, isSubmissionDeadlineReached(c))
+	})
+
+	t.Run("Should return false when submission deadline has not been reached", func(t *testing.T) {
+		deadline := time.Now().Add(time.Hour)
+		c := SubTCircuitRules{SubmissionDeadline: &deadline}
+		assert.False(t, isSubmissionDeadlineReached(c))
+	})
+
+	t.Run("Should return true when submission deadline has been reached", func(t *testing.T) {
+		deadline := time.Now()
+		c := SubTCircuitRules{SubmissionDeadline: &deadline}
+		assert.True(t, isSubmissionDeadlineReached(c))
+	})
+}
+func TestIsCompetitionCircuit(t *testing.T) {
+	assert.True(t, IsCompetitionCircuit("Tunnel Circuit"))
+	assert.True(t, IsCompetitionCircuit("Urban Circuit"))
+	assert.True(t, IsCompetitionCircuit("Cave Circuit"))
+
+	assert.False(t, IsCompetitionCircuit("Tunnel Practice 1"))
+	assert.False(t, IsCompetitionCircuit("Urban Practice 1"))
+	assert.False(t, IsCompetitionCircuit("Cave Practice 1"))
 }

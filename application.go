@@ -80,7 +80,7 @@ var ecNm *sim.Ec2Client
 func init() {
 
 	cfg := appConfig{}
-	cfg.isGoTest = strings.Contains(os.Args[0], "test")
+	cfg.isGoTest = strings.Contains(strings.ToLower(os.Args[0]), "test")
 
 	// Using ENV approach to allow multiple layers of configuration.
 	// See https://github.com/joho/godotenv

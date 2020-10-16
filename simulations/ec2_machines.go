@@ -336,14 +336,7 @@ func (s *Ec2Client) runInstanceCall(ctx context.Context, input *ec2.RunInstances
 		// DryRun AWS requests always return an error
 		// This error indicates whether or not the request was successful
 		awsErr, ok := err.(awserr.Error)
-		if ok && AWSErrorIsRetryable(awsErr) {
-			// If the error is non-fatal retry the launch
-			logger(ctx).Info(fmt.Sprintf("launchNodes - %s retryable error: %s\n", awsErr.Code(), awsErr.Message()))
-			if try != MaxAWSRetries {
-				Sleep(time.Second * time.Duration(try))
-			}
-			continue
-		} else if ok && awsErr.Code() == AWSErrCodeDryRunOperation {
+		if ok && awsErr.Code() == AWSErrCodeDryRunOperation {
 			// If the error code is `DryRunOperation` it means we have the necessary
 			// permissions to do the operation
 			input.SetDryRun(false)
@@ -356,6 +349,13 @@ func (s *Ec2Client) runInstanceCall(ctx context.Context, input *ec2.RunInstances
 				logger(ctx).Warning(fmt.Sprintf("launchNodes - error launching: %s\n", err))
 			}
 			return
+		} else if ok {
+			// If the error is non-fatal retry the launch
+			logger(ctx).Info(fmt.Sprintf("launchNodes - %s retryable error: %s\n", awsErr.Code(), awsErr.Message()))
+			if try != MaxAWSRetries {
+				Sleep(time.Second * time.Duration(try))
+			}
+			continue
 		} else {
 			// Return the RunInstance error otherwise
 			return
