@@ -569,6 +569,14 @@ var SubTCircuits = []string{
 	CircuitCavePractice1,
 	CircuitCavePractice2,
 	CircuitCavePractice3,
+	CircuitCaveCircuit,
+}
+
+// SubTCompetitionCircuits is the list of circuits that are used for competitions.
+var SubTCompetitionCircuits = []string{
+	CircuitTunnelCircuit,
+	CircuitUrbanCircuit,
+	CircuitCaveCircuit,
 }
 
 // isValidRobotType checks if the field value is a valid Robot Type.

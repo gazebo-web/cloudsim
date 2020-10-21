@@ -3,6 +3,8 @@ package simulations
 import (
 	"fmt"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+	"gitlab.com/ignitionrobotics/web/ign-go"
 	"testing"
 	"time"
 )
@@ -43,4 +45,79 @@ func TestSimulationDeployment_Clone(t *testing.T) {
 
 	// Check that the references are copied and can be overwritten
 	assert.NotEqual(t, *simDep.GroupID, *simDepClone.GroupID)
+}
+
+func TestGetRemainingSubmissions(t *testing.T) {
+	// Get database config
+	config, err := ign.NewDatabaseConfigFromEnvVars()
+	require.NoError(t, err)
+
+	// Initialize database
+	db, err := ign.InitDbWithCfg(&config)
+	require.NoError(t, err)
+
+	db.DropTableIfExists(&SimulationDeployment{})
+	db.DropTableIfExists(&CircuitCustomRule{})
+
+	// Auto migrate models
+	db.AutoMigrate(&SimulationDeployment{})
+	db.AutoMigrate(&CircuitCustomRule{})
+
+	// Define data
+	owner := "Ignition Robotics"
+	circuit := "Cave Circuit"
+
+	require.NoError(t, db.Model(&CircuitCustomRule{}).Save(&CircuitCustomRule{Circuit: &circuit, Value: "1", RuleType: MaxSubmissions}).Error)
+
+	result, err := getRemainingSubmissions(db, circuit, "")
+	require.NoError(t, err)
+
+	require.NotNil(t, result)
+	assert.Equal(t, 1, *result)
+
+	// Define group ID of the first submission
+	firstGroupID := "aaaa-bbbb-cccc-dddd"
+
+	// Create the first submission
+	first := &SimulationDeployment{
+		GroupID:          &firstGroupID,
+		DeploymentStatus: simPending.ToPtr(),
+		Owner:            &owner,
+		ExtraSelector:    &circuit,
+		Held:             true,
+		MultiSim:         int(multiSimParent),
+	}
+
+	require.NoError(t, db.Model(&SimulationDeployment{}).Save(&first).Error)
+
+	// Create child sims for the first submission
+	createTestChildSims(t, db, first, 3)
+
+	result, err = getRemainingSubmissions(db, circuit, owner)
+	require.NoError(t, err)
+
+	require.NotNil(t, result)
+	assert.Equal(t, 0, *result)
+
+	gid := "aaaa-bbbb-cccc-eeee"
+	second := &SimulationDeployment{
+		GroupID:          &gid,
+		DeploymentStatus: simPending.ToPtr(),
+		Owner:            &owner,
+		ExtraSelector:    &circuit,
+		Held:             true,
+		MultiSim:         int(multiSimParent),
+	}
+	db.Model(&SimulationDeployment{}).Save(&second)
+
+	// Create child sims for the second submission
+	createTestChildSims(t, db, second, 3)
+
+	require.NoError(t, MarkPreviousSubmissionsSuperseded(db, gid, owner, circuit))
+
+	result, err = getRemainingSubmissions(db, circuit, owner)
+	require.NoError(t, err)
+
+	require.NotNil(t, result)
+	assert.Equal(t, 0, *result)
 }
