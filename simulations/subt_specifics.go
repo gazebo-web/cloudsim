@@ -116,6 +116,7 @@ const (
 	CircuitCavePractice1      string = "Cave Practice 1"
 	CircuitCavePractice2      string = "Cave Practice 2"
 	CircuitCavePractice3      string = "Cave Practice 3"
+	CircuitCaveCircuit        string = "Cave Circuit"
 
 	// Container names
 	GazeboServerContainerName    string = "gzserver-container"
@@ -419,6 +420,10 @@ func (sa *SubTApplication) customizeSimulationRequest(ctx context.Context,
 
 		if !sa.isQualified(subtSim.Owner, subtSim.Circuit, username) {
 			return NewErrorMessage(ErrorNotQualified)
+		}
+
+		if isSubmissionDeadlineReached(*rules) {
+			return NewErrorMessage(ErrorSubmissionDeadlineReached)
 		}
 	}
 
@@ -1770,8 +1775,8 @@ func (sa *SubTApplication) CreateGlooVirtualServiceRoute(ctx context.Context, s 
 			s.cfg.KubernetesGlooNamespace,
 			groupID,
 		)
-		logger.Info(fmt.Sprintf("Got upstream! Name: %s", upstream))
 		if err == nil {
+			logger.Info(fmt.Sprintf("Got upstream! Name: %s", upstream))
 			break
 		} else if i < retries-1 {
 			logger.Info("Failed to get Kubernetes Service Gloo Upstream name. Retrying. Error:", err)
@@ -2356,19 +2361,30 @@ func (sa *SubTApplication) deleteApplication(ctx context.Context, s *Service, tx
 
 	// Delete Gloo route associated to the groupID.
 	if len(sa.cfg.IngressName) > 0 && len(sa.cfg.WebsocketHost) > 0 {
-		_, err := gloo.RemoveVirtualServiceRoute(
-			ctx,
-			s.glooClientset,
-			s.cfg.KubernetesGlooNamespace,
-			sa.cfg.IngressName,
-			&gatewayapiv1.Route{
-				Name: groupID,
-			},
-		)
+		retries := uint(9)
+		for i := uint(1); i < retries; i++ {
+			_, err := gloo.RemoveVirtualServiceRoute(
+				ctx,
+				s.glooClientset,
+				s.cfg.KubernetesGlooNamespace,
+				sa.cfg.IngressName,
+				&gatewayapiv1.Route{
+					Name: groupID,
+				},
+			)
+			if err == nil {
+				break
+			} else if i < retries-1 {
+				logger(ctx).Info("Failed to delete Gloo Virtual Service route. Retrying. Error:", err)
+			}
+
+			// If an error occurred, retry for up to 10 min with exponential backoff
+			Sleep(time.Duration(1<<i) * time.Second)
+		}
 
 		if err != nil {
-			// There was an unexpected error deleting the Ingress rule and the simulation will be marked as failed,
-			// as this is an unexpected scenario.
+			// There was an unexpected error deleting the Gloo Virtual Service route and the simulation will be marked
+			// as failed, as this is an unexpected scenario.
 			em := ign.NewErrorMessageWithBase(ign.ErrorK8Delete, err)
 			errMsg := "Error while removing k8 Ingress rule. Make sure a sysadmin deletes the ingress rule manually."
 			logger(ctx).Error(errMsg, em)
@@ -2727,6 +2743,11 @@ func (sa *SubTApplication) ValidateSimulationLaunch(ctx context.Context, tx *gor
 	if err := sa.checkHeldSimulation(ctx, tx, dep); err != nil {
 		return err
 	}
+
+	if err := sa.checkSupersededSimulation(ctx, *dep.GroupID, *dep.DeploymentStatus); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -2736,6 +2757,15 @@ func (sa *SubTApplication) checkHeldSimulation(ctx context.Context, tx *gorm.DB,
 	if dep.Held {
 		logger(ctx).Warning(fmt.Sprintf("checkHeldSimulation - Cannot run a held simulation (Group ID: %s)", *dep.GroupID))
 		return NewErrorMessage(ErrorLaunchHeldSimulation)
+	}
+	return nil
+}
+
+// checkSupersededSimulation is a validator that returns an error if the given status equals to superseded.
+func (sa *SubTApplication) checkSupersededSimulation(ctx context.Context, groupID string, status int) *ign.ErrMsg {
+	if simSuperseded.Eq(status) {
+		logger(ctx).Warning(fmt.Sprintf("checkSupersededSimulation - Cannot run a Superseded simulation (Group ID: %s)", groupID))
+		return NewErrorMessage(ErrorLaunchSupersededSimulation)
 	}
 	return nil
 }
@@ -2765,4 +2795,21 @@ func (sa *SubTApplication) simulationIsHeld(ctx context.Context, tx *gorm.DB, de
 		return false
 	}
 	return true
+}
+
+// isSubmissionDeadlineReached checks if a certain circuit has reached its submission deadline.
+// It only returns true if the deadline is set and has been reached, in any other case it returns false.
+func isSubmissionDeadlineReached(circuit SubTCircuitRules) bool {
+	return circuit.SubmissionDeadline != nil && circuit.SubmissionDeadline.Before(time.Now())
+}
+
+// IsCompetitionCircuit checks if the given circuit is a competition circuit.
+// This is used to check if the given circuit is a Tunnel, Urban or Cave circuit.
+func IsCompetitionCircuit(circuit string) bool {
+	for _, c := range SubTCompetitionCircuits {
+		if c == circuit {
+			return true
+		}
+	}
+	return false
 }
