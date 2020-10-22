@@ -12,11 +12,11 @@ import (
 	"time"
 )
 
+// LaunchGazeboServerPod launches a gazebo server pod.
 var LaunchGazeboServerPod = jobs.LaunchPod.Extend(actions.Job{
 	Name:            "launch-gzserver-pod",
 	PreHooks:        []actions.JobFunc{setStartState, prepareCreatePodInput},
 	PostHooks:       []actions.JobFunc{returnState},
-	RollbackHandler: nil,
 	InputType:       actions.GetJobDataType(&state.StartSimulation{}),
 	OutputType:      actions.GetJobDataType(&state.StartSimulation{}),
 })
