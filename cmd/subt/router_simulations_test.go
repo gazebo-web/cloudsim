@@ -103,12 +103,12 @@ func TestSimulationsRoute(t *testing.T) {
 	var teamASimGroupID string
 
 	vStix := "Virtual Stix"
-	tunnel := "Tunnel Circuit"
+	circuit := "Tunnel Circuit"
 
-	// Create a custom max_submissions rule for Tunnel Circuit (set to 1)
+	// Create a custom max_submissions rule for circuit (set to 1)
 	tcLimitRule := &sim.CircuitCustomRule{
 		Owner:    nil,
-		Circuit:  &tunnel,
+		Circuit:  &circuit,
 		RuleType: sim.MaxSubmissions,
 		Value:    "1",
 	}
@@ -120,9 +120,9 @@ func TestSimulationsRoute(t *testing.T) {
 		{uriTest{"createSim - valid invocation with jwt", createSimURI, teamAUser1, nil, false, false}, vStix, "TeamA", nil, "TeamAUser1"},
 		{uriTest{"createSim - valid invocation for TeamB with default jwt", createSimURI, defaultJWT, nil, false, false}, vStix, "TeamB", nil, sysAdminForTest},
 		{uriTest{"createSim - TeamBAdmin should not be able to create sim for TeamA", createSimURI, teamBAdmin, unauth, false, false}, vStix, "TeamA", nil, ""},
-		{uriTest{"createSim - TeamBAdmin can create sim for TeamB", createSimURI, teamBAdmin, nil, false, false}, tunnel, "TeamB", nil, "TeamBAdmin"},
-		{uriTest{"createSim - TeamBAdmin should not be able to create a 2nd sim for TeamB", createSimURI, teamBAdmin, sim.NewErrorMessage(sim.ErrorCircuitSubmissionLimitReached), false, false}, tunnel, "TeamB", nil, "TeamBAdmin"},
-		{uriTest{"createSim - robotName longer than max", createSimURI, teamBAdmin, ign.NewErrorMessage(ign.ErrorFormInvalidValue), false, false}, tunnel, "TeamB", sptr("a25charsname1111111111111"), "TeamBAdmin"},
+		{uriTest{"createSim - TeamBAdmin can create sim for TeamB", createSimURI, teamBAdmin, nil, false, false}, circuit, "TeamB", nil, "TeamBAdmin"},
+		{uriTest{"createSim - TeamBAdmin should not be able to create a 2nd sim for TeamB", createSimURI, teamBAdmin, sim.NewErrorMessage(sim.ErrorCircuitSubmissionLimitReached), false, false}, circuit, "TeamB", nil, "TeamBAdmin"},
+		{uriTest{"createSim - robotName longer than max", createSimURI, teamBAdmin, ign.NewErrorMessage(ign.ErrorFormInvalidValue), false, false}, circuit, "TeamB", sptr("a25charsname1111111111111"), "TeamBAdmin"},
 	}
 
 	for i, test := range createSimsTestsData {
@@ -165,11 +165,12 @@ func TestSimulationsRoute(t *testing.T) {
 	uri := "/1.0/simulations"
 
 	getSimulationsTestsData := []getSimulationsTest{
-		{uriTest{"getSims - invalid uri", invalidURI, nil, ign.NewErrorMessage(ign.ErrorNameNotFound), true, true}, nil, nil}, {uriTest{"getSims - with no jwt", uri, nil, ign.NewErrorMessage(ign.ErrorUnauthorized), true, false}, nil, nil},
+		{uriTest{"getSims - invalid uri", invalidURI, nil, ign.NewErrorMessage(ign.ErrorNameNotFound), true, true}, nil, nil},
+		{uriTest{"getSims - with no jwt", uri, nil, ign.NewErrorMessage(ign.ErrorUnauthorized), true, false}, nil, nil},
 		{uriTest{"getSims - invocation with non existing user", uri, nonexistentJWT, ign.NewErrorMessage(ign.ErrorAuthNoUser), false, false}, nil, nil},
 		{uriTest{"getSims - valid invocation with jwt", uri, defaultJWT, nil, false, false}, []string{"sim5", "sim3", "sim2"}, nil},
 		{uriTest{"getSims - valid invocation with user valid jwt", uri, teamAUser1, nil, false, false}, []string{"sim2"}, nil},
-		{uriTest{"getSims - valid invocation filtering by circuit with jwt", uri, defaultJWT, nil, false, false}, []string{"sim5"}, sptr(tunnel)},
+		{uriTest{"getSims - valid invocation filtering by circuit with jwt", uri, defaultJWT, nil, false, false}, []string{"sim5"}, sptr(circuit)},
 		{uriTest{"getSims - valid invocation filtering by circuit with user valid jwt", uri, teamAUser1, nil, false, false}, []string{"sim2"}, sptr(vStix)},
 		{uriTest{"getSims - valid invocation filtering by circuit with admin jwt", uri, defaultJWT, nil, false, false}, []string{"sim3", "sim2"}, sptr(vStix)},
 	}
@@ -181,8 +182,9 @@ func TestSimulationsRoute(t *testing.T) {
 			}
 			invokeURITest(t, test.uriTest, func(bslice *[]byte, resp *igntest.AssertResponse) {
 				// Status OK callback
-				sims := []sim.SimulationDeployment{}
+				var sims []sim.SimulationDeployment
 				require.NoError(t, json.Unmarshal(*bslice, &sims), "Unable to unmarshal response", string(*bslice))
+				assert.Len(t, sims, len(test.expSimNames))
 				for i, n := range test.expSimNames {
 					assert.Equal(t, n, *sims[i].Name)
 				}
@@ -322,7 +324,7 @@ func TestGetRemainingSubmissionsRoute(t *testing.T) {
 	setup()
 
 	// Route parameters
-	circuit := "Tunnel Circuit"
+	circuit := "Tunnel Practice 1"
 	owner := sysAdminForTest
 	URI := fmt.Sprintf("/1.0/%s/remaining_submissions/%s", circuit, owner)
 	testRoute := uriTest{
@@ -388,11 +390,17 @@ func TestGetRemainingSubmissionsRoute(t *testing.T) {
 	for i, test := range customRules {
 		t.Run(fmt.Sprintf("%s-%d", testRoute.testDesc, i), func(t *testing.T) {
 			// Create a fake simulation
-			globals.Server.Db.Create(&sim.SimulationDeployment{
-				Owner:         sptr(owner),
-				GroupID:       sptr(uuid.NewV4().String()),
-				ExtraSelector: sptr(circuit),
-			})
+			fakesim := &sim.SimulationDeployment{
+				Owner:            sptr(owner),
+				GroupID:          sptr(uuid.NewV4().String()),
+				ExtraSelector:    sptr(circuit),
+				DeploymentStatus: intptr(30), // Running hard-coded.
+			}
+			globals.Server.Db.Create(fakesim)
+
+			if fakesim.ExtraSelector != nil && sim.IsCompetitionCircuit(*fakesim.ExtraSelector) {
+				sim.MarkPreviousSubmissionsSuperseded(globals.Server.Db, *fakesim.GroupID, *fakesim.Owner, *fakesim.ExtraSelector)
+			}
 
 			// Create the next custom rules
 			if test.rule != nil {

@@ -3,39 +3,86 @@ module gitlab.com/ignitionrobotics/web/cloudsim
 go 1.15
 
 require (
+	github.com/Knetic/govaluate v3.0.1-0.20171022003610-9aa49832a739+incompatible // indirect
 	github.com/auth0/go-jwt-middleware v0.0.0-20200810150920-a32d7af194d1 // indirect
-	github.com/aws/aws-sdk-go v1.34.30
+	github.com/aws/aws-sdk-go v1.34.25
+	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/caarlos0/env v3.5.0+incompatible
-	github.com/casbin/casbin/v2 v2.12.0
+	github.com/casbin/casbin v1.9.1 // indirect
+	github.com/casbin/casbin/v2 v2.6.11
+	github.com/casbin/gorm-adapter v1.0.0 // indirect
 	github.com/casbin/gorm-adapter/v2 v2.1.0
+	github.com/codegangsta/negroni v1.0.0 // indirect
+	github.com/creasty/defaults v1.5.1
+	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
-	github.com/elastic/go-elasticsearch/v8 v8.0.0-20200924133523-7442a8de3032 // indirect
+	github.com/docker/spdystream v0.0.0-20181023171402-6480d4af844c // indirect
+	github.com/elastic/go-elasticsearch/v8 v8.0.0-20200916133832-96c1726edbaa // indirect
+	github.com/emirpasic/gods v1.12.0 // indirect
+	github.com/ghodss/yaml v1.0.1-0.20190212211648-25d852aebe32 // indirect
 	github.com/go-playground/form v3.1.4+incompatible
+	github.com/go-playground/locales v0.13.0 // indirect
+	github.com/go-playground/universal-translator v0.17.0 // indirect
 	github.com/go-sql-driver/mysql v1.5.0
+	github.com/gogo/protobuf v1.3.1 // indirect
+	github.com/golang/glog v0.0.0-20160126235308-23def4e6c14b // indirect
 	github.com/golang/protobuf v1.4.2
+	github.com/google/gofuzz v1.0.0 // indirect
+	github.com/googleapis/gnostic v0.3.1 // indirect
 	github.com/gorilla/mux v1.8.0
 	github.com/gorilla/websocket v1.4.2
+	github.com/howeyc/gopass v0.0.0-20170109162249-bf9dde6d0d2c // indirect
 	github.com/imdario/mergo v0.3.8
+	github.com/jbenet/go-context v0.0.0-20150711004518-d14ea06fba99 // indirect
 	github.com/jinzhu/gorm v1.9.16
-	github.com/johannesboyne/gofakes3 v0.0.0-20200716060623-6b2b4cb092cc
+	github.com/jinzhu/inflection v1.0.0 // indirect
+	github.com/jmespath/go-jmespath v0.3.0 // indirect
 	github.com/joho/godotenv v1.3.0
+	github.com/jpillora/go-ogle-analytics v0.0.0-20161213085824-14b04e0594ef // indirect
+	github.com/json-iterator/go v1.1.10 // indirect
+	github.com/kevinburke/ssh_config v0.0.0-20190725054713-01f96b0aa0cd // indirect
+	github.com/leodido/go-urn v1.2.0 // indirect
 	github.com/lib/pq v1.8.0 // indirect
+	github.com/mattn/go-pointer v0.0.0-20180825124634-49522c3f3791
+	github.com/matttproud/golang_protobuf_extensions v1.0.1 // indirect
+	github.com/mitchellh/go-homedir v1.1.0 // indirect
+	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
+	github.com/modern-go/reflect2 v1.0.1 // indirect
 	github.com/panjf2000/ants v0.0.0-20190122063359-2ba69cd1384d
+	github.com/pelletier/go-buffruneio v0.3.0 // indirect
 	github.com/pkg/errors v0.9.1
+	github.com/pmezard/go-difflib v1.0.0 // indirect
+	github.com/prometheus/client_golang v1.7.1 // indirect
+	github.com/prometheus/client_model v0.2.0 // indirect
 	github.com/prometheus/common v0.11.1 // indirect
+	github.com/prometheus/procfs v0.1.3 // indirect
+	github.com/rollbar/rollbar-go v1.2.0 // indirect
 	github.com/satori/go.uuid v1.2.0
+	github.com/sergi/go-diff v1.1.0 // indirect
 	github.com/solo-io/gloo v1.4.12
 	github.com/solo-io/solo-kit v0.13.8-patch4
+	github.com/spf13/pflag v1.0.5 // indirect
+	github.com/src-d/gcfg v1.4.0 // indirect
+	github.com/stretchr/objx v0.2.0 // indirect
 	github.com/stretchr/testify v1.5.1
+	github.com/urfave/negroni/v2 v2.0.2 // indirect
+	github.com/xanzy/ssh-agent v0.2.1 // indirect
 	gitlab.com/ignitionrobotics/web/fuelserver v0.0.0-20200916210816-e30ab5ed9d47
-	gitlab.com/ignitionrobotics/web/ign-go v0.0.0-20200804201637-78fc7e089169
+	gitlab.com/ignitionrobotics/web/ign-go v0.0.0-20201013152111-8655ead5c276
 	gitlab.com/ignitionrobotics/web/scheduler v0.5.1-0.20200114185916-4bd85f4ff2d6 // indirect
 	golang.org/x/crypto v0.0.0-20200820211705-5c72a883971a // indirect
-	golang.org/x/net v0.0.0-20200923182212-328152dc79b1
-	golang.org/x/sys v0.0.0-20200923182605-d9f96fdee20d // indirect
+	golang.org/x/net v0.0.0-20200904194848-62affa334b73
+	golang.org/x/sys v0.0.0-20200916084744-dbad9cb7cb7a // indirect
+	golang.org/x/text v0.3.2 // indirect
+	golang.org/x/time v0.0.0-20191024005414-555d28b269f0 // indirect
+	google.golang.org/appengine v1.6.6 // indirect
 	google.golang.org/protobuf v1.25.0
 	gopkg.in/go-playground/assert.v1 v1.2.1 // indirect
 	gopkg.in/go-playground/validator.v9 v9.31.0
+	gopkg.in/inf.v0 v0.9.1 // indirect
+	gopkg.in/src-d/go-billy.v4 v4.3.2 // indirect
+	gopkg.in/src-d/go-git.v4 v4.13.1 // indirect
+	gopkg.in/warnings.v0 v0.1.2 // indirect
 	gopkg.in/yaml.v2 v2.3.0
 	k8s.io/api v0.17.2
 	k8s.io/apimachinery v0.17.2
