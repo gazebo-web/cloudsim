@@ -176,7 +176,7 @@ coverage:
     - *setup_git_credentials
     - *setup_db
   script:
-    - go test -covermode=atomic -coverprofile=coverage.tx ./...
+    - go test -covermode=atomic -coverprofile=coverage.tx $(go list ./...)
     - go tool cover -func=coverage.tx
     - bash <(curl -s https://codecov.io/bash)
   services:
