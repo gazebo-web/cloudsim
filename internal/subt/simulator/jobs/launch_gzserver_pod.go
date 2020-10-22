@@ -27,8 +27,7 @@ func prepareCreatePodInput(store actions.Store, tx *gorm.DB, deployment *actions
 	podName := "prefix-groupid-gzserver"
 
 	// Set up namespace
-	namespace := "default"
-	// namespace := simCtx.Platform().Store().Cluster().Namespace()
+	namespace := s.Platform().Store().Orchestrator().Namespace()
 
 	// Get simulation
 	sim, err := s.Services().Simulations().Get(s.GroupID)
