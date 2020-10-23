@@ -31,11 +31,12 @@ func TestLaunchGazeboServerPod(t *testing.T) {
 	storeOrchestrator := sfake.NewFakeOrchestrator()
 	fakeStore := sfake.NewFakeStore(nil, storeOrchestrator, storeIgnition)
 
-	// Mock stores methods used on this test
+	// Mock ignition store methods for this test
 	storeIgnition.On("GazeboServerLogsPath").Return("/tmp/test")
 	storeIgnition.On("IP").Return("127.0.0.1")
 	storeIgnition.On("Verbosity").Return("0")
 
+	// Mock orchestrator store methods for this test
 	storeOrchestrator.On("Namespace").Return("default")
 	storeOrchestrator.On("TerminationGracePeriod").Return(time.Second)
 	storeOrchestrator.On("Nameservers").Return([]string{"8.8.8.8", "8.8.4.4"})
@@ -55,7 +56,7 @@ func TestLaunchGazeboServerPod(t *testing.T) {
 		NetworkPolicies: nil,
 	})
 
-	// Set up platform using fake store and kubernetes component
+	// Set up platform using fake store and fake kubernetes component
 	p := platform.NewPlatform(nil, nil, ks, fakeStore)
 
 	// Initialize generic simulation service
@@ -64,9 +65,10 @@ func TestLaunchGazeboServerPod(t *testing.T) {
 	// Create a GroupID for testing.
 	gid := simulations.GroupID("aaaa-bbbb-cccc-dddd")
 
+	// Define track name
 	trackName := "Cave Circuit World 1"
 
-	// Create a simulation
+	// Create a simulation for the given track
 	sim := fake.NewSimulation(fake.SimulationConfig{
 		GroupID: gid,
 		Status:  simulations.StatusRunning,
@@ -82,6 +84,7 @@ func TestLaunchGazeboServerPod(t *testing.T) {
 	// Initialize tracks service
 	trackService := tfake.NewService()
 
+	// Mock Get method from tracks service
 	trackService.On("Get", trackName).Return(&tracks.Track{
 		Name:          trackName,
 		Image:         "world-image.org/image",
