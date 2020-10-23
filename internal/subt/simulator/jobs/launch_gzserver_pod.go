@@ -24,6 +24,7 @@ var LaunchGazeboServerPod = jobs.LaunchPod.Extend(actions.Job{
 func prepareCreatePodInput(store actions.Store, tx *gorm.DB, deployment *actions.Deployment, value interface{}) (interface{}, error) {
 	s := store.State().(*state.StartSimulation)
 
+	// TODO: How do we get the pod name?
 	podName := "prefix-groupid-gzserver"
 
 	// Set up namespace
