@@ -2,7 +2,7 @@ package jobs
 
 import (
 	"github.com/jinzhu/gorm"
-	"gitlab.com/ignitionrobotics/web/cloudsim/internal/subt"
+	subtapp "gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/application"
 	"gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/gazebo"
 	"gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/simulations"
 	"gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/simulator/state"
@@ -40,8 +40,8 @@ func prepareCreatePodInput(store actions.Store, tx *gorm.DB, deployment *actions
 
 	// Get track name
 	trackName := subtSim.Track()
-	subtSimService := s.Services().(subt.Services)
-	track, err := subtSimService.Tracks().Get(trackName)
+	app := s.Services().(subtapp.Services)
+	track, err := app.Tracks().Get(trackName)
 	if err != nil {
 		return nil, err
 	}
@@ -137,5 +137,5 @@ func prepareCreatePodInput(store actions.Store, tx *gorm.DB, deployment *actions
 		Nameservers: nameservers,
 	}
 
-	return input, nil
+	return jobs.LaunchPodInput(input), nil
 }
