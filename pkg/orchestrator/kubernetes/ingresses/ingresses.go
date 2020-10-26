@@ -18,7 +18,7 @@ type ingresses struct {
 func (m *ingresses) Get(name string, namespace string) (orchestrator.Resource, error) {
 	m.Logger.Debug(fmt.Sprintf("Getting ingress with name [%s] in namespace [%s]", name, namespace))
 
-	out, err := m.API.ExtensionsV1beta1().Ingresses(name).Get(namespace, metav1.GetOptions{})
+	out, err := m.API.ExtensionsV1beta1().Ingresses(namespace).Get(name, metav1.GetOptions{})
 	if err != nil {
 		m.Logger.Debug(fmt.Sprintf("Getting ingress with name [%s] in namespace [%s] failed.", name, namespace))
 		return nil, err
