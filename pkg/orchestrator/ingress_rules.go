@@ -43,6 +43,8 @@ type Path struct {
 // Endpoint describes an entrypoint to a certain service name with the given port.
 type Endpoint struct {
 	// Name is the name of the service.
+	// Using Kubernetes: It's the name of the service we're pointing to
+	// Using Gloo: It's the name of the upstream.
 	Name string
 	// Port is the port of the service.
 	Port int32

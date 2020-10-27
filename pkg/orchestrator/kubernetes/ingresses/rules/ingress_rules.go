@@ -33,11 +33,15 @@ func (m *ingressRules) Get(resource orchestrator.Resource, host string) (orchest
 	}
 
 	// Get rule that matches the given host
-	var rule v1beta1.HTTPIngressRuleValue
+	var rule *v1beta1.HTTPIngressRuleValue
 	for _, ingressRule := range ingress.Spec.Rules {
 		if ingressRule.Host == host {
-			rule = *ingressRule.IngressRuleValue.HTTP
+			rule = ingressRule.IngressRuleValue.HTTP
 		}
+	}
+
+	if rule == nil {
+		return nil, orchestrator.ErrRuleNotFound
 	}
 
 	// Prepare paths and create output
