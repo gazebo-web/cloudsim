@@ -6,14 +6,13 @@ import (
 	gateway "github.com/solo-io/gloo/projects/gateway/pkg/api/v1/kube/client/clientset/versioned/typed/gateway.solo.io/v1"
 	glooapiv1 "github.com/solo-io/gloo/projects/gloo/pkg/api/v1"
 	"github.com/solo-io/gloo/projects/gloo/pkg/api/v1/core/matchers"
-	gloo "github.com/solo-io/gloo/projects/gloo/pkg/api/v1/kube/client/clientset/versioned/typed/gloo.solo.io/v1"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator"
 	"gitlab.com/ignitionrobotics/web/ign-go"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
+// virtualHosts is a orchestrator.IngressRules implementation to manage Gloo Virtual Hosts.
 type virtualHosts struct {
-	API     gloo.GlooV1Interface
 	Gateway gateway.GatewayV1Interface
 	Logger  ign.Logger
 }

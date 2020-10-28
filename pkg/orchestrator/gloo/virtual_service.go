@@ -9,6 +9,7 @@ import (
 )
 
 // virtualServices is an orchestrator.Ingresses implementation using Gloo.
+// It's in charge of managing Gloo Virtual Services.
 type virtualServices struct {
 	Gateway gateway.GatewayV1Interface
 	Logger  ign.Logger
