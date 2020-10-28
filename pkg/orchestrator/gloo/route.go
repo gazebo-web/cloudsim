@@ -61,44 +61,44 @@ func (r *rule) RemovePaths(paths []orchestrator.Path) {
 func (r *rule) ToOutput() interface{} {
 	return &gatewayapiv1.VirtualHost{
 		Domains: r.domains,
-		Routes:  r.generateRoutes(),
+		Routes:  generateRoutes(r.resource.Namespace(), r.paths),
 	}
 }
 
-func (r *rule) generateRoutes() []*gatewayapiv1.Route {
-	routes := make([]*gatewayapiv1.Route, 0, len(r.paths))
-	for _, p := range r.paths {
-		routes = append(routes, r.generateRoute(p))
+func generateRoutes(namespace string, paths []orchestrator.Path) []*gatewayapiv1.Route {
+	routes := make([]*gatewayapiv1.Route, 0, len(paths))
+	for _, p := range paths {
+		routes = append(routes, generateRoute(namespace, p))
 	}
 	return routes
 }
 
-func (r *rule) generateRoute(path orchestrator.Path) *gatewayapiv1.Route {
+func generateRoute(namespace string, path orchestrator.Path) *gatewayapiv1.Route {
 	return &gatewayapiv1.Route{
-		Matchers: r.generateMatchers(path),
-		Action:   r.generateRouteAction(path),
+		Matchers: []*matchers.Matcher{
+			generateMatcher(path.Address),
+		},
+		Action: generateRouteAction(namespace, path.Endpoint.Name),
 	}
 }
 
-func (r *rule) generateMatchers(path orchestrator.Path) []*matchers.Matcher {
-	return []*matchers.Matcher{
-		{
-			PathSpecifier: &matchers.Matcher_Regex{
-				Regex: path.Address,
-			},
+func generateMatcher(addr string) *matchers.Matcher {
+	return &matchers.Matcher{
+		PathSpecifier: &matchers.Matcher_Regex{
+			Regex: addr,
 		},
 	}
 }
 
-func (r *rule) generateRouteAction(path orchestrator.Path) *gatewayapiv1.Route_RouteAction {
+func generateRouteAction(namespace string, endpointName string) *gatewayapiv1.Route_RouteAction {
 	return &gatewayapiv1.Route_RouteAction{
 		RouteAction: &glooapiv1.RouteAction{
 			Destination: &glooapiv1.RouteAction_Single{
 				Single: &glooapiv1.Destination{
 					DestinationType: &glooapiv1.Destination_Upstream{
 						Upstream: &core.ResourceRef{
-							Name:      path.Endpoint.Name,
-							Namespace: r.resource.Namespace(),
+							Name:      endpointName,
+							Namespace: namespace,
 						},
 					},
 				},
