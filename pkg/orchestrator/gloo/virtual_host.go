@@ -18,6 +18,7 @@ type virtualHosts struct {
 	Logger  ign.Logger
 }
 
+// Get returns a representation of a virtual host using an orchestrator.Rule.
 func (v *virtualHosts) Get(resource orchestrator.Resource, host string) (orchestrator.Rule, error) {
 	// Get the virtual service
 	vs, err := v.Gateway.VirtualServices(resource.Namespace()).Get(resource.Name(), metav1.GetOptions{})
@@ -50,6 +51,7 @@ func (v *virtualHosts) Get(resource orchestrator.Resource, host string) (orchest
 	return out, nil
 }
 
+// Upsert inserts routes on `paths` in the virtual host represented by `rule`.
 func (v *virtualHosts) Upsert(rule orchestrator.Rule, paths ...orchestrator.Path) error {
 	v.Logger.Debug(fmt.Sprintf("Upserting rule for virtual host [%s] ", rule.Host()))
 
@@ -74,6 +76,7 @@ func (v *virtualHosts) Upsert(rule orchestrator.Rule, paths ...orchestrator.Path
 	return nil
 }
 
+// Remove removes the routes listed on `paths` from the virtual host represented by `rule`.
 func (v *virtualHosts) Remove(rule orchestrator.Rule, paths ...orchestrator.Path) error {
 	v.Logger.Debug(fmt.Sprintf("Removing routes from virtual host [%s] ", rule.Host()))
 
@@ -102,6 +105,8 @@ func (v *virtualHosts) Remove(rule orchestrator.Rule, paths ...orchestrator.Path
 	return nil
 }
 
+// NewPaths initializes creates a list of routes from the given virtual host.
+// The list of routes will be represented by a slice of orchestrator.Path.
 func NewPaths(vh *gatewayapiv1.VirtualHost) []orchestrator.Path {
 	routes := make([]orchestrator.Path, 0, len(vh.Routes))
 	for _, r := range vh.Routes {
@@ -124,6 +129,7 @@ func NewPath(matcher *matchers.Matcher, action *gatewayapiv1.Route_RouteAction) 
 	}
 }
 
+// NewVirtualHosts initializes a new orchestrator.IngressRules implementation using Gloo.
 func NewVirtualHosts(gw gateway.GatewayV1Interface, logger ign.Logger) orchestrator.IngressRules {
 	return &virtualHosts{
 		Gateway: gw,
