@@ -105,7 +105,7 @@ func (v *virtualHosts) Remove(rule orchestrator.Rule, paths ...orchestrator.Path
 	return nil
 }
 
-// NewPaths initializes creates a list of routes from the given virtual host.
+// NewPaths extracts the list of routes from the given virtual host.
 // The list of routes will be represented by a slice of orchestrator.Path.
 func NewPaths(vh *gatewayapiv1.VirtualHost) []orchestrator.Path {
 	routes := make([]orchestrator.Path, 0, len(vh.Routes))
