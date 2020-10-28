@@ -52,9 +52,9 @@ func (r *rule) ToOutput() interface{} {
 
 // generateRoutes generates a set of routes from the given namespace a list of paths.
 func generateRoutes(namespace string, paths []orchestrator.Path) []*gatewayapiv1.Route {
-	routes := make([]*gatewayapiv1.Route, 0, len(paths))
-	for _, p := range paths {
-		routes = append(routes, generateRoute(namespace, p))
+	routes := make([]*gatewayapiv1.Route, len(paths))
+	for i, p := range paths {
+		routes[i] = generateRoute(namespace, p)
 	}
 	return routes
 }
