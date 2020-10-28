@@ -56,3 +56,40 @@ type IngressRules interface {
 	Upsert(rule Rule, paths ...Path) error
 	Remove(rule Rule, paths ...Path) error
 }
+
+// UpsertPaths updates or inserts the given elements into the given list.
+// Returns the list after all elements have been updated/added.
+func UpsertPaths(list, elements []Path) []Path {
+	for _, p := range elements {
+		var updated bool
+		for i, rulePath := range list {
+			if rulePath.Endpoint == p.Endpoint {
+				updated = true
+				list[i] = p
+				break
+			}
+		}
+		if !updated {
+			list = append(list, p)
+		}
+	}
+	return list
+}
+
+// RemovePaths removes the given elements from the given list.
+// Returns the list after all elements have been removed.
+func RemovePaths(list, elements []Path) []Path {
+	for _, p := range elements {
+		for i, rulePath := range list {
+			if rulePath.Endpoint == p.Endpoint {
+				pathsLen := len(list)
+				if pathsLen > 1 {
+					list[i] = list[pathsLen-1]
+				}
+				list = list[:pathsLen-1]
+				break
+			}
+		}
+	}
+	return list
+}

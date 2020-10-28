@@ -34,35 +34,12 @@ func (r *rule) Paths() []orchestrator.Path {
 
 // UpsertPaths inserts and update the given routes into the current virtual host.
 func (r *rule) UpsertPaths(paths []orchestrator.Path) {
-	for _, p := range paths {
-		var updated bool
-		for i, rulePath := range r.paths {
-			if rulePath.Endpoint == p.Endpoint {
-				updated = true
-				r.paths[i] = p
-				break
-			}
-		}
-		if !updated {
-			r.paths = append(r.paths, p)
-		}
-	}
+	r.paths = orchestrator.UpsertPaths(r.paths, paths)
 }
 
 // RemovePaths removes the given routes from the current virtual host.
 func (r *rule) RemovePaths(paths []orchestrator.Path) {
-	for _, p := range paths {
-		for i, rulePath := range r.paths {
-			if rulePath.Endpoint == p.Endpoint {
-				pathsLen := len(r.paths)
-				if pathsLen > 1 {
-					r.paths[i] = r.paths[pathsLen-1]
-				}
-				r.paths = r.paths[:pathsLen-1]
-				break
-			}
-		}
-	}
+	r.paths = orchestrator.RemovePaths(r.paths, paths)
 }
 
 // ToOutput generates a Gloo representation of a Virtual Host from the current rule.
