@@ -21,7 +21,8 @@ func (v *virtualServices) Get(name string, namespace string) (orchestrator.Resou
 	vs, err := v.Gateway.VirtualServices(namespace).Get(name, metav1.GetOptions{})
 
 	if err != nil {
-		v.Logger.Debug(fmt.Sprintf("Getting virtual service with name [%s] in namespace [%s] failed.", name, namespace))
+		v.Logger.Debug(fmt.Sprintf("Getting virtual service with name [%s] in namespace [%s] failed. Error: %s.",
+			name, namespace, err))
 		return nil, err
 	}
 
