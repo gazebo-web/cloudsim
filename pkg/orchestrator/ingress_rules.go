@@ -26,6 +26,11 @@ type Rule interface {
 
 // Path matches a certain Address to a specific Endpoint.
 type Path struct {
+	// UID is an unique identifier used to identify different paths.
+	// In kubernetes: It's the backend service name.
+	// In gloo: It's the route name.
+	UID string
+
 	// Address is an extended POSIX regex as defined by IEEE Std 1003.1,
 	// (i.e this follows the egrep/unix syntax, not the perl syntax)
 	// matched against the path of an incoming request. Currently it can
@@ -63,7 +68,7 @@ func UpsertPaths(list, elements []Path) []Path {
 	for _, p := range elements {
 		var updated bool
 		for i, rulePath := range list {
-			if rulePath.Endpoint == p.Endpoint {
+			if rulePath.UID == p.UID {
 				updated = true
 				list[i] = p
 				break

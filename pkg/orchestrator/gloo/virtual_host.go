@@ -112,16 +112,17 @@ func NewPaths(vh *gatewayapiv1.VirtualHost) []orchestrator.Path {
 	for _, r := range vh.Routes {
 		m := r.Matchers[0]
 		ra := r.Action.(*gatewayapiv1.Route_RouteAction)
-		routes = append(routes, NewPath(m, ra))
+		routes = append(routes, NewPath(r.Name, m, ra))
 	}
 	return routes
 }
 
 // NewPath converts a certain matcher and route action into a generic orchestrator.Path.
-func NewPath(matcher *matchers.Matcher, action *gatewayapiv1.Route_RouteAction) orchestrator.Path {
+func NewPath(routeName string, matcher *matchers.Matcher, action *gatewayapiv1.Route_RouteAction) orchestrator.Path {
 	dest := action.RouteAction.Destination.(*glooapiv1.RouteAction_Single)
 	up := dest.Single.DestinationType.(*glooapiv1.Destination_Upstream)
 	return orchestrator.Path{
+		UID:     routeName,
 		Address: matcher.GetRegex(),
 		Endpoint: orchestrator.Endpoint{
 			Name: up.Upstream.Name,

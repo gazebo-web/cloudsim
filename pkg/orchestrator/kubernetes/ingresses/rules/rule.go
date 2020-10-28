@@ -82,6 +82,7 @@ func NewPaths(in []v1beta1.HTTPIngressPath) []orchestrator.Path {
 	var out []orchestrator.Path
 	for _, p := range in {
 		out = append(out, orchestrator.Path{
+			UID:     p.Backend.ServiceName,
 			Address: p.Path,
 			Endpoint: orchestrator.Endpoint{
 				Name: p.Backend.ServiceName,
