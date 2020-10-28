@@ -8,6 +8,7 @@ import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator"
 )
 
+// rule is an orchestrator.Rule implementation using Gloo Virtual Host.
 type rule struct {
 	resource orchestrator.Resource
 	host     string
@@ -15,18 +16,23 @@ type rule struct {
 	domains  []string
 }
 
+// Resource returns the resource associated with the current rule.
+// It returns the reference to a virtual service.
 func (r *rule) Resource() orchestrator.Resource {
 	return r.resource
 }
 
+// Host returns the Virtual Host domain used to identify this rule.
 func (r *rule) Host() string {
 	return r.host
 }
 
+// Paths returns a list of paths. This list abstracts a set of Gloo routes for a certain virtual host.
 func (r *rule) Paths() []orchestrator.Path {
 	return r.paths
 }
 
+// UpsertPaths inserts and update the given routes into the current virtual host.
 func (r *rule) UpsertPaths(paths []orchestrator.Path) {
 	for _, p := range paths {
 		var updated bool
@@ -43,6 +49,7 @@ func (r *rule) UpsertPaths(paths []orchestrator.Path) {
 	}
 }
 
+// RemovePaths removes the given routes from the current virtual host.
 func (r *rule) RemovePaths(paths []orchestrator.Path) {
 	for _, p := range paths {
 		for i, rulePath := range r.paths {
@@ -58,6 +65,7 @@ func (r *rule) RemovePaths(paths []orchestrator.Path) {
 	}
 }
 
+// ToOutput generates a Gloo representation of a Virtual Host from the current rule.
 func (r *rule) ToOutput() interface{} {
 	return &gatewayapiv1.VirtualHost{
 		Domains: r.domains,
@@ -65,6 +73,7 @@ func (r *rule) ToOutput() interface{} {
 	}
 }
 
+// generateRoutes generates a set of routes from the given namespace a list of paths.
 func generateRoutes(namespace string, paths []orchestrator.Path) []*gatewayapiv1.Route {
 	routes := make([]*gatewayapiv1.Route, 0, len(paths))
 	for _, p := range paths {
@@ -73,6 +82,7 @@ func generateRoutes(namespace string, paths []orchestrator.Path) []*gatewayapiv1
 	return routes
 }
 
+// generateRoute generates a gloo route from the given namespace and path.
 func generateRoute(namespace string, path orchestrator.Path) *gatewayapiv1.Route {
 	return &gatewayapiv1.Route{
 		Matchers: []*matchers.Matcher{
@@ -82,22 +92,24 @@ func generateRoute(namespace string, path orchestrator.Path) *gatewayapiv1.Route
 	}
 }
 
-func generateMatcher(addr string) *matchers.Matcher {
+// generateMatcher generates a Regex matcher for the given value.
+func generateMatcher(value string) *matchers.Matcher {
 	return &matchers.Matcher{
 		PathSpecifier: &matchers.Matcher_Regex{
-			Regex: addr,
+			Regex: value,
 		},
 	}
 }
 
-func generateRouteAction(namespace string, endpointName string) *gatewayapiv1.Route_RouteAction {
+// generateRouteAction generates a RouteAction for the given pointing to the given upstream.
+func generateRouteAction(namespace string, upstream string) *gatewayapiv1.Route_RouteAction {
 	return &gatewayapiv1.Route_RouteAction{
 		RouteAction: &glooapiv1.RouteAction{
 			Destination: &glooapiv1.RouteAction_Single{
 				Single: &glooapiv1.Destination{
 					DestinationType: &glooapiv1.Destination_Upstream{
 						Upstream: &core.ResourceRef{
-							Name:      endpointName,
+							Name:      upstream,
 							Namespace: namespace,
 						},
 					},
@@ -107,11 +119,12 @@ func generateRouteAction(namespace string, endpointName string) *gatewayapiv1.Ro
 	}
 }
 
+// NewRule initializes a new orchestrator.Rule implementation using a Gloo.
 func NewRule(resource orchestrator.Resource, host string, domains []string, paths ...orchestrator.Path) orchestrator.Rule {
 	return &rule{
 		resource: resource,
-		domains:  domains,
 		host:     host,
+		domains:  domains,
 		paths:    paths,
 	}
 }
