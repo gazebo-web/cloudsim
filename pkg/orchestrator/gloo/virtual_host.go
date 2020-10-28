@@ -2,7 +2,6 @@ package gloo
 
 import (
 	"fmt"
-	apiv1 "github.com/solo-io/gloo/projects/gateway/pkg/api/v1"
 	gatewayapiv1 "github.com/solo-io/gloo/projects/gateway/pkg/api/v1"
 	gateway "github.com/solo-io/gloo/projects/gateway/pkg/api/v1/kube/client/clientset/versioned/typed/gateway.solo.io/v1"
 	glooapiv1 "github.com/solo-io/gloo/projects/gloo/pkg/api/v1"
@@ -26,20 +25,19 @@ func (v *virtualHosts) Get(resource orchestrator.Resource, host string) (orchest
 		return nil, err
 	}
 
-	// Get the routes from the underlying virtual host.
-	routes := vs.Spec.GetVirtualHost().GetRoutes()
+	// Get the domains from the underlying virtual host.
+	domains := vs.Spec.GetVirtualHost().GetDomains()
 
-	// Find the route
-	var route *apiv1.Route
-	for _, r := range routes {
-		if r.GetName() == host {
-			route = r
-			break
+	// Find if the given host is part of the domain list
+	var domain string
+	for _, d := range domains {
+		if d == host {
+			domain = d
 		}
 	}
 
 	// Fail if there's no route that matches the host.
-	if route == nil {
+	if len(domain) == 0 {
 		return nil, orchestrator.ErrRuleNotFound
 	}
 
