@@ -23,16 +23,15 @@ func TestNewVirtualHosts(t *testing.T) {
 	assert.IsType(t, &virtualHosts{}, vhs)
 }
 
-func TestVirtualHosts_Get(t *testing.T) {
+func setupTestVirtualHosts(t *testing.T, regex string) (*gatewayFake.FakeGatewayV1, ign.Logger, orchestrator.Resource) {
 	// Define constants
-	const name = "nameTest"
 	const namespace = "default"
 	const upstream = "my-service"
-	const regex = "[a-zA-Z]+"
+
 	domains := []string{"test.org"}
 
 	// Initialize new mock virtual service
-	vs := newTestVirtualService(name, namespace, upstream, regex, domains)
+	vs := newTestVirtualService(t.Name(), namespace, upstream, regex, domains)
 
 	// Initialize fake gateway implementation.
 	gw := &gatewayFake.FakeGatewayV1{Fake: &fake.NewSimpleClientset().Fake}
@@ -48,11 +47,18 @@ func TestVirtualHosts_Get(t *testing.T) {
 	vss := NewVirtualServices(gw, logger)
 
 	// Get the resource associated with the virtual service.
-	res, err := vss.Get(name, namespace)
+	res, err := vss.Get(t.Name(), namespace)
 	require.NotNil(t, res)
 	require.NoError(t, err)
 
-	// Initialize virtual hosts manger
+	return gw, logger, res
+}
+
+func TestVirtualHosts_Get(t *testing.T) {
+	const regex = "[a-zA-Z]+"
+	gw, logger, res := setupTestVirtualHosts(t, regex)
+
+	// Initialize virtual hosts manager
 	vhs := NewVirtualHosts(gw, logger)
 
 	// Get the representation of the virtual host that has the test.org domain.
@@ -64,7 +70,7 @@ func TestVirtualHosts_Get(t *testing.T) {
 
 	// There should only be one path, and it should have the values from the virtual host.
 	assert.Len(t, p, 1)
-	assert.Equal(t, name, p[0].UID)
+	assert.Equal(t, t.Name(), p[0].UID)
 	assert.Equal(t, regex, p[0].Address)
 
 	// --------------------------------------------------------------------------
@@ -75,7 +81,27 @@ func TestVirtualHosts_Get(t *testing.T) {
 }
 
 func TestVirtualHosts_Upsert(t *testing.T) {
+	const regex = "[a-zA-Z]+"
+	gw, logger, res := setupTestVirtualHosts(t, regex)
 
+	// Initialize virtual hosts manager
+	vhs := NewVirtualHosts(gw, logger)
+
+	// Get the representation of the virtual host that has the test.org domain.
+	rule, err := vhs.Get(res, "test.org")
+	require.NoError(t, err)
+
+	p := NewPath(t.Name(), generateMatcher("another-regex"), generateRouteAction("default", "my-new-service"))
+	err = vhs.Upsert(rule, p)
+	assert.NoError(t, err)
+
+	rule, err = vhs.Get(res, "test.org")
+	require.NoError(t, err)
+
+	assert.Len(t, rule.Paths(), 1)
+
+	assert.Equal(t, "another-regex", rule.Paths()[0].Address)
+	assert.Equal(t, "my-new-service", rule.Paths()[0].Endpoint.Name)
 }
 
 func TestVirtualHost_Remove(t *testing.T) {
