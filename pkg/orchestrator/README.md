@@ -39,9 +39,9 @@ From Glooo's documentation:
 
 ```mermaid
 graph LR;
-  client([client])-. Ingress-managed <br> load balancer .->ingress[Ingress];
+  client[client]-. Load Balancer managed by Ingress .->ingress[Ingress];
   ingress-->|routing rule|service[Service];
-  subgraph cluster
+  subgraph cluster[Cluster]
   ingress;
   service-->pod1[Pod];
   service-->pod2[Pod];
