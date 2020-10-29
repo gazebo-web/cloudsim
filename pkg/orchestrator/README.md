@@ -21,15 +21,13 @@ different Nodes.
 
 ```mermaid
 graph LR;
-  subgraph cluster[Cluster]
-    subgraph node1[Node]
-      pod1[Pod];
-      pod2[Pod];
-    end
-    subgraph node2[Node]
-      pod1[Pod];
-      pod2[Pod];
-    end
+  subgraph node1[Node]
+    pod1[Pod];
+    pod2[Pod];
+  end
+  subgraph node2[Node]
+    pod3[Pod];
+    pod4[Pod];
   end
 ```
 
