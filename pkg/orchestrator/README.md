@@ -32,7 +32,6 @@ graph LR;
   pod1[Pod]-->service;
   service-->pod2[Pod];
   service-->pod3[Pod];
-  service-->pod4[Pod];
   end
 ```
 
