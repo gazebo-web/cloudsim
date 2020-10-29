@@ -37,6 +37,23 @@ From Glooo's documentation:
 > Gloo is exceptional in its function-level routing; its support for legacy apps, microservices and serverless; 
 > its discovery capabilities; its numerous features; and its tight integration with leading open-source projects.
 
+```mermaid
+graph LR;
+  client([client])-. Ingress-managed <br> load balancer .->ingress[Ingress];
+  ingress-->|routing rule|service[Service];
+  subgraph cluster
+  ingress;
+  service-->pod1[Pod];
+  service-->pod2[Pod];
+  end
+  classDef plain fill:#ddd,stroke:#fff,stroke-width:4px,color:#000;
+  classDef k8s fill:#326ce5,stroke:#fff,stroke-width:4px,color:#fff;
+  classDef cluster fill:#fff,stroke:#bbb,stroke-width:2px,color:#326ce5;
+  class ingress,service,pod1,pod2 k8s;
+  class client plain;
+  class cluster cluster;
+```
+
 A table has been added below to help you understand how these two implementations compare to each other by the 
 implementation-specific resource they consume:
 
