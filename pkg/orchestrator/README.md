@@ -25,6 +25,14 @@ access `Pods`.
 - Services can be created by passing a `CreateServiceInput` instance to the `Create` method.
 - Services can be removed by using the `Delete` method.
 
+```mermaid
+graph LR;
+    pod1[Pod]-->service([service])
+    service-->pod2[Pod]
+    service-->pod3[Pod]
+    service-->pod4[Pod]
+```
+
 ## Ingresses
 The `Ingresses` interface allows you to manage ingresses. An Ingress exposes HTTP and HTTPS routes from outside the 
 cluster to services within the cluster.
@@ -39,8 +47,8 @@ From Glooo's documentation:
 
 ```mermaid
 graph LR;
-  client[client]-. Load Balancer managed by Ingress .->ingress[Ingress];
-  ingress-->|routing rule|service[Service];
+  client[Client]-->ingress[Ingress];
+  ingress-->service[Service];
   subgraph cluster[Cluster]
   ingress;
   service-->pod1[Pod];
