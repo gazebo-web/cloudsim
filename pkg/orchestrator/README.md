@@ -7,8 +7,8 @@ The `Cluster` interface grants you access to the different interfaces available 
 
 ## Nodes
 The `Nodes` interface allows you to manage nodes. Nodes are a representation of a machine that's running inside the 
-cluster. As it is right now, this interface exposes a method to wait until for 
-nodes have joined the cluster.
+cluster. As it is right now, this interface exposes a method to wait until 
+nodes have joined the cluster and are ready to be used.
 
 ## Pods
 The `Pods` interface allows you to manage pods. Pods are a representation of a Unit of Work running inside 
