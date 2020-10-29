@@ -19,6 +19,20 @@ different Nodes.
 - As well as the `Nodes` interface, the `Pods` interface exposes a method to wait for a certain condition to happen.
 - Pods can be deleted by using the `Delete` method.
 
+```mermaid
+graph LR;
+  subgraph cluster[Cluster]
+    subgraph node1[Node]
+      pod1[Pod];
+      pod2[Pod];
+    end
+    subgraph node2[Node]
+      pod1[Pod];
+      pod2[Pod];
+    end
+  end
+```
+
 ## Services
 The `Services` interface allows you to manage services. Services are an abstraction which defines a policy by on how to 
 access `Pods`. 
