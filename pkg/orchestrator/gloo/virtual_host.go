@@ -114,10 +114,10 @@ func (v *virtualHosts) Remove(rule orchestrator.Rule, paths ...orchestrator.Path
 // The list of routes will be represented by a slice of orchestrator.Path.
 func NewPaths(vh *gatewayapiv1.VirtualHost) []orchestrator.Path {
 	routes := make([]orchestrator.Path, 0, len(vh.Routes))
-	for _, r := range vh.Routes {
+	for i, r := range vh.Routes {
 		m := r.Matchers[0]
 		ra := r.Action.(*gatewayapiv1.Route_RouteAction)
-		routes = append(routes, NewPath(r.Name, m, ra))
+		routes[i] = NewPath(r.Name, m, ra)
 	}
 	return routes
 }
