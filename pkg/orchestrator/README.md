@@ -27,13 +27,13 @@ access `Pods`.
 
 ```mermaid
 graph LR;
-    client[Client]-->service[Service]
-    subgraph cluster[Cluster]
-    pod1[Pod]-->service;
-    service-->pod2[Pod];
-    service-->pod3[Pod];
-    service-->pod4[Pod];
-    end
+  client[Client]-->service[Service];
+  subgraph cluster[Cluster]
+  pod1[Pod]-->service;
+  service-->pod2[Pod];
+  service-->pod3[Pod];
+  service-->pod4[Pod];
+  end
 ```
 
 ## Ingresses
