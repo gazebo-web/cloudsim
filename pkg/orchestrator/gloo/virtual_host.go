@@ -85,6 +85,12 @@ func (v *virtualHosts) Remove(rule orchestrator.Rule, paths ...orchestrator.Path
 		return err
 	}
 
+	if len(rule.Paths()) == 0 {
+		v.Logger.Debug(fmt.Sprintf("Error while removing routes from virtual host [%s]. Error: %s",
+			rule.Host(), orchestrator.ErrRuleEmpty))
+		return orchestrator.ErrRuleEmpty
+	}
+
 	// Remove paths from rule
 	rule.RemovePaths(paths)
 

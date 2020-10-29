@@ -5,6 +5,8 @@ import "errors"
 var (
 	// ErrRuleNotFound is returned when a rule doesn't exist.
 	ErrRuleNotFound = errors.New("rule not found")
+	// ErrRuleEmpty is returned when a rule does not have any paths.
+	ErrRuleEmpty = errors.New("rule has no paths")
 )
 
 // Rule is used to return a list of available paths to access a certain service.

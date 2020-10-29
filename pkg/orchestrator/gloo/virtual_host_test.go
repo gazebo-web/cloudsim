@@ -105,6 +105,29 @@ func TestVirtualHosts_Upsert(t *testing.T) {
 }
 
 func TestVirtualHost_Remove(t *testing.T) {
+	const regex = "[a-zA-Z]+"
+	gw, logger, res := setupTestVirtualHosts(t, regex)
+
+	// Initialize virtual hosts manager
+	vhs := NewVirtualHosts(gw, logger)
+
+	// Get the representation of the virtual host that has the test.org domain.
+	rule, err := vhs.Get(res, "test.org")
+	require.NoError(t, err)
+
+	p := rule.Paths()
+
+	err = vhs.Remove(rule, p...)
+	assert.NoError(t, err)
+
+	rule, err = vhs.Get(res, "test.org")
+	require.NoError(t, err)
+
+	assert.Len(t, rule.Paths(), 0)
+
+	err = vhs.Remove(rule, p...)
+	assert.Error(t, err)
+	assert.Equal(t, err, orchestrator.ErrRuleEmpty)
 }
 
 func newTestVirtualService(name, namespace, upstream, regex string, domains []string) *gatewayv1.VirtualService {
