@@ -20,7 +20,7 @@ different Nodes.
 - Pods can be deleted by using the `Delete` method.
 
 ```mermaid
-graph LR;
+graph TD;
   subgraph node1[Node]
     pod1[Pod];
     pod2[Pod];
@@ -38,7 +38,7 @@ access `Pods`.
 - Services can be removed by using the `Delete` method.
 
 ```mermaid
-graph LR;
+graph TD;
   client[Client]-->service[Service];
   subgraph cluster[Cluster]
   pod1[Pod]-->service;
