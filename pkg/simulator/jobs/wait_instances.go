@@ -29,7 +29,7 @@ func waitForInstances(store actions.Store, tx *gorm.DB, deployment *actions.Depl
 	// Create input
 	var waitMachinesOkInputs []cloud.WaitMachinesOKInput
 	for _, c := range machineList {
-		waitMachinesOkInputs = append(waitMachinesOkInputs, *c.ToWaitMachinesOKInput())
+		waitMachinesOkInputs = append(waitMachinesOkInputs, c.ToWaitMachinesOKInput())
 	}
 
 	// Create get platform namespace from state.
