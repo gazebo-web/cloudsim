@@ -77,7 +77,7 @@ different Nodes.
 - Pods can be created by passing a `CreatePodInput` instance to the `Create` method.
 - Scripts and commands can be executed inside a Pod by using the `Executor`.
 - Files and logs can be read from a running Pod by using the `Reader`.
-- As well as the `Nodes` interface, the `Pods` interface exposes a method to wait for a certain condition to happen.
+- Just like the `Nodes` interface, the `Pods` interface exposes a method to wait for a certain condition to happen.
 - Pods can be deleted by using the `Delete` method.
 
 ```mermaid
