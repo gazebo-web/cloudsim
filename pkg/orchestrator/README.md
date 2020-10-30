@@ -93,7 +93,7 @@ graph TD;
 ```
 
 # Services
-The `Services` interface allows you to manage services. Services are an abstraction which defines a policy on how to 
+The `Services` interface allows you to manage services. A Service is an abstraction that defines a policy on how to 
 access `Pods`. 
 - Services can be created by passing a `CreateServiceInput` instance to the `Create` method.
 - Services can be removed by using the `Delete` method.
