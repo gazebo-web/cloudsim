@@ -7,7 +7,7 @@ The `Cluster` interface grants you access to the different interfaces available 
 It's the main entry point when using the orchestrator component.
 
 ### Kubernetes
-Three functions have been added to initialize a Kubernetes cluster. A defualt implementation, a custom implementation 
+Three functions have been added to initialize a Kubernetes cluster. A default implementation, a custom implementation 
 and a fake one for testing purposes.
 
 **Default implementation**: With the default implementation you avoid creating all the components that will be used by 
