@@ -2,9 +2,8 @@ package jobs
 
 import (
 	"fmt"
-	"github.com/jinzhu/gorm"
-	_ "github.com/jinzhu/gorm/dialects/sqlite"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/simulator/state"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/actions"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/application"
@@ -13,21 +12,19 @@ import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
 	simfake "gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations/fake"
 	envfake "gitlab.com/ignitionrobotics/web/cloudsim/pkg/store/fake"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/utils/db/gorm"
 	"testing"
 )
 
 func TestLaunchInstances(t *testing.T) {
 	// Initialize database
-	db, err := gorm.Open("sqlite3", "file::memory:?cache=shared")
+	db, err := gorm.GetDBFromEnvVars()
 
 	// If the database fails to connect, fail instantly.
-	if err != nil {
-		assert.NoError(t, err)
-		t.FailNow()
-	}
+	require.NoError(t, err)
 
 	// Migrate db for actions
-	actions.MigrateDB(db, true)
+	actions.MigrateDB(db)
 
 	// Initialize simulation
 	gid := simulations.GroupID("aaaa-bbbb-cccc-dddd")

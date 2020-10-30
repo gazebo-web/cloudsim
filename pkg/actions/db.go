@@ -6,7 +6,7 @@ import (
 )
 
 // MigrateDB migrates application models, indexes and keys to the database.
-func migrateDB(tx *gorm.DB) error {
+func MigrateDB(tx *gorm.DB) error {
 	return gormUtils.CleanAndMigrateModels(
 		tx,
 		&Deployment{},
