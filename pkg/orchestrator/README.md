@@ -112,7 +112,7 @@ graph TD;
 The `Ingresses` interface allows you to manage ingresses. An Ingress exposes endpoints that allow external access 
 to services within the cluster.
 
-Two different implementations were create for Cloudsim, one using the default Kubernetes Ingress implementation, and 
+Two different implementations were create for Cloudsim, one using the default [Kubernetes Ingress](https://kubernetes.io/docs/concepts/services-networking/ingress/) implementation, and 
 another one using a third-party application called [Gloo](https://www.solo.io/products/gloo/).
 
 From Gloo's documentation:
