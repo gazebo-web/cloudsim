@@ -53,16 +53,16 @@ func prepareCreatePodInput(store actions.Store, tx *gorm.DB, deployment *actions
 	// Get terminate grace period
 	terminationGracePeriod := s.Platform().Store().Orchestrator().TerminationGracePeriod()
 
+
 	// Generate gazebo command args
 	runCommand := gazebo.Generate(gazebo.LaunchConfig{
-		Worlds:                  []string{""},
+		Worlds:                  []string{track.World},
 		WorldMaxSimSeconds:      time.Duration(track.MaxSimSeconds),
-		Seeds:                   nil,
-		RunIndex:                nil,
-		AuthorizationToken:      nil,
-		MaxWebsocketConnections: 0,
-		Robots:                  nil,
-		Marsupials:              nil,
+		Seeds:                   track.Seed,
+		AuthorizationToken:      subtSim.Token(),
+		MaxWebsocketConnections: 500,
+		Robots:                  subtSim.Robots(),
+		Marsupials:              subtSim.Marsupials(),
 	})
 
 	// Set up container configuration

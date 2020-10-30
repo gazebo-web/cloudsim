@@ -8,4 +8,7 @@ type Simulation interface {
 
 	// Track returns the track name of the simulation that will be used as the simulation world.
 	Track() string
+	Token() *string
+	Robots() []simulations.Robot
+	Marsupials() []simulations.Marsupial
 }
