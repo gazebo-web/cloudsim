@@ -55,6 +55,22 @@ The `Nodes` interface allows you to manage nodes. Nodes are a representation of 
 cluster. As it is right now, this interface exposes a method to wait until 
 nodes have joined the cluster and are ready to be used.
 
+```go
+config, err := kubernetes.GetConfig()
+if err != nil {
+    panic(err)
+}
+
+client, err := kubernetes.NewAPI(config)
+if err != nil {
+    panic(err)
+}
+
+logger := ign.NewLoggerNoRollbar("Kubernetes", ign.VerbosityDebug)
+
+ns := NewNodes(client, logger)
+```
+
 # Pods
 The `Pods` interface allows you to manage pods. Pods are a representation of a Unit of Work running inside 
 different Nodes. 
@@ -99,7 +115,7 @@ cluster to services within the cluster.
 Two different implementations were create for Cloudsim, one using the default Kubernetes Ingress implementation, and 
 another one using a third-party application called Gloo.
 
-From Glooo's documentation:
+From Gloo's documentation:
 > Gloo is a feature-rich, Kubernetes-native ingress controller, and next-generation API gateway. 
 > Gloo is exceptional in its function-level routing; its support for legacy apps, microservices and serverless; 
 > its discovery capabilities; its numerous features; and its tight integration with leading open-source projects.
@@ -118,7 +134,7 @@ graph LR;
 A table has been added below to help you understand how these two implementations compare to each other by the 
 implementation-specific resource they consume:
 
-| Component | Kubernetes | Gloo |
+| Cloudsim | Kubernetes | Gloo |
 | ----- | ----- | ----- |
 | Ingresses | Ingress | Virtual Services |
 | IngressRules | IngressRule | Virtual Host |
