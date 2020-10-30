@@ -149,3 +149,12 @@ The `Rule` interface groups a set of methods to upsert and remove paths from a c
 
 # Paths
 `Path` is data structure that groups all the fields needed to link a certain address (or route) to a specific service.
+
+**Path data structure**
+
+| Field         | Kubernetes                                 | Gloo          |
+| ------------- | ------------------------------------------ | ------------- |
+| UID           | HTTPIngressPath.Backend.ServiceName        | Route name    |
+| Address       | HTTPIngressPath.Path                       | Regex matcher |
+| Endpoint.Name | HTTPIngressPath.Backend.ServiceName        | Upstream name |
+| Endpoint.Port | HTTPIngressPath.Backend.ServicePort.IntVal | -             |
