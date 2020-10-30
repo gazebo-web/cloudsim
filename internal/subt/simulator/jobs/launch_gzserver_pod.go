@@ -56,9 +56,9 @@ func prepareCreatePodInput(store actions.Store, tx *gorm.DB, deployment *actions
 
 	// Generate gazebo command args
 	runCommand := gazebo.Generate(gazebo.LaunchConfig{
-		Worlds:                  []string{track.World},
+		World:                   track.World,
 		WorldMaxSimSeconds:      time.Duration(track.MaxSimSeconds),
-		Seeds:                   track.Seed,
+		Seed:                    track.Seed,
 		AuthorizationToken:      subtSim.Token(),
 		MaxWebsocketConnections: 500,
 		Robots:                  subtSim.Robots(),

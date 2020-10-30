@@ -16,8 +16,10 @@ type Track struct {
 	MaxSimSeconds int `json:"max_sim_seconds"`
 	// Public sets a track open for single runs.
 	Public bool `json:"public"`
-	Seed   []int
-	World  string
+	// Seed is the world's seed of this track. It no seed is provided, a random one will be used instead.
+	Seed *int `json:"seed"`
+	// World is the world
+	World string
 }
 
 // TableName returns the name of the Track table.

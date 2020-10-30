@@ -24,7 +24,7 @@ func TestGenerate(t *testing.T) {
 	cmd := Generate(LaunchConfig{
 		World:                   world,
 		WorldMaxSimSeconds:      duration,
-		Seed:                    seed,
+		Seed:                    &seed,
 		AuthorizationToken:      &token,
 		MaxWebsocketConnections: maxConn,
 		Robots:                  []simulations.Robot{fakeRobotA, fakeRobotB},

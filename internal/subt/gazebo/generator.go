@@ -32,7 +32,7 @@ type LaunchConfig struct {
 
 	// Seed is used to randomly generate a world.
 	// If no seed is provided, gazebo will generate its own seed.
-	Seed int
+	Seed *int
 
 	// AuthorizationToken has the token used for the gazebo websocket server.
 	AuthorizationToken *string
@@ -67,8 +67,10 @@ func Generate(params LaunchConfig) []string {
 	// Set headless
 	cmd = append(cmd, fmt.Sprintf("%s:=%s", keyHeadless, "true"))
 
-	// Get the Seed for this run
-	cmd = append(cmd, fmt.Sprintf("%s:=%d", keySeed, params.Seed))
+	// Set the Seed for this run
+	if params.Seed != nil {
+		cmd = append(cmd, fmt.Sprintf("%s:=%d", keySeed, *params.Seed))
+	}
 
 	// Set the authorization token if it exists
 	if params.AuthorizationToken != nil {
