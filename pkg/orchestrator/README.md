@@ -31,6 +31,10 @@ logger := ign.NewLoggerNoRollbar("Kubernetes", ign.VerbosityDebug)
 ks := kubernetes.NewDefaultKubernetes(client, initializer, logger)
 ```
 
+These steps are in the `InitializeKubernetes`.
+
+<hr>
+
 **Custom implementation**: When you need to initialize the cluster with different components, `NewCustomKubernetes` 
 allows you to manually pass the different subcomponents.
 ```go
