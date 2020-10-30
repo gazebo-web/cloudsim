@@ -113,7 +113,7 @@ The `Ingresses` interface allows you to manage ingresses. An Ingress exposes end
 to services within the cluster.
 
 Two different implementations were create for Cloudsim, one using the default Kubernetes Ingress implementation, and 
-another one using a third-party application called Gloo.
+another one using a third-party application called [Gloo](https://www.solo.io/products/gloo/).
 
 From Gloo's documentation:
 > Gloo is a feature-rich, Kubernetes-native ingress controller, and next-generation API gateway. 
