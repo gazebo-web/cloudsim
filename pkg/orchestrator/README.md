@@ -1,16 +1,57 @@
 # Orchestrator
-The `Orchestrator` package represents a component in charge of managing a single cluster. In order to do that, this component exposes a
-set of interfaces that are used as subcomponents for managing different resources in a cluster.
+The `Orchestrator` package represents a component in charge of managing a single cluster. In order to do that, this 
+component exposes a set of interfaces that are used as subcomponents for managing different resources in a cluster.
 
-## Cluster
+# Cluster
 The `Cluster` interface grants you access to the different interfaces available to manage resources. 
+It's the main entry point when using the orchestrator component.
 
-## Nodes
+### Kubernetes
+Three functions have been added to initialize a Kubernetes cluster. A defualt implementation, a custom implementation 
+and a fake one for testing purposes.
+
+**Default implementation**: With the default implementation you avoid creating all the components that will be used by 
+the orchestrator component to manage the cluster.
+
+```go
+config, err := kubernetes.GetConfig()
+if err != nil {
+    panic(err)
+}
+
+client, err := kubernetes.NewAPI(config)
+if err != nil {
+    panic(err)
+}
+
+initializer := spdy.NewSPDYInitializer(config)
+
+logger := ign.NewLoggerNoRollbar("Kubernetes", ign.VerbosityDebug)
+
+ks := kubernetes.NewDefaultKubernetes(client, initializer, logger)
+```
+
+**Custom implementation**: When you need to initialize the cluster with different components, `NewCustomKubernetes` 
+allows you to manually pass the different subcomponents.
+```go
+config := Config{
+    Nodes:           nil,
+    Pods:            nil,
+    Ingresses:       nil,
+    IngressRules:    nil,
+    Services:        nil,
+    NetworkPolicies: nil,
+}
+
+ks := kubernetes.NewCustomKubernetes(config)
+```
+
+# Nodes
 The `Nodes` interface allows you to manage nodes. Nodes are a representation of a machine that's running inside the 
 cluster. As it is right now, this interface exposes a method to wait until 
 nodes have joined the cluster and are ready to be used.
 
-## Pods
+# Pods
 The `Pods` interface allows you to manage pods. Pods are a representation of a Unit of Work running inside 
 different Nodes. 
 - Pods can be created by passing a `CreatePodInput` instance to the `Create` method.
@@ -31,8 +72,8 @@ graph TD;
   end
 ```
 
-## Services
-The `Services` interface allows you to manage services. Services are an abstraction which defines a policy by on how to 
+# Services
+The `Services` interface allows you to manage services. Services are an abstraction which defines a policy on how to 
 access `Pods`. 
 - Services can be created by passing a `CreateServiceInput` instance to the `Create` method.
 - Services can be removed by using the `Delete` method.
@@ -47,7 +88,7 @@ graph TD;
   end
 ```
 
-## Ingresses
+# Ingresses
 The `Ingresses` interface allows you to manage ingresses. An Ingress exposes HTTP and HTTPS routes from outside the 
 cluster to services within the cluster.
 
@@ -80,6 +121,6 @@ implementation-specific resource they consume:
 | Rule | HTTPIngressRuleValue | Route |
 | Path | HTTPIngressPath | RouteAction + Matcher |
 
-## Ingress Rules
+# Ingress Rules
 
-### Paths
+# Paths
