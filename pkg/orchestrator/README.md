@@ -142,5 +142,10 @@ implementation-specific resource they consume:
 | Path | HTTPIngressPath | RouteAction + Matcher |
 
 # Ingress Rules
+The `IngressRules` interface allows you to manage rules from a certain `Ingress`.
+
+# Rules
+The `Rule` interface groups a set of methods to upsert and remove paths from a certain rule.
 
 # Paths
+`Path` is data structure that groups all the fields needed to link a certain address (or route) to a specific service.
