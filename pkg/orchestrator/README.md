@@ -131,16 +131,6 @@ graph LR;
   end
 ```
 
-A table has been added below to help you understand how these two implementations compare to each other by the 
-implementation-specific resource they consume:
-
-| Cloudsim | Kubernetes | Gloo |
-| ----- | ----- | ----- |
-| Ingresses | Ingress | Virtual Services |
-| IngressRules | IngressRule | Virtual Host |
-| Rule | HTTPIngressRuleValue | Route |
-| Path | HTTPIngressPath | RouteAction + Matcher |
-
 # Ingress Rules
 The `IngressRules` interface allows you to manage rules from a certain `Ingress`.
 
@@ -158,3 +148,14 @@ The `Rule` interface groups a set of methods to upsert and remove paths from a c
 | Address       | HTTPIngressPath.Path                       | Regex matcher |
 | Endpoint.Name | HTTPIngressPath.Backend.ServiceName        | Upstream name |
 | Endpoint.Port | HTTPIngressPath.Backend.ServicePort.IntVal | -             |
+
+# Gloo vs Kubernetes
+A table has been added below to help you understand how these two implementations compare to each other by the 
+implementation-specific resource they consume:
+
+| Cloudsim | Kubernetes | Gloo |
+| -------- | ---------- | ---- |
+| Ingresses | Ingress | Virtual Services |
+| IngressRules | IngressRule | Virtual Host |
+| Rule | HTTPIngressRuleValue | Route |
+| Path | HTTPIngressPath | RouteAction + Matcher |
