@@ -31,7 +31,7 @@ logger := ign.NewLoggerNoRollbar("Kubernetes", ign.VerbosityDebug)
 ks := kubernetes.NewDefaultKubernetes(client, initializer, logger)
 ```
 
-These steps are in the `InitializeKubernetes`.
+These steps are in the `InitializeKubernetes` function.
 
 <hr>
 
