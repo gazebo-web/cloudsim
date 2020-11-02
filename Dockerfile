@@ -14,7 +14,7 @@ RUN go mod download
 COPY . .
 
 # Build app
-RUN go install -o cloudsim ./cmd/subt
+RUN go build -o cloudsim ./cmd/subt
 
 # Runner
 FROM registry.gitlab.com/ignitionrobotics/web/images/cloudsim-base:1.1.0
