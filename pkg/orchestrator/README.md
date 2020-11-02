@@ -75,7 +75,7 @@ ns := NewNodes(client, logger)
 The `Pods` interface allows you to manage pods. Pods are a representation of a Unit of Work running inside 
 different Nodes. 
 - Pods can be created by passing a `CreatePodInput` instance to the `Create` method.
-- Scripts and commands can be executed inside a Pod by using the `Executor`.
+- Scripts and commands can be executed inside a Pod by using the `Executor` interface that can be accessed by calling the `Exec` method.
 - Files and logs can be read from a running Pod by using the `Reader` interface that can be accessed by calling the `Read` method.
 - Just like the `Nodes` interface, the `Pods` interface exposes a method to wait for a certain condition to happen.
 - Pods can be deleted by using the `Delete` method.
