@@ -14,7 +14,8 @@ type StartSimulation struct {
 	services                application.Services
 	GroupID                 simulations.GroupID
 	GazeboServerPod         orchestrator.Resource
-	CreatedInstances        []cloud.CreateMachinesOutput
+	CreateMachinesInput     []cloud.CreateMachinesInput
+	CreateMachinesOutput    []cloud.CreateMachinesOutput
 	GazeboNodeLabels        map[string]string
 	FieldComputerNodeLabels map[string]string
 	GazeboServerPodLabels   map[string]string

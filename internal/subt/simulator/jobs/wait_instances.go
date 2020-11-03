@@ -22,5 +22,5 @@ func createWaitForInstancesInput(store actions.Store, tx *gorm.DB, deployment *a
 
 	store.SetState(s)
 
-	return jobs.WaitForInstancesInput(s.CreatedInstances), nil
+	return jobs.WaitForInstancesInput(s.CreateMachinesOutput), nil
 }

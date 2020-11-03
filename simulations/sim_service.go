@@ -1014,8 +1014,6 @@ func (s *Service) StartSimulationAsync(ctx context.Context,
 		}
 	}
 
-
-
 	// Set read and write permissions to owner (eg, the team) and to the Application
 	// organizing team (eg. subt).
 	if em := s.bulkAddPermissions(groupID, []per.Action{per.Read, per.Write}, owner, *simDep.Application); em != nil {
