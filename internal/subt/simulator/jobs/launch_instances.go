@@ -69,7 +69,7 @@ func createLaunchInstancesInput(store actions.Store, tx *gorm.DB, deployment *ac
 		})
 	}
 
-	s.CreateMachinesInputs = input
+	s.CreateMachinesInput = input
 
 	store.SetState(s)
 
@@ -83,7 +83,7 @@ func checkLaunchInstancesOutput(store actions.Store, tx *gorm.DB, deployment *ac
 	s := store.State().(*state.StartSimulation)
 
 	var requested int64
-	for _, c := range s.CreateMachinesInputs {
+	for _, c := range s.CreateMachinesInput {
 		requested += c.MinCount
 	}
 
@@ -105,7 +105,7 @@ func saveLaunchInstancesOutput(store actions.Store, tx *gorm.DB, deployment *act
 
 	s := store.State().(*state.StartSimulation)
 
-	s.CreateMachinesOutputs = out
+	s.CreateMachinesOutput = out
 
 	store.SetState(s)
 

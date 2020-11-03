@@ -5,6 +5,8 @@ import "errors"
 var (
 	// ErrRuleNotFound is returned when a rule doesn't exist.
 	ErrRuleNotFound = errors.New("rule not found")
+	// ErrRuleEmpty is returned when a rule does not have any paths.
+	ErrRuleEmpty = errors.New("rule has no paths")
 )
 
 // Rule is used to return a list of available paths to access a certain service.
@@ -26,6 +28,11 @@ type Rule interface {
 
 // Path matches a certain Address to a specific Endpoint.
 type Path struct {
+	// UID is an unique identifier used to identify different paths.
+	// In kubernetes: It's the backend service name.
+	// In gloo: It's the route name.
+	UID string
+
 	// Address is an extended POSIX regex as defined by IEEE Std 1003.1,
 	// (i.e this follows the egrep/unix syntax, not the perl syntax)
 	// matched against the path of an incoming request. Currently it can
@@ -43,6 +50,8 @@ type Path struct {
 // Endpoint describes an entrypoint to a certain service name with the given port.
 type Endpoint struct {
 	// Name is the name of the service.
+	// Using Kubernetes: It's the name of the service we're pointing to
+	// Using Gloo: It's the name of the upstream.
 	Name string
 	// Port is the port of the service.
 	Port int32
@@ -53,4 +62,41 @@ type IngressRules interface {
 	Get(resource Resource, host string) (Rule, error)
 	Upsert(rule Rule, paths ...Path) error
 	Remove(rule Rule, paths ...Path) error
+}
+
+// UpsertPaths updates or inserts the given elements into the given list.
+// Returns the list after all elements have been updated/added.
+func UpsertPaths(list, elements []Path) []Path {
+	for _, p := range elements {
+		var updated bool
+		for i, rulePath := range list {
+			if rulePath.UID == p.UID {
+				updated = true
+				list[i] = p
+				break
+			}
+		}
+		if !updated {
+			list = append(list, p)
+		}
+	}
+	return list
+}
+
+// RemovePaths removes the given elements from the given list.
+// Returns the list after all elements have been removed.
+func RemovePaths(list, elements []Path) []Path {
+	for _, p := range elements {
+		for i, rulePath := range list {
+			if rulePath.Endpoint == p.Endpoint {
+				pathsLen := len(list)
+				if pathsLen > 1 {
+					list[i] = list[pathsLen-1]
+				}
+				list = list[:pathsLen-1]
+				break
+			}
+		}
+	}
+	return list
 }
