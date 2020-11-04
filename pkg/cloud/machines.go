@@ -88,15 +88,15 @@ func (c *CreateMachinesOutput) Length() int {
 }
 
 // ToTerminateMachinesInput converts the content of CreateMachinesOutput into TerminateMachinesInput.
-func (c *CreateMachinesOutput) ToTerminateMachinesInput() *TerminateMachinesInput {
-	return &TerminateMachinesInput{
+func (c *CreateMachinesOutput) ToTerminateMachinesInput() TerminateMachinesInput {
+	return TerminateMachinesInput{
 		Instances: c.Instances,
 	}
 }
 
 // ToWaitMachinesOKInput converts the content of CreateMachinesOutput into WaitMachinesOKInput.
-func (c *CreateMachinesOutput) ToWaitMachinesOKInput() *WaitMachinesOKInput {
-	return &WaitMachinesOKInput{
+func (c *CreateMachinesOutput) ToWaitMachinesOKInput() WaitMachinesOKInput {
+	return WaitMachinesOKInput{
 		Instances: c.Instances,
 	}
 }

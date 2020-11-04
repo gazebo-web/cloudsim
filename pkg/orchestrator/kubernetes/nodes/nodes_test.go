@@ -126,7 +126,7 @@ func TestWait_WaitForNodesToBeReady(t *testing.T) {
 		Status: apiv1.NodeStatus{
 			Conditions: []apiv1.NodeCondition{
 				{
-					Type:   apiv1.NodePIDPressure,
+					Type:   apiv1.NodeNetworkUnavailable,
 					Status: apiv1.ConditionTrue,
 				},
 			},
@@ -166,7 +166,7 @@ func TestWait_ErrWhenNodesArentReady(t *testing.T) {
 		Status: apiv1.NodeStatus{
 			Conditions: []apiv1.NodeCondition{
 				{
-					Type:   apiv1.NodePIDPressure,
+					Type:   apiv1.NodeNetworkUnavailable,
 					Status: apiv1.ConditionTrue,
 				},
 			},
