@@ -14,14 +14,14 @@ RUN go mod download
 COPY . .
 
 # Build app
-RUN go install ./cmd/subt
+RUN go build -o cloudsim ./cmd/subt
 
 # Runner
 FROM registry.gitlab.com/ignitionrobotics/web/images/cloudsim-base:1.1.0
 
 WORKDIR /app
 
-COPY --from=builder /go/bin/cloudsim .
+COPY --from=builder /go/src/gitlab.com/ignitionrobotics/web/cloudsim cloudsim
 COPY . .
 
 ENTRYPOINT [ "./docker-entrypoint.sh" ]
