@@ -94,9 +94,10 @@ func invokeURITestMultipartPOST(t *testing.T, test uriTest, params map[string]st
 		igntest.AssertRoute("OPTIONS", test.URL, http.StatusOK, t)
 	}
 	code, bslice, ok := igntest.SendMultipartPOST(t.Name(), t, test.URL, jwt, params, nil)
-	require.Equal(t, expStatus, code)
+	assert.Equal(t, expStatus, code)
 	if expStatus != http.StatusOK && !test.ignoreErrorBody {
 		igntest.AssertBackendErrorCode(t.Name(), bslice, expEm.ErrCode, t)
+		t.Logf("[Error] Status: %d | Error code: %d | Message: %s | Route: %s", expEm.StatusCode, expEm.ErrCode, expEm.Msg, expEm.Route)
 	} else if expStatus == http.StatusOK {
 		var resp igntest.AssertResponse
 		resp.Ok = ok

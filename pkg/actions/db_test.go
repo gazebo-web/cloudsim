@@ -2,7 +2,7 @@ package actions
 
 import (
 	"github.com/jinzhu/gorm"
-	"github.com/stretchr/testify/require"
+	gormUtils "gitlab.com/ignitionrobotics/web/cloudsim/pkg/utils/db/gorm"
 	"gitlab.com/ignitionrobotics/web/ign-go"
 	"golang.org/x/net/context"
 	"testing"
@@ -19,23 +19,20 @@ type storeTestData struct {
 	value int
 }
 
+// setupTest can be called at the start of a test in the actions package to get a set of common values used for testing.
 func setupTest(t *testing.T) *TestResource {
 	ctx := context.Background()
 	logger := ign.LoggerFromContext(ctx)
+	db, err := gormUtils.GetDBFromEnvVars()
+	if err != nil {
+		t.Fatalf("Could not connect to database: %s", err)
+	}
 
-	// Get the db config
-	var dbConfig ign.DatabaseConfig
-	var err error
-	dbConfig, err = ign.NewDatabaseConfigFromEnvVars()
-	require.NoError(t, err, "Could not read database config from env vars")
-
-	// Connect to the db
-	db, err := ign.InitDbWithCfg(&dbConfig)
-	require.NoError(t, err, "Could not connect to the db.")
-
-	// Migrate database tables
-	err = MigrateDB(db, true)
-	require.NoError(t, err, "Could not migrate actions to the db.")
+	// Migrate the action models
+	err = migrateDB(db)
+	if err != nil {
+		t.Fatalf("Could not migrate actions database models: %s", err)
+	}
 
 	// Create the test resource container
 	testResources := TestResource{
