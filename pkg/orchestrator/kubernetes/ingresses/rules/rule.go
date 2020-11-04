@@ -20,35 +20,12 @@ func (r *rule) Resource() orchestrator.Resource {
 
 // UpsertPaths inserts and update the given paths into the current rule.
 func (r *rule) UpsertPaths(paths []orchestrator.Path) {
-	for _, p := range paths {
-		var updated bool
-		for i, rulePath := range r.paths {
-			if rulePath.Endpoint == p.Endpoint {
-				updated = true
-				r.paths[i] = p
-				break
-			}
-		}
-		if !updated {
-			r.paths = append(r.paths, p)
-		}
-	}
+	r.paths = orchestrator.UpsertPaths(r.paths, paths)
 }
 
 // RemovePaths removes the paths from the current rule.
 func (r *rule) RemovePaths(paths []orchestrator.Path) {
-	for _, p := range paths {
-		for i, rulePath := range r.paths {
-			if rulePath.Endpoint == p.Endpoint {
-				pathsLen := len(r.paths)
-				if pathsLen > 1 {
-					r.paths[i] = r.paths[pathsLen-1]
-				}
-				r.paths = r.paths[:pathsLen-1]
-				break
-			}
-		}
-	}
+	r.paths = orchestrator.RemovePaths(r.paths, paths)
 }
 
 // toIngressPaths converts the current rule paths into an slice of v1beta1.HTTPIngressPath.
@@ -105,6 +82,7 @@ func NewPaths(in []v1beta1.HTTPIngressPath) []orchestrator.Path {
 	var out []orchestrator.Path
 	for _, p := range in {
 		out = append(out, orchestrator.Path{
+			UID:     p.Backend.ServiceName,
 			Address: p.Path,
 			Endpoint: orchestrator.Endpoint{
 				Name: p.Backend.ServiceName,

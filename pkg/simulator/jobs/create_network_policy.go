@@ -7,11 +7,11 @@ import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulator/state"
 )
 
-// JobCreateNetworkPolicyInput is the input for the CreateNetworkPolicy job.
-type JobCreateNetworkPolicyInput orchestrator.CreateNetworkPolicyInput
+// CreateNetworkPolicyInput is the input for the CreateNetworkPolicy job.
+type CreateNetworkPolicyInput orchestrator.CreateNetworkPolicyInput
 
-// JobCreateNetworkPolicyOutput is the output of the CreateNetworkPolicy job.
-type JobCreateNetworkPolicyOutput struct {
+// CreateNetworkPolicyOutput is the output of the CreateNetworkPolicy job.
+type CreateNetworkPolicyOutput struct {
 	// Resource is the representation of the network policy source that was created.
 	Resource orchestrator.Resource
 
@@ -28,12 +28,12 @@ var CreateNetworkPolicy = &actions.Job{
 func createNetworkPolicy(store actions.Store, tx *gorm.DB, deployment *actions.Deployment, value interface{}) (interface{}, error) {
 	s := store.State().(state.Platform)
 
-	input := value.(JobCreateNetworkPolicyInput)
+	input := value.(CreateNetworkPolicyInput)
 
 	createInput := orchestrator.CreateNetworkPolicyInput(input)
 	res, err := s.Platform().Orchestrator().NetworkPolicies().Create(createInput)
 
-	return JobCreateNetworkPolicyOutput{
+	return CreateNetworkPolicyOutput{
 		Resource: res,
 		Error:    err,
 	}, nil

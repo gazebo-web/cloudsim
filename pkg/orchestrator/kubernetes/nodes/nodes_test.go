@@ -93,20 +93,6 @@ func TestConditionSetAsExpected(t *testing.T) {
 		Status: apiv1.NodeStatus{
 			Conditions: []apiv1.NodeCondition{
 				{
-					Type:   apiv1.NodeKubeletConfigOk,
-					Status: apiv1.ConditionTrue,
-				},
-			},
-		},
-	}, orchestrator.ReadyCondition))
-
-	assert.False(t, m.isConditionSetAsExpected(apiv1.Node{
-		TypeMeta:   metav1.TypeMeta{},
-		ObjectMeta: metav1.ObjectMeta{},
-		Spec:       apiv1.NodeSpec{},
-		Status: apiv1.NodeStatus{
-			Conditions: []apiv1.NodeCondition{
-				{
 					Type:   apiv1.NodeMemoryPressure,
 					Status: apiv1.ConditionTrue,
 				},
@@ -140,7 +126,7 @@ func TestWait_WaitForNodesToBeReady(t *testing.T) {
 		Status: apiv1.NodeStatus{
 			Conditions: []apiv1.NodeCondition{
 				{
-					Type:   apiv1.NodeKubeletConfigOk,
+					Type:   apiv1.NodeNetworkUnavailable,
 					Status: apiv1.ConditionTrue,
 				},
 			},
@@ -180,7 +166,7 @@ func TestWait_ErrWhenNodesArentReady(t *testing.T) {
 		Status: apiv1.NodeStatus{
 			Conditions: []apiv1.NodeCondition{
 				{
-					Type:   apiv1.NodeKubeletConfigOk,
+					Type:   apiv1.NodeNetworkUnavailable,
 					Status: apiv1.ConditionTrue,
 				},
 			},
