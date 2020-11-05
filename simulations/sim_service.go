@@ -893,24 +893,13 @@ func (s *Service) workerStartSimulation(payload interface{}) {
 		return
 	}
 
-	// bind a specific logger to the worker
-	reqID := fmt.Sprintf("worker-start-sim-%s", groupID)
-	newLogger := logger(s.baseCtx).Clone(reqID)
-	workerCtx := ign.NewContextWithLogger(s.baseCtx, newLogger)
+	ctx := context.TODO()
 
-	newLogger.Info("Worker about to invoke StartSimulation for groupID: " + groupID)
-
-	simDep, err := GetSimulationDeployment(s.DB, groupID)
+	err := s.simulator.Start(ctx, simulations.GroupID(groupID))
 	if err != nil {
-		logger(workerCtx).Error(fmt.Sprintf("startSimulation - %v", err))
-		return
+		logger(ctx).Error(fmt.Sprintf("Failed to initialize simulation [%s]. Error: %v", groupID, err))
 	}
-
-	res, em := s.startSimulation(workerCtx, s.DB, simDep)
-	if res == launcherRelaunchNeeded {
-		s.requeueSimulation(simDep)
-	}
-	s.notify(PoolStartSimulation, groupID, res, em)
+	logger(ctx).Info(fmt.Sprintf("Simulation [%s] was successfully launched.", groupID))
 }
 
 // ///////////////////////////////////////////////////////////////////////
