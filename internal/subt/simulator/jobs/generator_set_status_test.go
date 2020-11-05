@@ -13,12 +13,14 @@ import (
 
 func TestGenerateSetSimulationStatusJob(t *testing.T) {
 	// Initialize job to change status to running
-	job := GenerateSetSimulationStatusJob("test", simulations.StatusRunning,
-		&state.StartSimulation{},
-		&state.StartSimulation{},
-		setStartState,
-		returnGroupIDFromStartState,
-	)
+	job := GenerateSetSimulationStatusJob(GenerateSetSimulationStatusConfig{
+		Name:       "test",
+		Status:     simulations.StatusRunning,
+		InputType:  &state.StartSimulation{},
+		OutputType: &state.StartSimulation{},
+		PreHooks:   []actions.JobFunc{setStartState, returnGroupIDFromStartState},
+		PostHooks:  nil,
+	})
 
 	// Initialize simulation
 	gid := simulations.GroupID("aaaa-bbbb-cccc-dddd")
