@@ -16,7 +16,7 @@ type services struct {
 }
 
 // Create creates a new service defined by the given input.
-func (s *services) Create(input orchestrator.CreateServiceInput) error {
+func (s *services) Create(input orchestrator.CreateServiceInput) (orchestrator.Resource, error) {
 	s.Logger.Debug(fmt.Sprintf("Creating new Service. Input: %+v", input))
 
 	// Create service port from input
@@ -43,11 +43,15 @@ func (s *services) Create(input orchestrator.CreateServiceInput) error {
 	_, err := s.API.CoreV1().Services(input.Namespace).Create(newService)
 	if err != nil {
 		s.Logger.Debug(fmt.Sprintf("Creating new Service %s failed. Error: %+v", input.Name, err))
-		return err
+		return nil, err
 	}
 
 	s.Logger.Debug(fmt.Sprintf("Creating new Service %s succeeded.", input.Name))
-	return nil
+
+	selector := orchestrator.NewSelector(input.ServiceLabels)
+	res := orchestrator.NewResource(input.Name, input.Namespace, selector)
+
+	return res, nil
 }
 
 func (s *services) Get(name, namespace string) (orchestrator.Resource, error) {

@@ -2,6 +2,7 @@ package services
 
 import (
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator"
 	"gitlab.com/ignitionrobotics/web/ign-go"
 	corev1 "k8s.io/api/core/v1"
@@ -13,7 +14,7 @@ import (
 func TestCreateService(t *testing.T) {
 	client := fake.NewSimpleClientset()
 	s := NewServices(client, ign.NewLoggerNoRollbar("TestService", ign.VerbosityDebug))
-	err := s.Create(orchestrator.CreateServiceInput{
+	res, err := s.Create(orchestrator.CreateServiceInput{
 		Name:      "service-test",
 		Type:      "ClusterIP",
 		Namespace: "default",
@@ -27,7 +28,9 @@ func TestCreateService(t *testing.T) {
 			"http": 80,
 		},
 	})
-	assert.NoError(t, err)
+	assert.NotNil(t, res)
+	require.NoError(t, err)
+
 	result, err := client.CoreV1().Services("default").Get("service-test", metav1.GetOptions{})
 	assert.NoError(t, err)
 	assert.Equal(t, corev1.ServiceTypeClusterIP, result.Spec.Type)
@@ -36,7 +39,7 @@ func TestCreateService(t *testing.T) {
 func TestCreateServiceFailsWhenServiceIsAlreadyCreated(t *testing.T) {
 	client := fake.NewSimpleClientset()
 	s := NewServices(client, ign.NewLoggerNoRollbar("TestService", ign.VerbosityDebug))
-	err := s.Create(orchestrator.CreateServiceInput{
+	_, err := s.Create(orchestrator.CreateServiceInput{
 		Name:      "service-test",
 		Type:      "ClusterIP",
 		Namespace: "default",
@@ -50,9 +53,9 @@ func TestCreateServiceFailsWhenServiceIsAlreadyCreated(t *testing.T) {
 			"http": 80,
 		},
 	})
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
-	err = s.Create(orchestrator.CreateServiceInput{
+	_, err = s.Create(orchestrator.CreateServiceInput{
 		Name:      "service-test",
 		Type:      "ClusterIP",
 		Namespace: "default",
@@ -80,7 +83,7 @@ func TestGetServiceSuccessWhenServiceExists(t *testing.T) {
 	client := fake.NewSimpleClientset()
 	s := NewServices(client, ign.NewLoggerNoRollbar("TestService", ign.VerbosityDebug))
 
-	err := s.Create(orchestrator.CreateServiceInput{
+	_, err := s.Create(orchestrator.CreateServiceInput{
 		Name:      "service-test",
 		Type:      "ClusterIP",
 		Namespace: "default",
@@ -94,10 +97,10 @@ func TestGetServiceSuccessWhenServiceExists(t *testing.T) {
 			"http": 80,
 		},
 	})
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	result, err := s.Get("service-test", "default")
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, "service-test", result.Name())
 }
 
@@ -105,7 +108,7 @@ func TestGetAllServicesSuccess(t *testing.T) {
 	client := fake.NewSimpleClientset()
 	s := NewServices(client, ign.NewLoggerNoRollbar("TestService", ign.VerbosityDebug))
 
-	err := s.Create(orchestrator.CreateServiceInput{
+	_, err := s.Create(orchestrator.CreateServiceInput{
 		Name:      "service-test",
 		Type:      "ClusterIP",
 		Namespace: "default",
@@ -119,9 +122,9 @@ func TestGetAllServicesSuccess(t *testing.T) {
 			"http": 80,
 		},
 	})
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
-	err = s.Create(orchestrator.CreateServiceInput{
+	_, err = s.Create(orchestrator.CreateServiceInput{
 		Name:      "service-test2",
 		Type:      "ClusterIP",
 		Namespace: "default",
@@ -135,10 +138,10 @@ func TestGetAllServicesSuccess(t *testing.T) {
 			"http": 80,
 		},
 	})
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	result, err := s.GetAllBySelector("default", orchestrator.NewSelector(map[string]string{"service": "test"}))
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Len(t, result, 2)
 }
 
@@ -146,7 +149,7 @@ func TestGetAllServicesFailsWhenUsingWrongLabels(t *testing.T) {
 	client := fake.NewSimpleClientset()
 	s := NewServices(client, ign.NewLoggerNoRollbar("TestService", ign.VerbosityDebug))
 
-	err := s.Create(orchestrator.CreateServiceInput{
+	_, err := s.Create(orchestrator.CreateServiceInput{
 		Name:      "service-test",
 		Type:      "ClusterIP",
 		Namespace: "default",
@@ -162,7 +165,7 @@ func TestGetAllServicesFailsWhenUsingWrongLabels(t *testing.T) {
 	})
 	assert.NoError(t, err)
 
-	err = s.Create(orchestrator.CreateServiceInput{
+	_, err = s.Create(orchestrator.CreateServiceInput{
 		Name:      "service-test2",
 		Type:      "ClusterIP",
 		Namespace: "default",
@@ -176,10 +179,10 @@ func TestGetAllServicesFailsWhenUsingWrongLabels(t *testing.T) {
 			"http": 80,
 		},
 	})
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	result, err := s.GetAllBySelector("default", orchestrator.NewSelector(map[string]string{"another": "test"}))
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Len(t, result, 0)
 }
 
@@ -188,7 +191,7 @@ func TestGetAllServicesFailsWhenNoServicesDoesNotExist(t *testing.T) {
 	s := NewServices(client, ign.NewLoggerNoRollbar("TestService", ign.VerbosityDebug))
 
 	result, err := s.GetAllBySelector("default", orchestrator.NewSelector(map[string]string{"some": "test"}))
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Len(t, result, 0)
 }
 
@@ -196,7 +199,7 @@ func TestRemoveServiceSuccessWhenServiceExists(t *testing.T) {
 	client := fake.NewSimpleClientset()
 	s := NewServices(client, ign.NewLoggerNoRollbar("TestService", ign.VerbosityDebug))
 
-	err := s.Create(orchestrator.CreateServiceInput{
+	_, err := s.Create(orchestrator.CreateServiceInput{
 		Name:      "service-test",
 		Type:      "ClusterIP",
 		Namespace: "default",
