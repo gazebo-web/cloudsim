@@ -14,21 +14,20 @@ import (
 
 // LaunchGazeboServerPod launches a gazebo server pod.
 var LaunchGazeboServerPod = jobs.LaunchPod.Extend(actions.Job{
-	Name:            "launch-gzserver-pod",
-	PreHooks:        []actions.JobFunc{setStartState, prepareCreatePodInput},
-	PostHooks:       []actions.JobFunc{returnState},
-	InputType:       actions.GetJobDataType(&state.StartSimulation{}),
-	OutputType:      actions.GetJobDataType(&state.StartSimulation{}),
+	Name:       "launch-gzserver-pod",
+	PreHooks:   []actions.JobFunc{setStartState, prepareCreatePodInput},
+	PostHooks:  []actions.JobFunc{returnState},
+	InputType:  actions.GetJobDataType(&state.StartSimulation{}),
+	OutputType: actions.GetJobDataType(&state.StartSimulation{}),
 })
 
 func prepareCreatePodInput(store actions.Store, tx *gorm.DB, deployment *actions.Deployment, value interface{}) (interface{}, error) {
 	s := store.State().(*state.StartSimulation)
-
-	// TODO: How do we get the pod name?
-	podName := "prefix-groupid-gzserver"
-
 	// Set up namespace
 	namespace := s.Platform().Store().Orchestrator().Namespace()
+
+	// Get pod name
+	podName := subtapp.GetGazeboServerPodName(s.GroupID)
 
 	// Get simulation
 	sim, err := s.Services().Simulations().Get(s.GroupID)
@@ -52,7 +51,6 @@ func prepareCreatePodInput(store actions.Store, tx *gorm.DB, deployment *actions
 
 	// Get terminate grace period
 	terminationGracePeriod := s.Platform().Store().Orchestrator().TerminationGracePeriod()
-
 
 	// Generate gazebo command args
 	runCommand := gazebo.Generate(gazebo.LaunchConfig{
