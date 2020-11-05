@@ -3,12 +3,26 @@ package simulations
 import (
 	"context"
 	"fmt"
+	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/ec2/ec2iface"
+	"github.com/aws/aws-sdk-go/service/s3/s3iface"
 	"github.com/caarlos0/env"
 	"github.com/jinzhu/gorm"
 	"github.com/panjf2000/ants"
 	"github.com/pkg/errors"
 	"github.com/satori/go.uuid"
 	"gitlab.com/ignitionrobotics/web/cloudsim/globals"
+	subt "gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/simulator"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/actions"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/application"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/cloud"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/cloud/aws/ec2"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/cloud/aws/s3"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/platform"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulator"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/store"
 	"gitlab.com/ignitionrobotics/web/cloudsim/queues"
 	"gitlab.com/ignitionrobotics/web/cloudsim/simulations/gloo"
 	"gitlab.com/ignitionrobotics/web/cloudsim/transport"
@@ -167,6 +181,18 @@ type Service struct {
 	userAccessor             useracc.UserAccessor
 	poolNotificationCallback PoolNotificationCallback
 	scheduler                *scheduler.Scheduler
+
+	// simulator is used to launch a specific set of jobs to start, restart and stop simulations.
+	simulator    simulator.Simulator
+	SessionAWS   *session.Session
+	EC2API       ec2iface.EC2API
+	machines     cloud.Machines
+	platform     platform.Platform
+	storage      cloud.Storage
+	orchestrator orchestrator.Cluster
+	envStore     store.Store
+	simService   simulations.Service
+	S3API        s3iface.S3API
 }
 
 // SimServImpl holds the instance of the Simulations Service. It is set at initialization.
@@ -298,6 +324,44 @@ func NewSimulationsService(ctx context.Context, db *gorm.DB, nm NodeManager, kcl
 	if err != nil {
 		return nil, err
 	}
+
+	// Get logger from context
+	loggerCtx := logger(ctx)
+
+	// Initialize AWS session.
+	s.SessionAWS, err = session.NewSession()
+	if err != nil {
+		return nil, err
+	}
+
+	// Initialize EC2API
+	s.EC2API = ec2.NewAPI(s.SessionAWS)
+
+	// Initialize machines component with EC2API.
+	s.machines = ec2.NewMachines(s.EC2API, loggerCtx)
+
+	// Initialize S3API
+	s.S3API = s3.NewAPI(s.SessionAWS)
+
+	// Initialize storage component with S3API
+	s.storage = s3.NewStorage(s.S3API, loggerCtx)
+
+	// TODO: Initialize env store
+
+	// TODO: Initialize orchestrator.
+
+	// Initialize platform with the different components
+	s.platform = platform.NewPlatform(s.machines, s.storage, s.orchestrator, s.envStore)
+
+	// TODO Initialize simService with subt implementation.
+	appServices := application.NewServices(s.simService)
+
+	s.simulator = subt.NewSimulator(subt.Config{
+		DB:                  db,
+		Platform:            s.platform,
+		ApplicationServices: appServices,
+		ActionService:       actions.NewService(),
+	})
 
 	return &s, nil
 }
@@ -1401,7 +1465,7 @@ func (s *Service) getMaxDurationForSimulation(ctx context.Context, tx *gorm.DB,
 	return maxDuration
 }
 
-// StartSimulation is the main func to launch a new simulation.
+// DEPRECATED: startSimulation is the main func to launch a new simulation.
 // IMPORTANT: This function is invoked in a separate thread, from a Launcher Worker thread.
 // @return: it can return a (launcherRelaunchNeeded) "relaunch" string value as result, which means the
 // pool worker will send the simulation again to the Pending queue.
