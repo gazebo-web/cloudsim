@@ -31,7 +31,7 @@ const (
 
 // MaxAWSRetries holds how many retries will be done against AWS. It is a var
 // to allow tests to change this value.
-var MaxAWSRetries int = 8
+var MaxAWSRetries = 8
 
 type awsConfig struct {
 	NamePrefix string `env:"AWS_INSTANCE_NAME_PREFIX,required"`
@@ -308,14 +308,7 @@ func (s *Ec2Client) runInstanceCall(ctx context.Context, input *ec2.RunInstances
 		// DryRun AWS requests always return an error
 		// This error indicates whether or not the request was successful
 		awsErr, ok := err.(awserr.Error)
-		if ok && AWSErrorIsRetryable(awsErr) {
-			// If the error is non-fatal retry the launch
-			logger(ctx).Info(fmt.Sprintf("launchNodes - %s retryable error: %s\n", awsErr.Code(), awsErr.Message()))
-			if try != MaxAWSRetries {
-				Sleep(time.Second * time.Duration(try))
-			}
-			continue
-		} else if ok && awsErr.Code() == AWSErrCodeDryRunOperation {
+		if ok && awsErr.Code() == AWSErrCodeDryRunOperation {
 			// If the error code is `DryRunOperation` it means we have the necessary
 			// permissions to do the operation
 			input.SetDryRun(false)
@@ -328,6 +321,13 @@ func (s *Ec2Client) runInstanceCall(ctx context.Context, input *ec2.RunInstances
 				logger(ctx).Warning(fmt.Sprintf("launchNodes - error launching: %s\n", err))
 			}
 			return
+		} else if ok {
+			// If the error is non-fatal retry the launch
+			logger(ctx).Info(fmt.Sprintf("launchNodes - %s retryable error: %s\n", awsErr.Code(), awsErr.Message()))
+			if try != MaxAWSRetries {
+				Sleep(time.Second * time.Duration(try))
+			}
+			continue
 		} else {
 			// Return the RunInstance error otherwise
 			return
@@ -527,12 +527,21 @@ func (s *Ec2Client) launchNodes(ctx context.Context, tx *gorm.DB, dep *Simulatio
 	// There were some cases where the previous block succeeded but AWS was unable
 	// to grant instances. A sanity check for this is made in order to handle this
 	// situation.
-	noInstances := len(machines) == 0 || len(instanceIds) == 0
-	if err != nil || noInstances {
+
+	// Count how many machines were requested
+	var requestedMachines int
+	for _, input := range instanceInputs {
+		requestedMachines += int(*input.MinCount)
+	}
+
+	// Check if there are no machines available or the number of instances created does not match the amount
+	// of requested machines.
+	invalidInstanceCount := len(instanceIds) != requestedMachines
+	if err != nil || invalidInstanceCount {
 		timeTrack(ctx, tstart, "launchNodes - launchInstances ended with error")
 
 		// Terminate launched EC2 instances
-		if !noInstances {
+		if len(instanceIds) > 0 {
 			s.terminateInstances(ctx, machines)
 		}
 
@@ -541,7 +550,7 @@ func (s *Ec2Client) launchNodes(ctx context.Context, tx *gorm.DB, dep *Simulatio
 		awsErr, ok := err.(awserr.Error)
 		retry := (ok && AWSErrorIsRetryable(awsErr)) ||
 			(err != nil && err.Error() == ign.NewErrorMessage(ign.ErrorLaunchingCloudInstanceNotEnoughResources).Msg) ||
-			noInstances
+			invalidInstanceCount
 		if retry {
 			errType = ign.ErrorLaunchingCloudInstanceNotEnoughResources
 		} else {

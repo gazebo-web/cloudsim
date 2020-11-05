@@ -10,6 +10,7 @@ import (
 	"github.com/satori/go.uuid"
 	"gitlab.com/ignitionrobotics/web/cloudsim/globals"
 	"gitlab.com/ignitionrobotics/web/cloudsim/queues"
+	"gitlab.com/ignitionrobotics/web/cloudsim/simulations/gloo"
 	"gitlab.com/ignitionrobotics/web/cloudsim/transport"
 	ignws "gitlab.com/ignitionrobotics/web/cloudsim/transport/ign"
 	useracc "gitlab.com/ignitionrobotics/web/cloudsim/users"
@@ -129,6 +130,8 @@ type Service struct {
 	AllowRequeuing bool
 	// A reference to the kubernetes client
 	clientset kubernetes.Interface
+	// A reference to the Gloo client
+	glooClientset gloo.Clientset
 	// A reference to the nodes manager implementation
 	hostsSvc NodeManager
 	DB       *gorm.DB
@@ -172,6 +175,8 @@ var SimServImpl SimService
 type simServConfig struct {
 	// KubernetesNamespace is the Kubernetes namespace for simulation resources.
 	KubernetesNamespace string `env:"SIMSVC_KUBERNETES_NAMESPACE" envDefault:"default"`
+	// KubernetesGlooNamespace is the Gloo namespace in the Kubernetes cluster.
+	KubernetesGlooNamespace string `env:"SIMSVC_KUBERNETES_GLOO_NAMESPACE" envDefault:"gloo-system"`
 	// PoolSizeLaunchSim is the number of worker threads available to launch simulations.
 	PoolSizeLaunchSim int `env:"SIMSVC_POOL_LAUNCH_SIM" envDefault:"10"`
 	// PoolSizeTerminateSim is the number of worker threads available to terminate simulations.
@@ -244,8 +249,8 @@ type PoolFactory func(poolSize int, jobF func(interface{})) (JobPool, error)
 // ///////////////////////////////////////////////////////////////////////
 
 // NewSimulationsService creates a new simulations service
-func NewSimulationsService(ctx context.Context, db *gorm.DB, nm NodeManager,
-	kcli kubernetes.Interface, pf PoolFactory, ua useracc.UserAccessor, isTest bool) (SimService, error) {
+func NewSimulationsService(ctx context.Context, db *gorm.DB, nm NodeManager, kcli kubernetes.Interface,
+	gloo gloo.Clientset, pf PoolFactory, ua useracc.UserAccessor, isTest bool) (SimService, error) {
 
 	var err error
 	s := Service{}
@@ -253,6 +258,7 @@ func NewSimulationsService(ctx context.Context, db *gorm.DB, nm NodeManager,
 	s.DB = db
 	s.baseCtx = ctx
 	s.clientset = kcli
+	s.glooClientset = gloo
 	s.userAccessor = ua
 	s.hostsSvc = nm
 	s.runningSimulations = map[string]*RunningSimulation{}
@@ -949,9 +955,11 @@ func (s *Service) StartSimulationAsync(ctx context.Context,
 		private = *createSim.Private
 	}
 
+	isAdmin := s.userAccessor.IsSystemAdmin(*user.Username)
+
 	stopOnEnd := false
 	// Only system admins can request instances to stop on end
-	if createSim.StopOnEnd != nil && s.userAccessor.IsSystemAdmin(*user.Username) {
+	if createSim.StopOnEnd != nil && isAdmin {
 		stopOnEnd = *createSim.StopOnEnd
 	}
 
@@ -990,10 +998,19 @@ func (s *Service) StartSimulationAsync(ctx context.Context,
 	}
 
 	// Set held state if the user is not a sysadmin and the simulations needs to be held
-	if !s.userAccessor.IsSystemAdmin(*user.Username) && s.applications[*simDep.Application].simulationIsHeld(ctx, tx, simDep) {
+	if !isAdmin && s.applications[*simDep.Application].simulationIsHeld(ctx, tx, simDep) {
 		err := simDep.UpdateHeldStatus(tx, true)
 		if err != nil {
 			return nil, ign.NewErrorMessageWithBase(ign.ErrorDbSave, err)
+		}
+
+		// Check if the simulation is a submission to a competition circuit.
+		// If that's the case, the previous submission should be marked as superseded.
+		if IsCompetitionCircuit(*simDep.ExtraSelector) {
+			err = MarkPreviousSubmissionsSuperseded(tx, *simDep.GroupID, *simDep.Owner, *simDep.ExtraSelector)
+			if err != nil {
+				return nil, ign.NewErrorMessageWithBase(ign.ErrorDbSave, err)
+			}
 		}
 	}
 
@@ -1036,6 +1053,16 @@ func (s *Service) StartSimulationAsync(ctx context.Context,
 	}
 
 	return simDep, nil
+}
+
+// MarkPreviousSubmissionsSuperseded marks a set of submissions with the simSuperseded status.
+func MarkPreviousSubmissionsSuperseded(tx *gorm.DB, groupID, owner, circuit string) error {
+	return tx.Model(&SimulationDeployment{}).
+		Where("group_id NOT LIKE ?", fmt.Sprintf("%s%%", groupID)).
+		Where("owner = ?", owner).
+		Where("extra_selector = ?", circuit).
+		Where("held = true").
+		Update("deployment_status", simSuperseded.ToInt()).Error
 }
 
 // LaunchSimulationAsync launches a simulation that is currently being held by cloudsim.
@@ -1198,10 +1225,23 @@ func (s *Service) checkValidNumberOfSimulations(ctx context.Context, tx *gorm.DB
 
 	limit := s.cfg.MaxSimultaneousSimsPerOwner
 	if limit != 0 {
-		if runningSims, err := s.getRunningSimulationDeploymentsByOwner(tx, owner); err != nil || len(*runningSims) > limit {
-			logger(ctx).Info(fmt.Sprintf("The Owner [%s] has reached the simultaneous simulations limit [%d]. Running simulations [%v]", owner, limit, *runningSims))
-			newErr := errors.Errorf("Cannot request new simulation. The Owner [%s] has reached the simultaneous simulations limit [%d]", owner, limit)
-			return NewErrorMessageWithBase(ErrorOwnerSimulationsLimitReached, newErr)
+		runningSims, err := s.getRunningSimulationDeploymentsByOwner(tx, owner)
+		if err != nil {
+			logger(ctx).Info("Failed to get running simulations by owner")
+			return NewErrorMessageWithBase(
+				ign.ErrorUnexpected,
+				fmt.Errorf("failed to get running simulations by owner %w", err),
+			)
+		}
+		if len(*runningSims) > limit {
+			logger(ctx).Info(fmt.Sprintf(
+				"Owner [%s] has reached the simultaneous simulations limit [%d]. Running simulations [%v]",
+				owner, limit, *runningSims))
+
+			return NewErrorMessageWithBase(
+				ErrorOwnerSimulationsLimitReached,
+				fmt.Errorf("cannot request new simulation, owner [%s] has reached the simultaneous simulations limit [%d]", owner, limit),
+			)
 		}
 	}
 
@@ -1585,12 +1625,6 @@ func (s *Service) ShutdownSimulationAsync(ctx context.Context, tx *gorm.DB,
 	// Allow specific Application to reject the permissions too.
 	if ok, em := s.applications[*mainDep.Application].checkCanShutdownSimulation(ctx, s, tx, mainDep, user); !ok {
 		return nil, em
-	}
-
-	// Sanity checks
-	if mainDep.isMultiSimChild() {
-		err := errors.New("Cannot shutdown a gz simulation from a MultiSim child. Only top level simulations")
-		return nil, ign.NewErrorMessageWithBase(ign.ErrorSimGroupNotFound, err)
 	}
 
 	// Check the simulation has the correct status

@@ -11,12 +11,38 @@ const (
 	// AWSErrCodeInsufficientInstanceCapacity is returned when not enough instances are available to fulfill the
 	// request.
 	AWSErrCodeInsufficientInstanceCapacity = "InsufficientInstanceCapacity"
+	// AWSErrCodeServiceUnavailable is returned when the request has failed due to a temporary failure of the server.
+	AWSErrCodeServiceUnavailable = "ServiceUnavailable"
+	// AWSErrCodeUnavailable is returned when the  server is overloaded and can't handle the request.
+	AWSErrCodeUnavailable = "Unavailable"
+	// AWSErrCodeInternalFailure is returned when the request processing has failed because of an unknown error,
+	// exception, or failure.
+	AWSErrCodeInternalFailure = "InternalFailure"
+	// AWSErrCodeInternalError is returned when an internal error has occurred.
+	AWSErrCodeInternalError = "InternalError"
+	// AWSErrCodeInsufficientReservedInstanceCapacity is returned when there are not enough available Reserved Instances
+	// to satisfy your minimum request.
+	AWSErrCodeInsufficientReservedInstanceCapacity = "InsufficientReservedInstanceCapacity"
+	// AWSErrCodeInsufficientHostCapacity is returned when there is not enough capacity to fulfill your Dedicated Host request.
+	AWSErrCodeInsufficientHostCapacity = "InsufficientHostCapacity"
+	// AWSErrCodeInsufficientCapacity is returned when there is not enough capacity to fulfill your import instance request.
+	AWSErrCodeInsufficientCapacity = "InsufficientCapacity"
+	// AWSErrCodeInsufficientAddressCapacity is returned when not enough available addresses to satisfy your minimum request.
+	AWSErrCodeInsufficientAddressCapacity = "InsufficientAddressCapacity"
 )
 
 var retryableErrors = []string{
 	// Dev NOTE: it is important that this array DOES NOT include "DryRunOperation" error.
 	AWSErrCodeRequestLimitExceeded,
 	AWSErrCodeInsufficientInstanceCapacity,
+	AWSErrCodeServiceUnavailable,
+	AWSErrCodeUnavailable,
+	AWSErrCodeInternalFailure,
+	AWSErrCodeInternalError,
+	AWSErrCodeInsufficientReservedInstanceCapacity,
+	AWSErrCodeInsufficientHostCapacity,
+	AWSErrCodeInsufficientCapacity,
+	AWSErrCodeInsufficientAddressCapacity,
 }
 
 // AWSErrorIsRetryable checks that an error returned by an AWS operation is
