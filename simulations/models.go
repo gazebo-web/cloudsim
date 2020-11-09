@@ -417,7 +417,7 @@ func (dep *SimulationDeployment) assertSimDepStatus(st DeploymentStatus) *ign.Er
 type MultiSimType int
 
 const (
-	// multiSimSingle represents a "single" simulation. Meaning it didn't spawned any other simulations.
+	// multiSimSingle represents a "single" simulation. Meaning it didn't spawn any other simulations.
 	// This is the default.
 	multiSimSingle MultiSimType = iota
 	// multiSimParent is used to tag the main simulation request, which was used to spawn the actual simulations.
@@ -489,6 +489,7 @@ const (
 	simTerminatingInstances DeploymentStatus = 80
 	simTerminated           DeploymentStatus = 90
 	simRejected             DeploymentStatus = 100
+	simSuperseded           DeploymentStatus = 110
 )
 
 // Corresponding string value for a Role
@@ -506,6 +507,7 @@ var depStatusStr = map[DeploymentStatus]string{
 	simTerminatingInstances:      "TerminatingInstances",
 	simTerminated:                "Terminated",
 	simRejected:                  "Rejected",
+	simSuperseded:                "Superseded",
 }
 
 // Eq function will compare for equality with an int based Status.
@@ -518,10 +520,15 @@ func (ds DeploymentStatus) String() string {
 	return depStatusStr[ds]
 }
 
-// ToPtr returns a pointer to string of this status value
+// ToPtr returns a pointer to int of this status value
 func (ds DeploymentStatus) ToPtr() *int {
 	i := int(ds)
 	return &i
+}
+
+// ToInt returns the int value of this status value.
+func (ds DeploymentStatus) ToInt() int {
+	return int(ds)
 }
 
 // DeploymentStatusFrom returns the DeploymentStatus value corresponding to the

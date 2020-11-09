@@ -34,8 +34,20 @@ var (
 	// StatusRejected is used when a simulation has been rejected.
 	StatusRejected Status = "rejected"
 
-	// StatusLaunchingNodes is used when a simulation has entered the launching nodes phase.
-	StatusLaunchingNodes Status = "launching-nodes"
+	// StatusLaunchingInstances is used when a simulation has entered the launching instances phase.
+	StatusLaunchingInstances Status = "launching-instances"
+
+	// StatusLaunchingPods is used when a simulation has entered the launching pods phase.
+	StatusLaunchingPods Status = "launching-pods"
+
+	// StatusWaitingInstances is used when a simulation is waiting for instances to be launched.
+	StatusWaitingInstances Status = "waiting-instances"
+
+	// StatusWaitingNodes is used when a simulation is waiting for nodes to be ready
+	StatusWaitingNodes Status = "waiting-nodes"
+
+	// StatusWaitingPods is used when a simulation is waiting for pods to be ready.
+	StatusWaitingPods Status = "waiting-pods"
 )
 
 // Kind is used to identify if a Simulation is a single simulation or a multisim.
@@ -71,4 +83,7 @@ type Simulation interface {
 
 	// Image returns the simulation's docker image. This image is used as the solution image.
 	Image() string
+
+	// SetStatus sets a given status to the simulation.
+	SetStatus(status Status)
 }

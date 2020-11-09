@@ -3,8 +3,8 @@ package users
 import (
 	"context"
 	"github.com/caarlos0/env"
-	"github.com/casbin/casbin"
-	"github.com/casbin/gorm-adapter"
+	"github.com/casbin/casbin/v2"
+	"github.com/casbin/gorm-adapter/v2"
 	"github.com/jinzhu/gorm"
 	"gitlab.com/ignitionrobotics/web/fuelserver/bundles/subt"
 	"gitlab.com/ignitionrobotics/web/fuelserver/bundles/users"
@@ -89,12 +89,22 @@ func NewUserAccessor(ctx context.Context, resourcePermissions *per.Permissions, 
 	ua.cfg.sysAdmin = sysAdmin
 
 	// Create Casbin helpers
-	adapter := gormadapter.NewAdapterByDB(usersDb)
-	enforcer := casbin.NewSyncedEnforcer("permissions/policy.conf", adapter)
+	adapter, err := gormadapter.NewAdapterByDB(usersDb)
+	if err != nil {
+		return nil, err
+	}
+
+	enforcer, err := casbin.NewSyncedEnforcer("permissions/policy.conf", adapter)
+	if err != nil {
+		return nil, err
+	}
 	ua.syncedEnforcer = enforcer
 
 	ua.p = &per.Permissions{}
-	ua.p.InitWithEnforcerAndAdapter(enforcer, adapter, sysAdmin)
+	err = ua.p.InitWithEnforcerAndAdapter(enforcer, adapter, sysAdmin)
+	if err != nil {
+		return nil, err
+	}
 
 	return &ua, nil
 }
@@ -273,7 +283,14 @@ func (u *UserAccessorImpl) IsAuthorizedForResource(user, resource string, action
 
 // AddResourcePermission adds a user (or group) permission on a resource
 func (u *UserAccessorImpl) AddResourcePermission(user, resource string, action per.Action) (bool, *ign.ErrMsg) {
-	return u.resourcePermissions.AddPermission(user, resource, action)
+	ok, err := u.resourcePermissions.AddPermission(user, resource, action)
+
+	var em *ign.ErrMsg
+	if err != nil {
+		em = ign.NewErrorMessageWithBase(ign.ErrorUnauthorized, err)
+	}
+
+	return ok, em
 }
 
 // AddScore creates a new score entry for an owner in a competition circuit

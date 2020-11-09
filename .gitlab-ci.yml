@@ -10,11 +10,11 @@ variables:
 ##########################################################
 # Aliases
 
-.setup_project: &setup_project
-  - cd /builds/ignitionrobotics/web/cloudsim
-  - mkdir -p -v $GOPATH/src/$PKG_NAME
-  - mv -f * $GOPATH/src/$PKG_NAME
-  - cd $GOPATH/src/$PKG_NAME
+.setup_modules: &setup_modules
+  - mkdir -p -v $GOPKGPATH
+
+.download_modules: &download_modules
+  - go mod download
 
 .gitlab_credentials: &setup_git_credentials
   - git config --global user.name "ign-cloudsim"
@@ -37,8 +37,14 @@ variables:
 ##########################################################
 # Cache configuration
 
-cache:
-  key: ${CI_COMMIT_REF_SLUG}
+.go-cache:
+  # Paths in the cache need to be in the build directory or Gitlab will ignore them
+  variables:
+    GOPATH: $CI_PROJECT_DIR/.go
+    GOPKGPATH: $CI_PROJECT_DIR/.go/pkg/mod
+  cache:
+    paths:
+      - $GOPKGPATH/
 
 ##########################################################
 # Stages
@@ -66,13 +72,25 @@ proto:
   tags:
     - gitlab-org
 
+dependencies:
+  stage: install
+  extends: .go-cache
+  before_script:
+    - *setup_modules
+  script:
+    - *download_modules
+    - ls $GOPKGPATH
+  tags:
+    - gitlab-org
+
 ##########################################################
 # Formatting stage
 
 fmt:
   stage: format
+  extends: .go-cache
   before_script:
-    - *setup_project
+    - *setup_modules
     - *setup_git_credentials
   script:
     - go fmt $(go list ./...)
@@ -81,23 +99,25 @@ fmt:
 
 lint:
   stage: format
+  extends: .go-cache
   before_script:
-    - *setup_project
+    - *setup_modules
     - *setup_git_credentials
   script:
     - golint -set_exit_status $(go list ./...)
   tags:
     - gitlab-org
 
-##########################################################
-# Testing stage
+###########################################################
+## Testing stage
 
 vet:
   stage: test
+  extends: .go-cache
   dependencies:
     - proto
   before_script:
-    - *setup_project
+    - *setup_modules
     - *setup_git_credentials
     - *setup_db
   script:
@@ -111,10 +131,11 @@ vet:
 
 test:
   stage: test
+  extends: .go-cache
   dependencies:
     - proto
   before_script:
-    - *setup_project
+    - *setup_modules
     - *setup_git_credentials
     - *setup_db
   script:
@@ -128,10 +149,11 @@ test:
 
 race:
   stage: test
+  extends: .go-cache
   dependencies:
     - proto
   before_script:
-    - *setup_project
+    - *setup_modules
     - *setup_git_credentials
     - *setup_db
   script:
@@ -146,14 +168,15 @@ race:
 
 coverage:
   stage: test
+  extends: .go-cache
   dependencies:
     - proto
   before_script:
-    - *setup_project
+    - *setup_modules
     - *setup_git_credentials
     - *setup_db
   script:
-    - go test -covermode=atomic -coverprofile=coverage.tx
+    - go test -covermode=atomic -coverprofile=coverage.tx ./...
     - go tool cover -func=coverage.tx
     - bash <(curl -s https://codecov.io/bash)
   services:
@@ -163,17 +186,14 @@ coverage:
   tags:
     - gitlab-org
 
-##########################################################
-# Packaging stage
+###########################################################
+## Packaging stage
 
-docker:
+.docker:
   stage: package
   image: docker
   services:
     - docker:dind
-  except:
-    - develop
-    - master
   dependencies:
     - proto
   variables:
@@ -183,70 +203,46 @@ docker:
     - docker version
     - docker info
     - "docker login -u gitlab-ci-token -p $CI_BUILD_TOKEN $CI_REGISTRY"
-  script:
-    - "docker pull $CI_REGISTRY_IMAGE:next || true"
-    - "docker build --cache-from $CI_REGISTRY_IMAGE:next --tag $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA ."
-    - "docker push $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA"
   after_script:
     - "docker logout ${CI_REGISTRY}"
   tags:
     - docker
 
+docker:
+  stage: package
+  extends: .docker
+  except:
+    - develop
+    - master
+  script:
+    - "docker pull $CI_REGISTRY_IMAGE:next || true"
+    - "docker build --cache-from $CI_REGISTRY_IMAGE:next --tag $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA ."
+    - "docker push $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA"
+
 docker:next:
   stage: package
-  image: docker
+  extends: .docker
   only:
     - develop
-  services:
-    - docker:dind
-  dependencies:
-    - proto
-  variables:
-    DOCKER_HOST: tcp://docker:2375
-    DOCKER_DRIVER: overlay2
-  before_script:
-    - docker version
-    - docker info
-    - "docker login -u gitlab-ci-token -p $CI_BUILD_TOKEN $CI_REGISTRY"
   script:
     - "docker pull $CI_REGISTRY_IMAGE || true"
     - "docker build --cache-from $CI_REGISTRY_IMAGE --tag $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA --tag $CI_REGISTRY_IMAGE:next ."
     - "docker push $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA"
     - "docker push $CI_REGISTRY_IMAGE:next"
-  after_script:
-    - "docker logout ${CI_REGISTRY}"
-  tags:
-    - docker
 
 docker:latest:
   stage: package
-  image: docker
+  extends: .docker
   only:
     - master
-  services:
-    - docker:dind
-  dependencies:
-    - proto
-  variables:
-    DOCKER_HOST: tcp://docker:2375
-    DOCKER_DRIVER: overlay2
-    DOCKER_TLS_CERTDIR: ""
-  before_script:
-    - docker version
-    - docker info
-    - "docker login -u gitlab-ci-token -p $CI_BUILD_TOKEN $CI_REGISTRY"
   script:
     - "docker pull $CI_REGISTRY_IMAGE || true"
     - "docker build --cache-from $CI_REGISTRY_IMAGE --tag $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA --tag $CI_REGISTRY_IMAGE:latest ."
     - "docker push $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA"
     - "docker push $CI_REGISTRY_IMAGE:latest"
-  after_script:
-    - "docker logout ${CI_REGISTRY}"
-  tags:
-    - docker
 
-##########################################################
-# Deploying stage
+###########################################################
+## Deploying stage
 
 integration:
   image: registry.gitlab.com/ignitionrobotics/web/images/kubectl:latest
