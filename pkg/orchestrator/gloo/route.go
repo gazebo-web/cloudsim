@@ -63,14 +63,14 @@ func generateRoutes(namespace string, paths []orchestrator.Path) []*gatewayapiv1
 func generateRoute(namespace string, path orchestrator.Path) *gatewayapiv1.Route {
 	return &gatewayapiv1.Route{
 		Matchers: []*matchers.Matcher{
-			generateMatcher(path.Address),
+			GenerateMatcher(path.Address),
 		},
-		Action: generateRouteAction(namespace, path.Endpoint.Name),
+		Action: GenerateRouteAction(namespace, path.Endpoint.Name),
 	}
 }
 
-// generateMatcher generates a Regex matcher for the given value.
-func generateMatcher(value string) *matchers.Matcher {
+// GenerateMatcher generates a Regex matcher for the given value.
+func GenerateMatcher(value string) *matchers.Matcher {
 	return &matchers.Matcher{
 		PathSpecifier: &matchers.Matcher_Regex{
 			Regex: value,
@@ -78,8 +78,8 @@ func generateMatcher(value string) *matchers.Matcher {
 	}
 }
 
-// generateRouteAction generates a RouteAction for the given pointing to the given upstream.
-func generateRouteAction(namespace string, upstream string) *gatewayapiv1.Route_RouteAction {
+// GenerateRouteAction generates a RouteAction for the given pointing to the given upstream.
+func GenerateRouteAction(namespace string, upstream string) *gatewayapiv1.Route_RouteAction {
 	return &gatewayapiv1.Route_RouteAction{
 		RouteAction: &glooapiv1.RouteAction{
 			Destination: &glooapiv1.RouteAction_Single{

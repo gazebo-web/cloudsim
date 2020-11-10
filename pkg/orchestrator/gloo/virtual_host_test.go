@@ -91,7 +91,7 @@ func TestVirtualHosts_Upsert(t *testing.T) {
 	rule, err := vhs.Get(res, "test.org")
 	require.NoError(t, err)
 
-	p := NewPath(t.Name(), generateMatcher("another-regex"), generateRouteAction("default", "my-new-service"))
+	p := NewPath(t.Name(), GenerateMatcher("another-regex"), GenerateRouteAction("default", "my-new-service"))
 	err = vhs.Upsert(rule, p)
 	assert.NoError(t, err)
 
@@ -142,9 +142,9 @@ func newTestVirtualService(name, namespace, upstream, regex string, domains []st
 				Routes: []*v1.Route{
 					{
 						Matchers: []*matchers.Matcher{
-							generateMatcher(regex),
+							GenerateMatcher(regex),
 						},
-						Action: generateRouteAction(namespace, upstream),
+						Action: GenerateRouteAction(namespace, upstream),
 						Name:   name,
 					},
 				},

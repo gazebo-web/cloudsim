@@ -68,6 +68,11 @@ type Orchestrator interface {
 
 	// Nameservers returns a slice of the nameservers used to expose simulations to the internet.
 	Nameservers() []string
+
+	// IngressNamespace returns the namespace where the ingress is running.
+	IngressNamespace() string
+	IngressName() string
+	IngressHost() string
 }
 
 // Ignition provides general information about cloudsim and ignition gazebo.
