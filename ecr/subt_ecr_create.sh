@@ -146,7 +146,9 @@ echo "{
     \"Condition\": {
       \"StringLike\": {
         \"s3:prefix\": [
-          \"gz-logs/${1}/circuit_logs/*\"
+          \"gz-logs/${1}/circuit_logs/tunnel/*\",
+          \"gz-logs/${1}/circuit_logs/urban/*\",
+          \"gz-logs/${1}/circuit_logs/cave/*\"
         ]
       }
     }
@@ -158,7 +160,9 @@ echo "{
     ],
     \"Effect\": \"Allow\",
     \"Resource\": [
-      \"arn:aws:s3:::web-cloudsim-production-logs/gz-logs/${1}/circuit_logs/*\"
+      \"arn:aws:s3:::web-cloudsim-production-logs/gz-logs/${1}/circuit_logs/tunnel/*\",
+      \"arn:aws:s3:::web-cloudsim-production-logs/gz-logs/${1}/circuit_logs/urban/*\",
+      \"arn:aws:s3:::web-cloudsim-production-logs/gz-logs/${1}/circuit_logs/cave/*\"
     ]
   }
 ]}
