@@ -33,36 +33,46 @@ type k8s struct {
 
 	// networkPolicies has a reference to an orchestrator.NetworkPolicies implementation.
 	networkPolicies orchestrator.NetworkPolicies
+
+	// extensions has a reference to an orchestrator.Extensions implementation.
+	extensions orchestrator.Extensions
 }
 
 // IngressRules returns the Kubernetes orchestrator.IngressRules implementation.
-func (k k8s) IngressRules() orchestrator.IngressRules {
+func (k *k8s) IngressRules() orchestrator.IngressRules {
 	return k.ingressRules
 }
 
 // Nodes returns the Kubernetes orchestrator.Nodes implementation.
-func (k k8s) Nodes() orchestrator.Nodes {
+func (k *k8s) Nodes() orchestrator.Nodes {
 	return k.nodes
 }
 
 // Pods returns the Kubernetes orchestrator.Pods implementation.
-func (k k8s) Pods() orchestrator.Pods {
+func (k *k8s) Pods() orchestrator.Pods {
 	return k.pods
 }
 
 // Services returns the Kubernetes orchestrator.Services implementation.
-func (k k8s) Services() orchestrator.Services {
+func (k *k8s) Services() orchestrator.Services {
 	return k.services
 }
 
 // Ingresses returns the Kubernetes orchestrator.Ingresses implementation.
-func (k k8s) Ingresses() orchestrator.Ingresses {
+func (k *k8s) Ingresses() orchestrator.Ingresses {
 	return k.ingresses
 }
 
 // NetworkPolicies returns the Kubernetes orchestrator.NetworkPolicies implementation.
-func (k k8s) NetworkPolicies() orchestrator.NetworkPolicies {
+func (k *k8s) NetworkPolicies() orchestrator.NetworkPolicies {
 	return k.networkPolicies
+}
+
+func (k *k8s) Extensions() orchestrator.Extensions {
+	if k.extensions == nil {
+		panic("no extensions have been added to the cluster implementation")
+	}
+	return k.extensions
 }
 
 // Config is used to group the inputs for NewCustomKubernetes.
@@ -74,6 +84,7 @@ type Config struct {
 	IngressRules    orchestrator.IngressRules
 	Services        orchestrator.Services
 	NetworkPolicies orchestrator.NetworkPolicies
+	Extensions      orchestrator.Extensions
 }
 
 // NewCustomKubernetes returns a orchestrator.Cluster implementation using Kubernetes.
@@ -86,6 +97,7 @@ func NewCustomKubernetes(config Config) orchestrator.Cluster {
 		ingressRules:    config.IngressRules,
 		services:        config.Services,
 		networkPolicies: config.NetworkPolicies,
+		extensions:      config.Extensions,
 	}
 }
 
@@ -99,6 +111,7 @@ func NewDefaultKubernetes(api kubernetes.Interface, spdyInit spdy.Initializer, l
 		services:        services.NewServices(api, logger),
 		ingresses:       ingresses.NewIngresses(api, logger),
 		networkPolicies: network.NewNetworkPolicies(api, logger),
+		extensions:      nil,
 	}
 }
 
@@ -113,6 +126,7 @@ func NewFakeKubernetes(logger ign.Logger) orchestrator.Cluster {
 		services:        services.NewServices(api, logger),
 		ingresses:       ingresses.NewIngresses(api, logger),
 		networkPolicies: network.NewNetworkPolicies(api, logger),
+		extensions:      nil,
 	}
 }
 

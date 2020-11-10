@@ -21,6 +21,8 @@ type StartSimulation struct {
 	GazeboServerPodLabels   map[string]string
 	FieldComputerPodLabels  map[string]string
 	CommsBridgePodLabels    map[string]string
+	ServiceLabels           orchestrator.Selector
+	UpstreamName            string
 }
 
 // Platform returns the underlying platform.

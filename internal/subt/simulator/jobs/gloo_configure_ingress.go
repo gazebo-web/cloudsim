@@ -20,14 +20,14 @@ var ConfigureIngressGloo = jobs.ConfigureIngress.Extend(actions.Job{
 
 func prepareConfigureIngressInputUsingGloo(store actions.Store, tx *gorm.DB, deployment *actions.Deployment, value interface{}) (interface{}, error) {
 	s := store.State().(*state.StartSimulation)
+
 	name := s.Platform().Store().Orchestrator().IngressName()
-	ns := s.Platform().Store().Orchestrator().IngressNamespace()
 	host := s.Platform().Store().Orchestrator().IngressHost()
 
-	s.Platform().Orchestrator().Ingresses().GetDestination()
+	ns := s.Platform().Store().Orchestrator().Namespace()
 
 	matcher := gloo.GenerateMatcher("")
-	action := gloo.GenerateRouteAction(ns, upstream)
+	action := gloo.GenerateRouteAction(ns, s.UpstreamName)
 	paths := []orchestrator.Path{gloo.NewPath("", matcher, action)}
 
 	return jobs.ConfigureIngressInput{
