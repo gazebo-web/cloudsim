@@ -547,6 +547,11 @@ var SubTCircuits = []string{
 	CircuitSimpleTunnel1,
 	CircuitSimpleTunnel2,
 	CircuitSimpleTunnel3,
+	CircuitTunnelCircuitWorld1,
+	CircuitTunnelCircuitWorld2,
+	CircuitTunnelCircuitWorld3,
+	CircuitTunnelCircuitWorld4,
+	CircuitTunnelCircuitWorld5,
 	CircuitUrbanQual,
 	CircuitUrbanSimple1,
 	CircuitUrbanSimple2,
@@ -570,6 +575,14 @@ var SubTCircuits = []string{
 	CircuitCavePractice2,
 	CircuitCavePractice3,
 	CircuitCaveCircuit,
+	CircuitCaveCircuitWorld1,
+	CircuitCaveCircuitWorld2,
+	CircuitCaveCircuitWorld3,
+	CircuitCaveCircuitWorld4,
+	CircuitCaveCircuitWorld5,
+	CircuitCaveCircuitWorld6,
+	CircuitCaveCircuitWorld7,
+	CircuitCaveCircuitWorld8,
 }
 
 // isValidRobotType checks if the field value is a valid Robot Type.
