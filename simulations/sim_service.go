@@ -955,9 +955,11 @@ func (s *Service) StartSimulationAsync(ctx context.Context,
 		private = *createSim.Private
 	}
 
+	isAdmin := s.userAccessor.IsSystemAdmin(*user.Username)
+
 	stopOnEnd := false
 	// Only system admins can request instances to stop on end
-	if createSim.StopOnEnd != nil && s.userAccessor.IsSystemAdmin(*user.Username) {
+	if createSim.StopOnEnd != nil && isAdmin {
 		stopOnEnd = *createSim.StopOnEnd
 	}
 
@@ -996,12 +998,23 @@ func (s *Service) StartSimulationAsync(ctx context.Context,
 	}
 
 	// Set held state if the user is not a sysadmin and the simulations needs to be held
-	if !s.userAccessor.IsSystemAdmin(*user.Username) && s.applications[*simDep.Application].simulationIsHeld(ctx, tx, simDep) {
+	if !isAdmin && s.applications[*simDep.Application].simulationIsHeld(ctx, tx, simDep) {
 		err := simDep.UpdateHeldStatus(tx, true)
 		if err != nil {
 			return nil, ign.NewErrorMessageWithBase(ign.ErrorDbSave, err)
 		}
+
+		// Check if the simulation is a submission to a competition circuit.
+		// If that's the case, the previous submission should be marked as superseded.
+		if IsCompetitionCircuit(*simDep.ExtraSelector) {
+			err = MarkPreviousSubmissionsSuperseded(tx, *simDep.GroupID, *simDep.Owner, *simDep.ExtraSelector)
+			if err != nil {
+				return nil, ign.NewErrorMessageWithBase(ign.ErrorDbSave, err)
+			}
+		}
 	}
+
+
 
 	// Set read and write permissions to owner (eg, the team) and to the Application
 	// organizing team (eg. subt).
@@ -1042,6 +1055,16 @@ func (s *Service) StartSimulationAsync(ctx context.Context,
 	}
 
 	return simDep, nil
+}
+
+// MarkPreviousSubmissionsSuperseded marks a set of submissions with the simSuperseded status.
+func MarkPreviousSubmissionsSuperseded(tx *gorm.DB, groupID, owner, circuit string) error {
+	return tx.Model(&SimulationDeployment{}).
+		Where("group_id NOT LIKE ?", fmt.Sprintf("%s%%", groupID)).
+		Where("owner = ?", owner).
+		Where("extra_selector = ?", circuit).
+		Where("held = true").
+		Update("deployment_status", simSuperseded.ToInt()).Error
 }
 
 // LaunchSimulationAsync launches a simulation that is currently being held by cloudsim.
@@ -1204,10 +1227,23 @@ func (s *Service) checkValidNumberOfSimulations(ctx context.Context, tx *gorm.DB
 
 	limit := s.cfg.MaxSimultaneousSimsPerOwner
 	if limit != 0 {
-		if runningSims, err := s.getRunningSimulationDeploymentsByOwner(tx, owner); err != nil || len(*runningSims) > limit {
-			logger(ctx).Info(fmt.Sprintf("The Owner [%s] has reached the simultaneous simulations limit [%d]. Running simulations [%v]", owner, limit, *runningSims))
-			newErr := errors.Errorf("Cannot request new simulation. The Owner [%s] has reached the simultaneous simulations limit [%d]", owner, limit)
-			return NewErrorMessageWithBase(ErrorOwnerSimulationsLimitReached, newErr)
+		runningSims, err := s.getRunningSimulationDeploymentsByOwner(tx, owner)
+		if err != nil {
+			logger(ctx).Info("Failed to get running simulations by owner")
+			return NewErrorMessageWithBase(
+				ign.ErrorUnexpected,
+				fmt.Errorf("failed to get running simulations by owner %w", err),
+			)
+		}
+		if len(*runningSims) > limit {
+			logger(ctx).Info(fmt.Sprintf(
+				"Owner [%s] has reached the simultaneous simulations limit [%d]. Running simulations [%v]",
+				owner, limit, *runningSims))
+
+			return NewErrorMessageWithBase(
+				ErrorOwnerSimulationsLimitReached,
+				fmt.Errorf("cannot request new simulation, owner [%s] has reached the simultaneous simulations limit [%d]", owner, limit),
+			)
 		}
 	}
 
