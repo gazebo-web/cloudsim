@@ -14,7 +14,8 @@ type LaunchWebsocketServiceInput orchestrator.CreateServiceInput
 // LaunchWebsocketServiceOutput is the output of the LaunchWebsocketService job.
 // This struct was set in place to let the post-hook handle errors.
 type LaunchWebsocketServiceOutput struct {
-	Error error
+	Resource orchestrator.Resource
+	Error    error
 }
 
 // LaunchWebsocketService is generic to job to launch a simulation's websocket service.
@@ -27,20 +28,16 @@ func launchWebsocketService(store actions.Store, tx *gorm.DB, deployment *action
 	s := store.State().(state.Platform)
 
 	// Parse input
-	input, ok := value.(LaunchWebsocketServiceInput)
+	input, ok := value.(orchestrator.CreateServiceInput)
 	if !ok {
 		return nil, simulator.ErrInvalidInput
 	}
 
-	createServiceInput := orchestrator.CreateServiceInput(input)
-
 	// Create service
-	err := s.Platform().Orchestrator().Services().Create(createServiceInput)
-	if err != nil {
-		return nil, err
-	}
+	res, err := s.Platform().Orchestrator().Services().Create(input)
 
 	return LaunchWebsocketServiceOutput{
-		Error: err,
+		Resource: res,
+		Error:    err,
 	}, nil
 }
