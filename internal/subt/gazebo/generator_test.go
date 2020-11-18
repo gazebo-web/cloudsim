@@ -10,17 +10,11 @@ import (
 )
 
 func TestGenerate(t *testing.T) {
-	worldIndex := 1
-	runIndex := 1
 	token := "test-token"
 	maxConn := 500
-	seeds := []int{1234, 5678, 91011}
+	seed := 5678
 
-	worlds := []string{
-		"cloudsim_sim.ign;worldName:=tunnel_circuit_practice_01,",
-		"cloudsim_sim.ign;worldName:=tunnel_circuit_practice_02",
-		"cloudsim_sim.ign;worldName:=tunnel_circuit_practice_03",
-	}
+	world := "cloudsim_sim.ign;worldName:=tunnel_circuit_practice_01"
 
 	fakeRobotA := fake.NewRobot("testA", "X1")
 	fakeRobotB := fake.NewRobot("testB", "X2")
@@ -28,11 +22,9 @@ func TestGenerate(t *testing.T) {
 	duration := 1500 * time.Second
 
 	cmd := Generate(LaunchConfig{
-		Worlds:                  worlds,
+		World:                   world,
 		WorldMaxSimSeconds:      duration,
-		Seeds:                   seeds,
-		WorldIndex:              &worldIndex,
-		RunIndex:                &runIndex,
+		Seed:                    &seed,
 		AuthorizationToken:      &token,
 		MaxWebsocketConnections: maxConn,
 		Robots:                  []simulations.Robot{fakeRobotA, fakeRobotB},
@@ -43,10 +35,10 @@ func TestGenerate(t *testing.T) {
 	})
 
 	assert.Equal(t, "cloudsim_sim.ign", cmd[0])
-	assert.Equal(t, "worldName:=tunnel_circuit_practice_02", cmd[1])
+	assert.Equal(t, "worldName:=tunnel_circuit_practice_01", cmd[1])
 	assert.Equal(t, fmt.Sprintf("durationSec:=%d", int(duration.Seconds())), cmd[2])
 	assert.Equal(t, "headless:=true", cmd[3])
-	assert.Equal(t, fmt.Sprintf("seed:=%d", seeds[runIndex]), cmd[4])
+	assert.Equal(t, fmt.Sprintf("seed:=%d", seed), cmd[4])
 	assert.Equal(t, fmt.Sprintf("websocketAuthKey:=%s", token), cmd[5])
 	assert.Equal(t, fmt.Sprintf("websocketAdminAuthKey:=%s", token), cmd[6])
 	assert.Equal(t, fmt.Sprintf("websocketMaxConnections:=%d", maxConn), cmd[7])
