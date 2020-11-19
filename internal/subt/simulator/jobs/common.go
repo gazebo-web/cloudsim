@@ -38,7 +38,21 @@ func checkWaitError(store actions.Store, tx *gorm.DB, deployment *actions.Deploy
 	return nil, nil
 }
 
-func destroyPods(store actions.Store, tx *gorm.DB, deployment *actions.Deployment, value interface{}, thrownError error) (interface{}, error) {
+// checkLaunchPodsError is an actions.JobFunc implementation that checks if the value returned by the job that
+// launches pods returns an error.
+func checkLaunchPodsError(store actions.Store, tx *gorm.DB, deployment *actions.Deployment, value interface{}) (interface{}, error) {
+	output := value.(jobs.LaunchPodsOutput)
+	if output.Error == nil {
+		return value, nil
+	}
+	err := deployment.SetJobData(tx, nil, actions.DeploymentJobData, value)
+	if err != nil {
+		return nil, err
+	}
+	return nil, output.Error
+}
+
+func rollbackPodsCreation(store actions.Store, tx *gorm.DB, deployment *actions.Deployment, value interface{}, thrownError error) (interface{}, error) {
 	out, err := deployment.GetJobData(tx, nil, actions.DeploymentJobData)
 	if err != nil {
 		return nil, err

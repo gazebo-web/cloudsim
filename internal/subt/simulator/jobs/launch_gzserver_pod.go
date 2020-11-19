@@ -12,29 +12,17 @@ import (
 	"time"
 )
 
-const gzServerPodKey = ""
-
 // LaunchGazeboServerPod launches a gazebo server pod.
 var LaunchGazeboServerPod = jobs.LaunchPods.Extend(actions.Job{
 	Name:            "launch-gzserver-pod",
-	PreHooks:        []actions.JobFunc{setStartState, prepareCreatePodInput},
-	PostHooks:       []actions.JobFunc{checkLaunchGazeboServerPodError, returnState},
-	RollbackHandler: destroyPods,
+	PreHooks:        []actions.JobFunc{setStartState, prepareGazeboCreatePodInput},
+	PostHooks:       []actions.JobFunc{checkLaunchPodsError, returnState},
+	RollbackHandler: rollbackPodsCreation,
 	InputType:       actions.GetJobDataType(&state.StartSimulation{}),
 	OutputType:      actions.GetJobDataType(&state.StartSimulation{}),
 })
 
-// checkLaunchGazeboServerPodError is an actions.JobFunc implementation that checks if the value returned by job that
-// launches pods returns an error.
-func checkLaunchGazeboServerPodError(store actions.Store, tx *gorm.DB, deployment *actions.Deployment, value interface{}) (interface{}, error) {
-	output := value.(jobs.LaunchPodsOutput)
-	if output.Error != nil {
-		return nil, output.Error
-	}
-	return nil, nil
-}
-
-func prepareCreatePodInput(store actions.Store, tx *gorm.DB, deployment *actions.Deployment, value interface{}) (interface{}, error) {
+func prepareGazeboCreatePodInput(store actions.Store, tx *gorm.DB, deployment *actions.Deployment, value interface{}) (interface{}, error) {
 	s := store.State().(*state.StartSimulation)
 	// Set up namespace
 	namespace := s.Platform().Store().Orchestrator().Namespace()
