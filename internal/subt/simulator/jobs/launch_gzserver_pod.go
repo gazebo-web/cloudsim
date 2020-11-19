@@ -12,14 +12,27 @@ import (
 	"time"
 )
 
+const gzServerPodKey = ""
+
 // LaunchGazeboServerPod launches a gazebo server pod.
-var LaunchGazeboServerPod = jobs.LaunchPod.Extend(actions.Job{
-	Name:       "launch-gzserver-pod",
-	PreHooks:   []actions.JobFunc{setStartState, prepareCreatePodInput},
-	PostHooks:  []actions.JobFunc{returnState},
-	InputType:  actions.GetJobDataType(&state.StartSimulation{}),
-	OutputType: actions.GetJobDataType(&state.StartSimulation{}),
+var LaunchGazeboServerPod = jobs.LaunchPods.Extend(actions.Job{
+	Name:            "launch-gzserver-pod",
+	PreHooks:        []actions.JobFunc{setStartState, prepareCreatePodInput},
+	PostHooks:       []actions.JobFunc{checkLaunchGazeboServerPodError, returnState},
+	RollbackHandler: destroyPods,
+	InputType:       actions.GetJobDataType(&state.StartSimulation{}),
+	OutputType:      actions.GetJobDataType(&state.StartSimulation{}),
 })
+
+// checkLaunchGazeboServerPodError is an actions.JobFunc implementation that checks if the value returned by job that
+// launches pods returns an error.
+func checkLaunchGazeboServerPodError(store actions.Store, tx *gorm.DB, deployment *actions.Deployment, value interface{}) (interface{}, error) {
+	output := value.(jobs.LaunchPodsOutput)
+	if output.Error != nil {
+		return nil, output.Error
+	}
+	return nil, nil
+}
 
 func prepareCreatePodInput(store actions.Store, tx *gorm.DB, deployment *actions.Deployment, value interface{}) (interface{}, error) {
 	s := store.State().(*state.StartSimulation)
@@ -113,28 +126,30 @@ func prepareCreatePodInput(store actions.Store, tx *gorm.DB, deployment *actions
 	nodeSelector := orchestrator.NewSelector(s.GazeboNodeLabels)
 
 	// Create the input for the operation
-	input := orchestrator.CreatePodInput{
-		Name:                          podName,
-		Namespace:                     namespace,
-		Labels:                        s.GazeboServerPodLabels,
-		RestartPolicy:                 orchestrator.RestartPolicyNever,
-		TerminationGracePeriodSeconds: terminationGracePeriod,
-		NodeSelector:                  nodeSelector,
-		Containers: []orchestrator.Container{
-			{
-				Name:                     "gzserver-container",
-				Image:                    containerImage,
-				Args:                     runCommand,
-				Privileged:               &privileged,
-				AllowPrivilegeEscalation: &allowPrivilegeEscalation,
-				Ports:                    ports,
-				Volumes:                  volumes,
-				EnvVars:                  envVars,
+	input := []orchestrator.CreatePodInput{
+		{
+			Name:                          podName,
+			Namespace:                     namespace,
+			Labels:                        s.GazeboServerPodLabels,
+			RestartPolicy:                 orchestrator.RestartPolicyNever,
+			TerminationGracePeriodSeconds: terminationGracePeriod,
+			NodeSelector:                  nodeSelector,
+			Containers: []orchestrator.Container{
+				{
+					Name:                     "gzserver-container",
+					Image:                    containerImage,
+					Args:                     runCommand,
+					Privileged:               &privileged,
+					AllowPrivilegeEscalation: &allowPrivilegeEscalation,
+					Ports:                    ports,
+					Volumes:                  volumes,
+					EnvVars:                  envVars,
+				},
 			},
+			Volumes:     volumes,
+			Nameservers: nameservers,
 		},
-		Volumes:     volumes,
-		Nameservers: nameservers,
 	}
 
-	return jobs.LaunchPodInput(input), nil
+	return jobs.LaunchPodsInput(input), nil
 }

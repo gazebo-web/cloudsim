@@ -4,6 +4,7 @@ import (
 	"github.com/jinzhu/gorm"
 	"gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/simulator/state"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/actions"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulator/jobs"
 )
 
@@ -34,5 +35,21 @@ func checkWaitError(store actions.Store, tx *gorm.DB, deployment *actions.Deploy
 	if output.Error != nil {
 		return nil, output.Error
 	}
+	return nil, nil
+}
+
+func destroyPods(store actions.Store, tx *gorm.DB, deployment *actions.Deployment, value interface{}, thrownError error) (interface{}, error) {
+	out, err := deployment.GetJobData(tx, nil, actions.DeploymentJobData)
+	if err != nil {
+		return nil, err
+	}
+
+	s := store.State().(state.PlatformGetter)
+
+	list := out.([]orchestrator.Resource)
+	for _, pod := range list {
+		_, _ = s.Platform().Orchestrator().Pods().Delete(pod)
+	}
+
 	return nil, nil
 }

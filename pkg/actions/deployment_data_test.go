@@ -132,8 +132,8 @@ func TestSetDeploymentJobDataAndGetDeploymentJobData(t *testing.T) {
 
 	// Create the job data entries
 	require.NoError(t, setDeploymentData(tr.db, deployment, &td.jobName1, deploymentJobInput, testInputData))
-	require.NoError(t, setDeploymentData(tr.db, deployment, &td.jobName1, deploymentJobData, testJobData))
-	require.NoError(t, setDeploymentData(tr.db, deployment, &td.jobName2, deploymentJobData, nil))
+	require.NoError(t, setDeploymentData(tr.db, deployment, &td.jobName1, DeploymentJobData, testJobData))
+	require.NoError(t, setDeploymentData(tr.db, deployment, &td.jobName2, DeploymentJobData, nil))
 	// Check that two entries have been created
 	assert.Equal(t, 3, dsdtd.getJobDataCount(t, tr.db, deployment))
 
@@ -151,8 +151,8 @@ func TestSetDeploymentJobDataAndGetDeploymentJobData(t *testing.T) {
 		require.Equal(t, dsdtd.marshallJSON(t, expected), dsdtd.marshallJSON(t, dbJobData))
 	}
 	compareWithDB(td.jobName1, deploymentJobInput, testInputData)
-	compareWithDB(td.jobName1, deploymentJobData, testJobData)
+	compareWithDB(td.jobName1, DeploymentJobData, testJobData)
 	// Check that the job with null data returns an error
-	_, err = getDeploymentData(tr.db, deployment, &td.jobName2, deploymentJobData)
+	_, err = getDeploymentData(tr.db, deployment, &td.jobName2, DeploymentJobData)
 	require.Equal(t, ErrDeploymentDataNoData, err)
 }

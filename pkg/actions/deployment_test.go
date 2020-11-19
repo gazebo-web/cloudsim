@@ -159,7 +159,7 @@ func TestSetAndGetJobData(t *testing.T) {
 
 	// Set job data
 	require.NoError(t, deployment.SetJobData(tr.db, &td.jobName1, deploymentJobInput, testInputData))
-	require.NoError(t, deployment.SetJobData(tr.db, &td.jobName1, deploymentJobData, testJobData))
+	require.NoError(t, deployment.SetJobData(tr.db, &td.jobName1, DeploymentJobData, testJobData))
 
 	// Modify job data
 	testInputData = deploymentTestStruct{I: 100}
@@ -172,7 +172,7 @@ func TestSetAndGetJobData(t *testing.T) {
 		require.Equal(t, expected, out.(deploymentTestStruct))
 	}
 	compareTestData(td.jobName1, deploymentJobInput, testInputData)
-	compareTestData(td.jobName1, deploymentJobData, testJobData)
+	compareTestData(td.jobName1, DeploymentJobData, testJobData)
 }
 
 func TestAddAndGetErrors(t *testing.T) {

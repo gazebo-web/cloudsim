@@ -8,41 +8,45 @@ import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulator/state"
 )
 
-// LaunchPodInput is the input of the LaunchPod job.
-type LaunchPodInput orchestrator.CreatePodInput
+// LaunchPodsInput is the input of the LaunchPods job.
+type LaunchPodsInput []orchestrator.CreatePodInput
 
-// LaunchPodOutput is the output of the LaunchPod job.
+// LaunchPodsOutput is the output of the LaunchPods job.
 // This struct was set in place to let the post-hook handle errors.
-type LaunchPodOutput struct {
-	Resource orchestrator.Resource
-	Error    error
+type LaunchPodsOutput struct {
+	Resources []orchestrator.Resource
+	Error     error
 }
 
-// LaunchPod is generic to job to launch pods into a cluster.
-var LaunchPod = &actions.Job{
-	Execute: launchPod,
+// LaunchPods is generic to job to launch pods into a cluster.
+var LaunchPods = &actions.Job{
+	Execute: launchPods,
 }
 
-// launchPod is the main function executed by the LaunchPod job.
-func launchPod(store actions.Store, tx *gorm.DB, deployment *actions.Deployment, value interface{}) (interface{}, error) {
+// launchPods is the main function executed by the LaunchPods job.
+func launchPods(store actions.Store, tx *gorm.DB, deployment *actions.Deployment, value interface{}) (interface{}, error) {
 	s := store.State().(state.Platform)
 
 	// Parse input
-	input, ok := value.(LaunchPodInput)
+	input, ok := value.(LaunchPodsInput)
 	if !ok {
 		return nil, simulator.ErrInvalidInput
 	}
 
-	createPodInput := orchestrator.CreatePodInput(input)
+	var created []orchestrator.Resource
+	var err error
 
-	// Create pod
-	res, err := s.Platform().Orchestrator().Pods().Create(createPodInput)
-	if err != nil {
-		return nil, err
+	for _, in := range input {
+		var res orchestrator.Resource
+		res, err = s.Platform().Orchestrator().Pods().Create(in)
+		if err != nil {
+			return nil, err
+		}
+		created = append(created, res)
 	}
 
-	return LaunchPodOutput{
-		Resource: res,
-		Error:    err,
+	return LaunchPodsOutput{
+		Resources: created,
+		Error:     err,
 	}, nil
 }

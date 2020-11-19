@@ -8,6 +8,14 @@ import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
 )
 
+type PlatformGetter interface {
+	Platform() platform.Platform
+}
+
+type ApplicationServicesGetter interface {
+	Services() application.Services
+}
+
 // StartSimulation is the state of the action that starts a simulation.
 type StartSimulation struct {
 	platform                platform.Platform
