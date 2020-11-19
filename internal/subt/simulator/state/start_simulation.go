@@ -8,11 +8,13 @@ import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
 )
 
+// PlatformGetter has a method to access a platform.Platform implementation.
 type PlatformGetter interface {
 	Platform() platform.Platform
 }
 
-type ApplicationServicesGetter interface {
+// AppServicesGetter has a method to access an application.Services implementation.
+type AppServicesGetter interface {
 	Services() application.Services
 }
 
