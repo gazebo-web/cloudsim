@@ -13,6 +13,14 @@ type fakeSimulation struct {
 	image   string
 }
 
+func (f *fakeSimulation) HasStatus(status simulations.Status) bool {
+	panic("implement me")
+}
+
+func (f *fakeSimulation) IsKind(kind simulations.Kind) bool {
+	panic("implement me")
+}
+
 // Image returns the fake simulation's image.
 func (f *fakeSimulation) Image() string {
 	return f.image
