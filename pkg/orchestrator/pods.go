@@ -3,21 +3,34 @@ package orchestrator
 import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/waiter"
 	"io"
+	corev1 "k8s.io/api/core/v1"
 	"time"
 )
 
 // RestartPolicy defines a restart policy used for pods.
-type RestartPolicy string
+type RestartPolicy corev1.RestartPolicy
 
-var (
+const (
 	// RestartPolicyNever is used to indicate that a pod won't be restarted.
-	RestartPolicyNever RestartPolicy = "Never"
+	RestartPolicyNever = RestartPolicy(corev1.RestartPolicyNever)
 
 	// RestartPolicyAlways is used to indicate that a pod always will be restarted.
-	RestartPolicyAlways RestartPolicy = "Always"
+	RestartPolicyAlways = RestartPolicy(corev1.RestartPolicyAlways)
 
 	// RestartPolicyOnFailure is used to indicate that a pod will be restarted only on failures.
-	RestartPolicyOnFailure RestartPolicy = "OnFailure"
+	RestartPolicyOnFailure = RestartPolicy(corev1.RestartPolicyOnFailure)
+)
+
+// HostPathType defines the host path type used for volumes.
+type HostPathType corev1.HostPathType
+
+const (
+	// HostPathUnset is used for backwards compatible, leave it empty if unset.
+	HostPathUnset = HostPathType(corev1.HostPathUnset)
+
+	// HostPathDirectoryOrCreate should be set if nothing exists at the given path, an empty directory will be created
+	// there as needed with file mode 0755.
+	HostPathDirectoryOrCreate = HostPathType(corev1.HostPathDirectoryOrCreate)
 )
 
 // Volume represents a storage that will be used to persist data from a certain Container.
@@ -29,6 +42,8 @@ type Volume struct {
 	HostPath string
 	// MountPath is the path within the container at which the volume should be mounted.
 	MountPath string
+	// HostPathType is the type
+	HostPathType HostPathType
 }
 
 // Container is a represents of a standard unit of software.
