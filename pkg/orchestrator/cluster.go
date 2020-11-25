@@ -35,6 +35,11 @@ type Selector interface {
 	String() string
 	// Map returns the underlying selector's map.
 	Map() map[string]string
+	// Extend extends the underlying base map with the extension selector.
+	// NOTE: If a certain key already exists in the base map, it will be overwritten by the extension value.
+	Extend(extension Selector) Selector
+	// Set sets the given value to the given key. If the key already exists, it will be overwritten.
+	Set(key string, value string)
 }
 
 // Resource groups a set of method to identify a resource in a cluster.
