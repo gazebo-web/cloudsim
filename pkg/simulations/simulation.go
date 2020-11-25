@@ -21,6 +21,10 @@ var (
 // GroupID is an universally unique identifier that identifies a Simulation.
 type GroupID string
 
+func (gid GroupID) String() string {
+	return string(gid)
+}
+
 // Status represents a stage a Simulation can be in.
 type Status string
 
