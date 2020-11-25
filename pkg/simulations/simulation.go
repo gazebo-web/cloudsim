@@ -79,8 +79,14 @@ type Simulation interface {
 	// Status returns the current simulation's status.
 	Status() Status
 
+	// HasStatus checks if the current simulation has the given status.
+	HasStatus(status Status) bool
+
 	// Kind returns the current simulation's kind.
 	Kind() Kind
+
+	// IsKind checks if the current simulation is of the given kind.
+	IsKind(Kind) bool
 
 	// Error returns the current simulation's error. It returns nil if the simulation doesn't have an error.
 	Error() *Error
