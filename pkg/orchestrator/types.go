@@ -41,6 +41,20 @@ func NewResource(name, namespace string, selector Selector) Resource {
 // selector is a group of key-pair values that identify a resource.
 type selector map[string]string
 
+// Set sets the given value to the given key. If the key already exists, it will be overwritten.
+func (s selector) Set(key string, value string) {
+	s[key] = value
+}
+
+// Extend extends the underlying base map with the extension selector.
+// NOTE: If a certain key already exists in the base map, it will be overwritten by the extension value.
+func (s selector) Extend(extension Selector) Selector {
+	for k, v := range extension.Map() {
+		s[k] = v
+	}
+	return s
+}
+
 // Map returns the selector in map format.
 func (s selector) Map() map[string]string {
 	return s
