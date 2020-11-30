@@ -38,6 +38,15 @@ func GetPodLabelsCommsBridge(groupID simulations.GroupID, parent *simulations.Gr
 	return base.Extend(ext)
 }
 
+func GetPodLabelsCommsBridgeCopy(groupID simulations.GroupID, parent *simulations.GroupID, robot simulations.Robot) orchestrator.Selector {
+	base := getPodLabelsBase(groupID, parent)
+	ext := orchestrator.NewSelector(map[string]string{
+		"copy-to-s3":     "true",
+		"copy-for-robot": strings.ToLower(robot.Name()),
+	})
+	return base.Extend(ext)
+}
+
 func GetPodLabelsGazeboServer(groupID simulations.GroupID, parent *simulations.GroupID) orchestrator.Selector {
 	base := getPodLabelsBase(groupID, parent)
 	ext := orchestrator.NewSelector(map[string]string{
