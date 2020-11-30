@@ -79,12 +79,10 @@ func TestLaunchInstances(t *testing.T) {
 	machines := &instancesLauncher{}
 
 	// Initialize platform
-	p := platform.NewPlatform(
-		machines,
-		nil,
-		nil,
-		configStore,
-	)
+	p := platform.NewPlatform(platform.Components{
+		Machines: machines,
+		Store:    configStore,
+	})
 
 	// Create initial state
 	initialState := state.NewStartSimulation(p, app, gid)
