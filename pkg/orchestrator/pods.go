@@ -54,7 +54,11 @@ type Container struct {
 	// Image is the image running inside the container.
 	Image string
 
-	// Args are the commands passed to the container.
+	// Command is the entrypoint array. It's not executed within a shell.
+	// The docker image's ENTRYPOINT is used if this is not provided. Cannot be updated.
+	Command []string
+
+	// Args passed to the Command. Cannot be updated.
 	Args []string
 
 	// Privileged defines if the container should run in privileged mode.
