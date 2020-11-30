@@ -28,7 +28,7 @@ func prepareGazeboCreatePodInput(store actions.Store, tx *gorm.DB, deployment *a
 	namespace := s.Platform().Store().Orchestrator().Namespace()
 
 	// Get pod name
-	podName := subtapp.GetGazeboServerPodName(s.GroupID)
+	podName := subtapp.GetPodNameGazeboServer(s.GroupID)
 
 	// Get simulation
 	sim, err := s.Services().Simulations().Get(s.GroupID)
@@ -105,20 +105,20 @@ func prepareGazeboCreatePodInput(store actions.Store, tx *gorm.DB, deployment *a
 		"XAUTHORITY":       "/tmp/.docker.xauth",
 		"USE_XVFB":         "1",
 		"IGN_RELAY":        s.Platform().Store().Ignition().IP(), // IP Cloudsim
-		"IGN_PARTITION":    string(s.GroupID),
+		"IGN_PARTITION":    s.GroupID.String(),
 		"IGN_VERBOSE":      s.Platform().Store().Ignition().Verbosity(),
 	}
 
 	nameservers := s.Platform().Store().Orchestrator().Nameservers()
 
-	nodeSelector := orchestrator.NewSelector(s.GazeboNodeLabels)
+	nodeSelector := subtapp.GetNodeLabelsGazeboServer(s.GroupID)
 
 	// Create the input for the operation
 	input := []orchestrator.CreatePodInput{
 		{
 			Name:                          podName,
 			Namespace:                     namespace,
-			Labels:                        s.GazeboServerPodLabels,
+			Labels:                        subtapp.GetPodLabelsGazeboServer(s.GroupID, s.ParentGroupID).Map(),
 			RestartPolicy:                 orchestrator.RestartPolicyNever,
 			TerminationGracePeriodSeconds: terminationGracePeriod,
 			NodeSelector:                  nodeSelector,
