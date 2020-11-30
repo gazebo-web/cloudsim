@@ -21,6 +21,11 @@ func GetPodNameCommsBridge(groupID simulations.GroupID, robotID string) string {
 	return fmt.Sprintf("%s-%s-comms-%s", simPrefix, groupID, robotID)
 }
 
+// GetPodNameCommsBridgeCopy is sued to generate the name for the comms bridge copy pod.
+func GetPodNameCommsBridgeCopy(groupID simulations.GroupID, robotID string) string {
+	return fmt.Sprintf("%s-copy", GetPodNameCommsBridge(groupID, robotID))
+}
+
 // GetPodNameGazeboServer is used to generate the name for the gazebo server pod.
 func GetPodNameGazeboServer(groupID simulations.GroupID) string {
 	return fmt.Sprintf("%s-%s-gzserver", simPrefix, groupID)
