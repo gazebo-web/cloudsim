@@ -86,4 +86,7 @@ type Ignition interface {
 
 	// Verbosity returns the level of verbosity that should be used for gazebo.
 	Verbosity() string
+
+	// LogsCopyEnabled determines if ROS logs should be saved in the storage.
+	LogsCopyEnabled() bool
 }
