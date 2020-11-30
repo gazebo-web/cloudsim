@@ -49,7 +49,10 @@ func TestWaitForGazeboServerPod(t *testing.T) {
 		NetworkPolicies: nil,
 	})
 
-	p := platform.NewPlatform(nil, nil, ks, fakeStore)
+	p := platform.NewPlatform(platform.Components{
+		Cluster: ks,
+		Store:   fakeStore,
+	})
 
 	gid := simulations.GroupID("aaaa-bbbb-cccc-dddd")
 	s := state.NewStartSimulation(p, nil, gid)
