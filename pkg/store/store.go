@@ -89,4 +89,8 @@ type Ignition interface {
 
 	// LogsCopyEnabled determines if ROS logs should be saved in the storage.
 	LogsCopyEnabled() bool
+
+	// Region returns the region where to launch a certain simulation.
+	Region() string
+	SecretsName() string
 }
