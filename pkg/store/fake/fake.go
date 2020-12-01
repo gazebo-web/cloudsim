@@ -45,6 +45,24 @@ type Ign struct {
 	*mock.Mock
 }
 
+// LogsCopyEnabled mocks the LogsCopyEnabled method.
+func (f *Ign) LogsCopyEnabled() bool {
+	args := f.Called()
+	return args.Bool(0)
+}
+
+// Region mocks the Region method.
+func (f *Ign) Region() string {
+	args := f.Called()
+	return args.String(0)
+}
+
+// SecretsName mocks the SecretsName method.
+func (f *Ign) SecretsName() string {
+	args := f.Called()
+	return args.String(0)
+}
+
 // IP mocks the IP method.
 func (f *Ign) IP() string {
 	args := f.Called()
