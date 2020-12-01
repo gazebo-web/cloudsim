@@ -8,6 +8,8 @@ type Simulation interface {
 
 	// Track returns the track name of the simulation that will be used as the simulation world.
 	Track() string
+
+	// Token returns the websocket access token for users to connect to a gazebo instance through GZ3D.
 	Token() *string
 
 	// Robots returns the list of robots from a certain simulation.

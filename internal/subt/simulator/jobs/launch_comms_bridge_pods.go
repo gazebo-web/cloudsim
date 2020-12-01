@@ -15,10 +15,10 @@ import (
 	"time"
 )
 
-// LaunchCommsBridge launches the list of comms bridge pods.
+// LaunchCommsBridge launches the list of comms bridge and copy pods.
 var LaunchCommsBridge = jobs.LaunchPods.Extend(actions.Job{
 	Name:            "launch-comms-bridge-pods",
-	PreHooks:        []actions.JobFunc{setStartState, prepareCommsBridgePodInput, prepareFieldComputerPodInput},
+	PreHooks:        []actions.JobFunc{setStartState, prepareCommsBridgePodInput},
 	PostHooks:       []actions.JobFunc{checkLaunchPodsError, returnState},
 	RollbackHandler: rollbackPodsCreation,
 	InputType:       actions.GetJobDataType(&state.StartSimulation{}),
