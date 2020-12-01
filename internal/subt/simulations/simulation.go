@@ -16,3 +16,12 @@ type Simulation interface {
 	// Marsupials returns the list of marsupials from a certain simulation.
 	Marsupials() []simulations.Marsupial
 }
+
+func IsRobotChildMarsupial(marsupials []simulations.Marsupial, robot simulations.Robot) bool {
+	for _, m := range marsupials {
+		if robot.IsEqual(m.Child()) {
+			return true
+		}
+	}
+	return false
+}

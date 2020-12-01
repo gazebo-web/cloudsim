@@ -42,7 +42,7 @@ func prepareCommsBridgePodInput(store actions.Store, tx *gorm.DB, deployment *ac
 
 	for i, r := range subtSim.Robots() {
 		childMarsupial := "false"
-		if isChildMarsupial(subtSim.Marsupials(), r) {
+		if subt.IsRobotChildMarsupial(subtSim.Marsupials(), r) {
 			childMarsupial = "true"
 		}
 
@@ -211,15 +211,6 @@ func prepareBridgeCopyCreatePodInput(c configBridgeCopyPod) orchestrator.CreateP
 		},
 		nameservers: c.nameservers,
 	})
-}
-
-func isChildMarsupial(marsupials []simulations.Marsupial, robot simulations.Robot) bool {
-	for _, m := range marsupials {
-		if robot.IsEqual(m.Child()) {
-			return true
-		}
-	}
-	return false
 }
 
 type configPod struct {
