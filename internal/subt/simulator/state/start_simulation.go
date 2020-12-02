@@ -20,8 +20,6 @@ type AppServicesGetter interface {
 
 // StartSimulation is the state of the action that starts a simulation.
 type StartSimulation struct {
-	PlatformGetter
-	AppServicesGetter
 	platform             platform.Platform
 	services             subtapp.Services
 	GroupID              simulations.GroupID
