@@ -6,17 +6,17 @@ import "gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
 type Simulation interface {
 	simulations.Simulation
 
-	// Track returns the track name of the simulation that will be used as the simulation world.
-	Track() string
+	// GetTrack returns the track name of the simulation that will be used as the simulation world.
+	GetTrack() string
 
-	// Token returns the websocket access token for users to connect to a gazebo instance through GZ3D.
-	Token() *string
+	// GetToken returns the websocket access token for users to connect to a gazebo instance through GZ3D.
+	GetToken() *string
 
-	// Robots returns the list of robots from a certain simulation.
-	Robots() []simulations.Robot
+	// GetRobots returns the list of robots from a certain simulation.
+	GetRobots() []simulations.Robot
 
-	// Marsupials returns the list of marsupials from a certain simulation.
-	Marsupials() []simulations.Marsupial
+	// GetMarsupials returns the list of marsupials from a certain simulation.
+	GetMarsupials() []simulations.Marsupial
 }
 
 func IsRobotChildMarsupial(marsupials []simulations.Marsupial, robot simulations.Robot) bool {

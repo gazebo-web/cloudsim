@@ -34,7 +34,7 @@ func prepareFieldComputerPodInput(store actions.Store, tx *gorm.DB, deployment *
 
 	var pods []orchestrator.CreatePodInput
 
-	for i, r := range subtSim.Robots() {
+	for i, r := range subtSim.GetRobots() {
 		robotID := subtapp.GetRobotID(i)
 		// Create field computer input
 		pods = append(pods, prepareFieldComputerCreatePodInput(configFieldComputerPod{

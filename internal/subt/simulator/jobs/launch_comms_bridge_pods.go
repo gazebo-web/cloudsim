@@ -36,13 +36,13 @@ func prepareCommsBridgePodInput(store actions.Store, tx *gorm.DB, deployment *ac
 
 	subtSim := sim.(subt.Simulation)
 
-	track, err := s.Services().Tracks().Get(subtSim.Track())
+	track, err := s.Services().Tracks().Get(subtSim.GetTrack())
 
 	var pods []orchestrator.CreatePodInput
 
-	for i, r := range subtSim.Robots() {
+	for i, r := range subtSim.GetRobots() {
 		childMarsupial := "false"
-		if subt.IsRobotChildMarsupial(subtSim.Marsupials(), r) {
+		if subt.IsRobotChildMarsupial(subtSim.GetMarsupials(), r) {
 			childMarsupial = "true"
 		}
 

@@ -40,7 +40,7 @@ func prepareGazeboCreatePodInput(store actions.Store, tx *gorm.DB, deployment *a
 	subtSim := sim.(simulations.Simulation)
 
 	// Get track name
-	trackName := subtSim.Track()
+	trackName := subtSim.GetTrack()
 	app := s.Services().(subtapp.Services)
 	track, err := app.Tracks().Get(trackName)
 	if err != nil {
@@ -58,10 +58,10 @@ func prepareGazeboCreatePodInput(store actions.Store, tx *gorm.DB, deployment *a
 		World:                   track.World,
 		WorldMaxSimSeconds:      time.Duration(track.MaxSimSeconds),
 		Seed:                    track.Seed,
-		AuthorizationToken:      subtSim.Token(),
+		AuthorizationToken:      subtSim.GetToken(),
 		MaxWebsocketConnections: 500,
-		Robots:                  subtSim.Robots(),
-		Marsupials:              subtSim.Marsupials(),
+		Robots:                  subtSim.GetRobots(),
+		Marsupials:              subtSim.GetMarsupials(),
 	})
 
 	// Set up container configuration
