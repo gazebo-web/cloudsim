@@ -13,6 +13,7 @@ import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/kubernetes/pods"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/kubernetes/spdy"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/platform"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/secrets"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
 	simfake "gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations/fake"
 	sfake "gitlab.com/ignitionrobotics/web/cloudsim/pkg/store/fake"
@@ -20,10 +21,14 @@ import (
 	"gitlab.com/ignitionrobotics/web/ign-go"
 	kfake "k8s.io/client-go/kubernetes/fake"
 	"testing"
+	"time"
 )
 
 func TestLaunchCommsBridgePods(t *testing.T) {
 	db, err := gorm.GetDBFromEnvVars()
+	require.NoError(t, err)
+
+	err = actions.MigrateDB(db)
 	require.NoError(t, err)
 
 	// Set up logger
@@ -32,7 +37,26 @@ func TestLaunchCommsBridgePods(t *testing.T) {
 	// Set up store
 	storeIgnition := sfake.NewFakeIgnition()
 	storeOrchestrator := sfake.NewFakeOrchestrator()
+	secretsManager := secrets.NewFakeSecrets()
 	fakeStore := sfake.NewFakeStore(nil, storeOrchestrator, storeIgnition)
+
+	// Mock ignition store methods for this test
+	storeIgnition.On("ROSLogsPath").Return("/tmp/test")
+	storeIgnition.On("IP").Return("127.0.0.1")
+	storeIgnition.On("Verbosity").Return("0")
+	storeIgnition.On("LogsCopyEnabled").Return(true)
+	storeIgnition.On("SecretsName").Return("aws-secrets")
+	storeIgnition.On("Region").Return("aws-secrets")
+
+	// Mock orchestrator store methods for this test
+	storeOrchestrator.On("Namespace").Return("default")
+	storeOrchestrator.On("TerminationGracePeriod").Return(time.Second)
+	storeOrchestrator.On("Nameservers").Return([]string{"8.8.8.8", "8.8.4.4"})
+
+	secretsManager.On("Get").Return(&secrets.Secret{Data: map[string][]byte{
+		"aws-access-key-id":     []byte("12345678910"),
+		"aws-secret-access-key": []byte("secret"),
+	}}, error(nil))
 
 	// Set up SPDY initializer with fake implementation
 	spdyInit := spdy.NewSPDYFakeInitializer()
@@ -68,6 +92,11 @@ func TestLaunchCommsBridgePods(t *testing.T) {
 		Error:   nil,
 		Image:   "test.org",
 		Track:   trackName,
+		Robots: []simulations.Robot{
+			simfake.NewRobot("testA", "X1"),
+			simfake.NewRobot("testB", "X2"),
+			simfake.NewRobot("testC", "X3"),
+		},
 	})
 
 	// Make the get method return the fake simulation when using
@@ -92,6 +121,7 @@ func TestLaunchCommsBridgePods(t *testing.T) {
 
 	// Create new state: Start simulation state.
 	s := state.NewStartSimulation(p, app, gid)
+	s.GazeboServerIP = "127.0.0.1"
 
 	// Set up action store
 	store := actions.NewStore(s)
