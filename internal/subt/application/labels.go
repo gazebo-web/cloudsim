@@ -6,6 +6,7 @@ import (
 	"strings"
 )
 
+// GetNodeLabelsFieldComputer returns a selector that identifies a field computer node.
 func GetNodeLabelsFieldComputer(groupID simulations.GroupID, robot simulations.Robot) orchestrator.Selector {
 	return orchestrator.NewSelector(map[string]string{
 		"cloudsim_groupid": groupID.String(),
@@ -14,6 +15,7 @@ func GetNodeLabelsFieldComputer(groupID simulations.GroupID, robot simulations.R
 	})
 }
 
+// GetNodeLabelsGazeboServer returns a selector that identifies a gazebo node.
 func GetNodeLabelsGazeboServer(groupID simulations.GroupID) orchestrator.Selector {
 	return orchestrator.NewSelector(map[string]string{
 		"cloudsim_groupid": groupID.String(),
@@ -21,6 +23,7 @@ func GetNodeLabelsGazeboServer(groupID simulations.GroupID) orchestrator.Selecto
 	})
 }
 
+// GetPodLabelsFieldComputer returns a selector that identifies a field computer pod.
 func GetPodLabelsFieldComputer(groupID simulations.GroupID, parent *simulations.GroupID) orchestrator.Selector {
 	base := getPodLabelsBase(groupID, parent)
 	ext := orchestrator.NewSelector(map[string]string{
@@ -29,6 +32,7 @@ func GetPodLabelsFieldComputer(groupID simulations.GroupID, parent *simulations.
 	return base.Extend(ext)
 }
 
+// GetPodLabelsCommsBridge returns a selector that identifies a comms bridge pod.
 func GetPodLabelsCommsBridge(groupID simulations.GroupID, parent *simulations.GroupID, robot simulations.Robot) orchestrator.Selector {
 	base := getPodLabelsBase(groupID, parent)
 	ext := orchestrator.NewSelector(map[string]string{
@@ -38,6 +42,7 @@ func GetPodLabelsCommsBridge(groupID simulations.GroupID, parent *simulations.Gr
 	return base.Extend(ext)
 }
 
+// GetPodLabelsCommsBridgeCopy returns a selector that identifies a comms bridge copy pod.
 func GetPodLabelsCommsBridgeCopy(groupID simulations.GroupID, parent *simulations.GroupID, robot simulations.Robot) orchestrator.Selector {
 	base := getPodLabelsBase(groupID, parent)
 	ext := orchestrator.NewSelector(map[string]string{
@@ -47,6 +52,7 @@ func GetPodLabelsCommsBridgeCopy(groupID simulations.GroupID, parent *simulation
 	return base.Extend(ext)
 }
 
+// GetPodLabelsGazeboServer returns a selector that identifies a gzserver pod.
 func GetPodLabelsGazeboServer(groupID simulations.GroupID, parent *simulations.GroupID) orchestrator.Selector {
 	base := getPodLabelsBase(groupID, parent)
 	ext := orchestrator.NewSelector(map[string]string{
@@ -55,6 +61,7 @@ func GetPodLabelsGazeboServer(groupID simulations.GroupID, parent *simulations.G
 	return base.Extend(ext)
 }
 
+// getPodLabelsBase returns the base set of key-values for all pod selectors.
 func getPodLabelsBase(groupID simulations.GroupID, parent *simulations.GroupID) orchestrator.Selector {
 	base := orchestrator.NewSelector(map[string]string{
 		"cloudsim":          "true",

@@ -19,6 +19,7 @@ type Simulation interface {
 	GetMarsupials() []simulations.Marsupial
 }
 
+// IsRobotChildMarsupial
 func IsRobotChildMarsupial(marsupials []simulations.Marsupial, robot simulations.Robot) bool {
 	for _, m := range marsupials {
 		if robot.IsEqual(m.Child()) {

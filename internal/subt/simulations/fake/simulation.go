@@ -28,22 +28,22 @@ type simulation struct {
 	marsupials []simulations.Marsupial
 }
 
-// Token returns the access token of a simulation.
+// GetToken returns the access token of a simulation.
 func (s *simulation) GetToken() *string {
 	return s.token
 }
 
-// Robots return the list of simulations.Robot that will run in the simulation.
+// GetRobots return the list of simulations.Robot that will run in the simulation.
 func (s *simulation) GetRobots() []simulations.Robot {
 	return s.robots
 }
 
-// Marsupials return the list of simulations.Marsupial for the simulation.
+// GetMarsupials return the list of simulations.Marsupial for the simulation.
 func (s *simulation) GetMarsupials() []simulations.Marsupial {
 	return s.marsupials
 }
 
-// Track returns the track of a simulation.
+// GetTrack returns the track of a simulation.
 func (s *simulation) GetTrack() string {
 	return s.track
 }
