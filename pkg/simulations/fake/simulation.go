@@ -22,23 +22,23 @@ func (f *fakeSimulation) IsKind(kind simulations.Kind) bool {
 }
 
 // Image returns the fake simulation's image.
-func (f *fakeSimulation) Image() string {
+func (f *fakeSimulation) GetImage() string {
 	return f.image
 }
 
 // Error returns the fake simulation's error.
 // It returns nil if no error has been set.
-func (f *fakeSimulation) Error() *simulations.Error {
+func (f *fakeSimulation) GetError() *simulations.Error {
 	return f.err
 }
 
 // GroupID returns the fake simulation's group id.
-func (f *fakeSimulation) GroupID() simulations.GroupID {
+func (f *fakeSimulation) GetGroupID() simulations.GroupID {
 	return f.groupID
 }
 
 // Status returns the fake simulation's status.
-func (f *fakeSimulation) Status() simulations.Status {
+func (f *fakeSimulation) GetStatus() simulations.Status {
 	return f.status
 }
 
@@ -48,7 +48,7 @@ func (f *fakeSimulation) SetStatus(status simulations.Status) {
 }
 
 // Kind returns the simulation's kind.
-func (f *fakeSimulation) Kind() simulations.Kind {
+func (f *fakeSimulation) GetKind() simulations.Kind {
 	return f.kind
 }
 

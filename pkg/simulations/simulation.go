@@ -73,27 +73,27 @@ type Error string
 
 // Simulation groups a set of methods to identify a simulation.
 type Simulation interface {
-	// GroupID returns the current simulation's group id.
-	GroupID() GroupID
+	// GetGroupID returns the current simulation's group id.
+	GetGroupID() GroupID
 
-	// Status returns the current simulation's status.
-	Status() Status
+	// GetStatus returns the current simulation's status.
+	GetStatus() Status
 
 	// HasStatus checks if the current simulation has the given status.
 	HasStatus(status Status) bool
 
+	// SetStatus sets a given status to the simulation.
+	SetStatus(status Status)
+
 	// Kind returns the current simulation's kind.
-	Kind() Kind
+	GetKind() Kind
 
 	// IsKind checks if the current simulation is of the given kind.
 	IsKind(Kind) bool
 
 	// Error returns the current simulation's error. It returns nil if the simulation doesn't have an error.
-	Error() *Error
+	GetError() *Error
 
 	// Image returns the simulation's docker image. This image is used as the solution image.
-	Image() string
-
-	// SetStatus sets a given status to the simulation.
-	SetStatus(status Status)
+	GetImage() string
 }

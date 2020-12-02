@@ -25,9 +25,9 @@ func checkSimulationNoError(store actions.Store, tx *gorm.DB, deployment *action
 	input := value.(CheckSimulationNoErrorInput)
 
 	for _, sim := range input {
-		if sim.Error() != nil {
+		if sim.GetError() != nil {
 			return CheckSimulationNoErrorOutput{
-				Error: fmt.Errorf("simulation [%s] with error status [%s]", sim.GroupID(), *sim.Error()),
+				Error: fmt.Errorf("simulation [%s] with error status [%s]", sim.GetGroupID(), *sim.GetError()),
 			}, nil
 		}
 	}
