@@ -92,5 +92,7 @@ type Ignition interface {
 
 	// Region returns the region where to launch a certain simulation.
 	Region() string
+
+	// SecretsName returns the name of the secrets to access credentials for different cloud providers.
 	SecretsName() string
 }
