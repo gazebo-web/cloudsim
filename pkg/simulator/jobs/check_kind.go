@@ -27,5 +27,5 @@ var CheckSimulationKind = &actions.Job{
 // checkSimulationKind is the execution of the CheckSimulationKind job.
 func checkSimulationKind(store actions.Store, tx *gorm.DB, deployment *actions.Deployment, value interface{}) (interface{}, error) {
 	input := value.(CheckSimulationKindInput)
-	return CheckSimulationKindOutput(input.Simulation.Kind() == input.Kind), nil
+	return CheckSimulationKindOutput(input.Simulation.IsKind(input.Kind)), nil
 }
