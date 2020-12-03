@@ -48,6 +48,9 @@ var (
 
 	// StatusWaitingPods is used when a simulation is waiting for pods to be ready.
 	StatusWaitingPods Status = "waiting-pods"
+
+	// StatusTerminateRequested is used when a simulation has been scheduled to be terminated.
+	StatusTerminateRequested Status = "terminate-requested"
 )
 
 // Kind is used to identify if a Simulation is a single simulation or a multisim.
