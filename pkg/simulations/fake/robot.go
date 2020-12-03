@@ -10,6 +10,10 @@ type fakeRobot struct {
 	kind string
 }
 
+func (f fakeRobot) IsEqual(robot simulations.Robot) bool {
+	return f.Name() == robot.Name()
+}
+
 // Name returns the fake robot's name.
 func (f fakeRobot) Name() string {
 	return f.name
