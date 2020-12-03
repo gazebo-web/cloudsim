@@ -2,6 +2,7 @@ package state
 
 import (
 	subtapp "gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/application"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/application"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/cloud"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/platform"
@@ -29,7 +30,11 @@ func (s *StartSimulation) Platform() platform.Platform {
 }
 
 // Services returns the underlying application services.
-func (s *StartSimulation) Services() subtapp.Services {
+func (s *StartSimulation) Services() application.Services {
+	return s.services
+}
+
+func (s *StartSimulation) SpecificServices() subtapp.Services {
 	return s.services
 }
 

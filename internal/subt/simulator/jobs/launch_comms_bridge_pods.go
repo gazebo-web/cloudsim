@@ -36,7 +36,7 @@ func prepareCommsBridgePodInput(store actions.Store, tx *gorm.DB, deployment *ac
 
 	subtSim := sim.(subt.Simulation)
 
-	track, err := s.Services().Tracks().Get(subtSim.GetTrack())
+	track, err := s.SpecificServices().Tracks().Get(subtSim.GetTrack())
 
 	var pods []orchestrator.CreatePodInput
 
@@ -47,9 +47,7 @@ func prepareCommsBridgePodInput(store actions.Store, tx *gorm.DB, deployment *ac
 		}
 
 		hostPath := "/tmp"
-
 		logDirectory := "robot-logs"
-
 		logMountPath := path.Join(hostPath, logDirectory)
 
 		// Create comms bridge input
