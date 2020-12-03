@@ -2,6 +2,7 @@ package jobs
 
 import (
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/simulator/state"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/actions"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/application"
@@ -10,7 +11,7 @@ import (
 	"testing"
 )
 
-func TestCheckSimulationPendingStatus_Success(t *testing.T) {
+func TestCheckSimulationStatus_Success(t *testing.T) {
 	// Initialize simulation
 	gid := simulations.GroupID("aaaa-bbbb-cccc-dddd")
 	sim := fake.NewSimulation(gid, simulations.StatusPending, simulations.SimSingle, nil, "test")
@@ -24,8 +25,15 @@ func TestCheckSimulationPendingStatus_Success(t *testing.T) {
 	input := state.NewStartSimulation(nil, app, gid)
 	s := actions.NewStore(input)
 
-	result, err := CheckSimulationPendingStatus.Run(s, nil, nil, input)
-	assert.NoError(t, err)
+	job := GenerateCheckStatusJob(CheckStatusJobConfig{
+		Name:       "test",
+		Status:     simulations.StatusPending,
+		InputType:  &state.StartSimulation{},
+		OutputType: &state.StartSimulation{},
+	})
+
+	result, err := job.Run(s, nil, nil, input)
+	require.NoError(t, err)
 
 	output, ok := result.(*state.StartSimulation)
 	assert.True(t, ok)
@@ -34,7 +42,7 @@ func TestCheckSimulationPendingStatus_Success(t *testing.T) {
 
 }
 
-func TestCheckSimulationPendingStatus_ErrSimNotPending(t *testing.T) {
+func TestCheckSimulationStatus_ErrSimInvaludStatus(t *testing.T) {
 	// Initialize simulation
 	gid := simulations.GroupID("aaaa-bbbb-cccc-dddd")
 	sim := fake.NewSimulation(gid, simulations.StatusRunning, simulations.SimSingle, nil, "test")
@@ -48,7 +56,14 @@ func TestCheckSimulationPendingStatus_ErrSimNotPending(t *testing.T) {
 	input := state.NewStartSimulation(nil, app, gid)
 	s := actions.NewStore(input)
 
-	_, err := CheckSimulationPendingStatus.Run(s, nil, nil, input)
+	job := GenerateCheckStatusJob(CheckStatusJobConfig{
+		Name:       "test",
+		Status:     simulations.StatusPending,
+		InputType:  &state.StartSimulation{},
+		OutputType: &state.StartSimulation{},
+	})
+
+	_, err := job.Run(s, nil, nil, input)
 	assert.Error(t, err)
 	assert.Equal(t, simulations.ErrIncorrectStatus, err)
 }
