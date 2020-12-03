@@ -6,20 +6,13 @@ import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/platform"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulator/state"
 )
-
-// PlatformGetter has a method to access a platform.Platform implementation.
-type PlatformGetter interface {
-	Platform() platform.Platform
-}
-
-// AppServicesGetter has a method to access an subtapp.Services implementation.
-type AppServicesGetter interface {
-	Services() subtapp.Services
-}
 
 // StartSimulation is the state of the action that starts a simulation.
 type StartSimulation struct {
+	state.PlatformGetter
+	state.ServicesGetter
 	platform             platform.Platform
 	services             subtapp.Services
 	GroupID              simulations.GroupID

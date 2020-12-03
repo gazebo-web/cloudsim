@@ -4,6 +4,7 @@ import (
 	"github.com/jinzhu/gorm"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/actions"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulator/state"
 )
 
 // SetSimulationStatusInput is the input for SetSimulationStatus job.
@@ -12,8 +13,6 @@ type SetSimulationStatusInput struct {
 	GroupID simulations.GroupID
 	// Status is the status that will be assigned to a certain simulation.
 	Status simulations.Status
-	// SetStatus is a function used to set a certain status to the given simulation.
-	SetStatus func(GroupID simulations.GroupID, status simulations.Status) error
 }
 
 // SetSimulationStatusOutput is the output of the SetSimulationStatus job.
@@ -33,7 +32,9 @@ var SetSimulationStatus = &actions.Job{
 func setSimulationStatus(store actions.Store, tx *gorm.DB, deployment *actions.Deployment, value interface{}) (interface{}, error) {
 	input := value.(SetSimulationStatusInput)
 
-	err := input.SetStatus(input.GroupID, input.Status)
+	s := store.State().(state.ServicesGetter)
+
+	err := s.Services().Simulations().UpdateStatus(input.GroupID, input.Status)
 	if err != nil {
 		return nil, err
 	}

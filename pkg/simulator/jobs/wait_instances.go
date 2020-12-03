@@ -33,7 +33,7 @@ func waitForInstances(store actions.Store, tx *gorm.DB, deployment *actions.Depl
 	}
 
 	// Create get platform namespace from state.
-	s := store.State().(state.Platform)
+	s := store.State().(state.PlatformGetter)
 
 	// Wait until machines are OK.
 	err := s.Platform().Machines().WaitOK(waitMachinesOkInputs)

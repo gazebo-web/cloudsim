@@ -38,9 +38,8 @@ func generateSetSimulationStatusInputPreHook(status simulations.Status) actions.
 		s := store.State().(state.AppServicesGetter)
 
 		return jobs.SetSimulationStatusInput{
-			GroupID:   gid,
-			Status:    status,
-			SetStatus: s.Services().Simulations().UpdateStatus,
+			GroupID: gid,
+			Status:  status,
 		}, nil
 	}
 }
