@@ -41,7 +41,7 @@ func prepareFieldComputerPodInput(store actions.Store, tx *gorm.DB, deployment *
 			groupID:                s.GroupID,
 			robotID:                robotID,
 			namespace:              s.Platform().Store().Orchestrator().Namespace(),
-			labels:                 nil,
+			labels:                 subtapp.GetPodLabelsFieldComputer(s.GroupID, s.ParentGroupID).Map(),
 			terminationGracePeriod: s.Platform().Store().Orchestrator().TerminationGracePeriod(),
 			nodeSelector:           subtapp.GetNodeLabelsFieldComputer(s.GroupID, r),
 			containerImage:         subtSim.GetImage(),
