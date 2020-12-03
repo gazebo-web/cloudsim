@@ -57,7 +57,10 @@ func TestLaunchGazeboServerPod(t *testing.T) {
 	})
 
 	// Set up platform using fake store and fake kubernetes component
-	p := platform.NewPlatform(nil, nil, ks, fakeStore)
+	p := platform.NewPlatform(platform.Components{
+		Cluster: ks,
+		Store:   fakeStore,
+	})
 
 	// Initialize generic simulation service
 	simservice := simfake.NewService()
