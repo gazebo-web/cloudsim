@@ -8,12 +8,12 @@ import (
 )
 
 // CreateNetworkPolicyInput is the input for the CreateNetworkPolicy job.
-type CreateNetworkPolicyInput orchestrator.CreateNetworkPolicyInput
+type CreateNetworkPolicyInput []orchestrator.CreateNetworkPolicyInput
 
 // CreateNetworkPolicyOutput is the output of the CreateNetworkPolicy job.
 type CreateNetworkPolicyOutput struct {
 	// Resource is the representation of the network policy source that was created.
-	Resource orchestrator.Resource
+	Resource []orchestrator.Resource
 
 	// Error has a reference to the thrown error when creating a network policy.
 	Error error
@@ -30,11 +30,22 @@ func createNetworkPolicy(store actions.Store, tx *gorm.DB, deployment *actions.D
 
 	input := value.(CreateNetworkPolicyInput)
 
-	createInput := orchestrator.CreateNetworkPolicyInput(input)
-	res, err := s.Platform().Orchestrator().NetworkPolicies().Create(createInput)
+	var resources []orchestrator.Resource
+	for _, in := range input {
+		res, err := s.Platform().Orchestrator().NetworkPolicies().Create(in)
+
+		if err != nil {
+			return CreateNetworkPolicyOutput{
+				Resource: resources,
+				Error:    err,
+			}, nil
+		}
+
+		resources = append(resources, res)
+	}
 
 	return CreateNetworkPolicyOutput{
-		Resource: res,
-		Error:    err,
+		Resource: resources,
+		Error:    nil,
 	}, nil
 }
