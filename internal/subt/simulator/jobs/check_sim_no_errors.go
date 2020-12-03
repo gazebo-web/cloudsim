@@ -47,7 +47,7 @@ func createCheckSimulationNoErrorInput(store actions.Store, tx *gorm.DB, deploym
 	// Add simulation to the next job input.
 	input = append(input, sim)
 
-	// If the simulation isn't parent, trigger the next job.
+	// If the simulation isn't a parent, execute the job.
 	if sim.Kind() != simulations.SimParent {
 		return input, nil
 	}
