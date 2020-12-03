@@ -6,6 +6,7 @@ import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/actions"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulator/jobs"
+	cstate "gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulator/state"
 )
 
 // returnState is an actions.JobFunc implementation that returns the state. It's usually used as a posthook.
@@ -58,7 +59,7 @@ func rollbackPodsCreation(store actions.Store, tx *gorm.DB, deployment *actions.
 		return nil, err
 	}
 
-	s := store.State().(state.PlatformGetter)
+	s := store.State().(cstate.PlatformGetter)
 
 	list := out.([]orchestrator.Resource)
 	for _, pod := range list {
