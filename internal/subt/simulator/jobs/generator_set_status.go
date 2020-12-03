@@ -2,7 +2,6 @@ package jobs
 
 import (
 	"github.com/jinzhu/gorm"
-	"gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/simulator/state"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/actions"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulator/jobs"
@@ -34,8 +33,6 @@ func GenerateSetSimulationStatusJob(config GenerateSetSimulationStatusConfig) *a
 func generateSetSimulationStatusInputPreHook(status simulations.Status) actions.JobFunc {
 	return func(store actions.Store, tx *gorm.DB, deployment *actions.Deployment, value interface{}) (interface{}, error) {
 		gid := value.(simulations.GroupID)
-
-		s := store.State().(state.AppServicesGetter)
 
 		return jobs.SetSimulationStatusInput{
 			GroupID: gid,
