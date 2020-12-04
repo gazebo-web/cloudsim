@@ -32,7 +32,7 @@ func GetPodNameGazeboServer(groupID simulations.GroupID) string {
 }
 
 // GetRobotID returns a robot identification name in the following form:
-// rbtN with N the given id.
+// rbtN with N being the given id.
 func GetRobotID(id int) string {
 	return fmt.Sprintf("%s%d", robotPrefix, id)
 }
