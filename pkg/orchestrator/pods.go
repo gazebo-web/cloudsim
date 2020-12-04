@@ -25,7 +25,7 @@ const (
 type HostPathType corev1.HostPathType
 
 const (
-	// HostPathUnset is used for backwards compatible, leave it empty if unset.
+	// HostPathUnset is used for backwards compatibility, leave it empty if unset.
 	HostPathUnset = HostPathType(corev1.HostPathUnset)
 
 	// HostPathDirectoryOrCreate should be set if nothing exists at the given path, an empty directory will be created
