@@ -27,17 +27,17 @@ func prepareFieldComputerPodInput(store actions.Store, tx *gorm.DB, deployment *
 
 	sim, err := s.Services().Simulations().Get(s.GroupID)
 	if err != nil {
-
+		return nil, err
 	}
 
 	subtSim := sim.(subt.Simulation)
 
-	var pods []orchestrator.CreatePodInput
+	pods := make([]orchestrator.CreatePodInput, len(subtSim.GetRobots()))
 
 	for i, r := range subtSim.GetRobots() {
 		robotID := subtapp.GetRobotID(i)
 		// Create field computer input
-		pods = append(pods, prepareFieldComputerCreatePodInput(configFieldComputerPod{
+		pods[i] = prepareFieldComputerCreatePodInput(configFieldComputerPod{
 			groupID:                s.GroupID,
 			robotID:                robotID,
 			namespace:              s.Platform().Store().Orchestrator().Namespace(),
@@ -47,7 +47,7 @@ func prepareFieldComputerPodInput(store actions.Store, tx *gorm.DB, deployment *
 			containerImage:         subtSim.GetImage(),
 			robotName:              r.Name(),
 			nameservers:            s.Platform().Store().Orchestrator().Nameservers(),
-		}))
+		})
 	}
 
 	return pods, nil
