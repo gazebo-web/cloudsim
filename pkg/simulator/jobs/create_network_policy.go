@@ -30,7 +30,7 @@ func createNetworkPolicies(store actions.Store, tx *gorm.DB, deployment *actions
 
 	input := value.(CreateNetworkPoliciesInput)
 
-	var resources []orchestrator.Resource
+	resources := make([]orchestrator.Resource, 0, len(input))
 	for _, in := range input {
 		res, err := s.Platform().Orchestrator().NetworkPolicies().Create(in)
 
