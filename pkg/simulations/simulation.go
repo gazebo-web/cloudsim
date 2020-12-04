@@ -79,7 +79,7 @@ type Simulation interface {
 	// GetStatus returns the current simulation's status.
 	GetStatus() Status
 
-	// HasStatus checks if the current simulation has the given status.
+	// HasStatus checks if the current simulation has a given status.
 	HasStatus(status Status) bool
 
 	// SetStatus sets a given status to the simulation.
