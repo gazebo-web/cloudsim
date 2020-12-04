@@ -92,6 +92,7 @@ type CreatePodInput struct {
 	// NodeSelector defines the node where the pod should run in.
 	NodeSelector Selector
 	// InitContainers is the list of container that should be created at pod initialization.
+	// InitContainers are launched before Containers, and are typically used to initialize the pod.
 	InitContainers []Container
 	// Containers is the list of containers that should be created inside the pod.
 	Containers []Container

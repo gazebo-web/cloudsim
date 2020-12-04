@@ -40,9 +40,7 @@ func prepareGazeboCreatePodInput(store actions.Store, tx *gorm.DB, deployment *a
 	subtSim := sim.(simulations.Simulation)
 
 	// Get track name
-	trackName := subtSim.GetTrack()
-	app := s.Services().(subtapp.Services)
-	track, err := app.Tracks().Get(trackName)
+	track, err := s.SubTServices().Tracks().Get(subtSim.GetTrack())
 	if err != nil {
 		return nil, err
 	}
