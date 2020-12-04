@@ -39,8 +39,8 @@ func checkWaitError(store actions.Store, tx *gorm.DB, deployment *actions.Deploy
 	return nil, nil
 }
 
-// checkLaunchPodsError is an actions.JobFunc implementation that checks if the value returned by the job that
-// launches pods returns an error.
+// checkLaunchPodsError is an actions.JobFunc implementation meant to be used as a post hook that checks if the value
+// returned by the job that launches pods returns an error.
 func checkLaunchPodsError(store actions.Store, tx *gorm.DB, deployment *actions.Deployment, value interface{}) (interface{}, error) {
 	output := value.(jobs.LaunchPodsOutput)
 	if output.Error == nil {
@@ -53,6 +53,8 @@ func checkLaunchPodsError(store actions.Store, tx *gorm.DB, deployment *actions.
 	return nil, output.Error
 }
 
+// rollbackPodsCreation is an actions.JobErrorHandler implementation meant to be used as rollback handler to delete pods
+// that were initialized in the jobs.LaunchPods job.
 func rollbackPodsCreation(store actions.Store, tx *gorm.DB, deployment *actions.Deployment, value interface{}, thrownError error) (interface{}, error) {
 	out, err := deployment.GetJobData(tx, nil, actions.DeploymentJobData)
 	if err != nil {
