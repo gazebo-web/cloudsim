@@ -103,7 +103,7 @@ func prepareGazeboCreatePodInput(store actions.Store, tx *gorm.DB, deployment *a
 		"XAUTHORITY":       "/tmp/.docker.xauth",
 		"USE_XVFB":         "1",
 		"IGN_RELAY":        s.Platform().Store().Ignition().IP(), // IP Cloudsim
-		"IGN_PARTITION":    s.GroupID.String(),
+		"IGN_PARTITION":    string(s.GroupID),
 		"IGN_VERBOSE":      s.Platform().Store().Ignition().Verbosity(),
 	}
 
