@@ -31,7 +31,7 @@ func prepareCommsBridgePodInput(store actions.Store, tx *gorm.DB, deployment *ac
 
 	sim, err := s.Services().Simulations().Get(s.GroupID)
 	if err != nil {
-
+		return nil, err
 	}
 
 	subtSim := sim.(subt.Simulation)
