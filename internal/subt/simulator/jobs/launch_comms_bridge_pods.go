@@ -20,7 +20,7 @@ var LaunchCommsBridge = jobs.LaunchPods.Extend(actions.Job{
 	Name:            "launch-comms-bridge-pods",
 	PreHooks:        []actions.JobFunc{setStartState, prepareCommsBridgePodInput},
 	PostHooks:       []actions.JobFunc{checkLaunchPodsError, returnState},
-	RollbackHandler: rollbackPodsCreation,
+	RollbackHandler: rollbackPodCreation,
 	InputType:       actions.GetJobDataType(&state.StartSimulation{}),
 	OutputType:      actions.GetJobDataType(&state.StartSimulation{}),
 })

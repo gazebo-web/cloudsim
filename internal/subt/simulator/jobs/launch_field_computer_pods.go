@@ -17,7 +17,7 @@ var LaunchFieldComputers = jobs.LaunchPods.Extend(actions.Job{
 	Name:            "launch-field-computer-pods",
 	PreHooks:        []actions.JobFunc{setStartState, prepareFieldComputerPodInput},
 	PostHooks:       []actions.JobFunc{checkLaunchPodsError, returnState},
-	RollbackHandler: rollbackPodsCreation,
+	RollbackHandler: rollbackPodCreation,
 	InputType:       actions.GetJobDataType(&state.StartSimulation{}),
 	OutputType:      actions.GetJobDataType(&state.StartSimulation{}),
 })
