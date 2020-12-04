@@ -37,6 +37,9 @@ func prepareCommsBridgePodInput(store actions.Store, tx *gorm.DB, deployment *ac
 	subtSim := sim.(subt.Simulation)
 
 	track, err := s.SubTServices().Tracks().Get(subtSim.GetTrack())
+	if err != nil {
+		return nil, err
+	}
 
 	var pods []orchestrator.CreatePodInput
 
