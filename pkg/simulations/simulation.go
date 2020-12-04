@@ -14,8 +14,8 @@ var (
 	// ErrIncorrectKind is returned when a simulation kind is not correct at the time it's being checked.
 	ErrIncorrectKind = errors.New("incorrect kind")
 
-	// ErrParentSimulationWithError is returned when a parent simulation has an error.
-	ErrParentSimulationWithError = errors.New("parent simulation with error")
+	// ErrSimulationWithError is returned when a simulation has an error.
+	ErrSimulationWithError = errors.New("simulation with error")
 )
 
 // GroupID is an universally unique identifier that identifies a Simulation.

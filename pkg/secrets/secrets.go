@@ -12,7 +12,7 @@ type Secret struct {
 	Data map[string][]byte
 }
 
-// Secrets has a set of methods to get kubernetesSecrets for a certain name and namespace.
+// Secrets has a set of methods to get secrets for a certain name and namespace.
 type Secrets interface {
 	Get(ctx context.Context, name, namespace string) (*Secret, error)
 }
