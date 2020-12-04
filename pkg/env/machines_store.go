@@ -107,15 +107,15 @@ func (m *machineEnvStore) SubnetAndZone() (string, string) {
 
 // Tags creates a set of tags for a certain machine using the given simulation, nodeType and nameSuffix.
 func (m *machineEnvStore) Tags(simulation simulations.Simulation, nodeType string, nameSuffix string) []cloud.Tag {
-	name := fmt.Sprintf("%s-%s-%s", m.NamePrefixValue, simulation.GroupID(), nameSuffix)
+	name := fmt.Sprintf("%s-%s-%s", m.NamePrefixValue, simulation.GetGroupID(), nameSuffix)
 	clusterKey := fmt.Sprintf("kubernetes.io/cluster/%s", m.ClusterNameValue)
 	return []cloud.Tag{
 		{
 			Resource: "instance",
 			Map: map[string]string{
 				"Name":                       name,
-				"cloudsim_groupid":           string(simulation.GroupID()),
-				"CloudsimGroupID":            string(simulation.GroupID()),
+				"cloudsim_groupid":           string(simulation.GetGroupID()),
+				"CloudsimGroupID":            string(simulation.GetGroupID()),
 				"project":                    "cloudsim",
 				"Cloudsim":                   "True",
 				"SubT":                       "True",
