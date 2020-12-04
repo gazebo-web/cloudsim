@@ -34,8 +34,8 @@ func (s *StartSimulation) Services() application.Services {
 	return s.services
 }
 
-// SpecificServices returns the subt specific application services.
-func (s *StartSimulation) SpecificServices() subtapp.Services {
+// SubTServices returns the subt specific application services.
+func (s *StartSimulation) SubTServices() subtapp.Services {
 	return s.services
 }
 
