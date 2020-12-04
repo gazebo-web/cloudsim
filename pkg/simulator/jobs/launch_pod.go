@@ -18,7 +18,7 @@ type LaunchPodsOutput struct {
 	Error     error
 }
 
-// LaunchPods is generic to job to launch pods into a cluster.
+// LaunchPods is a generic job to launch pods on a cluster.
 var LaunchPods = &actions.Job{
 	Execute: launchPods,
 }
