@@ -36,15 +36,15 @@ func (v *VirtualServices) Get(name string, namespace string) (orchestrator.Resou
 }
 
 // GetUpstream is used to get the matching upstream for a certain service in the cluster identified by the given selector.
-func (g *VirtualServices) GetUpstream(namespace string, selector orchestrator.Selector) (orchestrator.Resource, error) {
-	g.Logger.Debug(
+func (v *VirtualServices) GetUpstream(namespace string, selector orchestrator.Selector) (orchestrator.Resource, error) {
+	v.Logger.Debug(
 		fmt.Sprintf("Getting upstream on namespace [%s] pointing to the given labels [%s]",
 			namespace, selector.Map()),
 	)
 
-	list, err := g.Client.Upstreams(namespace).List(metav1.ListOptions{LabelSelector: selector.String()})
+	list, err := v.Client.Upstreams(namespace).List(metav1.ListOptions{LabelSelector: selector.String()})
 	if err != nil {
-		g.Logger.Debug(
+		v.Logger.Debug(
 			fmt.Sprintf("Failed to get upstream on namespace [%s] pointing to the given labels [%s]. Error: %s",
 				namespace, selector.Map()),
 		)
