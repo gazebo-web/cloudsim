@@ -48,7 +48,7 @@ func createCheckSimulationNoErrorInput(store actions.Store, tx *gorm.DB, deploym
 	input = append(input, sim)
 
 	// If the simulation isn't a parent, execute the job.
-	if sim.Kind() != simulations.SimParent {
+	if !sim.IsKind(simulations.SimParent) {
 		return input, nil
 	}
 
