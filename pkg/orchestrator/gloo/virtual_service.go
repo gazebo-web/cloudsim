@@ -35,6 +35,7 @@ func (v *VirtualServices) Get(name string, namespace string) (orchestrator.Resou
 	return orchestrator.NewResource(vs.Name, vs.Namespace, s), nil
 }
 
+// GetUpstream is used to get the matching upstream for a certain service in the cluster identified by the given selector.
 func (g *VirtualServices) GetUpstream(namespace string, selector orchestrator.Selector) (orchestrator.Resource, error) {
 	g.Logger.Debug(
 		fmt.Sprintf("Getting upstream on namespace [%s] pointing to the given labels [%s]",
