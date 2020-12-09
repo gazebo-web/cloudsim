@@ -13,7 +13,7 @@ import (
 // VirtualServices is an orchestrator.Ingresses implementation using Gloo.
 // It's in charge of managing Gloo Virtual Services.
 type VirtualServices struct {
-	Client  gloo.GlooV1Client
+	Client  gloo.GlooV1Interface
 	Gateway gateway.GatewayV1Interface
 	Logger  ign.Logger
 }
@@ -63,7 +63,7 @@ func (v *VirtualServices) GetUpstream(namespace string, selector orchestrator.Se
 }
 
 // NewVirtualServices initializes a new orchestrator.Ingresses implementation using Gloo Virtual Services.
-func NewVirtualServices(gw gateway.GatewayV1Interface, logger ign.Logger, client gloo.GlooV1Client) orchestrator.Ingresses {
+func NewVirtualServices(gw gateway.GatewayV1Interface, logger ign.Logger, client gloo.GlooV1Interface) orchestrator.Ingresses {
 	return &VirtualServices{
 		Gateway: gw,
 		Logger:  logger,

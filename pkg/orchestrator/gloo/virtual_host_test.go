@@ -44,7 +44,7 @@ func setupTestVirtualHosts(t *testing.T, regex string) (*gatewayFake.FakeGateway
 	logger := ign.NewLoggerNoRollbar("TestVirtualHosts", ign.VerbosityDebug)
 
 	// Initialize virtual services manager
-	vss := NewVirtualServices(gw, logger)
+	vss := NewVirtualServices(gw, logger, nil)
 
 	// Get the resource associated with the virtual service.
 	res, err := vss.Get(t.Name(), namespace)
