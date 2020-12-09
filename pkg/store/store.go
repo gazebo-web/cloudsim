@@ -71,7 +71,11 @@ type Orchestrator interface {
 
 	// IngressNamespace returns the namespace where the ingress is running.
 	IngressNamespace() string
+
+	// IngressName returns the ingress name used by Gloo.
 	IngressName() string
+
+	// IngressHost returns a FQDN used to route traffic to cloudsim instances.
 	IngressHost() string
 }
 
