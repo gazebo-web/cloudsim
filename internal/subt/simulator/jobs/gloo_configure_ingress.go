@@ -54,6 +54,27 @@ func checkConfigureIngressError(store actions.Store, tx *gorm.DB, deployment *ac
 
 // rollbackGlooIngress is in charge of removing any ingress configuration when there is an error.
 func rollbackGlooIngress(store actions.Store, tx *gorm.DB, dep *actions.Deployment, v interface{}, thrownError error) (interface{}, error) {
+	s := store.State().(*state.StartSimulation)
+
+	name := s.Platform().Store().Orchestrator().IngressName()
+	host := s.Platform().Store().Orchestrator().IngressHost()
+
+	ns := s.Platform().Store().Orchestrator().Namespace()
+
+	resource, err := s.Platform().Orchestrator().Ingresses().Get(name, ns)
+	if err != nil {
+		return nil, err
+	}
+
+	rule, err := s.Platform().Orchestrator().IngressRules().Get(resource, host)
+	if err != nil {
+		return nil, err
+	}
+
+	matcher := gloo.GenerateRegexMatcher(application.GetSimulationIngressPath(s.GroupID))
+	action := gloo.GenerateRouteAction(ns, s.UpstreamName)
+
+	_ = s.Platform().Orchestrator().IngressRules().Remove(rule, gloo.NewPath(s.GroupID.String(), matcher, action))
 
 	return nil, nil
 }
