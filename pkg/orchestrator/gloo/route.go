@@ -63,14 +63,14 @@ func generateRoutes(namespace string, paths []orchestrator.Path) []*gatewayapiv1
 func generateRoute(namespace string, path orchestrator.Path) *gatewayapiv1.Route {
 	return &gatewayapiv1.Route{
 		Matchers: []*matchers.Matcher{
-			GenerateMatcher(path.Address),
+			GenerateRegexMatcher(path.Address),
 		},
 		Action: GenerateRouteAction(namespace, path.Endpoint.Name),
 	}
 }
 
-// GenerateMatcher generates a Regex matcher for the given value.
-func GenerateMatcher(value string) *matchers.Matcher {
+// GenerateRegexMatcher generates a Regex matcher for the given value.
+func GenerateRegexMatcher(value string) *matchers.Matcher {
 	return &matchers.Matcher{
 		PathSpecifier: &matchers.Matcher_Regex{
 			Regex: value,

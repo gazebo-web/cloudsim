@@ -42,7 +42,7 @@ func TestGenerateMatchers(t *testing.T) {
 		},
 	}
 
-	out := GenerateMatcher(addr)
+	out := GenerateRegexMatcher(addr)
 
 	assert.Equal(t, m, out)
 }
@@ -52,12 +52,12 @@ func TestGenerateRoute(t *testing.T) {
 	const namespace string = "default"
 	const endpoint string = "/"
 
-	p := NewPath("test-route", GenerateMatcher(addr), GenerateRouteAction(namespace, endpoint))
+	p := NewPath("test-route", GenerateRegexMatcher(addr), GenerateRouteAction(namespace, endpoint))
 	out := generateRoute(namespace, p)
 
 	r := &gatewayapiv1.Route{
 		Matchers: []*matchers.Matcher{
-			GenerateMatcher(addr),
+			GenerateRegexMatcher(addr),
 		},
 		Action: GenerateRouteAction(namespace, endpoint),
 	}
@@ -70,7 +70,7 @@ func TestGenerateRoutes(t *testing.T) {
 	const namespace string = "default"
 	const endpoint string = "/"
 
-	p := NewPath("test-route", GenerateMatcher(addr), GenerateRouteAction(namespace, endpoint))
+	p := NewPath("test-route", GenerateRegexMatcher(addr), GenerateRouteAction(namespace, endpoint))
 	out := generateRoutes(namespace, []orchestrator.Path{p, p, p})
 
 	exp := []*gatewayapiv1.Route{generateRoute(namespace, p), generateRoute(namespace, p), generateRoute(namespace, p)}
@@ -86,7 +86,7 @@ func TestRoute_ToOutput(t *testing.T) {
 
 	res := orchestrator.NewResource("test", ns, nil)
 
-	p := NewPath("test-route", GenerateMatcher(addr), GenerateRouteAction(ns, endpoint))
+	p := NewPath("test-route", GenerateRegexMatcher(addr), GenerateRouteAction(ns, endpoint))
 	r := NewRule(res, "somehost", []string{"openrobotics.org"}, p)
 
 	vh := &gatewayapiv1.VirtualHost{
