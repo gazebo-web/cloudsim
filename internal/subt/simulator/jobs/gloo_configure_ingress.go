@@ -2,6 +2,7 @@ package jobs
 
 import (
 	"github.com/jinzhu/gorm"
+	"gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/application"
 	"gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/simulator/state"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/actions"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator"
@@ -15,9 +16,9 @@ var ConfigureIngressGloo = jobs.ConfigureIngress.Extend(actions.Job{
 	Name:            "configure-ingress-gloo",
 	PreHooks:        []actions.JobFunc{setStartState, prepareConfigureIngressInputUsingGloo},
 	PostHooks:       []actions.JobFunc{checkConfigureIngressError, returnState},
-	RollbackHandler: nil,
-	InputType:       nil,
-	OutputType:      nil,
+	RollbackHandler: rollbackGlooIngress,
+	InputType:       actions.GetJobDataType(&state.StartSimulation{}),
+	OutputType:      actions.GetJobDataType(&state.StartSimulation{}),
 })
 
 // prepareConfigureIngressInputUsingGloo is a pre-hook for the ConfigureIngressGloo job in charge of configuring the
@@ -30,9 +31,9 @@ func prepareConfigureIngressInputUsingGloo(store actions.Store, tx *gorm.DB, dep
 
 	ns := s.Platform().Store().Orchestrator().Namespace()
 
-	matcher := gloo.GenerateRegexMatcher("")
+	matcher := gloo.GenerateRegexMatcher(application.GetSimulationIngressPath(s.GroupID))
 	action := gloo.GenerateRouteAction(ns, s.UpstreamName)
-	paths := []orchestrator.Path{gloo.NewPath("", matcher, action)}
+	paths := []orchestrator.Path{gloo.NewPath(s.GroupID.String(), matcher, action)}
 
 	return jobs.ConfigureIngressInput{
 		Name:      name,
@@ -48,5 +49,10 @@ func checkConfigureIngressError(store actions.Store, tx *gorm.DB, deployment *ac
 	if out.Error != nil {
 		return nil, out.Error
 	}
+	return nil, nil
+}
+
+// rollbackGlooIngress is in charge of removing any ingress configuration when there is an error.
+func rollbackGlooIngress(store actions.Store, tx *gorm.DB, dep *actions.Deployment, v interface{}, thrownError error) (interface{}, error) {
 	return nil, nil
 }
