@@ -32,7 +32,7 @@ func createWaitRequestForUpstream(store actions.Store, tx *gorm.DB, deployment *
 		if err != nil {
 			return false, err
 		}
-		s.UpstreamName = res.Namespace()
+		s.UpstreamName = res.Name()
 		return true, nil
 	})
 

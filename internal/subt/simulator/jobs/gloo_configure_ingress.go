@@ -54,5 +54,6 @@ func checkConfigureIngressError(store actions.Store, tx *gorm.DB, deployment *ac
 
 // rollbackGlooIngress is in charge of removing any ingress configuration when there is an error.
 func rollbackGlooIngress(store actions.Store, tx *gorm.DB, dep *actions.Deployment, v interface{}, thrownError error) (interface{}, error) {
+
 	return nil, nil
 }
