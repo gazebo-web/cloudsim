@@ -110,13 +110,14 @@ func prepareCreatePodInput(store actions.Store, tx *gorm.DB, deployment *actions
 
 	nameservers := s.Platform().Store().Orchestrator().Nameservers()
 
-	nodeSelector := orchestrator.NewSelector(s.GazeboNodeLabels)
+	nodeSelector := subtapp.GetNodeLabelsGazeboServer(s.GroupID)
+	podLabels := subtapp.GetPodLabelsGazeboServer(s.GroupID, s.ParentGroupID)
 
 	// Create the input for the operation
 	input := orchestrator.CreatePodInput{
 		Name:                          podName,
 		Namespace:                     namespace,
-		Labels:                        s.GazeboServerPodLabels,
+		Labels:                        podLabels.Map(),
 		RestartPolicy:                 orchestrator.RestartPolicyNever,
 		TerminationGracePeriodSeconds: terminationGracePeriod,
 		NodeSelector:                  nodeSelector,

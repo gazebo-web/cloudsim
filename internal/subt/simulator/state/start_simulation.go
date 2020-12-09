@@ -10,19 +10,14 @@ import (
 
 // StartSimulation is the state of the action that starts a simulation.
 type StartSimulation struct {
-	platform                platform.Platform
-	services                application.Services
-	GroupID                 simulations.GroupID
-	GazeboServerPod         orchestrator.Resource
-	CreateMachinesInput     []cloud.CreateMachinesInput
-	CreateMachinesOutput    []cloud.CreateMachinesOutput
-	GazeboNodeLabels        map[string]string
-	FieldComputerNodeLabels map[string]string
-	GazeboServerPodLabels   map[string]string
-	FieldComputerPodLabels  map[string]string
-	CommsBridgePodLabels    map[string]string
-	ServiceLabels           orchestrator.Selector
-	UpstreamName            string
+	platform             platform.Platform
+	services             application.Services
+	GroupID              simulations.GroupID
+	GazeboServerPod      orchestrator.Resource
+	CreateMachinesInput  []cloud.CreateMachinesInput
+	CreateMachinesOutput []cloud.CreateMachinesOutput
+	ParentGroupID        *simulations.GroupID
+	UpstreamName         string
 }
 
 // Platform returns the underlying platform.
