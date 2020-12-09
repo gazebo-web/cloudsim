@@ -33,9 +33,6 @@ type k8s struct {
 
 	// networkPolicies has a reference to an orchestrator.NetworkPolicies implementation.
 	networkPolicies orchestrator.NetworkPolicies
-
-	// extensions has a reference to an orchestrator.Extensions implementation.
-	extensions orchestrator.Extensions
 }
 
 // IngressRules returns the Kubernetes orchestrator.IngressRules implementation.
@@ -68,13 +65,6 @@ func (k *k8s) NetworkPolicies() orchestrator.NetworkPolicies {
 	return k.networkPolicies
 }
 
-func (k *k8s) Extensions() orchestrator.Extensions {
-	if k.extensions == nil {
-		panic("no extensions have been added to the cluster implementation")
-	}
-	return k.extensions
-}
-
 // Config is used to group the inputs for NewCustomKubernetes.
 // It includes all the needed subcomponents for Kubernetes.
 type Config struct {
@@ -84,7 +74,6 @@ type Config struct {
 	IngressRules    orchestrator.IngressRules
 	Services        orchestrator.Services
 	NetworkPolicies orchestrator.NetworkPolicies
-	Extensions      orchestrator.Extensions
 }
 
 // NewCustomKubernetes returns a orchestrator.Cluster implementation using Kubernetes.
@@ -97,7 +86,6 @@ func NewCustomKubernetes(config Config) orchestrator.Cluster {
 		ingressRules:    config.IngressRules,
 		services:        config.Services,
 		networkPolicies: config.NetworkPolicies,
-		extensions:      config.Extensions,
 	}
 }
 
@@ -111,7 +99,6 @@ func NewDefaultKubernetes(api kubernetes.Interface, spdyInit spdy.Initializer, l
 		services:        services.NewServices(api, logger),
 		ingresses:       ingresses.NewIngresses(api, logger),
 		networkPolicies: network.NewNetworkPolicies(api, logger),
-		extensions:      nil,
 	}
 }
 
@@ -126,7 +113,6 @@ func NewFakeKubernetes(logger ign.Logger) orchestrator.Cluster {
 		services:        services.NewServices(api, logger),
 		ingresses:       ingresses.NewIngresses(api, logger),
 		networkPolicies: network.NewNetworkPolicies(api, logger),
-		extensions:      nil,
 	}
 }
 
