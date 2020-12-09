@@ -12,12 +12,11 @@ import (
 
 // WaitUpstream is a job extending the generic jobs.Wait to wait for an upstream to be available.
 var WaitUpstream = jobs.Wait.Extend(actions.Job{
-	Name:            "wait-upstream-gloo",
-	PreHooks:        []actions.JobFunc{setStartState, createWaitRequestForUpstream},
-	PostHooks:       []actions.JobFunc{returnState},
-	RollbackHandler: nil,
-	InputType:       actions.GetJobDataType(&state.StartSimulation{}),
-	OutputType:      actions.GetJobDataType(&state.StartSimulation{}),
+	Name:       "wait-upstream-gloo",
+	PreHooks:   []actions.JobFunc{setStartState, createWaitRequestForUpstream},
+	PostHooks:  []actions.JobFunc{returnState},
+	InputType:  actions.GetJobDataType(&state.StartSimulation{}),
+	OutputType: actions.GetJobDataType(&state.StartSimulation{}),
 })
 
 // createWaitRequestForUpstream is a pre-hook of the specific WaitUpstream job in charge of creating the request for the jobs.Wait job.
