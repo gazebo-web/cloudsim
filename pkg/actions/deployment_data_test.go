@@ -131,15 +131,15 @@ func TestSetDeploymentJobDataAndGetDeploymentJobData(t *testing.T) {
 	testJobData := dsdtd.createTestData(789, "job", true, 987, "jobPtr", false)
 
 	// Create the job data entries
-	require.NoError(t, setDeploymentData(tr.db, deployment, &td.jobName1, deploymentJobInput, testInputData))
-	require.NoError(t, setDeploymentData(tr.db, deployment, &td.jobName1, deploymentJobData, testJobData))
-	require.NoError(t, setDeploymentData(tr.db, deployment, &td.jobName2, deploymentJobData, nil))
+	require.NoError(t, setDeploymentData(tr.db, deployment, &td.jobName1, DeploymentJobInput, testInputData))
+	require.NoError(t, setDeploymentData(tr.db, deployment, &td.jobName1, DeploymentJobData, testJobData))
+	require.NoError(t, setDeploymentData(tr.db, deployment, &td.jobName2, DeploymentJobData, nil))
 	// Check that two entries have been created
 	assert.Equal(t, 3, dsdtd.getJobDataCount(t, tr.db, deployment))
 
 	// Update an existing job data entry
 	testInputData = dsdtd.createTestData(111, "modifiedInput", true, 999, "modifiedPtr", false)
-	require.NoError(t, setDeploymentData(tr.db, deployment, &td.jobName1, deploymentJobInput, testInputData))
+	require.NoError(t, setDeploymentData(tr.db, deployment, &td.jobName1, DeploymentJobInput, testInputData))
 	// Check that the number of entries remains the same
 	assert.Equal(t, 3, dsdtd.getJobDataCount(t, tr.db, deployment))
 
@@ -150,9 +150,9 @@ func TestSetDeploymentJobDataAndGetDeploymentJobData(t *testing.T) {
 		dbJobData := out.(DeploymentJobDataTestStruct)
 		require.Equal(t, dsdtd.marshallJSON(t, expected), dsdtd.marshallJSON(t, dbJobData))
 	}
-	compareWithDB(td.jobName1, deploymentJobInput, testInputData)
-	compareWithDB(td.jobName1, deploymentJobData, testJobData)
+	compareWithDB(td.jobName1, DeploymentJobInput, testInputData)
+	compareWithDB(td.jobName1, DeploymentJobData, testJobData)
 	// Check that the job with null data returns an error
-	_, err = getDeploymentData(tr.db, deployment, &td.jobName2, deploymentJobData)
+	_, err = getDeploymentData(tr.db, deployment, &td.jobName2, DeploymentJobData)
 	require.Equal(t, ErrDeploymentDataNoData, err)
 }

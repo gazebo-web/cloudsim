@@ -11,11 +11,11 @@ import (
 type deploymentDataType string
 
 const (
-	// deploymentJobInput entries contain the data used as input for the job.
-	deploymentJobInput = deploymentDataType("input")
-	// deploymentJobData entries contain data stored by a job for future use.
+	// DeploymentJobInput entries contain the data used as input for the job.
+	DeploymentJobInput = deploymentDataType("input")
+	// DeploymentJobData entries contain data stored by a job for future use.
 	// This data is used by jobs to handle errors and rollback.
-	deploymentJobData = deploymentDataType("job")
+	DeploymentJobData = deploymentDataType("job")
 )
 
 var (

@@ -104,7 +104,7 @@ func (d *Deployment) setJob(tx *gorm.DB, job string, inputData interface{}) erro
 
 	// Set the job's input data
 	if inputData != nil {
-		if err := d.SetJobData(tx, &job, deploymentJobInput, inputData); err != nil {
+		if err := d.SetJobData(tx, &job, DeploymentJobInput, inputData); err != nil {
 			return err
 		}
 	}
