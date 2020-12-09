@@ -138,14 +138,19 @@ test:
     - *setup_modules
     - *setup_git_credentials
     - *setup_db
+    - go install github.com/jstemmer/go-junit-report
   script:
-    - go test -v -failfast $(go list ./...)
+    - go test -v  2>&1 | $GOPATH/bin/go-junit-report -set-exit-code > report.xml
   services:
     - mysql:5.7
   environment:
     name: testing
   tags:
     - gitlab-org
+  artifacts:
+    when: always
+    reports:
+      junit: report.xml
 
 race:
   stage: test
