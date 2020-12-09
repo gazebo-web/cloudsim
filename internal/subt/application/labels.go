@@ -23,18 +23,27 @@ const (
 
 // GetNodeLabelsFieldComputer returns a selector that identifies a field computer node.
 func GetNodeLabelsFieldComputer(groupID simulations.GroupID, robot simulations.Robot) orchestrator.Selector {
-	return orchestrator.NewSelector(map[string]string{
-		labelGroupID:       groupID.String(),
+	base := GetNodeLabelsBase(groupID)
+
+	return base.Extend(orchestrator.NewSelector(map[string]string{
 		labelFieldComputer: "true",
 		labelRobotName:     strings.ToLower(robot.Name()),
-	})
+	}))
 }
 
 // GetNodeLabelsGazeboServer returns a selector that identifies a gazebo node.
 func GetNodeLabelsGazeboServer(groupID simulations.GroupID) orchestrator.Selector {
-	return orchestrator.NewSelector(map[string]string{
-		labelGroupID:      groupID.String(),
+	base := GetNodeLabelsBase(groupID)
+
+	return base.Extend(orchestrator.NewSelector(map[string]string{
 		labelGazeboServer: "true",
+	}))
+}
+
+// GetNodeLabelsBase returns the base labels to identify a simulation's node.
+func GetNodeLabelsBase(groupID simulations.GroupID) orchestrator.Selector {
+	return orchestrator.NewSelector(map[string]string{
+		labelGroupID: groupID.String(),
 	})
 }
 
