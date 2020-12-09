@@ -95,14 +95,14 @@ func setParentGroupIDLabels(store actions.Store, tx *gorm.DB, deployment *action
 		return nil, err
 	}
 
-	if sim.Kind() == simulations.SimChild {
+	if sim.GetKind() == simulations.SimChild {
 		parent, err := s.Services().Simulations().GetParent(s.GroupID)
 		if err != nil {
 			return nil, err
 		}
-		s.GazeboServerPodLabels["parent-group-id"] = string(parent.GroupID())
-		s.FieldComputerPodLabels["parent-group-id"] = string(parent.GroupID())
-		s.CommsBridgePodLabels["parent-group-id"] = string(parent.GroupID())
+		s.GazeboServerPodLabels["parent-group-id"] = string(parent.GetGroupID())
+		s.FieldComputerPodLabels["parent-group-id"] = string(parent.GetGroupID())
+		s.CommsBridgePodLabels["parent-group-id"] = string(parent.GetGroupID())
 	}
 
 	return s, nil

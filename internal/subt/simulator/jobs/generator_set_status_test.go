@@ -40,6 +40,6 @@ func TestGenerateSetSimulationStatusJob(t *testing.T) {
 	_, err := job.Run(s, nil, nil, initialState)
 
 	assert.NoError(t, err)
-	assert.Equal(t, simulations.StatusRunning, sim.Status())
+	assert.Equal(t, simulations.StatusRunning, sim.GetStatus())
 
 }

@@ -26,6 +26,6 @@ var CheckSimulationStatus = &actions.Job{
 // checkSimulationStatus is the execute function of the CheckSimulationStatus job.
 func checkSimulationStatus(store actions.Store, tx *gorm.DB, deployment *actions.Deployment, value interface{}) (interface{}, error) {
 	input := value.(CheckSimulationStatusInput)
-	output := CheckSimulationStatusOutput(input.Simulation.Status() == input.Status)
+	output := CheckSimulationStatusOutput(input.Simulation.HasStatus(input.Status))
 	return output, nil
 }

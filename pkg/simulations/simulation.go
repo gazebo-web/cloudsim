@@ -14,12 +14,17 @@ var (
 	// ErrIncorrectKind is returned when a simulation kind is not correct at the time it's being checked.
 	ErrIncorrectKind = errors.New("incorrect kind")
 
-	// ErrParentSimulationWithError is returned when a parent simulation has an error.
-	ErrParentSimulationWithError = errors.New("parent simulation with error")
+	// ErrSimulationWithError is returned when a simulation has an error.
+	ErrSimulationWithError = errors.New("simulation with error")
 )
 
 // GroupID is an universally unique identifier that identifies a Simulation.
 type GroupID string
+
+// String returns the string representation of a GroupID.
+func (gid GroupID) String() string {
+	return string(gid)
+}
 
 // Status represents a stage a Simulation can be in.
 type Status string
@@ -48,6 +53,9 @@ var (
 
 	// StatusWaitingPods is used when a simulation is waiting for pods to be ready.
 	StatusWaitingPods Status = "waiting-pods"
+
+	// StatusTerminateRequested is used when a simulation has been scheduled to be terminated.
+	StatusTerminateRequested Status = "terminate-requested"
 )
 
 // Kind is used to identify if a Simulation is a single simulation or a multisim.
@@ -69,21 +77,27 @@ type Error string
 
 // Simulation groups a set of methods to identify a simulation.
 type Simulation interface {
-	// GroupID returns the current simulation's group id.
-	GroupID() GroupID
+	// GetGroupID returns the current simulation's group id.
+	GetGroupID() GroupID
 
-	// Status returns the current simulation's status.
-	Status() Status
+	// GetStatus returns the current simulation's status.
+	GetStatus() Status
 
-	// Kind returns the current simulation's kind.
-	Kind() Kind
-
-	// Error returns the current simulation's error. It returns nil if the simulation doesn't have an error.
-	Error() *Error
-
-	// Image returns the simulation's docker image. This image is used as the solution image.
-	Image() string
+	// HasStatus checks if the current simulation has the given status.
+	HasStatus(status Status) bool
 
 	// SetStatus sets a given status to the simulation.
 	SetStatus(status Status)
+
+	// Kind returns the current simulation's kind.
+	GetKind() Kind
+
+	// IsKind checks if the current simulation is of the given kind.
+	IsKind(Kind) bool
+
+	// Error returns the current simulation's error. It returns nil if the simulation doesn't have an error.
+	GetError() *Error
+
+	// Image returns the simulation's docker image. This image is used as the solution image.
+	GetImage() string
 }
