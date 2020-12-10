@@ -22,29 +22,17 @@ const (
 
 // LaunchConfig includes the information to create the launch command arguments needed to launch gazebo server.
 type LaunchConfig struct {
-	// Worlds is a slice of gazebo worlds with parameters.
-	// Worlds should have a length >= 1.
+	// World is a gazebo world with parameters.
 	// Example:
-	// 		[
-	//			"tunnel_circuit_practice.ign;worldName:=tunnel_circuit_practice_01",
-	//			"tunnel_circuit_practice.ign;worldName:=tunnel_circuit_practice_02",
-	//		]
-	Worlds []string
-
-	// WorldIndex defines which world should be used from Worlds.
-	// If no WorldIndex is provided, the first (Worlds[0]) world will be used instead.
-	WorldIndex *int
+	// 	"tunnel_circuit_practice.ign;worldName:=tunnel_circuit_practice_01"
+	World string
 
 	// WorldMaxSimSeconds is the total amount of seconds that a simulation can run.
 	WorldMaxSimSeconds time.Duration
 
-	// Seeds are used to randomly generate worlds.
-	// If no seeds are provided, gazebo will generate its own seeds.
-	// If seeds are provided, RunIndex should be provided as well.
-	Seeds []int
-
-	// RunIndex defines what seed should be used from the Seeds slice.
-	RunIndex *int
+	// Seed is used to randomly generate a world.
+	// If no seed is provided, gazebo will generate its own seed.
+	Seed *int
 
 	// AuthorizationToken has the token used for the gazebo websocket server.
 	AuthorizationToken *string
@@ -66,10 +54,7 @@ type LaunchConfig struct {
 
 // Generate generates the needed arguments to initialize Gazebo server.
 func Generate(params LaunchConfig) []string {
-	launchWorldName := params.Worlds[0]
-	if params.WorldIndex != nil {
-		launchWorldName = params.Worlds[*params.WorldIndex]
-	}
+	launchWorldName := params.World
 
 	// We split by ";" (semicolon), in case the configured worldToLaunch string has arguments.
 	// eg. 'tunnel_circuit_practice.ign;worldName:=tunnel_circuit_practice_01'
@@ -82,14 +67,9 @@ func Generate(params LaunchConfig) []string {
 	// Set headless
 	cmd = append(cmd, fmt.Sprintf("%s:=%s", keyHeadless, "true"))
 
-	// Get the Seed for this run
-	if len(params.Seeds) > 0 {
-		seed := params.Seeds[0]
-		if params.RunIndex != nil {
-			seed = params.Seeds[*params.RunIndex]
-		}
-
-		cmd = append(cmd, fmt.Sprintf("%s:=%d", keySeed, seed))
+	// Set the Seed for this run
+	if params.Seed != nil {
+		cmd = append(cmd, fmt.Sprintf("%s:=%d", keySeed, *params.Seed))
 	}
 
 	// Set the authorization token if it exists

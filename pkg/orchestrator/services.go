@@ -26,7 +26,7 @@ type CreateServiceInput struct {
 // Services groups a set of methods for managing services like Load Balancers.
 // services are usually used to abstract a group of pods behind a single endpoint.
 type Services interface {
-	Create(input CreateServiceInput) error
+	Create(input CreateServiceInput) (Resource, error)
 	Get(name, namespace string) (Resource, error)
 	GetAllBySelector(namespace string, selector Selector) ([]Resource, error)
 	Remove(resource Resource) error

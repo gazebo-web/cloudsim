@@ -13,29 +13,44 @@ type fakeSimulation struct {
 	image   string
 }
 
-// Image returns the fake simulation's image.
-func (f fakeSimulation) Image() string {
+// HasStatus returns true if the given status matches with the current status.
+func (f *fakeSimulation) HasStatus(status simulations.Status) bool {
+	return f.status == status
+}
+
+// IsKind returns true if the given kind matches with the current kind.
+func (f *fakeSimulation) IsKind(kind simulations.Kind) bool {
+	return f.kind == kind
+}
+
+// GetImage returns the fake simulation's image.
+func (f *fakeSimulation) GetImage() string {
 	return f.image
 }
 
-// Error returns the fake simulation's error.
+// GetError returns the fake simulation's error.
 // It returns nil if no error has been set.
-func (f fakeSimulation) Error() *simulations.Error {
+func (f *fakeSimulation) GetError() *simulations.Error {
 	return f.err
 }
 
-// GroupID returns the fake simulation's group id.
-func (f fakeSimulation) GroupID() simulations.GroupID {
+// GetGroupID returns the fake simulation's group id.
+func (f *fakeSimulation) GetGroupID() simulations.GroupID {
 	return f.groupID
 }
 
-// Status returns the fake simulation's status.
-func (f fakeSimulation) Status() simulations.Status {
+// GetStatus returns the fake simulation's status.
+func (f *fakeSimulation) GetStatus() simulations.Status {
 	return f.status
 }
 
-// Kind returns the simulation's kind.
-func (f fakeSimulation) Kind() simulations.Kind {
+// SetStatus sets the fake simulation's status to the given status.
+func (f *fakeSimulation) SetStatus(status simulations.Status) {
+	f.status = status
+}
+
+// GetKind returns the simulation's kind.
+func (f *fakeSimulation) GetKind() simulations.Kind {
 	return f.kind
 }
 

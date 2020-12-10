@@ -7,34 +7,45 @@ import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulator/state"
 )
 
-// CreateNetworkPolicyInput is the input for the CreateNetworkPolicy job.
-type CreateNetworkPolicyInput orchestrator.CreateNetworkPolicyInput
+// CreateNetworkPoliciesInput is the input for the CreateNetworkPolicies job.
+type CreateNetworkPoliciesInput []orchestrator.CreateNetworkPolicyInput
 
-// CreateNetworkPolicyOutput is the output of the CreateNetworkPolicy job.
-type CreateNetworkPolicyOutput struct {
-	// Resource is the representation of the network policy source that was created.
-	Resource orchestrator.Resource
+// CreateNetworkPoliciesOutput is the output of the CreateNetworkPolicies job.
+type CreateNetworkPoliciesOutput struct {
+	// Resource is the representation of the network policies that were created.
+	Resource []orchestrator.Resource
 
-	// Error has a reference to the thrown error when creating a network policy.
+	// Error has a reference to the latest error thrown when creating the network policies.
 	Error error
 }
 
-// CreateNetworkPolicy is a generic job to be used to create network policies.
-var CreateNetworkPolicy = &actions.Job{
-	Execute: createNetworkPolicy,
+// CreateNetworkPolicies is a generic job to be used to create network policies.
+var CreateNetworkPolicies = &actions.Job{
+	Execute: createNetworkPolicies,
 }
 
-// createNetworkPolicy is used by the CreateNetworkPolicy job as the execute function.
-func createNetworkPolicy(store actions.Store, tx *gorm.DB, deployment *actions.Deployment, value interface{}) (interface{}, error) {
+// createNetworkPolicies is used by the CreateNetworkPolicies job as the execute function.
+func createNetworkPolicies(store actions.Store, tx *gorm.DB, deployment *actions.Deployment, value interface{}) (interface{}, error) {
 	s := store.State().(state.Platform)
 
-	input := value.(CreateNetworkPolicyInput)
+	input := value.(CreateNetworkPoliciesInput)
 
-	createInput := orchestrator.CreateNetworkPolicyInput(input)
-	res, err := s.Platform().Orchestrator().NetworkPolicies().Create(createInput)
+	resources := make([]orchestrator.Resource, 0, len(input))
+	for _, in := range input {
+		res, err := s.Platform().Orchestrator().NetworkPolicies().Create(in)
 
-	return CreateNetworkPolicyOutput{
-		Resource: res,
-		Error:    err,
+		if err != nil {
+			return CreateNetworkPoliciesOutput{
+				Resource: resources,
+				Error:    err,
+			}, nil
+		}
+
+		resources = append(resources, res)
+	}
+
+	return CreateNetworkPoliciesOutput{
+		Resource: resources,
+		Error:    nil,
 	}, nil
 }
