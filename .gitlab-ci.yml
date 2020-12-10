@@ -138,14 +138,19 @@ test:
     - *setup_modules
     - *setup_git_credentials
     - *setup_db
+    - go install github.com/jstemmer/go-junit-report
   script:
-    - go test $(go list ./...)
+    - go test -v  2>&1 | $GOPATH/bin/go-junit-report -set-exit-code > report.xml
   services:
     - mysql:5.7
   environment:
     name: testing
   tags:
     - gitlab-org
+  artifacts:
+    when: always
+    reports:
+      junit: report.xml
 
 race:
   stage: test
@@ -157,7 +162,7 @@ race:
     - *setup_git_credentials
     - *setup_db
   script:
-    - go test -race $(go list ./...)
+    - go test -v -failfast -race $(go list ./...)
   services:
     - mysql:5.7
   environment:
@@ -176,7 +181,7 @@ coverage:
     - *setup_git_credentials
     - *setup_db
   script:
-    - go test -covermode=atomic -coverprofile=coverage.tx ./...
+    - go test -v -failfast -covermode=atomic -coverprofile=coverage.tx  $(go list ./...)
     - go tool cover -func=coverage.tx
     - bash <(curl -s https://codecov.io/bash)
   services:

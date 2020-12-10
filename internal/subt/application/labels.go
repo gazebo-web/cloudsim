@@ -6,20 +6,44 @@ import (
 	"strings"
 )
 
+const (
+	labelGroupID             = "cloudsim_groupid"
+	labelPodGroupID          = "cloudsim-group-id"
+	labelParentGroupID       = "parent-group-id"
+	labelFieldComputer       = "field-computer"
+	labelRobotName           = "robot_name"
+	labelGazeboServer        = "gzserver"
+	labelCommsBridge         = "comms-bridge"
+	labelCommsBridgeForRobot = "comms-for-robot"
+	labelCopyS3              = "copy-to-s3"
+	labelCopyForRobot        = "copy-for-robot"
+	labelCloudsim            = "cloudsim"
+	labelSubT                = "SubT"
+)
+
 // GetNodeLabelsFieldComputer returns a selector that identifies a field computer node.
 func GetNodeLabelsFieldComputer(groupID simulations.GroupID, robot simulations.Robot) orchestrator.Selector {
-	return orchestrator.NewSelector(map[string]string{
-		"cloudsim_groupid": groupID.String(),
-		"field-computer":   "true",
-		"robot_name":       strings.ToLower(robot.Name()),
-	})
+	base := GetNodeLabelsBase(groupID)
+
+	return base.Extend(orchestrator.NewSelector(map[string]string{
+		labelFieldComputer: "true",
+		labelRobotName:     strings.ToLower(robot.Name()),
+	}))
 }
 
 // GetNodeLabelsGazeboServer returns a selector that identifies a gazebo node.
 func GetNodeLabelsGazeboServer(groupID simulations.GroupID) orchestrator.Selector {
+	base := GetNodeLabelsBase(groupID)
+
+	return base.Extend(orchestrator.NewSelector(map[string]string{
+		labelGazeboServer: "true",
+	}))
+}
+
+// GetNodeLabelsBase returns the base labels to identify a simulation's node.
+func GetNodeLabelsBase(groupID simulations.GroupID) orchestrator.Selector {
 	return orchestrator.NewSelector(map[string]string{
-		"cloudsim_groupid": groupID.String(),
-		"gzserver":         "true",
+		labelGroupID: groupID.String(),
 	})
 }
 
@@ -27,7 +51,7 @@ func GetNodeLabelsGazeboServer(groupID simulations.GroupID) orchestrator.Selecto
 func GetPodLabelsFieldComputer(groupID simulations.GroupID, parent *simulations.GroupID) orchestrator.Selector {
 	base := getPodLabelsBase(groupID, parent)
 	ext := orchestrator.NewSelector(map[string]string{
-		"field-computer": "true",
+		labelFieldComputer: "true",
 	})
 	return base.Extend(ext)
 }
@@ -36,8 +60,8 @@ func GetPodLabelsFieldComputer(groupID simulations.GroupID, parent *simulations.
 func GetPodLabelsCommsBridge(groupID simulations.GroupID, parent *simulations.GroupID, robot simulations.Robot) orchestrator.Selector {
 	base := getPodLabelsBase(groupID, parent)
 	ext := orchestrator.NewSelector(map[string]string{
-		"comms-bridge":    "true",
-		"comms-for-robot": strings.ToLower(robot.Name()),
+		labelCommsBridge:         "true",
+		labelCommsBridgeForRobot: strings.ToLower(robot.Name()),
 	})
 	return base.Extend(ext)
 }
@@ -46,8 +70,8 @@ func GetPodLabelsCommsBridge(groupID simulations.GroupID, parent *simulations.Gr
 func GetPodLabelsCommsBridgeCopy(groupID simulations.GroupID, parent *simulations.GroupID, robot simulations.Robot) orchestrator.Selector {
 	base := getPodLabelsBase(groupID, parent)
 	ext := orchestrator.NewSelector(map[string]string{
-		"copy-to-s3":     "true",
-		"copy-for-robot": strings.ToLower(robot.Name()),
+		labelCopyS3:       "true",
+		labelCopyForRobot: strings.ToLower(robot.Name()),
 	})
 	return base.Extend(ext)
 }
@@ -56,7 +80,7 @@ func GetPodLabelsCommsBridgeCopy(groupID simulations.GroupID, parent *simulation
 func GetPodLabelsGazeboServer(groupID simulations.GroupID, parent *simulations.GroupID) orchestrator.Selector {
 	base := getPodLabelsBase(groupID, parent)
 	ext := orchestrator.NewSelector(map[string]string{
-		"gzserver": "true",
+		labelGazeboServer: "true",
 	})
 	return base.Extend(ext)
 }
@@ -64,13 +88,13 @@ func GetPodLabelsGazeboServer(groupID simulations.GroupID, parent *simulations.G
 // getPodLabelsBase returns the base set of key-values for all pod selectors.
 func getPodLabelsBase(groupID simulations.GroupID, parent *simulations.GroupID) orchestrator.Selector {
 	base := orchestrator.NewSelector(map[string]string{
-		"cloudsim":          "true",
-		"SubT":              "true",
-		"cloudsim-group-id": groupID.String(),
+		labelCloudsim:   "true",
+		labelSubT:       "true",
+		labelPodGroupID: groupID.String(),
 	})
 
 	if parent != nil {
-		base.Set("parent-group-id", parent.String())
+		base.Set(labelParentGroupID, parent.String())
 	}
 
 	return base

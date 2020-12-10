@@ -347,13 +347,13 @@ func TestProcessJobs(t *testing.T) {
 		require.Equal(t, std.getJobDataCount(t, tr.db, deployment), jobCount*2)
 
 		// Job 1
-		checkJobData(t, tr, deployment, td.jobName1, deploymentJobInput, &std.job1InputData)
+		checkJobData(t, tr, deployment, td.jobName1, DeploymentJobInput, &std.job1InputData)
 		checkJobData(t, tr, deployment, td.jobName1, DeploymentJobData, &std.job1JobData)
 		// Job 2
-		checkJobData(t, tr, deployment, td.jobName2, deploymentJobInput, &std.job2InputData)
+		checkJobData(t, tr, deployment, td.jobName2, DeploymentJobInput, &std.job2InputData)
 		checkJobData(t, tr, deployment, td.jobName2, DeploymentJobData, &std.job2JobData)
 		// Job 3
-		checkJobData(t, tr, deployment, td.jobName3, deploymentJobInput, &std.job3InputData)
+		checkJobData(t, tr, deployment, td.jobName3, DeploymentJobInput, &std.job3InputData)
 		checkJobData(t, tr, deployment, td.jobName3, DeploymentJobData, &std.job3JobData)
 	}
 
@@ -380,9 +380,9 @@ func TestProcessJobs(t *testing.T) {
 		}
 
 		// Set job data
-		require.NoError(t, deployment.SetJobData(tr.db, &td.jobName1, deploymentJobInput, &std.job1InputData))
+		require.NoError(t, deployment.SetJobData(tr.db, &td.jobName1, DeploymentJobInput, &std.job1InputData))
 		require.NoError(t, deployment.SetJobData(tr.db, &td.jobName1, DeploymentJobData, &std.job1JobData))
-		require.NoError(t, deployment.SetJobData(tr.db, &td.jobName2, deploymentJobInput, &std.job2InputData))
+		require.NoError(t, deployment.SetJobData(tr.db, &td.jobName2, DeploymentJobInput, &std.job2InputData))
 
 		input, err := std.processJobs(t, tr, service, executeInput, nil, jobs)
 		require.NoError(t, err)
@@ -529,13 +529,13 @@ func testServiceValidateExecute(t *testing.T, db *gorm.DB, deployment *Deploymen
 		require.Equal(t, *inputData, *out.(*ServiceTestStruct))
 	}
 	// Job 1
-	checkJobData(t, db, deployment, td.jobName1, deploymentJobInput, &std.job1InputData)
+	checkJobData(t, db, deployment, td.jobName1, DeploymentJobInput, &std.job1InputData)
 	checkJobData(t, db, deployment, td.jobName1, DeploymentJobData, &std.job1JobData)
 	// Job 2
-	checkJobData(t, db, deployment, td.jobName2, deploymentJobInput, &std.job2InputData)
+	checkJobData(t, db, deployment, td.jobName2, DeploymentJobInput, &std.job2InputData)
 	checkJobData(t, db, deployment, td.jobName2, DeploymentJobData, &std.job2JobData)
 	// Job 3
-	checkJobData(t, db, deployment, td.jobName3, deploymentJobInput, &std.job3InputData)
+	checkJobData(t, db, deployment, td.jobName3, DeploymentJobInput, &std.job3InputData)
 	checkJobData(t, db, deployment, td.jobName3, DeploymentJobData, &std.job3JobData)
 
 	// Check that the deployment is marked as finished
@@ -561,13 +561,13 @@ func testServiceValidateRollbackExecute(t *testing.T, db *gorm.DB, deployment *D
 		require.Equal(t, *inputData, *out.(*ServiceTestStruct))
 	}
 	// Job 1
-	checkJobData(t, db, deployment, td.jobName1, deploymentJobInput, &std.job1InputData)
+	checkJobData(t, db, deployment, td.jobName1, DeploymentJobInput, &std.job1InputData)
 	checkJobData(t, db, deployment, td.jobName1, DeploymentJobData, &std.jobRollbackJobData)
 	// Job 2
-	checkJobData(t, db, deployment, td.jobName2, deploymentJobInput, &std.job2InputData)
+	checkJobData(t, db, deployment, td.jobName2, DeploymentJobInput, &std.job2InputData)
 	checkJobData(t, db, deployment, td.jobName2, DeploymentJobData, &std.job2JobData)
 	// Job 3
-	checkJobData(t, db, deployment, td.jobName3, deploymentJobInput, &std.job3InputData)
+	checkJobData(t, db, deployment, td.jobName3, DeploymentJobInput, &std.job3InputData)
 	checkJobData(t, db, deployment, td.jobName3, DeploymentJobData, &std.jobRollbackJobData)
 
 	// Check that the deployment is marked as finished
@@ -665,9 +665,9 @@ func TestExecuteResumeAction(t *testing.T) {
 
 	// Create job data and update the deployment to start at the second job
 	deployment := executeInput.getDeployment()
-	require.NoError(t, deployment.SetJobData(tr.db, &td.jobName1, deploymentJobInput, &std.job1InputData))
+	require.NoError(t, deployment.SetJobData(tr.db, &td.jobName1, DeploymentJobInput, &std.job1InputData))
 	require.NoError(t, deployment.SetJobData(tr.db, &td.jobName1, DeploymentJobData, &std.job1JobData))
-	require.NoError(t, deployment.SetJobData(tr.db, &td.jobName2, deploymentJobInput, &std.job2InputData))
+	require.NoError(t, deployment.SetJobData(tr.db, &td.jobName2, DeploymentJobInput, &std.job2InputData))
 	require.NoError(t, deployment.setJob(tr.db, td.jobName2, nil))
 
 	deployment = std.execute(t, tr.store, tr.db, service, jobs, executeInput, nil, false)
@@ -744,11 +744,11 @@ func TestExecuteResumeRollback(t *testing.T) {
 	require.NoError(t, deployment.setJob(tr.db, td.jobName1, nil))
 	require.NoError(t, deployment.setRollbackStatus(tr.db, std.errRollback))
 	// Job data
-	require.NoError(t, deployment.SetJobData(tr.db, &td.jobName1, deploymentJobInput, &std.job1InputData))
+	require.NoError(t, deployment.SetJobData(tr.db, &td.jobName1, DeploymentJobInput, &std.job1InputData))
 	require.NoError(t, deployment.SetJobData(tr.db, &td.jobName1, DeploymentJobData, &std.job1JobData))
-	require.NoError(t, deployment.SetJobData(tr.db, &td.jobName2, deploymentJobInput, &std.job2InputData))
+	require.NoError(t, deployment.SetJobData(tr.db, &td.jobName2, DeploymentJobInput, &std.job2InputData))
 	require.NoError(t, deployment.SetJobData(tr.db, &td.jobName2, DeploymentJobData, &std.job2JobData))
-	require.NoError(t, deployment.SetJobData(tr.db, &td.jobName3, deploymentJobInput, &std.job3InputData))
+	require.NoError(t, deployment.SetJobData(tr.db, &td.jobName3, DeploymentJobInput, &std.job3InputData))
 	require.NoError(t, deployment.SetJobData(tr.db, &td.jobName3, DeploymentJobData, &std.job3JobData))
 	// Job errors
 	require.NoError(t, deployment.addJobError(tr.db, &td.jobName3, std.errExecute))

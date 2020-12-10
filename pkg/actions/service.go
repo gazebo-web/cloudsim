@@ -180,7 +180,7 @@ func (s *service) processJobs(store Store, tx *gorm.DB, action *Action, executeI
 
 	// If the executeInput is not new, get the jobInput from persistent storage
 	if !executeInput.isNew() {
-		if jobInput, err = deployment.GetJobData(tx, &deployment.CurrentJob, deploymentJobInput); err != nil {
+		if jobInput, err = deployment.GetJobData(tx, &deployment.CurrentJob, DeploymentJobInput); err != nil {
 			return err
 		}
 	}

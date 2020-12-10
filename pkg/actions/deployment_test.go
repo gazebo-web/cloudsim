@@ -136,7 +136,7 @@ func TestSetJob(t *testing.T) {
 	require.Equal(t, 1, dtd.getDeploymentJobDataCount(t, tr.db))
 
 	// Check that the job data is of input type
-	out, err := deployment.GetJobData(tr.db, &td.jobName2, deploymentJobInput)
+	out, err := deployment.GetJobData(tr.db, &td.jobName2, DeploymentJobInput)
 	require.NoError(t, err)
 	require.Equal(t, testInputData.I, out.(*deploymentTestStruct).I)
 }
@@ -158,12 +158,12 @@ func TestSetAndGetJobData(t *testing.T) {
 	jobDataTypeRegistry.register(GetJobDataType(testJobData))
 
 	// Set job data
-	require.NoError(t, deployment.SetJobData(tr.db, &td.jobName1, deploymentJobInput, testInputData))
+	require.NoError(t, deployment.SetJobData(tr.db, &td.jobName1, DeploymentJobInput, testInputData))
 	require.NoError(t, deployment.SetJobData(tr.db, &td.jobName1, DeploymentJobData, testJobData))
 
 	// Modify job data
 	testInputData = deploymentTestStruct{I: 100}
-	require.NoError(t, deployment.SetJobData(tr.db, &td.jobName1, deploymentJobInput, testInputData))
+	require.NoError(t, deployment.SetJobData(tr.db, &td.jobName1, DeploymentJobInput, testInputData))
 
 	// Get job data
 	compareTestData := func(job string, dataType deploymentDataType, expected deploymentTestStruct) {
@@ -171,7 +171,7 @@ func TestSetAndGetJobData(t *testing.T) {
 		require.NoError(t, err)
 		require.Equal(t, expected, out.(deploymentTestStruct))
 	}
-	compareTestData(td.jobName1, deploymentJobInput, testInputData)
+	compareTestData(td.jobName1, DeploymentJobInput, testInputData)
 	compareTestData(td.jobName1, DeploymentJobData, testJobData)
 }
 
