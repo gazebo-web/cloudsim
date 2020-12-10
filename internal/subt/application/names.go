@@ -22,3 +22,8 @@ func GetCommsBridgePodName(groupID simulations.GroupID, robotID string) string {
 func GetGazeboServerPodName(groupID simulations.GroupID) string {
 	return fmt.Sprintf("%s-%s-gzserver", prefix, groupID)
 }
+
+// GetSimulationIngressPath gets the path to the gzserver websocket server for a certain simulation.
+func GetSimulationIngressPath(groupID simulations.GroupID) string {
+	return fmt.Sprintf("/simulations/%s", groupID.String())
+}

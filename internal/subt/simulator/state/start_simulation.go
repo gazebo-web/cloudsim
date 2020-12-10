@@ -17,6 +17,7 @@ type StartSimulation struct {
 	CreateMachinesInput  []cloud.CreateMachinesInput
 	CreateMachinesOutput []cloud.CreateMachinesOutput
 	ParentGroupID        *simulations.GroupID
+	UpstreamName         string
 }
 
 // Platform returns the underlying platform.
