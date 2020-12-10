@@ -39,7 +39,7 @@ func generateCheckSimulationNoKindInputPreHook(kind simulations.Kind) actions.Jo
 	}
 }
 
-// assertSimulationNoKind is the post-hook in charge of guarantee that the output of the jobs.CheckSimulationKindOutput job operation
+// assertSimulationNoKind is the post-hook in charge of guaranteeing that the output of the jobs.CheckSimulationKindOutput job operation
 // is not of a certain kind.
 func assertSimulationNoKind(store actions.Store, tx *gorm.DB, deployment *actions.Deployment, value interface{}) (interface{}, error) {
 	isKind := value.(jobs.CheckSimulationKindOutput)
