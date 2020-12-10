@@ -46,7 +46,7 @@ func (v *VirtualServices) GetUpstream(namespace string, selector orchestrator.Se
 	if err != nil {
 		v.Logger.Debug(
 			fmt.Sprintf("Failed to get upstream on namespace [%s] pointing to the given labels [%s]. Error: %s",
-				namespace, selector.Map()),
+				namespace, selector.Map(), err),
 		)
 		return nil, err
 	}
