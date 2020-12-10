@@ -11,7 +11,6 @@ import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulator/jobs"
 	"path"
-	"time"
 )
 
 // LaunchCommsBridge launches the list of comms bridge and copy pods.
@@ -99,68 +98,37 @@ func prepareCommsBridgePodInput(store actions.Store, tx *gorm.DB, deployment *ac
 				return nil, err
 			}
 
-			accessKey := secret.Data[s.Platform().Store().Ignition().AccessKeyLabel()]
-			secretAccessKey := secret.Data[s.Platform().Store().Ignition().SecretAccessKeyLabel()]
+			accessKey := string(secret.Data[s.Platform().Store().Ignition().AccessKeyLabel()])
+			secretAccessKey := string(secret.Data[s.Platform().Store().Ignition().SecretAccessKeyLabel()])
 
-			// Create copy pod input
-			pods = append(pods, prepareBridgeCopyCreatePodInput(configBridgeCopyPod{
+			pods = append(pods, prepareCreatePodInput(configPod{
 				name:                   subtapp.GetPodNameCommsBridgeCopy(s.GroupID, subtapp.GetRobotID(i+1)),
-				namespace:              s.Platform().Store().Orchestrator().Namespace(),
+				namespace:              ns,
 				labels:                 subtapp.GetPodLabelsCommsBridgeCopy(s.GroupID, s.ParentGroupID, r).Map(),
+				restartPolicy:          orchestrator.RestartPolicyNever,
 				terminationGracePeriod: s.Platform().Store().Orchestrator().TerminationGracePeriod(),
 				nodeSelector:           subtapp.GetNodeLabelsFieldComputer(s.GroupID, r),
-				hostLogsPath:           logMountPath,
-				mountLogsPath:          s.Platform().Store().Ignition().ROSLogsPath(),
-				region:                 s.Platform().Store().Ignition().Region(),
-				accessKey:              string(accessKey),
-				secretAccessKey:        string(secretAccessKey),
-				nameservers:            s.Platform().Store().Orchestrator().Nameservers(),
+				containerName:          "copy-to-s3",
+				image:                  "infrastructureascode/aws-cli:latest",
+				command:                []string{"tail", "-f", "/dev/null"},
+				volumes: []orchestrator.Volume{
+					{
+						Name:         "logs",
+						HostPath:     logMountPath,
+						MountPath:    s.Platform().Store().Ignition().ROSLogsPath(),
+						HostPathType: orchestrator.HostPathDirectoryOrCreate,
+					},
+				},
+				envVars: map[string]string{
+					"AWS_DEFAULT_REGION":    s.Platform().Store().Ignition().Region(),
+					"AWS_REGION":            s.Platform().Store().Ignition().Region(),
+					"AWS_ACCESS_KEY_ID":     accessKey,
+					"AWS_SECRET_ACCESS_KEY": secretAccessKey,
+				},
+				nameservers: s.Platform().Store().Orchestrator().Nameservers(),
 			}))
 		}
 	}
 
 	return pods, nil
-}
-
-type configBridgeCopyPod struct {
-	name                   string
-	namespace              string
-	labels                 map[string]string
-	terminationGracePeriod time.Duration
-	nodeSelector           orchestrator.Selector
-	hostLogsPath           string
-	mountLogsPath          string
-	region                 string
-	accessKey              string
-	secretAccessKey        string
-	nameservers            []string
-}
-
-func prepareBridgeCopyCreatePodInput(c configBridgeCopyPod) orchestrator.CreatePodInput {
-	return prepareCreatePodInput(configPod{
-		name:                   c.name,
-		namespace:              c.namespace,
-		labels:                 c.labels,
-		restartPolicy:          orchestrator.RestartPolicyNever,
-		terminationGracePeriod: c.terminationGracePeriod,
-		nodeSelector:           c.nodeSelector,
-		containerName:          "copy-to-s3",
-		image:                  "infrastructureascode/aws-cli:latest",
-		command:                []string{"tail", "-f", "/dev/null"},
-		volumes: []orchestrator.Volume{
-			{
-				Name:         "logs",
-				HostPath:     c.hostLogsPath,
-				MountPath:    c.mountLogsPath,
-				HostPathType: orchestrator.HostPathDirectoryOrCreate,
-			},
-		},
-		envVars: map[string]string{
-			"AWS_DEFAULT_REGION":    c.region,
-			"AWS_REGION":            c.region,
-			"AWS_ACCESS_KEY_ID":     c.accessKey,
-			"AWS_SECRET_ACCESS_KEY": c.secretAccessKey,
-		},
-		nameservers: c.nameservers,
-	})
 }
