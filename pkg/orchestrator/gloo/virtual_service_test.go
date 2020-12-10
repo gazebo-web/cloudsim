@@ -14,7 +14,7 @@ func TestNewVirtualService(t *testing.T) {
 
 	var gw gateway.GatewayV1Interface
 	var logger ign.Logger
-	var client gloo.GlooV1Client
+	var client *gloo.GlooV1Client
 
 	vss = NewVirtualServices(gw, logger, client)
 
