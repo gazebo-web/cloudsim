@@ -9,7 +9,6 @@ import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/simulator/state"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/actions"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulator/jobs"
 	"path"
 	"time"
@@ -54,25 +53,41 @@ func prepareCommsBridgePodInput(store actions.Store, tx *gorm.DB, deployment *ac
 		logMountPath := path.Join(hostPath, logDirectory)
 
 		// Create comms bridge input
-		pods = append(pods, prepareCommsBridgeCreatePodInput(configCommsBridgePod{
-			groupID:                s.GroupID,
-			robotNumber:            i,
-			robotID:                subtapp.GetRobotID(i + 1),
+		pods = append(pods, prepareCreatePodInput(configPod{
+			name:                   subtapp.GetPodNameCommsBridge(s.GroupID, subtapp.GetRobotID(i+1)),
 			namespace:              s.Platform().Store().Orchestrator().Namespace(),
 			labels:                 subtapp.GetPodLabelsCommsBridge(s.GroupID, s.ParentGroupID, r).Map(),
+			restartPolicy:          orchestrator.RestartPolicyNever,
 			terminationGracePeriod: s.Platform().Store().Orchestrator().TerminationGracePeriod(),
 			nodeSelector:           subtapp.GetNodeLabelsFieldComputer(s.GroupID, r),
-			containerImage:         track.BridgeImage,
-			gzServerPodIP:          s.GazeboServerIP,
-			robotName:              r.Name(),
-			robotType:              r.Kind(),
-			ignVerbose:             s.Platform().Store().Ignition().Verbosity(),
-			ignIP:                  "", // To be removed.
-			mountLogsPath:          s.Platform().Store().Ignition().ROSLogsPath(),
-			hostLogsPath:           logMountPath,
-			nameservers:            s.Platform().Store().Orchestrator().Nameservers(),
-			worldName:              track.World,
-			childMarsupial:         childMarsupial,
+			containerName:          subtapp.GetContainerNameCommsBridge(),
+			image:                  track.BridgeImage,
+			args: []string{
+				track.World,
+				fmt.Sprintf("robotName%d:=%s", i, r.Name()),
+				fmt.Sprintf("robotConfig%d:=%s", i, r.Kind()),
+				"headless:=true",
+				fmt.Sprintf("marsupial:=%s", childMarsupial),
+			},
+			privileged:                true,
+			allowPrivilegesEscalation: true,
+			volumes: []orchestrator.Volume{
+				{
+					Name:         "logs",
+					HostPath:     logMountPath,
+					HostPathType: orchestrator.HostPathDirectoryOrCreate,
+					MountPath:    s.Platform().Store().Ignition().ROSLogsPath(),
+				},
+			},
+			envVars: map[string]string{
+				"IGN_PARTITION":  s.GroupID.String(),
+				"IGN_RELAY":      s.GazeboServerIP,
+				"IGN_VERBOSE":    s.Platform().Store().Ignition().Verbosity(),
+				"ROBOT_NAME":     r.Name(),
+				"IGN_IP":         "", // To be removed.
+				"ROS_MASTER_URI": "http://($ROS_IP):11311",
+			},
+			nameservers: s.Platform().Store().Orchestrator().Nameservers(),
 		}))
 
 		if s.Platform().Store().Ignition().LogsCopyEnabled() {
@@ -107,70 +122,6 @@ func prepareCommsBridgePodInput(store actions.Store, tx *gorm.DB, deployment *ac
 	return pods, nil
 }
 
-type configCommsBridgePod struct {
-	groupID simulations.GroupID
-	// robotNumber is the robot index that's being created from the list of robots when iterating over the list.
-	robotNumber int
-	// robotID is the robot ID that will be used in the pod name.
-	robotID                string
-	namespace              string
-	labels                 map[string]string
-	terminationGracePeriod time.Duration
-	nodeSelector           orchestrator.Selector
-	containerImage         string
-	gzServerPodIP          string
-	robotName              string
-	robotType              string
-	ignVerbose             string
-	ignIP                  string // To be removed.
-	mountLogsPath          string
-	hostLogsPath           string
-	nameservers            []string
-	worldName              string
-	childMarsupial         string
-}
-
-func prepareCommsBridgeCreatePodInput(c configCommsBridgePod) orchestrator.CreatePodInput {
-	in := configPod{
-		name:                   subtapp.GetPodNameCommsBridge(c.groupID, c.robotID),
-		namespace:              c.namespace,
-		labels:                 c.labels,
-		restartPolicy:          orchestrator.RestartPolicyNever,
-		terminationGracePeriod: c.terminationGracePeriod,
-		nodeSelector:           c.nodeSelector,
-		containerName:          "comms-bridge",
-		image:                  c.containerImage,
-		args: []string{
-			c.worldName,
-			fmt.Sprintf("robotName%d:=%s", c.robotNumber, c.robotName),
-			fmt.Sprintf("robotConfig%d:=%s", c.robotNumber, c.robotType),
-			"headless:=true",
-			fmt.Sprintf("marsupial:=%s", c.childMarsupial),
-		},
-		privileged:                true,
-		allowPrivilegesEscalation: true,
-		volumes: []orchestrator.Volume{
-			{
-				Name:         "logs",
-				HostPath:     c.hostLogsPath,
-				HostPathType: orchestrator.HostPathDirectoryOrCreate,
-				MountPath:    c.mountLogsPath,
-			},
-		},
-		envVars: map[string]string{
-			"IGN_PARTITION":  c.groupID.String(),
-			"IGN_RELAY":      c.gzServerPodIP,
-			"IGN_VERBOSE":    c.ignVerbose,
-			"ROBOT_NAME":     c.robotName,
-			"IGN_IP":         c.ignIP, // To be removed.
-			"ROS_MASTER_URI": "http://($ROS_IP):11311",
-		},
-		nameservers: c.nameservers,
-	}
-
-	return preparePod(in)
-}
-
 type configBridgeCopyPod struct {
 	name                   string
 	namespace              string
@@ -186,7 +137,7 @@ type configBridgeCopyPod struct {
 }
 
 func prepareBridgeCopyCreatePodInput(c configBridgeCopyPod) orchestrator.CreatePodInput {
-	return preparePod(configPod{
+	return prepareCreatePodInput(configPod{
 		name:                   c.name,
 		namespace:              c.namespace,
 		labels:                 c.labels,

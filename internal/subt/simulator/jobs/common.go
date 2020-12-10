@@ -73,7 +73,7 @@ func rollbackPodCreation(store actions.Store, tx *gorm.DB, deployment *actions.D
 }
 
 // configPod is a set of configurations that need to be passed in order to configure a orchestrator.CreatePodInput using
-// the preparePod function.
+// the prepareCreatePodInput function.
 type configPod struct {
 	name                      string
 	namespace                 string
@@ -93,8 +93,8 @@ type configPod struct {
 	nameservers               []string
 }
 
-// preparePod is in charge of preparing the input for the create pod job.
-func preparePod(c configPod) orchestrator.CreatePodInput {
+// prepareCreatePodInput is in charge of preparing the input for the create pod job.
+func prepareCreatePodInput(c configPod) orchestrator.CreatePodInput {
 	return orchestrator.CreatePodInput{
 		Name:                          c.name,
 		Namespace:                     c.namespace,

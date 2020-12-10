@@ -86,5 +86,5 @@ func prepareFieldComputerCreatePodInput(c configFieldComputerPod) orchestrator.C
 		nameservers: nil,
 	}
 
-	return preparePod(in)
+	return prepareCreatePodInput(in)
 }

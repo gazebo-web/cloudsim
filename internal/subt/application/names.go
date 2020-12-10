@@ -36,3 +36,7 @@ func GetPodNameGazeboServer(groupID simulations.GroupID) string {
 func GetRobotID(id int) string {
 	return fmt.Sprintf("%s%d", robotPrefix, id)
 }
+
+func GetContainerNameCommsBridge() string {
+	return "comms-bridge"
+}
