@@ -53,10 +53,11 @@ func prepareGazeboCreatePodInput(store actions.Store, tx *gorm.DB, deployment *a
 
 	// Generate gazebo command args
 	runCommand := gazebo.Generate(gazebo.LaunchConfig{
-		World:                   track.World,
-		WorldMaxSimSeconds:      time.Duration(track.MaxSimSeconds),
-		Seed:                    track.Seed,
-		AuthorizationToken:      subtSim.GetToken(),
+		World:              track.World,
+		WorldMaxSimSeconds: time.Duration(track.MaxSimSeconds),
+		Seed:               track.Seed,
+		AuthorizationToken: subtSim.GetToken(),
+		// TODO: Get max connections from store.
 		MaxWebsocketConnections: 500,
 		Robots:                  subtSim.GetRobots(),
 		Marsupials:              subtSim.GetMarsupials(),
@@ -109,8 +110,6 @@ func prepareGazeboCreatePodInput(store actions.Store, tx *gorm.DB, deployment *a
 
 	nameservers := s.Platform().Store().Orchestrator().Nameservers()
 
-	nodeSelector := subtapp.GetNodeLabelsGazeboServer(s.GroupID)
-
 	// Create the input for the operation
 	input := []orchestrator.CreatePodInput{
 		{
@@ -119,7 +118,7 @@ func prepareGazeboCreatePodInput(store actions.Store, tx *gorm.DB, deployment *a
 			Labels:                        subtapp.GetPodLabelsGazeboServer(s.GroupID, s.ParentGroupID).Map(),
 			RestartPolicy:                 orchestrator.RestartPolicyNever,
 			TerminationGracePeriodSeconds: terminationGracePeriod,
-			NodeSelector:                  nodeSelector,
+			NodeSelector:                  subtapp.GetNodeLabelsGazeboServer(s.GroupID),
 			Containers: []orchestrator.Container{
 				{
 					Name:                     "gzserver-container",
