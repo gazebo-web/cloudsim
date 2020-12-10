@@ -90,3 +90,10 @@ func getPodLabelsBase(groupID simulations.GroupID, parent *simulations.GroupID) 
 
 	return base
 }
+
+// GetWebsocketServiceLabels returns a selector that will identify a websocket service for a certain simulation.
+func GetWebsocketServiceLabels(groupID simulations.GroupID) orchestrator.Selector {
+	return orchestrator.NewSelector(map[string]string{
+		labelPodGroupID: groupID.String(),
+	})
+}

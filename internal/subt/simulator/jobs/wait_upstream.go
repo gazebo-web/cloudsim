@@ -2,6 +2,7 @@ package jobs
 
 import (
 	"github.com/jinzhu/gorm"
+	"gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/application"
 	"gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/simulator/state"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/actions"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/gloo"
@@ -28,7 +29,7 @@ func createWaitRequestForUpstream(store actions.Store, tx *gorm.DB, deployment *
 	ns := s.Platform().Store().Orchestrator().IngressNamespace()
 
 	req := waiter.NewWaitRequest(func() (bool, error) {
-		res, err := vs.GetUpstream(ns, s.ServiceLabels)
+		res, err := vs.GetUpstream(ns, application.GetWebsocketServiceLabels(s.GroupID))
 		if err != nil {
 			return false, err
 		}
