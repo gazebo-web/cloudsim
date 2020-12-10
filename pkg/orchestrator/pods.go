@@ -42,7 +42,7 @@ type Volume struct {
 	HostPath string
 	// MountPath is the path within the container at which the volume should be mounted.
 	MountPath string
-	// HostPathType is the type
+	// HostPathType defines the mount type and mounting behavior.
 	HostPathType HostPathType
 }
 
