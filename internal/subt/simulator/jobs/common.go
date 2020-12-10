@@ -7,6 +7,7 @@ import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulator/jobs"
 	cstate "gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulator/state"
+	"time"
 )
 
 // returnState is an actions.JobFunc implementation that returns the state. It's usually used as a posthook.
@@ -69,4 +70,52 @@ func rollbackPodCreation(store actions.Store, tx *gorm.DB, deployment *actions.D
 	}
 
 	return nil, nil
+}
+
+// configPod is a set of configurations that need to be passed in order to configure a orchestrator.CreatePodInput using
+// the preparePod function.
+type configPod struct {
+	name                      string
+	namespace                 string
+	labels                    map[string]string
+	restartPolicy             orchestrator.RestartPolicy
+	terminationGracePeriod    time.Duration
+	nodeSelector              orchestrator.Selector
+	containerName             string
+	image                     string
+	command                   []string
+	args                      []string
+	privileged                bool
+	allowPrivilegesEscalation bool
+	ports                     []int32
+	volumes                   []orchestrator.Volume
+	envVars                   map[string]string
+	nameservers               []string
+}
+
+// preparePod is in charge of preparing the input for the create pod job.
+func preparePod(c configPod) orchestrator.CreatePodInput {
+	return orchestrator.CreatePodInput{
+		Name:                          c.name,
+		Namespace:                     c.namespace,
+		Labels:                        c.labels,
+		RestartPolicy:                 c.restartPolicy,
+		TerminationGracePeriodSeconds: c.terminationGracePeriod,
+		NodeSelector:                  c.nodeSelector,
+		Containers: []orchestrator.Container{
+			{
+				Name:                     c.containerName,
+				Image:                    c.image,
+				Command:                  c.command,
+				Args:                     c.args,
+				Privileged:               &c.privileged,
+				AllowPrivilegeEscalation: &c.allowPrivilegesEscalation,
+				Ports:                    c.ports,
+				Volumes:                  c.volumes,
+				EnvVars:                  c.envVars,
+			},
+		},
+		Volumes:     c.volumes,
+		Nameservers: c.nameservers,
+	}
 }

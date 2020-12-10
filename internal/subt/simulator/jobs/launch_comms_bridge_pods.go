@@ -84,8 +84,8 @@ func prepareCommsBridgePodInput(store actions.Store, tx *gorm.DB, deployment *ac
 				return nil, err
 			}
 
-			accessKey := secret.Data["aws-access-key-id"]
-			secretAccessKey := secret.Data["aws-secret-access-key"]
+			accessKey := secret.Data[s.Platform().Store().Ignition().AccessKeyLabel()]
+			secretAccessKey := secret.Data[s.Platform().Store().Ignition().SecretAccessKeyLabel()]
 
 			// Create copy pod input
 			pods = append(pods, prepareBridgeCopyCreatePodInput(configBridgeCopyPod{
@@ -212,49 +212,4 @@ func prepareBridgeCopyCreatePodInput(c configBridgeCopyPod) orchestrator.CreateP
 		},
 		nameservers: c.nameservers,
 	})
-}
-
-type configPod struct {
-	name                      string
-	namespace                 string
-	labels                    map[string]string
-	restartPolicy             orchestrator.RestartPolicy
-	terminationGracePeriod    time.Duration
-	nodeSelector              orchestrator.Selector
-	containerName             string
-	image                     string
-	command                   []string
-	args                      []string
-	privileged                bool
-	allowPrivilegesEscalation bool
-	ports                     []int32
-	volumes                   []orchestrator.Volume
-	envVars                   map[string]string
-	nameservers               []string
-}
-
-func preparePod(c configPod) orchestrator.CreatePodInput {
-	return orchestrator.CreatePodInput{
-		Name:                          c.name,
-		Namespace:                     c.namespace,
-		Labels:                        c.labels,
-		RestartPolicy:                 c.restartPolicy,
-		TerminationGracePeriodSeconds: c.terminationGracePeriod,
-		NodeSelector:                  c.nodeSelector,
-		Containers: []orchestrator.Container{
-			{
-				Name:                     c.containerName,
-				Image:                    c.image,
-				Command:                  c.command,
-				Args:                     c.args,
-				Privileged:               &c.privileged,
-				AllowPrivilegeEscalation: &c.allowPrivilegesEscalation,
-				Ports:                    c.ports,
-				Volumes:                  c.volumes,
-				EnvVars:                  c.envVars,
-			},
-		},
-		Volumes:     c.volumes,
-		Nameservers: c.nameservers,
-	}
 }

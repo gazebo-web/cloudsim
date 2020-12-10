@@ -38,6 +38,14 @@ type ignitionEnvStore struct {
 	SecretsNameValue string `env:"CLOUDSIM_IGN_SECRETS_NAME"`
 }
 
+func (i *ignitionEnvStore) AccessKeyLabel() string {
+	return "aws-access-key-id"
+}
+
+func (i *ignitionEnvStore) SecretAccessKeyLabel() string {
+	return "aws-secret-access-key"
+}
+
 func (i *ignitionEnvStore) LogsCopyEnabled() bool {
 	return i.LogsCopyEnabledValue
 }

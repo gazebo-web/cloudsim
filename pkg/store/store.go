@@ -95,4 +95,8 @@ type Ignition interface {
 
 	// SecretsName returns the name of the secrets to access credentials for different cloud providers.
 	SecretsName() string
+
+	AccessKeyLabel() string
+
+	SecretAccessKeyLabel() string
 }

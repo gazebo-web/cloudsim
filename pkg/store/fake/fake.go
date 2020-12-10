@@ -45,6 +45,18 @@ type Ign struct {
 	*mock.Mock
 }
 
+// AccessKeyLabel mocks the AccessKeyLabel method.
+func (f *Ign) AccessKeyLabel() string {
+	args := f.Called()
+	return args.String(0)
+}
+
+// SecretAccessKeyLabel mocks the SecretAccessKeyLabel method.
+func (f *Ign) SecretAccessKeyLabel() string {
+	args := f.Called()
+	return args.String(0)
+}
+
 // LogsCopyEnabled mocks the LogsCopyEnabled method.
 func (f *Ign) LogsCopyEnabled() bool {
 	args := f.Called()
