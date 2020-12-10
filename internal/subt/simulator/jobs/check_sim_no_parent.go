@@ -5,7 +5,7 @@ import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
 )
 
-// CheckSimulationIsNotParent is a job in charge of checking if a simulation is parent.
+// CheckSimulationIsNotParent is a job in charge of checking if a simulation is not a parent simulation.
 var CheckSimulationIsNotParent = GenerateCheckSimulationNoKindJob(
 	"check-simulation-parent",
 	simulations.SimParent,
