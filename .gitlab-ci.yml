@@ -140,7 +140,7 @@ test:
     - *setup_db
     - go install github.com/jstemmer/go-junit-report
   script:
-    - go test -v  2>&1 | $GOPATH/bin/go-junit-report -set-exit-code > report.xml
+    - go test -v $(go list ./...) 2>&1 | $GOPATH/bin/go-junit-report -set-exit-code > report.xml
   services:
     - mysql:5.7
   environment:
