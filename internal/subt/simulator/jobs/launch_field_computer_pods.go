@@ -42,7 +42,7 @@ func prepareFieldComputerPodInput(store actions.Store, tx *gorm.DB, deployment *
 			restartPolicy:             orchestrator.RestartPolicyNever,
 			terminationGracePeriod:    s.Platform().Store().Orchestrator().TerminationGracePeriod(),
 			nodeSelector:              subtapp.GetNodeLabelsFieldComputer(s.GroupID, r),
-			containerName:             "field-computer",
+			containerName:             subtapp.GetContainerNameFieldComputer(),
 			image:                     subtSim.GetImage(),
 			args:                      nil,
 			privileged:                false,

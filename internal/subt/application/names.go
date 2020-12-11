@@ -46,3 +46,8 @@ func GetContainerNameCommsBridge() string {
 func GetContainerNameCommsBridgeCopy() string {
 	return "copy-to-s3"
 }
+
+// GetContainerNameFieldComputer returns the field computer container name.
+func GetContainerNameFieldComputer() string {
+	return "field-computer"
+}
