@@ -66,7 +66,7 @@ type configFieldComputerPod struct {
 }
 
 func prepareFieldComputerCreatePodInput(c configFieldComputerPod) orchestrator.CreatePodInput {
-	in := configPod{
+	in := configCreatePodInput{
 		name:                      subtapp.GetPodNameFieldComputer(c.groupID, c.robotID),
 		namespace:                 c.namespace,
 		labels:                    c.labels,

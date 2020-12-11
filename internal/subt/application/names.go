@@ -37,6 +37,11 @@ func GetRobotID(id int) string {
 	return fmt.Sprintf("%s%d", robotPrefix, id)
 }
 
+// GetContainerNameCommsBridge returns the comms bridge container name.
 func GetContainerNameCommsBridge() string {
 	return "comms-bridge"
+}
+
+func GetContainerNameCommsBridgeCopy() string {
+	return "copy-to-s3"
 }

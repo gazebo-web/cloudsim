@@ -52,7 +52,7 @@ func prepareCommsBridgePodInput(store actions.Store, tx *gorm.DB, deployment *ac
 		logMountPath := path.Join(hostPath, logDirectory)
 
 		// Create comms bridge input
-		pods = append(pods, prepareCreatePodInput(configPod{
+		pods = append(pods, prepareCreatePodInput(configCreatePodInput{
 			name:                   subtapp.GetPodNameCommsBridge(s.GroupID, subtapp.GetRobotID(i+1)),
 			namespace:              s.Platform().Store().Orchestrator().Namespace(),
 			labels:                 subtapp.GetPodLabelsCommsBridge(s.GroupID, s.ParentGroupID, r).Map(),
@@ -78,14 +78,12 @@ func prepareCommsBridgePodInput(store actions.Store, tx *gorm.DB, deployment *ac
 					MountPath:    s.Platform().Store().Ignition().ROSLogsPath(),
 				},
 			},
-			envVars: map[string]string{
-				"IGN_PARTITION":  s.GroupID.String(),
-				"IGN_RELAY":      s.GazeboServerIP,
-				"IGN_VERBOSE":    s.Platform().Store().Ignition().Verbosity(),
-				"ROBOT_NAME":     r.Name(),
-				"IGN_IP":         "", // To be removed.
-				"ROS_MASTER_URI": "http://($ROS_IP):11311",
-			},
+			envVars: subtapp.GetEnvVarsCommsBridge(
+				s.GroupID,
+				r.Name(),
+				s.GazeboServerIP,
+				s.Platform().Store().Ignition().Verbosity(),
+			),
 			nameservers: s.Platform().Store().Orchestrator().Nameservers(),
 		}))
 
@@ -101,14 +99,14 @@ func prepareCommsBridgePodInput(store actions.Store, tx *gorm.DB, deployment *ac
 			accessKey := string(secret.Data[s.Platform().Store().Ignition().AccessKeyLabel()])
 			secretAccessKey := string(secret.Data[s.Platform().Store().Ignition().SecretAccessKeyLabel()])
 
-			pods = append(pods, prepareCreatePodInput(configPod{
+			pods = append(pods, prepareCreatePodInput(configCreatePodInput{
 				name:                   subtapp.GetPodNameCommsBridgeCopy(s.GroupID, subtapp.GetRobotID(i+1)),
 				namespace:              ns,
 				labels:                 subtapp.GetPodLabelsCommsBridgeCopy(s.GroupID, s.ParentGroupID, r).Map(),
 				restartPolicy:          orchestrator.RestartPolicyNever,
 				terminationGracePeriod: s.Platform().Store().Orchestrator().TerminationGracePeriod(),
 				nodeSelector:           subtapp.GetNodeLabelsFieldComputer(s.GroupID, r),
-				containerName:          "copy-to-s3",
+				containerName:          subtapp.GetContainerNameCommsBridgeCopy(),
 				image:                  "infrastructureascode/aws-cli:latest",
 				command:                []string{"tail", "-f", "/dev/null"},
 				volumes: []orchestrator.Volume{
@@ -119,12 +117,11 @@ func prepareCommsBridgePodInput(store actions.Store, tx *gorm.DB, deployment *ac
 						HostPathType: orchestrator.HostPathDirectoryOrCreate,
 					},
 				},
-				envVars: map[string]string{
-					"AWS_DEFAULT_REGION":    s.Platform().Store().Ignition().Region(),
-					"AWS_REGION":            s.Platform().Store().Ignition().Region(),
-					"AWS_ACCESS_KEY_ID":     accessKey,
-					"AWS_SECRET_ACCESS_KEY": secretAccessKey,
-				},
+				envVars: subtapp.GetEnvVarsCommsBridgeCopy(
+					s.Platform().Store().Ignition().Region(),
+					accessKey,
+					secretAccessKey,
+				),
 				nameservers: s.Platform().Store().Orchestrator().Nameservers(),
 			}))
 		}

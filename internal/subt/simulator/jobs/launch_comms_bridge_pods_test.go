@@ -47,6 +47,8 @@ func TestLaunchCommsBridgePods(t *testing.T) {
 	storeIgnition.On("LogsCopyEnabled").Return(true)
 	storeIgnition.On("SecretsName").Return("aws-secrets")
 	storeIgnition.On("Region").Return("aws-secrets")
+	storeIgnition.On("AccessKeyLabel").Return("aws-access-key-id")
+	storeIgnition.On("SecretAccessKeyLabel").Return("aws-secret-access-key")
 
 	// Mock orchestrator store methods for this test
 	storeOrchestrator.On("Namespace").Return("default")
@@ -72,7 +74,7 @@ func TestLaunchCommsBridgePods(t *testing.T) {
 	p := platform.NewPlatform(platform.Components{
 		Cluster: ks,
 		Store:   fakeStore,
-		Secrets: nil, // Replace with fake implementation.
+		Secrets: secretsManager,
 	})
 
 	// Initialize generic simulation service
