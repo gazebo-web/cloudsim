@@ -56,5 +56,5 @@ func prepareFieldComputerPodInput(store actions.Store, tx *gorm.DB, deployment *
 		})
 	}
 
-	return pods, nil
+	return jobs.LaunchPodsInput(pods), nil
 }
