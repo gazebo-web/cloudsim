@@ -42,6 +42,7 @@ func GetContainerNameCommsBridge() string {
 	return "comms-bridge"
 }
 
+// GetContainerNameCommsBridgeCopy returns the comms bridge copy container name.
 func GetContainerNameCommsBridgeCopy() string {
 	return "copy-to-s3"
 }
