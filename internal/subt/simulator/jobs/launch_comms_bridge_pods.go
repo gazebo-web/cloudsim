@@ -127,5 +127,5 @@ func prepareCommsBridgePodInput(store actions.Store, tx *gorm.DB, deployment *ac
 		}
 	}
 
-	return pods, nil
+	return jobs.LaunchPodsInput(pods), nil
 }
