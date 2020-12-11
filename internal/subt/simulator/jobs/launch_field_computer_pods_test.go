@@ -5,15 +5,12 @@ import (
 	subtapp "gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/application"
 	"gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/simulations/fake"
 	"gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/simulator/state"
-	"gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/tracks"
-	tfake "gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/tracks/fake"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/actions"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/application"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/kubernetes"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/kubernetes/pods"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/kubernetes/spdy"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/platform"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/secrets"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
 	simfake "gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations/fake"
 	sfake "gitlab.com/ignitionrobotics/web/cloudsim/pkg/store/fake"
@@ -24,7 +21,7 @@ import (
 	"time"
 )
 
-func TestLaunchCommsBridgePods(t *testing.T) {
+func TestLaunchFieldComputerPods(t *testing.T) {
 	db, err := gorm.GetDBFromEnvVars()
 	require.NoError(t, err)
 
@@ -32,33 +29,15 @@ func TestLaunchCommsBridgePods(t *testing.T) {
 	require.NoError(t, err)
 
 	// Set up logger
-	logger := ign.NewLoggerNoRollbar("TestLaunchGazeboServerPod", ign.VerbosityDebug)
+	logger := ign.NewLoggerNoRollbar("TestLaunchFieldComputerPods", ign.VerbosityDebug)
 
 	// Set up store
-	storeIgnition := sfake.NewFakeIgnition()
 	storeOrchestrator := sfake.NewFakeOrchestrator()
-	secretsManager := secrets.NewFakeSecrets()
-	fakeStore := sfake.NewFakeStore(nil, storeOrchestrator, storeIgnition)
-
-	// Mock ignition store methods for this test
-	storeIgnition.On("ROSLogsPath").Return("/tmp/test")
-	storeIgnition.On("IP").Return("127.0.0.1")
-	storeIgnition.On("Verbosity").Return("0")
-	storeIgnition.On("LogsCopyEnabled").Return(true)
-	storeIgnition.On("SecretsName").Return("aws-secrets")
-	storeIgnition.On("Region").Return("aws-secrets")
-	storeIgnition.On("AccessKeyLabel").Return("aws-access-key-id")
-	storeIgnition.On("SecretAccessKeyLabel").Return("aws-secret-access-key")
+	fakeStore := sfake.NewFakeStore(nil, storeOrchestrator, nil)
 
 	// Mock orchestrator store methods for this test
 	storeOrchestrator.On("Namespace").Return("default")
 	storeOrchestrator.On("TerminationGracePeriod").Return(time.Second)
-	storeOrchestrator.On("Nameservers").Return([]string{"8.8.8.8", "8.8.4.4"})
-
-	secretsManager.On("Get").Return(&secrets.Secret{Data: map[string][]byte{
-		"aws-access-key-id":     []byte("12345678910"),
-		"aws-secret-access-key": []byte("secret"),
-	}}, error(nil))
 
 	// Set up SPDY initializer with fake implementation
 	spdyInit := spdy.NewSPDYFakeInitializer()
@@ -74,7 +53,6 @@ func TestLaunchCommsBridgePods(t *testing.T) {
 	p := platform.NewPlatform(platform.Components{
 		Cluster: ks,
 		Store:   fakeStore,
-		Secrets: secretsManager,
 	})
 
 	// Initialize generic simulation service
@@ -83,17 +61,14 @@ func TestLaunchCommsBridgePods(t *testing.T) {
 	// Create a GetGroupID for testing.
 	gid := simulations.GroupID("aaaa-bbbb-cccc-dddd")
 
-	// Define track name
-	trackName := "Cave Circuit World 1"
-
-	// Create a simulation for the given track
+	// Create a simulation
 	sim := fake.NewSimulation(fake.SimulationConfig{
 		GroupID: gid,
 		Status:  simulations.StatusLaunchingPods,
 		Kind:    simulations.SimSingle,
 		Error:   nil,
 		Image:   "test.org",
-		Track:   trackName,
+		Track:   "Cave Circuit World 1",
 		Robots: []simulations.Robot{
 			simfake.NewRobot("testA", "X1"),
 			simfake.NewRobot("testB", "X2"),
@@ -104,22 +79,8 @@ func TestLaunchCommsBridgePods(t *testing.T) {
 	// Make the get method return the fake simulation
 	simservice.On("Get", gid).Return(sim, error(nil))
 
-	// Initialize tracks service
-	trackService := tfake.NewService()
-
-	// Mock Get method from tracks service
-	trackService.On("Get", trackName).Return(&tracks.Track{
-		Name:          trackName,
-		Image:         "world-image.org/image",
-		BridgeImage:   "bridge-image.org/image",
-		StatsTopic:    "test",
-		WarmupTopic:   "test",
-		MaxSimSeconds: 500,
-		Public:        true,
-	}, error(nil))
-
 	// Create SubT application service
-	app := subtapp.NewServices(application.NewServices(simservice), trackService)
+	app := subtapp.NewServices(application.NewServices(simservice), nil)
 
 	// Create new state: Start simulation state.
 	s := state.NewStartSimulation(p, app, gid)
@@ -129,7 +90,7 @@ func TestLaunchCommsBridgePods(t *testing.T) {
 	store := actions.NewStore(s)
 
 	// Run job
-	_, err = LaunchCommsBridge.Run(store, db, &actions.Deployment{CurrentJob: "test"}, s)
+	_, err = LaunchFieldComputers.Run(store, db, &actions.Deployment{CurrentJob: "test"}, s)
 
 	// Check if there are any errors.
 	require.NoError(t, err)
