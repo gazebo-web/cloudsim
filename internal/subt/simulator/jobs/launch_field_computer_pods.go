@@ -7,9 +7,7 @@ import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/simulator/state"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/actions"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulator/jobs"
-	"time"
 )
 
 // LaunchFieldComputers launches the list of field computer pods.
@@ -37,54 +35,26 @@ func prepareFieldComputerPodInput(store actions.Store, tx *gorm.DB, deployment *
 	for i, r := range subtSim.GetRobots() {
 		robotID := subtapp.GetRobotID(i)
 		// Create field computer input
-		pods[i] = prepareFieldComputerCreatePodInput(configFieldComputerPod{
-			groupID:                s.GroupID,
-			robotID:                robotID,
-			namespace:              s.Platform().Store().Orchestrator().Namespace(),
-			labels:                 subtapp.GetPodLabelsFieldComputer(s.GroupID, s.ParentGroupID).Map(),
-			terminationGracePeriod: s.Platform().Store().Orchestrator().TerminationGracePeriod(),
-			nodeSelector:           subtapp.GetNodeLabelsFieldComputer(s.GroupID, r),
-			containerImage:         subtSim.GetImage(),
-			robotName:              r.Name(),
-			nameservers:            s.Platform().Store().Orchestrator().Nameservers(),
+		pods[i] = prepareCreatePodInput(configCreatePodInput{
+			name:                      subtapp.GetPodNameFieldComputer(s.GroupID, robotID),
+			namespace:                 s.Platform().Store().Orchestrator().Namespace(),
+			labels:                    subtapp.GetPodLabelsFieldComputer(s.GroupID, s.ParentGroupID).Map(),
+			restartPolicy:             orchestrator.RestartPolicyNever,
+			terminationGracePeriod:    s.Platform().Store().Orchestrator().TerminationGracePeriod(),
+			nodeSelector:              subtapp.GetNodeLabelsFieldComputer(s.GroupID, r),
+			containerName:             "field-computer",
+			image:                     subtSim.GetImage(),
+			args:                      nil,
+			privileged:                false,
+			allowPrivilegesEscalation: true,
+			ports:                     nil,
+			volumes:                   nil,
+			envVars: map[string]string{
+				"ROBOT_NAME": r.Name(),
+			},
+			nameservers: nil,
 		})
 	}
 
 	return pods, nil
-}
-
-type configFieldComputerPod struct {
-	groupID                simulations.GroupID
-	robotID                string
-	namespace              string
-	labels                 map[string]string
-	terminationGracePeriod time.Duration
-	nodeSelector           orchestrator.Selector
-	containerImage         string
-	robotName              string
-	nameservers            []string
-}
-
-func prepareFieldComputerCreatePodInput(c configFieldComputerPod) orchestrator.CreatePodInput {
-	in := configCreatePodInput{
-		name:                      subtapp.GetPodNameFieldComputer(c.groupID, c.robotID),
-		namespace:                 c.namespace,
-		labels:                    c.labels,
-		restartPolicy:             orchestrator.RestartPolicyNever,
-		terminationGracePeriod:    c.terminationGracePeriod,
-		nodeSelector:              c.nodeSelector,
-		containerName:             "field-computer",
-		image:                     c.containerImage,
-		args:                      nil,
-		privileged:                false,
-		allowPrivilegesEscalation: true,
-		ports:                     nil,
-		volumes:                   nil,
-		envVars: map[string]string{
-			"ROBOT_NAME": c.robotName,
-		},
-		nameservers: nil,
-	}
-
-	return prepareCreatePodInput(in)
 }
