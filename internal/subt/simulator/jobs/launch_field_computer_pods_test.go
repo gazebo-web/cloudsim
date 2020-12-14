@@ -90,7 +90,7 @@ func TestLaunchFieldComputerPods(t *testing.T) {
 	store := actions.NewStore(s)
 
 	// Run job
-	_, err = LaunchFieldComputers.Run(store, db, &actions.Deployment{CurrentJob: "test"}, s)
+	_, err = LaunchFieldComputerPods.Run(store, db, &actions.Deployment{CurrentJob: "test"}, s)
 
 	// Check if there are any errors.
 	require.NoError(t, err)

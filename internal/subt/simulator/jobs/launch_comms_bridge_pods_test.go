@@ -129,7 +129,7 @@ func TestLaunchCommsBridgePods(t *testing.T) {
 	store := actions.NewStore(s)
 
 	// Run job
-	_, err = LaunchCommsBridge.Run(store, db, &actions.Deployment{CurrentJob: "test"}, s)
+	_, err = LaunchCommsBridgePods.Run(store, db, &actions.Deployment{CurrentJob: "test"}, s)
 
 	// Check if there are any errors.
 	require.NoError(t, err)

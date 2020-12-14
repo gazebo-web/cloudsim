@@ -10,8 +10,8 @@ import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulator/jobs"
 )
 
-// LaunchFieldComputers launches the list of field computer pods.
-var LaunchFieldComputers = jobs.LaunchPods.Extend(actions.Job{
+// LaunchFieldComputerPods launches the list of field computer pods.
+var LaunchFieldComputerPods = jobs.LaunchPods.Extend(actions.Job{
 	Name:            "launch-field-computer-pods",
 	PreHooks:        []actions.JobFunc{setStartState, prepareFieldComputerPodInput},
 	PostHooks:       []actions.JobFunc{checkLaunchPodsError, returnState},
