@@ -55,9 +55,10 @@ func (p *pods) Create(input orchestrator.CreatePodInput) (orchestrator.Resource,
 
 		// Add new container to list of containers
 		containers = append(containers, apiv1.Container{
-			Name:  c.Name,
-			Image: c.Image,
-			Args:  c.Args,
+			Name:    c.Name,
+			Image:   c.Image,
+			Command: c.Command,
+			Args:    c.Args,
 			SecurityContext: &apiv1.SecurityContext{
 				Privileged:               c.Privileged,
 				AllowPrivilegeEscalation: c.AllowPrivilegeEscalation,

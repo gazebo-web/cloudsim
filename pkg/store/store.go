@@ -95,4 +95,17 @@ type Ignition interface {
 
 	// Verbosity returns the level of verbosity that should be used for gazebo.
 	Verbosity() string
+
+	// LogsCopyEnabled determines if ROS logs should be saved in the storage.
+	LogsCopyEnabled() bool
+
+	// Region returns the region where to launch a certain simulation.
+	Region() string
+
+	// SecretsName returns the name of the secrets to access credentials for different cloud providers.
+	SecretsName() string
+
+	AccessKeyLabel() string
+
+	SecretAccessKeyLabel() string
 }

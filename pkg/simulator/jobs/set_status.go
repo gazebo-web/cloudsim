@@ -32,7 +32,7 @@ var SetSimulationStatus = &actions.Job{
 func setSimulationStatus(store actions.Store, tx *gorm.DB, deployment *actions.Deployment, value interface{}) (interface{}, error) {
 	input := value.(SetSimulationStatusInput)
 
-	s := store.State().(state.Services)
+	s := store.State().(state.ServicesGetter)
 
 	err := s.Services().Simulations().UpdateStatus(input.GroupID, input.Status)
 	if err != nil {

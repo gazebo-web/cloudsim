@@ -27,6 +27,35 @@ type ignitionEnvStore struct {
 
 	// VerbosityValue is the IGN_VERBOSE value that will be passed to Pods launched for SubT.
 	VerbosityValue string `env:"CLOUDSIM_IGN_VERBOSITY"`
+
+	// LogsCopyEnabledValue is the CLOUDSIM_IGN_LOGS_COPY_ENABLED value that will used to define if logs should be copied.
+	LogsCopyEnabledValue bool `env:"CLOUDSIM_IGN_LOGS_COPY_ENABLED"`
+
+	// RegionValue is the CLOUDSIM_IGN_REGION value that will determine where to launch simulations.
+	RegionValue string `env:"CLOUDSIM_IGN_REGION"`
+
+	// SecretsNameValue is the CLOUDSIM_IGN_SECRETS_NAME value that will used to get credentials for cloud providers.
+	SecretsNameValue string `env:"CLOUDSIM_IGN_SECRETS_NAME"`
+}
+
+func (i *ignitionEnvStore) AccessKeyLabel() string {
+	return "aws-access-key-id"
+}
+
+func (i *ignitionEnvStore) SecretAccessKeyLabel() string {
+	return "aws-secret-access-key"
+}
+
+func (i *ignitionEnvStore) LogsCopyEnabled() bool {
+	return i.LogsCopyEnabledValue
+}
+
+func (i *ignitionEnvStore) Region() string {
+	return i.RegionValue
+}
+
+func (i *ignitionEnvStore) SecretsName() string {
+	return i.SecretsNameValue
 }
 
 // ROSLogsPath returns the path of the logs from bridge containers.
