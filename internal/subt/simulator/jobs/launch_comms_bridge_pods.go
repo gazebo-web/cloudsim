@@ -13,8 +13,8 @@ import (
 	"path"
 )
 
-// LaunchCommsBridge launches the list of comms bridge and copy pods.
-var LaunchCommsBridge = jobs.LaunchPods.Extend(actions.Job{
+// LaunchCommsBridgePods launches the list of comms bridge and copy pods.
+var LaunchCommsBridgePods = jobs.LaunchPods.Extend(actions.Job{
 	Name:            "launch-comms-bridge-pods",
 	PreHooks:        []actions.JobFunc{setStartState, prepareCommsBridgePodInput},
 	PostHooks:       []actions.JobFunc{checkLaunchPodsError, returnState},
@@ -23,8 +23,8 @@ var LaunchCommsBridge = jobs.LaunchPods.Extend(actions.Job{
 	OutputType:      actions.GetJobDataType(&state.StartSimulation{}),
 })
 
+// prepareCommsBridgePodInput prepares the input for the generic LaunchPods job to launch comms bridge pods.
 func prepareCommsBridgePodInput(store actions.Store, tx *gorm.DB, deployment *actions.Deployment, value interface{}) (interface{}, error) {
-
 	s := store.State().(*state.StartSimulation)
 
 	sim, err := s.Services().Simulations().Get(s.GroupID)

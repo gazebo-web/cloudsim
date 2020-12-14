@@ -10,8 +10,8 @@ import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulator/jobs"
 )
 
-// LaunchFieldComputers launches the list of field computer pods.
-var LaunchFieldComputers = jobs.LaunchPods.Extend(actions.Job{
+// LaunchFieldComputerPods launches the list of field computer pods.
+var LaunchFieldComputerPods = jobs.LaunchPods.Extend(actions.Job{
 	Name:            "launch-field-computer-pods",
 	PreHooks:        []actions.JobFunc{setStartState, prepareFieldComputerPodInput},
 	PostHooks:       []actions.JobFunc{checkLaunchPodsError, returnState},
@@ -20,6 +20,7 @@ var LaunchFieldComputers = jobs.LaunchPods.Extend(actions.Job{
 	OutputType:      actions.GetJobDataType(&state.StartSimulation{}),
 })
 
+// prepareFieldComputerPodInput prepares the input for the generic LaunchPods job to launch field computer pods.
 func prepareFieldComputerPodInput(store actions.Store, tx *gorm.DB, deployment *actions.Deployment, value interface{}) (interface{}, error) {
 	s := store.State().(*state.StartSimulation)
 
