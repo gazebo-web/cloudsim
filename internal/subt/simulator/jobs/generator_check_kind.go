@@ -8,27 +8,24 @@ import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulator/jobs"
 )
 
-// GenerateCheckSimulationKindJob generates a specific check simulation kind job.
-// The generated jobs are used to check if a simulation is single, parent or child.
-func GenerateCheckSimulationKindJob(name string, kind simulations.Kind, inputType, outputType interface{}) *actions.Job {
-	createCheckKindInput := generateCheckSimulationKindInputPreHook(kind)
+// GenerateCheckSimulationNotOfKindJob is a job generator for checking that a certain simulation is not of a certain kind.
+func GenerateCheckSimulationNotOfKindJob(name string, kind simulations.Kind, inputType, outputType interface{}) *actions.Job {
+	createCheckKindInput := generateCheckSimulationNotOfKindInputPreHook(kind)
 
 	return jobs.CheckSimulationKind.Extend(actions.Job{
 		Name:       name,
-		PreHooks:   []actions.JobFunc{createCheckKindInput},
-		PostHooks:  []actions.JobFunc{assertSimulationKind, returnState},
+		PreHooks:   []actions.JobFunc{setStartState, createCheckKindInput},
+		PostHooks:  []actions.JobFunc{assertSimulationNotOfKind, returnState},
 		InputType:  actions.GetJobDataType(inputType),
 		OutputType: actions.GetJobDataType(outputType),
 	})
 }
 
-// generateCheckSimulationKindInputPreHook generates a pre-hook to get the simulation from a certain group ID
-// passed in the action store and prepares the proper dto for the generic job to check simulation kind.
-func generateCheckSimulationKindInputPreHook(kind simulations.Kind) actions.JobFunc {
+// generateCheckSimulationNotOfKindInputPreHook generates a pre-hook to get the simulation from a certain group ID
+// passed in the action store and prepares the proper dto for the generic job to check simulation is not of a certain kind.
+func generateCheckSimulationNotOfKindInputPreHook(kind simulations.Kind) actions.JobFunc {
 	return func(store actions.Store, tx *gorm.DB, deployment *actions.Deployment, value interface{}) (interface{}, error) {
 		s := value.(*state.StartSimulation)
-
-		store.SetState(s)
 
 		sim, err := s.Services().Simulations().Get(s.GroupID)
 		if err != nil {
@@ -42,9 +39,9 @@ func generateCheckSimulationKindInputPreHook(kind simulations.Kind) actions.JobF
 	}
 }
 
-// assertSimulationKind is the post-hook in charge of guarantee that the output of the CheckSimulationKind job operation
-// is of the correct kind.
-func assertSimulationKind(store actions.Store, tx *gorm.DB, deployment *actions.Deployment, value interface{}) (interface{}, error) {
+// assertSimulationNotOfKind is the post-hook in charge of guaranteeing that the output of the jobs.CheckSimulationKindOutput job operation
+// is not of a certain kind.
+func assertSimulationNotOfKind(store actions.Store, tx *gorm.DB, deployment *actions.Deployment, value interface{}) (interface{}, error) {
 	isKind := value.(jobs.CheckSimulationKindOutput)
 	if isKind {
 		return nil, simulations.ErrIncorrectKind
