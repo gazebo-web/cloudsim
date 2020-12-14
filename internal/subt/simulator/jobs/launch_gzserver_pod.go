@@ -1,6 +1,7 @@
 package jobs
 
 import (
+	"context"
 	"github.com/jinzhu/gorm"
 	subtapp "gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/application"
 	"gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/gazebo"
@@ -27,9 +28,6 @@ func prepareGazeboCreatePodInput(store actions.Store, tx *gorm.DB, deployment *a
 	// Set up namespace
 	namespace := s.Platform().Store().Orchestrator().Namespace()
 
-	// Get pod name
-	podName := subtapp.GetPodNameGazeboServer(s.GroupID)
-
 	// Get simulation
 	sim, err := s.Services().Simulations().Get(s.GroupID)
 	if err != nil {
@@ -44,13 +42,6 @@ func prepareGazeboCreatePodInput(store actions.Store, tx *gorm.DB, deployment *a
 	if err != nil {
 		return nil, err
 	}
-
-	// Assign track's image as container image.
-	containerImage := track.Image
-
-	// Get terminate grace period
-	terminationGracePeriod := s.Platform().Store().Orchestrator().TerminationGracePeriod()
-
 	// Generate gazebo command args
 	runCommand := gazebo.Generate(gazebo.LaunchConfig{
 		World:              track.World,
@@ -111,18 +102,18 @@ func prepareGazeboCreatePodInput(store actions.Store, tx *gorm.DB, deployment *a
 	nameservers := s.Platform().Store().Orchestrator().Nameservers()
 
 	// Create the input for the operation
-	input := []orchestrator.CreatePodInput{
+	pods := []orchestrator.CreatePodInput{
 		{
-			Name:                          podName,
+			Name:                          subtapp.GetPodNameGazeboServer(s.GroupID),
 			Namespace:                     namespace,
 			Labels:                        subtapp.GetPodLabelsGazeboServer(s.GroupID, s.ParentGroupID).Map(),
 			RestartPolicy:                 orchestrator.RestartPolicyNever,
-			TerminationGracePeriodSeconds: terminationGracePeriod,
+			TerminationGracePeriodSeconds: s.Platform().Store().Orchestrator().TerminationGracePeriod(),
 			NodeSelector:                  subtapp.GetNodeLabelsGazeboServer(s.GroupID),
 			Containers: []orchestrator.Container{
 				{
-					Name:                     "gzserver-container",
-					Image:                    containerImage,
+					Name:                     subtapp.GetContainerNameGazeboServer(),
+					Image:                    track.Image,
 					Args:                     runCommand,
 					Privileged:               &privileged,
 					AllowPrivilegeEscalation: &allowPrivilegeEscalation,
@@ -135,6 +126,44 @@ func prepareGazeboCreatePodInput(store actions.Store, tx *gorm.DB, deployment *a
 			Nameservers: nameservers,
 		},
 	}
+	if s.Platform().Store().Ignition().LogsCopyEnabled() {
+		secretsName := s.Platform().Store().Ignition().SecretsName()
+		ns := s.Platform().Store().Orchestrator().Namespace()
 
-	return jobs.LaunchPodsInput(input), nil
+		secret, err := s.Platform().Secrets().Get(context.TODO(), secretsName, ns)
+		if err != nil {
+			return nil, err
+		}
+
+		accessKey := string(secret.Data[s.Platform().Store().Ignition().AccessKeyLabel()])
+		secretAccessKey := string(secret.Data[s.Platform().Store().Ignition().SecretAccessKeyLabel()])
+
+		pods = append(pods, prepareCreatePodInput(configCreatePodInput{
+			name:                   subtapp.GetPodNameGazeboServerCopy(s.GroupID),
+			namespace:              ns,
+			labels:                 subtapp.GetPodLabelsGazeboServerCopy(s.GroupID, s.ParentGroupID).Map(),
+			restartPolicy:          orchestrator.RestartPolicyNever,
+			terminationGracePeriod: s.Platform().Store().Orchestrator().TerminationGracePeriod(),
+			nodeSelector:           subtapp.GetNodeLabelsGazeboServer(s.GroupID),
+			containerName:          subtapp.GetContainerNameGazeboServerCopy(),
+			image:                  "infrastructureascode/aws-cli:latest",
+			command:                []string{"tail", "-f", "/dev/null"},
+			volumes: []orchestrator.Volume{
+				{
+					Name:         "logs",
+					HostPath:     s.Platform().Store().Ignition().GazeboBucket(),
+					MountPath:    s.Platform().Store().Ignition().GazeboServerLogsPath(),
+					HostPathType: orchestrator.HostPathDirectoryOrCreate,
+				},
+			},
+			envVars: subtapp.GetEnvVarsGazeboServerCopy(
+				s.Platform().Store().Ignition().Region(),
+				accessKey,
+				secretAccessKey,
+			),
+			nameservers: s.Platform().Store().Orchestrator().Nameservers(),
+		}))
+	}
+
+	return jobs.LaunchPodsInput(pods), nil
 }

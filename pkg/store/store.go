@@ -99,4 +99,6 @@ type Ignition interface {
 	AccessKeyLabel() string
 
 	SecretAccessKeyLabel() string
+
+	GazeboBucket() string
 }
