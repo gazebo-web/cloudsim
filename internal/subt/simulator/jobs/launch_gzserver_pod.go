@@ -128,9 +128,8 @@ func prepareGazeboCreatePodInput(store actions.Store, tx *gorm.DB, deployment *a
 	}
 	if s.Platform().Store().Ignition().LogsCopyEnabled() {
 		secretsName := s.Platform().Store().Ignition().SecretsName()
-		ns := s.Platform().Store().Orchestrator().Namespace()
 
-		secret, err := s.Platform().Secrets().Get(context.TODO(), secretsName, ns)
+		secret, err := s.Platform().Secrets().Get(context.TODO(), secretsName, namespace)
 		if err != nil {
 			return nil, err
 		}
@@ -138,31 +137,38 @@ func prepareGazeboCreatePodInput(store actions.Store, tx *gorm.DB, deployment *a
 		accessKey := string(secret.Data[s.Platform().Store().Ignition().AccessKeyLabel()])
 		secretAccessKey := string(secret.Data[s.Platform().Store().Ignition().SecretAccessKeyLabel()])
 
-		pods = append(pods, prepareCreatePodInput(configCreatePodInput{
-			name:                   subtapp.GetPodNameGazeboServerCopy(s.GroupID),
-			namespace:              ns,
-			labels:                 subtapp.GetPodLabelsGazeboServerCopy(s.GroupID, s.ParentGroupID).Map(),
-			restartPolicy:          orchestrator.RestartPolicyNever,
-			terminationGracePeriod: s.Platform().Store().Orchestrator().TerminationGracePeriod(),
-			nodeSelector:           subtapp.GetNodeLabelsGazeboServer(s.GroupID),
-			containerName:          subtapp.GetContainerNameGazeboServerCopy(),
-			image:                  "infrastructureascode/aws-cli:latest",
-			command:                []string{"tail", "-f", "/dev/null"},
-			volumes: []orchestrator.Volume{
+		volumes = []orchestrator.Volume{
+			{
+				Name:         "logs",
+				HostPath:     s.Platform().Store().Ignition().GazeboBucket(),
+				MountPath:    s.Platform().Store().Ignition().GazeboServerLogsPath(),
+				HostPathType: orchestrator.HostPathDirectoryOrCreate,
+			},
+		}
+
+		pods = append(pods, orchestrator.CreatePodInput{
+			Name:                          subtapp.GetPodNameGazeboServerCopy(s.GroupID),
+			Namespace:                     namespace,
+			Labels:                        subtapp.GetPodLabelsGazeboServerCopy(s.GroupID, s.ParentGroupID).Map(),
+			RestartPolicy:                 orchestrator.RestartPolicyNever,
+			TerminationGracePeriodSeconds: s.Platform().Store().Orchestrator().TerminationGracePeriod(),
+			NodeSelector:                  subtapp.GetNodeLabelsGazeboServer(s.GroupID),
+			Containers: []orchestrator.Container{
 				{
-					Name:         "logs",
-					HostPath:     s.Platform().Store().Ignition().GazeboBucket(),
-					MountPath:    s.Platform().Store().Ignition().GazeboServerLogsPath(),
-					HostPathType: orchestrator.HostPathDirectoryOrCreate,
+					Name:    subtapp.GetContainerNameGazeboServerCopy(),
+					Image:   "infrastructureascode/aws-cli:latest",
+					Command: []string{"tail", "-f", "/dev/null"},
+					Volumes: volumes,
+					EnvVars: subtapp.GetEnvVarsGazeboServerCopy(
+						s.Platform().Store().Ignition().Region(),
+						accessKey,
+						secretAccessKey,
+					),
 				},
 			},
-			envVars: subtapp.GetEnvVarsGazeboServerCopy(
-				s.Platform().Store().Ignition().Region(),
-				accessKey,
-				secretAccessKey,
-			),
-			nameservers: s.Platform().Store().Orchestrator().Nameservers(),
-		}))
+			Volumes:     volumes,
+			Nameservers: nameservers,
+		})
 	}
 
 	return jobs.LaunchPodsInput(pods), nil
