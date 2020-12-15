@@ -109,30 +109,3 @@ type configCreatePodInput struct {
 	// nameservers is the set of nameservers that should be used by the pod to get access to the internet.
 	nameservers []string
 }
-
-// prepareCreatePodInput is in charge of preparing the input for the create pod job.
-func prepareCreatePodInput(c configCreatePodInput) orchestrator.CreatePodInput {
-	return orchestrator.CreatePodInput{
-		Name:                          c.name,
-		Namespace:                     c.namespace,
-		Labels:                        c.labels,
-		RestartPolicy:                 c.restartPolicy,
-		TerminationGracePeriodSeconds: c.terminationGracePeriod,
-		NodeSelector:                  c.nodeSelector,
-		Containers: []orchestrator.Container{
-			{
-				Name:                     c.containerName,
-				Image:                    c.image,
-				Command:                  c.command,
-				Args:                     c.args,
-				Privileged:               &c.privileged,
-				AllowPrivilegeEscalation: &c.allowPrivilegesEscalation,
-				Ports:                    c.ports,
-				Volumes:                  c.volumes,
-				EnvVars:                  c.envVars,
-			},
-		},
-		Volumes:     c.volumes,
-		Nameservers: c.nameservers,
-	}
-}
