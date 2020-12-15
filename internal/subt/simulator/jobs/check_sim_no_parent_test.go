@@ -2,7 +2,9 @@ package jobs
 
 import (
 	"github.com/stretchr/testify/assert"
+	subtapp "gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/application"
 	"gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/simulator/state"
+	tfake "gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/tracks/fake"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/actions"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/application"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
@@ -18,13 +20,18 @@ func TestCheckSimIsParent(t *testing.T) {
 	// Initialize fake simulation service
 	svc := fake.NewService()
 	svc.On("Get", gid).Return(sim, nil)
-	app := application.NewServices(svc)
+
+	// Initialize tracks service
+	trackService := tfake.NewService()
+
+	// Create SubT application service
+	app := subtapp.NewServices(application.NewServices(svc), trackService)
 
 	// Initialize job input and store
 	input := state.NewStartSimulation(nil, app, gid)
 	s := actions.NewStore(input)
 
-	result, err := CheckSimulationIsParent.Run(s, nil, nil, input)
+	result, err := CheckSimulationIsNotParent.Run(s, nil, nil, input)
 	assert.NoError(t, err)
 
 	output, ok := result.(*state.StartSimulation)
@@ -42,13 +49,18 @@ func TestCheckSimIsParent_ErrSimIsParent(t *testing.T) {
 	// Initialize fake simulation service
 	svc := fake.NewService()
 	svc.On("Get", gid).Return(sim, nil)
-	app := application.NewServices(svc)
+
+	// Initialize tracks service
+	trackService := tfake.NewService()
+
+	// Create SubT application service
+	app := subtapp.NewServices(application.NewServices(svc), trackService)
 
 	// Initialize job input and store
 	input := state.NewStartSimulation(nil, app, gid)
 	s := actions.NewStore(input)
 
-	_, err := CheckSimulationIsParent.Run(s, nil, nil, input)
+	_, err := CheckSimulationIsNotParent.Run(s, nil, nil, input)
 	assert.Error(t, err)
 	assert.Equal(t, simulations.ErrIncorrectKind, err)
 }

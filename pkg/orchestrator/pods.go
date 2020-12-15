@@ -3,21 +3,34 @@ package orchestrator
 import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/waiter"
 	"io"
+	corev1 "k8s.io/api/core/v1"
 	"time"
 )
 
 // RestartPolicy defines a restart policy used for pods.
-type RestartPolicy string
+type RestartPolicy corev1.RestartPolicy
 
-var (
+const (
 	// RestartPolicyNever is used to indicate that a pod won't be restarted.
-	RestartPolicyNever RestartPolicy = "Never"
+	RestartPolicyNever = RestartPolicy(corev1.RestartPolicyNever)
 
 	// RestartPolicyAlways is used to indicate that a pod always will be restarted.
-	RestartPolicyAlways RestartPolicy = "Always"
+	RestartPolicyAlways = RestartPolicy(corev1.RestartPolicyAlways)
 
 	// RestartPolicyOnFailure is used to indicate that a pod will be restarted only on failures.
-	RestartPolicyOnFailure RestartPolicy = "OnFailure"
+	RestartPolicyOnFailure = RestartPolicy(corev1.RestartPolicyOnFailure)
+)
+
+// HostPathType defines the host path type used for volumes.
+type HostPathType corev1.HostPathType
+
+const (
+	// HostPathUnset is used for backwards compatibility, leave it empty if unset.
+	HostPathUnset = HostPathType(corev1.HostPathUnset)
+
+	// HostPathDirectoryOrCreate should be set if nothing exists at the given path, an empty directory will be created
+	// there as needed with file mode 0755.
+	HostPathDirectoryOrCreate = HostPathType(corev1.HostPathDirectoryOrCreate)
 )
 
 // Volume represents a storage that will be used to persist data from a certain Container.
@@ -29,6 +42,8 @@ type Volume struct {
 	HostPath string
 	// MountPath is the path within the container at which the volume should be mounted.
 	MountPath string
+	// HostPathType defines the mount type and mounting behavior.
+	HostPathType HostPathType
 }
 
 // Container is a represents of a standard unit of software.
@@ -39,7 +54,11 @@ type Container struct {
 	// Image is the image running inside the container.
 	Image string
 
-	// Args are the commands passed to the container.
+	// Command is the entrypoint array. It's not executed within a shell.
+	// The docker image's ENTRYPOINT is used if this is not provided. Cannot be updated.
+	Command []string
+
+	// Args passed to the Command. Cannot be updated.
 	Args []string
 
 	// Privileged defines if the container should run in privileged mode.
@@ -72,6 +91,9 @@ type CreatePodInput struct {
 	TerminationGracePeriodSeconds time.Duration
 	// NodeSelector defines the node where the pod should run in.
 	NodeSelector Selector
+	// InitContainers is the list of containers that are created during pod initialization.
+	// InitContainers are launched before Containers, and are typically used to initialize the pod.
+	InitContainers []Container
 	// Containers is the list of containers that should be created inside the pod.
 	Containers []Container
 	// Volumes are the list of volumes that will be created to persist the data from the Container.Volumes.

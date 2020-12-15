@@ -27,7 +27,7 @@ const jobLaunchInstancesDataKey = "created-machines"
 
 func launchInstances(store actions.Store, tx *gorm.DB, deployment *actions.Deployment, value interface{}) (interface{}, error) {
 	// Get the store
-	s := store.State().(state.Platform)
+	s := store.State().(state.PlatformGetter)
 
 	// Parse the input
 	in := value.(LaunchInstancesInput)
@@ -50,7 +50,7 @@ func launchInstances(store actions.Store, tx *gorm.DB, deployment *actions.Deplo
 
 func removeCreatedInstances(store actions.Store, tx *gorm.DB, deployment *actions.Deployment, value interface{}, err error) (interface{}, error) {
 	// Get the store
-	s := store.State().(state.Platform)
+	s := store.State().(state.PlatformGetter)
 
 	// Get the list of instances from the execute function.
 	data, dataErr := deployment.GetJobData(tx, nil, jobLaunchInstancesDataKey)

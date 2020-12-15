@@ -13,21 +13,22 @@ import (
 )
 
 // LaunchGazeboServerPod launches a gazebo server pod.
-var LaunchGazeboServerPod = jobs.LaunchPod.Extend(actions.Job{
-	Name:       "launch-gzserver-pod",
-	PreHooks:   []actions.JobFunc{setStartState, prepareCreatePodInput},
-	PostHooks:  []actions.JobFunc{returnState},
-	InputType:  actions.GetJobDataType(&state.StartSimulation{}),
-	OutputType: actions.GetJobDataType(&state.StartSimulation{}),
+var LaunchGazeboServerPod = jobs.LaunchPods.Extend(actions.Job{
+	Name:            "launch-gzserver-pod",
+	PreHooks:        []actions.JobFunc{setStartState, prepareGazeboCreatePodInput},
+	PostHooks:       []actions.JobFunc{checkLaunchPodsError, returnState},
+	RollbackHandler: rollbackPodCreation,
+	InputType:       actions.GetJobDataType(&state.StartSimulation{}),
+	OutputType:      actions.GetJobDataType(&state.StartSimulation{}),
 })
 
-func prepareCreatePodInput(store actions.Store, tx *gorm.DB, deployment *actions.Deployment, value interface{}) (interface{}, error) {
+func prepareGazeboCreatePodInput(store actions.Store, tx *gorm.DB, deployment *actions.Deployment, value interface{}) (interface{}, error) {
 	s := store.State().(*state.StartSimulation)
 	// Set up namespace
 	namespace := s.Platform().Store().Orchestrator().Namespace()
 
 	// Get pod name
-	podName := subtapp.GetGazeboServerPodName(s.GroupID)
+	podName := subtapp.GetPodNameGazeboServer(s.GroupID)
 
 	// Get simulation
 	sim, err := s.Services().Simulations().Get(s.GroupID)
@@ -39,9 +40,7 @@ func prepareCreatePodInput(store actions.Store, tx *gorm.DB, deployment *actions
 	subtSim := sim.(simulations.Simulation)
 
 	// Get track name
-	trackName := subtSim.GetTrack()
-	app := s.Services().(subtapp.Services)
-	track, err := app.Tracks().Get(trackName)
+	track, err := s.SubTServices().Tracks().Get(subtSim.GetTrack())
 	if err != nil {
 		return nil, err
 	}
@@ -54,10 +53,11 @@ func prepareCreatePodInput(store actions.Store, tx *gorm.DB, deployment *actions
 
 	// Generate gazebo command args
 	runCommand := gazebo.Generate(gazebo.LaunchConfig{
-		World:                   track.World,
-		WorldMaxSimSeconds:      time.Duration(track.MaxSimSeconds),
-		Seed:                    track.Seed,
-		AuthorizationToken:      subtSim.GetToken(),
+		World:              track.World,
+		WorldMaxSimSeconds: time.Duration(track.MaxSimSeconds),
+		Seed:               track.Seed,
+		AuthorizationToken: subtSim.GetToken(),
+		// TODO: Get max connections from store.
 		MaxWebsocketConnections: 500,
 		Robots:                  subtSim.GetRobots(),
 		Marsupials:              subtSim.GetMarsupials(),
@@ -110,32 +110,31 @@ func prepareCreatePodInput(store actions.Store, tx *gorm.DB, deployment *actions
 
 	nameservers := s.Platform().Store().Orchestrator().Nameservers()
 
-	nodeSelector := subtapp.GetNodeLabelsGazeboServer(s.GroupID)
-	podLabels := subtapp.GetPodLabelsGazeboServer(s.GroupID, s.ParentGroupID)
-
 	// Create the input for the operation
-	input := orchestrator.CreatePodInput{
-		Name:                          podName,
-		Namespace:                     namespace,
-		Labels:                        podLabels.Map(),
-		RestartPolicy:                 orchestrator.RestartPolicyNever,
-		TerminationGracePeriodSeconds: terminationGracePeriod,
-		NodeSelector:                  nodeSelector,
-		Containers: []orchestrator.Container{
-			{
-				Name:                     "gzserver-container",
-				Image:                    containerImage,
-				Args:                     runCommand,
-				Privileged:               &privileged,
-				AllowPrivilegeEscalation: &allowPrivilegeEscalation,
-				Ports:                    ports,
-				Volumes:                  volumes,
-				EnvVars:                  envVars,
+	input := []orchestrator.CreatePodInput{
+		{
+			Name:                          podName,
+			Namespace:                     namespace,
+			Labels:                        subtapp.GetPodLabelsGazeboServer(s.GroupID, s.ParentGroupID).Map(),
+			RestartPolicy:                 orchestrator.RestartPolicyNever,
+			TerminationGracePeriodSeconds: terminationGracePeriod,
+			NodeSelector:                  subtapp.GetNodeLabelsGazeboServer(s.GroupID),
+			Containers: []orchestrator.Container{
+				{
+					Name:                     "gzserver-container",
+					Image:                    containerImage,
+					Args:                     runCommand,
+					Privileged:               &privileged,
+					AllowPrivilegeEscalation: &allowPrivilegeEscalation,
+					Ports:                    ports,
+					Volumes:                  volumes,
+					EnvVars:                  envVars,
+				},
 			},
+			Volumes:     volumes,
+			Nameservers: nameservers,
 		},
-		Volumes:     volumes,
-		Nameservers: nameservers,
 	}
 
-	return jobs.LaunchPodInput(input), nil
+	return jobs.LaunchPodsInput(input), nil
 }

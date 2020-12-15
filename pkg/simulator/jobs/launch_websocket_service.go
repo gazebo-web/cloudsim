@@ -25,7 +25,7 @@ var LaunchWebsocketService = &actions.Job{
 
 // launchWebsocketService is the main function executed by the LaunchWebsocketService job.
 func launchWebsocketService(store actions.Store, tx *gorm.DB, deployment *actions.Deployment, value interface{}) (interface{}, error) {
-	s := store.State().(state.Platform)
+	s := store.State().(state.PlatformGetter)
 
 	// Parse input
 	input, ok := value.(orchestrator.CreateServiceInput)

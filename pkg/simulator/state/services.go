@@ -4,7 +4,7 @@ import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/application"
 )
 
-// Services exposes a method to access the application services.
-type Services interface {
+// ServicesGetter exposes a method to access the application services.
+type ServicesGetter interface {
 	Services() application.Services
 }
