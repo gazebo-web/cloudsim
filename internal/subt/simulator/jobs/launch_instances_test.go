@@ -4,7 +4,9 @@ import (
 	"fmt"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	subtapp "gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/application"
 	"gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/simulator/state"
+	"gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/tracks"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/actions"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/application"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/cloud"
@@ -84,8 +86,12 @@ func TestLaunchInstances(t *testing.T) {
 		Store:    configStore,
 	})
 
+	tracksService := tracks.NewService(nil, nil, nil)
+
+	subt := subtapp.NewServices(app, tracksService)
+
 	// Create initial state
-	initialState := state.NewStartSimulation(p, app, gid)
+	initialState := state.NewStartSimulation(p, subt, gid)
 
 	// Pass the initial state to the action store
 	s := actions.NewStore(&initialState)

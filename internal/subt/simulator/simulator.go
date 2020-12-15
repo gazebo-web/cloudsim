@@ -3,9 +3,9 @@ package simulator
 import (
 	"context"
 	"github.com/jinzhu/gorm"
+	subtapp "gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/application"
 	"gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/simulator/state"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/actions"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/application"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/platform"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulator"
@@ -29,7 +29,7 @@ const (
 type subTSimulator struct {
 	applicationName string
 	platform        platform.Platform
-	services        application.Services
+	services        subtapp.Services
 	actions         actions.Servicer
 	db              *gorm.DB
 }
@@ -90,7 +90,7 @@ func (s *subTSimulator) Restart(ctx context.Context, groupID simulations.GroupID
 type Config struct {
 	DB                  *gorm.DB
 	Platform            platform.Platform
-	ApplicationServices application.Services
+	ApplicationServices subtapp.Services
 	ActionService       actions.Servicer
 }
 

@@ -3,7 +3,9 @@ package jobs
 import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
+	subtapp "gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/application"
 	"gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/simulator/state"
+	"gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/tracks"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/actions"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/application"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
@@ -33,8 +35,12 @@ func TestGenerateSetSimulationStatusJob(t *testing.T) {
 	})
 	app := application.NewServices(svc)
 
+	tracksService := tracks.NewService(nil, nil, nil)
+
+	subt := subtapp.NewServices(app, tracksService)
+
 	// Initialize store
-	initialState := state.NewStartSimulation(nil, app, gid)
+	initialState := state.NewStartSimulation(nil, subt, gid)
 	s := actions.NewStore(&initialState)
 
 	_, err := job.Run(s, nil, nil, initialState)

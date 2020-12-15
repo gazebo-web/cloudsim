@@ -45,6 +45,36 @@ type Ign struct {
 	*mock.Mock
 }
 
+// AccessKeyLabel mocks the AccessKeyLabel method.
+func (f *Ign) AccessKeyLabel() string {
+	args := f.Called()
+	return args.String(0)
+}
+
+// SecretAccessKeyLabel mocks the SecretAccessKeyLabel method.
+func (f *Ign) SecretAccessKeyLabel() string {
+	args := f.Called()
+	return args.String(0)
+}
+
+// LogsCopyEnabled mocks the LogsCopyEnabled method.
+func (f *Ign) LogsCopyEnabled() bool {
+	args := f.Called()
+	return args.Bool(0)
+}
+
+// Region mocks the Region method.
+func (f *Ign) Region() string {
+	args := f.Called()
+	return args.String(0)
+}
+
+// SecretsName mocks the SecretsName method.
+func (f *Ign) SecretsName() string {
+	args := f.Called()
+	return args.String(0)
+}
+
 // IP mocks the IP method.
 func (f *Ign) IP() string {
 	args := f.Called()
