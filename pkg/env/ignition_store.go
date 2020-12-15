@@ -44,22 +44,29 @@ func (i *ignitionEnvStore) GazeboBucket() string {
 	return i.GazeboBucketValue
 }
 
+// AccessKeyLabel returns the access key label to get the credentials for a certain cloud provider.
+// For AWS, it returns: `aws-access-key-id`
 func (i *ignitionEnvStore) AccessKeyLabel() string {
 	return "aws-access-key-id"
 }
 
+// SecretAccessKeyLabel returns the secret access key label to get the credentials for a certain cloud provider.
+// For AWS, it returns: `aws-secret-access-key`
 func (i *ignitionEnvStore) SecretAccessKeyLabel() string {
 	return "aws-secret-access-key"
 }
 
+// LogsCopyEnabled determines if ROS/Gazebo logs should be saved in a bucket or not.
 func (i *ignitionEnvStore) LogsCopyEnabled() bool {
 	return i.LogsCopyEnabledValue
 }
 
+// Region returns the region where to launch a certain simulation.
 func (i *ignitionEnvStore) Region() string {
 	return i.RegionValue
 }
 
+// SecretsName returns the name of the secrets to access credentials for different cloud providers.
 func (i *ignitionEnvStore) SecretsName() string {
 	return i.SecretsNameValue
 }
