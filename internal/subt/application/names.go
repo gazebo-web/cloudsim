@@ -51,3 +51,8 @@ func GetContainerNameCommsBridgeCopy() string {
 func GetContainerNameFieldComputer() string {
 	return "field-computer"
 }
+
+// GetSimulationIngressPath gets the path to the gzserver websocket server for a certain simulation.
+func GetSimulationIngressPath(groupID simulations.GroupID) string {
+	return fmt.Sprintf("/simulations/%s", groupID.String())
+}

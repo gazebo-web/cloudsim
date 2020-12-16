@@ -16,6 +16,34 @@ type orchestratorEnvStore struct {
 
 	// NamespaceValue is the orchestrator namespace where simulations should be launched.
 	NamespaceValue string `env:"CLOUDSIM_ORCHESTRATOR_NAMESPACE" envDefault:"default"`
+
+	// IngressNamespaceValue is the namespace where the gloo ingress lives.
+	IngressNamespaceValue string `env:"CLOUDSIM_ORCHESTRATOR_INGRESS_NAMESPACE" envDefault:"default"`
+
+	// IngressNameValue is the name of the Kubernetes Ingress used to route client requests from the Internet to
+	// different internal services. This configuration is required to enable websocket connections to simulations.
+	IngressNameValue string `env:"SUBT_ORCHESTRATOR_INGRESS_NAME,required"`
+
+	// IngressHostValue contains the address of the host used to route incoming websocket connections.
+	// It is used to select a specific rule to modify in an ingress.
+	// The ingress resource referenced by the `IngressName` configuration must contain at least one rule with a host
+	// value matching this configuration.
+	IngressHostValue string
+}
+
+// IngressNamespace returns the ingress namespace.
+func (o orchestratorEnvStore) IngressNamespace() string {
+	return o.IngressNamespaceValue
+}
+
+// IngressName returns the ingress name.
+func (o orchestratorEnvStore) IngressName() string {
+	return o.IngressNameValue
+}
+
+// IngressHost returns the ingress host.
+func (o orchestratorEnvStore) IngressHost() string {
+	return o.IngressHostValue
 }
 
 // TerminationGracePeriod duration that pods need to terminate gracefully.
