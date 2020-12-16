@@ -1,6 +1,7 @@
 package jobs
 
 import (
+	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 	subtapp "gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/application"
 	"gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/simulations/fake"
@@ -13,6 +14,7 @@ import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/kubernetes/pods"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/kubernetes/spdy"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/platform"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/secrets"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
 	simfake "gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations/fake"
 	sfake "gitlab.com/ignitionrobotics/web/cloudsim/pkg/store/fake"
@@ -36,6 +38,11 @@ func TestLaunchGazeboServerPod(t *testing.T) {
 	storeIgnition.On("IP").Return("127.0.0.1")
 	storeIgnition.On("Verbosity").Return("0")
 	storeIgnition.On("LogsCopyEnabled").Return(true)
+	storeIgnition.On("SecretsName").Return("aws-secrets")
+	storeIgnition.On("Region").Return("us-west-1")
+	storeIgnition.On("AccessKeyLabel").Return("aws-access-key-id")
+	storeIgnition.On("SecretAccessKeyLabel").Return("aws-secret-access-key")
+	storeIgnition.On("GazeboBucket").Return("gz-logs")
 
 	// Mock orchestrator store methods for this test
 	storeOrchestrator.On("Namespace").Return("default")
@@ -44,6 +51,14 @@ func TestLaunchGazeboServerPod(t *testing.T) {
 
 	// Set up SPDY initializer with fake implementation
 	spdyInit := spdy.NewSPDYFakeInitializer()
+
+	secretsManager := secrets.NewFakeSecrets()
+	ctx := mock.AnythingOfType("*context.emptyCtx")
+
+	secretsManager.On("Get", ctx, "aws-secrets", "default").Return(&secrets.Secret{Data: map[string][]byte{
+		"aws-access-key-id":     []byte("12345678910"),
+		"aws-secret-access-key": []byte("secret"),
+	}}, error(nil))
 
 	// Set up kubernetes component
 	client := kfake.NewSimpleClientset()
@@ -61,6 +76,7 @@ func TestLaunchGazeboServerPod(t *testing.T) {
 	p := platform.NewPlatform(platform.Components{
 		Cluster: ks,
 		Store:   fakeStore,
+		Secrets: secretsManager,
 	})
 
 	// Initialize generic simulation service
