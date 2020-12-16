@@ -35,6 +35,7 @@ func TestLaunchGazeboServerPod(t *testing.T) {
 	storeIgnition.On("GazeboServerLogsPath").Return("/tmp/test")
 	storeIgnition.On("IP").Return("127.0.0.1")
 	storeIgnition.On("Verbosity").Return("0")
+	storeIgnition.On("LogsCopyEnabled").Return(true)
 
 	// Mock orchestrator store methods for this test
 	storeOrchestrator.On("Namespace").Return("default")
