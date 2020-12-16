@@ -105,7 +105,13 @@ type Ignition interface {
 	// SecretsName returns the name of the secrets to access credentials for different cloud providers.
 	SecretsName() string
 
+	// AccessKeyLabel returns the access key label to get the credentials for a certain cloud provider.
+	// For AWS, it returns: `aws-access-key-id`
 	AccessKeyLabel() string
 
+	// SecretAccessKeyLabel returns the secret access key label to get the credentials for a certain cloud provider.
+	// For AWS, it returns: `aws-secret-access-key`
 	SecretAccessKeyLabel() string
+
+	GazeboBucket() string
 }

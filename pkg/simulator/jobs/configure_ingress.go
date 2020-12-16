@@ -28,7 +28,7 @@ var ConfigureIngress = &actions.Job{
 
 // configureIngress is used by the ConfigureIngress job as the execute function.
 func configureIngress(store actions.Store, tx *gorm.DB, deployment *actions.Deployment, value interface{}) (interface{}, error) {
-	s := store.State().(state.Platform)
+	s := store.State().(state.PlatformGetter)
 
 	input := value.(ConfigureIngressInput)
 

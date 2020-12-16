@@ -20,6 +20,7 @@ var LaunchFieldComputerPods = jobs.LaunchPods.Extend(actions.Job{
 	OutputType:      actions.GetJobDataType(&state.StartSimulation{}),
 })
 
+// prepareFieldComputerPodInput prepares the input for the generic LaunchPods job to launch field computer pods.
 func prepareFieldComputerPodInput(store actions.Store, tx *gorm.DB, deployment *actions.Deployment, value interface{}) (interface{}, error) {
 	s := store.State().(*state.StartSimulation)
 
@@ -35,25 +36,27 @@ func prepareFieldComputerPodInput(store actions.Store, tx *gorm.DB, deployment *
 	for i, r := range subtSim.GetRobots() {
 		robotID := subtapp.GetRobotID(i)
 		// Create field computer input
-		pods[i] = prepareCreatePodInput(configCreatePodInput{
-			name:                      subtapp.GetPodNameFieldComputer(s.GroupID, robotID),
-			namespace:                 s.Platform().Store().Orchestrator().Namespace(),
-			labels:                    subtapp.GetPodLabelsFieldComputer(s.GroupID, s.ParentGroupID).Map(),
-			restartPolicy:             orchestrator.RestartPolicyNever,
-			terminationGracePeriod:    s.Platform().Store().Orchestrator().TerminationGracePeriod(),
-			nodeSelector:              subtapp.GetNodeLabelsFieldComputer(s.GroupID, r),
-			containerName:             subtapp.GetContainerNameFieldComputer(),
-			image:                     subtSim.GetImage(),
-			args:                      nil,
-			privileged:                false,
-			allowPrivilegesEscalation: true,
-			ports:                     nil,
-			volumes:                   nil,
-			envVars: map[string]string{
-				"ROBOT_NAME": r.Name(),
+		privileged := false
+		allowPrivilegesEscalation := true
+		pods[i] = orchestrator.CreatePodInput{
+			Name:                          subtapp.GetPodNameFieldComputer(s.GroupID, robotID),
+			Namespace:                     s.Platform().Store().Orchestrator().Namespace(),
+			Labels:                        subtapp.GetPodLabelsFieldComputer(s.GroupID, s.ParentGroupID).Map(),
+			RestartPolicy:                 orchestrator.RestartPolicyNever,
+			TerminationGracePeriodSeconds: s.Platform().Store().Orchestrator().TerminationGracePeriod(),
+			NodeSelector:                  subtapp.GetNodeLabelsFieldComputer(s.GroupID, r),
+			Containers: []orchestrator.Container{
+				{
+					Name:                     subtapp.GetContainerNameFieldComputer(),
+					Image:                    subtSim.GetImage(),
+					Privileged:               &privileged,
+					AllowPrivilegeEscalation: &allowPrivilegesEscalation,
+					EnvVars: map[string]string{
+						"ROBOT_NAME": r.Name(),
+					},
+				},
 			},
-			nameservers: nil,
-		})
+		}
 	}
 
 	return jobs.LaunchPodsInput(pods), nil
