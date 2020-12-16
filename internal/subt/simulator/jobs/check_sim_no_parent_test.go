@@ -31,7 +31,7 @@ func TestCheckSimIsParent(t *testing.T) {
 	input := state.NewStartSimulation(nil, app, gid)
 	s := actions.NewStore(input)
 
-	result, err := CheckSimulationIsParent.Run(s, nil, nil, input)
+	result, err := CheckSimulationIsNotParent.Run(s, nil, nil, input)
 	assert.NoError(t, err)
 
 	output, ok := result.(*state.StartSimulation)
@@ -60,7 +60,7 @@ func TestCheckSimIsParent_ErrSimIsParent(t *testing.T) {
 	input := state.NewStartSimulation(nil, app, gid)
 	s := actions.NewStore(input)
 
-	_, err := CheckSimulationIsParent.Run(s, nil, nil, input)
+	_, err := CheckSimulationIsNotParent.Run(s, nil, nil, input)
 	assert.Error(t, err)
 	assert.Equal(t, simulations.ErrIncorrectKind, err)
 }

@@ -123,6 +123,24 @@ type Orchestrator struct {
 	*mock.Mock
 }
 
+// IngressNamespace mocks the IngressNamespace method.
+func (f Orchestrator) IngressNamespace() string {
+	args := f.Called()
+	return args.String(0)
+}
+
+// IngressName mocks the IngressName method.
+func (f Orchestrator) IngressName() string {
+	args := f.Called()
+	return args.String(0)
+}
+
+// IngressHost mocks the IngressHost method.
+func (f Orchestrator) IngressHost() string {
+	args := f.Called()
+	return args.String(0)
+}
+
 // Namespace mocks the Namespace method.
 func (f Orchestrator) Namespace() string {
 	args := f.Called()

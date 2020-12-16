@@ -21,6 +21,7 @@ type StartSimulation struct {
 	CreateMachinesInput  []cloud.CreateMachinesInput
 	CreateMachinesOutput []cloud.CreateMachinesOutput
 	ParentGroupID        *simulations.GroupID
+	UpstreamName         string
 	GazeboServerIP       string
 }
 
