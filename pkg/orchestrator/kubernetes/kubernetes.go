@@ -36,32 +36,32 @@ type k8s struct {
 }
 
 // IngressRules returns the Kubernetes orchestrator.IngressRules implementation.
-func (k k8s) IngressRules() orchestrator.IngressRules {
+func (k *k8s) IngressRules() orchestrator.IngressRules {
 	return k.ingressRules
 }
 
 // Nodes returns the Kubernetes orchestrator.Nodes implementation.
-func (k k8s) Nodes() orchestrator.Nodes {
+func (k *k8s) Nodes() orchestrator.Nodes {
 	return k.nodes
 }
 
 // Pods returns the Kubernetes orchestrator.Pods implementation.
-func (k k8s) Pods() orchestrator.Pods {
+func (k *k8s) Pods() orchestrator.Pods {
 	return k.pods
 }
 
 // Services returns the Kubernetes orchestrator.Services implementation.
-func (k k8s) Services() orchestrator.Services {
+func (k *k8s) Services() orchestrator.Services {
 	return k.services
 }
 
 // Ingresses returns the Kubernetes orchestrator.Ingresses implementation.
-func (k k8s) Ingresses() orchestrator.Ingresses {
+func (k *k8s) Ingresses() orchestrator.Ingresses {
 	return k.ingresses
 }
 
 // NetworkPolicies returns the Kubernetes orchestrator.NetworkPolicies implementation.
-func (k k8s) NetworkPolicies() orchestrator.NetworkPolicies {
+func (k *k8s) NetworkPolicies() orchestrator.NetworkPolicies {
 	return k.networkPolicies
 }
 
