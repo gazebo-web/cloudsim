@@ -2288,16 +2288,7 @@ func (sa *SubTApplication) processSimulationResults(ctx context.Context, s *Serv
 	if !dep.isMultiSim() {
 		// Create the score entry
 		if !globals.DisableScoreGeneration {
-			logger(ctx).Info(
-				fmt.Sprintf("processSimulationResults - Creating competition_scores entry for simulation [%s]", *dep.GroupID),
-			)
-			if em := s.userAccessor.AddScore(dep.GroupID, dep.Application, dep.ExtraSelector, dep.Owner,
-				values.Score, dep.GroupID); em != nil {
-				logMsg := fmt.Sprintf(
-					"processSimulationResults - Could not create competition_scores entry for simulation [%s].",
-					*dep.GroupID,
-				)
-				logger(ctx).Error(logMsg, em)
+			if em := processScore(ctx, s.userAccessor, tx, dep, values.Score); em != nil {
 				return em
 			}
 		}
@@ -2322,6 +2313,32 @@ func (sa *SubTApplication) processSimulationResults(ctx context.Context, s *Serv
 	}
 
 	return nil
+}
+
+// processScore creates the competition_scores entry for a simulation and updates its score.
+func processScore(ctx context.Context, userAccessor useracc.UserAccessor, tx *gorm.DB,
+	dep *SimulationDeployment, score *float64) *ign.ErrMsg {
+		logger(ctx).Info(
+			fmt.Sprintf("processScore - Creating competition_scores entry for simulation [%s]", *dep.GroupID),
+		)
+		if em := userAccessor.AddScore(dep.GroupID, dep.Application, dep.ExtraSelector, dep.Owner,
+			score, dep.GroupID); em != nil {
+				logMsg := fmt.Sprintf(
+					"processScore - Could not create competition_scores entry for simulation [%s].",
+					*dep.GroupID,
+				)
+				logger(ctx).Error(logMsg, em)
+				return em
+		}
+		if em := dep.UpdateScore(tx, score); em != nil {
+			logMsg := fmt.Sprintf(
+				"processScore - Could not create competition_scores entry for simulation [%s].",
+				*dep.GroupID,
+			)
+			logger(ctx).Error(logMsg, em)
+			return em
+		}
+		return nil
 }
 
 func isTeamSolutionPod(pod corev1.Pod) bool {
@@ -2681,16 +2698,7 @@ func (sa *SubTApplication) updateMultiSimStatuses(ctx context.Context, tx *gorm.
 
 	// Create the score entry
 	if !globals.DisableScoreGeneration {
-		logger(ctx).Info(
-			fmt.Sprintf("updateMultiSimStatuses - Creating competition_scores entry for simulation [%s]", *simDep.GroupID),
-		)
-		if em := userAccessor.AddScore(simDep.GroupID, simDep.Application, simDep.ExtraSelector, simDep.Owner,
-			&summary.Score, &summary.Sources); em != nil {
-			logMsg := fmt.Sprintf(
-				"updateMultiSimStatuses - Could not create competition_scores entry for simulation [%s].",
-				*simDep.GroupID,
-			)
-			logger(ctx).Error(logMsg, em)
+		if em := processScore(ctx, userAccessor, tx, simDep, &summary.Score); em != nil {
 			return em
 		}
 	}

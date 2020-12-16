@@ -121,3 +121,58 @@ func TestGetRemainingSubmissions(t *testing.T) {
 	require.NotNil(t, result)
 	assert.Equal(t, 0, *result)
 }
+
+func TestUpdateScore(t *testing.T) {
+	// Get database config
+	config, err := ign.NewDatabaseConfigFromEnvVars()
+	require.NoError(t, err)
+
+	// Initialize database
+	db, err := ign.InitDbWithCfg(&config)
+	require.NoError(t, err)
+
+	require.NoError(t, db.DropTableIfExists(&SimulationDeployment{}).Error)
+
+	// Auto migrate models
+	require.NoError(t, db.AutoMigrate(&SimulationDeployment{}).Error)
+
+	// Scores to use
+	score := 1.123
+	updatedScore := 99.99
+
+	// Create a submission
+	simDep := SimulationDeployment{
+		ValidFor:         sptr("6h0m0s"),
+		Owner:            sptr("Test"),
+		Creator:          sptr("TestUser"),
+		Private:          boolptr(true),
+		StopOnEnd:        boolptr(false),
+		Name:             sptr("TestSimDep"),
+		Image:            sptr("test"),
+		GroupID:          sptr("11111111-1111-1111-1111-111111111111-c-1"),
+		ParentGroupID:    sptr("11111111-1111-1111-1111-111111111111-c-1"),
+		MultiSim:         2,
+		DeploymentStatus: intptr(90),
+		ErrorStatus:      sptr("InitializationFailed"),
+		Platform:         sptr("subt"),
+		Application:      sptr("subt"),
+		Extra:            sptr("{}"),
+		ExtraSelector:    sptr("Test Circuit"),
+		Robots:           sptr("X1,X2"),
+		Score:            &score,
+	}
+
+	require.NoError(t, db.Model(&SimulationDeployment{}).Save(&simDep).Error)
+
+	// Verify unmodified score.
+	assert.Equal(t, simDep.Score, &score)
+
+	// Update score and verify both variable and database row values.
+	simDep.UpdateScore(db, &updatedScore)
+
+	assert.Equal(t, simDep.Score, &updatedScore)
+
+	var dbSimDep SimulationDeployment
+	require.NoError(t, db.Model(&SimulationDeployment{}).Where("id = ?", simDep.ID).First(&dbSimDep).Error)
+	assert.Equal(t, dbSimDep.Score, &updatedScore)
+}
