@@ -65,6 +65,7 @@ func GetContainerNameFieldComputer() string {
 // GetContainerNameGazeboServerCopy returns the gzserver copy container name.
 func GetContainerNameGazeboServerCopy() string {
 	return "copy-to-s3"
+}
 
 // GetSimulationIngressPath gets the path to the gzserver websocket server for a certain simulation.
 func GetSimulationIngressPath(groupID simulations.GroupID) string {
