@@ -24,7 +24,7 @@ func GetEnvVarsCommsBridgeCopy(region, accessKey, secret string) map[string]stri
 	}
 }
 
-// GetEnvVarsCommsBridgeCopy returns the env vars for the comms-bridge-copy container.
+// GetEnvVarsGazeboServerCopy returns the env vars for the gzserver copy container.
 func GetEnvVarsGazeboServerCopy(region, accessKey, secret string) map[string]string {
 	return map[string]string{
 		"AWS_DEFAULT_REGION":    region,

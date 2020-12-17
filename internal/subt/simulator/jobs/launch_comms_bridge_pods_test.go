@@ -1,6 +1,7 @@
 package jobs
 
 import (
+	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 	subtapp "gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/application"
 	"gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/simulations/fake"
@@ -46,7 +47,7 @@ func TestLaunchCommsBridgePods(t *testing.T) {
 	storeIgnition.On("Verbosity").Return("0")
 	storeIgnition.On("LogsCopyEnabled").Return(true)
 	storeIgnition.On("SecretsName").Return("aws-secrets")
-	storeIgnition.On("Region").Return("aws-secrets")
+	storeIgnition.On("Region").Return("us-west-1")
 	storeIgnition.On("AccessKeyLabel").Return("aws-access-key-id")
 	storeIgnition.On("SecretAccessKeyLabel").Return("aws-secret-access-key")
 
@@ -55,7 +56,9 @@ func TestLaunchCommsBridgePods(t *testing.T) {
 	storeOrchestrator.On("TerminationGracePeriod").Return(time.Second)
 	storeOrchestrator.On("Nameservers").Return([]string{"8.8.8.8", "8.8.4.4"})
 
-	secretsManager.On("Get").Return(&secrets.Secret{Data: map[string][]byte{
+	ctx := mock.AnythingOfType("context.TODO")
+
+	secretsManager.On("Get", ctx, "aws-secrets", "default").Return(&secrets.Secret{Data: map[string][]byte{
 		"aws-access-key-id":     []byte("12345678910"),
 		"aws-secret-access-key": []byte("secret"),
 	}}, error(nil))
