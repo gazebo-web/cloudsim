@@ -32,8 +32,8 @@ func prepareNetworkPolicyGazeboServerInput(store actions.Store, tx *gorm.DB, dep
 
 	selectors := make([]orchestrator.Selector, len(robots))
 
-	for _, r := range robots {
-		selectors = append(selectors, subtapp.GetPodLabelsCommsBridge(s.GroupID, s.ParentGroupID, r))
+	for i, r := range robots {
+		selectors[i] = subtapp.GetPodLabelsCommsBridge(s.GroupID, s.ParentGroupID, r)
 	}
 
 	return jobs.CreateNetworkPoliciesInput{
