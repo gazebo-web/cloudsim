@@ -15,7 +15,7 @@ import (
 var WaitUpstream = jobs.Wait.Extend(actions.Job{
 	Name:       "wait-upstream-gloo",
 	PreHooks:   []actions.JobFunc{setStartState, createWaitRequestForUpstream},
-	PostHooks:  []actions.JobFunc{returnState},
+	PostHooks:  []actions.JobFunc{checkWaitError, returnState},
 	InputType:  actions.GetJobDataType(&state.StartSimulation{}),
 	OutputType: actions.GetJobDataType(&state.StartSimulation{}),
 })
