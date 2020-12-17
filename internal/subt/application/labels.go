@@ -49,7 +49,7 @@ func GetNodeLabelsBase(groupID simulations.GroupID) orchestrator.Selector {
 
 // GetPodLabelsFieldComputer returns a selector that identifies a field computer pod.
 func GetPodLabelsFieldComputer(groupID simulations.GroupID, parent *simulations.GroupID) orchestrator.Selector {
-	base := getPodLabelsBase(groupID, parent)
+	base := GetPodLabelsBase(groupID, parent)
 	ext := orchestrator.NewSelector(map[string]string{
 		labelFieldComputer: "true",
 	})
@@ -58,7 +58,7 @@ func GetPodLabelsFieldComputer(groupID simulations.GroupID, parent *simulations.
 
 // GetPodLabelsCommsBridge returns a selector that identifies a comms bridge pod.
 func GetPodLabelsCommsBridge(groupID simulations.GroupID, parent *simulations.GroupID, robot simulations.Robot) orchestrator.Selector {
-	base := getPodLabelsBase(groupID, parent)
+	base := GetPodLabelsBase(groupID, parent)
 	ext := orchestrator.NewSelector(map[string]string{
 		labelCommsBridge:         "true",
 		labelCommsBridgeForRobot: strings.ToLower(robot.Name()),
@@ -68,7 +68,7 @@ func GetPodLabelsCommsBridge(groupID simulations.GroupID, parent *simulations.Gr
 
 // GetPodLabelsCommsBridgeCopy returns a selector that identifies a comms bridge copy pod.
 func GetPodLabelsCommsBridgeCopy(groupID simulations.GroupID, parent *simulations.GroupID, robot simulations.Robot) orchestrator.Selector {
-	base := getPodLabelsBase(groupID, parent)
+	base := GetPodLabelsBase(groupID, parent)
 	ext := orchestrator.NewSelector(map[string]string{
 		labelCopyS3:       "true",
 		labelCopyForRobot: strings.ToLower(robot.Name()),
@@ -87,15 +87,15 @@ func GetPodLabelsGazeboServerCopy(groupID simulations.GroupID, parent *simulatio
 
 // GetPodLabelsGazeboServer returns a selector that identifies a gzserver pod.
 func GetPodLabelsGazeboServer(groupID simulations.GroupID, parent *simulations.GroupID) orchestrator.Selector {
-	base := getPodLabelsBase(groupID, parent)
+	base := GetPodLabelsBase(groupID, parent)
 	ext := orchestrator.NewSelector(map[string]string{
 		labelGazeboServer: "true",
 	})
 	return base.Extend(ext)
 }
 
-// getPodLabelsBase returns the base set of key-values for all pod selectors.
-func getPodLabelsBase(groupID simulations.GroupID, parent *simulations.GroupID) orchestrator.Selector {
+// GetPodLabelsBase returns the base set of key-values for all pod selectors.
+func GetPodLabelsBase(groupID simulations.GroupID, parent *simulations.GroupID) orchestrator.Selector {
 	base := orchestrator.NewSelector(map[string]string{
 		labelCloudsim:   "true",
 		labelSubT:       "true",
