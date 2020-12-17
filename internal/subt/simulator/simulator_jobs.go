@@ -22,13 +22,13 @@ var JobsStartSimulation = actions.Jobs{
 	jobs.WaitForGazeboServerPod,
 	jobs.WaitUpstream,
 	jobs.ConfigureIngressGloo,
-	// jobs.LaunchWebsocketService,
+	jobs.LaunchWebsocketService,
 	jobs.LaunchCommsBridgePods,
 	jobs.CreateNetworkPolicyCommsBridges,
 	jobs.LaunchFieldComputerPods,
 	jobs.CreateNetworkPolicyFieldComputers,
 	jobs.SetSimulationStatusToWaitPods,
-	//jobs.WaitForRobotPods,
+	jobs.WaitRobots,
 	jobs.SetSimulationStatusToRunning,
 }
 
