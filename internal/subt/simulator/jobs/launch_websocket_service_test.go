@@ -15,21 +15,29 @@ import (
 )
 
 func TestLaunchWebsocketService(t *testing.T) {
+	// Initialize logger
 	logger := ign.NewLoggerNoRollbar("TestLaunchWebsocketService", ign.VerbosityDebug)
 
+	// Mock store orchestrator
 	storeOrchestrator := sfake.NewFakeOrchestrator()
 	storeOrchestrator.On("Namespace").Return("default")
 
+	// Initialize the store with the mocked store
 	fakeStore := sfake.NewFakeStore(nil, storeOrchestrator, nil)
 
+	// Define the simulation group ID used  by the job.
 	gid := simulations.GroupID("aaaa-bbbb-cccc-dddd")
 
+	// Initialize a new fake kubernetes client.
 	client := kfake.NewSimpleClientset()
 
+	// Initialize a kubernetes service manager
 	kss := services.NewServices(client, logger)
 
+	// Initialize a new cluster component with the kubernetes service manager
 	ks := kubernetes.NewCustomKubernetes(kubernetes.Config{Services: kss})
 
+	// Initialize a new platform with the orchestrator component and the mocked store.
 	p := platform.NewPlatform(platform.Components{
 		Cluster: ks,
 		Store:   fakeStore,
