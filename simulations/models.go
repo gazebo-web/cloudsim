@@ -78,6 +78,8 @@ type SimulationDeployment struct {
 	// simulation.
 	// This token is currently used to establish connections with the simulation's websocket server.
 	AuthorizationToken *string `json:"-"`
+	// Score has the simulation's score. It's updated when the simulations finishes and gets processed.
+	Score *float64 `json:"score,omitempty"`
 }
 
 // NewSimulationDeployment creates and initializes a simulation deployment struct.
@@ -227,6 +229,16 @@ func (dep *SimulationDeployment) UpdateProcessed(tx *gorm.DB, state bool) error 
 	dep.Processed = state
 	if err := tx.Save(&dep).Error; err != nil {
 		return err
+	}
+	return nil
+}
+
+// UpdateScore is used to update the score of the current simulation while it's being processed.
+// Returns an error if the SimulationDeployment Score field failed to update.
+func (dep *SimulationDeployment) UpdateScore(tx *gorm.DB, score *float64) *ign.ErrMsg {
+	dep.Score = score
+	if err := tx.Model(&SimulationDeployment{}).Where("id = ?", dep.ID).Update("score", score).Error; err != nil {
+		return ign.NewErrorMessageWithBase(ign.ErrorDbSave, err)
 	}
 	return nil
 }
