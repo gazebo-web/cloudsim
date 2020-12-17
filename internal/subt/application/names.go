@@ -71,3 +71,8 @@ func GetContainerNameGazeboServerCopy() string {
 func GetSimulationIngressPath(groupID simulations.GroupID) string {
 	return fmt.Sprintf("/simulations/%s", groupID.String())
 }
+
+// GetServiceNameWebsocket returns the websocket name for the given GroupID.
+func GetServiceNameWebsocket(groupID simulations.GroupID) string {
+	return fmt.Sprintf("%s-%s-websocket", simPrefix, groupID)
+}
