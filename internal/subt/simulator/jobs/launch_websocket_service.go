@@ -13,7 +13,7 @@ import (
 var LaunchWebsocketService = jobs.LaunchWebsocketService.Extend(actions.Job{
 	Name:       "launch-websocket-service",
 	PreHooks:   []actions.JobFunc{setStartState, prepareLaunchWebsocketServiceInput},
-	PostHooks:  []actions.JobFunc{returnState},
+	PostHooks:  []actions.JobFunc{checkLaunchServiceError, returnState},
 	InputType:  actions.GetJobDataType(&state.StartSimulation{}),
 	OutputType: actions.GetJobDataType(&state.StartSimulation{}),
 })
