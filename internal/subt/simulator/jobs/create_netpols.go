@@ -10,6 +10,8 @@ import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulator/jobs"
 )
 
+// CreateNetworkPolicyGazeboServer extends the generic jobs.CreateNetworkPolicies to create a network policy for the
+// gazebo server
 var CreateNetworkPolicyGazeboServer = jobs.CreateNetworkPolicies.Extend(actions.Job{
 	Name:       "create-netpol-gzserver",
 	PreHooks:   []actions.JobFunc{setStartState, prepareNetworkPolicyGazeboServerInput},
@@ -18,6 +20,8 @@ var CreateNetworkPolicyGazeboServer = jobs.CreateNetworkPolicies.Extend(actions.
 	OutputType: actions.GetJobDataType(&state.StartSimulation{}),
 })
 
+// prepareNetworkPolicyGazeboServerInput is a pre-hook of the CreateNetworkPolicyGazeboServer job that prepares the input
+// for the generic jobs.CreateNetworkPolicies job.
 func prepareNetworkPolicyGazeboServerInput(store actions.Store, tx *gorm.DB, deployment *actions.Deployment, value interface{}) (interface{}, error) {
 	s := store.State().(*state.StartSimulation)
 
@@ -58,6 +62,8 @@ func prepareNetworkPolicyGazeboServerInput(store actions.Store, tx *gorm.DB, dep
 	}, nil
 }
 
+// CreateNetworkPolicyFieldComputers extends the generic jobs.CreateNetworkPolicies to create a network policy for the
+// different field computers.
 var CreateNetworkPolicyFieldComputers = jobs.CreateNetworkPolicies.Extend(actions.Job{
 	Name:            "create-netpol-field-computers",
 	PreHooks:        []actions.JobFunc{setStartState, prepareNetworkPolicyFieldComputersInput},
@@ -67,6 +73,8 @@ var CreateNetworkPolicyFieldComputers = jobs.CreateNetworkPolicies.Extend(action
 	OutputType:      actions.GetJobDataType(&state.StartSimulation{}),
 })
 
+// prepareNetworkPolicyFieldComputersInput is a pre-hook of the CreateNetworkPolicyFieldComputers job that prepares the input
+// for the generic jobs.CreateNetworkPolicies job.
 func prepareNetworkPolicyFieldComputersInput(store actions.Store, tx *gorm.DB, deployment *actions.Deployment, value interface{}) (interface{}, error) {
 	s := store.State().(*state.StartSimulation)
 
@@ -110,6 +118,8 @@ func prepareNetworkPolicyFieldComputersInput(store actions.Store, tx *gorm.DB, d
 	return input, nil
 }
 
+// CreateNetworkPolicyCommsBridges extends the generic jobs.CreateNetworkPolicies to create a network policy for the
+// different comms bridges.
 var CreateNetworkPolicyCommsBridges = jobs.CreateNetworkPolicies.Extend(actions.Job{
 	Name:       "create-netpol-comms-bridges",
 	PreHooks:   []actions.JobFunc{setStartState, prepareNetworkPolicyCommsBridgesInput},
@@ -118,6 +128,8 @@ var CreateNetworkPolicyCommsBridges = jobs.CreateNetworkPolicies.Extend(actions.
 	OutputType: actions.GetJobDataType(&state.StartSimulation{}),
 })
 
+// prepareNetworkPolicyCommsBridgesInput is a pre-hook of the CreateNetworkPolicyCommsBridges job that prepares the input
+// for the generic jobs.CreateNetworkPolicies job.
 func prepareNetworkPolicyCommsBridgesInput(store actions.Store, tx *gorm.DB, deployment *actions.Deployment, value interface{}) (interface{}, error) {
 	s := store.State().(*state.StartSimulation)
 
