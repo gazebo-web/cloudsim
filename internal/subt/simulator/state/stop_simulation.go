@@ -30,8 +30,8 @@ func (s *StopSimulation) SubTServices() subtapp.Services {
 }
 
 // NewStopSimulation initializes a new state for stopping simulations.
-func NewStopSimulation(platform platform.Platform, services subtapp.Services, groupID simulations.GroupID) *RestartSimulation {
-	return &RestartSimulation{
+func NewStopSimulation(platform platform.Platform, services subtapp.Services, groupID simulations.GroupID) *StopSimulation {
+	return &StopSimulation{
 		platform: platform,
 		services: services,
 		GroupID:  groupID,
