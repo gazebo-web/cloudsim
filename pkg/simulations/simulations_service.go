@@ -19,4 +19,7 @@ type Service interface {
 
 	// GetRobots returns the robot list of the simulation with the given groupID.
 	GetRobots(groupID GroupID) ([]Robot, error)
+
+	// Stop marks a simulation identified with the given Group ID as stopped.
+	Stop(groupID GroupID) error
 }
