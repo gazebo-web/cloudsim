@@ -63,5 +63,13 @@ var SetSimulationStatusToWaitPods = GenerateSetSimulationStatusJob(GenerateSetSi
 	InputType:  &state.StartSimulation{},
 	OutputType: &state.StartSimulation{},
 	PreHooks:   []actions.JobFunc{setStartState, returnGroupIDFromStartState},
-	PostHooks:  nil,
+})
+
+// SetSimulationStatusToDeletingPods is used to set a simulation status to deleting pods.
+var SetSimulationStatusToDeletingPods = GenerateSetSimulationStatusJob(GenerateSetSimulationStatusConfig{
+	Name:       "set-simulation-status-deleting-pods",
+	Status:     simulations.StatusDeletingPods,
+	InputType:  &state.StopSimulation{},
+	OutputType: &state.StopSimulation{},
+	PreHooks:   []actions.JobFunc{setStopState, returnGroupIDFromStopState},
 })
