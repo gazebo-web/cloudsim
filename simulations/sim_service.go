@@ -1129,6 +1129,8 @@ func (s *Service) RestartSimulationAsync(ctx context.Context, tx *gorm.DB,
 	clone.ValidFor = sptr(s.getMaxDurationForSimulation(ctx, tx, clone).String())
 	// Reset the processed field to allow processing when simulations end
 	clone.Processed = false
+	// Reset the simulation score.
+	clone.Score = nil
 
 	// Find out if the old simulation was also a "retry" and get its retry number
 	const retryStr = "-r-"
