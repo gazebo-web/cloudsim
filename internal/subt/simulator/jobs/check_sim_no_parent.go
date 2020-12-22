@@ -2,6 +2,7 @@ package jobs
 
 import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/simulator/state"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/actions"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
 )
 
@@ -10,7 +11,7 @@ var CheckStartSimulationIsNotParent = GenerateCheckSimulationNotOfKindJob(
 	ConfigCheckSimulationNotOfKindJob{
 		Name:               "check-start-simulation-no-parent",
 		Kind:               simulations.SimParent,
-		PreHooks:           nil,
+		PreHooks:           []actions.JobFunc{setStartState},
 		PreparationPreHook: generateCheckStartSimulationNotOfKindInputPreHook(simulations.SimParent),
 		InputType:          &state.StartSimulation{},
 		OutputType:         &state.StartSimulation{},
@@ -22,7 +23,7 @@ var CheckStopSimulationIsNotParent = GenerateCheckSimulationNotOfKindJob(
 	ConfigCheckSimulationNotOfKindJob{
 		Name:               "check-stop-simulation-no-parent",
 		Kind:               simulations.SimParent,
-		PreHooks:           nil,
+		PreHooks:           []actions.JobFunc{setStartState, setStopState},
 		PreparationPreHook: generateCheckStopSimulationNotOfKindInputPreHook(simulations.SimParent),
 		InputType:          &state.StopSimulation{},
 		OutputType:         &state.StopSimulation{},
