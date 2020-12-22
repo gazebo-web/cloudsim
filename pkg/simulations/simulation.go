@@ -56,6 +56,9 @@ var (
 
 	// StatusTerminateRequested is used when a simulation has been scheduled to be terminated.
 	StatusTerminateRequested Status = "terminate-requested"
+
+	// StatusDeletingPods is used when a simulation is being shutdown.
+	StatusDeletingPods Status = "deleting-pods"
 )
 
 // Kind is used to identify if a Simulation is a single simulation or a multisim.
