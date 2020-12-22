@@ -109,6 +109,7 @@ type Pods interface {
 	Reader(resource Resource) Reader
 	WaitForCondition(resource Resource, condition Condition) waiter.Waiter
 	Delete(resource Resource) (Resource, error)
+	Get(name, namespace string) (Resource, error)
 }
 
 // Executor groups a set of methods to run commands and scripts inside a Pod.
