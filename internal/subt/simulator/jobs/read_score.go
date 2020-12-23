@@ -50,7 +50,8 @@ func readScore(store actions.Store, tx *gorm.DB, deployment *actions.Deployment,
 
 	// Set the score
 	s.Score = score
+	store.SetState(s)
 
-	//
+	// Return state
 	return s, nil
 }
