@@ -13,6 +13,7 @@ type StopSimulation struct {
 	services subtapp.Services
 	GroupID  simulations.GroupID
 	Score    float64
+	Stats    simulations.Statistics
 }
 
 // Platform returns the underlying platform.
