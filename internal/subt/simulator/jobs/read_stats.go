@@ -31,7 +31,7 @@ func readStats(store actions.Store, tx *gorm.DB, deployment *actions.Deployment,
 	}
 
 	// Get a reader to read the score from the gzserver pod
-	reader, err := s.Platform().Orchestrator().Pods().Reader(res).File("/tmp/logs/score.yml")
+	reader, err := s.Platform().Orchestrator().Pods().Reader(res).File("/tmp/logs/summary.yml")
 	if err != nil {
 		return nil, err
 	}
@@ -54,6 +54,6 @@ func readStats(store actions.Store, tx *gorm.DB, deployment *actions.Deployment,
 	s.Stats = stats
 	store.SetState(s)
 
-	// Return the store
+	// Return the state
 	return s, nil
 }
