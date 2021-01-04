@@ -42,7 +42,11 @@ func SendEmail(recipient *[]string, sender *string, subject string, templateFile
 }
 
 // SendSimulationSummaryEmail sends a summary email to the user that created the simulation
-func SendSimulationSummaryEmail(dep *SimulationDeployment, summary AggregatedSubTSimulationValues) *ign.ErrMsg {
+// `summary` contains summary information for the run. It should be passed for all types of simulation.
+// `runData` contains specific simulation run information. It should only be passed for single sims.
+func SendSimulationSummaryEmail(dep *SimulationDeployment, summary AggregatedSubTSimulationValues,
+	runData *string) *ign.ErrMsg {
+
 	// Do not send emails for simulations that have already been processed
 	if dep.Processed {
 		return ign.NewErrorMessageWithBase(ign.ErrorUnexpected, errors.New("simulation has already been processed"))
@@ -69,12 +73,14 @@ func SendSimulationSummaryEmail(dep *SimulationDeployment, summary AggregatedSub
 		SimName string
 		GroupID string
 		Summary string
+		RunData *string
 	}{
 		Name:    *user.Name,
 		SimName: *dep.Name,
 		Circuit: *dep.ExtraSelector,
 		GroupID: *dep.GroupID,
 		Summary: marshaledSummary.String(),
+		RunData: runData,
 	}
 
 	// Set the list of recipients
