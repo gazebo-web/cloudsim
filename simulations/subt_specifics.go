@@ -80,56 +80,56 @@ const (
 
 	// A predefined const to refer to the SubT Application type
 	// This will be used to know which Pods and services launch.
-	applicationSubT           string = "subt"
-	CircuitNIOSHSRConfigA     string = "NIOSH SR Config A"
-	CircuitNIOSHSRConfigB     string = "NIOSH SR Config B"
-	CircuitNIOSHEXConfigA     string = "NIOSH EX Config A"
-	CircuitNIOSHEXConfigB     string = "NIOSH EX Config B"
-	CircuitVirtualStix        string = "Virtual Stix"
-	CircuitTunnelCircuit      string = "Tunnel Circuit"
-	CircuitTunnelPractice1    string = "Tunnel Practice 1"
-	CircuitTunnelPractice2    string = "Tunnel Practice 2"
-	CircuitTunnelPractice3    string = "Tunnel Practice 3"
-	CircuitSimpleTunnel1      string = "Simple Tunnel 1"
-	CircuitSimpleTunnel2      string = "Simple Tunnel 2"
-	CircuitSimpleTunnel3      string = "Simple Tunnel 3"
+	applicationSubT            string = "subt"
+	CircuitNIOSHSRConfigA      string = "NIOSH SR Config A"
+	CircuitNIOSHSRConfigB      string = "NIOSH SR Config B"
+	CircuitNIOSHEXConfigA      string = "NIOSH EX Config A"
+	CircuitNIOSHEXConfigB      string = "NIOSH EX Config B"
+	CircuitVirtualStix         string = "Virtual Stix"
+	CircuitTunnelCircuit       string = "Tunnel Circuit"
+	CircuitTunnelPractice1     string = "Tunnel Practice 1"
+	CircuitTunnelPractice2     string = "Tunnel Practice 2"
+	CircuitTunnelPractice3     string = "Tunnel Practice 3"
+	CircuitSimpleTunnel1       string = "Simple Tunnel 1"
+	CircuitSimpleTunnel2       string = "Simple Tunnel 2"
+	CircuitSimpleTunnel3       string = "Simple Tunnel 3"
 	CircuitTunnelCircuitWorld1 string = "Tunnel Circuit World 1"
 	CircuitTunnelCircuitWorld2 string = "Tunnel Circuit World 2"
 	CircuitTunnelCircuitWorld3 string = "Tunnel Circuit World 3"
 	CircuitTunnelCircuitWorld4 string = "Tunnel Circuit World 4"
 	CircuitTunnelCircuitWorld5 string = "Tunnel Circuit World 5"
-	CircuitUrbanQual          string = "Urban Qualification"
-	CircuitUrbanSimple1       string = "Urban Simple 1"
-	CircuitUrbanSimple2       string = "Urban Simple 2"
-	CircuitUrbanSimple3       string = "Urban Simple 3"
-	CircuitUrbanPractice1     string = "Urban Practice 1"
-	CircuitUrbanPractice2     string = "Urban Practice 2"
-	CircuitUrbanPractice3     string = "Urban Practice 3"
-	CircuitUrbanCircuit       string = "Urban Circuit"
-	CircuitUrbanCircuitWorld1 string = "Urban Circuit World 1"
-	CircuitUrbanCircuitWorld2 string = "Urban Circuit World 2"
-	CircuitUrbanCircuitWorld3 string = "Urban Circuit World 3"
-	CircuitUrbanCircuitWorld4 string = "Urban Circuit World 4"
-	CircuitUrbanCircuitWorld5 string = "Urban Circuit World 5"
-	CircuitUrbanCircuitWorld6 string = "Urban Circuit World 6"
-	CircuitUrbanCircuitWorld7 string = "Urban Circuit World 7"
-	CircuitUrbanCircuitWorld8 string = "Urban Circuit World 8"
-	CircuitCaveSimple1        string = "Cave Simple 1"
-	CircuitCaveSimple2        string = "Cave Simple 2"
-	CircuitCaveSimple3        string = "Cave Simple 3"
-	CircuitCaveQual           string = "Cave Qualification"
-	CircuitCavePractice1      string = "Cave Practice 1"
-	CircuitCavePractice2      string = "Cave Practice 2"
-	CircuitCavePractice3      string = "Cave Practice 3"
-	CircuitCaveCircuit        string = "Cave Circuit"
-	CircuitCaveCircuitWorld1  string = "Cave Circuit World 1"
-	CircuitCaveCircuitWorld2  string = "Cave Circuit World 2"
-	CircuitCaveCircuitWorld3  string = "Cave Circuit World 3"
-	CircuitCaveCircuitWorld4  string = "Cave Circuit World 4"
-	CircuitCaveCircuitWorld5  string = "Cave Circuit World 5"
-	CircuitCaveCircuitWorld6  string = "Cave Circuit World 6"
-	CircuitCaveCircuitWorld7  string = "Cave Circuit World 7"
-	CircuitCaveCircuitWorld8  string = "Cave Circuit World 8"
+	CircuitUrbanQual           string = "Urban Qualification"
+	CircuitUrbanSimple1        string = "Urban Simple 1"
+	CircuitUrbanSimple2        string = "Urban Simple 2"
+	CircuitUrbanSimple3        string = "Urban Simple 3"
+	CircuitUrbanPractice1      string = "Urban Practice 1"
+	CircuitUrbanPractice2      string = "Urban Practice 2"
+	CircuitUrbanPractice3      string = "Urban Practice 3"
+	CircuitUrbanCircuit        string = "Urban Circuit"
+	CircuitUrbanCircuitWorld1  string = "Urban Circuit World 1"
+	CircuitUrbanCircuitWorld2  string = "Urban Circuit World 2"
+	CircuitUrbanCircuitWorld3  string = "Urban Circuit World 3"
+	CircuitUrbanCircuitWorld4  string = "Urban Circuit World 4"
+	CircuitUrbanCircuitWorld5  string = "Urban Circuit World 5"
+	CircuitUrbanCircuitWorld6  string = "Urban Circuit World 6"
+	CircuitUrbanCircuitWorld7  string = "Urban Circuit World 7"
+	CircuitUrbanCircuitWorld8  string = "Urban Circuit World 8"
+	CircuitCaveSimple1         string = "Cave Simple 1"
+	CircuitCaveSimple2         string = "Cave Simple 2"
+	CircuitCaveSimple3         string = "Cave Simple 3"
+	CircuitCaveQual            string = "Cave Qualification"
+	CircuitCavePractice1       string = "Cave Practice 1"
+	CircuitCavePractice2       string = "Cave Practice 2"
+	CircuitCavePractice3       string = "Cave Practice 3"
+	CircuitCaveCircuit         string = "Cave Circuit"
+	CircuitCaveCircuitWorld1   string = "Cave Circuit World 1"
+	CircuitCaveCircuitWorld2   string = "Cave Circuit World 2"
+	CircuitCaveCircuitWorld3   string = "Cave Circuit World 3"
+	CircuitCaveCircuitWorld4   string = "Cave Circuit World 4"
+	CircuitCaveCircuitWorld5   string = "Cave Circuit World 5"
+	CircuitCaveCircuitWorld6   string = "Cave Circuit World 6"
+	CircuitCaveCircuitWorld7   string = "Cave Circuit World 7"
+	CircuitCaveCircuitWorld8   string = "Cave Circuit World 8"
 
 	// Container names
 	GazeboServerContainerName    string = "gzserver-container"
@@ -834,6 +834,22 @@ func (sa *SubTApplication) getSimulationLiveLogs(ctx context.Context, s *Service
 	return &podLog, nil
 }
 
+func (sa *SubTApplication) copyPodReadFile(ctx context.Context, s *Service,
+	dep *SimulationDeployment, filepath string) (*bytes.Buffer, error) {
+
+	podName := sa.getCopyPodName(
+		sa.getGazeboPodName(getSimulationPodNamePrefix(*dep.GroupID)),
+	)
+	return KubernetesPodReadFile(
+		ctx,
+		s.clientset,
+		s.cfg.KubernetesNamespace,
+		podName,
+		CopyToS3SidecarContainerName,
+		filepath,
+	)
+}
+
 // getSimulationScore returns the simulation score from the pod of a simulation deployment.
 func (sa *SubTApplication) getSimulationScore(ctx context.Context, s *Service,
 	dep *SimulationDeployment) (*float64, *ign.ErrMsg) {
@@ -847,18 +863,11 @@ func (sa *SubTApplication) getSimulationScore(ctx context.Context, s *Service,
 		return &score, nil
 	}
 
-	podName := sa.getCopyPodName(
-		sa.getGazeboPodName(getSimulationPodNamePrefix(*dep.GroupID)),
-	)
-	filepath := fmt.Sprintf("%s/score.yml", sa.cfg.SidecarContainerLogsVolumeMountPath)
-
-	out, err := KubernetesPodReadFile(
+	out, err := sa.copyPodReadFile(
 		ctx,
-		s.clientset,
-		s.cfg.KubernetesNamespace,
-		podName,
-		CopyToS3SidecarContainerName,
-		filepath,
+		s,
+		dep,
+		fmt.Sprintf("%s/score.yml", sa.cfg.SidecarContainerLogsVolumeMountPath),
 	)
 	if err != nil {
 		return nil, ign.NewErrorMessageWithBase(int64(ErrorInvalidScore), err)
@@ -889,18 +898,11 @@ func (sa *SubTApplication) getSimulationStatistics(ctx context.Context, s *Servi
 		}, nil
 	}
 
-	podName := sa.getCopyPodName(
-		sa.getGazeboPodName(getSimulationPodNamePrefix(*dep.GroupID)),
-	)
-	filepath := fmt.Sprintf("%s/summary.yml", sa.cfg.SidecarContainerLogsVolumeMountPath)
-
-	out, err := KubernetesPodReadFile(
+	out, err := sa.copyPodReadFile(
 		ctx,
-		s.clientset,
-		s.cfg.KubernetesNamespace,
-		podName,
-		CopyToS3SidecarContainerName,
-		filepath,
+		s,
+		dep,
+		fmt.Sprintf("%s/summary.yml", sa.cfg.SidecarContainerLogsVolumeMountPath),
 	)
 	if err != nil {
 		return nil, ign.NewErrorMessageWithBase(int64(ErrorInvalidSummary), err)
@@ -913,6 +915,34 @@ func (sa *SubTApplication) getSimulationStatistics(ctx context.Context, s *Servi
 	}
 
 	return &statistics, nil
+}
+
+// getSimulationScore returns the simulation run data containing metrics, information about found artifacts, etc.
+func (sa *SubTApplication) getSimulationRunData(ctx context.Context, s *Service,
+	dep *SimulationDeployment) (*string, *ign.ErrMsg) {
+
+	// HACK This is a temporary fix until we can properly mock the Kubernetes clientset
+	// s.clientset will not be a kubernetes.Clientset if this is a test.
+	// A hardcoded value is returned if a test kubernetes interface is detected
+	// for tests to complete successfully.
+	if _, ok := s.clientset.(*kubernetes.Clientset); ok == false {
+		out := ""
+		return &out, nil
+	}
+
+	out, err := sa.copyPodReadFile(
+		ctx,
+		s,
+		dep,
+		fmt.Sprintf("%s/run.yml", sa.cfg.SidecarContainerLogsVolumeMountPath),
+	)
+	if err != nil {
+		return nil, ign.NewErrorMessageWithBase(int64(ErrorInvalidRunInformation), err)
+	}
+
+	runData := out.String()
+
+	return &runData, nil
 }
 
 ////////////////////////////////////////////////////////////////////////////
@@ -2304,7 +2334,14 @@ func (sa *SubTApplication) processSimulationResults(ctx context.Context, s *Serv
 				ModelCountAvg:          float64(values.ModelCount),
 				ModelCountStdDev:       0,
 			}
-			SendSimulationSummaryEmail(dep, summary)
+
+			// Get simulation run information
+			runData, em := sa.getSimulationRunData(ctx, s, dep)
+			if em != nil {
+				return em
+			}
+
+			SendSimulationSummaryEmail(dep, summary, runData)
 		}
 	}
 
@@ -2318,27 +2355,27 @@ func (sa *SubTApplication) processSimulationResults(ctx context.Context, s *Serv
 // processScore creates the competition_scores entry for a simulation and updates its score.
 func processScore(ctx context.Context, userAccessor useracc.UserAccessor, tx *gorm.DB,
 	dep *SimulationDeployment, score *float64) *ign.ErrMsg {
-		logger(ctx).Info(
-			fmt.Sprintf("processScore - Creating competition_scores entry for simulation [%s]", *dep.GroupID),
+	logger(ctx).Info(
+		fmt.Sprintf("processScore - Creating competition_scores entry for simulation [%s]", *dep.GroupID),
+	)
+	if em := userAccessor.AddScore(dep.GroupID, dep.Application, dep.ExtraSelector, dep.Owner,
+		score, dep.GroupID); em != nil {
+		logMsg := fmt.Sprintf(
+			"processScore - Could not create competition_scores entry for simulation [%s].",
+			*dep.GroupID,
 		)
-		if em := userAccessor.AddScore(dep.GroupID, dep.Application, dep.ExtraSelector, dep.Owner,
-			score, dep.GroupID); em != nil {
-				logMsg := fmt.Sprintf(
-					"processScore - Could not create competition_scores entry for simulation [%s].",
-					*dep.GroupID,
-				)
-				logger(ctx).Error(logMsg, em)
-				return em
-		}
-		if em := dep.UpdateScore(tx, score); em != nil {
-			logMsg := fmt.Sprintf(
-				"processScore - Could not create competition_scores entry for simulation [%s].",
-				*dep.GroupID,
-			)
-			logger(ctx).Error(logMsg, em)
-			return em
-		}
-		return nil
+		logger(ctx).Error(logMsg, em)
+		return em
+	}
+	if em := dep.UpdateScore(tx, score); em != nil {
+		logMsg := fmt.Sprintf(
+			"processScore - Could not create competition_scores entry for simulation [%s].",
+			*dep.GroupID,
+		)
+		logger(ctx).Error(logMsg, em)
+		return em
+	}
+	return nil
 }
 
 func isTeamSolutionPod(pod corev1.Pod) bool {
@@ -2720,7 +2757,7 @@ func (sa *SubTApplication) updateMultiSimStatuses(ctx context.Context, tx *gorm.
 
 	// Send an email with the summary to the competitor
 	if !globals.DisableSummaryEmails {
-		SendSimulationSummaryEmail(simDep, *summary)
+		SendSimulationSummaryEmail(simDep, *summary, nil)
 	}
 
 	if !simDep.Processed {
