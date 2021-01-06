@@ -2,11 +2,19 @@
 <html lang="en">
 <head></head>
 <body>
-  <p>Hello {{ .Name }},</p>
-  <p>Your {{ .Circuit }} simulation {{ .SimName }} with id {{ .GroupID }} has finished successfully.</p>
-  <h3>Summary</h3>
-  <pre>{{ .Summary }}</pre>
-  <p>Regards,</p>
-  <p>Open Robotics Team</p>
+<p>Hello {{ .Name }},</p>
+
+<p>Your {{ .Circuit }} simulation {{ .SimName }} with id {{ .GroupID }} has finished successfully.</p>
+
+<h3>Summary</h3>
+<pre>{{ .Summary }}</pre>
+
+{{ if .RunData }}
+    <h3>Simulation Run Data</h3>
+    <pre>{{ .RunData }}</pre>
+{{ end }}
+
+<p>Regards,</p>
+<p>Open Robotics Team</p>
 </body>
 </html>

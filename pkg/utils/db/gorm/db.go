@@ -6,14 +6,19 @@ import (
 	"gitlab.com/ignitionrobotics/web/ign-go"
 )
 
-// GetDBFromEnvVars reads environment variables to return a Gorm database connection.
+var (
+	// ErrEmptyDatabaseName is returned when a database configuration contains an empty database name
+	ErrEmptyDatabaseName = errors.New("db config contains empty database name")
+)
+
+// getDBConfigFromEnvVars reads environment variables to return a database connection configuration.
 // The environment variables used are:
 // * IGN_DB_ADDRESS Address of the DBMS.
 // * IGN_DB_USERNAME Username to connect to the DBMS with.
 // * IGN_DB_PASSWORD Password to connect to the DBMS with.
 // * IGN_DB_NAME Name of the database to connect to.
 // * IGN_DB_MAX_OPEN_CONNS - (Optional) You run the risk of getting a 'too many connections' error if this is not set.
-func GetDBFromEnvVars() (*gorm.DB, error) {
+func getDBConfigFromEnvVars() (*ign.DatabaseConfig, error) {
 	// Get the db config
 	var dbConfig ign.DatabaseConfig
 	var err error
@@ -21,9 +26,43 @@ func GetDBFromEnvVars() (*gorm.DB, error) {
 	if err != nil {
 		return nil, err
 	}
+	if len(dbConfig.Name) == 0 {
+		return nil, ErrEmptyDatabaseName
+	}
+
+	return &dbConfig, nil
+}
+
+// GetDBFromEnvVars reads environment variables to return a Gorm database connection.
+func GetDBFromEnvVars() (*gorm.DB, error) {
+	// Get the db config
+	dbConfig, err := getDBConfigFromEnvVars()
+	if err != nil {
+		return nil, err
+	}
 
 	// Connect to the db
-	db, err := ign.InitDbWithCfg(&dbConfig)
+	db, err := ign.InitDbWithCfg(dbConfig)
+	if err != nil {
+		return nil, err
+	}
+
+	return db, nil
+}
+
+// GetTestDBFromEnvVars reads environment variables to return a Gorm database connection.
+func GetTestDBFromEnvVars() (*gorm.DB, error) {
+	// Get the db config
+	dbConfig, err := getDBConfigFromEnvVars()
+	if err != nil {
+		return nil, err
+	}
+
+	// Add the test name suffix
+	dbConfig.Name += "_test"
+
+	// Connect to the db
+	db, err := ign.InitDbWithCfg(dbConfig)
 	if err != nil {
 		return nil, err
 	}

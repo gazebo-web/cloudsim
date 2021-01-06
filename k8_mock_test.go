@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"gitlab.com/ignitionrobotics/web/cloudsim/testing"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -16,12 +17,6 @@ import (
 type K8Mock struct {
 	kubernetes.Interface
 }
-
-// ChainedMockFunction is a generic function used to create Kubernetes Reactor
-// chains. Reactor chains allows modifying resources in response to events.
-// ChainedMockFunction differs from MockFunction in that it returns a `handled`
-// value, which lets the reactor chain short circuit if necessary.
-type ChainedMockFunction func(args ...interface{}) (handled bool, res interface{})
 
 // PodMutator mutates a pod as a Reaction.
 type PodMutator func(pod *corev1.Pod) (handled bool, err error)
@@ -116,16 +111,8 @@ func (f *K8Mock) MakePod(name, image string, labels map[string]string) *corev1.P
 // (pods, nodes, etc). "*" can be passed to verbs and resources to be called in
 // all cases.
 // For a complete list of available verbs and resources, run `kubectl api-resources -o wide`
-func (f *K8Mock) AddReactor(verb, resource string, fn ChainedMockFunction) *K8Mock {
-	reactor := func(action k8testing.Action) (handled bool, ret runtime.Object, err error) {
-		handled, res := fn(action)
-		// If the mock result is an error, return that error
-		if err, ok := res.(error); ok {
-			return handled, nil, err
-		}
-		ret = res.(runtime.Object)
-		return handled, ret, nil
-	}
+func (f *K8Mock) AddReactor(verb, resource string, fn testing.ChainedMockFunction) *K8Mock {
+	reactor := testing.GenerateReactor(fn)
 	f.getSimpleClientset().Fake.PrependReactor(verb, resource, reactor)
 	return f
 }

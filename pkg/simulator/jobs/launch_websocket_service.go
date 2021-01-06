@@ -28,13 +28,13 @@ func launchWebsocketService(store actions.Store, tx *gorm.DB, deployment *action
 	s := store.State().(state.PlatformGetter)
 
 	// Parse input
-	input, ok := value.(orchestrator.CreateServiceInput)
+	input, ok := value.(LaunchWebsocketServiceInput)
 	if !ok {
 		return nil, simulator.ErrInvalidInput
 	}
 
 	// Create service
-	res, err := s.Platform().Orchestrator().Services().Create(input)
+	res, err := s.Platform().Orchestrator().Services().Create(orchestrator.CreateServiceInput(input))
 
 	return LaunchWebsocketServiceOutput{
 		Resource: res,
