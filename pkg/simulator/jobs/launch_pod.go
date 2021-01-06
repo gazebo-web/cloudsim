@@ -33,6 +33,10 @@ func launchPods(store actions.Store, tx *gorm.DB, deployment *actions.Deployment
 		return nil, simulator.ErrInvalidInput
 	}
 
+	if len(input) == 0 {
+		return nil, nil
+	}
+
 	var created []orchestrator.Resource
 	var err error
 
