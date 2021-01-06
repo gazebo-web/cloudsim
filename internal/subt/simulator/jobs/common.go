@@ -34,6 +34,12 @@ func returnGroupIDFromStartState(store actions.Store, tx *gorm.DB, deployment *a
 	return s.GroupID, nil
 }
 
+// returnGroupIDFromStopState parses the input vale as the StopSimulation state and returns the group id.
+func returnGroupIDFromStopState(store actions.Store, tx *gorm.DB, deployment *actions.Deployment, value interface{}) (interface{}, error) {
+	s := store.State().(*state.StopSimulation)
+	return s.GroupID, nil
+}
+
 // checkWaitError is an actions.JobFunc implementation that checks if the value returned by a job extended from the
 // Wait job returns an error.
 // If the previous jobs.Wait job returns an error, it will trigger the rollback handler.
