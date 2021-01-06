@@ -20,7 +20,7 @@ var ReadStats = actions.Job{
 	OutputType: actions.GetJobDataType(&state.StopSimulation{}),
 }
 
-// readScore is the main execute function for the ReadScore job.
+// readStats is the main execute function for the ReadStats job.
 func readStats(store actions.Store, tx *gorm.DB, deployment *actions.Deployment, value interface{}) (interface{}, error) {
 	s := store.State().(*state.StopSimulation)
 
