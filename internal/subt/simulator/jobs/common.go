@@ -77,3 +77,12 @@ func rollbackPodCreation(store actions.Store, tx *gorm.DB, deployment *actions.D
 
 	return nil, nil
 }
+
+// checkLaunchServiceError checks if the output from the jobs.LaunchWebsocketService has an error.
+func checkLaunchServiceError(store actions.Store, tx *gorm.DB, deployment *actions.Deployment, value interface{}) (interface{}, error) {
+	output := value.(jobs.LaunchWebsocketServiceOutput)
+	if output.Error == nil {
+		return value, nil
+	}
+	return nil, output.Error
+}
