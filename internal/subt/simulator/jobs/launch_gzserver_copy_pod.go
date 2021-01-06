@@ -10,7 +10,7 @@ import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulator/jobs"
 )
 
-// LaunchGazeboServerPod launches a gazebo server copy pod.
+// LaunchGazeboServerCopyPod launches a gazebo server copy pod.
 var LaunchGazeboServerCopyPod = jobs.LaunchPods.Extend(actions.Job{
 	Name:            "launch-gzserver-copy-pod",
 	PreHooks:        []actions.JobFunc{setStartState, prepareGazeboCreateCopyPodInput},
@@ -20,6 +20,7 @@ var LaunchGazeboServerCopyPod = jobs.LaunchPods.Extend(actions.Job{
 	OutputType:      actions.GetJobDataType(&state.StartSimulation{}),
 })
 
+// prepareGazeboCreateCopyPodInput prepares the input to launch a copy pod for a gzserver.
 func prepareGazeboCreateCopyPodInput(store actions.Store, tx *gorm.DB, deployment *actions.Deployment, value interface{}) (interface{}, error) {
 	s := store.State().(*state.StartSimulation)
 
