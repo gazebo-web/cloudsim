@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/aws/aws-sdk-go/service/ec2/ec2iface"
@@ -10,6 +11,7 @@ import (
 )
 
 const (
+	Ec2OpDescribeInstances         OpType = "DescribeInstances"
 	Ec2OpRunInstances              OpType = "RunInstances"
 	Ec2OpStopInstances             OpType = "StopInstances"
 	Ec2OpTerminateInstances        OpType = "TerminateInstances"
@@ -20,10 +22,16 @@ const (
 type EC2Mock struct {
 	ec2iface.EC2API
 	Mock
+	DescribeInstancesFunc         func(*ec2.DescribeInstancesInput) (*ec2.DescribeInstancesOutput, error)
 	RunInstancesFunc              func(*ec2.RunInstancesInput) (*ec2.Reservation, error)
 	StopInstancesFunc             func(*ec2.StopInstancesInput) (*ec2.StopInstancesOutput, error)
 	TerminateInstancesFunc        func(*ec2.TerminateInstancesInput) (*ec2.TerminateInstancesOutput, error)
 	WaitUntilInstanceStatusOkFunc func(*ec2.DescribeInstanceStatusInput) error
+}
+
+// GenerateEC2InstanceID generates an EC2 instance ID
+func GenerateEC2InstanceID() string {
+	return fmt.Sprintf("i-test-%s", uuid.NewV4().String())
 }
 
 // NewEC2Mock creates a new EC2Mock.
@@ -36,6 +44,9 @@ func NewEC2Mock() *EC2Mock {
 // NewEC2MockSuccessfulLaunch creates a new Mock prepared to launch EC2 instances required for a single robot
 // simulation.
 func NewEC2MockSuccessfulLaunch() *EC2Mock {
+	ec2InstanceID1 := GenerateEC2InstanceID()
+	ec2InstanceID2 := GenerateEC2InstanceID()
+
 	m := NewEC2Mock()
 	m.SetMockFunction(Ec2OpWaitUntilInstanceStatusOk, FixedValues, false, nil)
 	m.SetMockFunction(Ec2OpRunInstances, FixedValues, false,
@@ -43,10 +54,20 @@ func NewEC2MockSuccessfulLaunch() *EC2Mock {
 		m.NewAWSErr(simulations.AWSErrCodeDryRunOperation),
 		// EC2 Instance 1
 		m.NewAWSErr(simulations.AWSErrCodeDryRunOperation),
-		m.NewReservation(fmt.Sprintf("i-test-1-%s", uuid.NewV4().String())),
+		m.NewReservation(ec2InstanceID1),
 		// EC2 Instance 2
 		m.NewAWSErr(simulations.AWSErrCodeDryRunOperation),
-		m.NewReservation(fmt.Sprintf("i-test-2-%s", uuid.NewV4().String())),
+		m.NewReservation(ec2InstanceID2),
+	)
+	m.SetMockFunction(Ec2OpDescribeInstances, FixedValues, false,
+		// Return the instances created when calling the RunInstances method
+		m.NewDescribeInstancesOutput(ec2InstanceID1, ec2InstanceID2),
+	)
+	m.SetMockFunction(Ec2OpTerminateInstances, FixedValues, false,
+		// Check that instances can be terminated
+		m.NewAWSErr(simulations.AWSErrCodeDryRunOperation),
+		// Delete the instances returned by the DescribeInstances method
+		m.NewTerminateInstancesOutput(ec2InstanceID1, ec2InstanceID2),
 	)
 	return m
 }
@@ -60,6 +81,9 @@ func (m *EC2Mock) NewAWSErr(code string) awserr.Error {
 func (m *EC2Mock) NewInstance(iID string) *ec2.Instance {
 	return &ec2.Instance{
 		InstanceId: &iID,
+		State: &ec2.InstanceState{
+			Name: aws.String(ec2.InstanceStateNameRunning),
+		},
 	}
 }
 
@@ -72,6 +96,65 @@ func (m *EC2Mock) NewReservation(iID ...string) *ec2.Reservation {
 	return &ec2.Reservation{
 		Instances: instances,
 	}
+}
+
+// NewDescribeInstancesOutput is a helper method to easily create "DescribeInstances" output.
+// iID contains a list of instance IDs to return .
+func (m *EC2Mock) NewDescribeInstancesOutput(iID ...string) *ec2.DescribeInstancesOutput {
+	reservations := make([]*ec2.Reservation, len(iID))
+	for i, id := range iID {
+		reservations[i] = m.NewReservation(id)
+	}
+
+	return &ec2.DescribeInstancesOutput{
+		Reservations: reservations,
+	}
+}
+
+// NewTerminateInstancesOutput is a helper method to easily create "TerminateInstances" output.
+// iID contains a list of instance IDs to terminate.
+func (m *EC2Mock) NewTerminateInstancesOutput(iID ...string) *ec2.TerminateInstancesOutput {
+	instanceStates := make([]*ec2.InstanceStateChange, len(iID))
+	for i, id := range iID {
+		instanceStates[i] = &ec2.InstanceStateChange{
+			InstanceId: aws.String(id),
+			PreviousState: &ec2.InstanceState{
+				Name: aws.String(ec2.InstanceStateNameRunning),
+			},
+			CurrentState: &ec2.InstanceState{
+				Name: aws.String(ec2.InstanceStateNameTerminated),
+			},
+		}
+	}
+
+	return &ec2.TerminateInstancesOutput{
+		TerminatingInstances: instanceStates,
+	}
+}
+
+// RunInstances API operation for Amazon Elastic Compute Cloud.
+func (m *EC2Mock) DescribeInstances(input *ec2.DescribeInstancesInput) (*ec2.DescribeInstancesOutput, error) {
+	if m.RunInstancesFunc != nil {
+		return m.DescribeInstancesFunc(input)
+	}
+
+	defer m.InvokeCallback(Ec2OpDescribeInstances, input)
+
+	result := m.GetMockResult(Ec2OpDescribeInstances)
+	// PassThrough is a special value that indicates the non-mocked version of this function should be called
+	if result == PassThrough {
+		return m.EC2API.DescribeInstances(input)
+	}
+	// If the mock result is an error, return that error
+	if err, ok := result.(error); ok {
+		return nil, err
+	}
+
+	// This explicit cast is needed to avoid a panic when result is 'nil'.
+	if r, ok := result.(*ec2.DescribeInstancesOutput); ok {
+		return r, nil
+	}
+	return nil, nil
 }
 
 // RunInstances API operation for Amazon Elastic Compute Cloud.
