@@ -6,18 +6,16 @@ import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/simulator/state"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/actions"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
-	"gopkg.in/yaml.v2"
 )
 
 // ReadStats is a job in charge of reading the statistics from a gzserver pod for the simulation that is being processed.
 var ReadStats = actions.Job{
-	Name:            "read-simulation-score",
-	PreHooks:        []actions.JobFunc{setStopState},
-	Execute:         readStats,
-	PostHooks:       []actions.JobFunc{returnState},
-	RollbackHandler: nil,
-	InputType:       actions.GetJobDataType(&state.StopSimulation{}),
-	OutputType:      actions.GetJobDataType(&state.StopSimulation{}),
+	Name:       "read-simulation-score",
+	PreHooks:   []actions.JobFunc{setStopState},
+	Execute:    readStats,
+	PostHooks:  []actions.JobFunc{returnState},
+	InputType:  actions.GetJobDataType(&state.StopSimulation{}),
+	OutputType: actions.GetJobDataType(&state.StopSimulation{}),
 }
 
 // readScore is the main execute function for the ReadScore job.
