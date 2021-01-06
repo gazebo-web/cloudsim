@@ -6,6 +6,7 @@ import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/simulator/state"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/actions"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
+	"gopkg.in/yaml.v2"
 )
 
 // ReadStats is a job in charge of reading the statistics from a gzserver pod for the simulation that is being processed.
