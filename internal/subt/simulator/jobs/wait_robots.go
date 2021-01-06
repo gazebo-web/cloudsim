@@ -9,17 +9,17 @@ import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulator/jobs"
 )
 
-// WaitRobots is a job extending the generic jobs.Wait to wait for robots to be ready.
-var WaitRobots = jobs.Wait.Extend(actions.Job{
-	Name:       "wait-robots",
-	PreHooks:   []actions.JobFunc{setStartState, createWaitRequestForRobots},
+// WaitSimulationPods is a job extending the generic jobs.Wait to wait for all simulation pods to be ready.
+var WaitSimulationPods = jobs.Wait.Extend(actions.Job{
+	Name:       "wait-simulation-pods",
+	PreHooks:   []actions.JobFunc{setStartState, createSimulationWaitRequest},
 	PostHooks:  []actions.JobFunc{returnState},
 	InputType:  actions.GetJobDataType(&state.StartSimulation{}),
 	OutputType: actions.GetJobDataType(&state.StartSimulation{}),
 })
 
-// createWaitRequestForRobots is a pre-hook of the specific WaitRobots job in charge of creating the request for the jobs.Wait job.
-func createWaitRequestForRobots(store actions.Store, tx *gorm.DB, deployment *actions.Deployment, value interface{}) (interface{}, error) {
+// createSimulationWaitRequest is a pre-hook of the specific WaitSimulationPods job in charge of creating the request for the jobs.Wait job.
+func createSimulationWaitRequest(store actions.Store, tx *gorm.DB, deployment *actions.Deployment, value interface{}) (interface{}, error) {
 	s := value.(*state.StartSimulation)
 
 	res := orchestrator.NewResource("", "", subtapp.GetPodLabelsBase(s.GroupID, s.ParentGroupID))
