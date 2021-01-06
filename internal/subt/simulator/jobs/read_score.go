@@ -1,6 +1,7 @@
 package jobs
 
 import (
+	"fmt"
 	"github.com/jinzhu/gorm"
 	subtapp "gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/application"
 	"gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/simulator/state"
@@ -28,8 +29,10 @@ func readScore(store actions.Store, tx *gorm.DB, deployment *actions.Deployment,
 		return nil, err
 	}
 
+	path := fmt.Sprintf("%s/score.yml", s.Platform().Store().Ignition().GazeboServerLogsPath())
+
 	// Get a reader to read the score from the gzserver pod
-	reader, err := s.Platform().Orchestrator().Pods().Reader(res).File("/tmp/logs/score.yml")
+	reader, err := s.Platform().Orchestrator().Pods().Reader(res).File(path)
 	if err != nil {
 		return nil, err
 	}
