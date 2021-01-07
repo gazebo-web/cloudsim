@@ -28,7 +28,7 @@ func prepareCommsBridgeCreateCopyPodInput(store actions.Store, tx *gorm.DB, depl
 	s := store.State().(*state.StartSimulation)
 
 	if !s.Platform().Store().Ignition().LogsCopyEnabled() {
-		return nil, nil
+		return jobs.LaunchPodsInput{}, nil
 	}
 
 	sim, err := s.Services().Simulations().Get(s.GroupID)
