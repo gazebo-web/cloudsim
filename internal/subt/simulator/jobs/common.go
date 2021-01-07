@@ -86,3 +86,25 @@ func checkLaunchServiceError(store actions.Store, tx *gorm.DB, deployment *actio
 	}
 	return nil, output.Error
 }
+
+// readFileContentFromCopyPod reads the file content located in the given path
+// of a certain pod in the given namespace.
+func readFileContentFromPod(p orchestrator.Pods, podName, namespace, path string) ([]byte, error) {
+	res, err := p.Get(podName, namespace)
+	if err != nil {
+		return nil, err
+	}
+
+	reader, err := p.Reader(res).File(path)
+	if err != nil {
+		return nil, err
+	}
+
+	var c []byte
+	_, err = reader.Read(c)
+	if err != nil {
+		return nil, err
+	}
+
+	return c, nil
+}

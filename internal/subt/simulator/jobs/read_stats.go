@@ -33,15 +33,7 @@ func readStats(store actions.Store, tx *gorm.DB, deployment *actions.Deployment,
 	// Get file path
 	path := fmt.Sprintf("%s/summary.yml", s.Platform().Store().Ignition().GazeboServerLogsPath())
 
-	// Get a reader to read the score from the gzserver pod
-	reader, err := s.Platform().Orchestrator().Pods().Reader(res).File(path)
-	if err != nil {
-		return nil, err
-	}
-
-	// Read the file's body
-	var body []byte
-	_, err = reader.Read(body)
+	body, err := readFileContentFromPod(s.Platform().Orchestrator().Pods(), res.Name(), res.Namespace(), path)
 	if err != nil {
 		return nil, err
 	}
