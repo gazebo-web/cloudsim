@@ -1,8 +1,6 @@
 package jobs
 
 import (
-	"github.com/jinzhu/gorm"
-	_ "github.com/jinzhu/gorm/dialects/sqlite"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 	subtapp "gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/application"
@@ -18,7 +16,7 @@ import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
 	simfake "gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations/fake"
 	sfake "gitlab.com/ignitionrobotics/web/cloudsim/pkg/store/fake"
-	// "gitlab.com/ignitionrobotics/web/cloudsim/pkg/utils/db/gorm"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/utils/db/gorm"
 	"gitlab.com/ignitionrobotics/web/ign-go"
 	kfake "k8s.io/client-go/kubernetes/fake"
 	"testing"
@@ -26,7 +24,7 @@ import (
 )
 
 func TestLaunchGazeboServerCopyPod(t *testing.T) {
-	db, err := gorm.Open("sqlite3", "file::memory:?cache=shared")
+	db, err := gorm.GetDBFromEnvVars()
 	require.NoError(t, err)
 
 	err = actions.MigrateDB(db)
