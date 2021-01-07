@@ -33,7 +33,7 @@ func TestLaunchCommsBridgeCopyPods(t *testing.T) {
 	require.NoError(t, err)
 
 	// Set up logger
-	logger := ign.NewLoggerNoRollbar("TestLaunchGazeboServerPod", ign.VerbosityDebug)
+	logger := ign.NewLoggerNoRollbar("TestLaunchCommsBridgeCopyPods", ign.VerbosityDebug)
 
 	// Set up store
 	storeIgnition := sfake.NewFakeIgnition()
