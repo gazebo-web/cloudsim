@@ -34,7 +34,10 @@ func launchPods(store actions.Store, tx *gorm.DB, deployment *actions.Deployment
 	}
 
 	if len(input) == 0 {
-		return nil, nil
+		return LaunchPodsOutput{
+			Resources: nil,
+			Error:     nil,
+		}, nil
 	}
 
 	var created []orchestrator.Resource
