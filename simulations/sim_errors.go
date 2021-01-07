@@ -70,7 +70,7 @@ const (
 	// ErrorSubmissionDeadlineReached is triggered when a submission deadline for a certain circuit has been reached.
 	ErrorSubmissionDeadlineReached SimErrCode = 5523
 	// ErrorLaunchSupersededSimulation is triggered when a held simulation is superseded.
-	ErrorLaunchSupersededSimulation SimErrCode = 5224
+	ErrorLaunchSupersededSimulation SimErrCode = 5524
 	// ErrorInvalidRunInformation is triggered when the run information file for a simulation cannot be accessed
 	ErrorInvalidRunInformation SimErrCode = 5525
 )
