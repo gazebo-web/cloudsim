@@ -24,7 +24,7 @@ func readScore(store actions.Store, tx *gorm.DB, deployment *actions.Deployment,
 	s := store.State().(*state.StopSimulation)
 
 	// Get the gzserver pod
-	res, err := s.Platform().Orchestrator().Pods().Get(subtapp.GetPodNameGazeboServer(s.GroupID), s.Platform().Store().Orchestrator().Namespace())
+	res, err := s.Platform().Orchestrator().Pods().Get(subtapp.GetPodNameGazeboServerCopy(s.GroupID), s.Platform().Store().Orchestrator().Namespace())
 	if err != nil {
 		return nil, err
 	}
