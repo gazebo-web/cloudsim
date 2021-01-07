@@ -100,7 +100,7 @@ func prepareGazeboCreatePodInput(store actions.Store, tx *gorm.DB, deployment *a
 
 	nameservers := s.Platform().Store().Orchestrator().Nameservers()
 
-	return jobs.LaunchPodsInput([]orchestrator.CreatePodInput{
+	return jobs.LaunchPodsInput{
 		{
 			Name:                          subtapp.GetPodNameGazeboServer(s.GroupID),
 			Namespace:                     namespace,
@@ -123,5 +123,5 @@ func prepareGazeboCreatePodInput(store actions.Store, tx *gorm.DB, deployment *a
 			Volumes:     volumes,
 			Nameservers: nameservers,
 		},
-	}), nil
+	}, nil
 }

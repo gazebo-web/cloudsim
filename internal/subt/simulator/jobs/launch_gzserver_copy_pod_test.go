@@ -1,37 +1,39 @@
 package jobs
 
 import (
+	"github.com/jinzhu/gorm"
+	_ "github.com/jinzhu/gorm/dialects/sqlite"
+	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 	subtapp "gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/application"
 	"gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/simulations/fake"
 	"gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/simulator/state"
-	"gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/tracks"
-	tfake "gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/tracks/fake"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/actions"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/application"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/kubernetes"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/kubernetes/pods"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/kubernetes/spdy"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/platform"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/secrets"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
 	simfake "gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations/fake"
 	sfake "gitlab.com/ignitionrobotics/web/cloudsim/pkg/store/fake"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/utils/db/gorm"
+	// "gitlab.com/ignitionrobotics/web/cloudsim/pkg/utils/db/gorm"
 	"gitlab.com/ignitionrobotics/web/ign-go"
 	kfake "k8s.io/client-go/kubernetes/fake"
 	"testing"
 	"time"
 )
 
-func TestLaunchCommsBridgePods(t *testing.T) {
-	db, err := gorm.GetDBFromEnvVars()
+func TestLaunchGazeboServerCopyPod(t *testing.T) {
+	db, err := gorm.Open("sqlite3", "file::memory:?cache=shared")
 	require.NoError(t, err)
 
 	err = actions.MigrateDB(db)
 	require.NoError(t, err)
 
 	// Set up logger
-	logger := ign.NewLoggerNoRollbar("TestLaunchGazeboServerPod", ign.VerbosityDebug)
+	logger := ign.NewLoggerNoRollbar("TestLaunchGazeboServerCopyPod", ign.VerbosityDebug)
 
 	// Set up store
 	storeIgnition := sfake.NewFakeIgnition()
@@ -39,7 +41,7 @@ func TestLaunchCommsBridgePods(t *testing.T) {
 	fakeStore := sfake.NewFakeStore(nil, storeOrchestrator, storeIgnition)
 
 	// Mock ignition store methods for this test
-	storeIgnition.On("ROSLogsPath").Return("/tmp/test")
+	storeIgnition.On("GazeboServerLogsPath").Return("/tmp/test")
 	storeIgnition.On("IP").Return("127.0.0.1")
 	storeIgnition.On("Verbosity").Return("0")
 	storeIgnition.On("LogsCopyEnabled").Return(true)
@@ -47,6 +49,7 @@ func TestLaunchCommsBridgePods(t *testing.T) {
 	storeIgnition.On("Region").Return("us-west-1")
 	storeIgnition.On("AccessKeyLabel").Return("aws-access-key-id")
 	storeIgnition.On("SecretAccessKeyLabel").Return("aws-secret-access-key")
+	storeIgnition.On("GazeboBucket").Return("gz-logs")
 
 	// Mock orchestrator store methods for this test
 	storeOrchestrator.On("Namespace").Return("default")
@@ -63,10 +66,72 @@ func TestLaunchCommsBridgePods(t *testing.T) {
 		Pods: po,
 	})
 
+	ctx := mock.AnythingOfType("*context.emptyCtx")
+	secretsManager := secrets.NewFakeSecrets()
+	secretsManager.On("Get", ctx, "aws-secrets", "default").Return(&secrets.Secret{Data: map[string][]byte{
+		"aws-access-key-id":     []byte("12345678910"),
+		"aws-secret-access-key": []byte("secret"),
+	}}, error(nil))
+
 	// Set up platform using fake store and fake kubernetes component
 	p := platform.NewPlatform(platform.Components{
 		Cluster: ks,
 		Store:   fakeStore,
+		Secrets: secretsManager,
+	})
+
+	// Initialize generic simulation service
+	simservice := simfake.NewService()
+
+	// Create a GetGroupID for testing.
+	gid := simulations.GroupID("aaaa-bbbb-cccc-dddd")
+
+	// Create a simulation
+	sim := fake.NewSimulation(fake.SimulationConfig{
+		GroupID: gid,
+		Status:  simulations.StatusLaunchingPods,
+		Kind:    simulations.SimSingle,
+		Error:   nil,
+		Image:   "test.org",
+		Track:   "Cave Circuit World 1",
+		Robots: []simulations.Robot{
+			simfake.NewRobot("testA", "X1"),
+			simfake.NewRobot("testB", "X2"),
+			simfake.NewRobot("testC", "X3"),
+		},
+	})
+
+	// Make the get method return the fake simulation
+	simservice.On("Get", gid).Return(sim, error(nil))
+
+	// Create SubT application service
+	app := subtapp.NewServices(application.NewServices(simservice), nil)
+
+	// Create new state: Start simulation state.
+	s := state.NewStartSimulation(p, app, gid)
+	s.GazeboServerIP = "127.0.0.1"
+
+	// Set up action store
+	store := actions.NewStore(s)
+
+	// Run job
+	_, err = LaunchGazeboServerCopyPod.Run(store, db, &actions.Deployment{CurrentJob: "test"}, s)
+
+	// Check if there are any errors.
+	require.NoError(t, err)
+}
+
+func TestLaunchGazeboServerCopyPodsLogsDisabled(t *testing.T) {
+	// Set up store
+	storeIgnition := sfake.NewFakeIgnition()
+	fakeStore := sfake.NewFakeStore(nil, nil, storeIgnition)
+
+	// Mock ignition store methods for this test
+	storeIgnition.On("LogsCopyEnabled").Return(false)
+
+	// Set up platform using fake store and fake kubernetes component
+	p := platform.NewPlatform(platform.Components{
+		Store: fakeStore,
 	})
 
 	// Initialize generic simulation service
@@ -96,22 +161,8 @@ func TestLaunchCommsBridgePods(t *testing.T) {
 	// Make the get method return the fake simulation
 	simservice.On("Get", gid).Return(sim, error(nil))
 
-	// Initialize tracks service
-	trackService := tfake.NewService()
-
-	// Mock Get method from tracks service
-	trackService.On("Get", trackName).Return(&tracks.Track{
-		Name:          trackName,
-		Image:         "world-image.org/image",
-		BridgeImage:   "bridge-image.org/image",
-		StatsTopic:    "test",
-		WarmupTopic:   "test",
-		MaxSimSeconds: 500,
-		Public:        true,
-	}, error(nil))
-
 	// Create SubT application service
-	app := subtapp.NewServices(application.NewServices(simservice), trackService)
+	app := subtapp.NewServices(application.NewServices(simservice), nil)
 
 	// Create new state: Start simulation state.
 	s := state.NewStartSimulation(p, app, gid)
@@ -121,7 +172,7 @@ func TestLaunchCommsBridgePods(t *testing.T) {
 	store := actions.NewStore(s)
 
 	// Run job
-	_, err = LaunchCommsBridgePods.Run(store, db, &actions.Deployment{CurrentJob: "test"}, s)
+	_, err := LaunchGazeboServerCopyPod.Run(store, nil, &actions.Deployment{CurrentJob: "test"}, s)
 
 	// Check if there are any errors.
 	require.NoError(t, err)

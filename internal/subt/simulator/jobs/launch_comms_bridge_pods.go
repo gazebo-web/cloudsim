@@ -1,7 +1,6 @@
 package jobs
 
 import (
-	"context"
 	"fmt"
 	"github.com/jinzhu/gorm"
 	subtapp "gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/application"
@@ -97,51 +96,6 @@ func prepareCommsBridgePodInput(store actions.Store, tx *gorm.DB, deployment *ac
 			Nameservers: s.Platform().Store().Orchestrator().Nameservers(),
 		})
 
-		if s.Platform().Store().Ignition().LogsCopyEnabled() {
-			secretsName := s.Platform().Store().Ignition().SecretsName()
-			ns := s.Platform().Store().Orchestrator().Namespace()
-
-			secret, err := s.Platform().Secrets().Get(context.TODO(), secretsName, ns)
-			if err != nil {
-				return nil, err
-			}
-
-			accessKey := string(secret.Data[s.Platform().Store().Ignition().AccessKeyLabel()])
-			secretAccessKey := string(secret.Data[s.Platform().Store().Ignition().SecretAccessKeyLabel()])
-
-			pods = append(pods, orchestrator.CreatePodInput{
-				Name:                          subtapp.GetPodNameCommsBridgeCopy(s.GroupID, subtapp.GetRobotID(i+1)),
-				Namespace:                     ns,
-				Labels:                        subtapp.GetPodLabelsCommsBridgeCopy(s.GroupID, s.ParentGroupID, r).Map(),
-				RestartPolicy:                 orchestrator.RestartPolicyNever,
-				TerminationGracePeriodSeconds: s.Platform().Store().Orchestrator().TerminationGracePeriod(),
-				NodeSelector:                  subtapp.GetNodeLabelsFieldComputer(s.GroupID, r),
-				InitContainers: []orchestrator.Container{
-					{
-						Name:    "chown-shared-volume",
-						Image:   "infrastructureascode/aws-cli:latest",
-						Command: []string{"/bin/sh"},
-						Args:    []string{"-c", fmt.Sprintf("chown %d:%d /tmp", 1000, 1000)},
-						Volumes: volumes,
-					},
-				},
-				Containers: []orchestrator.Container{
-					{
-						Name:    subtapp.GetContainerNameCommsBridgeCopy(),
-						Image:   "infrastructureascode/aws-cli:latest",
-						Command: []string{"tail", "-f", "/dev/null"},
-						Volumes: volumes,
-						EnvVars: subtapp.GetEnvVarsCommsBridgeCopy(
-							s.Platform().Store().Ignition().Region(),
-							accessKey,
-							secretAccessKey,
-						),
-					},
-				},
-				Volumes:     volumes,
-				Nameservers: s.Platform().Store().Orchestrator().Nameservers(),
-			})
-		}
 	}
 
 	return jobs.LaunchPodsInput(pods), nil

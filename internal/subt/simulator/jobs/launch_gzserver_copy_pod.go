@@ -25,7 +25,7 @@ func prepareGazeboCreateCopyPodInput(store actions.Store, tx *gorm.DB, deploymen
 	s := store.State().(*state.StartSimulation)
 
 	if !s.Platform().Store().Ignition().LogsCopyEnabled() {
-		return []orchestrator.CreatePodInput{}, nil
+		return jobs.LaunchPodsInput{}, nil
 	}
 
 	// Set up namespace
@@ -53,7 +53,7 @@ func prepareGazeboCreateCopyPodInput(store actions.Store, tx *gorm.DB, deploymen
 		},
 	}
 
-	return jobs.LaunchPodsInput([]orchestrator.CreatePodInput{
+	return jobs.LaunchPodsInput{
 		{
 			Name:                          subtapp.GetPodNameGazeboServerCopy(s.GroupID),
 			Namespace:                     namespace,
@@ -77,5 +77,5 @@ func prepareGazeboCreateCopyPodInput(store actions.Store, tx *gorm.DB, deploymen
 			Volumes:     volumes,
 			Nameservers: nameservers,
 		},
-	}), nil
+	}, nil
 }
