@@ -254,6 +254,37 @@ func (p *pods) podHasIP(pod *apiv1.Pod) bool {
 	return pod.Status.PodIP != ""
 }
 
+// GetIP gets the IP for the pod identified with the given name in the current namespace.
+func (p *pods) GetIP(name, namespace string) (string, error) {
+	p.Logger.Debug(fmt.Sprintf("Getting IP from pod with name [%s] in namespace [%s]", name, namespace))
+
+	pod, err := p.API.CoreV1().Pods(namespace).Get(name, metav1.GetOptions{})
+	if err != nil {
+		p.Logger.Debug(fmt.Sprintf(
+			"Getting IP from pod with name [%s] in namespace [%s] failed. Error: %+v.",
+			name, namespace, err,
+		))
+		return "", err
+	}
+
+	if !p.podHasIP(pod) {
+		err = orchestrator.ErrPodHasNoIP
+
+		p.Logger.Debug(fmt.Sprintf(
+			"Getting IP from pod with name [%s] in namespace [%s] failed. Error: %+v.",
+			name, namespace, err,
+		))
+		return "", err
+	}
+
+	p.Logger.Debug(fmt.Sprintf(
+		"Getting IP from pod with name [%s] in namespace [%s] succeeded.",
+		name, namespace,
+	))
+
+	return pod.Status.PodIP, nil
+}
+
 // NewPods initializes a new orchestrator.Pods implementation for managing Kubernetes Pods.
 func NewPods(api kubernetes.Interface, spdy spdy.Initializer, logger ign.Logger) orchestrator.Pods {
 	return &pods{
