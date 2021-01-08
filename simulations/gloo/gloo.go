@@ -3,12 +3,11 @@ package gloo
 import (
 	"context"
 	"errors"
+	gatewayFake "github.com/solo-io/gloo/projects/gateway/pkg/api/v1/kube/client/clientset/versioned/fake"
 	gateway "github.com/solo-io/gloo/projects/gateway/pkg/api/v1/kube/client/clientset/versioned/typed/gateway.solo.io/v1"
-	gatewayFake "github.com/solo-io/gloo/projects/gateway/pkg/api/v1/kube/client/clientset/versioned/typed/gateway.solo.io/v1/fake"
+	glooFake "github.com/solo-io/gloo/projects/gloo/pkg/api/v1/kube/client/clientset/versioned/fake"
 	gloo "github.com/solo-io/gloo/projects/gloo/pkg/api/v1/kube/client/clientset/versioned/typed/gloo.solo.io/v1"
-	glooFake "github.com/solo-io/gloo/projects/gloo/pkg/api/v1/kube/client/clientset/versioned/typed/gloo.solo.io/v1/fake"
 	"gitlab.com/ignitionrobotics/web/ign-go"
-	"k8s.io/client-go/kubernetes/fake"
 	restclient "k8s.io/client-go/rest"
 )
 
@@ -61,14 +60,13 @@ type ClientsetConfig struct {
 // newFakeClientset returns a fake Gloo Clientset for unit testing.
 func newFakeClientset() Clientset {
 	return &clientset{
-		GlooV1Interface:    &glooFake.FakeGlooV1{Fake: &fake.NewSimpleClientset().Fake},
-		GatewayV1Interface: &gatewayFake.FakeGatewayV1{Fake: &fake.NewSimpleClientset().Fake},
+		GlooV1Interface:    glooFake.NewSimpleClientset().GlooV1(),
+		GatewayV1Interface: gatewayFake.NewSimpleClientset().GatewayV1(),
 	}
 }
 
 // newClientset creates a new Gloo clientset.
 func newClientset(kubeconfig *restclient.Config) (Clientset, error) {
-
 	// Prepare the Gloo clientset
 	glooClient, err := gloo.NewForConfig(kubeconfig)
 	if err != nil {
