@@ -46,7 +46,6 @@ func prepareNetworkPolicyGazeboServerInput(store actions.Store, tx *gorm.DB, dep
 			PeersFrom: selectors,
 			// Allow traffic to comms bridges
 			PeersTo: selectors,
-
 			Ingresses: orchestrator.NetworkIngressRule{
 				IPBlocks: []string{
 					// Allow traffic from cloudsim
@@ -62,7 +61,7 @@ func prepareNetworkPolicyGazeboServerInput(store actions.Store, tx *gorm.DB, dep
 					// Allow traffic to cloudsim
 					fmt.Sprintf("%s/32", s.Platform().Store().Ignition().IP()),
 				},
-				// Allow traffic from anywhere.
+				// Allow traffic to the internet
 				AllowOutbound: true,
 			},
 		},
@@ -92,6 +91,7 @@ func prepareNetworkPolicyFieldComputersInput(store actions.Store, tx *gorm.DB, d
 
 	input := make(jobs.CreateNetworkPoliciesInput, len(robots))
 
+	// Each robot's field computer should communicate to its respective comms bridge.
 	for i, r := range robots {
 		robotID := subtapp.GetRobotID(i)
 		input[i] = orchestrator.CreateNetworkPolicyInput{
