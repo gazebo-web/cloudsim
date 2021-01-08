@@ -58,6 +58,7 @@ func (p *pods) Create(input orchestrator.CreatePodInput) (orchestrator.Resource,
 			volumeMounts = append(volumeMounts, apiv1.VolumeMount{
 				Name:      v.Name,
 				MountPath: v.MountPath,
+				SubPath:   v.SubPath,
 			})
 		}
 
