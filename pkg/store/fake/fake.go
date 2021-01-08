@@ -45,12 +45,6 @@ type Ign struct {
 	*mock.Mock
 }
 
-// GazeboBucket mocks the GazeboBucket method.
-func (f *Ign) GazeboBucket() string {
-	args := f.Called()
-	return args.String(0)
-}
-
 // AccessKeyLabel mocks the AccessKeyLabel method.
 func (f *Ign) AccessKeyLabel() string {
 	args := f.Called()
