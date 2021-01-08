@@ -78,7 +78,7 @@ func GetPodLabelsCommsBridgeCopy(groupID simulations.GroupID, parent *simulation
 
 // GetPodLabelsGazeboServerCopy returns a selector that identifies a gzserver copy pod.
 func GetPodLabelsGazeboServerCopy(groupID simulations.GroupID, parent *simulations.GroupID) orchestrator.Selector {
-	base := getPodLabelsBase(groupID, parent)
+	base := GetPodLabelsBase(groupID, parent)
 	ext := orchestrator.NewSelector(map[string]string{
 		labelCopyS3: "true",
 	})
