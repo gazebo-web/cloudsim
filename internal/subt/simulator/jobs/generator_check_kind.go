@@ -8,6 +8,7 @@ import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulator/jobs"
 )
 
+// ConfigCheckSimulationNotOfKindJob is used to configure the job returned by the GenerateCheckSimulationNotOfKindJob function.
 type ConfigCheckSimulationNotOfKindJob struct {
 	Name               string
 	Kind               simulations.Kind
