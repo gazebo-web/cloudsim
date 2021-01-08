@@ -1376,17 +1376,7 @@ func (sa *SubTApplication) launchApplication(ctx context.Context, s *Service, tx
 	// If S3 log backup is enabled then add an additional copy pod to upload
 	// logs at the end of the simulation.
 	if sa.cfg.S3LogsCopyEnabled {
-		copyPod := sa.createS3CopyPod(
-			ctx,
-			s,
-			dep,
-			gzPod.Spec.NodeSelector,
-			gazeboPodName,
-			hostPath,
-			"logs",
-			sa.cfg.S3LogsBucket,
-			sa.getGazeboLogsFilename(groupID),
-		)
+		copyPod := sa.createS3CopyPod(ctx, s, dep, gzPod.Spec.NodeSelector, gazeboPodName, hostPath, "logs", sa.cfg.S3LogsBucket, sa.getGazeboLogsFilename(groupID))
 		// Launch the copy pod
 		_, err := s.clientset.CoreV1().Pods(s.cfg.KubernetesNamespace).Create(copyPod)
 		if err != nil {
