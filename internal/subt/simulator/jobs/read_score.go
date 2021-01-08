@@ -23,15 +23,14 @@ var ReadScore = actions.Job{
 func readScore(store actions.Store, tx *gorm.DB, deployment *actions.Deployment, value interface{}) (interface{}, error) {
 	s := store.State().(*state.StopSimulation)
 
-	// Get the gzserver copy pod
-	res, err := s.Platform().Orchestrator().Pods().Get(subtapp.GetPodNameGazeboServerCopy(s.GroupID), s.Platform().Store().Orchestrator().Namespace())
-	if err != nil {
-		return nil, err
-	}
-
 	path := fmt.Sprintf("%s/score.yml", s.Platform().Store().Ignition().GazeboServerLogsPath())
 
-	body, err := readFileContentFromPod(s.Platform().Orchestrator().Pods(), res.Name(), res.Namespace(), path)
+	body, err := readFileContentFromPod(
+		s.Platform().Orchestrator().Pods(),
+		subtapp.GetPodNameGazeboServerCopy(s.GroupID),
+		s.Platform().Store().Orchestrator().Namespace(),
+		path,
+	)
 	if err != nil {
 		return nil, err
 	}
