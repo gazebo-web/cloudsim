@@ -10,12 +10,18 @@ import (
 
 // ConfigCheckSimulationNotOfKindJob is used to configure the job returned by the GenerateCheckSimulationNotOfKindJob function.
 type ConfigCheckSimulationNotOfKindJob struct {
-	Name               string
-	Kind               simulations.Kind
-	PreHooks           []actions.JobFunc
+	// Name is the name of the job.
+	Name string
+	// Kind is the Kind that should be compared.
+	Kind simulations.Kind
+	// PreHooks are the pre-hooks that should go before the PreparationPreHook.
+	PreHooks []actions.JobFunc
+	// PreparationPreHook is a single pre-hook in charge of setting the input for the CheckSimulationKind generic job.
 	PreparationPreHook actions.JobFunc
-	InputType          interface{}
-	OutputType         interface{}
+	// InputType is the job's input type.
+	InputType interface{}
+	// OutputType is the job's output type.
+	OutputType interface{}
 }
 
 // GenerateCheckSimulationNotOfKindJob is a job generator for checking that a certain simulation is not of a certain kind.
