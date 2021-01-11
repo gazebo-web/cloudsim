@@ -32,6 +32,7 @@ func prepareNetworkPolicyGazeboServerInput(store actions.Store, tx *gorm.DB, dep
 
 	selectors := make([]orchestrator.Selector, len(robots))
 
+	// Each robot's comms bridge will be granted with permissions to communicate to the gazebo server
 	for i, r := range robots {
 		selectors[i] = subtapp.GetPodLabelsCommsBridge(s.GroupID, s.ParentGroupID, r)
 	}
