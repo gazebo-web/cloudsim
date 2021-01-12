@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/gorilla/websocket"
 	"github.com/stretchr/testify/suite"
+	"gitlab.com/ignitionrobotics/web/cloudsim/ign-transport/proto/ignition/msgs"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/transport"
 	"net/http"
 	"net/http/httptest"
