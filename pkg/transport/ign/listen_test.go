@@ -37,7 +37,7 @@ func TestTransporterListenDontPanicHTTPClosed(t *testing.T) {
 		tr, err := NewIgnWebsocketTransporter(u.Host, u.Path, transport.WebsocketScheme, "")
 		defer tr.Disconnect()
 		assert.NoError(t, err)
-		tr.Subscribe("test", func(message transport.Messager) {
+		tr.Subscribe("test", func(message transport.Message) {
 			var msg msgs.StringMsg
 			err = message.GetPayload(&msg)
 			assert.NoError(t, err)
@@ -72,7 +72,7 @@ func TestTransporterListenDontPanicWSClosed(t *testing.T) {
 		tr, err := NewIgnWebsocketTransporter(u.Host, u.Path, transport.WebsocketScheme, "")
 		defer tr.Disconnect()
 		assert.NoError(t, err)
-		tr.Subscribe("test", func(message transport.Messager) {
+		tr.Subscribe("test", func(message transport.Message) {
 			var msg msgs.StringMsg
 			err = message.GetPayload(&msg)
 			assert.NoError(t, err)
