@@ -3,7 +3,6 @@ package simulations
 import (
 	"context"
 	"fmt"
-	"gitlab.com/ignitionrobotics/web/cloudsim/ign-transport/proto/ignition/msgs"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/transport"
 	ignws "gitlab.com/ignitionrobotics/web/cloudsim/pkg/transport/ign"
 	"gitlab.com/ignitionrobotics/web/ign-go"
