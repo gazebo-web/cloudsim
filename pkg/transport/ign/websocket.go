@@ -3,7 +3,7 @@ package ign
 import (
 	"errors"
 	"github.com/gorilla/websocket"
-	"gitlab.com/ignitionrobotics/web/cloudsim/transport"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/transport"
 	"gitlab.com/ignitionrobotics/web/ign-go"
 )
 

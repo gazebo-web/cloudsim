@@ -9,10 +9,10 @@ import (
 	"github.com/pkg/errors"
 	"github.com/satori/go.uuid"
 	"gitlab.com/ignitionrobotics/web/cloudsim/globals"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/transport"
+	ignws "gitlab.com/ignitionrobotics/web/cloudsim/pkg/transport/ign"
 	"gitlab.com/ignitionrobotics/web/cloudsim/queues"
 	"gitlab.com/ignitionrobotics/web/cloudsim/simulations/gloo"
-	"gitlab.com/ignitionrobotics/web/cloudsim/transport"
-	ignws "gitlab.com/ignitionrobotics/web/cloudsim/transport/ign"
 	useracc "gitlab.com/ignitionrobotics/web/cloudsim/users"
 	"gitlab.com/ignitionrobotics/web/fuelserver/bundles/users"
 	per "gitlab.com/ignitionrobotics/web/fuelserver/permissions"
@@ -1013,8 +1013,6 @@ func (s *Service) StartSimulationAsync(ctx context.Context,
 			}
 		}
 	}
-
-
 
 	// Set read and write permissions to owner (eg, the team) and to the Application
 	// organizing team (eg. subt).
