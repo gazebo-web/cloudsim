@@ -2,20 +2,28 @@ package runsim
 
 import (
 	"context"
+	"gitlab.com/ignitionrobotics/web/cloudsim/ign-transport/proto/ignition/msgs"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
 	ignws "gitlab.com/ignitionrobotics/web/cloudsim/transport/ign"
 	"sync"
 	"time"
 )
 
-type Callback func(ctx context.Context, msg ignws.Message)
+type Callback func(ctx context.Context, msg ignws.Message) error
 
 type Callbacks interface {
-	readWorldStats(ctx context.Context, msg ignws.Message)
-	readWarmup(ctx context.Context, msg ignws.Message)
+	readWorldStats(ctx context.Context, msg ignws.Message) error
+	readWarmup(ctx context.Context, msg ignws.Message) error
 }
 
 type State string
+
+const (
+	stateUnknown        State = "unknown"
+	stateRun            State = "run"
+	statePause          State = "pause"
+	stdoutSkipStatsMsgs       = 100
+)
 
 type RunningSimulation struct {
 	// GroupID has a reference to the simulations.GroupID value to identify a simulation.
@@ -49,18 +57,61 @@ type RunningSimulation struct {
 	stdoutSkipStatsMsgsCount int
 }
 
-func (rs *RunningSimulation) Free(ctx context.Context) error {
-	panic("implement me")
-}
-
 func (rs *RunningSimulation) IsExpired() bool {
-	panic("implement me")
+	var secondsExpired bool
+	if rs.SimMaxAllowedSeconds > 0 {
+		secondsExpired = rs.hasReachedMaxSeconds()
+	}
+	return secondsExpired || time.Now().After(rs.MaxValidUntil)
 }
 
-func (rs *RunningSimulation) readWorldStats(ctx context.Context, msg ignws.Message) {
-	panic("implement me")
+func (rs *RunningSimulation) readWorldStats(ctx context.Context, msg ignws.Message) error {
+	var m msgs.WorldStatistics
+
+	err := msg.GetPayload(&m)
+	if err != nil {
+		return err
+	}
+
+	rs.stdoutSkipStatsMsgsCount++
+	if rs.stdoutSkipStatsMsgsCount > stdoutSkipStatsMsgs {
+		rs.stdoutSkipStatsMsgsCount = 0
+	}
+
+	rs.lockCurrentState.Lock()
+	defer rs.lockCurrentState.Unlock()
+
+	if m.Paused {
+		rs.currentState = statePause
+	} else {
+		rs.currentState = stateRun
+	}
+
+	rs.SimTimeSeconds = m.SimTime.Sec
+
+	return nil
 }
 
-func (rs *RunningSimulation) readWarmup(ctx context.Context, msg ignws.Message) {
-	panic("implement me")
+func (rs *RunningSimulation) hasReachedMaxSeconds() bool {
+	return (rs.SimTimeSeconds - rs.SimWarmupSeconds) > rs.SimMaxAllowedSeconds
+}
+
+func (rs *RunningSimulation) readWarmup(ctx context.Context, msg ignws.Message) error {
+	var m msgs.StringMsg
+	err := msg.GetPayload(&m)
+	if err != nil {
+		return err
+	}
+
+	if m.Data == "started" {
+		if rs.SimWarmupSeconds == 0 {
+			rs.SimWarmupSeconds = rs.SimTimeSeconds
+		}
+	}
+
+	if !rs.Finished && m.Data == "finished" {
+		rs.Finished = true
+	}
+
+	return nil
 }
