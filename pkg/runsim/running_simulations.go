@@ -9,13 +9,16 @@ import (
 	"time"
 )
 
+// Callback defines a function that is used to read incoming ignition websocket messages.
 type Callback func(ctx context.Context, msg ignws.Message) error
 
-type Callbacks interface {
+// SimulationCallbacks has different Callback implementations used by RunningSimulation.
+type SimulationCallbacks interface {
 	readWorldStats(ctx context.Context, msg ignws.Message) error
 	readWarmup(ctx context.Context, msg ignws.Message) error
 }
 
+// State defines a gazebo state. It's used to represent if a simulation is running or paused.
 type State string
 
 const (
@@ -25,6 +28,7 @@ const (
 	stdoutSkipStatsMsgs       = 100
 )
 
+// RunningSimulation is a representation of a simulations.Simulation that has been launched by workers.
 type RunningSimulation struct {
 	// GroupID has a reference to the simulations.GroupID value to identify a simulation.
 	GroupID simulations.GroupID
@@ -57,6 +61,7 @@ type RunningSimulation struct {
 	stdoutSkipStatsMsgsCount int
 }
 
+// IsExpired returns true if the RunningSimulation has expired.
 func (rs *RunningSimulation) IsExpired() bool {
 	var secondsExpired bool
 	if rs.SimMaxAllowedSeconds > 0 {
@@ -65,6 +70,8 @@ func (rs *RunningSimulation) IsExpired() bool {
 	return secondsExpired || time.Now().After(rs.MaxValidUntil)
 }
 
+// readWorldStats is the callback passed to the websocket client. It will be invoked
+// each time a message is received in the topic associated to this node's groupID.
 func (rs *RunningSimulation) readWorldStats(ctx context.Context, msg ignws.Message) error {
 	var m msgs.WorldStatistics
 
@@ -92,10 +99,13 @@ func (rs *RunningSimulation) readWorldStats(ctx context.Context, msg ignws.Messa
 	return nil
 }
 
+// hasReachedMaxSeconds defines if a simulation has reached the max allowed amount of seconds.
 func (rs *RunningSimulation) hasReachedMaxSeconds() bool {
 	return (rs.SimTimeSeconds - rs.SimWarmupSeconds) > rs.SimMaxAllowedSeconds
 }
 
+// readWarmup is the callback passed to the websocket client that will be invoked each time
+// a message is received at the /warmup/ready topic.
 func (rs *RunningSimulation) readWarmup(ctx context.Context, msg ignws.Message) error {
 	var m msgs.StringMsg
 	err := msg.GetPayload(&m)
