@@ -3,11 +3,12 @@ package platform
 import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/cloud"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/runsim"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/secrets"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/store"
 )
 
-// Platform groups a set of components for creating simulations.
+// Platform groups a set of components for managing simulations.
 // Each application will make use of one platform to run their simulations.
 // The cloudsim team provides a default Kubernetes and AWS implementation of this Platform.
 // Other combinations could be implemented after adding their respective subcomponents.
@@ -26,6 +27,8 @@ type Platform interface {
 
 	// Secrets returns a secrets.Secrets component.
 	Secrets() secrets.Secrets
+
+	RunningSimulations() runsim.Manager
 }
 
 // Components lists the components used to initialize a Platform.
@@ -50,11 +53,16 @@ func NewPlatform(components Components) Platform {
 
 // platform is a Platform implementation.
 type platform struct {
-	storage      cloud.Storage
-	machines     cloud.Machines
-	orchestrator orchestrator.Cluster
-	store        store.Store
-	secrets      secrets.Secrets
+	storage            cloud.Storage
+	machines           cloud.Machines
+	orchestrator       orchestrator.Cluster
+	store              store.Store
+	secrets            secrets.Secrets
+	runningSimulations runsim.Manager
+}
+
+func (p *platform) RunningSimulations() runsim.Manager {
+	return p.runningSimulations
 }
 
 // Store returns a store.Store implementation.
