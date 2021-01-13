@@ -11,6 +11,7 @@ type Manager interface {
 	Add(groupID simulations.GroupID, rs RunningSimulation, t ignws.PubSubWebsocketTransporter) error
 	ListExpiredSimulations() []RunningSimulation
 	GetTransporter(groupID simulations.GroupID) ignws.PubSubWebsocketTransporter
+	Free(groupID simulations.GroupID)
 	Remove(groupID simulations.GroupID) error
 }
 
@@ -18,6 +19,23 @@ type Manager interface {
 type manager struct {
 	transporters       map[simulations.GroupID]ignws.PubSubWebsocketTransporter
 	runningSimulations map[simulations.GroupID]RunningSimulation
+}
+
+// Free disconnects the websocket client for the given GroupID.
+func (m *manager) Free(groupID simulations.GroupID) {
+	t := m.GetTransporter(groupID)
+
+	rs, ok := m.runningSimulations[groupID]
+	if !ok {
+		return
+	}
+
+	rs.publishing = false
+	m.runningSimulations[groupID] = rs
+
+	if t != nil && t.IsConnected() {
+		t.Disconnect()
+	}
 }
 
 // Add adds a running simulation and a websocket transport to the given groupID.
