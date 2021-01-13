@@ -6,6 +6,7 @@ import (
 	ignws "gitlab.com/ignitionrobotics/web/cloudsim/transport/ign"
 )
 
+// Manager describes a set of methods to handle a set of RunningSimulation and their connections to different websocket servers.
 type Manager interface {
 	Add(groupID simulations.GroupID, rs RunningSimulation, t ignws.PubSubWebsocketTransporter) error
 	ListExpiredSimulations() []RunningSimulation
@@ -13,12 +14,18 @@ type Manager interface {
 	Remove(groupID simulations.GroupID) error
 }
 
+// manager is a Manager implementation.
 type manager struct {
 	transporters       map[simulations.GroupID]ignws.PubSubWebsocketTransporter
 	runningSimulations map[simulations.GroupID]RunningSimulation
 }
 
+// Add adds a running simulation and a websocket transport to the given groupID.
 func (m *manager) Add(groupID simulations.GroupID, rs RunningSimulation, t ignws.PubSubWebsocketTransporter) error {
+	if t == nil {
+		return fmt.Errorf("invalid websocket transport for [%s], it should not be nil", groupID)
+	}
+
 	if _, exists := m.transporters[groupID]; exists {
 		return fmt.Errorf("websocket transport [%s] already exists", groupID)
 	}
@@ -32,18 +39,21 @@ func (m *manager) Add(groupID simulations.GroupID, rs RunningSimulation, t ignws
 	return nil
 }
 
+// ListExpiredSimulations list all expired simulations from the list of running simulations.
 func (m *manager) ListExpiredSimulations() []RunningSimulation {
 	return m.listByCriteria(func(rs RunningSimulation) bool {
 		return rs.IsExpired()
 	})
 }
 
+// ListFinishedSimulations list all finished simulations from the list of running simulations.
 func (m *manager) ListFinishedSimulations() []RunningSimulation {
 	return m.listByCriteria(func(rs RunningSimulation) bool {
 		return rs.Finished
 	})
 }
 
+// listByCriteria allows you to list running simulations by a given criteria.
 func (m *manager) listByCriteria(criteria func(rs RunningSimulation) bool) []RunningSimulation {
 	rss := make([]RunningSimulation, 0, len(m.runningSimulations))
 	for _, rs := range m.runningSimulations {
@@ -54,6 +64,8 @@ func (m *manager) listByCriteria(criteria func(rs RunningSimulation) bool) []Run
 	return rss
 }
 
+// GetTransporter returns a websocket transporter for the given groupID.
+// It returns nil if there's no connection available for the given groupID.
 func (m *manager) GetTransporter(groupID simulations.GroupID) ignws.PubSubWebsocketTransporter {
 	t, ok := m.transporters[groupID]
 	if !ok {
@@ -62,9 +74,11 @@ func (m *manager) GetTransporter(groupID simulations.GroupID) ignws.PubSubWebsoc
 	return t
 }
 
+// Remove removes a running simulation and its websocket connection.
+// If the websocket connection is still active, it will return an error.
 func (m *manager) Remove(groupID simulations.GroupID) error {
-	if _, exists := m.transporters[groupID]; !exists {
-		return fmt.Errorf("websocket transport [%s] does not exist", groupID)
+	if t, exists := m.transporters[groupID]; !exists || t.IsConnected() {
+		return fmt.Errorf("websocket transport [%s] does not exist or it's still connected to the websocket server", groupID)
 	}
 	delete(m.transporters, groupID)
 
@@ -76,6 +90,7 @@ func (m *manager) Remove(groupID simulations.GroupID) error {
 	return nil
 }
 
+// NewManager initializes a running simulation's manager in charge of communicating to websocket servers.
 func NewManager() Manager {
 	return &manager{
 		transporters:       make(map[simulations.GroupID]ignws.PubSubWebsocketTransporter),

@@ -34,14 +34,10 @@ type RunningSimulation struct {
 	GroupID simulations.GroupID
 	// currentState is the last reported state by gazebo
 	currentState State
-	// desiredState is used to send through a transport node a request to gazebo to apply this state.
-	desiredState State
-	// publishing is an internal flag to show if we are sending ign-transport messages
-	publishing bool
 	// lockCurrentState is a mutex used to guard access to currentState field
 	lockCurrentState sync.RWMutex
-	// lockDesiredState is a mutex used to guard access to desiredState field
-	lockDesiredState sync.RWMutex
+	// publishing is an internal flag to show if we are sending ign-transport messages
+	publishing bool
 	// SimTimeSeconds tracks the current "sim seconds" reported by the simulation /stats topic.
 	SimTimeSeconds int64
 	// SimWarmupSeconds holds the "sim seconds" value when the simulation notified
