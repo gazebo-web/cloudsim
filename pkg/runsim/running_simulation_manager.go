@@ -8,8 +8,9 @@ import (
 
 // Manager describes a set of methods to handle a set of RunningSimulation and their connections to different websocket servers.
 type Manager interface {
-	Add(groupID simulations.GroupID, rs RunningSimulation, t ignws.PubSubWebsocketTransporter) error
-	ListExpiredSimulations() []RunningSimulation
+	Add(groupID simulations.GroupID, rs *RunningSimulation, t ignws.PubSubWebsocketTransporter) error
+	ListExpiredSimulations() []*RunningSimulation
+	ListFinishedSimulations() []*RunningSimulation
 	GetTransporter(groupID simulations.GroupID) ignws.PubSubWebsocketTransporter
 	Free(groupID simulations.GroupID)
 	Remove(groupID simulations.GroupID) error
@@ -18,7 +19,7 @@ type Manager interface {
 // manager is a Manager implementation.
 type manager struct {
 	transporters       map[simulations.GroupID]ignws.PubSubWebsocketTransporter
-	runningSimulations map[simulations.GroupID]RunningSimulation
+	runningSimulations map[simulations.GroupID]*RunningSimulation
 }
 
 // Free disconnects the websocket client for the given GroupID.
@@ -39,7 +40,10 @@ func (m *manager) Free(groupID simulations.GroupID) {
 }
 
 // Add adds a running simulation and a websocket transport to the given groupID.
-func (m *manager) Add(groupID simulations.GroupID, rs RunningSimulation, t ignws.PubSubWebsocketTransporter) error {
+func (m *manager) Add(groupID simulations.GroupID, rs *RunningSimulation, t ignws.PubSubWebsocketTransporter) error {
+	if rs == nil {
+		return fmt.Errorf("invalid running simulation for [%s], it should be not nil", groupID)
+	}
 	if t == nil {
 		return fmt.Errorf("invalid websocket transport for [%s], it should not be nil", groupID)
 	}
@@ -58,22 +62,22 @@ func (m *manager) Add(groupID simulations.GroupID, rs RunningSimulation, t ignws
 }
 
 // ListExpiredSimulations list all expired simulations from the list of running simulations.
-func (m *manager) ListExpiredSimulations() []RunningSimulation {
-	return m.listByCriteria(func(rs RunningSimulation) bool {
+func (m *manager) ListExpiredSimulations() []*RunningSimulation {
+	return m.listByCriteria(func(rs *RunningSimulation) bool {
 		return rs.IsExpired()
 	})
 }
 
 // ListFinishedSimulations list all finished simulations from the list of running simulations.
-func (m *manager) ListFinishedSimulations() []RunningSimulation {
-	return m.listByCriteria(func(rs RunningSimulation) bool {
+func (m *manager) ListFinishedSimulations() []*RunningSimulation {
+	return m.listByCriteria(func(rs *RunningSimulation) bool {
 		return rs.Finished
 	})
 }
 
 // listByCriteria allows you to list running simulations by a given criteria.
-func (m *manager) listByCriteria(criteria func(rs RunningSimulation) bool) []RunningSimulation {
-	rss := make([]RunningSimulation, 0, len(m.runningSimulations))
+func (m *manager) listByCriteria(criteria func(rs *RunningSimulation) bool) []*RunningSimulation {
+	rss := make([]*RunningSimulation, 0, len(m.runningSimulations))
 	for _, rs := range m.runningSimulations {
 		if criteria(rs) {
 			rss = append(rss, rs)
@@ -112,6 +116,6 @@ func (m *manager) Remove(groupID simulations.GroupID) error {
 func NewManager() Manager {
 	return &manager{
 		transporters:       make(map[simulations.GroupID]ignws.PubSubWebsocketTransporter),
-		runningSimulations: make(map[simulations.GroupID]RunningSimulation),
+		runningSimulations: make(map[simulations.GroupID]*RunningSimulation),
 	}
 }
