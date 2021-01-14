@@ -45,7 +45,7 @@ type RunningSimulation struct {
 	// MaxValidUntil keeps track of the Max time this simulation should be automatically
 	// terminated. It is used to avoid dangling simulations.
 	MaxValidUntil time.Time
-	// Finished indicates if the simulation has finished running. A "finished" message in the warmup topic will mark the
+	// Finished indicates if the simulation has finished running. A "recording_complete" message in the warmup topic will mark the
 	// simulation as finished.
 	Finished bool
 	// stdoutSkipStatsMsgsCount is an internal variable used to control throttling while printing debug messages to stdout
@@ -256,7 +256,7 @@ func (s *RunningSimulation) callbackWarmup(ctx context.Context, msg transport.Me
 
 			s.SimWarmupSeconds = s.SimTimeSeconds
 		}
-	} else if !s.Finished && wup.Data == "finished" {
+	} else if !s.Finished && wup.Data == "recording_complete" {
 		logger(ctx).Info(fmt.Sprintf("RunningSimulation groupID[%s]- Finished message received. Parsed struct: [%v]", s.GroupID, wup.String()))
 
 		s.Finished = true
