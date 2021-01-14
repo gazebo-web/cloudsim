@@ -19,13 +19,7 @@ type runningSimulationTestSuite struct {
 	suite.Suite
 }
 
-func (s *runningSimulationTestSuite) SetupTest() {
-
-}
-
 func (s *runningSimulationTestSuite) TestHasReachedMaxSeconds() {
-	validFor := 1 * time.Hour
-
 	rs := RunningSimulation{
 		GroupID:                  simulations.GroupID("aaaa-bbbb-cccc-dddd"),
 		currentState:             stateUnknown,
@@ -34,7 +28,7 @@ func (s *runningSimulationTestSuite) TestHasReachedMaxSeconds() {
 		SimWarmupSeconds:         10,
 		SimMaxAllowedSeconds:     100,
 		CreatedAt:                time.Now(),
-		MaxValidUntil:            time.Now().Add(validFor),
+		MaxValidUntil:            time.Now().Add(1 * time.Hour),
 		Finished:                 false,
 		stdoutSkipStatsMsgsCount: 0,
 	}
