@@ -110,5 +110,21 @@ func (s *managerTestSuite) TestFree() {
 }
 
 func (s *managerTestSuite) TestRemove() {
+	rs := RunningSimulation{publishing: true}
+	t := ignws.NewPubSubTransporterMock()
 
+	s.manager.runningSimulations["test"] = &rs
+	s.manager.transporters["test"] = t
+
+	t.On("IsConnected").Once().Return(true)
+	err := s.manager.Remove("test")
+	s.Assert().Error(err)
+
+	t.On("IsConnected").Once().Return(false)
+
+	err = s.manager.Remove("test")
+	s.Assert().NoError(err)
+
+	err = s.manager.Remove("test")
+	s.Assert().Error(err)
 }
