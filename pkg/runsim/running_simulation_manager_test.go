@@ -25,18 +25,35 @@ func (s *managerTestSuite) SetupTest() {
 }
 
 func (s *managerTestSuite) TestAdd() {
+	// Before adding, underlying maps should be empty.
 	s.Require().Len(s.manager.transporters, 0)
 	s.Require().Len(s.manager.runningSimulations, 0)
 
 	gid := simulations.GroupID("aaaa-bbbb-dddd-eeee")
-
 	rs := RunningSimulation{}
 	t := ignws.NewPubSubTransporterMock()
 
-	s.manager.Add(gid, &rs, t)
+	// Adding a running simulation should not return an error
+	err := s.manager.Add(gid, &rs, t)
+	s.Assert().NoError(err)
 
+	// The underlying maps should have 1 element
 	s.Assert().Len(s.manager.transporters, 1)
 	s.Assert().Len(s.manager.runningSimulations, 1)
+
+	// Adding a running simulation with the same group id should return an error.
+	err = s.manager.Add(gid, &rs, t)
+	s.Assert().Error(err)
+
+	// If rs and/or t are nil, it should return an error.
+	err = s.manager.Add("test", nil, t)
+	s.Assert().Error(err)
+
+	err = s.manager.Add("test", &rs, nil)
+	s.Assert().Error(err)
+
+	err = s.manager.Add("test", nil, nil)
+	s.Assert().Error(err)
 }
 
 func (s *managerTestSuite) TestListExpiredSimulations() {

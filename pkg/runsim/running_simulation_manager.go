@@ -51,11 +51,12 @@ func (m *manager) Add(groupID simulations.GroupID, rs *RunningSimulation, t ignw
 	if _, exists := m.transporters[groupID]; exists {
 		return fmt.Errorf("websocket transport [%s] already exists", groupID)
 	}
-	m.transporters[groupID] = t
 
 	if _, exists := m.runningSimulations[groupID]; exists {
 		return fmt.Errorf("running simulation [%s] already exists", groupID)
 	}
+
+	m.transporters[groupID] = t
 	m.runningSimulations[groupID] = rs
 
 	return nil
