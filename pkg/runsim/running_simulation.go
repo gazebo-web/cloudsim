@@ -9,10 +9,7 @@ import (
 	"time"
 )
 
-// Callback defines a function that is used to read incoming ignition websocket messages.
-type Callback func(ctx context.Context, msg ignws.Message) error
-
-// SimulationCallbacks has different Callback implementations used by RunningSimulation.
+// SimulationCallbacks has a set of methods that will listen to gazebo topics from the websocket client.
 type SimulationCallbacks interface {
 	readWorldStats(ctx context.Context, msg ignws.Message) error
 	readWarmup(ctx context.Context, msg ignws.Message) error
