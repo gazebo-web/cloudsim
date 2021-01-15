@@ -73,11 +73,40 @@ func (s *managerTestSuite) TestListFinishedSimulations() {
 }
 
 func (s *managerTestSuite) TestGetTransporter() {
+	t := ignws.NewPubSubTransporterMock()
 
+	s.manager.transporters["test"] = t
+
+	output := s.manager.GetTransporter("test")
+	s.Assert().Equal(t, output)
+
+	output = s.manager.GetTransporter("test2")
+	s.Assert().Nil(output)
 }
 
 func (s *managerTestSuite) TestFree() {
+	rs := RunningSimulation{publishing: true}
+	t := ignws.NewPubSubTransporterMock()
 
+	// First returns true
+	t.On("IsConnected").Once().Return(true)
+
+	// After the transporter gets disconnected, return false.
+	t.On("IsConnected").Once().Return(false)
+
+	t.On("Disconnect").Once()
+
+	s.manager.runningSimulations["test"] = &rs
+	s.manager.transporters["test"] = t
+
+	s.manager.Free("test")
+
+	s.Assert().False(rs.publishing)
+
+	// Don't panic unless Disconnect is being called again (that should not happen)
+	s.NotPanics(func() {
+		s.manager.Free("test")
+	})
 }
 
 func (s *managerTestSuite) TestRemove() {
