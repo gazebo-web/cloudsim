@@ -17,21 +17,6 @@ type StopSimulation struct {
 	RunData  string
 }
 
-// Platform returns the underlying platform.
-func (s *StopSimulation) Platform() platform.Platform {
-	return s.platform
-}
-
-// Services returns the underlying application services.
-func (s *StopSimulation) Services() application.Services {
-	return s.services
-}
-
-// SubTServices returns the subt specific application services.
-func (s *StopSimulation) SubTServices() subtapp.Services {
-	return s.services
-}
-
 // NewStopSimulation initializes a new state for stopping simulations.
 func NewStopSimulation(platform platform.Platform, services subtapp.Services, groupID simulations.GroupID) *RestartSimulation {
 	return &RestartSimulation{
