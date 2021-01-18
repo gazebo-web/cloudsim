@@ -46,6 +46,10 @@ func createLaunchInstancesInput(store actions.Store, tx *gorm.DB, deployment *ac
 	}
 
 	robots, err := s.Services().Simulations().GetRobots(s.GroupID)
+	if err != nil {
+		return nil, err
+	}
+
 	for _, r := range robots {
 		tags := s.
 			Platform().
