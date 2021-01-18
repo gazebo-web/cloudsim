@@ -109,4 +109,7 @@ type Simulation interface {
 
 	// Image returns the simulation's docker image. This image is used as the solution image.
 	GetImage() string
+
+	// IsProcessed returns true if the simulation has been already processed.
+	IsProcessed() bool
 }

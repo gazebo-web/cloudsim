@@ -6,11 +6,17 @@ import (
 
 // fakeSimulation is a fake simulations.Simulation implementation.
 type fakeSimulation struct {
-	groupID simulations.GroupID
-	status  simulations.Status
-	kind    simulations.Kind
-	err     *simulations.Error
-	image   string
+	groupID   simulations.GroupID
+	status    simulations.Status
+	kind      simulations.Kind
+	err       *simulations.Error
+	image     string
+	processed bool
+}
+
+// IsProcessed returns true if the simulation has been processed.
+func (f *fakeSimulation) IsProcessed() bool {
+	return f.processed
 }
 
 // HasStatus returns true if the given status matches with the current status.
