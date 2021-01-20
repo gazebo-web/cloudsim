@@ -118,3 +118,15 @@ func (rs *RunningSimulation) readWarmup(ctx context.Context, msg ignws.Message) 
 
 	return nil
 }
+
+func NewRunningSimulation(groupID simulations.GroupID, maxSimSeconds int64, validFor time.Duration) *RunningSimulation {
+	return &RunningSimulation{
+		GroupID:              groupID,
+		currentState:         stateUnknown,
+		publishing:           false,
+		SimMaxAllowedSeconds: maxSimSeconds,
+		CreatedAt:            time.Now(),
+		MaxValidUntil:        time.Now().Add(validFor),
+		Finished:             false,
+	}
+}
