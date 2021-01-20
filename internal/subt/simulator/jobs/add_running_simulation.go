@@ -14,9 +14,22 @@ var AddRunningSimulation = &actions.Job{
 	PreHooks:        []actions.JobFunc{setStartState},
 	Execute:         addRunningSimulation,
 	PostHooks:       []actions.JobFunc{returnState},
-	RollbackHandler: nil,
-	InputType:       nil,
-	OutputType:      nil,
+	RollbackHandler: revertAddingRunningSimulation,
+	InputType:       actions.GetJobDataType(&state.StartSimulation{}),
+	OutputType:      actions.GetJobDataType(&state.StartSimulation{}),
+}
+
+// revertAddingRunningSimulation reverts all the changes made while adding a running simulation.
+func revertAddingRunningSimulation(store actions.Store, tx *gorm.DB, deployment *actions.Deployment, value interface{}, _ error) (interface{}, error) {
+	s := store.State().(*state.StartSimulation)
+
+	s.Platform().RunningSimulations().Free(s.GroupID)
+
+	err := s.Platform().RunningSimulations().Remove(s.GroupID)
+	if err != nil {
+		return nil, err
+	}
+	return nil, nil
 }
 
 // addRunningSimulation is the main function of the AddRunningSimulation job.
