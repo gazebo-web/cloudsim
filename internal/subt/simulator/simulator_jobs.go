@@ -8,7 +8,7 @@ import (
 // JobsStartSimulation groups the jobs needed to start a simulation.
 var JobsStartSimulation = actions.Jobs{
 	jobs.CheckSimulationPendingStatus,
-	jobs.CheckSimulationIsNotParent,
+	jobs.CheckStartSimulationIsNotParent,
 	jobs.CheckSimulationNoErrors,
 	jobs.SetSimulationStatusToLaunchInstances,
 	jobs.LaunchInstances,
@@ -28,7 +28,8 @@ var JobsStartSimulation = actions.Jobs{
 	jobs.LaunchFieldComputerPods,
 	jobs.CreateNetworkPolicyFieldComputers,
 	jobs.SetSimulationStatusToWaitPods,
-	jobs.WaitRobots,
+	jobs.WaitSimulationPods,
+	jobs.AddRunningSimulation,
 	jobs.SetSimulationStatusToRunning,
 }
 
