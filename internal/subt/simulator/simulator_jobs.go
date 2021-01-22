@@ -39,7 +39,7 @@ var JobsStopSimulation = actions.Jobs{
 	jobs.CheckSimulationTerminateRequestedStatus,
 	jobs.SetSimulationStatusToProcessingResults,
 	jobs.CheckStopSimulationIsNotParent,
-	// jobs.SetStoppedAt,
+	jobs.SetStoppedAt,
 	jobs.ReadScore,
 	jobs.ReadStats,
 	jobs.ReadRunData,

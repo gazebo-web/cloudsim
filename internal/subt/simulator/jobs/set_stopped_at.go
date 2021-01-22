@@ -7,7 +7,7 @@ import (
 )
 
 // SetStoppedAt is a job in charge of setting StoppedAt field from a certain simulation to the time of when it has been stopped.
-var SetStoppedAt = actions.Job{
+var SetStoppedAt = &actions.Job{
 	Name:            "set-stopped-at",
 	PreHooks:        []actions.JobFunc{setStopState},
 	Execute:         setStoppedAt,
