@@ -10,12 +10,13 @@ import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations/fake"
 	"testing"
+	"time"
 )
 
 func TestCheckSimIsNotParent(t *testing.T) {
 	// Initialize simulation
 	gid := simulations.GroupID("aaaa-bbbb-cccc-dddd")
-	sim := fake.NewSimulation(gid, simulations.StatusPending, simulations.SimSingle, nil, "test")
+	sim := fake.NewSimulation(gid, simulations.StatusPending, simulations.SimSingle, nil, "test", 1*time.Minute)
 
 	// Initialize fake simulation service
 	svc := fake.NewService()
@@ -44,7 +45,7 @@ func TestCheckSimIsNotParent(t *testing.T) {
 func TestCheckSimIsNotParent_ErrSimIsParent(t *testing.T) {
 	// Initialize simulation
 	gid := simulations.GroupID("aaaa-bbbb-cccc-dddd")
-	sim := fake.NewSimulation(gid, simulations.StatusPending, simulations.SimParent, nil, "test")
+	sim := fake.NewSimulation(gid, simulations.StatusPending, simulations.SimParent, nil, "test", 1*time.Minute)
 
 	// Initialize fake simulation service
 	svc := fake.NewService()
