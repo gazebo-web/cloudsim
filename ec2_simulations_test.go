@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	uuid "github.com/satori/go.uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"gitlab.com/ignitionrobotics/web/cloudsim/globals"
@@ -143,9 +142,9 @@ func TestInsufficientCapacityRequeue(t *testing.T) {
 	for i, test := range createSimsTestsData {
 		t.Run(test.testDesc, func(t *testing.T) {
 			// Mock EC2 responses
-			ec2Impl := NewEC2Mock()
+			ec2Impl := NewEC2MockSuccessfulLaunch()
 
-			// Mock WaitUnitlInstanceStatusOk
+			// Mock WaitUntilInstanceStatusOk
 			ec2Impl.SetMockFunction(Ec2OpWaitUntilInstanceStatusOk, FixedValues, false, nil)
 
 			// Mock RunInstances
@@ -159,6 +158,8 @@ func TestInsufficientCapacityRequeue(t *testing.T) {
 				}
 			}
 			// Simulate that there's not enough resources, then grant the resources
+			ec2InstanceID1 := GenerateEC2InstanceID()
+			ec2InstanceID2 := GenerateEC2InstanceID()
 			mockValues = append(mockValues,
 				ec2Impl.NewAWSErr(sim.AWSErrCodeInsufficientInstanceCapacity),
 				ec2Impl.NewAWSErr(sim.AWSErrCodeInsufficientInstanceCapacity),
@@ -166,10 +167,10 @@ func TestInsufficientCapacityRequeue(t *testing.T) {
 				ec2Impl.NewAWSErr(sim.AWSErrCodeDryRunOperation),
 				// EC2 Instance 1
 				ec2Impl.NewAWSErr(sim.AWSErrCodeDryRunOperation),
-				ec2Impl.NewReservation(fmt.Sprintf("i-test-1-%s", uuid.NewV4().String())),
+				ec2Impl.NewReservation(ec2InstanceID1),
 				// EC2 Instance 2
 				ec2Impl.NewAWSErr(sim.AWSErrCodeDryRunOperation),
-				ec2Impl.NewReservation(fmt.Sprintf("i-test-2-%s", uuid.NewV4().String())),
+				ec2Impl.NewReservation(ec2InstanceID2),
 			)
 			ec2Impl.SetMockFunction(Ec2OpRunInstances, FixedValues, mockValues...)
 

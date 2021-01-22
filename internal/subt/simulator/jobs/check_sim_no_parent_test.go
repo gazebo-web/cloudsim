@@ -12,7 +12,7 @@ import (
 	"testing"
 )
 
-func TestCheckSimIsParent(t *testing.T) {
+func TestCheckSimIsNotParent(t *testing.T) {
 	// Initialize simulation
 	gid := simulations.GroupID("aaaa-bbbb-cccc-dddd")
 	sim := fake.NewSimulation(gid, simulations.StatusPending, simulations.SimSingle, nil, "test")
@@ -31,7 +31,7 @@ func TestCheckSimIsParent(t *testing.T) {
 	input := state.NewStartSimulation(nil, app, gid)
 	s := actions.NewStore(input)
 
-	result, err := CheckSimulationIsNotParent.Run(s, nil, nil, input)
+	result, err := CheckStartSimulationIsNotParent.Run(s, nil, nil, input)
 	assert.NoError(t, err)
 
 	output, ok := result.(*state.StartSimulation)
@@ -41,7 +41,7 @@ func TestCheckSimIsParent(t *testing.T) {
 
 }
 
-func TestCheckSimIsParent_ErrSimIsParent(t *testing.T) {
+func TestCheckSimIsNotParent_ErrSimIsParent(t *testing.T) {
 	// Initialize simulation
 	gid := simulations.GroupID("aaaa-bbbb-cccc-dddd")
 	sim := fake.NewSimulation(gid, simulations.StatusPending, simulations.SimParent, nil, "test")
@@ -60,7 +60,7 @@ func TestCheckSimIsParent_ErrSimIsParent(t *testing.T) {
 	input := state.NewStartSimulation(nil, app, gid)
 	s := actions.NewStore(input)
 
-	_, err := CheckSimulationIsNotParent.Run(s, nil, nil, input)
+	_, err := CheckStartSimulationIsNotParent.Run(s, nil, nil, input)
 	assert.Error(t, err)
 	assert.Equal(t, simulations.ErrIncorrectKind, err)
 }

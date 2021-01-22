@@ -63,5 +63,31 @@ var SetSimulationStatusToWaitPods = GenerateSetSimulationStatusJob(GenerateSetSi
 	InputType:  &state.StartSimulation{},
 	OutputType: &state.StartSimulation{},
 	PreHooks:   []actions.JobFunc{setStartState, returnGroupIDFromStartState},
-	PostHooks:  nil,
+})
+
+// SetSimulationStatusToDeletingPods is used to set a simulation status to deleting pods.
+var SetSimulationStatusToDeletingPods = GenerateSetSimulationStatusJob(GenerateSetSimulationStatusConfig{
+	Name:       "set-simulation-status-deleting-pods",
+	Status:     simulations.StatusDeletingPods,
+	InputType:  &state.StopSimulation{},
+	OutputType: &state.StopSimulation{},
+	PreHooks:   []actions.JobFunc{setStopState, returnGroupIDFromStopState},
+})
+
+// SetSimulationStatusToDeletingNodes is used to set a simulation status to deleting nodes.
+var SetSimulationStatusToDeletingNodes = GenerateSetSimulationStatusJob(GenerateSetSimulationStatusConfig{
+	Name:       "set-simulation-status-deleting-nodes",
+	Status:     simulations.StatusDeletingNodes,
+	InputType:  &state.StopSimulation{},
+	OutputType: &state.StopSimulation{},
+	PreHooks:   []actions.JobFunc{setStopState, returnGroupIDFromStopState},
+})
+
+// SetSimulationStatusToProcessingResults is used to set a simulation status to processing results.
+var SetSimulationStatusToProcessingResults = GenerateSetSimulationStatusJob(GenerateSetSimulationStatusConfig{
+	Name:       "set-simulation-status-processing-results",
+	Status:     simulations.StatusProcessingResults,
+	InputType:  &state.StopSimulation{},
+	OutputType: &state.StopSimulation{},
+	PreHooks:   []actions.JobFunc{setStopState, returnGroupIDFromStopState},
 })

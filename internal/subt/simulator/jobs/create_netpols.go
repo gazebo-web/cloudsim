@@ -32,6 +32,7 @@ func prepareNetworkPolicyGazeboServerInput(store actions.Store, tx *gorm.DB, dep
 
 	selectors := make([]orchestrator.Selector, len(robots))
 
+	// Each robot's comms bridge will be granted with permissions to communicate to the gazebo server
 	for i, r := range robots {
 		selectors[i] = subtapp.GetPodLabelsCommsBridge(s.GroupID, s.ParentGroupID, r)
 	}
@@ -42,20 +43,26 @@ func prepareNetworkPolicyGazeboServerInput(store actions.Store, tx *gorm.DB, dep
 			Namespace:   s.Platform().Store().Orchestrator().Namespace(),
 			Labels:      subtapp.GetPodLabelsBase(s.GroupID, s.ParentGroupID).Map(),
 			PodSelector: subtapp.GetPodLabelsGazeboServer(s.GroupID, s.ParentGroupID),
-			PeersFrom:   selectors,
-			PeersTo:     selectors,
+			// Allow traffic from comms bridges
+			PeersFrom: selectors,
+			// Allow traffic to comms bridges
+			PeersTo: selectors,
 			Ingresses: orchestrator.NetworkIngressRule{
 				IPBlocks: []string{
+					// Allow traffic from cloudsim
 					fmt.Sprintf("%s/32", s.Platform().Store().Ignition().IP()),
 				},
 				Ports: []int32{
+					// Allow traffic to websocket server
 					9002,
 				},
 			},
 			Egresses: orchestrator.NetworkEgressRule{
 				IPBlocks: []string{
+					// Allow traffic to cloudsim
 					fmt.Sprintf("%s/32", s.Platform().Store().Ignition().IP()),
 				},
+				// Allow traffic to the internet
 				AllowOutbound: true,
 			},
 		},
@@ -85,6 +92,7 @@ func prepareNetworkPolicyFieldComputersInput(store actions.Store, tx *gorm.DB, d
 
 	input := make(jobs.CreateNetworkPoliciesInput, len(robots))
 
+	// Each robot's field computer should communicate to its respective comms bridge.
 	for i, r := range robots {
 		robotID := subtapp.GetRobotID(i)
 		input[i] = orchestrator.CreateNetworkPolicyInput{
@@ -93,23 +101,29 @@ func prepareNetworkPolicyFieldComputersInput(store actions.Store, tx *gorm.DB, d
 			Labels:      subtapp.GetPodLabelsBase(s.GroupID, s.ParentGroupID).Map(),
 			PodSelector: subtapp.GetPodLabelsFieldComputer(s.GroupID, s.ParentGroupID),
 			PeersFrom: []orchestrator.Selector{
+				// Allow traffic from comms bridges
 				subtapp.GetPodLabelsCommsBridge(s.GroupID, s.ParentGroupID, r),
 			},
 			PeersTo: []orchestrator.Selector{
+				// Allow traffic to comms bridges
 				subtapp.GetPodLabelsCommsBridge(s.GroupID, s.ParentGroupID, r),
 			},
 			Ingresses: orchestrator.NetworkIngressRule{
 				IPBlocks: []string{
+					// Allow traffic from cloudsim
 					fmt.Sprintf("%s/32", s.Platform().Store().Ignition().IP()),
 				},
 				Ports: []int32{
+					// Allow traffic from websocket server
 					9002,
 				},
 			},
 			Egresses: orchestrator.NetworkEgressRule{
 				IPBlocks: []string{
+					// Allow traffic to cloudsim
 					fmt.Sprintf("%s/32", s.Platform().Store().Ignition().IP()),
 				},
+				// Disable traffic to the internet
 				AllowOutbound: false,
 			},
 		}
@@ -148,25 +162,33 @@ func prepareNetworkPolicyCommsBridgesInput(store actions.Store, tx *gorm.DB, dep
 			Labels:      subtapp.GetPodLabelsBase(s.GroupID, s.ParentGroupID).Map(),
 			PodSelector: subtapp.GetPodLabelsCommsBridge(s.GroupID, s.ParentGroupID, r),
 			PeersFrom: []orchestrator.Selector{
+				// Allow traffic from gazebo server
 				subtapp.GetPodLabelsGazeboServer(s.GroupID, s.ParentGroupID),
+				// Allow traffic from field computer
 				subtapp.GetPodLabelsFieldComputer(s.GroupID, s.ParentGroupID),
 			},
 			PeersTo: []orchestrator.Selector{
+				// Allow traffic to gazebo server
 				subtapp.GetPodLabelsGazeboServer(s.GroupID, s.ParentGroupID),
+				// Allow traffic to field computer
 				subtapp.GetPodLabelsFieldComputer(s.GroupID, s.ParentGroupID),
 			},
 			Ingresses: orchestrator.NetworkIngressRule{
 				IPBlocks: []string{
+					// Allow traffic from cloudsim
 					fmt.Sprintf("%s/32", s.Platform().Store().Ignition().IP()),
 				},
 				Ports: []int32{
+					// Allow traffic from websocket server
 					9002,
 				},
 			},
 			Egresses: orchestrator.NetworkEgressRule{
 				IPBlocks: []string{
+					// Allow traffic to cloudsim
 					fmt.Sprintf("%s/32", s.Platform().Store().Ignition().IP()),
 				},
+				// Allow traffic to the internet
 				AllowOutbound: true,
 			},
 		}

@@ -36,12 +36,6 @@ type ignitionEnvStore struct {
 
 	// SecretsNameValue is the CLOUDSIM_IGN_SECRETS_NAME value that will used to get credentials for cloud providers.
 	SecretsNameValue string `env:"CLOUDSIM_IGN_SECRETS_NAME"`
-
-	GazeboBucketValue string `env:"CLOUDSIM_IGN_GAZEBO_BUCKET,required"`
-}
-
-func (i *ignitionEnvStore) GazeboBucket() string {
-	return i.GazeboBucketValue
 }
 
 // AccessKeyLabel returns the access key label to get the credentials for a certain cloud provider.

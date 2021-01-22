@@ -21,9 +21,22 @@ func setStartState(store actions.Store, tx *gorm.DB, deployment *actions.Deploym
 	return s, nil
 }
 
+// setStopState parses the input value as the StopSimulation state and sets the store with that state.
+func setStopState(store actions.Store, tx *gorm.DB, deployment *actions.Deployment, value interface{}) (interface{}, error) {
+	s := value.(*state.StopSimulation)
+	store.SetState(s)
+	return s, nil
+}
+
 // returnGroupIDFromStartState parses the input value as the StartSimulation state and returns the group id.
 func returnGroupIDFromStartState(store actions.Store, tx *gorm.DB, deployment *actions.Deployment, value interface{}) (interface{}, error) {
 	s := store.State().(*state.StartSimulation)
+	return s.GroupID, nil
+}
+
+// returnGroupIDFromStopState parses the input vale as the StopSimulation state and returns the group id.
+func returnGroupIDFromStopState(store actions.Store, tx *gorm.DB, deployment *actions.Deployment, value interface{}) (interface{}, error) {
+	s := store.State().(*state.StopSimulation)
 	return s.GroupID, nil
 }
 
@@ -78,4 +91,26 @@ func checkLaunchServiceError(store actions.Store, tx *gorm.DB, deployment *actio
 		return value, nil
 	}
 	return nil, output.Error
+}
+
+// readFileContentFromCopyPod reads the file content located in the given path
+// of a certain pod in the given namespace.
+func readFileContentFromPod(p orchestrator.Pods, podName, namespace, path string) ([]byte, error) {
+	res, err := p.Get(podName, namespace)
+	if err != nil {
+		return nil, err
+	}
+
+	reader, err := p.Reader(res).File(path)
+	if err != nil {
+		return nil, err
+	}
+
+	var c []byte
+	_, err = reader.Read(c)
+	if err != nil {
+		return nil, err
+	}
+
+	return c, nil
 }

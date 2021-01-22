@@ -20,6 +20,29 @@ type pods struct {
 	Logger ign.Logger
 }
 
+// Get gets a pod with the certain name and in the given namespace and returns a resource that identifies that pod.
+func (p *pods) Get(name, namespace string) (orchestrator.Resource, error) {
+	p.Logger.Debug(fmt.Sprintf("Getting pod with name [%s] in namespace [%s]", name, namespace))
+
+	pod, err := p.API.CoreV1().Pods(namespace).Get(name, metav1.GetOptions{})
+	if err != nil {
+		p.Logger.Debug(fmt.Sprintf(
+			"Getting pod with name [%s] in namespace [%s] failed. Error: %+v.",
+			name, namespace, err,
+		))
+		return nil, err
+	}
+
+	selector := orchestrator.NewSelector(pod.Labels)
+
+	p.Logger.Debug(fmt.Sprintf(
+		"Getting pod with name [%s] in namespace [%s] succeeded.",
+		name, namespace,
+	))
+
+	return orchestrator.NewResource(name, namespace, selector), nil
+}
+
 // Create creates a new pod with the information given in orchestrator.CreatePodInput.
 func (p *pods) Create(input orchestrator.CreatePodInput) (orchestrator.Resource, error) {
 	p.Logger.Debug(fmt.Sprintf("Creating new pod. Input: %+v", input))
@@ -35,6 +58,7 @@ func (p *pods) Create(input orchestrator.CreatePodInput) (orchestrator.Resource,
 			volumeMounts = append(volumeMounts, apiv1.VolumeMount{
 				Name:      v.Name,
 				MountPath: v.MountPath,
+				SubPath:   v.SubPath,
 			})
 		}
 

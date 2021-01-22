@@ -56,6 +56,15 @@ var (
 
 	// StatusTerminateRequested is used when a simulation has been scheduled to be terminated.
 	StatusTerminateRequested Status = "terminate-requested"
+
+	// StatusDeletingPods is used when the pods of a certain simulation are being deleted.
+	StatusDeletingPods Status = "deleting-pods"
+
+	// StatusDeletingNodes is used when the nodes of a certain simulation are being deleted.
+	StatusDeletingNodes Status = "deleting-nodes"
+
+	// StatusProcessingResults is used when a simulation's score and stats are being extracted from a gazebo server.
+	StatusProcessingResults Status = "processing-results"
 )
 
 // Kind is used to identify if a Simulation is a single simulation or a multisim.
