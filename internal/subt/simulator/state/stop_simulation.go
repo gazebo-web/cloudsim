@@ -2,7 +2,6 @@ package state
 
 import (
 	subtapp "gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/application"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/application"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/platform"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
 )

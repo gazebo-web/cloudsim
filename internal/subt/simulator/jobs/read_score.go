@@ -10,7 +10,7 @@ import (
 )
 
 // ReadScore is a job in charge of reading the score from a gzserver copy pod for the simulation that is being processed.
-var ReadScore = actions.Job{
+var ReadScore = &actions.Job{
 	Name:       "read-simulation-score",
 	PreHooks:   []actions.JobFunc{setStopState},
 	Execute:    readScore,
