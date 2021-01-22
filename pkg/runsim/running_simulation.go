@@ -119,6 +119,8 @@ func (rs *RunningSimulation) readWarmup(ctx context.Context, msg ignws.Message) 
 	return nil
 }
 
+// NewRunningSimulation initializes a new RunningSimulation identified by the given groupID that will run for a maximum
+// amount of maxSimSeconds seconds and will be valid for the duration given in validFor.
 func NewRunningSimulation(groupID simulations.GroupID, maxSimSeconds int64, validFor time.Duration) *RunningSimulation {
 	return &RunningSimulation{
 		GroupID:              groupID,
