@@ -16,6 +16,7 @@ import (
 	envfake "gitlab.com/ignitionrobotics/web/cloudsim/pkg/store/fake"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/utils/db/gorm"
 	"testing"
+	"time"
 )
 
 func TestLaunchInstances(t *testing.T) {
@@ -30,7 +31,7 @@ func TestLaunchInstances(t *testing.T) {
 
 	// Initialize simulation
 	gid := simulations.GroupID("aaaa-bbbb-cccc-dddd")
-	sim := simfake.NewSimulation(gid, simulations.StatusPending, simulations.SimSingle, nil, "test")
+	sim := simfake.NewSimulation(gid, simulations.StatusPending, simulations.SimSingle, nil, "test", 1*time.Minute)
 
 	// Initialize fake simulation service
 	svc := simfake.NewService()
