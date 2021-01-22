@@ -15,6 +15,7 @@ type StopSimulation struct {
 	Score    float64
 	Stats    simulations.Statistics
 	RunData  string
+	Summary  simulations.Summary
 }
 
 // Platform returns the underlying platform.
