@@ -49,5 +49,5 @@ func readRunData(store actions.Store, tx *gorm.DB, deployment *actions.Deploymen
 	store.SetState(s)
 
 	// Return state
-	return s, nil
+	return store, nil
 }
