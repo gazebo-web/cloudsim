@@ -46,6 +46,8 @@ type RunningSimulation struct {
 	Finished bool
 	// stdoutSkipStatsMsgsCount is an internal variable used to control throttling while printing debug messages to stdout
 	stdoutSkipStatsMsgsCount int
+	// Transport has a reference to a publisher/subscriber transporting mechanism using websockets.
+	Transport ignws.PubSubWebsocketTransporter
 }
 
 // IsExpired returns true if the RunningSimulation has expired.
