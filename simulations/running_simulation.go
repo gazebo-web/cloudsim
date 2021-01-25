@@ -3,9 +3,9 @@ package simulations
 import (
 	"context"
 	"fmt"
-	msgs "gitlab.com/ignitionrobotics/web/cloudsim/ign-transport/proto/ignition/msgs"
-	"gitlab.com/ignitionrobotics/web/cloudsim/transport"
-	ignws "gitlab.com/ignitionrobotics/web/cloudsim/transport/ign"
+	"gitlab.com/ignitionrobotics/web/cloudsim/ign-transport/proto/ignition/msgs"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/transport"
+	ignws "gitlab.com/ignitionrobotics/web/cloudsim/pkg/transport/ign"
 	"gitlab.com/ignitionrobotics/web/ign-go"
 	"sync"
 	"time"
@@ -93,14 +93,14 @@ func NewRunningSimulation(ctx context.Context, dep *SimulationDeployment, t ignw
 	ctx = ign.NewContextWithLogger(ctx, newLogger)
 
 	// subscribe to the stats topic to know the play/pause status
-	err := s.websocketTransportNode.Subscribe(worldStatsTopic, func(message transport.Messager) {
+	err := s.websocketTransportNode.Subscribe(worldStatsTopic, func(message transport.Message) {
 		s.callbackWorldStats(ctx, message)
 	})
 	if err != nil {
 		return nil, err
 	}
 
-	err = s.websocketTransportNode.Subscribe(worldWarmupTopic, func(message transport.Messager) {
+	err = s.websocketTransportNode.Subscribe(worldWarmupTopic, func(message transport.Message) {
 		s.callbackWarmup(ctx, message)
 	})
 	if err != nil {
@@ -212,7 +212,7 @@ func buildGazeboSetStateMessage(ctx context.Context, state gazeboState) (msg, ms
 
 // callbackWorldStats is the callback passed to the websocket client. It will be invoked
 // each time a message is received in the topic associated to this node's groupID.
-func (s *RunningSimulation) callbackWorldStats(ctx context.Context, msg transport.Messager) {
+func (s *RunningSimulation) callbackWorldStats(ctx context.Context, msg transport.Message) {
 	ws := msgs.WorldStatistics{}
 	if err := msg.GetPayload(&ws); err != nil {
 		// do nothing . Just log it
@@ -241,7 +241,7 @@ func (s *RunningSimulation) callbackWorldStats(ctx context.Context, msg transpor
 
 // callbackWarmup is the callback passed to the websocket client that will be invoked each time
 // a message is received at the /warmup/ready topic.
-func (s *RunningSimulation) callbackWarmup(ctx context.Context, msg transport.Messager) {
+func (s *RunningSimulation) callbackWarmup(ctx context.Context, msg transport.Message) {
 	wup := msgs.StringMsg{}
 	if err := msg.GetPayload(&wup); err != nil {
 		// do nothing . Just log it
