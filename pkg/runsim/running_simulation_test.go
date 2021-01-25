@@ -32,13 +32,13 @@ func (s *runningSimulationTestSuite) TestHasReachedMaxSeconds() {
 		Finished:                 false,
 		stdoutSkipStatsMsgsCount: 0,
 	}
-	s.Assert().False(rs.hasReachedMaxSeconds())
+	s.Assert().False(rs.hasReachedMaxSimSeconds())
 
 	rs.SimTimeSeconds += 10
-	s.Assert().False(rs.hasReachedMaxSeconds())
+	s.Assert().False(rs.hasReachedMaxSimSeconds())
 
 	rs.SimTimeSeconds++
-	s.Assert().True(rs.hasReachedMaxSeconds())
+	s.Assert().True(rs.hasReachedMaxSimSeconds())
 
 }
 

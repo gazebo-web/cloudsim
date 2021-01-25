@@ -58,7 +58,7 @@ type RunningSimulation struct {
 func (rs *RunningSimulation) IsExpired() bool {
 	var secondsExpired bool
 	if rs.SimMaxAllowedSeconds > 0 {
-		secondsExpired = rs.hasReachedMaxSeconds()
+		secondsExpired = rs.hasReachedMaxSimSeconds()
 	}
 	return secondsExpired || time.Now().After(rs.MaxValidUntil)
 }
@@ -92,8 +92,8 @@ func (rs *RunningSimulation) readWorldStats(ctx context.Context, msg ignws.Messa
 	return nil
 }
 
-// hasReachedMaxSeconds defines if a simulation has reached the max allowed amount of seconds.
-func (rs *RunningSimulation) hasReachedMaxSeconds() bool {
+// hasReachedMaxSimSeconds defines if a simulation has reached the max allowed amount of seconds.
+func (rs *RunningSimulation) hasReachedMaxSimSeconds() bool {
 	return (rs.SimTimeSeconds - rs.SimWarmupSeconds) > rs.SimMaxAllowedSeconds
 }
 
