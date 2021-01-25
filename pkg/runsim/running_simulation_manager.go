@@ -3,7 +3,7 @@ package runsim
 import (
 	"fmt"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
-	ignws "gitlab.com/ignitionrobotics/web/cloudsim/transport/ign"
+	ignws "gitlab.com/ignitionrobotics/web/cloudsim/pkg/transport/ign"
 )
 
 // Manager describes a set of methods to handle a set of RunningSimulation and their connections to different websocket servers.

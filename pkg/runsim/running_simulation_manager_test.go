@@ -3,7 +3,7 @@ package runsim
 import (
 	"github.com/stretchr/testify/suite"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
-	ignws "gitlab.com/ignitionrobotics/web/cloudsim/transport/ign"
+	ignws "gitlab.com/ignitionrobotics/web/cloudsim/pkg/transport/ign"
 	"testing"
 	"time"
 )

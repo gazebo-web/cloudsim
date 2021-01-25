@@ -4,7 +4,7 @@ import (
 	"context"
 	"gitlab.com/ignitionrobotics/web/cloudsim/ign-transport/proto/ignition/msgs"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
-	ignws "gitlab.com/ignitionrobotics/web/cloudsim/transport/ign"
+	ignws "gitlab.com/ignitionrobotics/web/cloudsim/pkg/transport/ign"
 	"sync"
 	"time"
 )
@@ -112,7 +112,7 @@ func (rs *RunningSimulation) readWarmup(ctx context.Context, msg ignws.Message) 
 		}
 	}
 
-	if !rs.Finished && m.Data == "finished" {
+	if !rs.Finished && m.Data == "recording_complete" {
 		rs.Finished = true
 	}
 
