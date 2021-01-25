@@ -48,6 +48,8 @@ type ec2Config struct {
 	ClusterName string `env:"AWS_CLUSTER_NAME,required"`
 	// Subnets is a slice of AWS subnet IDs where to launch simulations (Example: subnet-1270518251)
 	Subnets []string `env:"IGN_EC2_SUBNETS,required" envSeparator:","`
+	// SecurityGroups is a slice of AWS security group IDs that will be assigned to simulation EC2 instances.
+	SecurityGroups []string `env:"IGN_EC2_SECURITY_GROUPS,required" envSeparator:","`
 	// AvailabilityZones is a slice of AWS availability zones where to launch simulations. (Example: us-east-1a)
 	AvailabilityZones []string `env:"IGN_EC2_AVAILABILITY_ZONES,required" envSeparator:","`
 	// AvailableEC2Machines is the maximum number of machines that Cloudsim can have running at a single time.
@@ -507,7 +509,7 @@ func (s *Ec2Client) launchNodes(ctx context.Context, tx *gorm.DB, dep *Simulatio
 		KeyName:          aws.String("ignitionFuel"),
 		MaxCount:         aws.Int64(1),
 		MinCount:         aws.Int64(1),
-		SecurityGroupIds: aws.StringSlice([]string{"sg-0c5c791266694a3ca"}),
+		SecurityGroupIds: aws.StringSlice(s.ec2Cfg.SecurityGroups),
 		SubnetId:         aws.String(s.ec2Cfg.Subnets[s.availabilityZoneIndex]),
 		Placement: &ec2.Placement{
 			AvailabilityZone: aws.String(s.ec2Cfg.AvailabilityZones[s.availabilityZoneIndex]),
