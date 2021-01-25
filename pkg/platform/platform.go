@@ -28,6 +28,7 @@ type Platform interface {
 	// Secrets returns a secrets.Secrets component.
 	Secrets() secrets.Secrets
 
+	// RunningSimulations returns a runsim.Manager component.
 	RunningSimulations() runsim.Manager
 }
 
