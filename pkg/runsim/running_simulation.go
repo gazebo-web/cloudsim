@@ -9,12 +9,6 @@ import (
 	"time"
 )
 
-// SimulationCallbacks has a set of methods that will listen to gazebo topics from the websocket client.
-type SimulationCallbacks interface {
-	readWorldStats(ctx context.Context, msg ignws.Message) error
-	readWarmup(ctx context.Context, msg ignws.Message) error
-}
-
 // State defines a gazebo state. It's used to represent if a simulation is running or paused.
 type State string
 
