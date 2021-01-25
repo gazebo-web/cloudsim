@@ -62,6 +62,7 @@ type platform struct {
 	runningSimulations runsim.Manager
 }
 
+// RunningSimulations returns a runsim.Manager implementation.
 func (p *platform) RunningSimulations() runsim.Manager {
 	return p.runningSimulations
 }
