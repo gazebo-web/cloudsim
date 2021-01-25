@@ -29,7 +29,7 @@ func readRunData(store actions.Store, tx *gorm.DB, deployment *actions.Deploymen
 	}
 
 	if !sim.IsKind(simulations.SimSingle) {
-		return store, nil
+		return s, nil
 	}
 
 	path := fmt.Sprintf("%s/run.yml", s.Platform().Store().Ignition().GazeboServerLogsPath())
