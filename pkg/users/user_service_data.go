@@ -42,14 +42,14 @@ import (
 
 // UserAccessorDataMock allows us to configure the Service with mock data used in tests.
 type UserAccessorDataMock struct {
-	ua              *UserAccessorImpl
+	ua              *service
 	sysadminIdentiy string
 	app             string
 }
 
 // NewUserAccessorDataMock ...
 func NewUserAccessorDataMock(ctx context.Context, ua Service, sysadminIdentiy, application string) *UserAccessorDataMock {
-	useracc := ua.(*UserAccessorImpl)
+	useracc := ua.(*service)
 	mock := UserAccessorDataMock{
 		ua:              useracc,
 		sysadminIdentiy: sysadminIdentiy,
