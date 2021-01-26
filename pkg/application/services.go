@@ -7,10 +7,10 @@ import (
 
 // Services groups the services needed by an application to launch simulations.
 type Services interface {
-	// Simulations acts as namespace to access different methods for managing simulations.
+	// Simulations provides access to a different set of methods for managing simulations.
 	Simulations() simulations.Service
 
-	// Users acts as a namespace to access different methods for managing users.
+	// Users provides access to a different set of methods for managing users.
 	Users() users.Service
 }
 
