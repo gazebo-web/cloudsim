@@ -3,8 +3,8 @@ package ign
 import (
 	"github.com/gorilla/websocket"
 	"github.com/stretchr/testify/assert"
-	msgs "gitlab.com/ignitionrobotics/web/cloudsim/ign-transport/proto/ignition/msgs"
-	"gitlab.com/ignitionrobotics/web/cloudsim/transport"
+	"gitlab.com/ignitionrobotics/web/cloudsim/ign-transport/proto/ignition/msgs"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/transport"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -37,7 +37,7 @@ func TestTransporterListenDontPanicHTTPClosed(t *testing.T) {
 		tr, err := NewIgnWebsocketTransporter(u.Host, u.Path, transport.WebsocketScheme, "")
 		defer tr.Disconnect()
 		assert.NoError(t, err)
-		tr.Subscribe("test", func(message transport.Messager) {
+		tr.Subscribe("test", func(message transport.Message) {
 			var msg msgs.StringMsg
 			err = message.GetPayload(&msg)
 			assert.NoError(t, err)
@@ -72,7 +72,7 @@ func TestTransporterListenDontPanicWSClosed(t *testing.T) {
 		tr, err := NewIgnWebsocketTransporter(u.Host, u.Path, transport.WebsocketScheme, "")
 		defer tr.Disconnect()
 		assert.NoError(t, err)
-		tr.Subscribe("test", func(message transport.Messager) {
+		tr.Subscribe("test", func(message transport.Message) {
 			var msg msgs.StringMsg
 			err = message.GetPayload(&msg)
 			assert.NoError(t, err)

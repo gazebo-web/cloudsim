@@ -5,7 +5,7 @@ import "gitlab.com/ignitionrobotics/web/cloudsim/internal/pkg/domain"
 // gormFilter is a filter to be used with gorm.
 type gormFilter struct {
 	template string
-	values    []interface{}
+	values   []interface{}
 }
 
 // Template returns the filter's query template.
@@ -22,6 +22,6 @@ func (w gormFilter) Values() []interface{} {
 func NewGormFilter(template string, values ...interface{}) domain.Filter {
 	return &gormFilter{
 		template: template,
-		values:    values,
+		values:   values,
 	}
 }

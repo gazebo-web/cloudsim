@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"github.com/gorilla/websocket"
 	"github.com/stretchr/testify/suite"
-	msgs "gitlab.com/ignitionrobotics/web/cloudsim/ign-transport/proto/ignition/msgs"
-	"gitlab.com/ignitionrobotics/web/cloudsim/transport"
+	"gitlab.com/ignitionrobotics/web/cloudsim/ign-transport/proto/ignition/msgs"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/transport"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -89,7 +89,7 @@ func (suite *subscriberTestSuite) init() PubSubWebsocketTransporter {
 
 func (suite *subscriberTestSuite) TestSubscribe_Accepted() {
 	suite.init()
-	err := suite.transport.Subscribe("test", func(message transport.Messager) {
+	err := suite.transport.Subscribe("test", func(message transport.Message) {
 		var payload string
 		suite.NoError(message.GetPayload(&payload))
 		suite.EqualValues(suite.testTopicMessage.String(), payload)
@@ -99,7 +99,7 @@ func (suite *subscriberTestSuite) TestSubscribe_Accepted() {
 
 func (suite *subscriberTestSuite) TestSubscribe_Rejected() {
 	suite.init()
-	_ = suite.transport.Subscribe("wrong-test", func(message transport.Messager) {
+	_ = suite.transport.Subscribe("wrong-test", func(message transport.Message) {
 		suite.Equal(nil, message)
 	})
 }
