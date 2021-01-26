@@ -19,7 +19,4 @@ type Simulator interface {
 
 	// Stop triggers an action to stop a simulation.
 	Stop(ctx context.Context, groupID simulations.GroupID) error
-
-	// Restart triggers an action to restart a simulation.
-	Restart(ctx context.Context, groupID simulations.GroupID) error
 }
