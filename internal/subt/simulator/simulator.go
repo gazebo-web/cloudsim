@@ -69,23 +69,6 @@ func (s *subTSimulator) Stop(ctx context.Context, groupID simulations.GroupID) e
 	return nil
 }
 
-// Restart triggers the action that will be in charge of restarting a simulation with the given Group ID.
-func (s *subTSimulator) Restart(ctx context.Context, groupID simulations.GroupID) error {
-	state := state.NewRestartSimulation(s.platform, s.services, groupID)
-	store := actions.NewStore(state)
-
-	execInput := &actions.ExecuteInput{
-		ApplicationName: &s.applicationName,
-		ActionName:      actionNameRestartSimulation,
-	}
-
-	err := s.actions.Execute(store, s.db, execInput, groupID)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
 // Config is used to initialize a new simulator for SubT.
 type Config struct {
 	DB                  *gorm.DB
