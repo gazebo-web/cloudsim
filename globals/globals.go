@@ -57,7 +57,7 @@ var DisableScoreGeneration = false
 // UserAccessor holds a reference to the UserAccessor. A proxy to ign-fuel's Users library
 // Dev note: code should not use this from globals. Instead configure your logic with arguments
 // in the constructors.
-var UserAccessor useracc.UserAccessor
+var UserAccessor useracc.Service
 
 // Permissions manages permissions for users, roles and resources.
 var Permissions *permissions.Permissions

@@ -14,14 +14,14 @@ import (
 
 // HTTPHandler is used to invoke inner logic based on incoming Http requests.
 type HTTPHandler struct {
-	UserAccessor useracc.UserAccessor
+	UserAccessor useracc.Service
 }
 
 // HTTPHandlerInstance is the default HTTPHandler instance. It is used by routes.go.
 var HTTPHandlerInstance *HTTPHandler
 
 // NewHTTPHandler creates a new HTTPHandler.
-func NewHTTPHandler(ctx context.Context, ua useracc.UserAccessor) (*HTTPHandler, error) {
+func NewHTTPHandler(ctx context.Context, ua useracc.Service) (*HTTPHandler, error) {
 	return &HTTPHandler{
 		UserAccessor: ua,
 	}, nil

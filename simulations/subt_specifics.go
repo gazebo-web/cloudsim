@@ -2343,7 +2343,7 @@ func (sa *SubTApplication) processSimulationResults(ctx context.Context, s *Serv
 }
 
 // processScore creates the competition_scores entry for a simulation and updates its score.
-func processScore(ctx context.Context, userAccessor useracc.UserAccessor, tx *gorm.DB,
+func processScore(ctx context.Context, userAccessor useracc.Service, tx *gorm.DB,
 	dep *SimulationDeployment, score *float64) *ign.ErrMsg {
 	logger(ctx).Info(
 		fmt.Sprintf("processScore - Creating competition_scores entry for simulation [%s]", *dep.GroupID),
@@ -2703,7 +2703,7 @@ func (sa *SubTApplication) uploadSimulationSummary(simDep *SimulationDeployment,
 
 // updateMultiSimStatuses updates the status of a Multi-Sim Parent and executes application-specific logic based on the
 // state of its children.
-func (sa *SubTApplication) updateMultiSimStatuses(ctx context.Context, tx *gorm.DB, userAccessor useracc.UserAccessor,
+func (sa *SubTApplication) updateMultiSimStatuses(ctx context.Context, tx *gorm.DB, userAccessor useracc.Service,
 	simDep *SimulationDeployment) *ign.ErrMsg {
 	// Note: simDep is a Parent in a multi-sim
 
