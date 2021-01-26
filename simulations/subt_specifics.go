@@ -2527,19 +2527,15 @@ func (sa *SubTApplication) setupEC2InstanceSpecifics(ctx context.Context, s *Ec2
 	subTTag4 := ec2.Tag{Key: aws.String(nodeLabelKeyCloudsimNodeType), Value: aws.String(subtTypeGazebo)}
 	appendTags(template, &subTTag, &subTTag2, &subTTag3, &subTTag4)
 	inputs := make([]*ec2.RunInstancesInput, 0)
+
+	// Configure EC2 instance specifics
+	template.ImageId = aws.String(s.ec2Cfg.AMI)
+	template.InstanceType = aws.String("g3.4xlarge")
+
 	gzInput, err := cloneRunInstancesInput(template)
 	if err != nil {
 		return nil, err
 	}
-
-	// AMI: cloudsim-worker-node-eks-gpu-optimized-1.0.0
-	// Modified version of Amazon EKS-optimized AMI with GPU support
-	// https://docs.aws.amazon.com/eks/latest/userguide/gpu-ami.html
-	// /aws/service/eks/optimized-ami/1.14/amazon-linux-2-gpu/recommended/image_id
-	imageID := aws.String("ami-08861f7e7b409ed0c")
-
-	gzInput.ImageId = imageID
-	gzInput.InstanceType = aws.String("g3.4xlarge")
 
 	// Add the new Input to the result array
 	inputs = append(inputs, gzInput)
@@ -2556,8 +2552,6 @@ func (sa *SubTApplication) setupEC2InstanceSpecifics(ctx context.Context, s *Ec2
 			return nil, err
 		}
 
-		fcInput.ImageId = imageID
-		fcInput.InstanceType = aws.String("g3.4xlarge")
 		// Replace the node type tag
 		replaceTag(fcInput, &ec2.Tag{
 			Key:   sptr(nodeLabelKeyCloudsimNodeType),
