@@ -8,6 +8,7 @@ import (
 	ignws "gitlab.com/ignitionrobotics/web/cloudsim/pkg/transport/ign"
 )
 
+// SetWebsocketConnection is a job in charge of setting a websocket connection to the gazebo server.
 var SetWebsocketConnection = &actions.Job{
 	Name:            "set-ws-conn",
 	PreHooks:        []actions.JobFunc{setStartState},
@@ -18,6 +19,7 @@ var SetWebsocketConnection = &actions.Job{
 	OutputType:      actions.GetJobDataType(&state.StartSimulation{}),
 }
 
+// connectWebsocket is the execute function of the SetWebsocketConnection job.
 func connectWebsocket(store actions.Store, tx *gorm.DB, deployment *actions.Deployment, value interface{}) (interface{}, error) {
 	s := store.State().(*state.StartSimulation)
 
@@ -45,6 +47,8 @@ func connectWebsocket(store actions.Store, tx *gorm.DB, deployment *actions.Depl
 	return store, nil
 }
 
+// revertWebsocketConnection is in charge of disconnecting the websocket server if an error happens while setting
+// the connection up.
 func revertWebsocketConnection(store actions.Store, tx *gorm.DB, deployment *actions.Deployment, value interface{}, err error) (interface{}, error) {
 	s := store.State().(*state.StartSimulation)
 
