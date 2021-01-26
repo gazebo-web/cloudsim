@@ -37,7 +37,7 @@ func TestGenerateSetSimulationStatusJob(t *testing.T) {
 
 	tracksService := tracks.NewService(nil, nil, nil)
 
-	subt := subtapp.NewServices(app, tracksService)
+	subt := subtapp.NewServices(app, tracksService, nil)
 
 	// Initialize store
 	initialState := state.NewStartSimulation(nil, subt, gid)

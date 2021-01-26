@@ -19,6 +19,7 @@ syntax = "proto3";
 package ignition.msgs;
 option java_package = "com.ignition.msgs";
 option java_outer_classname = "WorldStatsProtos";
+option go_package = "msgs";
 
 /// \ingroup ignition.msgs
 /// \interface WorldStatistics

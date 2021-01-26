@@ -3,12 +3,12 @@ package ign
 import (
 	"errors"
 	"github.com/gorilla/websocket"
-	"gitlab.com/ignitionrobotics/web/cloudsim/transport"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/transport"
 	"gitlab.com/ignitionrobotics/web/ign-go"
 )
 
 // Callback is a function that will be executed after reading a message from a certain topic.
-type Callback func(message transport.Messager)
+type Callback func(message transport.Message)
 
 // Publisher represents a set of methods that will let some process send messages to another process.
 type Publisher interface {
