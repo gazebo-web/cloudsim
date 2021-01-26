@@ -15,6 +15,7 @@ import (
 	"time"
 )
 
+// Config has the configuration for the users service.
 type Config struct {
 	AutoLoadPolicySeconds int `env:"USER_ACCESSOR_AUTOLOAD_SECONDS" envDefault:"10"`
 	sysAdmin              string
