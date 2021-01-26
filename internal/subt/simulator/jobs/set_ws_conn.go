@@ -4,8 +4,8 @@ import (
 	"github.com/jinzhu/gorm"
 	"gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/simulator/state"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/actions"
-	"gitlab.com/ignitionrobotics/web/cloudsim/transport"
-	ignws "gitlab.com/ignitionrobotics/web/cloudsim/transport/ign"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/transport"
+	ignws "gitlab.com/ignitionrobotics/web/cloudsim/pkg/transport/ign"
 )
 
 var SetWebsocketConnection = &actions.Job{
@@ -30,6 +30,11 @@ func connectWebsocket(store actions.Store, tx *gorm.DB, deployment *actions.Depl
 	}
 
 	t, err := ignws.NewIgnWebsocketTransporter(host, path, transport.WebsocketSecureScheme, token)
+	if err != nil {
+		return nil, err
+	}
+
+	err = t.Connect()
 	if err != nil {
 		return nil, err
 	}
