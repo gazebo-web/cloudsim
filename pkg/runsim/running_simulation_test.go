@@ -6,7 +6,7 @@ import (
 	"github.com/stretchr/testify/suite"
 	"gitlab.com/ignitionrobotics/web/cloudsim/ign-transport/proto/ignition/msgs"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
-	"gitlab.com/ignitionrobotics/web/cloudsim/transport/ign"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/transport/ign"
 	"testing"
 	"time"
 )
