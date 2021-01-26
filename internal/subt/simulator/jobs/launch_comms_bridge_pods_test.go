@@ -111,7 +111,7 @@ func TestLaunchCommsBridgePods(t *testing.T) {
 	}, error(nil))
 
 	// Create SubT application service
-	app := subtapp.NewServices(application.NewServices(simservice), trackService, nil)
+	app := subtapp.NewServices(application.NewServices(simservice, nil), trackService, nil)
 
 	// Create new state: Start simulation state.
 	s := state.NewStartSimulation(p, app, gid)

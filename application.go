@@ -24,9 +24,9 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/pkg/errors"
 	"gitlab.com/ignitionrobotics/web/cloudsim/globals"
+	useracc "gitlab.com/ignitionrobotics/web/cloudsim/pkg/users"
 	sim "gitlab.com/ignitionrobotics/web/cloudsim/simulations"
 	"gitlab.com/ignitionrobotics/web/cloudsim/simulations/gloo"
-	useracc "gitlab.com/ignitionrobotics/web/cloudsim/users"
 	"gitlab.com/ignitionrobotics/web/fuelserver/permissions"
 	"gitlab.com/ignitionrobotics/web/ign-go"
 	"gitlab.com/ignitionrobotics/web/ign-go/monitoring/prometheus"
@@ -171,7 +171,7 @@ func init() {
 	userAccessor, err := initUserAccessor(logCtx, cfg)
 	if err != nil {
 		// Log and shutdown the app , if there is an error during startup
-		logger.Critical("Critical error trying to create UserAccessor", err)
+		logger.Critical("Critical error trying to create Service", err)
 		log.Fatalf("%+v\n", err)
 	}
 	globals.UserAccessor = userAccessor
@@ -340,7 +340,7 @@ func initPermissions(cfg appConfig) *permissions.Permissions {
 }
 
 // initUserAccessor initializes access to Users (from ign-fuel db)
-func initUserAccessor(ctx context.Context, cfg appConfig) (useracc.UserAccessor, error) {
+func initUserAccessor(ctx context.Context, cfg appConfig) (useracc.Service, error) {
 
 	// Dev notes:
 	// Users live in the ign-fuel DB and not in the cloudsim DB. That's why we need
@@ -401,7 +401,7 @@ func initUserAccessor(ctx context.Context, cfg appConfig) (useracc.UserAccessor,
 	// service.
 	globals.Server.UsersDb = usersDb
 
-	ua, err := useracc.NewUserAccessor(ctx, globals.Permissions, usersDb, cfg.SysAdmin)
+	ua, err := useracc.NewService(ctx, globals.Permissions, usersDb, cfg.SysAdmin)
 	if err != nil {
 		return nil, err
 	}
