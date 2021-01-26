@@ -55,5 +55,5 @@ func addRunningSimulation(store actions.Store, tx *gorm.DB, deployment *actions.
 		return nil, err
 	}
 
-	return store, nil
+	return s, nil
 }
