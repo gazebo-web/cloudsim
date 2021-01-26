@@ -80,7 +80,7 @@ func TestLaunchFieldComputerPods(t *testing.T) {
 	simservice.On("Get", gid).Return(sim, error(nil))
 
 	// Create SubT application service
-	app := subtapp.NewServices(application.NewServices(simservice), nil, nil)
+	app := subtapp.NewServices(application.NewServices(simservice, nil), nil, nil)
 
 	// Create new state: Start simulation state.
 	s := state.NewStartSimulation(p, app, gid)

@@ -34,7 +34,7 @@ func TestLaunchInstances(t *testing.T) {
 
 	// Initialize fake simulation service
 	svc := simfake.NewService()
-	app := application.NewServices(svc)
+	app := application.NewServices(svc, nil)
 
 	svc.On("Get", gid).Return(sim, error(nil)).Once()
 

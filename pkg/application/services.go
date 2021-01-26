@@ -17,12 +17,12 @@ type Services interface {
 // services is a Services implementation.
 type services struct {
 	simulation simulations.Service
-	users      users.Service
+	user       users.Service
 }
 
 // Users returns the underlying User service.
 func (s *services) Users() users.Service {
-	return s.users
+	return s.user
 }
 
 // Simulations returns the underlying Simulation service.
@@ -31,9 +31,9 @@ func (s *services) Simulations() simulations.Service {
 }
 
 // NewServices initializes a new Application Services implementation.
-func NewServices(simulation simulations.Service, users users.Service) Services {
+func NewServices(simulation simulations.Service, user users.Service) Services {
 	return &services{
 		simulation: simulation,
-		users:      users,
+		user:       user,
 	}
 }
