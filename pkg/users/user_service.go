@@ -59,6 +59,7 @@ type Service interface {
 	GetUserFromUsername(username string) (*users.User, *ign.ErrMsg)
 	// GetOrganization gets a user's organization database entry from the username
 	GetOrganization(username string) (*users.Organization, *ign.ErrMsg)
+	StartAutoLoadPolicy()
 }
 
 // UserAccessorImpl is the default implementation of Service interface.
@@ -74,8 +75,8 @@ type UserAccessorImpl struct {
 	resourcePermissions *per.Permissions
 }
 
-// NewUserAccessor initializes a new Service.
-func NewUserAccessor(ctx context.Context, resourcePermissions *per.Permissions, usersDb *gorm.DB, sysAdmin string) (*UserAccessorImpl, error) {
+// NewService initializes a new Service.
+func NewService(ctx context.Context, resourcePermissions *per.Permissions, usersDb *gorm.DB, sysAdmin string) (Service, error) {
 
 	ua := UserAccessorImpl{}
 	ua.Db = usersDb

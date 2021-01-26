@@ -401,7 +401,7 @@ func initUserAccessor(ctx context.Context, cfg appConfig) (useracc.Service, erro
 	// service.
 	globals.Server.UsersDb = usersDb
 
-	ua, err := useracc.NewUserAccessor(ctx, globals.Permissions, usersDb, cfg.SysAdmin)
+	ua, err := useracc.NewService(ctx, globals.Permissions, usersDb, cfg.SysAdmin)
 	if err != nil {
 		return nil, err
 	}
