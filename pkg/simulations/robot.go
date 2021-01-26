@@ -7,6 +7,5 @@ type Robot interface {
 	// Kind returns the robot's type. It's the robot config type.
 	Kind() string
 	// IsEqual returns true if the given robot is the same robot.
-	// It's used for
 	IsEqual(Robot) bool
 }

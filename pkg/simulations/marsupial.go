@@ -10,7 +10,7 @@ type Marsupial interface {
 
 // marsupial is a Marsupial implementation.
 type marsupial struct {
-	// parent has a referencere to the parent robot.
+	// parent has a reference to the parent robot.
 	parent Robot
 	// child has a reference to the child robot.
 	child Robot
