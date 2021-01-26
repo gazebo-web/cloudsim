@@ -89,7 +89,7 @@ func TestLaunchInstances(t *testing.T) {
 
 	tracksService := tracks.NewService(nil, nil, nil)
 
-	subt := subtapp.NewServices(app, tracksService)
+	subt := subtapp.NewServices(app, tracksService, nil)
 
 	// Create initial state
 	initialState := state.NewStartSimulation(p, subt, gid)

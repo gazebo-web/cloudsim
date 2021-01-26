@@ -3,7 +3,7 @@ package runsim
 import (
 	"fmt"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
-	ignws "gitlab.com/ignitionrobotics/web/cloudsim/transport/ign"
+	ignws "gitlab.com/ignitionrobotics/web/cloudsim/pkg/transport/ign"
 )
 
 // Manager describes a set of methods to handle a set of RunningSimulation and their connections to different websocket servers.
@@ -18,7 +18,6 @@ type Manager interface {
 
 // manager is a Manager implementation.
 type manager struct {
-	transporters       map[simulations.GroupID]ignws.PubSubWebsocketTransporter
 	runningSimulations map[simulations.GroupID]*RunningSimulation
 }
 
@@ -48,15 +47,12 @@ func (m *manager) Add(groupID simulations.GroupID, rs *RunningSimulation, t ignw
 		return fmt.Errorf("invalid websocket transport for [%s], it should not be nil", groupID)
 	}
 
-	if _, exists := m.transporters[groupID]; exists {
-		return fmt.Errorf("websocket transport [%s] already exists", groupID)
-	}
-
 	if _, exists := m.runningSimulations[groupID]; exists {
 		return fmt.Errorf("running simulation [%s] already exists", groupID)
 	}
 
-	m.transporters[groupID] = t
+	rs.Transport = t
+
 	m.runningSimulations[groupID] = rs
 
 	return nil
@@ -90,23 +86,18 @@ func (m *manager) listByCriteria(criteria func(rs *RunningSimulation) bool) []*R
 // GetTransporter returns a websocket transporter for the given groupID.
 // It returns nil if there's no connection available for the given groupID.
 func (m *manager) GetTransporter(groupID simulations.GroupID) ignws.PubSubWebsocketTransporter {
-	t, ok := m.transporters[groupID]
+	r, ok := m.runningSimulations[groupID]
 	if !ok {
 		return nil
 	}
-	return t
+	return r.Transport
 }
 
 // Remove removes a running simulation and its websocket connection.
 // If the websocket connection is still active, it will return an error.
 func (m *manager) Remove(groupID simulations.GroupID) error {
-	if t, exists := m.transporters[groupID]; !exists || t.IsConnected() {
+	if r, exists := m.runningSimulations[groupID]; !exists || r.Transport.IsConnected() {
 		return fmt.Errorf("websocket transport [%s] does not exist or it's still connected to the websocket server", groupID)
-	}
-	delete(m.transporters, groupID)
-
-	if _, exists := m.runningSimulations[groupID]; !exists {
-		return fmt.Errorf("running simulation [%s] does not exists", groupID)
 	}
 	delete(m.runningSimulations, groupID)
 
@@ -116,7 +107,6 @@ func (m *manager) Remove(groupID simulations.GroupID) error {
 // NewManager initializes a running simulation's manager in charge of communicating to websocket servers.
 func NewManager() Manager {
 	return &manager{
-		transporters:       make(map[simulations.GroupID]ignws.PubSubWebsocketTransporter),
 		runningSimulations: make(map[simulations.GroupID]*RunningSimulation),
 	}
 }

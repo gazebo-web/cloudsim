@@ -4,16 +4,10 @@ import (
 	"context"
 	"gitlab.com/ignitionrobotics/web/cloudsim/ign-transport/proto/ignition/msgs"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
-	ignws "gitlab.com/ignitionrobotics/web/cloudsim/transport/ign"
+	ignws "gitlab.com/ignitionrobotics/web/cloudsim/pkg/transport/ign"
 	"sync"
 	"time"
 )
-
-// SimulationCallbacks has a set of methods that will listen to gazebo topics from the websocket client.
-type SimulationCallbacks interface {
-	readWorldStats(ctx context.Context, msg ignws.Message) error
-	readWarmup(ctx context.Context, msg ignws.Message) error
-}
 
 // State defines a gazebo state. It's used to represent if a simulation is running or paused.
 type State string
@@ -52,13 +46,15 @@ type RunningSimulation struct {
 	Finished bool
 	// stdoutSkipStatsMsgsCount is an internal variable used to control throttling while printing debug messages to stdout
 	stdoutSkipStatsMsgsCount int
+	// Transport has a reference to a publisher/subscriber transporting mechanism using websockets.
+	Transport ignws.PubSubWebsocketTransporter
 }
 
 // IsExpired returns true if the RunningSimulation has expired.
 func (rs *RunningSimulation) IsExpired() bool {
 	var secondsExpired bool
 	if rs.SimMaxAllowedSeconds > 0 {
-		secondsExpired = rs.hasReachedMaxSeconds()
+		secondsExpired = rs.hasReachedMaxSimSeconds()
 	}
 	return secondsExpired || time.Now().After(rs.MaxValidUntil)
 }
@@ -92,8 +88,8 @@ func (rs *RunningSimulation) readWorldStats(ctx context.Context, msg ignws.Messa
 	return nil
 }
 
-// hasReachedMaxSeconds defines if a simulation has reached the max allowed amount of seconds.
-func (rs *RunningSimulation) hasReachedMaxSeconds() bool {
+// hasReachedMaxSimSeconds defines if a simulation has reached the max allowed amount of seconds.
+func (rs *RunningSimulation) hasReachedMaxSimSeconds() bool {
 	return (rs.SimTimeSeconds - rs.SimWarmupSeconds) > rs.SimMaxAllowedSeconds
 }
 
@@ -112,7 +108,7 @@ func (rs *RunningSimulation) readWarmup(ctx context.Context, msg ignws.Message) 
 		}
 	}
 
-	if !rs.Finished && m.Data == "finished" {
+	if !rs.Finished && m.Data == "recording_complete" {
 		rs.Finished = true
 	}
 
