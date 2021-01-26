@@ -36,20 +36,25 @@ func revertAddingRunningSimulation(store actions.Store, tx *gorm.DB, deployment 
 func addRunningSimulation(store actions.Store, tx *gorm.DB, deployment *actions.Deployment, value interface{}) (interface{}, error) {
 	s := store.State().(*state.StartSimulation)
 
+	// Get the simulation
 	sim, err := s.SubTServices().Simulations().Get(s.GroupID)
 	if err != nil {
 		return nil, err
 	}
 
+	// Parse it as a subt simulation
 	subtSim := sim.(subt.Simulation)
 
+	// Get the track for the given simulation
 	t, err := s.SubTServices().Tracks().Get(subtSim.GetTrack())
 	if err != nil {
 		return nil, err
 	}
 
+	// Initialize a new RunningSimulation.
 	rs := runsim.NewRunningSimulation(s.GroupID, int64(t.MaxSimSeconds), sim.GetValidFor())
 
+	// Add the running simulation and websocket connection to the Running Simulation manager.
 	err = s.Platform().RunningSimulations().Add(s.GroupID, rs, s.WebsocketConnection)
 	if err != nil {
 		return nil, err
