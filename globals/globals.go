@@ -5,7 +5,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3/s3iface"
 	"github.com/go-playground/form"
 	ignws "gitlab.com/ignitionrobotics/web/cloudsim/pkg/transport/ign"
-	useracc "gitlab.com/ignitionrobotics/web/cloudsim/users"
+	useracc "gitlab.com/ignitionrobotics/web/cloudsim/pkg/users"
 	"gitlab.com/ignitionrobotics/web/fuelserver/permissions"
 	"gitlab.com/ignitionrobotics/web/ign-go"
 	"gopkg.in/go-playground/validator.v9"
