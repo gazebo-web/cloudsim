@@ -182,7 +182,7 @@ func (s *runningSimulationTestSuite) TestReadWarmupWhenFinished() {
 	}
 
 	m := msgs.StringMsg{
-		Data: "finished",
+		Data: "recording_complete",
 	}
 	b, err := proto.Marshal(&m)
 	s.Require().NoError(err)
