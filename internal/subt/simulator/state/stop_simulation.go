@@ -3,6 +3,7 @@ package state
 import (
 	subtapp "gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/application"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/application"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/platform"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
 )
@@ -15,6 +16,7 @@ type StopSimulation struct {
 	Score    float64
 	Stats    simulations.Statistics
 	RunData  string
+	PodList  []orchestrator.Resource
 }
 
 // Platform returns the underlying platform.
