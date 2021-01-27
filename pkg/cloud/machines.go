@@ -21,6 +21,8 @@ var (
 	ErrMachineCreationFailed = errors.New("machine creation failed")
 	// ErrMissingMachineNames is returned when no machines ids are provided to be terminated.
 	ErrMissingMachineNames = errors.New("missing machine names")
+	// ErrMissingMachineNames is returned when no tags ids are provided to be terminated.
+	ErrMissingMachineFilters = errors.New("missing machine filters")
 )
 
 // Tag is a group of key-value pairs for a certain resource.
@@ -106,6 +108,8 @@ func (c *CreateMachinesOutput) ToWaitMachinesOKInput() WaitMachinesOKInput {
 type TerminateMachinesInput struct {
 	// Instances has the list of machine ids.
 	Instances []string
+	// Filters has a list of filters to identify machines that should be deleted.
+	Filters map[string][]string
 }
 
 // CountMachinesInput is the input for the Machines.Count operation.
