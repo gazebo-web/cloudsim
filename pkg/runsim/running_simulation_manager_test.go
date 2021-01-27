@@ -3,7 +3,7 @@ package runsim
 import (
 	"github.com/stretchr/testify/suite"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
-	ignws "gitlab.com/ignitionrobotics/web/cloudsim/transport/ign"
+	ignws "gitlab.com/ignitionrobotics/web/cloudsim/pkg/transport/ign"
 	"testing"
 	"time"
 )
@@ -19,14 +19,12 @@ type managerTestSuite struct {
 
 func (s *managerTestSuite) SetupTest() {
 	s.manager = &manager{
-		transporters:       make(map[simulations.GroupID]ignws.PubSubWebsocketTransporter),
 		runningSimulations: make(map[simulations.GroupID]*RunningSimulation),
 	}
 }
 
 func (s *managerTestSuite) TestAdd() {
 	// Before adding, underlying maps should be empty.
-	s.Require().Len(s.manager.transporters, 0)
 	s.Require().Len(s.manager.runningSimulations, 0)
 
 	gid := simulations.GroupID("aaaa-bbbb-dddd-eeee")
@@ -38,7 +36,6 @@ func (s *managerTestSuite) TestAdd() {
 	s.Assert().NoError(err)
 
 	// The underlying maps should have 1 element
-	s.Assert().Len(s.manager.transporters, 1)
 	s.Assert().Len(s.manager.runningSimulations, 1)
 
 	// Adding a running simulation with the same group id should return an error.
@@ -100,7 +97,7 @@ func (s *managerTestSuite) TestListFinishedSimulations() {
 func (s *managerTestSuite) TestGetTransporter() {
 	t := ignws.NewPubSubTransporterMock()
 
-	s.manager.transporters["test"] = t
+	s.manager.runningSimulations["test"] = &RunningSimulation{Transport: t}
 
 	output := s.manager.GetTransporter("test")
 	s.Assert().Equal(t, output)
@@ -110,8 +107,8 @@ func (s *managerTestSuite) TestGetTransporter() {
 }
 
 func (s *managerTestSuite) TestFree() {
-	rs := RunningSimulation{publishing: true}
 	t := ignws.NewPubSubTransporterMock()
+	rs := RunningSimulation{publishing: true, Transport: t}
 
 	// First returns true
 	t.On("IsConnected").Once().Return(true)
@@ -123,7 +120,6 @@ func (s *managerTestSuite) TestFree() {
 	t.On("Disconnect").Once()
 
 	s.manager.runningSimulations["test"] = &rs
-	s.manager.transporters["test"] = t
 
 	s.manager.Free("test")
 
@@ -137,11 +133,10 @@ func (s *managerTestSuite) TestFree() {
 
 func (s *managerTestSuite) TestRemove() {
 	// Add data before running tests
-	rs := RunningSimulation{}
 	t := ignws.NewPubSubTransporterMock()
+	rs := RunningSimulation{Transport: t}
 
 	s.manager.runningSimulations["test"] = &rs
-	s.manager.transporters["test"] = t
 
 	// We should not be able to remove a simulation that has a connection.
 	t.On("IsConnected").Once().Return(true)

@@ -22,11 +22,11 @@ func TestCheckSimulationStatus_Success(t *testing.T) {
 	// Initialize fake simulation service
 	svc := fake.NewService()
 	svc.On("Get", gid).Return(sim, nil)
-	app := application.NewServices(svc)
+	app := application.NewServices(svc, nil)
 
 	tracksService := tracks.NewService(nil, nil, nil)
 
-	subt := subtapp.NewServices(app, tracksService)
+	subt := subtapp.NewServices(app, tracksService, nil)
 
 	// Initialize job input and store
 	input := state.NewStartSimulation(nil, subt, gid)
@@ -57,11 +57,11 @@ func TestCheckSimulationStatus_ErrSimInvaludStatus(t *testing.T) {
 	// Initialize fake simulation service
 	svc := fake.NewService()
 	svc.On("Get", gid).Return(sim, nil)
-	app := application.NewServices(svc)
+	app := application.NewServices(svc, nil)
 
 	tracksService := tracks.NewService(nil, nil, nil)
 
-	subt := subtapp.NewServices(app, tracksService)
+	subt := subtapp.NewServices(app, tracksService, nil)
 
 	// Initialize job input and store
 	input := state.NewStartSimulation(nil, subt, gid)

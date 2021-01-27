@@ -3,31 +3,17 @@ package simulations
 import (
 	"context"
 	"fmt"
-	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/ec2/ec2iface"
-	"github.com/aws/aws-sdk-go/service/s3/s3iface"
 	"github.com/caarlos0/env"
 	"github.com/jinzhu/gorm"
 	"github.com/panjf2000/ants"
 	"github.com/pkg/errors"
 	"github.com/satori/go.uuid"
 	"gitlab.com/ignitionrobotics/web/cloudsim/globals"
-	subt "gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/simulator"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/actions"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/application"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/cloud"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/cloud/aws/ec2"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/cloud/aws/s3"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/platform"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulator"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/store"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/transport"
+	ignws "gitlab.com/ignitionrobotics/web/cloudsim/pkg/transport/ign"
+	useracc "gitlab.com/ignitionrobotics/web/cloudsim/pkg/users"
 	"gitlab.com/ignitionrobotics/web/cloudsim/queues"
 	"gitlab.com/ignitionrobotics/web/cloudsim/simulations/gloo"
-	"gitlab.com/ignitionrobotics/web/cloudsim/transport"
-	ignws "gitlab.com/ignitionrobotics/web/cloudsim/transport/ign"
-	useracc "gitlab.com/ignitionrobotics/web/cloudsim/users"
 	"gitlab.com/ignitionrobotics/web/fuelserver/bundles/users"
 	per "gitlab.com/ignitionrobotics/web/fuelserver/permissions"
 	"gitlab.com/ignitionrobotics/web/ign-go"
@@ -177,22 +163,10 @@ type Service struct {
 	multisimStatusUpdater     *time.Ticker
 	multisimStatusUpdaterDone chan bool
 	applications              map[string]ApplicationType
-	// The UserAccessor to check for Users/Orgs permissions
-	userAccessor             useracc.UserAccessor
+	// The Service to check for Users/Orgs permissions
+	userAccessor             useracc.Service
 	poolNotificationCallback PoolNotificationCallback
 	scheduler                *scheduler.Scheduler
-
-	// simulator is used to launch a specific set of jobs to start, restart and stop simulations.
-	simulator    simulator.Simulator
-	SessionAWS   *session.Session
-	EC2API       ec2iface.EC2API
-	machines     cloud.Machines
-	platform     platform.Platform
-	storage      cloud.Storage
-	orchestrator orchestrator.Cluster
-	envStore     store.Store
-	simService   simulations.Service
-	S3API        s3iface.S3API
 }
 
 // SimServImpl holds the instance of the Simulations Service. It is set at initialization.
@@ -251,7 +225,7 @@ type ApplicationType interface {
 		robotName *string, lines int64) (interface{}, *ign.ErrMsg)
 	launchApplication(ctx context.Context, s *Service, tx *gorm.DB, dep *SimulationDeployment,
 		podNamePrefix string, baseLabels map[string]string) (interface{}, *ign.ErrMsg)
-	updateMultiSimStatuses(ctx context.Context, tx *gorm.DB, userAccessor useracc.UserAccessor, simDep *SimulationDeployment) *ign.ErrMsg
+	updateMultiSimStatuses(ctx context.Context, tx *gorm.DB, userAccessor useracc.Service, simDep *SimulationDeployment) *ign.ErrMsg
 	getCompetitionRobots() (interface{}, *ign.ErrMsg)
 	ValidateSimulationLaunch(ctx context.Context, tx *gorm.DB, dep *SimulationDeployment) *ign.ErrMsg
 	// TODO: Move simulationIsHeld to SubT implementation.
@@ -276,7 +250,7 @@ type PoolFactory func(poolSize int, jobF func(interface{})) (JobPool, error)
 
 // NewSimulationsService creates a new simulations service
 func NewSimulationsService(ctx context.Context, db *gorm.DB, nm NodeManager, kcli kubernetes.Interface,
-	gloo gloo.Clientset, pf PoolFactory, ua useracc.UserAccessor, isTest bool) (SimService, error) {
+	gloo gloo.Clientset, pf PoolFactory, ua useracc.Service, isTest bool) (SimService, error) {
 
 	var err error
 	s := Service{}
@@ -324,44 +298,6 @@ func NewSimulationsService(ctx context.Context, db *gorm.DB, nm NodeManager, kcl
 	if err != nil {
 		return nil, err
 	}
-
-	// Get logger from context
-	loggerCtx := logger(ctx)
-
-	// Initialize AWS session.
-	s.SessionAWS, err = session.NewSession()
-	if err != nil {
-		return nil, err
-	}
-
-	// Initialize EC2API
-	s.EC2API = ec2.NewAPI(s.SessionAWS)
-
-	// Initialize machines component with EC2API.
-	s.machines = ec2.NewMachines(s.EC2API, loggerCtx)
-
-	// Initialize S3API
-	s.S3API = s3.NewAPI(s.SessionAWS)
-
-	// Initialize storage component with S3API
-	s.storage = s3.NewStorage(s.S3API, loggerCtx)
-
-	// TODO: Initialize env store
-
-	// TODO: Initialize orchestrator.
-
-	// Initialize platform with the different components
-	s.platform = platform.NewPlatform(s.machines, s.storage, s.orchestrator, s.envStore)
-
-	// TODO Initialize simService with subt implementation.
-	appServices := application.NewServices(s.simService)
-
-	s.simulator = subt.NewSimulator(subt.Config{
-		DB:                  db,
-		Platform:            s.platform,
-		ApplicationServices: appServices,
-		ActionService:       actions.NewService(),
-	})
 
 	return &s, nil
 }
@@ -893,13 +829,24 @@ func (s *Service) workerStartSimulation(payload interface{}) {
 		return
 	}
 
-	ctx := context.TODO()
+	// bind a specific logger to the worker
+	reqID := fmt.Sprintf("worker-start-sim-%s", groupID)
+	newLogger := logger(s.baseCtx).Clone(reqID)
+	workerCtx := ign.NewContextWithLogger(s.baseCtx, newLogger)
 
-	err := s.simulator.Start(ctx, simulations.GroupID(groupID))
+	newLogger.Info("Worker about to invoke StartSimulation for groupID: " + groupID)
+
+	simDep, err := GetSimulationDeployment(s.DB, groupID)
 	if err != nil {
-		logger(ctx).Error(fmt.Sprintf("Failed to initialize simulation [%s]. Error: %v", groupID, err))
+		logger(workerCtx).Error(fmt.Sprintf("startSimulation - %v", err))
+		return
 	}
-	logger(ctx).Info(fmt.Sprintf("Simulation [%s] was successfully launched.", groupID))
+
+	res, em := s.startSimulation(workerCtx, s.DB, simDep)
+	if res == launcherRelaunchNeeded {
+		s.requeueSimulation(simDep)
+	}
+	s.notify(PoolStartSimulation, groupID, res, em)
 }
 
 // ///////////////////////////////////////////////////////////////////////
@@ -1456,7 +1403,7 @@ func (s *Service) getMaxDurationForSimulation(ctx context.Context, tx *gorm.DB,
 	return maxDuration
 }
 
-// DEPRECATED: startSimulation is the main func to launch a new simulation.
+// StartSimulation is the main func to launch a new simulation.
 // IMPORTANT: This function is invoked in a separate thread, from a Launcher Worker thread.
 // @return: it can return a (launcherRelaunchNeeded) "relaunch" string value as result, which means the
 // pool worker will send the simulation again to the Pending queue.

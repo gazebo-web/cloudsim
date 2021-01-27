@@ -6,7 +6,7 @@ import (
 	"github.com/stretchr/testify/suite"
 	"gitlab.com/ignitionrobotics/web/cloudsim/ign-transport/proto/ignition/msgs"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
-	"gitlab.com/ignitionrobotics/web/cloudsim/transport/ign"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/transport/ign"
 	"testing"
 	"time"
 )
@@ -32,13 +32,13 @@ func (s *runningSimulationTestSuite) TestHasReachedMaxSeconds() {
 		Finished:                 false,
 		stdoutSkipStatsMsgsCount: 0,
 	}
-	s.Assert().False(rs.hasReachedMaxSeconds())
+	s.Assert().False(rs.hasReachedMaxSimSeconds())
 
 	rs.SimTimeSeconds += 10
-	s.Assert().False(rs.hasReachedMaxSeconds())
+	s.Assert().False(rs.hasReachedMaxSimSeconds())
 
 	rs.SimTimeSeconds++
-	s.Assert().True(rs.hasReachedMaxSeconds())
+	s.Assert().True(rs.hasReachedMaxSimSeconds())
 
 }
 
@@ -182,7 +182,7 @@ func (s *runningSimulationTestSuite) TestReadWarmupWhenFinished() {
 	}
 
 	m := msgs.StringMsg{
-		Data: "finished",
+		Data: "recording_complete",
 	}
 	b, err := proto.Marshal(&m)
 	s.Require().NoError(err)

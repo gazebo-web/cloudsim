@@ -256,7 +256,8 @@ func (p *pods) podHasIP(pod *apiv1.Pod) bool {
 
 // GetIP gets the IP for the pod identified with the given name in the current namespace.
 // It will return an error if no IP has been assigned to the pod when calling this method.
-// WaitForCondition can be used to wait until the pod has an IP assigned (orchestrator.HasIPStatusCondition).
+// This job assumes that the pod is ready and can be accessed immediately. A WaitForCondition job must be executed at some point
+// before executing this job to ensure that the pod is ready and has an IP assigned (orchestrator.HasIPStatusCondition).
 func (p *pods) GetIP(name, namespace string) (string, error) {
 	p.Logger.Debug(fmt.Sprintf("Getting IP from pod with name [%s] in namespace [%s]", name, namespace))
 

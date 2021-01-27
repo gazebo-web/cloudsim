@@ -28,6 +28,7 @@ type Platform interface {
 	// Secrets returns a secrets.Secrets component.
 	Secrets() secrets.Secrets
 
+	// RunningSimulations returns a runsim.Manager component.
 	RunningSimulations() runsim.Manager
 }
 
@@ -61,6 +62,7 @@ type platform struct {
 	runningSimulations runsim.Manager
 }
 
+// RunningSimulations returns a runsim.Manager implementation.
 func (p *platform) RunningSimulations() runsim.Manager {
 	return p.runningSimulations
 }
