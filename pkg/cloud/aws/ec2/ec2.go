@@ -222,9 +222,6 @@ func (m *machines) Create(inputs []cloud.CreateMachinesInput) (created []cloud.C
 // It returns an error if no instances ids are provided.
 // It also returns an error if the underlying TerminateInstances request fails.
 func (m *machines) terminateByID(instances []string) error {
-	if instances == nil || len(instances) == 0 {
-		return cloud.ErrMissingMachineNames
-	}
 	_, err := m.API.TerminateInstances(&ec2.TerminateInstancesInput{
 		DryRun:      aws.Bool(false),
 		InstanceIds: aws.StringSlice(instances),
@@ -236,10 +233,6 @@ func (m *machines) terminateByID(instances []string) error {
 // It returns an error if no instances filters are provided.
 // It also returns an error if the underlying TerminateInstances request fails.
 func (m *machines) terminateByFilters(filters map[string][]string) error {
-	if filters == nil || len(filters) == 0 {
-		return cloud.ErrMissingMachineFilters
-	}
-
 	out, err := m.API.DescribeInstances(&ec2.DescribeInstancesInput{
 		MaxResults: aws.Int64(1000),
 		Filters:    m.createFilters(filters),
@@ -265,16 +258,23 @@ func (m *machines) terminateByFilters(filters map[string][]string) error {
 // If the former fails, the latter won't be executed.
 func (m *machines) Terminate(input cloud.TerminateMachinesInput) error {
 	m.Logger.Debug(fmt.Sprintf("Terminating machines with the following input: %+v", input))
-	if input.Instances != nil && len(input.Instances) > 0 {
-		err := m.terminateByID(input.Instances)
+
+	err := input.Validate()
+	if err != nil {
+		m.Logger.Debug(fmt.Sprintf("Invalid request, couldn't validate input: %+v", input))
+		return err
+	}
+
+	if input.ValidateInstances() == nil {
+		err = m.terminateByID(input.Instances)
 		if err != nil {
-			m.Logger.Debug(fmt.Sprintf("Error while terminating instances by instance id. Instances: [%s]. Error: %s.", input.Instances, err))
+			m.Logger.Debug(fmt.Sprintf("Error while terminating instances by id. IDs: [%s]. Error: %s.", input.Filters, err))
 			return err
 		}
 	}
 
-	if input.Filters != nil && len(input.Filters) > 0 {
-		err := m.terminateByFilters(input.Filters)
+	if input.ValidateFilters() == nil {
+		err = m.terminateByFilters(input.Filters)
 		if err != nil {
 			m.Logger.Debug(fmt.Sprintf("Error while terminating instances by filters. Filters: [%s]. Error: %s.", input.Filters, err))
 			return err

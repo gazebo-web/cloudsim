@@ -23,6 +23,8 @@ var (
 	ErrMissingMachineNames = errors.New("missing machine names")
 	// ErrMissingMachineNames is returned when no tags ids are provided to be terminated.
 	ErrMissingMachineFilters = errors.New("missing machine filters")
+	// ErrInvalidTerminateRequest is used to return an error when validating a termination machine request fails.
+	ErrInvalidTerminateRequest = errors.New("invalid terminate machines request")
 )
 
 // Tag is a group of key-value pairs for a certain resource.
@@ -110,6 +112,30 @@ type TerminateMachinesInput struct {
 	Instances []string
 	// Filters has a list of filters to identify machines that should be deleted.
 	Filters map[string][]string
+}
+
+// ValidateInstances validates that the instances ids given in the TerminateMachinesInput are valid.
+func (in *TerminateMachinesInput) ValidateInstances() error {
+	if in.Instances == nil || len(in.Instances) == 0 {
+		return ErrMissingMachineNames
+	}
+	return nil
+}
+
+// ValidateInstances validates that the filters given in the TerminateMachinesInput are valid.
+func (in *TerminateMachinesInput) ValidateFilters() error {
+	if in.Filters == nil || len(in.Filters) == 0 {
+		return ErrMissingMachineFilters
+	}
+	return nil
+}
+
+// Validate validates that the TerminateMachinesInput request is valid.
+func (in *TerminateMachinesInput) Validate() error {
+	if in.ValidateInstances() != nil && in.ValidateFilters() != nil {
+		return ErrInvalidTerminateRequest
+	}
+	return nil
 }
 
 // CountMachinesInput is the input for the Machines.Count operation.
