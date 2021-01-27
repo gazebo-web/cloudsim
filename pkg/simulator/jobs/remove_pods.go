@@ -9,12 +9,13 @@ import (
 )
 
 // RemovePodsInput is the input of the RemovePods job.
-type RemovePodsInput orchestrator.Selector
+type RemovePodsInput []orchestrator.Resource
 
 // RemovePodsOutput is the output of the RemovePods job.
 // This struct was set in place to let the post-hook handle errors.
 type RemovePodsOutput struct {
-	Error error
+	Resources []orchestrator.Resource
+	Error     error
 }
 
 // LaunchPods is a generic job to remove pods from a cluster.
@@ -32,9 +33,27 @@ func removePods(store actions.Store, tx *gorm.DB, deployment *actions.Deployment
 		return nil, simulator.ErrInvalidInput
 	}
 
-	err := s.Platform().Orchestrator().Pods().DeleteBulk(input)
+	if len(input) == 0 {
+		return LaunchPodsOutput{
+			Resources: []orchestrator.Resource{},
+			Error:     nil,
+		}, nil
+	}
+
+	var deleted []orchestrator.Resource
+	var err error
+
+	for _, in := range input {
+		var res orchestrator.Resource
+		res, err = s.Platform().Orchestrator().Pods().Delete(in)
+		if err != nil {
+			return nil, err
+		}
+		deleted = append(deleted, res)
+	}
 
 	return RemovePodsOutput{
-		Error: err,
+		Resources: deleted,
+		Error:     err,
 	}, nil
 }
