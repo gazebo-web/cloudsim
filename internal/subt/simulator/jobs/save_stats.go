@@ -26,5 +26,4 @@ func saveStats(store actions.Store, tx *gorm.DB, deployment *actions.Deployment,
 	}
 
 	return s, nil
-
 }
