@@ -31,12 +31,27 @@ type handlerWithUser func(user *users.User, tx *gorm.DB, w http.ResponseWriter, 
 
 // WithUser is a middleware that checks for a valid user from the JWT and passes
 // the user to the handlerWithUser.
+// If the user is not present or invalid, an error is returned.
 func WithUser(handler handlerWithUser) ign.HandlerWithResult {
 	return func(tx *gorm.DB, w http.ResponseWriter, r *http.Request) (interface{}, *ign.ErrMsg) {
 		// Get JWT user. Fail if invalid or missing
 		user, ok, em := HTTPHandlerInstance.UserAccessor.UserFromJWT(r)
 		if !ok {
 			return nil, em
+		}
+		return handler(user, tx, w, r)
+	}
+}
+
+// WithUserOrAnonymous is a middleware that checks for a valid user from the JWT and passes
+// the user to the handlerWithUser.
+// If the user is not present or invalid, a nil user is passed.
+func WithUserOrAnonymous(handler handlerWithUser) ign.HandlerWithResult {
+	return func(tx *gorm.DB, w http.ResponseWriter, r *http.Request) (interface{}, *ign.ErrMsg) {
+		// Get JWT user. Fail if invalid or missing
+		user, ok, _ := HTTPHandlerInstance.UserAccessor.UserFromJWT(r)
+		if !ok {
+			return handler(nil, tx, w, r)
 		}
 		return handler(user, tx, w, r)
 	}
