@@ -26,7 +26,7 @@ func TestCheckSimIsNotParent(t *testing.T) {
 	trackService := tfake.NewService()
 
 	// Create SubT application service
-	app := subtapp.NewServices(application.NewServices(svc), trackService, nil)
+	app := subtapp.NewServices(application.NewServices(svc, nil), trackService, nil)
 
 	// Initialize job input and store
 	input := state.NewStartSimulation(nil, app, gid)
@@ -55,7 +55,7 @@ func TestCheckSimIsNotParent_ErrSimIsParent(t *testing.T) {
 	trackService := tfake.NewService()
 
 	// Create SubT application service
-	app := subtapp.NewServices(application.NewServices(svc), trackService, nil)
+	app := subtapp.NewServices(application.NewServices(svc, nil), trackService, nil)
 
 	// Initialize job input and store
 	input := state.NewStartSimulation(nil, app, gid)

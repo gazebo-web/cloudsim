@@ -88,7 +88,7 @@ func (rs *RunningSimulation) readWorldStats(ctx context.Context, msg ignws.Messa
 	return nil
 }
 
-// hasReachedMaxSimSeconds defines if a simulation has reached the max allowed amount of seconds.
+// hasReachedMaxSimSeconds defines if a simulation has reached the max allowed amount of simulation seconds.
 func (rs *RunningSimulation) hasReachedMaxSimSeconds() bool {
 	return (rs.SimTimeSeconds - rs.SimWarmupSeconds) > rs.SimMaxAllowedSeconds
 }

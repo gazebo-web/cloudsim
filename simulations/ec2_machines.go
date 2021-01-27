@@ -46,6 +46,9 @@ type awsConfig struct {
 type ec2Config struct {
 	// ClusterName contains the name of the cluster EC2 instances will join.
 	ClusterName string `env:"AWS_CLUSTER_NAME,required"`
+	// AMI contains the Amazon Machine Image (AMI) id used when launching simulation EC2 instances. The AMIs must
+	// contain all the necessary system dependencies required to run the simulation.
+	AMI string `env:"IGN_EC2_AMI,required"`
 	// Subnets is a slice of AWS subnet IDs where to launch simulations (Example: subnet-1270518251)
 	Subnets []string `env:"IGN_EC2_SUBNETS,required" envSeparator:","`
 	// SecurityGroups is a slice of AWS security group IDs that will be assigned to simulation EC2 instances.

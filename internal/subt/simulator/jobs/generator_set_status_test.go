@@ -34,7 +34,7 @@ func TestGenerateSetSimulationStatusJob(t *testing.T) {
 	svc.On("UpdateStatus", gid, simulations.StatusRunning).Return(error(nil)).Run(func(args mock.Arguments) {
 		sim.SetStatus(simulations.StatusRunning)
 	})
-	app := application.NewServices(svc)
+	app := application.NewServices(svc, nil)
 
 	tracksService := tracks.NewService(nil, nil, nil)
 
