@@ -18,12 +18,12 @@ type RemovePodsOutput struct {
 	Error     error
 }
 
-// LaunchPods is a generic job to remove pods from a cluster.
+// RemovePods is a generic job to remove pods from a cluster.
 var RemovePods = &actions.Job{
 	Execute: removePods,
 }
 
-// launchPods is the main function executed by the LaunchPods job.
+// removePods is the main function executed by the RemovePods job.
 func removePods(store actions.Store, tx *gorm.DB, deployment *actions.Deployment, value interface{}) (interface{}, error) {
 	s := store.State().(state.PlatformGetter)
 
