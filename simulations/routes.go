@@ -17,8 +17,7 @@ var Routes ign.Routes = ign.Routes{
 		Description: "Information about all simulations",
 		URI:         "/simulations",
 		Headers:     ign.AuthHeadersRequired,
-		Methods:     ign.Methods{},
-		SecureMethods: ign.SecureMethods{
+		Methods:     ign.Methods{
 			// swagger:route GET /simulations simulations listSimulations
 			//
 			// Get list of simulations.
@@ -29,6 +28,12 @@ var Routes ign.Routes = ign.Routes{
 			// can be defined with query parameter 'per_page'.
 			// The route supports the 'order' parameter, with values 'asc' and
 			// 'desc' (default: desc).
+			//
+			// This route also supports getting simulations of a particular
+			// organization with the 'owner' parameter
+			//
+			// This route also supports filtering by privacy with the 'private'
+			// parameter
 			//
 			// This route also supports the 'status' parameter
 			// which filters the results based on a status string with one of the
@@ -55,10 +60,12 @@ var Routes ign.Routes = ign.Routes{
 				Type:        "GET",
 				Description: "Get all simulations",
 				Handlers: ign.FormatHandlers{
-					ign.FormatHandler{Extension: ".json", Handler: ign.JSONResult(WithUser(CloudsimSimulationList))},
-					ign.FormatHandler{Handler: ign.JSONResult(WithUser(CloudsimSimulationList))},
+					ign.FormatHandler{Extension: ".json", Handler: ign.JSONResult(WithUserOrAnonymous(CloudsimSimulationList))},
+					ign.FormatHandler{Handler: ign.JSONResult(WithUserOrAnonymous(CloudsimSimulationList))},
 				},
 			},
+		},
+		SecureMethods: ign.SecureMethods{
 			// swagger:route POST /simulations simulations createSimulation
 			//
 			// Launches a new cloudsim simulation
