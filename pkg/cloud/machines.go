@@ -21,7 +21,7 @@ var (
 	ErrMachineCreationFailed = errors.New("machine creation failed")
 	// ErrMissingMachineNames is returned when no machines ids are provided to be terminated.
 	ErrMissingMachineNames = errors.New("missing machine names")
-	// ErrMissingMachineNames is returned when no tags ids are provided to be terminated.
+	// ErrMissingMachineFilters is returned when no tags ids are provided to be terminated.
 	ErrMissingMachineFilters = errors.New("missing machine filters")
 	// ErrInvalidTerminateRequest is used to return an error when validating a termination machine request fails.
 	ErrInvalidTerminateRequest = errors.New("invalid terminate machines request")
@@ -122,7 +122,7 @@ func (in *TerminateMachinesInput) ValidateInstances() error {
 	return nil
 }
 
-// ValidateInstances validates that the filters given in the TerminateMachinesInput are valid.
+// ValidateFilters validates that the filters given in the TerminateMachinesInput are valid.
 func (in *TerminateMachinesInput) ValidateFilters() error {
 	if in.Filters == nil || len(in.Filters) == 0 {
 		return ErrMissingMachineFilters
