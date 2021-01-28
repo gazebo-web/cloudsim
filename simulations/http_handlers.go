@@ -199,6 +199,18 @@ func CloudsimSimulationList(user *users.User, tx *gorm.DB,
 		circuit = &params["circuit"][0]
 	}
 
+	var owner *string
+	if len(params["owner"]) > 0 && len(params["owner"][0]) > 0 {
+		owner = &params["owner"][0]
+	}
+
+	private := false
+	if len(params["private"]) > 0 && len(params["private"][0]) > 0 {
+		if flag, err := strconv.ParseBool(params["private"][0]); err == nil {
+			private = flag
+		}
+	}
+
 	sims, pagination, em := SimServImpl.SimulationDeploymentList(
 		r.Context(),
 		pr,
@@ -211,6 +223,8 @@ func CloudsimSimulationList(user *users.User, tx *gorm.DB,
 		user,
 		sptr(getDefaultApplicationName()),
 		includeChildren,
+		owner,
+		private,
 	)
 	if em != nil {
 		return nil, em
