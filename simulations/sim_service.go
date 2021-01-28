@@ -74,7 +74,7 @@ type SimService interface {
 		groupID string, user *users.User) (interface{}, *ign.ErrMsg)
 	SimulationDeploymentList(ctx context.Context, p *ign.PaginationRequest, tx *gorm.DB, byStatus *DeploymentStatus,
 		invertStatus bool, byErrStatus *ErrorStatus, invertErrStatus bool, byCircuit *string, user *users.User,
-		application *string, includeChildren bool) (*SimulationDeployments, *ign.PaginationResult, *ign.ErrMsg)
+		application *string, includeChildren bool, owner *string, private *bool) (*SimulationDeployments, *ign.PaginationResult, *ign.ErrMsg)
 	StartSimulationAsync(ctx context.Context, tx *gorm.DB, createSim *CreateSimulation,
 		user *users.User) (interface{}, *ign.ErrMsg)
 	LaunchSimulationAsync(ctx context.Context, tx *gorm.DB, groupID string,
@@ -1954,7 +1954,7 @@ func (s *Service) getGazeboWorldWarmupTopic(ctx context.Context, tx *gorm.DB, de
 func (s *Service) SimulationDeploymentList(ctx context.Context, p *ign.PaginationRequest,
 	tx *gorm.DB, byStatus *DeploymentStatus, invertStatus bool,
 	byErrStatus *ErrorStatus, invertErrStatus bool, byCircuit *string, user *users.User,
-	application *string, includeChildren bool) (*SimulationDeployments, *ign.PaginationResult, *ign.ErrMsg) {
+	application *string, includeChildren bool, owner *string, private *bool) (*SimulationDeployments, *ign.PaginationResult, *ign.ErrMsg) {
 
 	// Create the DB query
 	var sims SimulationDeployments
@@ -1973,9 +1973,13 @@ func (s *Service) SimulationDeploymentList(ctx context.Context, p *ign.Paginatio
 	}
 
 	// Restrict including children to application and system admins
-	if ok, _ := s.userAccessor.CanPerformWithRole(application, *user.Username, per.Admin); !ok {
-		// Regardless of the value passed as argument, we set it to False if the requestor
-		// is neither an application or system admin.
+	if user != nil {
+		if ok, _ := s.userAccessor.CanPerformWithRole(application, *user.Username, per.Admin); !ok {
+			// Regardless of the value passed as argument, we set it to False if the requestor
+			// is neither an application or system admin.
+			includeChildren = false
+		}
+	} else {
 		includeChildren = false
 	}
 
@@ -2010,9 +2014,24 @@ func (s *Service) SimulationDeploymentList(ctx context.Context, p *ign.Paginatio
 
 	// If user belongs to the application's main Org, then he can see all simulations.
 	// Otherwise, only those simulations created by the user's team.
-	if ok, _ := s.userAccessor.CanPerformWithRole(application, *user.Username, per.Member); !ok {
-		// filter resources based on privacy setting
-		q = s.userAccessor.QueryForResourceVisibility(q, nil, user)
+	// If there is no user, only public ones.
+	if user != nil {
+		if ok, _ := s.userAccessor.CanPerformWithRole(application, *user.Username, per.Member); !ok {
+			// filter resources based on privacy setting
+			q = s.userAccessor.QueryForResourceVisibility(q, nil, user)
+		}
+	} else {
+		q = s.userAccessor.QueryForResourceVisibility(q, nil, nil)
+	}
+
+	// Filter by owner if present
+	if owner != nil {
+		q = q.Where("owner = ?", *owner)
+	}
+
+	// Filter by privacy if present
+	if private != nil {
+		q = q.Where("private = ?", *private)
 	}
 
 	pagination, err := ign.PaginateQuery(q, &sims, *p)
