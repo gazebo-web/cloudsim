@@ -16,6 +16,8 @@ func TestMarkPreviousSubmissionsSuperseded(t *testing.T) {
 		t.FailNow()
 	}
 
+	config.Name = fmt.Sprintf("%s-test", config.Name)
+
 	// Initialize database
 	db, err := ign.InitDbWithCfg(&config)
 	if err != nil {
