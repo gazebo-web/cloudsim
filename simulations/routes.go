@@ -33,7 +33,9 @@ var Routes ign.Routes = ign.Routes{
 			// organization with the 'owner' parameter
 			//
 			// This route also supports filtering by privacy with the 'private'
-			// parameter
+			// parameter. By default the route returns simulations based on the
+			// permissions of the JWT user, if present. Otherwise, it returns public
+			// simulations
 			//
 			// This route also supports the 'status' parameter
 			// which filters the results based on a status string with one of the

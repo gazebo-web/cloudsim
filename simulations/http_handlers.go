@@ -204,10 +204,10 @@ func CloudsimSimulationList(user *users.User, tx *gorm.DB,
 		owner = &params["owner"][0]
 	}
 
-	private := false
+	var private *bool
 	if len(params["private"]) > 0 && len(params["private"][0]) > 0 {
 		if flag, err := strconv.ParseBool(params["private"][0]); err == nil {
-			private = flag
+			private = &flag
 		}
 	}
 
