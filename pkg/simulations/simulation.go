@@ -16,6 +16,9 @@ var (
 
 	// ErrSimulationWithError is returned when a simulation has an error.
 	ErrSimulationWithError = errors.New("simulation with error")
+
+	// ErrSimulationProcessed is returned when simulation is trying to be processed twice.
+	ErrSimulationProcessed = errors.New("simulation has been processed")
 )
 
 // GroupID is an universally unique identifier that identifies a Simulation.
@@ -86,30 +89,36 @@ type Error string
 
 // Simulation groups a set of methods to identify a simulation.
 type Simulation interface {
-	// GetGroupID returns the current simulation's group id.
+	// GetGroupID returns the current Simulation's group id.
 	GetGroupID() GroupID
 
-	// GetStatus returns the current simulation's status.
+	// GetStatus returns the current Simulation's status.
 	GetStatus() Status
 
-	// HasStatus checks if the current simulation has a given status.
+	// HasStatus checks if the current Simulation has a given status.
 	HasStatus(status Status) bool
 
-	// SetStatus sets a given status to the simulation.
+	// SetStatus sets a given status to the Simulation.
 	SetStatus(status Status)
 
-	// Kind returns the current simulation's kind.
+	// Kind returns the current Simulation's kind.
 	GetKind() Kind
 
-	// IsKind checks if the current simulation is of the given kind.
+	// IsKind checks if the current Simulation is of the given kind.
 	IsKind(Kind) bool
 
-	// Error returns the current simulation's error. It returns nil if the simulation doesn't have an error.
+	// Error returns the current Simulation's error. It returns nil if the simulation doesn't have an error.
 	GetError() *Error
 
-	// Image returns the simulation's docker image. This image is used as the solution image.
+	// Image returns the Simulation's docker image. This image is used as the solution image.
 	GetImage() string
 
-	// IsProcessed returns true if the simulation has been already processed.
+	// IsProcessed returns true if the Simulation has been already processed.
 	IsProcessed() bool
+
+	// GetOwner returns the Simulation's owner.
+	GetOwner() *string
+
+	// GetCreator returns the Simulation's creator.
+	GetCreator() string
 }
