@@ -166,8 +166,8 @@ func TestSimulationsRoute(t *testing.T) {
 
 	getSimulationsTestsData := []getSimulationsTest{
 		{uriTest{"getSims - invalid uri", invalidURI, nil, ign.NewErrorMessage(ign.ErrorNameNotFound), true, true}, nil, nil},
-		{uriTest{"getSims - with no jwt", uri, nil, ign.NewErrorMessage(ign.ErrorUnauthorized), true, false}, nil, nil},
-		{uriTest{"getSims - invocation with non existing user", uri, nonexistentJWT, ign.NewErrorMessage(ign.ErrorAuthNoUser), false, false}, nil, nil},
+		{uriTest{"getSims - with no jwt", uri, nil, nil, true, false}, nil, nil},
+		{uriTest{"getSims - invocation with non existing user", uri, nonexistentJWT, nil, false, false}, nil, nil},
 		{uriTest{"getSims - valid invocation with jwt", uri, defaultJWT, nil, false, false}, []string{"sim5", "sim3", "sim2"}, nil},
 		{uriTest{"getSims - valid invocation with user valid jwt", uri, teamAUser1, nil, false, false}, []string{"sim2"}, nil},
 		{uriTest{"getSims - valid invocation filtering by circuit with jwt", uri, defaultJWT, nil, false, false}, []string{"sim5"}, sptr(circuit)},
