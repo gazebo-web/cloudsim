@@ -112,4 +112,7 @@ type Ignition interface {
 	// SecretAccessKeyLabel returns the secret access key label to get the credentials for a certain cloud provider.
 	// For AWS, it returns: `aws-secret-access-key`
 	SecretAccessKeyLabel() string
+
+	// DefaultRecipients returns the list of default emails where to send summary emails.
+	DefaultRecipients() []string
 }
