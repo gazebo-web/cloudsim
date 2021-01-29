@@ -1,10 +1,16 @@
 package orchestrator
 
 import (
+	"errors"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/waiter"
 	"io"
 	corev1 "k8s.io/api/core/v1"
 	"time"
+)
+
+var (
+	// ErrPodHasNoIP is returned when Pods.GetIP method is called and there's no IP assigned to the pod.
+	ErrPodHasNoIP = errors.New("pod has no ip")
 )
 
 // RestartPolicy defines a restart policy used for pods.
@@ -112,6 +118,7 @@ type Pods interface {
 	WaitForCondition(resource Resource, condition Condition) waiter.Waiter
 	Delete(resource Resource) (Resource, error)
 	Get(name, namespace string) (Resource, error)
+	GetIP(name, namespace string) (string, error)
 }
 
 // Executor groups a set of methods to run commands and scripts inside a Pod.

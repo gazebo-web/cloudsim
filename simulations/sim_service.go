@@ -9,11 +9,11 @@ import (
 	"github.com/pkg/errors"
 	"github.com/satori/go.uuid"
 	"gitlab.com/ignitionrobotics/web/cloudsim/globals"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/transport"
+	ignws "gitlab.com/ignitionrobotics/web/cloudsim/pkg/transport/ign"
+	useracc "gitlab.com/ignitionrobotics/web/cloudsim/pkg/users"
 	"gitlab.com/ignitionrobotics/web/cloudsim/queues"
 	"gitlab.com/ignitionrobotics/web/cloudsim/simulations/gloo"
-	"gitlab.com/ignitionrobotics/web/cloudsim/transport"
-	ignws "gitlab.com/ignitionrobotics/web/cloudsim/transport/ign"
-	useracc "gitlab.com/ignitionrobotics/web/cloudsim/users"
 	"gitlab.com/ignitionrobotics/web/fuelserver/bundles/users"
 	per "gitlab.com/ignitionrobotics/web/fuelserver/permissions"
 	"gitlab.com/ignitionrobotics/web/ign-go"
@@ -163,8 +163,8 @@ type Service struct {
 	multisimStatusUpdater     *time.Ticker
 	multisimStatusUpdaterDone chan bool
 	applications              map[string]ApplicationType
-	// The UserAccessor to check for Users/Orgs permissions
-	userAccessor             useracc.UserAccessor
+	// The Service to check for Users/Orgs permissions
+	userAccessor             useracc.Service
 	poolNotificationCallback PoolNotificationCallback
 	scheduler                *scheduler.Scheduler
 }
@@ -225,7 +225,7 @@ type ApplicationType interface {
 		robotName *string, lines int64) (interface{}, *ign.ErrMsg)
 	launchApplication(ctx context.Context, s *Service, tx *gorm.DB, dep *SimulationDeployment,
 		podNamePrefix string, baseLabels map[string]string) (interface{}, *ign.ErrMsg)
-	updateMultiSimStatuses(ctx context.Context, tx *gorm.DB, userAccessor useracc.UserAccessor, simDep *SimulationDeployment) *ign.ErrMsg
+	updateMultiSimStatuses(ctx context.Context, tx *gorm.DB, userAccessor useracc.Service, simDep *SimulationDeployment) *ign.ErrMsg
 	getCompetitionRobots() (interface{}, *ign.ErrMsg)
 	ValidateSimulationLaunch(ctx context.Context, tx *gorm.DB, dep *SimulationDeployment) *ign.ErrMsg
 	// TODO: Move simulationIsHeld to SubT implementation.
@@ -250,7 +250,7 @@ type PoolFactory func(poolSize int, jobF func(interface{})) (JobPool, error)
 
 // NewSimulationsService creates a new simulations service
 func NewSimulationsService(ctx context.Context, db *gorm.DB, nm NodeManager, kcli kubernetes.Interface,
-	gloo gloo.Clientset, pf PoolFactory, ua useracc.UserAccessor, isTest bool) (SimService, error) {
+	gloo gloo.Clientset, pf PoolFactory, ua useracc.Service, isTest bool) (SimService, error) {
 
 	var err error
 	s := Service{}
