@@ -12,7 +12,7 @@ import (
 	"testing"
 )
 
-func TestGenerateSummary(t *testing.T) {
+func TestGenerateSummaryWhenSingleSimulation(t *testing.T) {
 	simService := simfake.NewService()
 	baseService := application.NewServices(simService, nil)
 	s := subtapp.NewServices(baseService, nil, nil)
@@ -48,10 +48,52 @@ func TestGenerateSummary(t *testing.T) {
 	assert.Equal(t, float64(stopState.Stats.RealTime), resultState.Summary.RealTimeDurationAvg)
 	assert.Equal(t, float64(stopState.Stats.SimulationTime), resultState.Summary.SimTimeDurationAvg)
 
-	assert.Equal(t, 0.0, resultState.Summary.SimTimeDurationStdDev)
-	assert.Equal(t, 0.0, resultState.Summary.RealTimeDurationStdDev)
-	assert.Equal(t, 0.0, resultState.Summary.ModelCountStdDev)
+	assert.Zero(t, resultState.Summary.SimTimeDurationStdDev)
+	assert.Zero(t, resultState.Summary.RealTimeDurationStdDev)
+	assert.Zero(t, resultState.Summary.ModelCountStdDev)
 
 	assert.Equal(t, stopState.Score, resultState.Summary.Score)
 
+}
+
+func TestGenerateSummaryWhenParentSimulation(t *testing.T) {
+	simService := simfake.NewService()
+	baseService := application.NewServices(simService, nil)
+	s := subtapp.NewServices(baseService, nil, nil)
+
+	gid := simulations.GroupID("aaaa-bbbb-cccc-dddd")
+	sim := simfake.NewSimulation(gid, simulations.StatusProcessingResults, simulations.SimParent, nil, "test.org/test")
+
+	stopState := state.NewStopSimulation(nil, s, gid)
+
+	stopState.Stats = simulations.Statistics{
+		Started:        1,
+		SimulationTime: 2,
+		RealTime:       3,
+		ModelCount:     4,
+	}
+
+	stopState.Score = 5
+
+	store := actions.NewStore(stopState)
+
+	simService.On("Get", gid).Return(sim, error(nil))
+
+	output, err := GenerateSummary.Run(store, nil, nil, stopState)
+	require.NoError(t, err)
+
+	resultState, ok := output.(*state.StopSimulation)
+	require.True(t, ok)
+
+	assert.Nil(t, resultState.Summary.GroupID)
+
+	assert.Zero(t, resultState.Summary.ModelCountAvg)
+	assert.Zero(t, resultState.Summary.RealTimeDurationAvg)
+	assert.Zero(t, resultState.Summary.SimTimeDurationAvg)
+
+	assert.Zero(t, resultState.Summary.SimTimeDurationStdDev)
+	assert.Zero(t, resultState.Summary.RealTimeDurationStdDev)
+	assert.Zero(t, resultState.Summary.ModelCountStdDev)
+
+	assert.Zero(t, resultState.Summary.Score)
 }
