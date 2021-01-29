@@ -28,21 +28,19 @@ func generateSummary(store actions.Store, tx *gorm.DB, deployment *actions.Deplo
 	}
 
 	if sim.IsKind(simulations.SimParent) {
-		return store, nil
+		return s, nil
 	}
 
-	if sim.IsKind(simulations.SimSingle) {
-		s.Summary = simulations.Summary{
-			GroupID:                &s.GroupID,
-			Score:                  s.Score,
-			SimTimeDurationAvg:     float64(s.Stats.SimulationTime),
-			SimTimeDurationStdDev:  0,
-			RealTimeDurationAvg:    float64(s.Stats.RealTime),
-			RealTimeDurationStdDev: 0,
-			ModelCountAvg:          float64(s.Stats.ModelCount),
-			ModelCountStdDev:       0,
-			Sources:                "",
-		}
+	s.Summary = simulations.Summary{
+		GroupID:                &s.GroupID,
+		Score:                  s.Score,
+		SimTimeDurationAvg:     float64(s.Stats.SimulationTime),
+		SimTimeDurationStdDev:  0,
+		RealTimeDurationAvg:    float64(s.Stats.RealTime),
+		RealTimeDurationStdDev: 0,
+		ModelCountAvg:          float64(s.Stats.ModelCount),
+		ModelCountStdDev:       0,
+		Sources:                "",
 	}
 
 	store.SetState(s)
