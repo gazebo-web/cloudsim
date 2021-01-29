@@ -15,6 +15,7 @@ type StopSimulation struct {
 	Score    float64
 	Stats    simulations.Statistics
 	Summary  simulations.Summary
+	RunData  string
 }
 
 // Platform returns the underlying platform.
@@ -33,8 +34,8 @@ func (s *StopSimulation) SubTServices() subtapp.Services {
 }
 
 // NewStopSimulation initializes a new state for stopping simulations.
-func NewStopSimulation(platform platform.Platform, services subtapp.Services, groupID simulations.GroupID) *RestartSimulation {
-	return &RestartSimulation{
+func NewStopSimulation(platform platform.Platform, services subtapp.Services, groupID simulations.GroupID) *StopSimulation {
+	return &StopSimulation{
 		platform: platform,
 		services: services,
 		GroupID:  groupID,

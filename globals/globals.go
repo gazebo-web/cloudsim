@@ -4,8 +4,8 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2/ec2iface"
 	"github.com/aws/aws-sdk-go/service/s3/s3iface"
 	"github.com/go-playground/form"
-	ignws "gitlab.com/ignitionrobotics/web/cloudsim/transport/ign"
-	useracc "gitlab.com/ignitionrobotics/web/cloudsim/users"
+	ignws "gitlab.com/ignitionrobotics/web/cloudsim/pkg/transport/ign"
+	useracc "gitlab.com/ignitionrobotics/web/cloudsim/pkg/users"
 	"gitlab.com/ignitionrobotics/web/fuelserver/permissions"
 	"gitlab.com/ignitionrobotics/web/ign-go"
 	"gopkg.in/go-playground/validator.v9"
@@ -57,7 +57,7 @@ var DisableScoreGeneration = false
 // UserAccessor holds a reference to the UserAccessor. A proxy to ign-fuel's Users library
 // Dev note: code should not use this from globals. Instead configure your logic with arguments
 // in the constructors.
-var UserAccessor useracc.UserAccessor
+var UserAccessor useracc.Service
 
 // Permissions manages permissions for users, roles and resources.
 var Permissions *permissions.Permissions
