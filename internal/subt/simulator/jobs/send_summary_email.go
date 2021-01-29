@@ -26,8 +26,8 @@ func sendSummaryEmail(store actions.Store, tx *gorm.DB, deployment *actions.Depl
 		return nil, err
 	}
 
-	if sim.IsProcessed() {
-		return nil, simulations.ErrSimulationProcessed
+	if sim.IsKind(simulations.SimSingle) {
+		return s, nil
 	}
 
 	user, em := s.Services().Users().GetUserFromUsername(sim.GetCreator())
