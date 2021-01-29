@@ -21,7 +21,7 @@ var RemovePods = jobs.RemovePods.Extend(actions.Job{
 // checkRemovePodsNoError is a post-hook in charge of checking that no errors were thrown while removing pods.
 func checkRemovePodsNoError(store actions.Store, tx *gorm.DB, deployment *actions.Deployment, value interface{}) (interface{}, error) {
 	s := store.State().(*state.StopSimulation)
-	out := value.(*jobs.RemovePodsOutput)
+	out := value.(jobs.RemovePodsOutput)
 	if out.Error != nil || len(out.Resources) != len(s.PodList) {
 		err := deployment.SetJobData(tx, nil, actions.DeploymentJobData, out)
 		if err != nil {
