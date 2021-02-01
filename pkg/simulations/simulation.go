@@ -2,6 +2,7 @@ package simulations
 
 import (
 	"errors"
+	"time"
 )
 
 var (
@@ -109,4 +110,7 @@ type Simulation interface {
 
 	// GetImage returns the simulation's docker image. This image is used as the solution image.
 	GetImage() string
+
+	// GetValidFor returns the amount of time that the simulation is considered valid.
+	GetValidFor() time.Duration
 }
