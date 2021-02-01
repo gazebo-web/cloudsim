@@ -218,29 +218,69 @@ func (m *machines) Create(inputs []cloud.CreateMachinesInput) (created []cloud.C
 	return created, nil
 }
 
-// terminate terminates EC2 instances.
-// It returns an error if no instances names are provided.
+// terminateByID terminates EC2 instances by instances ID.
+// It returns an error if no instances ids are provided.
 // It also returns an error if the underlying TerminateInstances request fails.
-func (m *machines) terminate(input cloud.TerminateMachinesInput) error {
-	if input.Instances == nil || len(input.Instances) == 0 {
-		return cloud.ErrMissingMachineNames
-	}
-	terminateInstancesInput := &ec2.TerminateInstancesInput{
+func (m *machines) terminateByID(instances []string) error {
+	_, err := m.API.TerminateInstances(&ec2.TerminateInstancesInput{
 		DryRun:      aws.Bool(false),
-		InstanceIds: aws.StringSlice(input.Instances),
-	}
-	_, err := m.API.TerminateInstances(terminateInstancesInput)
+		InstanceIds: aws.StringSlice(instances),
+	})
 	return err
 }
 
-// Terminate terminates EC2 machines.
+// terminateByFilters terminates EC2 instances by filtering.
+// It returns an error if no instances filters are provided.
+// It also returns an error if the underlying TerminateInstances request fails.
+func (m *machines) terminateByFilters(filters map[string][]string) error {
+	out, err := m.API.DescribeInstances(&ec2.DescribeInstancesInput{
+		MaxResults: aws.Int64(1000),
+		Filters:    m.createFilters(filters),
+	})
+
+	var instanceIds []string
+	for _, r := range out.Reservations {
+		for _, instance := range r.Instances {
+			instanceIds = append(instanceIds, *instance.InstanceId)
+		}
+	}
+
+	_, err = m.API.TerminateInstances(&ec2.TerminateInstancesInput{
+		DryRun:      aws.Bool(false),
+		InstanceIds: aws.StringSlice(instanceIds),
+	})
+
+	return err
+}
+
+// Terminate terminates EC2 machines by either passing instances ids or filters.
+// If both are passed, instances will be terminated using instances ids first, and then filters.
+// If the former fails, the latter won't be executed.
 func (m *machines) Terminate(input cloud.TerminateMachinesInput) error {
 	m.Logger.Debug(fmt.Sprintf("Terminating machines with the following input: %+v", input))
-	err := m.terminate(input)
+
+	err := input.Validate()
 	if err != nil {
-		m.Logger.Debug(fmt.Sprintf("Error while terminating instances. Instances: [%s]. Error: %s.", input.Instances, err))
+		m.Logger.Debug(fmt.Sprintf("Invalid request, couldn't validate input: %+v", input))
 		return err
 	}
+
+	if input.ValidateInstances() == nil {
+		err = m.terminateByID(input.Instances)
+		if err != nil {
+			m.Logger.Debug(fmt.Sprintf("Error while terminating instances by id. IDs: [%s]. Error: %s.", input.Filters, err))
+			return err
+		}
+	}
+
+	if input.ValidateFilters() == nil {
+		err = m.terminateByFilters(input.Filters)
+		if err != nil {
+			m.Logger.Debug(fmt.Sprintf("Error while terminating instances by filters. Filters: [%s]. Error: %s.", input.Filters, err))
+			return err
+		}
+	}
+
 	m.Logger.Debug("Terminating machines succeeded.")
 	return nil
 }
