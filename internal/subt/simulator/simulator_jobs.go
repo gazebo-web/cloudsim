@@ -43,5 +43,5 @@ var JobsStopSimulation = actions.Jobs{
 	jobs.ReadScore,
 	jobs.ReadStats,
 	jobs.ReadRunData,
-	// jobs.GenerateSummary,
+	jobs.GenerateSummary,
 }
