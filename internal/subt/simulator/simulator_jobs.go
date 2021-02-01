@@ -44,4 +44,7 @@ var JobsStopSimulation = actions.Jobs{
 	jobs.ReadStats,
 	jobs.ReadRunData,
 	jobs.GenerateSummary,
+	jobs.DisconnectWebsocket,
+	jobs.RemoveRunningSimulation,
+	jobs.RemovePods,
 }
