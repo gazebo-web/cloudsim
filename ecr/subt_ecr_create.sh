@@ -19,6 +19,11 @@
 #
 # An admin can log into the AWS console and manage the IAM policy and ECS
 # repositories
+#
+# == New Circuits ==
+#
+# If a new circuit is added, then make sure to add the circuit to the 
+# S3 policy. You can copy an existing the circuit line and adjust appropriately.
 
 # Check for the existance of the team name on the command line
 if [ $# -eq 0 ]; then
