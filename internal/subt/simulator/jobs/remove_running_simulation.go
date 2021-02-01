@@ -8,7 +8,7 @@ import (
 
 // RemoveRunningSimulation is job in charge of removing a running simulation from the list of running simulations.
 var RemoveRunningSimulation = &actions.Job{
-	Name:       "add-running-simulation",
+	Name:       "remove-running-simulation",
 	PreHooks:   []actions.JobFunc{setStopState},
 	Execute:    removeRunningSimulation,
 	PostHooks:  []actions.JobFunc{returnState},
