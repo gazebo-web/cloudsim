@@ -98,15 +98,15 @@ type Simulation interface {
 	// SetStatus sets a given status to the simulation.
 	SetStatus(status Status)
 
-	// Kind returns the current simulation's kind.
+	// GetKind returns the current simulation's kind.
 	GetKind() Kind
 
 	// IsKind checks if the current simulation is of the given kind.
 	IsKind(Kind) bool
 
-	// Error returns the current simulation's error. It returns nil if the simulation doesn't have an error.
+	// GetError returns the current simulation's error. It returns nil if the simulation doesn't have an error.
 	GetError() *Error
 
-	// Image returns the simulation's docker image. This image is used as the solution image.
+	// GetImage returns the simulation's docker image. This image is used as the solution image.
 	GetImage() string
 }
