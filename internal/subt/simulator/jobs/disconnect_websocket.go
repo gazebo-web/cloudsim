@@ -13,8 +13,8 @@ var DisconnectWebsocket = &actions.Job{
 	Execute:         disconnectWebsocket,
 	PostHooks:       []actions.JobFunc{returnState},
 	RollbackHandler: revertWebsocketConnection,
-	InputType:       actions.GetJobDataType(&state.StartSimulation{}),
-	OutputType:      actions.GetJobDataType(&state.StartSimulation{}),
+	InputType:       actions.GetJobDataType(&state.StopSimulation{}),
+	OutputType:      actions.GetJobDataType(&state.StopSimulation{}),
 }
 
 // disconnectWebsocket is in charge of disconnecting the websocket client for a certain running simulation.
