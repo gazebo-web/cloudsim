@@ -2050,11 +2050,6 @@ func (s *Service) SimulationDeploymentList(ctx context.Context, p *ign.Paginatio
 func (s *Service) GetSimulationDeployment(ctx context.Context, tx *gorm.DB,
 	groupID string, user *users.User) (interface{}, *ign.ErrMsg) {
 
-	// make sure the user has the correct permissions
-	if ok, em := s.userAccessor.IsAuthorizedForResource(*user.Username, groupID, per.Read); !ok {
-		return nil, em
-	}
-
 	var dep *SimulationDeployment
 	var err error
 
@@ -2070,7 +2065,12 @@ func (s *Service) GetSimulationDeployment(ctx context.Context, tx *gorm.DB,
 	}
 
 	// If the user is not a system admin, remove the RunIndex and WorldIndex fields.
-	if ok := s.userAccessor.IsSystemAdmin(*user.Username); !ok {
+	if user != nil {
+		if ok := s.userAccessor.IsSystemAdmin(*user.Username); !ok {
+			extra.RunIndex = nil
+			extra.WorldIndex = nil
+		}
+	} else {
 		extra.RunIndex = nil
 		extra.WorldIndex = nil
 	}
