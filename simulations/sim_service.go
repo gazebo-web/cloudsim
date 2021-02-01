@@ -2050,17 +2050,24 @@ func (s *Service) SimulationDeploymentList(ctx context.Context, p *ign.Paginatio
 func (s *Service) GetSimulationDeployment(ctx context.Context, tx *gorm.DB,
 	groupID string, user *users.User) (interface{}, *ign.ErrMsg) {
 
-	// make sure the user has the correct permissions
-	if ok, em := s.userAccessor.IsAuthorizedForResource(*user.Username, groupID, per.Read); !ok {
-		return nil, em
-	}
-
 	var dep *SimulationDeployment
 	var err error
 
 	dep, err = GetSimulationDeployment(tx, groupID)
 	if err != nil {
 		return nil, ign.NewErrorMessageWithBase(ign.ErrorSimGroupNotFound, err)
+	}
+
+	// Check for user permissions if the simulation is private.
+	if *dep.Private == true {
+		if user == nil {
+			return nil, ign.NewErrorMessageWithBase(ign.ErrorUnauthorized, err)
+		}
+
+		// make sure the user has the correct permissions
+		if ok, em := s.userAccessor.IsAuthorizedForResource(*user.Username, groupID, per.Read); !ok {
+			return nil, em
+		}
 	}
 
 	var extra *ExtraInfoSubT
@@ -2070,7 +2077,11 @@ func (s *Service) GetSimulationDeployment(ctx context.Context, tx *gorm.DB,
 	}
 
 	// If the user is not a system admin, remove the RunIndex and WorldIndex fields.
-	if ok := s.userAccessor.IsSystemAdmin(*user.Username); !ok {
+	var ok bool
+	if user != nil {
+		ok = s.userAccessor.IsSystemAdmin(*user.Username)
+	}
+	if !ok || user == nil {
 		extra.RunIndex = nil
 		extra.WorldIndex = nil
 	}
