@@ -96,7 +96,8 @@ var Routes ign.Routes = ign.Routes{
 		Description: "Single simulation based on its groupID",
 		URI:         "/simulations/{group}",
 		Headers:     ign.AuthHeadersRequired,
-		Methods:     ign.Methods{
+		Methods:     ign.Methods{},
+		SecureMethods: ign.SecureMethods{
 			// swagger:route GET /simulations/{group} simulations getSimulation
 			//
 			// Get a single simulation based on its groupID
@@ -113,11 +114,9 @@ var Routes ign.Routes = ign.Routes{
 				Type:        "GET",
 				Description: "Get a single simulation based on its groupID",
 				Handlers: ign.FormatHandlers{
-					ign.FormatHandler{Handler: ign.JSONResultNoTx(WithUserOrAnonymous(GetCloudsimSimulation))},
+					ign.FormatHandler{Handler: ign.JSONResultNoTx(WithUser(GetCloudsimSimulation))},
 				},
 			},
-		},
-		SecureMethods: ign.SecureMethods{
 			// swagger:route DELETE /simulations/{group} simulations deleteSimulation
 			//
 			// Deletes a cloudsim simulation
