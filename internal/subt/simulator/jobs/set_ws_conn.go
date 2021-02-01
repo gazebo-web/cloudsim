@@ -44,7 +44,7 @@ func connectWebsocket(store actions.Store, tx *gorm.DB, deployment *actions.Depl
 	s.WebsocketConnection = t
 	store.SetState(s)
 
-	return store, nil
+	return s, nil
 }
 
 // revertWebsocketConnection is in charge of disconnecting the websocket server if an error happens while setting
