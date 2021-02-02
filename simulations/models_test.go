@@ -237,6 +237,8 @@ func TestUpdateScore(t *testing.T) {
 
 	// Initialize database
 	db, err := ign.InitDbWithCfg(&config)
+	defer db.Close()
+
 	require.NoError(t, err)
 
 	require.NoError(t, db.DropTableIfExists(&SimulationDeployment{}).Error)
@@ -285,6 +287,6 @@ func TestUpdateScore(t *testing.T) {
 	assert.Equal(t, dbSimDep.Score, &updatedScore)
 }
 
-func (suite *MachineInstanceTestSuite) TearDownTest() {
+func (suite *MachineInstanceTestSuite) TearDownSuite() {
 	suite.db.Close()
 }

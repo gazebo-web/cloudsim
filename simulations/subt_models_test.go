@@ -55,6 +55,7 @@ func TestCountSimulationsByCircuitReturnsZero(t *testing.T) {
 
 	// Initialize database
 	db, err := ign.InitDbWithCfg(&config)
+	defer db.Close()
 	if err != nil {
 		t.FailNow()
 	}
@@ -83,6 +84,7 @@ func TestCountSimulationByCircuitReturnsCountWhenCircuitIsSubmitted(t *testing.T
 
 	// Initialize database
 	db, err := ign.InitDbWithCfg(&config)
+	defer db.Close()
 	if err != nil {
 		t.FailNow()
 	}
@@ -127,6 +129,7 @@ func TestCountSimulationByCircuitReturnsCountWhenCircuitGetsSuperseded(t *testin
 
 	// Initialize database
 	db, err := ign.InitDbWithCfg(&config)
+	defer db.Close()
 	if err != nil {
 		t.FailNow()
 	}
