@@ -2059,7 +2059,8 @@ func (s *Service) GetSimulationDeployment(ctx context.Context, tx *gorm.DB,
 	}
 
 	// Check for user permissions if the simulation is private.
-	if dep.Private != nil && *dep.Private == true {
+	ok := false
+	if dep != nil && dep.Private != nil && *dep.Private == true {
 		if user == nil {
 			return nil, ign.NewErrorMessageWithBase(ign.ErrorUnauthorized, err)
 		}
@@ -2077,7 +2078,6 @@ func (s *Service) GetSimulationDeployment(ctx context.Context, tx *gorm.DB,
 	}
 
 	// If the user is not a system admin, remove the RunIndex and WorldIndex fields.
-	var ok bool
 	if user != nil {
 		ok = s.userAccessor.IsSystemAdmin(*user.Username)
 	}
