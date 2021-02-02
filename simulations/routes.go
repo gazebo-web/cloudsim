@@ -287,8 +287,7 @@ var Routes ign.Routes = ign.Routes{
 		Description: "Gets a simulation's websocket server address",
 		URI:         "/simulations/{group}/websocket",
 		Headers:     ign.AuthHeadersRequired,
-		Methods:     ign.Methods{},
-		SecureMethods: ign.SecureMethods{
+		Methods:     ign.Methods{
 			// swagger:route GET /simulations/{group}/websocket simulations websocket
 			//
 			// Gets a simulation's websocket server address and authorization token
@@ -304,10 +303,11 @@ var Routes ign.Routes = ign.Routes{
 				Type:        "GET",
 				Description: "Get a simulation's websocket server address and authorization token",
 				Handlers: ign.FormatHandlers{
-					ign.FormatHandler{Handler: ign.JSONResultNoTx(WithUser(SimulationWebsocketAddress))},
+					ign.FormatHandler{Handler: ign.JSONResultNoTx(WithUserOrAnonymous(SimulationWebsocketAddress))},
 				},
 			},
 		},
+		SecureMethods: ign.SecureMethods{},
 	},
 
 	// Route to get machine information
