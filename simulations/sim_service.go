@@ -2107,22 +2107,36 @@ func (s *Service) GetSimulationWebsocketAddress(ctx context.Context, tx *gorm.DB
 		return nil, ign.NewErrorMessageWithBase(ign.ErrorSimGroupNotFound, err)
 	}
 
-	// Check that the requesting user has the correct permissions
-	username := *user.Username
+	// Check for user permissions if the simulation is private.
+	if *dep.Private != nil && *dep.Private == true {
+		if user == nil {
+			return nil, ign.NewErrorMessageWithBase(ign.ErrorUnauthorized, err)
+		}
+
+		// make sure the user has the correct permissions
+		if ok, em := s.userAccessor.IsAuthorizedForResource(*user.Username, groupID, per.Read); !ok {
+			return nil, em
+		}
+	}
+
 	// Parent simulations are not valid as they do not run simulations directly
 	if dep.isMultiSimParent() {
 		return nil, ign.NewErrorMessage(ign.ErrorInvalidSimulationStatus)
 	}
+
 	// Multisim child simulations can only be accessed by admins
-	if dep.isMultiSimChild() && !s.userAccessor.IsSystemAdmin(username) {
-		return nil, ign.NewErrorMessage(ign.ErrorUnauthorized)
-	}
-	// Check access permissions
-	if ok, em := s.userAccessor.IsAuthorizedForResource(username, groupID, per.Read); !ok {
-		return nil, em
+	if dep.isMultiSimChild() {
+		var isAdmin = false
+		if user != nil {
+			isAdmin = s.userAccessor.IsSystemAdmin(*user.Username)
+		}
+
+		if user == nil || !isAdmin {
+			return nil, ign.NewErrorMessage(ign.ErrorUnauthorized)
+		}
 	}
 
-	// Find the specific Application handler and ask for the live logs
+	// Find the specific Application handler and ask for the websocket address
 	return s.applications[*dep.Application].getSimulationWebsocketAddress(ctx, s, tx, dep)
 }
 
