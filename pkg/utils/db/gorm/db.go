@@ -97,5 +97,9 @@ func CleanAndMigrateModels(tx *gorm.DB, models ...interface{}) error {
 		return err
 	}
 
-	return MigrateModels(tx, models...)
+	err = MigrateModels(tx, models...)
+	if err != nil {
+		return err
+	}
+	return nil
 }
