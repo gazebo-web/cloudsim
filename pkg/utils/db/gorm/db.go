@@ -78,7 +78,9 @@ func MigrateModels(tx *gorm.DB, models ...interface{}) error {
 		return errors.New("attempted to migrate with an invalid tx")
 	}
 
-	tx.AutoMigrate(models...)
+	if err := tx.AutoMigrate(models...).Error; err != nil {
+		return err
+	}
 
 	return nil
 }
@@ -89,7 +91,13 @@ func CleanAndMigrateModels(tx *gorm.DB, models ...interface{}) error {
 		return errors.New("attempted to clean database with an invalid tx")
 	}
 
-	tx.DropTableIfExists(models...)
+	if err := tx.DropTableIfExists(models...).Error; err != nil {
+		return err
+	}
 
-	return MigrateModels(tx, models...)
+	if err := MigrateModels(tx, models...); err != nil {
+		return err
+	}
+
+	return nil
 }
