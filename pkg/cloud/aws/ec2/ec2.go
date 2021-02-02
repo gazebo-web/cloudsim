@@ -237,6 +237,9 @@ func (m *machines) terminateByFilters(filters map[string][]string) error {
 		MaxResults: aws.Int64(1000),
 		Filters:    m.createFilters(filters),
 	})
+	if err != nil {
+		return err
+	}
 
 	var instanceIds []string
 	for _, r := range out.Reservations {
