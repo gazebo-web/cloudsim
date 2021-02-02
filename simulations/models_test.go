@@ -61,6 +61,7 @@ func TestGetRemainingSubmissions(t *testing.T) {
 
 	// Initialize database
 	db, err := ign.InitDbWithCfg(&config)
+	defer db.Close()
 	require.NoError(t, err)
 
 	db.DropTableIfExists(&SimulationDeployment{})
@@ -282,4 +283,8 @@ func TestUpdateScore(t *testing.T) {
 	var dbSimDep SimulationDeployment
 	require.NoError(t, db.Model(&SimulationDeployment{}).Where("id = ?", simDep.ID).First(&dbSimDep).Error)
 	assert.Equal(t, dbSimDep.Score, &updatedScore)
+}
+
+func (suite *MachineInstanceTestSuite) TearDownTest() {
+	suite.db.Close()
 }
