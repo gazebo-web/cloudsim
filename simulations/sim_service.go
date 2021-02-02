@@ -2059,7 +2059,7 @@ func (s *Service) GetSimulationDeployment(ctx context.Context, tx *gorm.DB,
 	}
 
 	// Check for user permissions if the simulation is private.
-	if *dep.Private == true {
+	if dep.Private != nil && *dep.Private == true {
 		if user == nil {
 			return nil, ign.NewErrorMessageWithBase(ign.ErrorUnauthorized, err)
 		}
