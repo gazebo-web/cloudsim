@@ -245,12 +245,7 @@ func (m *machines) terminateByFilters(filters map[string][]string) error {
 		}
 	}
 
-	_, err = m.API.TerminateInstances(&ec2.TerminateInstancesInput{
-		DryRun:      aws.Bool(false),
-		InstanceIds: aws.StringSlice(instanceIds),
-	})
-
-	return err
+	return m.terminateByID(instanceIds)
 }
 
 // Terminate terminates EC2 machines by either passing instances ids or filters.
