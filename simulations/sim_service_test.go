@@ -2,15 +2,16 @@ package simulations
 
 import (
 	"fmt"
+	"github.com/jinzhu/gorm"
 	"github.com/stretchr/testify/assert"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/utils/db/gorm"
+	gormUtils "gitlab.com/ignitionrobotics/web/cloudsim/pkg/utils/db/gorm"
 	"testing"
 	"time"
 )
 
 func TestMarkPreviousSubmissionsSuperseded(t *testing.T) {
 	// Get database config
-	db, err := gorm.GetTestDBFromEnvVars()
+	db, err := gormUtils.GetTestDBFromEnvVars()
 
 	db.DropTableIfExists(&SimulationDeployment{})
 
