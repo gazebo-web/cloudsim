@@ -22,6 +22,7 @@ import (
 func TestLaunchInstances(t *testing.T) {
 	// Initialize database
 	db, err := gorm.GetDBFromEnvVars()
+	defer db.Close()
 
 	// If the database fails to connect, fail instantly.
 	require.NoError(t, err)

@@ -23,6 +23,7 @@ import (
 
 func TestLaunchFieldComputerPods(t *testing.T) {
 	db, err := gorm.GetDBFromEnvVars()
+	defer db.Close()
 	require.NoError(t, err)
 
 	err = actions.MigrateDB(db)
