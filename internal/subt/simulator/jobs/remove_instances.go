@@ -9,23 +9,27 @@ import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulator/jobs"
 )
 
+const (
+	instanceTagGroupID string = "CloudsimGroupID"
+)
+
 // RemoveInstances is a job in charge of removing all machines for a certain simulation.
 var RemoveInstances = jobs.RemoveInstances.Extend(actions.Job{
 	Name:       "remove-instances",
-	PreHooks:   []actions.JobFunc{setStopState, prepareRemoveInstances},
+	PreHooks:   []actions.JobFunc{setStopState, prepareRemoveInstancesInput},
 	PostHooks:  []actions.JobFunc{returnState},
 	InputType:  actions.GetJobDataType(&state.StopSimulation{}),
 	OutputType: actions.GetJobDataType(&state.StopSimulation{}),
 })
 
-// prepareRemoveInstances is in charge of preparing the input for the generic jobs.RemoveInstances job.
-func prepareRemoveInstances(store actions.Store, tx *gorm.DB, deployment *actions.Deployment, value interface{}) (interface{}, error) {
+// prepareRemoveInstancesInput is in charge of preparing the input for the generic jobs.RemoveInstances job.
+func prepareRemoveInstancesInput(store actions.Store, tx *gorm.DB, deployment *actions.Deployment, value interface{}) (interface{}, error) {
 	s := store.State().(*state.StopSimulation)
 
 	return jobs.RemoveInstancesInput{
 		cloud.TerminateMachinesInput{
 			Filters: map[string][]string{
-				fmt.Sprintf("tag:%s", "CloudsimGroupID"): {
+				fmt.Sprintf("tag:%s", instanceTagGroupID): {
 					s.GroupID.String(),
 				},
 			},
