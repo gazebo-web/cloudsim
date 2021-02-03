@@ -2,6 +2,7 @@ package simulations
 
 import (
 	"errors"
+	"time"
 )
 
 var (
@@ -101,17 +102,20 @@ type Simulation interface {
 	// SetStatus sets a given status to the Simulation.
 	SetStatus(status Status)
 
-	// Kind returns the current Simulation's kind.
+	// GetKind returns the current simulation's kind.
 	GetKind() Kind
 
 	// IsKind checks if the current Simulation is of the given kind.
 	IsKind(Kind) bool
 
-	// Error returns the current Simulation's error. It returns nil if the simulation doesn't have an error.
+	// GetError returns the current simulation's error. It returns nil if the simulation doesn't have an error.
 	GetError() *Error
 
-	// Image returns the Simulation's docker image. This image is used as the solution image.
+	// GetImage returns the simulation's docker image. This image is used as the solution image.
 	GetImage() string
+
+	// GetValidFor returns the amount of time that the simulation is considered valid.
+	GetValidFor() time.Duration
 
 	// IsProcessed returns true if the Simulation has been already processed.
 	IsProcessed() bool
