@@ -36,6 +36,8 @@ var deploymentErrorTestData = struct {
 
 func TestNewDeploymentErrorAndGetDeploymentErrors(t *testing.T) {
 	tr := setupTest(t)
+	defer tr.db.Close()
+
 	td := getTestData(t)
 	detd := deploymentErrorTestData
 
