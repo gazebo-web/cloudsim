@@ -56,7 +56,11 @@ func (s *removeInstancesTestSuite) TestRemoveInstancesFails() {
 	}).Return(errors.New("some test error"))
 
 	_, err := RemoveInstances.Run(s.Store, nil, nil, s.InitialState)
-	s.Assert().Error(err)
+
+	// If terminating instances fails, we don't want to have an error. The reason for this is strictly related to
+	// avoid having a termination process that has stopped in the middle, leaving some machines undeleted,
+	// because a single termination request failed.
+	s.Assert().NoError(err)
 }
 
 func (s *removeInstancesTestSuite) TestRemoveInstancesSuccess() {
