@@ -4,6 +4,7 @@ import (
 	"errors"
 	"github.com/jinzhu/gorm"
 	"gitlab.com/ignitionrobotics/web/ign-go"
+	"log"
 )
 
 var (
@@ -78,8 +79,8 @@ func MigrateModels(tx *gorm.DB, models ...interface{}) error {
 		return errors.New("attempted to migrate with an invalid tx")
 	}
 
-	err := tx.AutoMigrate(models...).Error
-	if err != nil {
+	if err := tx.AutoMigrate(models...).Error; err != nil {
+		log.Println("MigrateModels: Error while running AutoMigrate, error:", err)
 		return err
 	}
 
@@ -92,14 +93,17 @@ func CleanAndMigrateModels(tx *gorm.DB, models ...interface{}) error {
 		return errors.New("attempted to clean database with an invalid tx")
 	}
 
-	err := tx.DropTableIfExists(models...).Error
-	if err != nil {
+	log.Printf("CleanAndMigrateModels: Dropping tables: %v\n", models)
+	if err := tx.DropTableIfExists(models...).Error; err != nil {
+		log.Println("CleanAndMigrateModels: Error while running DropTableIfExists, error:", err)
 		return err
 	}
 
-	err = MigrateModels(tx, models...)
-	if err != nil {
+	log.Printf("CleanAndMigrateModels: Migrating tables: %v\n", models)
+	if err := MigrateModels(tx, models...); err != nil {
+		log.Println("CleanAndMigrateModels: Error while running MigrateModels, error:", err)
 		return err
 	}
+
 	return nil
 }
