@@ -285,6 +285,6 @@ func TestUpdateScore(t *testing.T) {
 	assert.Equal(t, dbSimDep.Score, &updatedScore)
 }
 
-func (suite *MachineInstanceTestSuite) TearDownTest() {
+func (suite *MachineInstanceTestSuite) TearDownSuite() {
 	suite.db.Close()
 }
