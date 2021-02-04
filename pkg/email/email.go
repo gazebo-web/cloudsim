@@ -30,6 +30,7 @@ type Sender interface {
 	Send(recipients []string, sender, subject, template string, data interface{}) error
 }
 
+// email implements the Sender interface using AWS SES api.
 type email struct {
 	API sesiface.SESAPI
 }
