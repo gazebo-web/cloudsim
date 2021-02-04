@@ -115,4 +115,7 @@ type Ignition interface {
 
 	// DefaultRecipients returns the list of default emails where to send summary emails.
 	DefaultRecipients() []string
+
+	// DefaultSender returns the default sender for emails.
+	DefaultSender() string
 }
