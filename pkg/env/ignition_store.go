@@ -36,6 +36,22 @@ type ignitionEnvStore struct {
 
 	// SecretsNameValue is the CLOUDSIM_IGN_SECRETS_NAME value that will used to get credentials for cloud providers.
 	SecretsNameValue string `env:"CLOUDSIM_IGN_SECRETS_NAME"`
+
+	// DefaultRecipientsValue has the list of emails that should always receive summaries.
+	DefaultRecipientsValue []string `env:"CLOUDSIM_IGN_DEFAULT_RECIPIENTS"`
+
+	// DefaultSenderValue is the email address used to send emails.
+	DefaultSenderValue string `env:"CLOUDSIM_IGN_DEFAULT_SENDER"`
+}
+
+// DefaultRecipients returns the list of default summary email recipients.
+func (i *ignitionEnvStore) DefaultRecipients() []string {
+	return i.DefaultRecipientsValue
+}
+
+// DefaultSender returns the default email address used to send emails.
+func (i *ignitionEnvStore) DefaultSender() string {
+	return i.DefaultSenderValue
 }
 
 // AccessKeyLabel returns the access key label to get the credentials for a certain cloud provider.
