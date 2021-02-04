@@ -308,7 +308,7 @@ production:
     - *deploy_kubernetes
   tags:
     - kubernetes
-    - production
+    - subt
   environment:
     name: production
   only:
