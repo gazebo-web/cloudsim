@@ -12,6 +12,7 @@ import (
 func TestMarkPreviousSubmissionsSuperseded(t *testing.T) {
 	// Get database config
 	db, err := gormUtils.GetTestDBFromEnvVars()
+	defer db.Close()
 
 	db.DropTableIfExists(&SimulationDeployment{})
 
