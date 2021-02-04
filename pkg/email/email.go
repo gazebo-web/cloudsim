@@ -21,6 +21,8 @@ var (
 	ErrInvalidSender = errors.New("invalid sender")
 	// ErrInvalidRecipient is returned when an invalid email is passed in the list of recipients to the Sender.Send method.
 	ErrInvalidRecipient = errors.New("invalid recipient")
+	// ErrInvalidData is returned when an invalid data is passed to the Sender.Send method.
+	ErrInvalidData = errors.New("invalid data")
 )
 
 // Sender has a method to send emails.
@@ -49,6 +51,9 @@ func (e *email) Send(recipients []string, sender, subject, template string, data
 	}
 	if ok := ValidateEmail(sender); !ok {
 		return ErrInvalidSender
+	}
+	if data == nil {
+		return ErrInvalidData
 	}
 
 	content, err := ign.ParseHTMLTemplate(template, data)

@@ -40,14 +40,43 @@ func TestEmailReturnsErrWhenSenderIsInvalid(t *testing.T) {
 	assert.Equal(t, ErrInvalidSender, err)
 }
 
+func TestEmailReturnsErrWhenInvalidPath(t *testing.T) {
+	s := NewEmailSender(nil)
+
+	err := s.Send([]string{"recipient@test.org"}, "example@test.org", "Some test", "test", nil)
+	assert.Error(t, err)
+}
+
+func TestEmailReturnsErrWhenDataIsNil(t *testing.T) {
+	s := NewEmailSender(&fakeSender{})
+	err := s.Send([]string{"recipient@test.org"}, "example@test.org", "Some test", "template.gohtml", nil)
+	assert.Error(t, err)
+	assert.Equal(t, ErrInvalidData, err)
+}
+
+func TestEmailSendingSuccess(t *testing.T) {
+	fake := fakeSender{}
+	s := NewEmailSender(&fake)
+	err := s.Send([]string{"recipient@test.org"}, "example@test.org", "Some test", "template.gohtml", struct {
+		Test string
+	}{
+		Test: "Hello there!",
+	})
+
+	assert.NoError(t, err)
+	assert.Equal(t, 1, fake.Called)
+}
+
 // fakeSender fakes the sesiface.SESAPI interface.
 type fakeSender struct {
 	returnError bool
+	Called      int
 	sesiface.SESAPI
 }
 
 // SendEmail mocks the SendEmail method from the sesiface.SESAPI.
 func (s *fakeSender) SendEmail(input *ses.SendEmailInput) (*ses.SendEmailOutput, error) {
+	s.Called++
 	if s.returnError {
 		return nil, errors.New("fake error")
 	}
