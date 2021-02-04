@@ -26,7 +26,7 @@ func sendSummaryEmail(store actions.Store, tx *gorm.DB, deployment *actions.Depl
 		return nil, err
 	}
 
-	if sim.IsKind(simulations.SimSingle) {
+	if !sim.IsKind(simulations.SimSingle) {
 		return s, nil
 	}
 
@@ -58,7 +58,12 @@ func sendSummaryEmail(store actions.Store, tx *gorm.DB, deployment *actions.Depl
 		recipients = append(recipients, *org.Email)
 	}
 
-	// TODO: Send summary to recipients
+	sender := s.Platform().Store().Ignition().DefaultSender()
+
+	err = s.Platform().EmailSender().Send(recipients, sender, "Simulation summary", "template.html", s.Summary)
+	if err != nil {
+		return nil, err
+	}
 
 	return s, nil
 }
