@@ -2251,7 +2251,7 @@ func (sa *SubTApplication) createS3CopyPod(ctx context.Context, s *Service, dep 
 ////////////////////////////////////////////////////////////////////////////
 
 // processSimulationResults when shutting down a simulation.
-// It registers the score and summaries of the simulation being shutdown.
+// It registers the score and statistics of the simulation being shutdown.
 func (sa *SubTApplication) processSimulationResults(ctx context.Context, s *Service, tx *gorm.DB,
 	dep *SimulationDeployment) *ign.ErrMsg {
 
