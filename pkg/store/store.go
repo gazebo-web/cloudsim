@@ -112,4 +112,5 @@ type Ignition interface {
 	// SecretAccessKeyLabel returns the secret access key label to get the credentials for a certain cloud provider.
 	// For AWS, it returns: `aws-secret-access-key`
 	SecretAccessKeyLabel() string
+	LogsBucket() string
 }

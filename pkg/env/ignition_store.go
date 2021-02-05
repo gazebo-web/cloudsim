@@ -36,6 +36,14 @@ type ignitionEnvStore struct {
 
 	// SecretsNameValue is the CLOUDSIM_IGN_SECRETS_NAME value that will used to get credentials for cloud providers.
 	SecretsNameValue string `env:"CLOUDSIM_IGN_SECRETS_NAME"`
+
+	// LogsBucketValue is the CLOUDSIM_AWS_GZ_LOGS_BUCKET value that will be used to upload logs.
+	LogsBucketValue string `env:"CLOUDSIM_AWS_GZ_LOGS_BUCKET"`
+}
+
+// LogsBucket returns the bucket where to upload logs.
+func (i *ignitionEnvStore) LogsBucket() string {
+	return i.LogsBucketValue
 }
 
 // AccessKeyLabel returns the access key label to get the credentials for a certain cloud provider.
