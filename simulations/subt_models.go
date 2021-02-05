@@ -212,7 +212,7 @@ type SimulationDeploymentsSubTValue struct {
 	ModelCount          int `gorm:"not null" json:"model_count"`
 }
 
-// AggregatedSubTSimulationValues contains the total score and average statistics of a group of simulation deployments.
+// AggregatedSubTSimulationValues contains the total score and average summaries of a group of simulation deployments.
 // These simulations are typically all the child simulations of a multi-sim.
 type AggregatedSubTSimulationValues struct {
 	Score                  float64 `json:"-"`

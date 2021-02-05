@@ -36,9 +36,10 @@ func readScore(store actions.Store, tx *gorm.DB, deployment *actions.Deployment,
 	}
 
 	// Parse the score
-	score, err := strconv.ParseFloat(string(body), 64)
-	if err != nil {
-		return nil, err
+	var score *float64
+	parsed, err := strconv.ParseFloat(string(body), 64)
+	if err == nil {
+		score = &parsed
 	}
 
 	// Set the score

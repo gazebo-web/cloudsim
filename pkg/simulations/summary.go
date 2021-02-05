@@ -8,7 +8,7 @@ type Summary struct {
 	// GroupID identifies a simulation.
 	GroupID *GroupID `json:"-" gorm:"not null;unique"`
 	// Score is the simulation score.
-	Score float64 `json:"-"`
+	Score *float64 `json:"-"`
 	// SimTimeDurationAvg is the average of the simulation time duration.
 	SimTimeDurationAvg float64 `json:"sim_time_duration_avg"`
 	// SimTimeDurationStdDev is the standard deviation of the simulation time duration.
@@ -18,4 +18,5 @@ type Summary struct {
 	ModelCountAvg          float64 `json:"model_count_avg"`
 	ModelCountStdDev       float64 `json:"model_count_std_dev" gorm:"-"`
 	Sources                string  `json:"-"`
+	RunData                string  `json:"-" gorm:"-"`
 }
