@@ -2292,7 +2292,7 @@ func (sa *SubTApplication) processSimulationResults(ctx context.Context, s *Serv
 	}
 	values.Score = score
 
-	// Get simulation summaries
+	// Get simulation statistics
 	statistics, em := sa.getSimulationStatistics(ctx, s, dep)
 	if em != nil {
 		return em
