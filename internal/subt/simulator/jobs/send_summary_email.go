@@ -21,45 +21,53 @@ var SendSummaryEmail = &actions.Job{
 func sendSummaryEmail(store actions.Store, tx *gorm.DB, deployment *actions.Deployment, value interface{}) (interface{}, error) {
 	s := store.State().(*state.StopSimulation)
 
+	// Get the simulation
 	sim, err := s.Services().Simulations().Get(s.GroupID)
 	if err != nil {
 		return nil, err
 	}
 
+	// Only send summary emails if the simulation is single.
 	if !sim.IsKind(simulations.SimSingle) {
 		return s, nil
 	}
 
+	// Get the user info
 	user, em := s.Services().Users().GetUserFromUsername(sim.GetCreator())
 	if em != nil {
 		return nil, em.BaseError
 	}
 
+	// Generate list of recipients
 	var recipients []string
 
+	// Append default recipients
 	recipients = append(recipients, s.Platform().Store().Ignition().DefaultRecipients()...)
 
+	// Add user's email.
 	if user.Email != nil {
 		recipients = append(recipients, *user.Email)
 	}
 
-	owner := sim.GetOwner()
-	if owner == nil {
-		// TODO: Send summary to recipients
-		return s, nil
-	}
-
-	org, em := s.Services().Users().GetOrganization(*owner)
-	if em != nil {
-		return nil, em.BaseError
-	}
-
-	if org.Email != nil {
-		recipients = append(recipients, *org.Email)
-	}
-
+	// Get default sender
 	sender := s.Platform().Store().Ignition().DefaultSender()
 
+	// Get owner
+	owner := sim.GetOwner()
+
+	// If there's an owner assigned, add the organization email
+	if owner != nil {
+		org, em := s.Services().Users().GetOrganization(*owner)
+		if em != nil {
+			return nil, em.BaseError
+		}
+
+		if org.Email != nil {
+			recipients = append(recipients, *org.Email)
+		}
+	}
+
+	// Send the email
 	err = s.Platform().EmailSender().Send(recipients, sender, "Simulation summary", "template.html", s.Summary)
 	if err != nil {
 		return nil, err
