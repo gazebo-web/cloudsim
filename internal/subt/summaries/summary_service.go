@@ -20,7 +20,7 @@ type service struct {
 	db *gorm.DB
 }
 
-// Calculate takes a parent group id and returns the calculate summary for all its children.
+// Calculate takes a parent group id and returns the aggregate summary for all its children.
 func (s *service) Calculate(groupID simulations.GroupID) (*simulations.Summary, error) {
 	var summary simulations.Summary
 
