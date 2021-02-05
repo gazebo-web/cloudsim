@@ -9,14 +9,20 @@ type Summary struct {
 	GroupID *GroupID `json:"-" gorm:"not null;unique"`
 	// Score is the simulation score.
 	Score *float64 `json:"-"`
-	// SimTimeDurationAvg is the average of the simulation time duration.
+	// SimTimeDurationAvg is the average value of the simulation time duration.
 	SimTimeDurationAvg float64 `json:"sim_time_duration_avg"`
-	// SimTimeDurationStdDev is the standard deviation of the simulation time duration.
-	SimTimeDurationStdDev  float64 `json:"sim_time_duration_std_dev" gorm:"-"`
-	RealTimeDurationAvg    float64 `json:"real_time_duration_avg"`
+	// SimTimeDurationStdDev is the standard deviation value of the simulation time duration. Only used by simulations.SimParent.
+	SimTimeDurationStdDev float64 `json:"sim_time_duration_std_dev" gorm:"-"`
+	// RealTimeDurationAvg is the average value of the real time duration.
+	RealTimeDurationAvg float64 `json:"real_time_duration_avg"`
+	// RealTimeDurationStdDev is the standard deviation value of the real time duration. Only used by simulations.SimParent.
 	RealTimeDurationStdDev float64 `json:"real_time_duration_std_dev" gorm:"-"`
-	ModelCountAvg          float64 `json:"model_count_avg"`
-	ModelCountStdDev       float64 `json:"model_count_std_dev" gorm:"-"`
-	Sources                string  `json:"-"`
-	RunData                string  `json:"-" gorm:"-"`
+	// ModelCountAvg is the average value of the model count.
+	ModelCountAvg float64 `json:"model_count_avg"`
+	// ModelCountStdDev is the standard deviation value of the model count. Only used by simulations.SimParent.
+	ModelCountStdDev float64 `json:"model_count_std_dev" gorm:"-"`
+	// Sources is used save all the children group ids. Only used by simulations.SimParent.
+	Sources string `json:"-"`
+	// RunData has the simulation run data.
+	RunData string `json:"-" gorm:"-"`
 }
