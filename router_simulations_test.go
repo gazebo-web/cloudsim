@@ -14,6 +14,7 @@ import (
 	"gitlab.com/ignitionrobotics/web/ign-go/testhelpers"
 	"strings"
 	"testing"
+	"strconv"
 )
 
 // Integration tests for Simulation related routes.
@@ -26,6 +27,15 @@ type createSimulationTest struct {
 	expCreator string
 }
 
+type createSimulationPrivacyTest struct {
+	uriTest
+	circuit    string
+	owner      string
+	robotName  *string
+	expCreator string
+	private    bool
+}
+
 type createSimulationCreditTest struct {
 	uriTest
 	circuit string
@@ -35,6 +45,12 @@ type getSimulationsTest struct {
 	uriTest
 	expSimNames []string
 	circuit     *string
+}
+
+type getSimulationsPrivacyTest struct {
+	uriTest
+	expSimNames []string
+	private     *bool
 }
 
 type getSimulationsMetadataTest struct {
@@ -166,8 +182,8 @@ func TestSimulationsRoute(t *testing.T) {
 
 	getSimulationsTestsData := []getSimulationsTest{
 		{uriTest{"getSims - invalid uri", invalidURI, nil, ign.NewErrorMessage(ign.ErrorNameNotFound), true, true}, nil, nil},
-		{uriTest{"getSims - with no jwt", uri, nil, ign.NewErrorMessage(ign.ErrorUnauthorized), true, false}, nil, nil},
-		{uriTest{"getSims - invocation with non existing user", uri, nonexistentJWT, ign.NewErrorMessage(ign.ErrorAuthNoUser), false, false}, nil, nil},
+		{uriTest{"getSims - with no jwt", uri, nil, nil, true, false}, nil, nil},
+		{uriTest{"getSims - invocation with non existing user", uri, nonexistentJWT, nil, false, false}, nil, nil},
 		{uriTest{"getSims - valid invocation with jwt", uri, defaultJWT, nil, false, false}, []string{"sim5", "sim3", "sim2"}, nil},
 		{uriTest{"getSims - valid invocation with user valid jwt", uri, teamAUser1, nil, false, false}, []string{"sim2"}, nil},
 		{uriTest{"getSims - valid invocation filtering by circuit with jwt", uri, defaultJWT, nil, false, false}, []string{"sim5"}, sptr(circuit)},
@@ -827,6 +843,119 @@ func TestGetCompetitionRobots(t *testing.T) {
 				for key := range sim.SubTRobotTypes {
 					assert.Contains(t, response, key)
 				}
+			})
+		})
+	}
+}
+
+func TestSimulationsPrivacy(t *testing.T) {
+	setup()
+
+	uri := "/1.0/simulations"
+
+	teamAUser1 := newJWT(createJWTForIdentity(t, "TeamAUser1"))
+	teamBUser1 := newJWT(createJWTForIdentity(t, "TeamBUser1"))
+	appTeamMember := newJWT(createJWTForIdentity(t, "subtMember"))
+
+	unauthError := ign.NewErrorMessage(ign.ErrorUnauthorized)
+
+	var teamAPublicSimGroupID string
+	var teamAPrivateSimGroupID string
+
+	circuit := "Virtual Stix"
+
+	// Create public and private simulations.
+	createSimsTestsData := []createSimulationPrivacyTest{
+		{uriTest{"privateSim - Create Private Simulation of TeamA", uri, teamAUser1, nil, false, false}, circuit, "TeamA", nil, "TeamAUser1", true},
+		{uriTest{"privateSim - Create Public Simulation of TeamA", uri, teamAUser1, nil, false, false}, circuit, "TeamA", nil, "TeamAUser1", false},
+	}
+
+	for i, test := range createSimsTestsData {
+		t.Run(test.testDesc, func(t *testing.T) {
+			rName := "robot1"
+			if test.robotName != nil {
+				rName = *test.robotName
+			}
+			createSubtForm := map[string]string{
+				"name":        fmt.Sprintf("sim%d", i),
+				"owner":       test.owner,
+				"circuit":     test.circuit,
+				"robot_name":  rName,
+				"robot_type":  "X1_SENSOR_CONFIG_1",
+				"robot_image": "infrastructureascode/aws-cli:latest",
+				"private":     strconv.FormatBool(test.private),
+			}
+			invokeURITestMultipartPOST(t, test.uriTest, createSubtForm, func(bslice *[]byte, resp *igntest.AssertResponse) {
+				// Status OK callback
+				dep := sim.SimulationDeployment{}
+				require.NoError(t, json.Unmarshal(*bslice, &dep), "Unable to unmarshal response", string(*bslice))
+				assert.Equal(t, test.owner, *dep.Owner)
+				assert.Equal(t, test.expCreator, *dep.Creator)
+				assert.Equal(t, test.private, *dep.Private)
+				assert.Equal(t, "subt", *dep.Application)
+				assert.Equal(t, 0, dep.MultiSim)
+
+				if teamAPublicSimGroupID == "" && *dep.Private == false {
+					// save the created dep groupID
+					// HACK
+					teamAPublicSimGroupID = *dep.GroupID
+				}
+				if teamAPrivateSimGroupID == "" && *dep.Private == true {
+					// save the created dep groupID
+					// HACK
+					teamAPrivateSimGroupID = *dep.GroupID
+				}
+			})
+		})
+	}
+
+	// Get public and private simulations.
+	getSimulationsTestsData := []getSimulationsPrivacyTest{
+		{uriTest{"privateSim - Get public simulations without jwt", uri, nil, nil, false, false}, []string{"sim1"}, nil},
+		{uriTest{"privateSim - Get public simulations with TeamB jwt", uri, teamBUser1, nil, false, false}, []string{"sim1"}, nil},
+		{uriTest{"privateSim - Get simulations with app admin jwt", uri, appTeamMember, nil, false, false}, []string{"sim1", "sim0"}, nil},
+		{uriTest{"privateSim - Get private simulations with TeamA jwt", uri, teamAUser1, nil, false, false}, []string{"sim1", "sim0"}, nil},
+		{uriTest{"privateSim - Get only private simulations with TeamA jwt", uri, teamAUser1, nil, false, false}, []string{"sim0"}, boolptr(true)},
+		{uriTest{"privateSim - Get only public simulations with TeamA jwt", uri, nil, nil, false, false}, []string{"sim1"}, boolptr(false)},
+	}
+
+	for _, test := range getSimulationsTestsData {
+		t.Run(test.testDesc, func(t *testing.T) {
+			if test.private != nil {
+				test.uriTest.URL = fmt.Sprintf("%s?private=%s", test.uriTest.URL, strconv.FormatBool(*test.private))
+			}
+			invokeURITest(t, test.uriTest, func(bslice *[]byte, resp *igntest.AssertResponse) {
+				// Status OK callback
+				var sims []sim.SimulationDeployment
+				require.NoError(t, json.Unmarshal(*bslice, &sims), "Unable to unmarshal response", string(*bslice))
+				assert.Len(t, sims, len(test.expSimNames))
+				for i, n := range test.expSimNames {
+					assert.Equal(t, n, *sims[i].Name)
+				}
+			})
+		})
+	}
+
+	// Get public and private individual simulations.
+	teamAPublicSim := uri + "/" + teamAPublicSimGroupID
+	teamAPrivateSim := uri + "/" + teamAPrivateSimGroupID
+
+	getSingleSimTestsData := []getSimulationsPrivacyTest{
+		{uriTest{"privateSim - Cannot get private simulation with no jwt", teamAPrivateSim, nil, unauthError, true, false}, nil, nil},
+		{uriTest{"privateSim - Cannot get private simulation with TeamB jwt", teamAPrivateSim, teamBUser1, unauthError, true, false}, nil, nil},
+		{uriTest{"privateSim - Get private simulation of TeamA with TeamA jwt", teamAPrivateSim, teamAUser1, nil, true, false}, []string{"sim0"}, nil},
+		{uriTest{"privateSim - Get private simulation of TeamA with app admin jwt", teamAPrivateSim, appTeamMember, nil, true, false}, []string{"sim0"}, nil},
+		{uriTest{"privateSim - Get public simulation of TeamA with no jwt", teamAPublicSim, nil, nil, true, false}, []string{"sim1"}, nil},
+		{uriTest{"privateSim - Get public simulation of TeamA with TeamB jwt", teamAPublicSim, teamBUser1, nil, true, false}, []string{"sim1"}, nil},
+	}
+
+	for _, test := range getSingleSimTestsData {
+		t.Run(test.testDesc, func(t *testing.T) {
+			invokeURITest(t, test.uriTest, func(bslice *[]byte, resp *igntest.AssertResponse) {
+				// Status OK callback
+				sim := sim.SimulationDeployment{}
+				require.NoError(t, json.Unmarshal(*bslice, &sim), "Unable to unmarshal response", string(*bslice))
+				assert.Equal(t, test.expSimNames[0], *sim.Name)
 			})
 		})
 	}
