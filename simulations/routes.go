@@ -17,8 +17,7 @@ var Routes ign.Routes = ign.Routes{
 		Description: "Information about all simulations",
 		URI:         "/simulations",
 		Headers:     ign.AuthHeadersRequired,
-		Methods:     ign.Methods{},
-		SecureMethods: ign.SecureMethods{
+		Methods:     ign.Methods{
 			// swagger:route GET /simulations simulations listSimulations
 			//
 			// Get list of simulations.
@@ -29,6 +28,14 @@ var Routes ign.Routes = ign.Routes{
 			// can be defined with query parameter 'per_page'.
 			// The route supports the 'order' parameter, with values 'asc' and
 			// 'desc' (default: desc).
+			//
+			// This route also supports getting simulations of a particular
+			// organization with the 'owner' parameter
+			//
+			// This route also supports filtering by privacy with the 'private'
+			// parameter. By default the route returns simulations based on the
+			// permissions of the JWT user, if present. Otherwise, it returns public
+			// simulations
 			//
 			// This route also supports the 'status' parameter
 			// which filters the results based on a status string with one of the
@@ -55,10 +62,12 @@ var Routes ign.Routes = ign.Routes{
 				Type:        "GET",
 				Description: "Get all simulations",
 				Handlers: ign.FormatHandlers{
-					ign.FormatHandler{Extension: ".json", Handler: ign.JSONResult(WithUser(CloudsimSimulationList))},
-					ign.FormatHandler{Handler: ign.JSONResult(WithUser(CloudsimSimulationList))},
+					ign.FormatHandler{Extension: ".json", Handler: ign.JSONResult(WithUserOrAnonymous(CloudsimSimulationList))},
+					ign.FormatHandler{Handler: ign.JSONResult(WithUserOrAnonymous(CloudsimSimulationList))},
 				},
 			},
+		},
+		SecureMethods: ign.SecureMethods{
 			// swagger:route POST /simulations simulations createSimulation
 			//
 			// Launches a new cloudsim simulation
@@ -87,8 +96,7 @@ var Routes ign.Routes = ign.Routes{
 		Description: "Single simulation based on its groupID",
 		URI:         "/simulations/{group}",
 		Headers:     ign.AuthHeadersRequired,
-		Methods:     ign.Methods{},
-		SecureMethods: ign.SecureMethods{
+		Methods:     ign.Methods{
 			// swagger:route GET /simulations/{group} simulations getSimulation
 			//
 			// Get a single simulation based on its groupID
@@ -105,9 +113,11 @@ var Routes ign.Routes = ign.Routes{
 				Type:        "GET",
 				Description: "Get a single simulation based on its groupID",
 				Handlers: ign.FormatHandlers{
-					ign.FormatHandler{Handler: ign.JSONResultNoTx(WithUser(GetCloudsimSimulation))},
+					ign.FormatHandler{Handler: ign.JSONResultNoTx(WithUserOrAnonymous(GetCloudsimSimulation))},
 				},
 			},
+		},
+		SecureMethods: ign.SecureMethods{
 			// swagger:route DELETE /simulations/{group} simulations deleteSimulation
 			//
 			// Deletes a cloudsim simulation
@@ -277,8 +287,7 @@ var Routes ign.Routes = ign.Routes{
 		Description: "Gets a simulation's websocket server address",
 		URI:         "/simulations/{group}/websocket",
 		Headers:     ign.AuthHeadersRequired,
-		Methods:     ign.Methods{},
-		SecureMethods: ign.SecureMethods{
+		Methods:     ign.Methods{
 			// swagger:route GET /simulations/{group}/websocket simulations websocket
 			//
 			// Gets a simulation's websocket server address and authorization token
@@ -294,10 +303,11 @@ var Routes ign.Routes = ign.Routes{
 				Type:        "GET",
 				Description: "Get a simulation's websocket server address and authorization token",
 				Handlers: ign.FormatHandlers{
-					ign.FormatHandler{Handler: ign.JSONResultNoTx(WithUser(SimulationWebsocketAddress))},
+					ign.FormatHandler{Handler: ign.JSONResultNoTx(WithUserOrAnonymous(SimulationWebsocketAddress))},
 				},
 			},
 		},
+		SecureMethods: ign.SecureMethods{},
 	},
 
 	// Route to get machine information
