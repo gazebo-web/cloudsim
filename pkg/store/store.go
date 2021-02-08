@@ -113,7 +113,7 @@ type Ignition interface {
 	// For AWS, it returns: `aws-secret-access-key`
 	SecretAccessKeyLabel() string
 
-	// DefaultRecipients returns the list of default emails where to send summary emails.
+	// DefaultRecipients returns the list of default emails to send summary emails to.
 	DefaultRecipients() []string
 
 	// DefaultSender returns the default sender for emails.

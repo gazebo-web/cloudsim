@@ -27,7 +27,7 @@ func sendSummaryEmail(store actions.Store, tx *gorm.DB, deployment *actions.Depl
 		return nil, err
 	}
 
-	// Only send summary emails if the simulation is single.
+	// Only send summary emails for single simulations.
 	if !sim.IsKind(simulations.SimSingle) {
 		return s, nil
 	}
