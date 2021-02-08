@@ -78,12 +78,12 @@ func GetServiceNameWebsocket(groupID simulations.GroupID) string {
 	return fmt.Sprintf("%s-%s-websocket", simPrefix, groupID.String())
 }
 
-// GetGazeboLogsFilename returns the filename of that contains the list of logs.
+// GetGazeboLogsFilename returns the filename of the file that contains simulation logs.
 func GetGazeboLogsFilename(groupID simulations.GroupID) string {
 	return fmt.Sprintf("%s.tar.gz", groupID.String())
 }
 
-// GetSimulationLogKey returns the path of logs of a certain simulation.
+// GetSimulationLogKey returns the path for logs inside a copy pod.
 func GetSimulationLogKey(groupID simulations.GroupID, owner string) string {
 	escaped := url.PathEscape(owner)
 	return fmt.Sprintf("/gz-logs/%s/%s/", escaped, groupID)

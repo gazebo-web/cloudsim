@@ -41,7 +41,7 @@ type ignitionEnvStore struct {
 	LogsBucketValue string `env:"CLOUDSIM_AWS_GZ_LOGS_BUCKET"`
 }
 
-// LogsBucket returns the bucket where to upload logs.
+// LogsBucket returns the bucket to upload simulation logs to.
 func (i *ignitionEnvStore) LogsBucket() string {
 	return i.LogsBucketValue
 }
