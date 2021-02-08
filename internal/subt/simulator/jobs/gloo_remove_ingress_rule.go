@@ -34,7 +34,7 @@ func prepareRemoveIngressRulesInput(store actions.Store, tx *gorm.DB, deployment
 	action := gloo.GenerateRouteAction(ns, s.UpstreamName)
 	paths := []orchestrator.Path{gloo.NewPath(s.GroupID.String(), matcher, action)}
 
-	return jobs.ConfigureIngressInput{
+	return jobs.RemoveIngressRulesInput{
 		Name:      name,
 		Namespace: ns,
 		Host:      host,
@@ -44,7 +44,7 @@ func prepareRemoveIngressRulesInput(store actions.Store, tx *gorm.DB, deployment
 
 // checkRemoveIngressRulesError checks if the given output from the generic jobs.RemoveIngressRules job returns an error.
 func checkRemoveIngressRulesError(store actions.Store, tx *gorm.DB, deployment *actions.Deployment, value interface{}) (interface{}, error) {
-	out := value.(jobs.ConfigureIngressOutput)
+	out := value.(jobs.RemoveIngressRulesOutput)
 	if out.Error != nil {
 		return nil, out.Error
 	}
