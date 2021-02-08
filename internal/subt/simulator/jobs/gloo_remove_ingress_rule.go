@@ -10,8 +10,8 @@ import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulator/jobs"
 )
 
-// ConfigureIngressGloo is a job extending the generic jobs.ConfigureIngress job that will configure Gloo to accept
-// websocket connections to the gzserver instance.
+// RemoveIngressRulesGloo is a job extending the generic jobs.RemoveIngressRules job that will remove rules from
+// the Gloo ingress.
 var RemoveIngressRulesGloo = jobs.RemoveIngressRules.Extend(actions.Job{
 	Name:       "remove-ingress-rules-gloo",
 	PreHooks:   []actions.JobFunc{setStopState, prepareRemoveIngressRulesInput},
