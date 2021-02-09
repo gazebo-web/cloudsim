@@ -3,8 +3,8 @@ package main
 // Import this file's dependencies
 import (
 	"context"
-	_ "github.com/go-sql-driver/mysql"
 	"github.com/jinzhu/gorm"
+	_ "github.com/jinzhu/gorm/dialects/sqlite"
 	sim "gitlab.com/ignitionrobotics/web/cloudsim/simulations"
 	"log"
 )

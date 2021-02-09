@@ -3,7 +3,6 @@ package gorm
 import (
 	"errors"
 	"github.com/jinzhu/gorm"
-	_ "github.com/jinzhu/gorm/dialects/sqlite"
 	"gitlab.com/ignitionrobotics/web/ign-go"
 	"log"
 )
