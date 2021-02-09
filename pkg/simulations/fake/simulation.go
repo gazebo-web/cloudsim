@@ -7,12 +7,30 @@ import (
 
 // fakeSimulation is a fake simulations.Simulation implementation.
 type fakeSimulation struct {
-	groupID  simulations.GroupID
-	status   simulations.Status
-	kind     simulations.Kind
-	err      *simulations.Error
-	image    string
-	validFor time.Duration
+	groupID   simulations.GroupID
+	status    simulations.Status
+	kind      simulations.Kind
+	err       *simulations.Error
+	image     string
+	validFor  time.Duration
+	processed bool
+	owner     *string
+	creator   string
+}
+
+// IsProcessed returns if the simulation is processed.
+func (f *fakeSimulation) IsProcessed() bool {
+	return f.processed
+}
+
+// GetOwner returns the simulation's owner.
+func (f *fakeSimulation) GetOwner() *string {
+	return f.owner
+}
+
+// GetCreator returns the simulation's creator.
+func (f *fakeSimulation) GetCreator() string {
+	return f.creator
 }
 
 // GetValidFor returns the valid duration.
