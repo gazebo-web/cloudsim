@@ -2,7 +2,7 @@ package tracks
 
 import (
 	"github.com/jinzhu/gorm"
-	_ "github.com/jinzhu/gorm/dialects/mysql"
+	_ "github.com/jinzhu/gorm/dialects/sqlite"
 	"github.com/stretchr/testify/suite"
 	"gitlab.com/ignitionrobotics/web/ign-go"
 	"testing"

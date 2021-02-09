@@ -3,6 +3,7 @@ package simulations
 import (
 	"fmt"
 	"github.com/jinzhu/gorm"
+	_ "github.com/jinzhu/gorm/dialects/sqlite"
 	"github.com/stretchr/testify/assert"
 	gormUtils "gitlab.com/ignitionrobotics/web/cloudsim/pkg/utils/db/gorm"
 	"testing"
@@ -11,7 +12,7 @@ import (
 
 func TestMarkPreviousSubmissionsSuperseded(t *testing.T) {
 	// Get database config
-	db, err := gormUtils.GetTestDBFromEnvVars()
+	db, err := gormUtils.GetDBFromEnvVars()
 	defer db.Close()
 
 	db.DropTableIfExists(&SimulationDeployment{})
