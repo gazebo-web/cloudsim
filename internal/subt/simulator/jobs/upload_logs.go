@@ -5,6 +5,7 @@ import (
 	subtapp "gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/application"
 	"gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/simulator/state"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/actions"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator"
 	"gitlab.com/ignitionrobotics/web/ign-go"
 	"path/filepath"
 )
@@ -71,14 +72,12 @@ func uploadLogs(store actions.Store, tx *gorm.DB, deployment *actions.Deployment
 			Bucket:   s.Platform().Storage().PrepareAddress(bucket, filename),
 		}
 
-		script, err := ign.ParseTemplate("simulations/scripts/copy_to_s3.sh", scriptParams)
-		if err != nil {
-			continue
-		}
+		exec := s.Platform().Orchestrator().Pods().Exec(res)
+		containerName := subtapp.GetContainerNameCommsBridgeCopy()
 
-		err = s.Platform().Orchestrator().Pods().Exec(res).Script(subtapp.GetContainerNameCommsBridgeCopy(), script)
+		err = uploadSingleLogs(exec, containerName, "simulations/scripts/copy_to_s3.sh", scriptParams)
 		if err != nil {
-			continue
+			return nil, err
 		}
 	}
 
@@ -99,16 +98,29 @@ func uploadLogs(store actions.Store, tx *gorm.DB, deployment *actions.Deployment
 		Bucket:   s.Platform().Storage().PrepareAddress(bucket, filename),
 	}
 
-	script, err := ign.ParseTemplate("simulations/scripts/copy_to_s3.sh", scriptParams)
-	if err != nil {
-		return nil, err
-	}
-
-	// Attempt uploading gazebo logs
-	err = s.Platform().Orchestrator().Pods().Exec(res).Script(subtapp.GetContainerNameGazeboServerCopy(), script)
+	exec := s.Platform().Orchestrator().Pods().Exec(res)
+	containerName := subtapp.GetContainerNameGazeboServerCopy()
+	err = uploadSingleLogs(exec, containerName, "simulations/scripts/copy_to_s3.sh", scriptParams)
 	if err != nil {
 		return nil, err
 	}
 
 	return s, nil
+}
+
+// uploadSingleLogs is a helper function in charge of running a certain script in scriptFilepath with the given scriptParams.
+// It will run this script inside the containerName using the orchestrator.Executor implementation passed as an argument.
+// It will return an error if parsing the script template of executing the script returns an error.
+func uploadSingleLogs(exec orchestrator.Executor, containerName string, scriptFilepath string, scriptParams uploadLogsScript) error {
+	script, err := ign.ParseTemplate(scriptFilepath, scriptParams)
+	if err != nil {
+		return err
+	}
+
+	err = exec.Script(containerName, script)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
