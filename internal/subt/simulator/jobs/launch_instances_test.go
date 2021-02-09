@@ -57,6 +57,8 @@ func TestLaunchInstances(t *testing.T) {
 	machineConfigStore.On("Type").Return("g3.4xlarge")
 	machineConfigStore.On("BaseImage").Return("osrf/test-image")
 	machineConfigStore.On("FirewallRules").Return([]string{"sg-12345"})
+	machineConfigStore.On("NamePrefix").Return("sim")
+	machineConfigStore.On("ClusterName").Return("cloudsim-cluster")
 
 	machineConfigStore.On("Tags", sim, "gzserver", "gzserver").Return([]cloud.Tag{
 		{

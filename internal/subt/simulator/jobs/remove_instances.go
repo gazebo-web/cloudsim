@@ -3,14 +3,11 @@ package jobs
 import (
 	"fmt"
 	"github.com/jinzhu/gorm"
+	subtapp "gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/application"
 	"gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/simulator/state"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/actions"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/cloud"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulator/jobs"
-)
-
-const (
-	instanceTagGroupID string = "CloudsimGroupID"
 )
 
 // RemoveInstances is a job in charge of removing all machines for a certain simulation.
@@ -26,13 +23,18 @@ var RemoveInstances = jobs.RemoveInstances.Extend(actions.Job{
 func prepareRemoveInstancesInput(store actions.Store, tx *gorm.DB, deployment *actions.Deployment, value interface{}) (interface{}, error) {
 	s := store.State().(*state.StopSimulation)
 
+	filters := make(map[string][]string)
+	tags := subtapp.GetTagsInstanceBase(s.GroupID)
+
+	for _, tag := range tags {
+		for k, v := range tag.Map {
+			filters[fmt.Sprintf("tag:%s", k)] = []string{v}
+		}
+	}
+
 	return jobs.RemoveInstancesInput{
 		cloud.TerminateMachinesInput{
-			Filters: map[string][]string{
-				fmt.Sprintf("tag:%s", instanceTagGroupID): {
-					s.GroupID.String(),
-				},
-			},
+			Filters: filters,
 		},
 	}, nil
 }

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/aws/aws-sdk-go/service/ec2/ec2iface"
 	"github.com/stretchr/testify/suite"
+	subtapp "gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/application"
 	"gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/simulator/state"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/actions"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/cloud"
@@ -24,10 +25,24 @@ type removeInstancesTestSuite struct {
 	GroupID      simulations.GroupID
 	InitialState *state.StopSimulation
 	Store        actions.Store
+	Filters      map[string][]string
 }
 
 func TestRemoveInstances(t *testing.T) {
 	suite.Run(t, new(removeInstancesTestSuite))
+}
+
+func (s *removeInstancesTestSuite) SetupSuite() {
+	s.GroupID = "aaaa-bbbb-cccc-dddd"
+
+	s.Filters = make(map[string][]string)
+	tags := subtapp.GetTagsInstanceBase(s.GroupID)
+
+	for _, tag := range tags {
+		for k, v := range tag.Map {
+			s.Filters[fmt.Sprintf("tag:%s", k)] = []string{v}
+		}
+	}
 }
 
 func (s *removeInstancesTestSuite) SetupTest() {
@@ -39,8 +54,6 @@ func (s *removeInstancesTestSuite) SetupTest() {
 		Machines: s.Machines,
 	})
 
-	s.GroupID = "aaaa-bbbb-cccc-dddd"
-
 	s.InitialState = state.NewStopSimulation(s.Platform, nil, s.GroupID)
 
 	s.Store = actions.NewStore(s.InitialState)
@@ -48,11 +61,7 @@ func (s *removeInstancesTestSuite) SetupTest() {
 
 func (s *removeInstancesTestSuite) TestRemoveInstancesFails() {
 	s.Machines.On("Terminate", cloud.TerminateMachinesInput{
-		Filters: map[string][]string{
-			fmt.Sprintf("tag:%s", instanceTagGroupID): {
-				s.GroupID.String(),
-			},
-		},
+		Filters: s.Filters,
 	}).Return(errors.New("some test error"))
 
 	_, err := RemoveInstances.Run(s.Store, nil, nil, s.InitialState)
@@ -65,11 +74,7 @@ func (s *removeInstancesTestSuite) TestRemoveInstancesFails() {
 
 func (s *removeInstancesTestSuite) TestRemoveInstancesSuccess() {
 	s.Machines.On("Terminate", cloud.TerminateMachinesInput{
-		Filters: map[string][]string{
-			fmt.Sprintf("tag:%s", instanceTagGroupID): {
-				s.GroupID.String(),
-			},
-		},
+		Filters: s.Filters,
 	}).Return(error(nil))
 
 	_, err := RemoveInstances.Run(s.Store, nil, nil, s.InitialState)
