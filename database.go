@@ -4,7 +4,7 @@ package main
 import (
 	"context"
 	"github.com/jinzhu/gorm"
-	_ "github.com/jinzhu/gorm/dialects/sqlite"
+	_ "github.com/jinzhu/gorm/dialects/mysql"
 	sim "gitlab.com/ignitionrobotics/web/cloudsim/simulations"
 	"log"
 )

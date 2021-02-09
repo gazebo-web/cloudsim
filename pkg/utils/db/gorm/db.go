@@ -2,6 +2,7 @@ package gorm
 
 import (
 	"errors"
+	"fmt"
 	"github.com/jinzhu/gorm"
 	"gitlab.com/ignitionrobotics/web/ign-go"
 	"log"
@@ -53,7 +54,12 @@ func GetDBFromEnvVars() (*gorm.DB, error) {
 
 // GetTestDBFromEnvVars reads environment variables to return a Gorm database connection.
 func GetTestDBFromEnvVars() (*gorm.DB, error) {
-	db, err := gorm.Open("sqlite3", "file::memory:?cache=shared")
+	cfg, err := getDBConfigFromEnvVars()
+	if err != nil {
+		return nil, err
+	}
+	db, err := gorm.Open("mysql", fmt.Sprintf("%s:%s@tcp(%s)/%s?charset=utf8&parseTime=True&loc=UTC",
+		cfg.UserName, cfg.Password, cfg.Address, cfg.Name))
 	if err != nil {
 		return nil, err
 	}
