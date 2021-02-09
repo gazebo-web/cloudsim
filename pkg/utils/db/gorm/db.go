@@ -3,6 +3,7 @@ package gorm
 import (
 	"errors"
 	"github.com/jinzhu/gorm"
+	_ "github.com/jinzhu/gorm/dialects/sqlite"
 	"gitlab.com/ignitionrobotics/web/ign-go"
 	"log"
 )
@@ -53,21 +54,10 @@ func GetDBFromEnvVars() (*gorm.DB, error) {
 
 // GetTestDBFromEnvVars reads environment variables to return a Gorm database connection.
 func GetTestDBFromEnvVars() (*gorm.DB, error) {
-	// Get the db config
-	dbConfig, err := getDBConfigFromEnvVars()
+	db, err := gorm.Open("sqlite3", "file::memory:?cache=shared")
 	if err != nil {
 		return nil, err
 	}
-
-	// Add the test name suffix
-	dbConfig.Name += "_test"
-
-	// Connect to the db
-	db, err := ign.InitDbWithCfg(dbConfig)
-	if err != nil {
-		return nil, err
-	}
-
 	return db, nil
 }
 
