@@ -68,7 +68,7 @@ func sendSummaryEmail(store actions.Store, tx *gorm.DB, deployment *actions.Depl
 	}
 
 	// Send the email
-	err = s.Platform().EmailSender().Send(recipients, sender, "Simulation summary", "template.html", s.Summary)
+	err = s.Platform().EmailSender().Send(recipients, sender, "Simulation summary", "simulations/email-templates/simulation_summary.html", s.Summary)
 	if err != nil {
 		return nil, err
 	}
