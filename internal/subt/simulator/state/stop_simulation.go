@@ -12,8 +12,9 @@ type StopSimulation struct {
 	platform platform.Platform
 	services subtapp.Services
 	GroupID  simulations.GroupID
-	Score    float64
+	Score    *float64
 	Stats    simulations.Statistics
+	Summary  simulations.Summary
 	RunData  string
 }
 
