@@ -63,6 +63,7 @@ func run(logger ign.Logger) error {
 	routerConfig.ConfigureRouter("/1.0/simulations", simulationController.GetRoutes())
 
 	// Platform ---
+	// TODO: Initialize platform components.
 	logger.Debug("main: Initializing NPS cloudsim platform")
 	p := platform.NewPlatform(platform.Components{
 		Machines: nil,
