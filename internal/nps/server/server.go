@@ -71,19 +71,20 @@ func NewServer(cfg Config) Server {
 	return &s
 }
 
-// This could be moved somewhere else
+// queueHandler is in charge of getting the next element from the queue and passing it to the do function.
+// TODO: Move somewhere else
 func queueHandler(queue *ign.Queue, do func(ctx context.Context, gid simulations.GroupID) error, logger ign.Logger) {
 	for {
 		element, em := queue.DequeueOrWaitForNextElement()
 		if em != nil {
 			logger.Error("queue: failed to dequeue next element, error:", em.BaseError)
-			break
+			continue
 		}
 
 		gid, ok := element.(simulations.GroupID)
 		if !ok {
 			logger.Error("queue: invalid input data")
-			break
+			continue
 		}
 
 		ctx := context.Background()
@@ -93,7 +94,6 @@ func queueHandler(queue *ign.Queue, do func(ctx context.Context, gid simulations
 			logger.Error("queue: failed perform operation on the next element, error:", err)
 			logger.Debug("queue: pushing element into the queue:", gid)
 			queue.Enqueue(gid)
-			break
 		}
 	}
 }
