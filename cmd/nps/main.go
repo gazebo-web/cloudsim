@@ -1,11 +1,18 @@
 package main
 
 import (
+	"context"
+	npsapp "gitlab.com/ignitionrobotics/web/cloudsim/internal/nps/application"
 	"gitlab.com/ignitionrobotics/web/cloudsim/internal/nps/server"
 	"gitlab.com/ignitionrobotics/web/cloudsim/internal/nps/simulations"
 	"gitlab.com/ignitionrobotics/web/cloudsim/internal/nps/simulator"
 	gormrepo "gitlab.com/ignitionrobotics/web/cloudsim/internal/pkg/repositories/gorm"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/actions"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/application"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/platform"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/users"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/utils/db/gorm"
+	"gitlab.com/ignitionrobotics/web/fuelserver/permissions"
 	"gitlab.com/ignitionrobotics/web/ign-go"
 	"os"
 )
@@ -36,6 +43,18 @@ func run(logger ign.Logger) error {
 	simulationService := simulations.NewService(simulationRepository, startQueue, stopQueue, logger)
 	simulationController := simulations.NewController(simulationService)
 
+	// Users & Permissions ---
+	perm := &permissions.Permissions{}
+	err = perm.Init(db, "sysadmin")
+	if err != nil {
+		return err
+	}
+
+	userService, err := users.NewService(context.TODO(), perm, db, "sysadmin")
+	if err != nil {
+		return err
+	}
+
 	// Router ---
 	logger.Debug("main: Initializing router")
 	router := ign.NewRouter()
@@ -43,9 +62,28 @@ func run(logger ign.Logger) error {
 
 	routerConfig.ConfigureRouter("/1.0/simulations", simulationController.GetRoutes())
 
+	// Platform ---
+	logger.Debug("main: Initializing NPS cloudsim platform")
+	p := platform.NewPlatform(platform.Components{
+		Machines: nil,
+		Storage:  nil,
+		Cluster:  nil,
+		Store:    nil,
+		Secrets:  nil,
+	})
+
+	// Application services
+	base := application.NewServices(simulationService, userService)
+	services := npsapp.NewServices(base)
+
 	// Simulator ---
 	logger.Debug("main: Initializing NPS simulator")
-	sim := simulator.NewSimulatorNPS()
+	sim := simulator.NewSimulatorNPS(simulator.Config{
+		DB:                  db,
+		Platform:            p,
+		ApplicationServices: services,
+		ActionService:       actions.NewService(),
+	})
 
 	// API Server ---
 	logger.Debug("main: Initializing API server")

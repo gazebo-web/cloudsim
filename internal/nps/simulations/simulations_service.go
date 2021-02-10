@@ -8,6 +8,7 @@ import (
 )
 
 type Service interface {
+	simulations.Service
 	Start(ctx context.Context, request StartRequest) (*StartResponse, error)
 	Stop(ctx context.Context, request StopRequest) (*StopResponse, error)
 }
@@ -17,6 +18,30 @@ type service struct {
 	startQueue *ign.Queue
 	stopQueue  *ign.Queue
 	logger     ign.Logger
+}
+
+func (s *service) Get(groupID simulations.GroupID) (simulations.Simulation, error) {
+	panic("implement me")
+}
+
+func (s *service) Reject(groupID simulations.GroupID) (simulations.Simulation, error) {
+	panic("implement me")
+}
+
+func (s *service) GetParent(groupID simulations.GroupID) (simulations.Simulation, error) {
+	panic("implement me")
+}
+
+func (s *service) UpdateStatus(groupID simulations.GroupID, status simulations.Status) error {
+	panic("implement me")
+}
+
+func (s *service) Update(groupID simulations.GroupID, simulation simulations.Simulation) error {
+	panic("implement me")
+}
+
+func (s *service) GetRobots(groupID simulations.GroupID) ([]simulations.Robot, error) {
+	panic("implement me")
 }
 
 func (s *service) Start(ctx context.Context, request StartRequest) (*StartResponse, error) {
