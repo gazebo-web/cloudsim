@@ -34,12 +34,12 @@ func prepareRemoveNetworkPoliciesInput(store actions.Store, tx *gorm.DB, deploym
 	resources := make([]orchestrator.Resource, 0, 2*len(robots)+1)
 
 	for i := range robots {
-		robotID := subtapp.GetRobotID(i)
+		robotID := subtapp.GetRobotID(i + 1)
 		resources = append(resources, orchestrator.NewResource(subtapp.GetPodNameCommsBridge(s.GroupID, robotID), ns, nil))
 		resources = append(resources, orchestrator.NewResource(subtapp.GetPodNameFieldComputer(s.GroupID, robotID), ns, nil))
 	}
 
-	resources = append(resources, orchestrator.NewResource(subtapp.GetPodNameGazeboServerCopy(s.GroupID), ns, nil))
+	resources = append(resources, orchestrator.NewResource(subtapp.GetPodNameGazeboServer(s.GroupID), ns, nil))
 
 	return jobs.RemoveNetworkPoliciesInput(resources), nil
 }
