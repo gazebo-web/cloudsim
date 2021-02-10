@@ -35,21 +35,31 @@ func run(logger ign.Logger) error {
 	}
 
 	// Queue ---
+	logger.Debug("main: Initializing start simulation queue")
 	startQueue := ign.NewQueue()
+
+	logger.Debug("main: Initializing stop simulation queue")
 	stopQueue := ign.NewQueue()
 
 	// Simulations ---
+	logger.Debug("main: Initializing simulations repository")
 	simulationRepository := gormrepo.NewRepository(db, logger, &simulations.Simulation{})
+
+	logger.Debug("main: Initializing simulations service")
 	simulationService := simulations.NewService(simulationRepository, startQueue, stopQueue, logger)
+
+	logger.Debug("main: Initializing simulations controller")
 	simulationController := simulations.NewController(simulationService)
 
 	// Users & Permissions ---
+	logger.Debug("main: Initializing user permissions")
 	perm := &permissions.Permissions{}
 	err = perm.Init(db, "sysadmin")
 	if err != nil {
 		return err
 	}
 
+	logger.Debug("main: Initializing user service")
 	userService, err := users.NewService(context.TODO(), perm, db, "sysadmin")
 	if err != nil {
 		return err
@@ -60,6 +70,7 @@ func run(logger ign.Logger) error {
 	router := ign.NewRouter()
 	routerConfig := ign.NewRouterConfigurer(router, nil)
 
+	logger.Debug("main: Configuring simulation routes")
 	routerConfig.ConfigureRouter("/1.0/simulations", simulationController.GetRoutes())
 
 	// Platform ---
