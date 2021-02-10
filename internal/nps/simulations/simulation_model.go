@@ -6,7 +6,9 @@ import (
 	"time"
 )
 
-// Simulation: SimulationDeployment
+// Simulation represents the simulation that will be launched in the cloud.
+// A copy of this entity could be found in the following path:
+// simulations/models.go:15
 type Simulation struct {
 	gorm.Model
 
