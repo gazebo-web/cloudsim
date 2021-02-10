@@ -50,10 +50,12 @@ func run(logger ign.Logger) error {
 	// API Server ---
 	logger.Debug("main: Initializing API server")
 	s := server.NewServer(server.Config{
-		Router:    router,
-		DB:        db,
-		Logger:    logger,
-		Simulator: sim,
+		Router:     router,
+		DB:         db,
+		Logger:     logger,
+		Simulator:  sim,
+		StartQueue: startQueue,
+		StopQueue:  stopQueue,
 	})
 
 	// HTTP listener ---
