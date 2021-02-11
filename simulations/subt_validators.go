@@ -65,7 +65,7 @@ func loadSubTRobotTypes(cfg *subTSpecificsConfig) {
 			"X1 Config 1",
 			"X1",
 			"X1_SENSOR_CONFIG_1",
-			135,
+			270,
 		),
 		"X1_SENSOR_CONFIG_2": generateSubTRobotType(
 			cfg,
@@ -73,7 +73,7 @@ func loadSubTRobotTypes(cfg *subTSpecificsConfig) {
 			"X1 Config 2",
 			"X1",
 			"X1_SENSOR_CONFIG_2",
-			150,
+			300,
 		),
 		"X1_SENSOR_CONFIG_3": generateSubTRobotType(
 			cfg,
@@ -81,7 +81,7 @@ func loadSubTRobotTypes(cfg *subTSpecificsConfig) {
 			"X1 Config 3",
 			"X1",
 			"X1_SENSOR_CONFIG_3",
-			160,
+			320,
 		),
 		"X1_SENSOR_CONFIG_4": generateSubTRobotType(
 			cfg,
@@ -89,7 +89,7 @@ func loadSubTRobotTypes(cfg *subTSpecificsConfig) {
 			"X1 Config 4",
 			"X1",
 			"X1_SENSOR_CONFIG_4",
-			185,
+			370,
 		),
 		"X1_SENSOR_CONFIG_5": generateSubTRobotType(
 			cfg,
@@ -97,7 +97,7 @@ func loadSubTRobotTypes(cfg *subTSpecificsConfig) {
 			"X1 Config 5",
 			"X1",
 			"X1_SENSOR_CONFIG_5",
-			145,
+			290,
 		),
 		"X1_SENSOR_CONFIG_6": generateSubTRobotType(
 			cfg,
@@ -105,7 +105,7 @@ func loadSubTRobotTypes(cfg *subTSpecificsConfig) {
 			"X1 Config 6",
 			"X1",
 			"X1_SENSOR_CONFIG_6",
-			190,
+			380,
 		),
 		"X1_SENSOR_CONFIG_7": generateSubTRobotType(
 			cfg,
@@ -113,7 +113,7 @@ func loadSubTRobotTypes(cfg *subTSpecificsConfig) {
 			"X1 Config 7",
 			"X1",
 			"X1_SENSOR_CONFIG_7",
-			210,
+			420,
 		),
 		"X1_SENSOR_CONFIG_8": generateSubTRobotType(
 			cfg,
@@ -121,7 +121,7 @@ func loadSubTRobotTypes(cfg *subTSpecificsConfig) {
 			"X1 Config 8",
 			"X1",
 			"X1_SENSOR_CONFIG_8",
-			185,
+			370,
 		),
 		"EXPLORER_X1_SENSOR_CONFIG_1": generateSubTRobotType(
 			cfg,
@@ -145,7 +145,7 @@ func loadSubTRobotTypes(cfg *subTSpecificsConfig) {
 			"X2 Config 1",
 			"X2",
 			"X2_SENSOR_CONFIG_1",
-			75,
+			150,
 		),
 		"X2_SENSOR_CONFIG_2": generateSubTRobotType(
 			cfg,
@@ -153,7 +153,7 @@ func loadSubTRobotTypes(cfg *subTSpecificsConfig) {
 			"X2 Config 2",
 			"X2",
 			"X2_SENSOR_CONFIG_2",
-			80,
+			160,
 		),
 		"X2_SENSOR_CONFIG_3": generateSubTRobotType(
 			cfg,
@@ -161,7 +161,7 @@ func loadSubTRobotTypes(cfg *subTSpecificsConfig) {
 			"X2 Config 3",
 			"X2",
 			"X2_SENSOR_CONFIG_3",
-			85,
+			170,
 		),
 		"X2_SENSOR_CONFIG_4": generateSubTRobotType(
 			cfg,
@@ -169,7 +169,7 @@ func loadSubTRobotTypes(cfg *subTSpecificsConfig) {
 			"X2 Config 4",
 			"X2",
 			"X2_SENSOR_CONFIG_4",
-			90,
+			180,
 		),
 		"X2_SENSOR_CONFIG_5": generateSubTRobotType(
 			cfg,
@@ -177,7 +177,7 @@ func loadSubTRobotTypes(cfg *subTSpecificsConfig) {
 			"X2 Config 5",
 			"X2",
 			"X2_SENSOR_CONFIG_5",
-			85,
+			170,
 		),
 		"X2_SENSOR_CONFIG_6": generateSubTRobotType(
 			cfg,
@@ -185,7 +185,7 @@ func loadSubTRobotTypes(cfg *subTSpecificsConfig) {
 			"X2 Config 6",
 			"X2",
 			"X2_SENSOR_CONFIG_6",
-			125,
+			250,
 		),
 		"X2_SENSOR_CONFIG_7": generateSubTRobotType(
 			cfg,
@@ -193,7 +193,7 @@ func loadSubTRobotTypes(cfg *subTSpecificsConfig) {
 			"X2 Config 7",
 			"X2",
 			"X2_SENSOR_CONFIG_7",
-			130,
+			260,
 		),
 		"X2_SENSOR_CONFIG_8": generateSubTRobotType(
 			cfg,
@@ -201,7 +201,7 @@ func loadSubTRobotTypes(cfg *subTSpecificsConfig) {
 			"X2 Config 8",
 			"X2",
 			"X2_SENSOR_CONFIG_8",
-			135,
+			275,
 		),
 		"X2_SENSOR_CONFIG_9": generateSubTRobotType(
 			cfg,
@@ -209,7 +209,7 @@ func loadSubTRobotTypes(cfg *subTSpecificsConfig) {
 			"X2 Config 9",
 			"X2",
 			"X2_SENSOR_CONFIG_9",
-			100,
+			205,
 		),
 		"ROBOTIKA_X2_SENSOR_CONFIG_1": generateSubTRobotType(
 			cfg,
@@ -241,7 +241,7 @@ func loadSubTRobotTypes(cfg *subTSpecificsConfig) {
 			"X3 UAV Config 1",
 			"X3",
 			"X3_SENSOR_CONFIG_1",
-			40,
+			80,
 		),
 		"X3_SENSOR_CONFIG_2": generateSubTRobotType(
 			cfg,
@@ -249,7 +249,7 @@ func loadSubTRobotTypes(cfg *subTSpecificsConfig) {
 			"X3 UAV Config 2",
 			"X3",
 			"X3_SENSOR_CONFIG_2",
-			45,
+			90,
 		),
 		"X3_SENSOR_CONFIG_3": generateSubTRobotType(
 			cfg,
@@ -257,7 +257,7 @@ func loadSubTRobotTypes(cfg *subTSpecificsConfig) {
 			"X3 UAV Config 3",
 			"X3",
 			"X3_SENSOR_CONFIG_3",
-			45,
+			90,
 		),
 		"X3_SENSOR_CONFIG_4": generateSubTRobotType(
 			cfg,
@@ -265,7 +265,7 @@ func loadSubTRobotTypes(cfg *subTSpecificsConfig) {
 			"X3 UAV Config 4",
 			"X3",
 			"X3_SENSOR_CONFIG_4",
-			50,
+			100,
 		),
 		"X3_SENSOR_CONFIG_5": generateSubTRobotType(
 			cfg,
@@ -273,7 +273,7 @@ func loadSubTRobotTypes(cfg *subTSpecificsConfig) {
 			"X3 UAV Config 5",
 			"X3",
 			"X3_SENSOR_CONFIG_5",
-			55,
+			110,
 		),
 		"X4_SENSOR_CONFIG_1": generateSubTRobotType(
 			cfg,
@@ -281,7 +281,7 @@ func loadSubTRobotTypes(cfg *subTSpecificsConfig) {
 			"X4 UAV Config 1",
 			"X4",
 			"X4_SENSOR_CONFIG_1",
-			65,
+			130,
 		),
 		"X4_SENSOR_CONFIG_2": generateSubTRobotType(
 			cfg,
@@ -289,7 +289,7 @@ func loadSubTRobotTypes(cfg *subTSpecificsConfig) {
 			"X4 UAV Config 2",
 			"X4",
 			"X4_SENSOR_CONFIG_2",
-			65,
+			130,
 		),
 		"X4_SENSOR_CONFIG_3": generateSubTRobotType(
 			cfg,
@@ -297,7 +297,7 @@ func loadSubTRobotTypes(cfg *subTSpecificsConfig) {
 			"X4 UAV Config 3",
 			"X4",
 			"X4_SENSOR_CONFIG_3",
-			65,
+			130,
 		),
 		"X4_SENSOR_CONFIG_4": generateSubTRobotType(
 			cfg,
@@ -305,7 +305,7 @@ func loadSubTRobotTypes(cfg *subTSpecificsConfig) {
 			"X4 UAV Config 4",
 			"X4",
 			"X4_SENSOR_CONFIG_4",
-			80,
+			160,
 		),
 		"X4_SENSOR_CONFIG_5": generateSubTRobotType(
 			cfg,
@@ -313,7 +313,7 @@ func loadSubTRobotTypes(cfg *subTSpecificsConfig) {
 			"X4 UAV Config 5",
 			"X4",
 			"X4_SENSOR_CONFIG_5",
-			75,
+			150,
 		),
 		"X4_SENSOR_CONFIG_6": generateSubTRobotType(
 			cfg,
@@ -321,7 +321,7 @@ func loadSubTRobotTypes(cfg *subTSpecificsConfig) {
 			"X4 UAV Config 6",
 			"X4",
 			"X4_SENSOR_CONFIG_6",
-			70,
+			140,
 		),
 		"SOPHISTICATED_ENGINEERING_X4_SENSOR_CONFIG_1": generateSubTRobotType(
 			cfg,
@@ -562,6 +562,46 @@ func loadSubTRobotTypes(cfg *subTSpecificsConfig) {
 			"SHAFTER",
 			"COSTAR_SHAFTER_SENSOR_CONFIG_1",
 			110,
+		),
+		"MARBLE_HD2_SENSOR_CONFIG_3": generateSubTRobotType(
+			cfg,
+			"openrobotics",
+			"MARBLE_HD2_SENSOR_CONFIG_3",
+			"HD2",
+			"MARBLE_HD2_SENSOR_CONFIG_3",
+			165,
+		),
+		"MARBLE_HD2_SENSOR_CONFIG_4": generateSubTRobotType(
+			cfg,
+			"openrobotics",
+			"MARBLE_HD2_SENSOR_CONFIG_4",
+			"HD2",
+			"MARBLE_HD2_SENSOR_CONFIG_4",
+			190,
+		),
+		"MARBLE_HUSKY_SENSOR_CONFIG_3": generateSubTRobotType(
+			cfg,
+			"openrobotics",
+			"MARBLE_HUSKY_SENSOR_CONFIG_3",
+			"HD2",
+			"MARBLE_HUSKY_SENSOR_CONFIG_3",
+			230,
+		),
+		"MARBLE_HUSKY_SENSOR_CONFIG_4": generateSubTRobotType(
+			cfg,
+			"openrobotics",
+			"MARBLE_HUSKY_SENSOR_CONFIG_4",
+			"HD2",
+			"MARBLE_HUSKY_SENSOR_CONFIG_4",
+			255,
+		),
+		"CERBERUS_M100_SENSOR_CONFIG_2": generateSubTRobotType(
+			cfg,
+			"openrobotics",
+			"CERBERUS_M100_SENSOR_CONFIG_2",
+			"M100",
+			"CERBERUS_M100_SENSOR_CONFIG_2",
+			105,
 		),
 	}
 }

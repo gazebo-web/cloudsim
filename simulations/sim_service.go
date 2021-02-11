@@ -9,11 +9,11 @@ import (
 	"github.com/pkg/errors"
 	"github.com/satori/go.uuid"
 	"gitlab.com/ignitionrobotics/web/cloudsim/globals"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/transport"
+	ignws "gitlab.com/ignitionrobotics/web/cloudsim/pkg/transport/ign"
+	useracc "gitlab.com/ignitionrobotics/web/cloudsim/pkg/users"
 	"gitlab.com/ignitionrobotics/web/cloudsim/queues"
 	"gitlab.com/ignitionrobotics/web/cloudsim/simulations/gloo"
-	"gitlab.com/ignitionrobotics/web/cloudsim/transport"
-	ignws "gitlab.com/ignitionrobotics/web/cloudsim/transport/ign"
-	useracc "gitlab.com/ignitionrobotics/web/cloudsim/users"
 	"gitlab.com/ignitionrobotics/web/fuelserver/bundles/users"
 	per "gitlab.com/ignitionrobotics/web/fuelserver/permissions"
 	"gitlab.com/ignitionrobotics/web/ign-go"
@@ -74,7 +74,7 @@ type SimService interface {
 		groupID string, user *users.User) (interface{}, *ign.ErrMsg)
 	SimulationDeploymentList(ctx context.Context, p *ign.PaginationRequest, tx *gorm.DB, byStatus *DeploymentStatus,
 		invertStatus bool, byErrStatus *ErrorStatus, invertErrStatus bool, byCircuit *string, user *users.User,
-		application *string, includeChildren bool) (*SimulationDeployments, *ign.PaginationResult, *ign.ErrMsg)
+		application *string, includeChildren bool, owner *string, private *bool) (*SimulationDeployments, *ign.PaginationResult, *ign.ErrMsg)
 	StartSimulationAsync(ctx context.Context, tx *gorm.DB, createSim *CreateSimulation,
 		user *users.User) (interface{}, *ign.ErrMsg)
 	LaunchSimulationAsync(ctx context.Context, tx *gorm.DB, groupID string,
@@ -1014,8 +1014,6 @@ func (s *Service) StartSimulationAsync(ctx context.Context,
 		}
 	}
 
-
-
 	// Set read and write permissions to owner (eg, the team) and to the Application
 	// organizing team (eg. subt).
 	if em := s.bulkAddPermissions(groupID, []per.Action{per.Read, per.Write}, owner, *simDep.Application); em != nil {
@@ -1954,7 +1952,7 @@ func (s *Service) getGazeboWorldWarmupTopic(ctx context.Context, tx *gorm.DB, de
 func (s *Service) SimulationDeploymentList(ctx context.Context, p *ign.PaginationRequest,
 	tx *gorm.DB, byStatus *DeploymentStatus, invertStatus bool,
 	byErrStatus *ErrorStatus, invertErrStatus bool, byCircuit *string, user *users.User,
-	application *string, includeChildren bool) (*SimulationDeployments, *ign.PaginationResult, *ign.ErrMsg) {
+	application *string, includeChildren bool, owner *string, private *bool) (*SimulationDeployments, *ign.PaginationResult, *ign.ErrMsg) {
 
 	// Create the DB query
 	var sims SimulationDeployments
@@ -1973,9 +1971,13 @@ func (s *Service) SimulationDeploymentList(ctx context.Context, p *ign.Paginatio
 	}
 
 	// Restrict including children to application and system admins
-	if ok, _ := s.userAccessor.CanPerformWithRole(application, *user.Username, per.Admin); !ok {
-		// Regardless of the value passed as argument, we set it to False if the requestor
-		// is neither an application or system admin.
+	if user != nil {
+		if ok, _ := s.userAccessor.CanPerformWithRole(application, *user.Username, per.Admin); !ok {
+			// Regardless of the value passed as argument, we set it to False if the requestor
+			// is neither an application or system admin.
+			includeChildren = false
+		}
+	} else {
 		includeChildren = false
 	}
 
@@ -2010,9 +2012,24 @@ func (s *Service) SimulationDeploymentList(ctx context.Context, p *ign.Paginatio
 
 	// If user belongs to the application's main Org, then he can see all simulations.
 	// Otherwise, only those simulations created by the user's team.
-	if ok, _ := s.userAccessor.CanPerformWithRole(application, *user.Username, per.Member); !ok {
-		// filter resources based on privacy setting
-		q = s.userAccessor.QueryForResourceVisibility(q, nil, user)
+	// If there is no user, only public ones.
+	if user != nil {
+		if ok, _ := s.userAccessor.CanPerformWithRole(application, *user.Username, per.Member); !ok {
+			// filter resources based on privacy setting
+			q = s.userAccessor.QueryForResourceVisibility(q, nil, user)
+		}
+	} else {
+		q = s.userAccessor.QueryForResourceVisibility(q, nil, nil)
+	}
+
+	// Filter by owner if present
+	if owner != nil {
+		q = q.Where("owner = ?", *owner)
+	}
+
+	// Filter by privacy if present
+	if private != nil {
+		q = q.Where("private = ?", *private)
 	}
 
 	pagination, err := ign.PaginateQuery(q, &sims, *p)
@@ -2033,17 +2050,17 @@ func (s *Service) SimulationDeploymentList(ctx context.Context, p *ign.Paginatio
 func (s *Service) GetSimulationDeployment(ctx context.Context, tx *gorm.DB,
 	groupID string, user *users.User) (interface{}, *ign.ErrMsg) {
 
-	// make sure the user has the correct permissions
-	if ok, em := s.userAccessor.IsAuthorizedForResource(*user.Username, groupID, per.Read); !ok {
-		return nil, em
-	}
-
 	var dep *SimulationDeployment
 	var err error
 
 	dep, err = GetSimulationDeployment(tx, groupID)
 	if err != nil {
 		return nil, ign.NewErrorMessageWithBase(ign.ErrorSimGroupNotFound, err)
+	}
+
+	// Check for user permissions if the simulation is private.
+	if err := s.VerifyPermissionOverPrivateSimulation(user, dep); err != nil {
+		return nil, err
 	}
 
 	var extra *ExtraInfoSubT
@@ -2053,7 +2070,11 @@ func (s *Service) GetSimulationDeployment(ctx context.Context, tx *gorm.DB,
 	}
 
 	// If the user is not a system admin, remove the RunIndex and WorldIndex fields.
-	if ok := s.userAccessor.IsSystemAdmin(*user.Username); !ok {
+	ok := false
+	if user != nil {
+		ok = s.userAccessor.IsSystemAdmin(*user.Username)
+	}
+	if !ok || user == nil {
 		extra.RunIndex = nil
 		extra.WorldIndex = nil
 	}
@@ -2079,22 +2100,22 @@ func (s *Service) GetSimulationWebsocketAddress(ctx context.Context, tx *gorm.DB
 		return nil, ign.NewErrorMessageWithBase(ign.ErrorSimGroupNotFound, err)
 	}
 
-	// Check that the requesting user has the correct permissions
-	username := *user.Username
+	// Check for user permissions if the simulation is private.
+	if err := s.VerifyPermissionOverPrivateSimulation(user, dep); err != nil {
+		return nil, err
+	}
+
 	// Parent simulations are not valid as they do not run simulations directly
 	if dep.isMultiSimParent() {
 		return nil, ign.NewErrorMessage(ign.ErrorInvalidSimulationStatus)
 	}
+
 	// Multisim child simulations can only be accessed by admins
-	if dep.isMultiSimChild() && !s.userAccessor.IsSystemAdmin(username) {
+	if dep.isMultiSimChild() && (user == nil || !s.userAccessor.IsSystemAdmin(*user.Username)) {
 		return nil, ign.NewErrorMessage(ign.ErrorUnauthorized)
 	}
-	// Check access permissions
-	if ok, em := s.userAccessor.IsAuthorizedForResource(username, groupID, per.Read); !ok {
-		return nil, em
-	}
 
-	// Find the specific Application handler and ask for the live logs
+	// Find the specific Application handler and ask for the websocket address
 	return s.applications[*dep.Application].getSimulationWebsocketAddress(ctx, s, tx, dep)
 }
 
@@ -2205,6 +2226,32 @@ func (s *Service) getRunningSimulationDeploymentsByOwner(tx *gorm.DB, owner stri
 // GetCompetitionRobots returns the list of available robot configurations for a competition.
 func (s *Service) GetCompetitionRobots(applicationName string) (interface{}, *ign.ErrMsg) {
 	return s.applications[applicationName].getCompetitionRobots()
+}
+
+// ///////////////////////////////////////////////////////////////////////
+// ///////////////////////////////////////////////////////////////////////
+
+// VerifyPermissionOverPrivateSimulation Checks if the given user has permissions over a private simulation.
+func (s *Service) VerifyPermissionOverPrivateSimulation(user *users.User, dep *SimulationDeployment) *ign.ErrMsg {
+	// Sanity check. Make sure the simulation deployment exists.
+	if dep == nil {
+		return ign.NewErrorMessage(ign.ErrorSimGroupNotFound)
+	}
+
+	// Private Simulation. Check if user has permission over it.
+	if dep.Private != nil && *dep.Private == true {
+		// Anonymous users have no permission over private simulations.
+		if user == nil {
+			return ign.NewErrorMessage(ign.ErrorUnauthorized)
+		}
+
+		// Make sure the user has the correct permissions
+		if ok, em := s.userAccessor.IsAuthorizedForResource(*user.Username, *dep.GroupID, per.Read); !ok {
+			return em
+		}
+	}
+
+	return nil
 }
 
 // ///////////////////////////////////////////////////////////////////////
