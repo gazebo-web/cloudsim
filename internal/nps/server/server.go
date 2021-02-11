@@ -14,7 +14,7 @@ type RoutesGetter interface {
 	GetRoutes() ign.Routes
 }
 
-// Server is an HTTP server that exposes an API Rest when calling ListenAndServe in the given address.
+// Server is an HTTP server that exposes a REST API when calling ListenAndServe in the given address.
 type Server interface {
 	// ListenAndServe serves the HTTP server in the given address.
 	// This operation should be called after initializing all the components.
