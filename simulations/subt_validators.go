@@ -603,6 +603,38 @@ func loadSubTRobotTypes(cfg *subTSpecificsConfig) {
 			"CERBERUS_M100_SENSOR_CONFIG_2",
 			105,
 		),
+		"EXPLORER_R3_SENSOR_CONFIG_1": generateSubTRobotType(
+			cfg,
+			"openrobotics",
+			"EXPLORER_R3_SENSOR_CONFIG_1",
+			"R3",
+			"EXPLORER_R3_SENSOR_CONFIG_1",
+			235,
+		),
+		"EXPLORER_R3_SENSOR_CONFIG_2": generateSubTRobotType(
+			cfg,
+			"openrobotics",
+			"EXPLORER_R3_SENSOR_CONFIG_2",
+			"R3",
+			"EXPLORER_R3_SENSOR_CONFIG_2",
+			260,
+		),
+		"CSIRO_DATA61_DTR_SENSOR_CONFIG_1": generateSubTRobotType(
+			cfg,
+			"openrobotics",
+			"CSIRO_DATA61_DTR_SENSOR_CONFIG_1",
+			"DTR",
+			"CSIRO_DATA61_DTR_SENSOR_CONFIG_1",
+			135,
+		),
+		"CSIRO_DATA61_DTR_SENSOR_CONFIG_2": generateSubTRobotType(
+			cfg,
+			"openrobotics",
+			"CSIRO_DATA61_DTR_SENSOR_CONFIG_2",
+			"DTR",
+			"CSIRO_DATA61_DTR_SENSOR_CONFIG_2",
+			160,
+		),
 	}
 }
 
