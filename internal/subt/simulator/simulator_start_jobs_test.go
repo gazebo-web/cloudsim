@@ -30,7 +30,7 @@ func TestStartSimulationAction(t *testing.T) {
 	db, err := gorm.GetTestDBFromEnvVars()
 	require.NoError(t, err)
 
-	// Initializer logger
+	// Initialize logger
 	logger := ign.NewLoggerNoRollbar("Cloudsim", ign.VerbosityDebug)
 
 	// Initializer platform components
