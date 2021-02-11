@@ -5,11 +5,16 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/jinzhu/gorm"
+	subtsim "gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/simulations"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
 	"gitlab.com/ignitionrobotics/web/ign-go"
 	"strconv"
 	"strings"
 	"time"
 )
+
+// Force SimulationDeployment to implement simulations.Simulation interface.
+var _ subtsim.Simulation = (*SimulationDeployment)(nil)
 
 // SimulationDeployment represents a cloudsim simulation .
 type SimulationDeployment struct {
@@ -81,6 +86,62 @@ type SimulationDeployment struct {
 	AuthorizationToken *string `json:"-"`
 	// Score has the simulation's score. It's updated when the simulations finishes and gets processed.
 	Score *float64 `json:"score,omitempty"`
+}
+
+func (dep *SimulationDeployment) GetGroupID() simulations.GroupID {
+	return simulations.GroupID(*dep.GroupID)
+}
+
+func (dep *SimulationDeployment) GetStatus() simulations.Status {
+	switch dep.DeploymentStatus {
+	// TODO: Add statuses
+	default:
+		return simulations.StatusUnknown
+	}
+}
+
+func (dep *SimulationDeployment) HasStatus(status simulations.Status) bool {
+	return dep.GetStatus() == status
+}
+
+func (dep *SimulationDeployment) SetStatus(status simulations.Status) {
+	dep.setStatus(status)
+}
+
+func (dep *SimulationDeployment) GetKind() simulations.Kind {
+	panic("implement me")
+}
+
+func (dep *SimulationDeployment) IsKind(kind simulations.Kind) bool {
+	panic("implement me")
+}
+
+func (dep *SimulationDeployment) GetError() *simulations.Error {
+	panic("implement me")
+}
+
+func (dep *SimulationDeployment) GetImage() string {
+	panic("implement me")
+}
+
+func (dep *SimulationDeployment) GetValidFor() time.Duration {
+	panic("implement me")
+}
+
+func (dep *SimulationDeployment) GetTrack() string {
+	panic("implement me")
+}
+
+func (dep *SimulationDeployment) GetToken() *string {
+	panic("implement me")
+}
+
+func (dep *SimulationDeployment) GetRobots() []simulations.Robot {
+	panic("implement me")
+}
+
+func (dep *SimulationDeployment) GetMarsupials() []simulations.Marsupial {
+	panic("implement me")
 }
 
 // NewSimulationDeployment creates and initializes a simulation deployment struct.
@@ -463,6 +524,19 @@ func (dep *SimulationDeployment) MarkAsMultiSimChild(tx *gorm.DB, parent *Simula
 		return ign.NewErrorMessageWithBase(ign.ErrorDbSave, err)
 	}
 	return nil
+}
+
+func (dep *SimulationDeployment) setStatus(status simulations.Status) {
+	dep.DeploymentStatus = convertStatus(status)
+}
+
+func convertStatus(status simulations.Status) *int {
+	switch status {
+	case simulations.StatusPending:
+		return simPending.ToPtr()
+	default:
+		return simPending.ToPtr()
+	}
 }
 
 // SimulationDeployments is a slice of SimulationDeployment

@@ -66,6 +66,9 @@ var (
 
 	// StatusProcessingResults is used when a simulation's score and stats are being extracted from a gazebo server.
 	StatusProcessingResults Status = "processing-results"
+
+	// StatusUnknown is used to represent an unknown status.
+	StatusUnknown Status = "unknown"
 )
 
 // Kind is used to identify if a Simulation is a single simulation or a multisim.

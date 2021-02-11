@@ -18,6 +18,7 @@ import (
 	gatewayv1 "github.com/solo-io/gloo/projects/gateway/pkg/api/v1/kube/apis/gateway.solo.io/v1"
 	"github.com/solo-io/gloo/projects/gloo/pkg/api/v1/core/matchers"
 	"gitlab.com/ignitionrobotics/web/cloudsim/globals"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
 	useracc "gitlab.com/ignitionrobotics/web/cloudsim/pkg/users"
 	"gitlab.com/ignitionrobotics/web/cloudsim/simulations/gloo"
 	"gitlab.com/ignitionrobotics/web/fuelserver/bundles/users"
@@ -183,6 +184,8 @@ type subTSpecificsConfig struct {
 	WebsocketHost string `env:"SUBT_WEBSOCKET_HOST"`
 }
 
+var _ ApplicationType = (*SubTApplication)(nil)
+
 // SubTApplication represents an application used to tailor SubT simulation requests.
 type SubTApplication struct {
 	cfg subTSpecificsConfig
@@ -196,6 +199,30 @@ type SubTApplication struct {
 	// s3 clients are safe to use concurrently.
 	s3Svc            s3iface.S3API
 	schedulableTasks []SchedulableTask
+}
+
+func (sa *SubTApplication) Get(groupID simulations.GroupID) (simulations.Simulation, error) {
+	panic("implement me")
+}
+
+func (sa *SubTApplication) Reject(groupID simulations.GroupID) (simulations.Simulation, error) {
+	panic("implement me")
+}
+
+func (sa *SubTApplication) GetParent(groupID simulations.GroupID) (simulations.Simulation, error) {
+	panic("implement me")
+}
+
+func (sa *SubTApplication) UpdateStatus(groupID simulations.GroupID, status simulations.Status) error {
+	panic("implement me")
+}
+
+func (sa *SubTApplication) Update(groupID simulations.GroupID, simulation simulations.Simulation) error {
+	panic("implement me")
+}
+
+func (sa *SubTApplication) GetRobots(groupID simulations.GroupID) ([]simulations.Robot, error) {
+	panic("implement me")
 }
 
 // SimulationStatistics contains the summary values of a simulation run.
