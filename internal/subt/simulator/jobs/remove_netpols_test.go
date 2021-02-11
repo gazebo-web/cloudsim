@@ -42,13 +42,13 @@ func TestRemoveNetPols(t *testing.T) {
 		},
 		&networkingv1.NetworkPolicy{
 			ObjectMeta: metav1.ObjectMeta{
-				Name:      subtapp.GetPodNameFieldComputer(gid, subtapp.GetRobotID(1)),
+				Name:      subtapp.GetPodNameFieldComputer(gid, subtapp.GetRobotID(0)),
 				Namespace: "default",
 			},
 		},
 		&networkingv1.NetworkPolicy{
 			ObjectMeta: metav1.ObjectMeta{
-				Name:      subtapp.GetPodNameCommsBridge(gid, subtapp.GetRobotID(1)),
+				Name:      subtapp.GetPodNameCommsBridge(gid, subtapp.GetRobotID(0)),
 				Namespace: "default",
 			},
 		},

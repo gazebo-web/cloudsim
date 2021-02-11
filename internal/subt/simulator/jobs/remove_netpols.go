@@ -34,7 +34,7 @@ func prepareRemoveNetworkPoliciesInput(store actions.Store, tx *gorm.DB, deploym
 	resources := make([]orchestrator.Resource, 0, 2*len(robots)+1)
 
 	for i := range robots {
-		robotID := subtapp.GetRobotID(i + 1)
+		robotID := subtapp.GetRobotID(i)
 		resources = append(resources, orchestrator.NewResource(subtapp.GetPodNameCommsBridge(s.GroupID, robotID), ns, nil))
 		resources = append(resources, orchestrator.NewResource(subtapp.GetPodNameFieldComputer(s.GroupID, robotID), ns, nil))
 	}
