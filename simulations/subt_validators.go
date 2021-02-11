@@ -129,7 +129,7 @@ func loadSubTRobotTypes(cfg *subTSpecificsConfig) {
 			"EXPLORER_X1_SENSOR_CONFIG_1",
 			"X1",
 			"EXPLORER_X1_SENSOR_CONFIG_1",
-			195,
+			390,
 		),
 		"EXPLORER_X1_SENSOR_CONFIG_2": generateSubTRobotType(
 			cfg,
@@ -137,7 +137,7 @@ func loadSubTRobotTypes(cfg *subTSpecificsConfig) {
 			"EXPLORER_X1_SENSOR_CONFIG_2",
 			"X1",
 			"EXPLORER_X1_SENSOR_CONFIG_2",
-			220,
+			440,
 		),
 		"X2_SENSOR_CONFIG_1": generateSubTRobotType(
 			cfg,
@@ -217,7 +217,7 @@ func loadSubTRobotTypes(cfg *subTSpecificsConfig) {
 			"ROBOTIKA_X2_SENSOR_CONFIG_1",
 			"X2",
 			"ROBOTIKA_X2_SENSOR_CONFIG_1",
-			95,
+			190,
 		),
 		"SOPHISTICATED_ENGINEERING_X2_SENSOR_CONFIG_1": generateSubTRobotType(
 			cfg,
@@ -225,7 +225,7 @@ func loadSubTRobotTypes(cfg *subTSpecificsConfig) {
 			"SOPHISTICATED_ENGINEERING_X2_SENSOR_CONFIG_1",
 			"X2",
 			"SOPHISTICATED_ENGINEERING_X2_SENSOR_CONFIG_1",
-			90,
+			180,
 		),
 		"SSCI_X2_SENSOR_CONFIG_1": generateSubTRobotType(
 			cfg,
@@ -233,7 +233,7 @@ func loadSubTRobotTypes(cfg *subTSpecificsConfig) {
 			"SSCI_X2_SENSOR_CONFIG_1",
 			"X2",
 			"SSCI_X2_SENSOR_CONFIG_1",
-			115,
+			230,
 		),
 		"X3_SENSOR_CONFIG_1": generateSubTRobotType(
 			cfg,
@@ -329,7 +329,7 @@ func loadSubTRobotTypes(cfg *subTSpecificsConfig) {
 			"SOPHISTICATED_ENGINEERING_X4_SENSOR_CONFIG_1",
 			"X4",
 			"SOPHISTICATED_ENGINEERING_X4_SENSOR_CONFIG_1",
-			80,
+			160,
 		),
 		"SSCI_X4_SENSOR_CONFIG_1": generateSubTRobotType(
 			cfg,
@@ -337,7 +337,7 @@ func loadSubTRobotTypes(cfg *subTSpecificsConfig) {
 			"SSCI_X4_SENSOR_CONFIG_1",
 			"X4",
 			"SSCI_X4_SENSOR_CONFIG_1",
-			100,
+			200,
 		),
 		"SSCI_X4_SENSOR_CONFIG_2": generateSubTRobotType(
 			cfg,
@@ -345,7 +345,7 @@ func loadSubTRobotTypes(cfg *subTSpecificsConfig) {
 			"SSCI_X4_SENSOR_CONFIG_2",
 			"X4",
 			"SSCI_X4_SENSOR_CONFIG_2",
-			90,
+			185,
 		),
 		"COSTAR_HUSKY_SENSOR_CONFIG_1": generateSubTRobotType(
 			cfg,
