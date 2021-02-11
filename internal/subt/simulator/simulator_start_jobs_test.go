@@ -33,7 +33,7 @@ func TestStartSimulationAction(t *testing.T) {
 	// Initialize logger
 	logger := ign.NewLoggerNoRollbar("Cloudsim", ign.VerbosityDebug)
 
-	// Initializer platform components
+	// Initialize platform components
 	c := platform.Components{
 		Machines: nil,
 		Storage:  nil,
