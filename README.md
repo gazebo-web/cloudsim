@@ -276,8 +276,11 @@ export IGN_ROLLBAR_ROOT=
 
 # EC2 Machines
 export IGN_EC2_AVAILABILITY_ZONES=us-east-1a
-export IGN_EC2_SUBNETS=subnet-0e632d68a9032ab9d
 export IGN_EC2_MACHINES_LIMIT=-1
+# All of the following variables should be updated to match the corresponding ids in your AWS account
+export IGN_EC2_AMI=ami-08861f7e7b409ed0c
+export IGN_EC2_SECURITY_GROUPS=sg-0c5c791266694a3ca
+export IGN_EC2_SUBNETS=subnet-0e632d68a9032ab9d
 
 # Configure AWS access
 export AWS_ACCOUNT=your account id (eg. used by AWS ECR)
