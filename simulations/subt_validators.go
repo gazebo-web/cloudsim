@@ -563,6 +563,46 @@ func loadSubTRobotTypes(cfg *subTSpecificsConfig) {
 			"COSTAR_SHAFTER_SENSOR_CONFIG_1",
 			110,
 		),
+		"MARBLE_HD2_SENSOR_CONFIG_3": generateSubTRobotType(
+			cfg,
+			"openrobotics",
+			"MARBLE_HD2_SENSOR_CONFIG_3",
+			"HD2",
+			"MARBLE_HD2_SENSOR_CONFIG_3",
+			165,
+		),
+		"MARBLE_HD2_SENSOR_CONFIG_4": generateSubTRobotType(
+			cfg,
+			"openrobotics",
+			"MARBLE_HD2_SENSOR_CONFIG_4",
+			"HD2",
+			"MARBLE_HD2_SENSOR_CONFIG_4",
+			190,
+		),
+		"MARBLE_HUSKY_SENSOR_CONFIG_3": generateSubTRobotType(
+			cfg,
+			"openrobotics",
+			"MARBLE_HUSKY_SENSOR_CONFIG_3",
+			"HD2",
+			"MARBLE_HUSKY_SENSOR_CONFIG_3",
+			230,
+		),
+		"MARBLE_HUSKY_SENSOR_CONFIG_4": generateSubTRobotType(
+			cfg,
+			"openrobotics",
+			"MARBLE_HUSKY_SENSOR_CONFIG_4",
+			"HD2",
+			"MARBLE_HUSKY_SENSOR_CONFIG_4",
+			255,
+		),
+		"CERBERUS_M100_SENSOR_CONFIG_2": generateSubTRobotType(
+			cfg,
+			"openrobotics",
+			"CERBERUS_M100_SENSOR_CONFIG_2",
+			"M100",
+			"CERBERUS_M100_SENSOR_CONFIG_2",
+			105,
+		),
 	}
 }
 
