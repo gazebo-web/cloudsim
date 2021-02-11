@@ -10,7 +10,7 @@ var (
 // Selector is used to uniquely identify a Platform.
 type Selector string
 
-// Set contains a set of platforms that can be used by Cloudsim.
+// Manager manages a set of platforms that can be used by Cloudsim.
 // Implementations must be simple platform containers and must not be aware of the feature sets, differences (if any) or
 // implementation details of the available platforms they contain. This is by design, in order to give applications the
 // flexibility to manage sets of platforms as they see fit.
@@ -19,22 +19,22 @@ type Selector string
 // service regions. At the same time, it is possible to have additional platforms making use of entirely different
 // components (e.g. GCP+Mesos, Azure+Swarm) co-exist with the set of AWS+Kubernetes platforms.
 // Every platform is uniquely identified by a Selector, a user-defined identifier. To make use of a specific platform,
-// the target platform's Selector is passed to the Set implementation through the Platform method.
+// the target platform's Selector is passed to the Manager implementation through the Platform method.
 // An example of a selector set:
 //   * aws_k8s_us_east_1 - Platform containing AWS and Kubernetes components pointed at us-east-1.
 //   * aws_k8s_us_east_2 - Platform containing AWS and Kubernetes components pointed at us-east-2.
 //   * gcp_mesos - Platform containing GCE and Apache Mesos components.
 //   * azure_swarm - Platform containing Azure and Docker Swarm components.
-type Set interface {
+type Manager interface {
 	// Selectors returns a slice with all the available platform selectors.
 	Selectors() []Selector
-	// Set returns a slice with all the available Map.
+	// Platforms returns a slice with all the available platforms.
 	Platforms() []Platform
-	// Set returns the platform that matches a specific selector, or an error if it is not found.
+	// Platform returns the platform that matches a specific selector, or an error if it is not found.
 	Platform(selector Selector) (Platform, error)
 }
 
-// Map is the default Set implementation.
+// Map is the default Manager implementation.
 type Map map[Selector]Platform
 
 // Selectors returns a slice with all the available platform selectors.

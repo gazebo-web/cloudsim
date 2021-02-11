@@ -17,7 +17,7 @@ type testMapSuite struct {
 	platform1 Platform
 	platform2 Platform
 	platform3 Platform
-	set       Set
+	set       Manager
 }
 
 func (s *testMapSuite) SetupSuite() {
