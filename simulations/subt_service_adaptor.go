@@ -5,12 +5,14 @@ import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
 )
 
-type SubTServiceAdaptor struct {
+// SimulationServiceAdaptor implements the simulations.Service interface.
+// It acts as an adaptor between the legacy code and the new code introduced in the code refactor.
+type SimulationServiceAdaptor struct {
 	db *gorm.DB
 }
 
 // Get gets a simulation deployment with the given GroupID.
-func (sa *SubTServiceAdaptor) Get(groupID simulations.GroupID) (simulations.Simulation, error) {
+func (sa *SimulationServiceAdaptor) Get(groupID simulations.GroupID) (simulations.Simulation, error) {
 	result, err := GetSimulationDeployment(sa.db, groupID.String())
 	if err != nil {
 		return nil, err
@@ -19,7 +21,7 @@ func (sa *SubTServiceAdaptor) Get(groupID simulations.GroupID) (simulations.Simu
 }
 
 // GetParent gets the parent simulation for the given GroupID.
-func (sa *SubTServiceAdaptor) GetParent(groupID simulations.GroupID) (simulations.Simulation, error) {
+func (sa *SimulationServiceAdaptor) GetParent(groupID simulations.GroupID) (simulations.Simulation, error) {
 	gid := groupID.String()
 	parent, err := GetParentSimulation(sa.db, &SimulationDeployment{GroupID: &gid})
 	if err != nil {
@@ -29,7 +31,7 @@ func (sa *SubTServiceAdaptor) GetParent(groupID simulations.GroupID) (simulation
 }
 
 // UpdateStatus persists the given status that assigns to the given GroupID.
-func (sa *SubTServiceAdaptor) UpdateStatus(groupID simulations.GroupID, status simulations.Status) error {
+func (sa *SimulationServiceAdaptor) UpdateStatus(groupID simulations.GroupID, status simulations.Status) error {
 	dep, err := GetSimulationDeployment(sa.db, groupID.String())
 	if err != nil {
 		return err
@@ -41,7 +43,8 @@ func (sa *SubTServiceAdaptor) UpdateStatus(groupID simulations.GroupID, status s
 	return nil
 }
 
-func (sa *SubTServiceAdaptor) Update(groupID simulations.GroupID, simulation simulations.Simulation) error {
+// Update updates the simulation identified by groupID with the data given in simulation.
+func (sa *SimulationServiceAdaptor) Update(groupID simulations.GroupID, simulation simulations.Simulation) error {
 	q := sa.db.Model(&SimulationDeployment{}).Where("group_id = ?", groupID.String()).Updates(simulation)
 	if q.Error != nil {
 		return q.Error
@@ -49,7 +52,8 @@ func (sa *SubTServiceAdaptor) Update(groupID simulations.GroupID, simulation sim
 	return nil
 }
 
-func (sa *SubTServiceAdaptor) GetRobots(groupID simulations.GroupID) ([]simulations.Robot, error) {
+// GetRobots returns the list of robots for the given groupID.
+func (sa *SimulationServiceAdaptor) GetRobots(groupID simulations.GroupID) ([]simulations.Robot, error) {
 	dep, err := GetSimulationDeployment(sa.db, groupID.String())
 	if err != nil {
 		return nil, err
@@ -67,6 +71,7 @@ func (sa *SubTServiceAdaptor) GetRobots(groupID simulations.GroupID) ([]simulati
 	return result, nil
 }
 
-func NewSubTServiceAdaptor(db *gorm.DB) simulations.Service {
-	return &SubTServiceAdaptor{db: db}
+// NewSubTSimulationServiceAdaptor initializes a new simulations.Service implementation using the SimulationServiceAdaptor.
+func NewSubTSimulationServiceAdaptor(db *gorm.DB) simulations.Service {
+	return &SimulationServiceAdaptor{db: db}
 }
