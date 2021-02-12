@@ -5,19 +5,19 @@
 
 ## Table of contents
 
-- What is Ignition Cloudsim?
-- Components
-    - Simulator
-    - Platform
-        - Machines
-        - Storage
-        - Orchestrator
-        - Store
-        - Secrets
-    - Application services
-        - Users
-        - Simulations
-- Starting a new application
+- [What is Ignition Cloudsim?](#what-is-ignition-cloudsim)
+- [Components](#components)
+    - [Simulator](#simulator)
+    - [Platform](#platform)
+        - [Machines](#machines)
+        - [Storage](#storage)
+        - [Orchestrator](#orchestrator)
+        - [Store](#store)
+        - [Secrets](#secrets)
+    - [Application services](#application-services)
+        - [Users](#users)
+        - [Simulations](#simulations)
+- [Starting a new application](#starting-a-new-application)
 
 ## What is Ignition Cloudsim?
 
@@ -55,11 +55,21 @@ implementation of this component can be found in the `ignitionrobotics.com/web/c
 The Storage component is in charge of providing an API to upload simulation logs. An AWS S3 implementation of this
 component can be found in the `ignitionrobotics.com/web/cloudsim/pkg/cloud/aws/s3` package.
 
+#### Orchestrator
+
+#### Store
+
+#### Secrets
+
 ### Application services
 
 Ignition Cloudsim requires that the different applications implement a set of interfaces. These interfaces will allow
 cloudsim to treat every application's simulations equally, but letting the developers of these applications to add
 specific business logic.
+
+#### Users
+
+#### Simulations
 
 ## Starting a new application
 
