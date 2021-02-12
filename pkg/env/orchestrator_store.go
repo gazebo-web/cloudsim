@@ -28,7 +28,7 @@ type orchestratorEnvStore struct {
 	// It is used to select a specific rule to modify in an ingress.
 	// The ingress resource referenced by the `IngressName` configuration must contain at least one rule with a host
 	// value matching this configuration.
-	IngressHostValue string
+	IngressHostValue string `env:"CLOUDSIM_ORCHESTRATOR_INGRESS_HOST,required"`
 }
 
 // IngressNamespace returns the ingress namespace.
