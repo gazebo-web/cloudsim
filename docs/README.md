@@ -40,9 +40,16 @@ order to let the application decide which cloud provider to use.
 
 ### Simulator
 
-The simulator component is the most important component on Ignition Cloudsim. It's the one that is in charge of Starting
+The Simulator component is the most important component on Ignition Cloudsim. It's the one that is in charge of Starting
 and Stopping simulations. To be able to perform these operations, the Simulator component is helped by a set of
 Platforms and Application Services. In the following sections we'll describe how to create these components.
+
+In order to start and stop simulations, the Simulator component uses actions. An action is a set of jobs that describes
+how a simulation should be launched, step by step.
+
+These jobs run on the application, but they usually perform request against the Cloudsim API. Generic jobs can be found
+in the
+`gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulator/jobs` package.
 
 ### Platform
 
@@ -74,23 +81,51 @@ different resources inside a cluster.
 
 ##### Nodes
 
+The Nodes sub-component is used to wait for recent nodes that have been created with the Machines component to join the
+cluster. An implementation of the Nodes sub-component using Kubernetes can be found in the `` package.
+
 ##### Pods
+
+The Pods sub-component is used to operate over a set of pods, it allows Cloudsim to create and destroy pods on a certain
+cluster. An implementation of the Pods sub-component using Kubernetes can be found in
+the `gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/kubernetes/pods` package.
 
 ##### Ingresses
 
+An implementation of the Ingresses sub-component using Kubernetes can be found in
+the `gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/kubernetes/ingresses` package. Or if you prefer using the
+Gloo Ingress Controller, an implementation with Gloo can be found
+here: `gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/gloo`.
+
 ##### Ingress Rules
+
+An implementation of the Ingress Rules sub-component using Kubernetes can be found in
+the `gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/kubernetes/ingresses/rules` package. Or if you prefer
+using the Gloo Ingress Controller, an implementation with Gloo can be found
+here: `gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/gloo`.
 
 ##### Services
 
+An implementation of the Pods sub-component using Kubernetes can be found in
+the `gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/kubernetes/services` package.
+
 ##### Network Policies
+
+An implementation of the Network Policies sub-component using Kubernetes can be found in
+the `gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/kubernetes/network` package.
 
 ---
 
 #### Store
 
+The Store component is used to provide configuration. Stores are used usually used in
+
 ---
 
 #### Secrets
+
+The Secrets component allows application to save secret data. An implementation using Kubernetes can be found in
+the `gitlab.com/ignitionrobotics/web/cloudsim/pkg/secrets` package.
 
 ---
 
