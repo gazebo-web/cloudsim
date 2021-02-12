@@ -3,7 +3,6 @@ package jobs
 import (
 	"github.com/jinzhu/gorm"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/actions"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulator"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulator/state"
 )
 
@@ -29,10 +28,7 @@ func removeWebsocketService(store actions.Store, tx *gorm.DB, deployment *action
 	s := store.State().(state.PlatformGetter)
 
 	// Parse input
-	input, ok := value.(RemoveWebsocketServiceInput)
-	if !ok {
-		return nil, simulator.ErrInvalidInput
-	}
+	input := value.(RemoveWebsocketServiceInput)
 
 	// Get the service
 	res, err := s.Platform().Orchestrator().Services().Get(input.Name, input.Namespace)
