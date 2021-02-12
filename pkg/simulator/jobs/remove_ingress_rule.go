@@ -53,7 +53,5 @@ func removeIngressRules(store actions.Store, tx *gorm.DB, deployment *actions.De
 		}, nil
 	}
 
-	return RemoveIngressRulesOutput{
-		Error: err,
-	}, nil
+	return RemoveIngressRulesOutput{Error: nil}, nil
 }
