@@ -12,6 +12,12 @@
         - [Machines](#machines)
         - [Storage](#storage)
         - [Orchestrator](#orchestrator)
+            - [Nodes](#nodes)
+            - [Pods](#pods)
+            - [Ingresses](#ingresses)
+            - [Ingress Rules](#ingress-rules)
+            - [Services](#services)
+            - [Network Policies](#network-policies)
         - [Store](#store)
         - [Secrets](#secrets)
     - [Application services](#application-services)
@@ -41,7 +47,7 @@ Platforms and Application Services. In the following sections we'll describe how
 ### Platform
 
 A Platform is a meta-component that represents a certain region in a specific cloud provider where to launch
-simulations. If you want to use `AWS` to launch simulations in `us-east-1` on a `EKS` cluster, you'll create a Platform
+simulations. If you want to use `AWS` to launch simulations in `us-east-1` on an `EKS` cluster, you'll create a Platform
 that represents that specific configuration. If you also need to launch on `us-east-2`, another Platform should be
 created.
 
@@ -56,6 +62,21 @@ The Storage component is in charge of providing an API to upload simulation logs
 component can be found in the `ignitionrobotics.com/web/cloudsim/pkg/cloud/aws/s3` package.
 
 #### Orchestrator
+
+The Orchestrator component is also a meta-component that includes a set of different sub-components to interact with
+different resources inside a cluster.
+
+##### Nodes
+
+##### Pods
+
+##### Ingresses
+
+##### Ingress Rules
+
+##### Services
+
+##### Network Policies
 
 #### Store
 
