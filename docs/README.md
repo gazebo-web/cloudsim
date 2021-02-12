@@ -23,7 +23,7 @@
     - [Application services](#application-services)
         - [Users](#users)
         - [Simulations](#simulations)
-- [Starting a new application](#starting-a-new-application)
+- [Configuring a Platform](#configuring-a-platform)
 
 ## What is Ignition Cloudsim?
 
@@ -179,5 +179,86 @@ The simulations interface represents a service that manages a set of simulations
 of a simulation running on a specific Platform. A simulation includes specific configuration to launch, like the image
 that needs to be used for robots.
 
-## Starting a new application
+## Configuring a Platform
 
+In the following tutorial we'll configure a platform that can be used by your simulator. Our current config will use:
+
+- Orchestrator: Kubernetes
+- Machines: EC2
+- Storage: S3
+- Secrets: Kubernetes
+- Ingress controller: Kubernetes
+- Store: Environment variables
+
+### Setting up a new Ignition Logger
+
+```go
+logger := ign.NewLoggerNoRollbar("Application", ign.VerbosityDebug)
+```
+
+### Initializing a Kubernetes orchestrator
+
+```go
+orchestrator := kubernetes.InitializeKubernetes(logger)
+```
+
+### Initializing AWS session
+
+Using `github.com/aws/aws-sdk-go/aws/session`
+
+```go
+session, err := session.NewSession()
+```
+
+### Starting Machines using EC2
+
+```go
+ec2api := ec2.NewAPI(session)
+machines := ec2.NewMachines(ec2api, logger)
+```
+
+### Starting Storage using S3
+
+```go
+s3api := s3.NewAPI(session)
+storage := s3.NewStorage(s3api, logger)
+```
+
+### Initializing config store
+
+```go
+configStore := env.NewStore()
+```
+
+### Initializing secrets
+
+```go
+config, err := kubernetes.GetConfig()
+if err != nil {
+	panic(err)
+}
+
+clientset, err := kubernetes.NewAPI(config)
+if err != nil {
+    panic(err)
+}
+
+secrets := secrets.NewKubernetesSecrets(clientset.CoreV1())
+```
+
+### Initializing Platform
+
+```go
+// Components
+c := platform.Components{
+    Machines: machines,
+    Storage:  storage,
+    Cluster:  orchestrator,
+    Store:    configStore,
+    Secrets:  secrets,
+}
+
+// Platform
+p := platform.NewPlatform(c)
+
+```
