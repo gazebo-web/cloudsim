@@ -3,9 +3,9 @@ package simulations
 // Marsupial is a combination of robots.
 type Marsupial interface {
 	// Parent returns the marsupial parent robot.
-	Parent() Robot
+	GetParent() Robot
 	// Child returns the marsupial child robot.
-	Child() Robot
+	GetChild() Robot
 }
 
 // marsupial is a Marsupial implementation.
@@ -17,12 +17,12 @@ type marsupial struct {
 }
 
 // Returns the parent robot.
-func (m marsupial) Parent() Robot {
+func (m marsupial) GetParent() Robot {
 	return m.parent
 }
 
 // Child returns the child robot.
-func (m marsupial) Child() Robot {
+func (m marsupial) GetChild() Robot {
 	return m.child
 }
 

@@ -55,7 +55,7 @@ func createLaunchInstancesInput(store actions.Store, tx *gorm.DB, deployment *ac
 			Platform().
 			Store().
 			Machines().
-			Tags(sim, "field-computer", fmt.Sprintf("fc-%s", r.Name()))
+			Tags(sim, "field-computer", fmt.Sprintf("fc-%s", r.GetName()))
 
 		input = append(input, cloud.CreateMachinesInput{
 			InstanceProfile: s.Platform().Store().Machines().InstanceProfile(),

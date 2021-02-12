@@ -527,15 +527,15 @@ func (dep *SimulationDeployment) MarkAsMultiSimChild(tx *gorm.DB, parent *Simula
 }
 
 func (dep *SimulationDeployment) setStatus(status simulations.Status) {
-	dep.DeploymentStatus = convertStatus(status)
+	dep.DeploymentStatus = convertStatus(status).ToPtr()
 }
 
-func convertStatus(status simulations.Status) *int {
+func convertStatus(status simulations.Status) DeploymentStatus {
 	switch status {
 	case simulations.StatusPending:
-		return simPending.ToPtr()
+		return simPending
 	default:
-		return simPending.ToPtr()
+		return simPending
 	}
 }
 
