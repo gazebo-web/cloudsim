@@ -27,7 +27,7 @@ func GetNodeLabelsFieldComputer(groupID simulations.GroupID, robot simulations.R
 
 	return base.Extend(orchestrator.NewSelector(map[string]string{
 		labelFieldComputer: "true",
-		labelRobotName:     strings.ToLower(robot.Name()),
+		labelRobotName:     strings.ToLower(robot.GetName()),
 	}))
 }
 
@@ -61,7 +61,7 @@ func GetPodLabelsCommsBridge(groupID simulations.GroupID, parent *simulations.Gr
 	base := GetPodLabelsBase(groupID, parent)
 	ext := orchestrator.NewSelector(map[string]string{
 		labelCommsBridge:         "true",
-		labelCommsBridgeForRobot: strings.ToLower(robot.Name()),
+		labelCommsBridgeForRobot: strings.ToLower(robot.GetName()),
 	})
 	return base.Extend(ext)
 }
@@ -71,7 +71,7 @@ func GetPodLabelsCommsBridgeCopy(groupID simulations.GroupID, parent *simulation
 	base := GetPodLabelsBase(groupID, parent)
 	ext := orchestrator.NewSelector(map[string]string{
 		labelCopyS3:       "true",
-		labelCopyForRobot: strings.ToLower(robot.Name()),
+		labelCopyForRobot: strings.ToLower(robot.GetName()),
 	})
 	return base.Extend(ext)
 }

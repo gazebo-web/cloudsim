@@ -2,6 +2,11 @@ package simulator
 
 import (
 	"context"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/credentials"
+	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/johannesboyne/gofakes3"
+	"github.com/johannesboyne/gofakes3/backend/s3mem"
 	uuid "github.com/satori/go.uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -9,6 +14,9 @@ import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/summaries"
 	"gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/tracks"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/application"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/cloud/aws/ec2"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/cloud/aws/s3"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/mock"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/platform"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations/fake"
@@ -16,6 +24,7 @@ import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/utils/db/gorm"
 	"gitlab.com/ignitionrobotics/web/ign-go"
 	"gopkg.in/go-playground/validator.v9"
+	"net/http/httptest"
 	"testing"
 )
 
@@ -33,10 +42,31 @@ func TestStartSimulationAction(t *testing.T) {
 	// Initialize logger
 	logger := ign.NewLoggerNoRollbar("Cloudsim", ign.VerbosityDebug)
 
+	// Initialize mock for EC2
+	ec2api := mock.NewEC2()
+
+	// Initialize mock for S3
+	storageBackend := s3mem.New()
+	storageFake := gofakes3.New(storageBackend)
+	storageServer := httptest.NewServer(storageFake.Server())
+
+	storageSessionConfig := &aws.Config{
+		Credentials:      credentials.NewStaticCredentials("YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY", ""),
+		Endpoint:         aws.String(storageServer.URL),
+		Region:           aws.String("us-east-1"),
+		DisableSSL:       aws.Bool(true),
+		S3ForcePathStyle: aws.Bool(true),
+	}
+
+	storageSession, err := session.NewSession(storageSessionConfig)
+	require.NoError(t, err)
+
+	storageAPI := s3.NewAPI(storageSession)
+
 	// Initialize platform components
 	c := platform.Components{
-		Machines: nil,
-		Storage:  nil,
+		Machines: ec2.NewMachines(ec2api, logger),
+		Storage:  s3.NewStorage(storageAPI, logger),
 		Cluster:  nil,
 		Store:    nil,
 		Secrets:  nil,
