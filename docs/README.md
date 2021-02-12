@@ -51,15 +51,21 @@ simulations. If you want to use `AWS` to launch simulations in `us-east-1` on an
 that represents that specific configuration. If you also need to launch on `us-east-2`, another Platform should be
 created.
 
+---
+
 #### Machines
 
 The Machines component is in charge of requesting instances to cloud providers in where to launch simulations. An EC2
 implementation of this component can be found in the `ignitionrobotics.com/web/cloudsim/pkg/cloud/aws/ec2` package.
 
+---
+
 #### Storage
 
 The Storage component is in charge of providing an API to upload simulation logs. An AWS S3 implementation of this
 component can be found in the `ignitionrobotics.com/web/cloudsim/pkg/cloud/aws/s3` package.
+
+---
 
 #### Orchestrator
 
@@ -78,9 +84,15 @@ different resources inside a cluster.
 
 ##### Network Policies
 
+---
+
 #### Store
 
+---
+
 #### Secrets
+
+---
 
 ### Application services
 
