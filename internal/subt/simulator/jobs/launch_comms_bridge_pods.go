@@ -76,8 +76,8 @@ func prepareCommsBridgePodInput(store actions.Store, tx *gorm.DB, deployment *ac
 					Image: track.BridgeImage,
 					Args: []string{
 						track.World,
-						fmt.Sprintf("robotName%d:=%s", i, r.Name()),
-						fmt.Sprintf("robotConfig%d:=%s", i, r.Kind()),
+						fmt.Sprintf("robotName%d:=%s", i, r.GetName()),
+						fmt.Sprintf("robotConfig%d:=%s", i, r.GetKind()),
 						"headless:=true",
 						fmt.Sprintf("marsupial:=%s", childMarsupial),
 					},
@@ -86,7 +86,7 @@ func prepareCommsBridgePodInput(store actions.Store, tx *gorm.DB, deployment *ac
 					Volumes:                  volumes,
 					EnvVars: subtapp.GetEnvVarsCommsBridge(
 						s.GroupID,
-						r.Name(),
+						r.GetName(),
 						s.GazeboServerIP,
 						s.Platform().Store().Ignition().Verbosity(),
 					),

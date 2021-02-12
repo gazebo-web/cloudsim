@@ -5,11 +5,16 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/jinzhu/gorm"
+	subtsim "gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/simulations"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
 	"gitlab.com/ignitionrobotics/web/ign-go"
 	"strconv"
 	"strings"
 	"time"
 )
+
+// Force SimulationDeployment to implement simulations.Simulation interface.
+var _ subtsim.Simulation = (*SimulationDeployment)(nil)
 
 // SimulationDeployment represents a cloudsim simulation .
 type SimulationDeployment struct {
@@ -81,6 +86,100 @@ type SimulationDeployment struct {
 	AuthorizationToken *string `json:"-"`
 	// Score has the simulation's score. It's updated when the simulations finishes and gets processed.
 	Score *float64 `json:"score,omitempty"`
+}
+
+func (dep *SimulationDeployment) GetGroupID() simulations.GroupID {
+	return simulations.GroupID(*dep.GroupID)
+}
+
+func (dep *SimulationDeployment) GetStatus() simulations.Status {
+	switch dep.DeploymentStatus {
+	// TODO: Add statuses
+	default:
+		return simulations.StatusUnknown
+	}
+}
+
+func (dep *SimulationDeployment) HasStatus(status simulations.Status) bool {
+	return dep.GetStatus() == status
+}
+
+func (dep *SimulationDeployment) SetStatus(status simulations.Status) {
+	dep.setStatus(status)
+}
+
+func (dep *SimulationDeployment) GetKind() simulations.Kind {
+	return simulations.Kind(dep.MultiSim)
+}
+
+func (dep *SimulationDeployment) IsKind(kind simulations.Kind) bool {
+	return dep.GetKind() == kind
+}
+
+func (dep *SimulationDeployment) GetError() *simulations.Error {
+	if dep.ErrorStatus == nil {
+		return nil
+	}
+	err := simulations.Error(*dep.ErrorStatus)
+	return &err
+}
+
+func (dep *SimulationDeployment) GetImage() string {
+	if dep.Image == nil {
+		return ""
+	}
+	return *dep.Image
+}
+
+func (dep *SimulationDeployment) GetValidFor() time.Duration {
+	if dep.ValidFor == nil {
+		return 0
+	}
+	d, err := time.ParseDuration(*dep.ValidFor)
+	if err != nil {
+		return 0
+	}
+	return d
+}
+
+func (dep *SimulationDeployment) GetTrack() string {
+	info, err := ReadExtraInfoSubT(dep)
+	if err != nil {
+		return ""
+	}
+	return info.Circuit
+}
+
+func (dep *SimulationDeployment) GetToken() *string {
+	return dep.AuthorizationToken
+}
+
+func (dep *SimulationDeployment) GetRobots() []simulations.Robot {
+	info, err := ReadExtraInfoSubT(dep)
+	if err != nil {
+		return nil
+	}
+	result := make([]simulations.Robot, len(info.Robots))
+	for i, robot := range info.Robots {
+		r := new(SubTRobot)
+		*r = robot
+		result[i] = r
+	}
+	return result
+}
+
+func (dep *SimulationDeployment) GetMarsupials() []simulations.Marsupial {
+	info, err := ReadExtraInfoSubT(dep)
+	if err != nil {
+		return nil
+	}
+	result := make([]simulations.Marsupial, len(info.Marsupials))
+	for i, marsupial := range info.Marsupials {
+		m := new(SubTMarsupial)
+		*m = marsupial
+		result[i] = m
+	}
+	return result
 }
 
 // NewSimulationDeployment creates and initializes a simulation deployment struct.
@@ -463,6 +562,19 @@ func (dep *SimulationDeployment) MarkAsMultiSimChild(tx *gorm.DB, parent *Simula
 		return ign.NewErrorMessageWithBase(ign.ErrorDbSave, err)
 	}
 	return nil
+}
+
+func (dep *SimulationDeployment) setStatus(status simulations.Status) {
+	dep.DeploymentStatus = convertStatus(status).ToPtr()
+}
+
+func convertStatus(status simulations.Status) DeploymentStatus {
+	switch status {
+	case simulations.StatusPending:
+		return simPending
+	default:
+		return simPending
+	}
 }
 
 // SimulationDeployments is a slice of SimulationDeployment
