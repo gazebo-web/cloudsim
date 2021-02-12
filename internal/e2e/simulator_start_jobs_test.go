@@ -1,4 +1,4 @@
-package simulator
+package e2e
 
 import (
 	"context"
@@ -11,19 +11,27 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	subtapp "gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/application"
+	"gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/simulator"
 	"gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/summaries"
 	"gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/tracks"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/actions"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/application"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/cloud/aws/ec2"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/cloud/aws/s3"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/env"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/mock"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/kubernetes"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/kubernetes/spdy"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/platform"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/secrets"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations/fake"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/users"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/utils/db/gorm"
+	legacy "gitlab.com/ignitionrobotics/web/cloudsim/simulations"
+	"gitlab.com/ignitionrobotics/web/fuelserver/permissions"
 	"gitlab.com/ignitionrobotics/web/ign-go"
 	"gopkg.in/go-playground/validator.v9"
+	kfake "k8s.io/client-go/kubernetes/fake"
 	"net/http/httptest"
 	"testing"
 )
@@ -37,6 +45,14 @@ func TestStartSimulationAction(t *testing.T) {
 
 	// Connect to the database
 	db, err := gorm.GetTestDBFromEnvVars()
+	require.NoError(t, err)
+
+	// Clean and migrate database
+	err = gorm.CleanAndMigrateModels(db, &legacy.SimulationDeployment{})
+	require.NoError(t, err)
+
+	// Migrate actions
+	err = actions.MigrateDB(db)
 	require.NoError(t, err)
 
 	// Initialize logger
@@ -63,23 +79,41 @@ func TestStartSimulationAction(t *testing.T) {
 
 	storageAPI := s3.NewAPI(storageSession)
 
+	// Initialize mock for Kubernetes orchestrator
+	kubernetesClientset := kfake.NewSimpleClientset()
+
+	fakeSPDY := spdy.NewSPDYFakeInitializer()
+
+	cluster := kubernetes.NewDefaultKubernetes(kubernetesClientset, fakeSPDY, logger)
+
+	// Initialize env vars
+	configStore := env.NewStore()
+
+	// Initialize secrets
+	secrets := secrets.NewKubernetesSecrets(kubernetesClientset.CoreV1())
+
 	// Initialize platform components
 	c := platform.Components{
 		Machines: ec2.NewMachines(ec2api, logger),
 		Storage:  s3.NewStorage(storageAPI, logger),
-		Cluster:  nil,
-		Store:    nil,
-		Secrets:  nil,
+		Cluster:  cluster,
+		Store:    configStore,
+		Secrets:  secrets,
 	}
 
 	// Initialize platform
 	p := platform.NewPlatform(c)
 
 	// Initialize base application services
-	simService := fake.NewService()
+	simService := legacy.NewSubTSimulationServiceAdaptor(db)
+
+	// Initializing permissions
+	perm := permissions.Permissions{}
+	err = perm.Init(db, "sysadmin")
+	require.NoError(t, err)
 
 	// Initialize user service
-	userService, err := users.NewService(ctx, nil, db, "sysadmin")
+	userService, err := users.NewService(ctx, &perm, db, "sysadmin")
 	require.NoError(t, err)
 
 	baseapp := application.NewServices(simService, userService)
@@ -100,11 +134,11 @@ func TestStartSimulationAction(t *testing.T) {
 	app := subtapp.NewServices(baseapp, trackService, summaryService)
 
 	// Initialize simulator
-	s := NewSimulator(Config{
+	s := simulator.NewSimulator(simulator.Config{
 		DB:                  db,
 		Platform:            p,
 		ApplicationServices: app,
-		ActionService:       nil,
+		ActionService:       actions.NewService(),
 	})
 
 	// Start the simulation.
