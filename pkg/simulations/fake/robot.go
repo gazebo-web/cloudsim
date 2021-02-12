@@ -10,6 +10,7 @@ type fakeRobot struct {
 	kind string
 }
 
+// IsEqual checks if the given robot has the same name as the current robot.
 func (f fakeRobot) IsEqual(robot simulations.Robot) bool {
 	return f.Name() == robot.Name()
 }

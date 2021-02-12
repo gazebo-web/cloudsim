@@ -37,6 +37,8 @@ type TestExecuteInput struct {
 
 func TestNewExecuteInput(t *testing.T) {
 	tr := setupTest(t)
+	defer tr.db.Close()
+
 	td := getTestData(t)
 
 	var input *ExecuteInput
@@ -60,6 +62,8 @@ func TestGetExecuteInput(t *testing.T) {
 // TestInitializeNew tests that a new ExecuteInput (with no deployment) is initialized properly
 func TestInitializeNew(t *testing.T) {
 	tr := setupTest(t)
+	defer tr.db.Close()
+
 	td := getTestData(t)
 	eitd := executeInputTestData
 
@@ -83,6 +87,8 @@ func TestInitializeNew(t *testing.T) {
 // TestInitializeNew tests that a new ExecuteInput with a deployment is initialized properly
 func TestInitializeWithDeployment(t *testing.T) {
 	tr := setupTest(t)
+	defer tr.db.Close()
+
 	td := getTestData(t)
 	eitd := executeInputTestData
 
