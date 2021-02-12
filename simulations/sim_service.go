@@ -9,7 +9,6 @@ import (
 	"github.com/pkg/errors"
 	"github.com/satori/go.uuid"
 	"gitlab.com/ignitionrobotics/web/cloudsim/globals"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/transport"
 	ignws "gitlab.com/ignitionrobotics/web/cloudsim/pkg/transport/ign"
 	useracc "gitlab.com/ignitionrobotics/web/cloudsim/pkg/users"
@@ -200,7 +199,6 @@ type simServConfig struct {
 // ApplicationType represents an Application (eg. SubT). Applications are used
 // to customize launched Simulations.
 type ApplicationType interface {
-	simulations.Service
 	getApplicationName() string
 	GetSchedulableTasks(ctx context.Context, s *Service, tx *gorm.DB) []SchedulableTask
 	checkCanShutdownSimulation(ctx context.Context, s *Service, tx *gorm.DB, dep *SimulationDeployment, user *users.User) (bool, *ign.ErrMsg)
