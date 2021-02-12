@@ -3,6 +3,22 @@
   <h1>Ignition Robotics</h1>
 </div>
 
+## Table of contents
+
+- What is Ignition Cloudsim?
+- Components
+    - Simulator
+    - Platform
+        - Machines
+        - Storage
+        - Orchestrator
+        - Store
+        - Secrets
+    - Application services
+        - Users
+        - Simulations
+- Starting a new application
+
 ## What is Ignition Cloudsim?
 
 Ignition Cloudsim is an API that allows launching, running and processing simulations in the cloud. It currently has
