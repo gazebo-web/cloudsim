@@ -109,39 +109,77 @@ func (dep *SimulationDeployment) SetStatus(status simulations.Status) {
 }
 
 func (dep *SimulationDeployment) GetKind() simulations.Kind {
-	panic("implement me")
+	return simulations.Kind(dep.MultiSim)
 }
 
 func (dep *SimulationDeployment) IsKind(kind simulations.Kind) bool {
-	panic("implement me")
+	return dep.GetKind() == kind
 }
 
 func (dep *SimulationDeployment) GetError() *simulations.Error {
-	panic("implement me")
+	if dep.ErrorStatus == nil {
+		return nil
+	}
+	err := simulations.Error(*dep.ErrorStatus)
+	return &err
 }
 
 func (dep *SimulationDeployment) GetImage() string {
-	panic("implement me")
+	if dep.Image == nil {
+		return ""
+	}
+	return *dep.Image
 }
 
 func (dep *SimulationDeployment) GetValidFor() time.Duration {
-	panic("implement me")
+	if dep.ValidFor == nil {
+		return 0
+	}
+	d, err := time.ParseDuration(*dep.ValidFor)
+	if err != nil {
+		return 0
+	}
+	return d
 }
 
 func (dep *SimulationDeployment) GetTrack() string {
-	panic("implement me")
+	info, err := ReadExtraInfoSubT(dep)
+	if err != nil {
+		return ""
+	}
+	return info.Circuit
 }
 
 func (dep *SimulationDeployment) GetToken() *string {
-	panic("implement me")
+	return dep.AuthorizationToken
 }
 
 func (dep *SimulationDeployment) GetRobots() []simulations.Robot {
-	panic("implement me")
+	info, err := ReadExtraInfoSubT(dep)
+	if err != nil {
+		return nil
+	}
+	result := make([]simulations.Robot, len(info.Robots))
+	for i, robot := range info.Robots {
+		r := new(SubTRobot)
+		*r = robot
+		result[i] = r
+	}
+	return result
 }
 
 func (dep *SimulationDeployment) GetMarsupials() []simulations.Marsupial {
-	panic("implement me")
+	info, err := ReadExtraInfoSubT(dep)
+	if err != nil {
+		return nil
+	}
+	result := make([]simulations.Marsupial, len(info.Marsupials))
+	for i, marsupial := range info.Marsupials {
+		m := new(SubTMarsupial)
+		*m = marsupial
+		result[i] = m
+	}
+	return result
 }
 
 // NewSimulationDeployment creates and initializes a simulation deployment struct.
