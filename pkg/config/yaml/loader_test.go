@@ -122,6 +122,10 @@ func (s *testLoaderSuite) TestLoad() {
 	if err := ioutil.WriteFile(filename, []byte(testYAML), os.FileMode(0700)); err != nil {
 		s.Fail("Failed to write YAML test file.", err)
 	}
+	// Delete the file after finishing with the test
+	defer func() {
+		_ = os.Remove(filename)
+	}()
 
 	expected := &TestYAML{
 		Integer: 1247129,
