@@ -11,6 +11,7 @@ type loader struct {
 	logger ign.Logger
 }
 
+// log logs a message using the logger contained by the loader. If logger is `nil`, no logging is performed.
 func (l *loader) log(interfaces ...interface{}) {
 	if l.logger != nil {
 		l.logger.Warning(interfaces...)
