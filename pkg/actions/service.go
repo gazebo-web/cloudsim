@@ -187,7 +187,6 @@ func (s *service) processJobs(store Store, tx *gorm.DB, action *Action, executeI
 
 	// Process jobs
 	for ; input.index < len(action.Jobs); input.index++ {
-
 		job := action.Jobs[input.index]
 
 		// Update the deployment job
