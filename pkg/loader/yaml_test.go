@@ -1,4 +1,4 @@
-package yaml
+package loader
 
 import (
 	"github.com/stretchr/testify/suite"
@@ -48,30 +48,30 @@ extra: string
 )
 
 func TestYAMLLoader(t *testing.T) {
-	suite.Run(t, new(testLoaderSuite))
+	suite.Run(t, new(testYAMLLoaderSuite))
 }
 
-type testLoaderSuite struct {
+type testYAMLLoaderSuite struct {
 	suite.Suite
-	loader *loader
+	loader *yamlLoader
 }
 
-func (s *testLoaderSuite) SetupSuite() {
+func (s *testYAMLLoaderSuite) SetupSuite() {
 	logger := ign.NewLoggerNoRollbar("test", ign.VerbosityWarning)
-	s.loader = NewLoader(logger).(*loader)
+	s.loader = NewYAMLLoader(logger).(*yamlLoader)
 }
 
-func (s *testLoaderSuite) TestLog() {
+func (s *testYAMLLoaderSuite) TestLog() {
 	s.NotPanics(func() { s.loader.log("test") })
 }
 
-func (s *testLoaderSuite) TestNilLog() {
-	// Verify that calling `loader.log` with a `nil` logger does not panic
-	loader := NewLoader(nil).(*loader)
+func (s *testYAMLLoaderSuite) TestNilLog() {
+	// Verify that calling `yamlLoader.log` with a `nil` logger does not panic
+	loader := NewYAMLLoader(nil).(*yamlLoader)
 	s.NotPanics(func() { loader.log("test") })
 }
 
-func (s *testLoaderSuite) TestParse() {
+func (s *testYAMLLoaderSuite) TestParse() {
 	expected := &TestYAML{
 		Integer: 1247129,
 		String:  "test",
@@ -92,7 +92,7 @@ func (s *testLoaderSuite) TestParse() {
 	s.Equal(expected, out)
 }
 
-func (s *testLoaderSuite) TestFailParse() {
+func (s *testYAMLLoaderSuite) TestFailParse() {
 	invalidYAML := `a:-`
 
 	out := &TestYAML{}
@@ -101,7 +101,7 @@ func (s *testLoaderSuite) TestFailParse() {
 	s.Error(err)
 }
 
-func (s *testLoaderSuite) TestIncompatibleOutputStruct() {
+func (s *testYAMLLoaderSuite) TestIncompatibleOutputStruct() {
 	type IncompatibleOut struct {
 		Test string
 	}
@@ -116,7 +116,7 @@ func (s *testLoaderSuite) TestIncompatibleOutputStruct() {
 	s.Equal(expected, out)
 }
 
-func (s *testLoaderSuite) TestLoad() {
+func (s *testYAMLLoaderSuite) TestLoad() {
 	// Create a YAML file to read from
 	filename := "test.yaml"
 	if err := ioutil.WriteFile(filename, []byte(testYAML), os.FileMode(0700)); err != nil {
