@@ -27,8 +27,8 @@ func LoadFile(loader Loader, path string, out interface{}) error {
 }
 
 // LoadDirFiles loads files contained in a directory into a target slice.
-// Only a single directory level is loaded. Subdirectories are ignored. Failure to read any single file will result in
-// an error, but will not stop the function from loading the rest of files in the target directory.
+// Only a single directory level is loaded. Subdirectories are ignored. Failure to read a file will eventually be
+// returned as an error, but will not stop the function from loading the rest of files in the target directory.
 // `path` must be a directory path.
 // `out` must be a map. The map must have string keys and pointer to interface type the files will be placed in as
 // values (e.g. map[string]*Target). The keys of the map will contain filenames of loaded files, and the values
@@ -38,11 +38,13 @@ func LoadFile(loader Loader, path string, out interface{}) error {
 // Returned error types can be checked using `errors.Is`. Errors of type ErrLoadFailed indicate that the file was
 // not accessible. It is up to the caller to consider this a critical error. All other errors are critical.
 func LoadDirFiles(loader Loader, path string, out interface{}) []error {
+	// Get the directory's list of files
 	files, err := ioutil.ReadDir(path)
 	if err != nil {
 		return []error{err}
 	}
 
+	// Process files
 	errs := make([]error, 0)
 	for _, file := range files {
 		// Only process files

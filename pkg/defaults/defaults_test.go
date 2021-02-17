@@ -20,7 +20,7 @@ func (d *D) SetDefaults() error {
 	return nil
 }
 
-// t is a test struct that does not implement the Defaulter interface.
+// T is a test struct that does not implement the Defaulter interface.
 type T struct {
 	Value string
 }
@@ -39,6 +39,7 @@ func (s *testDefaultsSuite) TestSetDefaultsImplements() {
 
 	s.NoError(SetDefaults(d))
 
+	// Struct does not implement Defaulter, it should have been modified
 	s.Equal(defaultValue, d.Value)
 }
 
@@ -48,5 +49,6 @@ func (s *testDefaultsSuite) TestSetDefaultsDoesNotImplement() {
 
 	s.NoError(SetDefaults(t))
 
+	// Struct does not implement Defaulter, it should not have been modified
 	s.Equal("", t.Value)
 }
