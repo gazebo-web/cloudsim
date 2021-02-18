@@ -90,6 +90,10 @@ func (s *service) GetStopQueue() *ign.Queue {
 	return s.stopQueue
 }
 
+// StartSimulation is called from service.Start(), and it should actually start
+// the simulation running.
+//
+// Flow: user --> POST /start --> controller.Start() --> service.Start() --> service.StartSimulation
 func (s *service) StartSimulation(ctx context.Context, groupID simulations.GroupID) error {
 
   fmt.Printf("StartSimulation for groupID[%s]\n", groupID)
@@ -125,6 +129,9 @@ func (s *service) GetRobots(groupID simulations.GroupID) ([]simulations.Robot, e
 	panic("implement me")
 }
 
+// Start is called from the Start function in controller.go.
+//
+// Flow: user --> POST /start --> controller.Start() --> service.Start()
 func (s *service) Start(ctx context.Context, request StartRequest) (*StartResponse, error) {
 	// Business logic
 

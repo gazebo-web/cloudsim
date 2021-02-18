@@ -34,6 +34,8 @@ func NewController(db *gorm.DB, logger ign.Logger) Controller {
 }
 
 // Start handles the `/start` route.
+//
+// Flow: user --> POST /start --> controller.Start()
 func (ctrl *controller) Start(w http.ResponseWriter, r *http.Request) {
 
   // Parse form's values and files.
@@ -52,6 +54,8 @@ func (ctrl *controller) Start(w http.ResponseWriter, r *http.Request) {
   }
 
   fmt.Printf("Image Name[%s]", req.Image)
+
+  // Hand off the start request data to the service.
 	res, err := ctrl.service.Start(r.Context(), req)
 	if err != nil {
 		// Send error message
