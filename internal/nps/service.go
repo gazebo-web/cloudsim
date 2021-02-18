@@ -3,8 +3,8 @@ package nps
 // This file implement the cloudsim/pkg/simulations service for this application.
 
 import (
-  "fmt"
 	"context"
+	"fmt"
 	"github.com/jinzhu/gorm"
 	"gitlab.com/ignitionrobotics/web/cloudsim/internal/pkg/domain"
 	gormrepo "gitlab.com/ignitionrobotics/web/cloudsim/internal/pkg/repositories/gorm"
@@ -96,8 +96,8 @@ func (s *service) GetStopQueue() *ign.Queue {
 // Flow: user --> POST /start --> controller.Start() --> service.Start() --> service.StartSimulation
 func (s *service) StartSimulation(ctx context.Context, groupID simulations.GroupID) error {
 
-  fmt.Printf("StartSimulation for groupID[%s]\n", groupID)
-  return nil
+	fmt.Printf("StartSimulation for groupID[%s]\n", groupID)
+	return nil
 }
 
 func (s *service) StopSimulation(ctx context.Context, groupID simulations.GroupID) error {

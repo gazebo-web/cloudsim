@@ -14,8 +14,8 @@ func (app *application) GetAPIRoutes() ign.Routes {
 
 	// Return the routes for this application. See also IGN's router.go
 	return ign.Routes{
-    // Example usage:
-    //     curl -X POST http://localhost:8000/1.0/start -F "image=DOCKER_IMAGE"
+		// Example usage:
+		//     curl -X POST http://localhost:8000/1.0/start -F "image=DOCKER_IMAGE"
 		ign.Route{
 			Name:        "Start simulation",
 			Description: "This is a description for starting a simulation",
@@ -30,8 +30,8 @@ func (app *application) GetAPIRoutes() ign.Routes {
 				},
 			},
 		},
-    // Example usage:
-    //     curl -X POST http://localhost:8000/1.0/stop
+		// Example usage:
+		//     curl -X POST http://localhost:8000/1.0/stop
 		ign.Route{
 			Name:        "Stop simulation",
 			Description: "This is a description for stopping a simulation",
