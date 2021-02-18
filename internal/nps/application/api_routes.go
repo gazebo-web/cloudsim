@@ -1,6 +1,6 @@
 package nps
 
-// This file contains api routes.
+// This file defines the API routes.
 
 import (
 	"gitlab.com/ignitionrobotics/web/ign-go"

@@ -1,6 +1,7 @@
 package nps
 
 // This file contains structures and functions that manage the application.
+// This is the primary entry point for the nps application.
 
 import (
 	"github.com/jinzhu/gorm"

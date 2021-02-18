@@ -3,6 +3,7 @@ package nps
 // This file implement the cloudsim/pkg/simulations service for this application.
 
 import (
+  "fmt"
 	"context"
 	"github.com/jinzhu/gorm"
 	"gitlab.com/ignitionrobotics/web/cloudsim/internal/pkg/domain"
@@ -11,6 +12,9 @@ import (
 	"gitlab.com/ignitionrobotics/web/ign-go"
 )
 
+// Service implements the busniess logic behind the controller. A request
+// comes into the controller, which then executes the appropriate function(s)
+// in this service in order to handle the request.
 type Service interface {
 	simulations.Service
 	Start(ctx context.Context, request StartRequest) (*StartResponse, error)
@@ -23,6 +27,7 @@ type Service interface {
 	GetStopQueue() *ign.Queue
 }
 
+// service stores data necessary to implement Service functions.
 type service struct {
 	repository domain.Repository
 	startQueue *ign.Queue
@@ -31,10 +36,6 @@ type service struct {
 }
 
 // NewService creates a new simulation service instance.
-// `repository` Database repository that hold simulation data.
-// `start` The start queue.
-// `stop` The stop queue.
-// `
 func NewService(db *gorm.DB, logger ign.Logger) Service {
 	s := &service{
 		// Create a new repository to hold simulation instance data.
@@ -57,7 +58,6 @@ func NewService(db *gorm.DB, logger ign.Logger) Service {
 }
 
 // queueHandler is in charge of getting the next element from the queue and passing it to the do function.
-// TODO: Move somewhere else
 func queueHandler(queue *ign.Queue, do func(ctx context.Context, gid simulations.GroupID) error, logger ign.Logger) {
 	for {
 		element, em := queue.DequeueOrWaitForNextElement()
@@ -80,22 +80,25 @@ func queueHandler(queue *ign.Queue, do func(ctx context.Context, gid simulations
 	}
 }
 
+// GetStartQueue returns the start queue
 func (s *service) GetStartQueue() *ign.Queue {
 	return s.startQueue
 }
 
+// GetStopQueue returns the stop queue
 func (s *service) GetStopQueue() *ign.Queue {
 	return s.stopQueue
 }
 
 func (s *service) StartSimulation(ctx context.Context, groupID simulations.GroupID) error {
 
-	panic("todo: implement me")
+  fmt.Printf("StartSimulation for groupID[%s]\n", groupID)
+  return nil
 }
 
 func (s *service) StopSimulation(ctx context.Context, groupID simulations.GroupID) error {
 
-	panic("todo: implement me")
+	panic("todo: StopSimulation")
 }
 
 func (s *service) Get(groupID simulations.GroupID) (simulations.Simulation, error) {
