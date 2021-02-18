@@ -1,4 +1,4 @@
-package simulations
+package nps
 
 // StartRequest is the request used to start a simulation.
 type StartRequest struct {

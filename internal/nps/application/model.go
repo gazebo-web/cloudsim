@@ -1,4 +1,7 @@
-package simulations
+package nps
+
+// This file contains database tables used to by the application to manage
+// simulations.
 
 import (
 	"github.com/jinzhu/gorm"
