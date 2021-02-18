@@ -1,7 +1,7 @@
 package main
 
 import (
-	"gitlab.com/ignitionrobotics/web/cloudsim/internal/nps/application"
+	"gitlab.com/ignitionrobotics/web/cloudsim/internal/nps"
 	"gitlab.com/ignitionrobotics/web/ign-go"
 	"os"
 )
