@@ -2,9 +2,9 @@ package nps
 
 import (
 	"fmt"
-  "net/http"
-  "github.com/jinzhu/gorm"
+	"github.com/jinzhu/gorm"
 	"gitlab.com/ignitionrobotics/web/ign-go"
+	"net/http"
 )
 
 // Controller is an interface designed to handle route requests.
@@ -14,22 +14,22 @@ type Controller interface {
 }
 
 type controller struct {
-  // service is this controller's implementation of the
-  // cloudsim/pkg/simulations service. See the simulations_service.go file.
+	// service is this controller's implementation of the
+	// cloudsim/pkg/simulations service. See the simulations_service.go file.
 	service Service
 }
 
 // NewController creates a new controller
 func NewController(db *gorm.DB, logger ign.Logger) Controller {
-  return &controller{
-    // Create a simulation service to manage simulation instances
-    service: NewService(db, logger),
-  }
+	return &controller{
+		// Create a simulation service to manage simulation instances
+		service: NewService(db, logger),
+	}
 }
 
 // Start handles the `/start` route.
 func (ctrl *controller) Start(w http.ResponseWriter, r *http.Request) {
-  fmt.Printf("\n\nHERE\n\n")
+	fmt.Printf("\n\nHERE\n\n")
 	// Parse request
 
 	// Get needed data to start simulation from the HTTP request, pass it to the Start Request

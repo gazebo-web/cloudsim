@@ -4,11 +4,11 @@ package nps
 
 import (
 	"context"
+	"github.com/jinzhu/gorm"
 	"gitlab.com/ignitionrobotics/web/cloudsim/internal/pkg/domain"
+	gormrepo "gitlab.com/ignitionrobotics/web/cloudsim/internal/pkg/repositories/gorm"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
 	"gitlab.com/ignitionrobotics/web/ign-go"
-  gormrepo "gitlab.com/ignitionrobotics/web/cloudsim/internal/pkg/repositories/gorm"
-  "github.com/jinzhu/gorm"
 )
 
 type Service interface {
@@ -16,11 +16,11 @@ type Service interface {
 	Start(ctx context.Context, request StartRequest) (*StartResponse, error)
 	Stop(ctx context.Context, request StopRequest) (*StopResponse, error)
 
-  StartSimulation(ctx context.Context, groupID simulations.GroupID) error
-  StopSimulation(ctx context.Context, groupID simulations.GroupID) error
+	StartSimulation(ctx context.Context, groupID simulations.GroupID) error
+	StopSimulation(ctx context.Context, groupID simulations.GroupID) error
 
-  GetStartQueue() *ign.Queue
-  GetStopQueue() *ign.Queue
+	GetStartQueue() *ign.Queue
+	GetStopQueue() *ign.Queue
 }
 
 type service struct {
@@ -36,24 +36,24 @@ type service struct {
 // `stop` The stop queue.
 // `
 func NewService(db *gorm.DB, logger ign.Logger) Service {
-  s := &service{
-    // Create a new repository to hold simulation instance data.
+	s := &service{
+		// Create a new repository to hold simulation instance data.
 		repository: gormrepo.NewRepository(db, logger, &Simulation{}),
-    // Create the start simulation queue
+		// Create the start simulation queue
 		startQueue: ign.NewQueue(),
-    // Create the stop simulation queue
-		stopQueue:  ign.NewQueue(),
-    // Store the logger
-		logger:     logger,
+		// Create the stop simulation queue
+		stopQueue: ign.NewQueue(),
+		// Store the logger
+		logger: logger,
 	}
 
-  // Create a queue to handle start requests.
+	// Create a queue to handle start requests.
 	go queueHandler(s.startQueue, s.StartSimulation, s.logger)
 
-  // Create a queue to handle stop requests.
+	// Create a queue to handle stop requests.
 	go queueHandler(s.stopQueue, s.StopSimulation, s.logger)
 
-  return s
+	return s
 }
 
 // queueHandler is in charge of getting the next element from the queue and passing it to the do function.
@@ -81,11 +81,11 @@ func queueHandler(queue *ign.Queue, do func(ctx context.Context, gid simulations
 }
 
 func (s *service) GetStartQueue() *ign.Queue {
-  return s.startQueue
+	return s.startQueue
 }
 
 func (s *service) GetStopQueue() *ign.Queue {
-  return s.stopQueue
+	return s.stopQueue
 }
 
 func (s *service) StartSimulation(ctx context.Context, groupID simulations.GroupID) error {

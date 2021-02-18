@@ -12,12 +12,12 @@ import (
 //     * IGN_DB_ADDRESS Address of the DBMS.
 //     * IGN_DB_USERNAME Username to connect to the DBMS with.
 //     * IGN_DB_PASSWORD Password to connect to the DBMS with.
-//     * IGN_DB_NAME Name of the database to connect to. 
+//     * IGN_DB_NAME Name of the database to connect to.
 //     * IGN_DB_MAX_OPEN_CONNS - (Optional) You run the risk of getting a
 //                           'too many connections' error if this is not set.
 func main() {
-  // Create a new logger. This will be used to log messages.
-  // The logger must be setup first.
+	// Create a new logger. This will be used to log messages.
+	// The logger must be setup first.
 	logger := ign.NewLoggerNoRollbar("NPS", ign.VerbosityDebug)
 
 	// Create the application
@@ -27,6 +27,6 @@ func main() {
 		os.Exit(1)
 	}
 
-  // Run the application
-  application.Run()
+	// Run the application
+	application.Run()
 }
