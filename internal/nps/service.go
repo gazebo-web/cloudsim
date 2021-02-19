@@ -10,7 +10,20 @@ import (
 	gormrepo "gitlab.com/ignitionrobotics/web/cloudsim/internal/pkg/repositories/gorm"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
 	"gitlab.com/ignitionrobotics/web/ign-go"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/actions"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulator/jobs"
+  "gitlab.com/ignitionrobotics/web/cloudsim/pkg/platform"
+  "gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulator/state"
+  ignapp "gitlab.com/ignitionrobotics/web/cloudsim/pkg/application"
+
 )
+
+// StartSimulation is the state of the action that starts a simulation.
+// WTF is this??
+type StartSimulation struct {
+	state.PlatformGetter
+	state.ServicesGetter
+}
 
 // Service implements the busniess logic behind the controller. A request
 // comes into the controller, which then executes the appropriate function(s)
@@ -33,6 +46,9 @@ type service struct {
 	startQueue *ign.Queue
 	stopQueue  *ign.Queue
 	logger     ign.Logger
+  db         *gorm.DB
+  platform   platform.Platform
+  services   ignapp.Services
 }
 
 // NewService creates a new simulation service instance.
@@ -46,6 +62,7 @@ func NewService(db *gorm.DB, logger ign.Logger) Service {
 		stopQueue: ign.NewQueue(),
 		// Store the logger
 		logger: logger,
+    db: db,
 	}
 
 	// Create a queue to handle start requests.
@@ -90,11 +107,36 @@ func (s *service) GetStopQueue() *ign.Queue {
 	return s.stopQueue
 }
 
+/////////////////////////////////////////////
+var LaunchGazeboServerPod = jobs.LaunchPods.Extend(actions.Job{
+	Name:            "launch-gzserver-pod",
+	PreHooks:        []actions.JobFunc{prepareGazeboCreatePodInput},
+	// PostHooks:       []actions.JobFunc{},
+	// RollbackHandler: rollbackPodCreation,
+	InputType:       actions.GetJobDataType(&StartSimulation{}),
+	OutputType:      actions.GetJobDataType(&StartSimulation{}),
+})
+
+func prepareGazeboCreatePodInput(store actions.Store, tx *gorm.DB, deployment *actions.Deployment, value interface{}) (interface{}, error) {
+  fmt.Printf("\n\nPREHOOK!\n\n")
+  return nil, nil
+}
+
+/////////////////////////////////////////////
+
+
 // StartSimulation is called from service.Start(), and it should actually start
 // the simulation running.
 //
 // Flow: user --> POST /start --> controller.Start() --> service.Start() --> service.StartSimulation
 func (s *service) StartSimulation(ctx context.Context, groupID simulations.GroupID) error {
+
+  state := StartSimulation{}
+  store := actions.NewStore(state)
+
+  action := &actions.Deployment{}
+  launchPodsInput := jobs.LaunchPodsInput{}
+  LaunchGazeboServerPod.Execute(store, s.db, action, launchPodsInput)
 
 	fmt.Printf("StartSimulation for groupID[%s]\n", groupID)
 	return nil

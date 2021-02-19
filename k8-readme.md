@@ -361,16 +361,30 @@ Then you need to re-copy the kunernetes/config (with cert data) to clients.
 
 ## Install Dind-Cluster to have a local Kubernetes with 1 master and 2 slave nodes
 
-- Pre-requisite: install liblz4-tool: `apt-get install liblz4-tool`.
-- Clone the repository: https://github.com/kubernetes-sigs/kubeadm-dind-cluster
-- From the dind-cluster root folder , run `./build/build-local.sh` to build its docker images.
-- After the images are succesfully built, do the following:
-```
-$ export DIND_IMAGE="mirantis/kubeadm-dind-cluster:local"
-$ sudo CNI_PLUGIN="weave" ./dind-cluster.sh up
-```
-- Check the cluster is working by: `kubectl get nodes` . You should see 3 nodes.
-- Now `Label` the nodes to have them ready to be used by Cloudsim:
+1. Install liblz4-tool
+    ```
+    sudo apt-get install liblz4-tool
+    ```
+1. Clone the kubeadm-dind-cluster repository
+    ```
+    git clone https://github.com/kubernetes-sigs/kubeadm-dind-cluster ~/kubeadm-dind-cluster
+    ```
+1. Build the kubeadm-dind-cluster
+    ```
+    cd ~/kubeadm-dind-cluster
+    ./build/build-local.sh
+    ```
+1. After the images are succesfully built, do the following
+    ```
+    export DIND_IMAGE="mirantis/kubeadm-dind-cluster:local"
+    sudo CNI_PLUGIN="weave" ./dind-cluster.sh up
+    ```
+1. Check the cluster is working by running the following, which should show
+   3 nodes.
+    ```
+    kubectl get nodes
+   ```
+1. Now `Label` the nodes to have them ready to be used by Cloudsim:
   - Note, you can see current node labels by: `kubectl get nodes --show-labels`
   1. Disable master: `kubectl label nodes kube-master cloudsim_free_node=false`
   1. Enable node 1: `kubectl label nodes kube-node-1 cloudsim_free_node=true` and then `kubectl label nodes kube-node-1 cloudsim_groupid=`

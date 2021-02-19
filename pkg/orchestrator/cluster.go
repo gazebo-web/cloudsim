@@ -20,6 +20,7 @@ var (
 )
 
 // Cluster groups a set of methods for managing a cluster.
+// Use this interface to create K8 resources.
 type Cluster interface {
 	Nodes() Nodes
 	Pods() Pods
