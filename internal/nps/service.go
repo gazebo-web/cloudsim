@@ -270,7 +270,10 @@ func (s *service) StartSimulation(ctx context.Context, groupID simulations.Group
   }
   store := actions.NewStore(state)
 
+  // \todo: What is this, why do I need it, and how do I create it?
   action := &actions.Deployment{}
+
+  // \todo: What is this, why do I need it, and how do I create it?
   launchPodsInput := jobs.LaunchPodsInput{}
 
   // Run the job. This will launch the docker container, hooray!!
@@ -328,6 +331,8 @@ func (s *service) Start(ctx context.Context, request StartRequest) (*StartRespon
 	// Send the simulation's group id to the queue
 	gid := simulations.GroupID("test")
 
+  // This will cause `StartSimulation` to be called because a groupId has been
+  // push into the `startQueue` which is processed by the `queueHandler`.
 	s.startQueue.Enqueue(gid)
 
 	return &StartResponse{}, nil
