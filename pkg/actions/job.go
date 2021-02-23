@@ -143,7 +143,9 @@ func (j *Job) Extend(extension Job) *Job {
 	}
 
 	// Make the extended job name the same as the job name
-	extension.Name = j.Name
+	if extension.Name == "" {
+		extension.Name = j.Name
+	}
 
 	// Create the extended job
 	if err := mergo.Merge(&extension, *j); err != nil {
