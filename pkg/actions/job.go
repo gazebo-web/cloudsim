@@ -141,9 +141,10 @@ func (j *Job) Extend(extension Job) *Job {
 	if extension.Execute != nil {
 		panic(fmt.Sprintf("extend cannot replace %s execute, create a new job instead", j.Name))
 	}
+  fmt.Printf("ExtName[%s] JName[%s]\n", extension.Name, j.Name)
 
 	// Make the extended job name the same as the job name
-	extension.Name = j.Name
+	j.Name = extension.Name
 
 	// Create the extended job
 	if err := mergo.Merge(&extension, *j); err != nil {

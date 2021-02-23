@@ -6,18 +6,19 @@ import (
 	"context"
 	"fmt"
 	"time"
-  "strings"
 	"github.com/jinzhu/gorm"
   "github.com/satori/go.uuid"
 	"gitlab.com/ignitionrobotics/web/cloudsim/internal/pkg/domain"
 	gormrepo "gitlab.com/ignitionrobotics/web/cloudsim/internal/pkg/repositories/gorm"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
 	"gitlab.com/ignitionrobotics/web/ign-go"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/actions"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulator/jobs"
+	// "gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulator/jobs"
   "gitlab.com/ignitionrobotics/web/cloudsim/pkg/platform"
   "gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulator/state"
+  "gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/kubernetes"
+  "gitlab.com/ignitionrobotics/web/cloudsim/pkg/cloud/aws"
+  "gitlab.com/ignitionrobotics/web/cloudsim/pkg/env"
   ignapp "gitlab.com/ignitionrobotics/web/cloudsim/pkg/application"
 
 )
@@ -33,8 +34,6 @@ type StartSimulationData struct {
 
 // Platform returns the underlying platform.
 func (s *StartSimulationData) Platform() platform.Platform {
-  fmt.Printf("Getting platform\n")
-  fmt.Println(s.platform)
   return s.platform
 }
 
@@ -55,6 +54,7 @@ type Service interface {
 
 // service stores data necessary to implement Service functions.
 type service struct {
+  applicationName string
 	repository domain.Repository
 	startQueue *ign.Queue
 	stopQueue  *ign.Queue
@@ -62,11 +62,18 @@ type service struct {
   db         *gorm.DB
   platform   platform.Platform
   services   ignapp.Services
+  actions    actions.Servicer
 }
 
 // NewService creates a new simulation service instance.
 func NewService(db *gorm.DB, logger ign.Logger) Service {
-	s := &service{
+  cluster, _ := kubernetes.InitializeKubernetes(logger)
+
+  storage, machines, _ := aws.InitializeAWS("us-east1", logger)
+  store := env.NewStore()
+
+	s := &service {
+    applicationName: applicationName,
 		// Create a new repository to hold simulation instance data.
 		repository: gormrepo.NewRepository(db, logger, &Simulation{}),
 		// Create the start simulation queue
@@ -76,20 +83,23 @@ func NewService(db *gorm.DB, logger ign.Logger) Service {
 		// Store the logger
 		logger: logger,
     db: db,
+    actions: actions.NewService(),
     // \todo: What is this, and how do I define each part?
     platform: platform.NewPlatform(platform.Components{
       // \todo How do you create a machine?
-      Machines: nil,
+      Machines: machines,
       // \todo How do you create a storage?
-      Storage: nil,
+      Storage: storage,
       // \todo: This is actually the orchestrator, accessed by the Orchestrator() function. Why is this named Cluster here?
-      Cluster: nil,
+      Cluster: cluster,
       // \todo How do you create a store, and what is the different from Storage above?
-      Store: nil,
+      Store: store,
       // \todo How do you create a secretes, and what are secrets?
       Secrets: nil,
     }),
 	}
+
+  registerActions(applicationName, s.actions)
 
 	// Create a queue to handle start requests.
 	go queueHandler(s.startQueue, s.StartSimulation, s.logger)
@@ -98,6 +108,42 @@ func NewService(db *gorm.DB, logger ign.Logger) Service {
 	go queueHandler(s.stopQueue, s.StopSimulation, s.logger)
 
 	return s
+}
+
+// registerActions register a set of actions into the given service with the given application's name.
+// It panics whenever an action could not be registered.
+// \todo: This seems like a useful utility function.
+func registerActions(name string, service actions.Servicer) {
+
+	actions := map[string]actions.Jobs{
+		actionNameStartSimulation: JobsStartSimulation,
+		// actionNameStopSimulation:  JobsStopSimulation,
+	}
+	for actionName, jobs := range actions {
+    fmt.Printf("Name[%s] ActionName[%s]\n", name, actionName)
+    for _, j := range jobs {
+      fmt.Printf("Job Name[%s]\n", j.Name)
+    }
+		err := registerAction(name, service, actionName, jobs)
+		if err != nil {
+			panic(err)
+		}
+	}
+}
+
+// registerAction registers the given jobs as a new action called actionName.
+// The action gets registered into the given service for the given application name.
+// \todo: This seems like a useful utility function.
+func registerAction(applicationName string, service actions.Servicer, actionName string, jobs actions.Jobs) error {
+	action, err := actions.NewAction(jobs)
+	if err != nil {
+		return err
+	}
+	err = service.RegisterAction(&applicationName, actionName, action)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 // queueHandler is in charge of getting the next element from the queue and passing it to the do function.
@@ -133,133 +179,6 @@ func (s *service) GetStopQueue() *ign.Queue {
 	return s.stopQueue
 }
 
-/////////////////////////////////////////////
-var LaunchGazeboServerPod = jobs.LaunchPods.Extend(actions.Job{
-	Name:            "launch-gzserver-pod",
-	PreHooks:        []actions.JobFunc{prepareGazeboCreatePodInput},
-	// PostHooks:       []actions.JobFunc{},
-	// RollbackHandler: rollbackPodCreation,
-	InputType:       actions.GetJobDataType(&StartSimulationData{}),
-	OutputType:      actions.GetJobDataType(&StartSimulationData{}),
-})
-
-func prepareGazeboCreatePodInput(store actions.Store, tx *gorm.DB, deployment *actions.Deployment, value interface{}) (interface{}, error) {
-  fmt.Printf("\n\nPREHOOK!\n\n")
-
-	startData := store.State().(*StartSimulationData)
-  fmt.Printf("State\n")
-  fmt.Println(startData)
-
-  var sim Simulation
-  if err := tx.Where("group_id = ?", startData.GroupID.String()).First(&sim).Error; err != nil {
-    return nil, err
-  }
-
-
-	// What is this, and why is it needed???
-	// namespace := s.Platform().Store().Orchestrator().Namespace()
-  fmt.Printf("-------------------------\n")
-
-	// TODO: Get ports from Ignition Store
-	ports := []int32{11345, 11311}
-
-	// Set up container configuration
-	privileged := true
-	allowPrivilegeEscalation := true
-
-	volumes := []orchestrator.Volume{
-		{
-			Name:      "xauth",
-			MountPath: "/tmp/.docker.xauth",
-			HostPath:  "/tmp/.docker.xauth",
-		},
-		{
-			Name:      "localtime",
-			MountPath: "/etc/localtime",
-			HostPath:  "/etc/localtime",
-		},
-		{
-			Name:      "devinput",
-			MountPath: "/dev/input",
-			HostPath:  "/dev/input",
-		},
-		{
-			Name:      "x11",
-			MountPath: "/tmp/.X11-unix",
-			HostPath:  "/tmp/.X11-unix",
-		},
-	}
-
-	envVars := map[string]string{
-		"DISPLAY":          ":0",
-		"TERM":             "",
-		"QT_X11_NO_MITSHM": "1",
-		"XAUTHORITY":       "/tmp/.docker.xauth",
-		"USE_XVFB":         "1",
-	}
-
-  // \todo: Are the regular nameservers? Are they manadatory?
-	// nameservers := s.Platform().Store().Orchestrator().Nameservers()
-
-	return jobs.LaunchPodsInput{
-		{
-      // Name is the name of the pod that will be created.
-      // \todo: Should this be unique, and where is name used?
-			Name:                          sim.Name,
-
-      // Namespace is the namespace where the pod will live in.
-      // \todo: What is a namespace?
-			Namespace:                     "namespace",
-
-      // Labels are the map of labels that will be applied to the pod.
-      // \todo: What are the labels used for?
-      Labels:                        map[string]string{"key":"value"},
-
-      // RestartPolicy defines how the pod should react after an error.
-      // \todo: What are the restart policies, and how do I choose one?
-			RestartPolicy:                 orchestrator.RestartPolicyNever,
-
-      // TerminationGracePeriodSeconds is the time duration in seconds the pod needs to terminate gracefully.
-      // \todo: What does this do?
-			TerminationGracePeriodSeconds: 0,
-
-      // NodeSelector defines the node where the pod should run in.
-      // \todo: What does this mean, and how do I know what value to put in???
-			NodeSelector:                  orchestrator.NewSelector(map[string]string{
-    "cloudsim_groupid": startData.GroupID.String() }),
-
-      // Containers is the list of containers that should be created inside the pod.
-      // \todo: What is a container? 
-			Containers: []orchestrator.Container{
-        {
-          // Name is the container's name.
-					Name:                     sim.Name,
-          // Image is the image running inside the container.
-					Image:                    sim.Image,
-          // Args passed to the Command. Cannot be updated.
-					Args:                     strings.Split(sim.Args,","),
-          // Privileged defines if the container should run in privileged mode.
-					Privileged:               &privileged,
-          // AllowPrivilegeEscalation is used to define if the container is allowed to scale its privileges.
-					AllowPrivilegeEscalation: &allowPrivilegeEscalation,
-          // Ports is the list of ports that should be opened.
-					Ports:                    ports,
-          // Volumes is the list of volumes that should be mounted in the container.
-					Volumes:                  volumes,
-          // EnvVars is the list of env vars that should be passed into the container.
-					EnvVars:                  envVars,
-				},
-			},
-			Volumes:     volumes,
-
-      // \todo: Is this required?
-			// Nameservers: nameservers,
-		},
-	}, nil
-}
-
-/////////////////////////////////////////////
-
 
 // StartSimulation is called from service.Start(), and it should actually start
 // the simulation running.
@@ -279,8 +198,18 @@ func (s *service) StartSimulation(ctx context.Context, groupID simulations.Group
   }
   store := actions.NewStore(state)
 
+	execInput := &actions.ExecuteInput{
+		ApplicationName: &s.applicationName,
+		ActionName:      actionNameStartSimulation,
+	}
+	err := s.actions.Execute(store, s.db, execInput, groupID)
+	if err != nil {
+		return err
+	}
+
   // \todo: What is this, why do I need it, and how do I create it?
-  action := &actions.Deployment{}
+  /* OLD
+   action := &actions.Deployment{}
 
   // \todo: What is this, why do I need it, and how do I create it?
   launchPodsInput := jobs.LaunchPodsInput{}
@@ -293,6 +222,7 @@ func (s *service) StartSimulation(ctx context.Context, groupID simulations.Group
     fmt.Printf("\n\nError launching pod\n\n")
     fmt.Println(err)
   }
+  */
 
 	fmt.Printf("StartSimulation for groupID[%s]\n", groupID)
 	return nil
@@ -341,7 +271,7 @@ func (s *service) Start(ctx context.Context, request StartRequest) (*StartRespon
     UpdatedAt: time.Now(),
 
     // Name of the simulation
-    Name: "test_sim",
+    Name: "nps-test-sim",
 
     // Create a group id
     GroupID: uuid.NewV4().String(),

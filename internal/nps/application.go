@@ -6,9 +6,20 @@ package nps
 import (
 	"github.com/jinzhu/gorm"
 	ignGorm "gitlab.com/ignitionrobotics/web/cloudsim/pkg/utils/db/gorm"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/actions"
 	"gitlab.com/ignitionrobotics/web/fuelserver/permissions"
 	"gitlab.com/ignitionrobotics/web/ign-go"
 	"gitlab.com/ignitionrobotics/web/ign-go/monitoring/prometheus"
+)
+
+const (
+ 	// actionNameStartSimulation is the name used to register the start simulation action.
+	actionNameStartSimulation = "start-simulation"
+	// actionNameStopSimulation is the name used to register the stop simulation action.
+	actionNameStopSimulation = "stop-simulation"
+
+	// applicationName is the name of the current simulator's application.
+	applicationName = "nps"
 )
 
 // Application is an interface designed to manage this application.
@@ -76,7 +87,13 @@ func NewApplication(apiVersion string, logger ign.Logger) (Application, error) {
 	}
 
   // Update the database.
-  app.db.AutoMigrate(&Simulation{})
+  app.db.AutoMigrate(
+    &Simulation{},
+    // \todo: This is mandatory in order for jobs.LaunchInstances to work. Without this, the job will fail with "Error 1146: Table 'nps.action_deployments' doesn't exist". This seems like a hidden dependency. How about letting the job/action create the table if it's missing?
+    &actions.Deployment{},
+  )
+
+  _ = actions.MigrateDB(db)
 
 	// Create a server monitoring provider. Specifying a provider makes the
 	// server automatically add middleware required to track metrics.
