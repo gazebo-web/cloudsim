@@ -5,7 +5,10 @@ package nps
 import (
 	"context"
 	"fmt"
+	"time"
+  "strings"
 	"github.com/jinzhu/gorm"
+  "github.com/satori/go.uuid"
 	"gitlab.com/ignitionrobotics/web/cloudsim/internal/pkg/domain"
 	gormrepo "gitlab.com/ignitionrobotics/web/cloudsim/internal/pkg/repositories/gorm"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator"
@@ -143,9 +146,15 @@ var LaunchGazeboServerPod = jobs.LaunchPods.Extend(actions.Job{
 func prepareGazeboCreatePodInput(store actions.Store, tx *gorm.DB, deployment *actions.Deployment, value interface{}) (interface{}, error) {
   fmt.Printf("\n\nPREHOOK!\n\n")
 
-	s := store.State().(*StartSimulationData)
+	startData := store.State().(*StartSimulationData)
   fmt.Printf("State\n")
-  fmt.Println(s)
+  fmt.Println(startData)
+
+  var sim Simulation
+  if err := tx.Where("group_id = ?", startData.GroupID.String()).First(&sim).Error; err != nil {
+    return nil, err
+  }
+
 
 	// What is this, and why is it needed???
 	// namespace := s.Platform().Store().Orchestrator().Namespace()
@@ -196,7 +205,7 @@ func prepareGazeboCreatePodInput(store actions.Store, tx *gorm.DB, deployment *a
 		{
       // Name is the name of the pod that will be created.
       // \todo: Should this be unique, and where is name used?
-			Name:                          "MyTestSimulation",
+			Name:                          sim.Name,
 
       // Namespace is the namespace where the pod will live in.
       // \todo: What is a namespace?
@@ -217,18 +226,18 @@ func prepareGazeboCreatePodInput(store actions.Store, tx *gorm.DB, deployment *a
       // NodeSelector defines the node where the pod should run in.
       // \todo: What does this mean, and how do I know what value to put in???
 			NodeSelector:                  orchestrator.NewSelector(map[string]string{
-    "cloudsim_groupid": s.GroupID.String() }),
+    "cloudsim_groupid": startData.GroupID.String() }),
 
       // Containers is the list of containers that should be created inside the pod.
       // \todo: What is a container? 
 			Containers: []orchestrator.Container{
         {
           // Name is the container's name.
-					Name:                     "nps-novnc",
+					Name:                     sim.Name,
           // Image is the image running inside the container.
-					Image:                    "osrf/ros:melodic-desktop-full",
+					Image:                    sim.Image,
           // Args passed to the Command. Cannot be updated.
-					Args:                     []string{"gazebo"},
+					Args:                     strings.Split(sim.Args,","),
           // Privileged defines if the container should run in privileged mode.
 					Privileged:               &privileged,
           // AllowPrivilegeEscalation is used to define if the container is allowed to scale its privileges.
@@ -326,16 +335,34 @@ func (s *service) Start(ctx context.Context, request StartRequest) (*StartRespon
 
 	// Validate request
 
-	// Create simulation if needed (using repository)
+	// Create a simulation
+  sim := Simulation{
+    CreatedAt: time.Now(),
+    UpdatedAt: time.Now(),
 
-	// Send the simulation's group id to the queue
-	gid := simulations.GroupID("test")
+    // Name of the simulation
+    Name: "test_sim",
+
+    // Create a group id
+    GroupID: uuid.NewV4().String(),
+
+    Image: request.Image,
+    Args: request.Args,
+  }
+
+  if err := s.db.Create(&sim).Error; err != nil {
+    return nil, err
+  }
+
+  gid := simulations.GroupID(sim.GroupID)
 
   // This will cause `StartSimulation` to be called because a groupId has been
   // push into the `startQueue` which is processed by the `queueHandler`.
 	s.startQueue.Enqueue(gid)
 
-	return &StartResponse{}, nil
+	return &StartResponse{
+    URI: "http://localhost:3030",
+  }, nil
 }
 
 func (s *service) Stop(ctx context.Context, request StopRequest) (*StopResponse, error) {

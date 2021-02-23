@@ -15,7 +15,7 @@ func (app *application) GetAPIRoutes() ign.Routes {
 	// Return the routes for this application. See also IGN's router.go
 	return ign.Routes{
 		// Example usage:
-		//     curl -X POST http://localhost:8000/1.0/start -F "image=DOCKER_IMAGE"
+    //     curl -X POST http://localhost:8000/1.0/start -F "image=osrf/ros:melodic-desktop-full" -F "arg=gazebo"
 		ign.Route{
 			Name:        "Start simulation",
 			Description: "This is a description for starting a simulation",
@@ -25,7 +25,7 @@ func (app *application) GetAPIRoutes() ign.Routes {
 					Type:        "POST",
 					Description: "Start simulations",
 					Handlers: ign.FormatHandlers{
-						ign.FormatHandler{Handler: http.HandlerFunc(ctrl.Start)},
+						ign.FormatHandler{Handler: ign.JSONResult(ctrl.Start)},
 					},
 				},
 			},

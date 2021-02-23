@@ -13,7 +13,7 @@ import (
 
 // Controller is an interface designed to handle route requests.
 type Controller interface {
-	Start(w http.ResponseWriter, r *http.Request)
+	Start(tx *gorm.DB, w http.ResponseWriter, r *http.Request) (interface{}, *ign.ErrMsg)
 	Stop(w http.ResponseWriter, r *http.Request)
 }
 
@@ -33,15 +33,26 @@ func NewController(db *gorm.DB, logger ign.Logger) Controller {
 	}
 }
 
+// Builds the ErrMsg extra info from the given DecodeErrors
+// \todo: Move this to a common place so that we don't have to copy it
+// every time we create an application.
+func getDecodeErrorsExtraInfo(err error) []string {
+	errs := err.(form.DecodeErrors)
+	extra := make([]string, 0, len(errs))
+	for field, er := range errs {
+		extra = append(extra, fmt.Sprintf("Field: %s. %v", field, er.Error()))
+	}
+	return extra
+}
+
 // Start handles the `/start` route.
 //
 // Flow: user --> POST /start --> controller.Start()
-func (ctrl *controller) Start(w http.ResponseWriter, r *http.Request) {
+func (ctrl *controller) Start(tx *gorm.DB, w http.ResponseWriter, r *http.Request) (interface{}, *ign.ErrMsg) {
 
 	// Parse form's values and files.
 	if err := r.ParseMultipartForm(0); err != nil {
-		fmt.Printf("Failed to parse form")
-		return //nil, ign.NewErrorMessageWithBase(ign.ErrorForm, err)
+		return nil, ign.NewErrorMessageWithBase(ign.ErrorForm, err)
 	}
 	defer r.MultipartForm.RemoveAll()
 
@@ -50,21 +61,21 @@ func (ctrl *controller) Start(w http.ResponseWriter, r *http.Request) {
 
 	if errs := ctrl.formDecoder.Decode(&req, r.Form); errs != nil {
 		fmt.Printf("Failed to decode form")
-		return //ign.NewErrorMessageWithArgs(ign.ErrorFormInvalidValue, errs, getDecodeErrorsExtraInfo(errs))
+		return nil, ign.NewErrorMessageWithArgs(ign.ErrorFormInvalidValue, errs, getDecodeErrorsExtraInfo(errs))
 	}
-
-	fmt.Printf("Image Name[%s]", req.Image)
 
 	// Hand off the start request data to the service.
 	res, err := ctrl.service.Start(r.Context(), req)
 	if err != nil {
-		// Send error message
+		return nil, ign.NewErrorMessageWithBase(ign.ErrorForm, err)
 	}
 
 	// Remove after addressing next comment
+  fmt.Printf("&&&&&&&&&&&&&&&&&&&&&&&&&\n")
 	fmt.Println(res)
 
 	// Send response to the user
+  return res, nil
 }
 
 // Stop handles the `/stop` route.

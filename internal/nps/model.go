@@ -4,7 +4,6 @@ package nps
 // simulations.
 
 import (
-	"github.com/jinzhu/gorm"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
 	"time"
 )
@@ -13,9 +12,22 @@ import (
 // A copy of this entity could be found in the following path:
 // simulations/models.go:15
 type Simulation struct {
-	gorm.Model
+  // Override default GORM Model fields
+  ID        uint      `gorm:"primary_key" json:"-"`
+  CreatedAt time.Time `gorm:"type:timestamp(3) NULL" json:"created_at"`
+  UpdatedAt time.Time `json:"updated_at"`
+  DeletedAt *time.Time `gorm:"type:timestamp(2) NULL" sql:"index" json:"-"`
+  // Timestamp in which this simulation was stopped/terminated.
+  StoppedAt *time.Time `gorm:"type:timestamp(3) NULL" json:"stopped_at,omitempty"`
 
-	// Add simulation fields here
+  Name string `json:"name"`
+  GroupID string `json:"groupid"`
+
+  // The docker to run
+  Image string `json:"image"`
+
+  // Comma separated list of arguments to pass into the docker image
+  Args string `json:"args"`
 }
 
 func (s *Simulation) TableName() string {

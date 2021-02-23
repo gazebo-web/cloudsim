@@ -75,6 +75,9 @@ func NewApplication(apiVersion string, logger ign.Logger) (Application, error) {
 		db:         db,
 	}
 
+  // Update the database.
+  app.db.AutoMigrate(&Simulation{})
+
 	// Create a server monitoring provider. Specifying a provider makes the
 	// server automatically add middleware required to track metrics.
 	monitoring := prometheus.NewPrometheusProvider("")
