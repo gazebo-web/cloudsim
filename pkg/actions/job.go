@@ -1,6 +1,7 @@
 package actions
 
 import (
+	"errors"
 	"fmt"
 	"github.com/imdario/mergo"
 	"github.com/jinzhu/gorm"
@@ -11,6 +12,11 @@ import (
 var (
 	// NilJobDataType is used to indicate that a Job Input or Output does not receive or return data.
 	NilJobDataType = reflect.TypeOf(struct{}{})
+
+	// ErrJobsEmptySequence is returned when a Jobs object does not contain any jobs.
+	ErrJobsEmptySequence = errors.New("job sequence is empty")
+	// ErrJobsNamesNotUnique is returned when a collection of Jobs contains more than one job with the same name.
+	ErrJobsNamesNotUnique = errors.New("jobs names must be unique")
 )
 
 // JobFunc is the function signature used by job hooks and Execute function.
@@ -73,7 +79,7 @@ type JobDataType reflect.Type
 // As an illustration, consider the following scenario:
 //
 //          ┌────┐                 ┌────┐                 ┌────┐
-// -string→ │ S1 │ -ExampleStruct→ | S2 | -ExampleStruct→ | S3 |
+// -string→ │ S1 │ -ExampleStruct→ │ S2 │ -ExampleStruct→ │ S3 │
 //          └────┘                 └────┘                 └────┘
 //	        I: string              I: Nil                 I: ExampleStruct
 //          O: ExampleStruct       O: Nil                 O: Nil
@@ -143,7 +149,9 @@ func (j *Job) Extend(extension Job) *Job {
 	}
 
 	// Make the extended job name the same as the job name
-	extension.Name = j.Name
+	if extension.Name == "" {
+		extension.Name = j.Name
+	}
 
 	// Create the extended job
 	if err := mergo.Merge(&extension, *j); err != nil {
@@ -230,6 +238,22 @@ func callJobFunc(jobFunc JobFunc, store Store, tx *gorm.DB, deployment *Deployme
 // Jobs is a slice of Job
 type Jobs []*Job
 
+// registerTypes registers types used by this sequence of job in a registry.
+func (s *Jobs) registerTypes(registry dataTypeRegistry) {
+	for _, job := range *s {
+		job.registerTypes(registry)
+	}
+}
+
+// notEmpty checks that the Jobs object is not empty.
+func (s *Jobs) notEmpty() error {
+	if len(*s) == 0 {
+		return ErrJobsEmptySequence
+	}
+
+	return nil
+}
+
 // jobsAreValid checks that all jobs are valid.
 func (s *Jobs) jobsAreValid() error {
 	for _, job := range *s {
@@ -241,14 +265,31 @@ func (s *Jobs) jobsAreValid() error {
 	return nil
 }
 
-// registerTypes registers types used by this sequence of job in a registry.
-func (s *Jobs) registerTypes(registry dataTypeRegistry) {
+func (s *Jobs) noRepeatedJobNames() error {
+	jobNames := make(map[string]interface{}, len(*s))
 	for _, job := range *s {
-		job.registerTypes(registry)
+		if _, ok := jobNames[job.Name]; ok {
+			return ErrJobsNamesNotUnique
+		}
+		jobNames[job.Name] = nil
 	}
+
+	return nil
 }
 
 // validate checks that the sequence of jobs is valid.
 func (s *Jobs) validate() error {
-	return s.jobsAreValid()
+	validators := []func() error{
+		s.notEmpty,
+		s.jobsAreValid,
+		s.noRepeatedJobNames,
+	}
+
+	for _, validator := range validators {
+		if err := validator(); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
