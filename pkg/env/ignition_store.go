@@ -1,7 +1,9 @@
 package env
 
 import (
+	"fmt"
 	"github.com/caarlos0/env"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/store"
 )
 
@@ -42,6 +44,9 @@ type ignitionEnvStore struct {
 
 	// DefaultSenderValue is the email address used to send emails.
 	DefaultSenderValue string `env:"CLOUDSIM_IGN_DEFAULT_SENDER"`
+
+	// WebsocketHostValue is the CLOUDSIM_WEBSOCKET_HOST that will be used as host to connect to simulation's websocket servers.
+	WebsocketHostValue string `env:"CLOUDSIM_SUBT_WEBSOCKET_HOST"`
 }
 
 // DefaultRecipients returns the list of default summary email recipients.
@@ -52,6 +57,16 @@ func (i *ignitionEnvStore) DefaultRecipients() []string {
 // DefaultSender returns the default email address used to send emails.
 func (i *ignitionEnvStore) DefaultSender() string {
 	return i.DefaultSenderValue
+}
+
+// GetWebsocketHost returns the host of the websocket address for connecting to simulation websocket servers.
+func (i *ignitionEnvStore) GetWebsocketHost() string {
+	return i.WebsocketHostValue
+}
+
+// GetWebsocketPath returns the path of the websocket address for the given simulation's group id.
+func (i *ignitionEnvStore) GetWebsocketPath(groupID simulations.GroupID) string {
+	return fmt.Sprintf("simulations/%s", groupID.String())
 }
 
 // AccessKeyLabel returns the access key label to get the credentials for a certain cloud provider.

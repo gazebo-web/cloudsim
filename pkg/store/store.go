@@ -118,4 +118,10 @@ type Ignition interface {
 
 	// DefaultSender returns the default sender for emails.
 	DefaultSender() string
+
+	// GetWebsocketHost returns the host of the websocket URL.
+	GetWebsocketHost() string
+
+	// GetWebsocketPath returns the path of the websocket URL for the given simulations.GroupID.
+	GetWebsocketPath(groupID simulations.GroupID) string
 }
