@@ -61,6 +61,7 @@ var deploymentTestData = struct {
 
 func TestNewDeploymentAndGetDeployment(t *testing.T) {
 	tr := setupTest(t)
+	defer tr.db.Close()
 
 	// New Deployment
 	deployment, err := newDeployment(tr.db, deploymentTestData.action)
@@ -80,6 +81,7 @@ func TestNewDeploymentAndGetDeployment(t *testing.T) {
 
 func TestGetRunningDeployments(t *testing.T) {
 	tr := setupTest(t)
+	defer tr.db.Close()
 
 	createTestDeployment := func(db *gorm.DB, status DeploymentStatus) error {
 		deployment := &Deployment{
@@ -108,6 +110,8 @@ func TestGetRunningDeployments(t *testing.T) {
 
 func TestSetJob(t *testing.T) {
 	tr := setupTest(t)
+	defer tr.db.Close()
+
 	td := getTestData(t)
 	dtd := deploymentTestData
 
@@ -143,6 +147,8 @@ func TestSetJob(t *testing.T) {
 
 func TestSetAndGetJobData(t *testing.T) {
 	tr := setupTest(t)
+	defer tr.db.Close()
+
 	td := getTestData(t)
 
 	// Reset the job data type registry
@@ -177,6 +183,8 @@ func TestSetAndGetJobData(t *testing.T) {
 
 func TestAddAndGetErrors(t *testing.T) {
 	tr := setupTest(t)
+	defer tr.db.Close()
+
 	td := getTestData(t)
 
 	deployment, err := newDeployment(tr.db, td.action)
@@ -208,6 +216,8 @@ func TestAddAndGetErrors(t *testing.T) {
 
 func TestSetStatusAndIsStatusAndGetRollbackError(t *testing.T) {
 	tr := setupTest(t)
+	defer tr.db.Close()
+
 	td := getTestData(t)
 
 	// The default status should be Running

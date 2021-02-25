@@ -20,7 +20,7 @@ var SaveStats = actions.Job{
 func saveStats(store actions.Store, tx *gorm.DB, deployment *actions.Deployment, value interface{}) (interface{}, error) {
 	s := store.State().(*state.StopSimulation)
 
-	err := s.SubTServices().Statistics().Save(s.GroupID, nil, s.Stats)
+	err := s.SubTServices().Statistics().Save(s.GroupID, &s.Score, s.Stats)
 	if err != nil {
 		return nil, err
 	}

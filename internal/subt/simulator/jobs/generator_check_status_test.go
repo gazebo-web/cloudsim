@@ -11,12 +11,13 @@ import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations/fake"
 	"testing"
+	"time"
 )
 
 func TestCheckSimulationStatus_Success(t *testing.T) {
 	// Initialize simulation
 	gid := simulations.GroupID("aaaa-bbbb-cccc-dddd")
-	sim := fake.NewSimulation(gid, simulations.StatusPending, simulations.SimSingle, nil, "test")
+	sim := fake.NewSimulation(gid, simulations.StatusPending, simulations.SimSingle, nil, "test", 1*time.Minute)
 
 	// Initialize fake simulation service
 	svc := fake.NewService()
@@ -51,7 +52,7 @@ func TestCheckSimulationStatus_Success(t *testing.T) {
 func TestCheckSimulationStatus_ErrSimInvaludStatus(t *testing.T) {
 	// Initialize simulation
 	gid := simulations.GroupID("aaaa-bbbb-cccc-dddd")
-	sim := fake.NewSimulation(gid, simulations.StatusRunning, simulations.SimSingle, nil, "test")
+	sim := fake.NewSimulation(gid, simulations.StatusRunning, simulations.SimSingle, nil, "test", 1*time.Minute)
 
 	// Initialize fake simulation service
 	svc := fake.NewService()

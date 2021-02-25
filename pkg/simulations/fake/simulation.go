@@ -2,15 +2,22 @@ package fake
 
 import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
+	"time"
 )
 
 // fakeSimulation is a fake simulations.Simulation implementation.
 type fakeSimulation struct {
-	groupID simulations.GroupID
-	status  simulations.Status
-	kind    simulations.Kind
-	err     *simulations.Error
-	image   string
+	groupID  simulations.GroupID
+	status   simulations.Status
+	kind     simulations.Kind
+	err      *simulations.Error
+	image    string
+	validFor time.Duration
+}
+
+// GetValidFor returns the valid duration.
+func (f *fakeSimulation) GetValidFor() time.Duration {
+	return f.validFor
 }
 
 // HasStatus returns true if the given status matches with the current status.
@@ -55,13 +62,13 @@ func (f *fakeSimulation) GetKind() simulations.Kind {
 }
 
 // NewSimulation initializes a new fake simulation.
-func NewSimulation(groupID simulations.GroupID, status simulations.Status, kind simulations.Kind,
-	err *simulations.Error, image string) simulations.Simulation {
+func NewSimulation(groupID simulations.GroupID, status simulations.Status, kind simulations.Kind, err *simulations.Error, image string, validFor time.Duration) simulations.Simulation {
 	return &fakeSimulation{
-		groupID: groupID,
-		status:  status,
-		kind:    kind,
-		err:     err,
-		image:   image,
+		groupID:  groupID,
+		status:   status,
+		kind:     kind,
+		err:      err,
+		image:    image,
+		validFor: validFor,
 	}
 }

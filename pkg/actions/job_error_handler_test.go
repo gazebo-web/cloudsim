@@ -61,6 +61,8 @@ var jobErrorTestData = struct {
 
 func TestJobFuncWrapErrorHandler(t *testing.T) {
 	tr := setupTest(t)
+	defer tr.db.Close()
+
 	setd := jobErrorTestData
 
 	currentJob := "job_1"
@@ -97,6 +99,8 @@ func TestJobFuncWrapErrorHandler(t *testing.T) {
 
 func TestErrorHandlerIgnoreError(t *testing.T) {
 	tr := setupTest(t)
+	defer tr.db.Close()
+
 	setd := jobErrorTestData
 
 	currentJob := "job_1"
@@ -113,6 +117,8 @@ func TestErrorHandlerIgnoreError(t *testing.T) {
 
 func TestJobRunErrorHandler(t *testing.T) {
 	tr := setupTest(t)
+	defer tr.db.Close()
+
 	td := getTestData(t)
 	setd := jobErrorTestData
 
