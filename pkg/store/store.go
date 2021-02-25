@@ -112,4 +112,10 @@ type Ignition interface {
 	// SecretAccessKeyLabel returns the secret access key label to get the credentials for a certain cloud provider.
 	// For AWS, it returns: `aws-secret-access-key`
 	SecretAccessKeyLabel() string
+
+	// GetWebsocketHost returns the host of the websocket URL.
+	GetWebsocketHost() string
+
+	// GetWebsocketPath returns the path of the websocket URL for the given simulations.GroupID.
+	GetWebsocketPath(groupID simulations.GroupID) string
 }
