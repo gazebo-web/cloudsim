@@ -92,6 +92,10 @@ func (m *machines) newRunInstancesInput(createMachines cloud.CreateMachinesInput
 		},
 		TagSpecifications: tagSpec,
 		UserData:          createMachines.InitScript,
+    // \todo I got this error when attempting to launch a machine:
+    //     `InvalidParameterCombination: The parameter groupName cannot be used with the parameter subnet`
+    //
+    // My understanding is that you should use either `SecurityGroupIds` or `SecurityGroups` with the preference being `SecurityGroupIds`
 		// SecurityGroups:    securityGroups,
 	}
 }
