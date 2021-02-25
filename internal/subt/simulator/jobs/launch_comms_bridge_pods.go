@@ -64,7 +64,7 @@ func prepareCommsBridgePodInput(store actions.Store, tx *gorm.DB, deployment *ac
 		}
 
 		pods = append(pods, orchestrator.CreatePodInput{
-			Name:                          subtapp.GetPodNameCommsBridge(s.GroupID, subtapp.GetRobotID(i+1)),
+			Name:                          subtapp.GetPodNameCommsBridge(s.GroupID, subtapp.GetRobotID(i)),
 			Namespace:                     s.Platform().Store().Orchestrator().Namespace(),
 			Labels:                        subtapp.GetPodLabelsCommsBridge(s.GroupID, s.ParentGroupID, r).Map(),
 			RestartPolicy:                 orchestrator.RestartPolicyNever,

@@ -10,6 +10,12 @@ type Service struct {
 	*mock.Mock
 }
 
+// GetWebsocketToken mocks the GetWebsocketToken method.
+func (s *Service) GetWebsocketToken(groupID simulations.GroupID) (string, error) {
+	args := s.Called(groupID)
+	return args.String(0), args.Error(1)
+}
+
 // GetRobots is a mock for the GetRobots method.
 func (s *Service) GetRobots(groupID simulations.GroupID) ([]simulations.Robot, error) {
 	args := s.Called(groupID)

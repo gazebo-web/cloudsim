@@ -1,7 +1,9 @@
 package env
 
 import (
+	"fmt"
 	"github.com/caarlos0/env"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/store"
 )
 
@@ -39,11 +41,24 @@ type ignitionEnvStore struct {
 
 	// LogsBucketValue is the CLOUDSIM_AWS_GZ_LOGS_BUCKET value that will be used to upload logs.
 	LogsBucketValue string `env:"CLOUDSIM_AWS_GZ_LOGS_BUCKET"`
+
+	// WebsocketHostValue is the CLOUDSIM_WEBSOCKET_HOST that will be used as host to connect to simulation's websocket servers.
+	WebsocketHostValue string `env:"CLOUDSIM_SUBT_WEBSOCKET_HOST"`
 }
 
 // LogsBucket returns the bucket to upload simulation logs to.
 func (i *ignitionEnvStore) LogsBucket() string {
 	return i.LogsBucketValue
+}
+
+// GetWebsocketHost returns the host of the websocket address for connecting to simulation websocket servers.
+func (i *ignitionEnvStore) GetWebsocketHost() string {
+	return i.WebsocketHostValue
+}
+
+// GetWebsocketPath returns the path of the websocket address for the given simulation's group id.
+func (i *ignitionEnvStore) GetWebsocketPath(groupID simulations.GroupID) string {
+	return fmt.Sprintf("simulations/%s", groupID.String())
 }
 
 // AccessKeyLabel returns the access key label to get the credentials for a certain cloud provider.
