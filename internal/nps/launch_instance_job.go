@@ -3,6 +3,7 @@ package nps
 // This file implements the launch instance job. 
 
 import (
+  "fmt"
 	"github.com/jinzhu/gorm"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/actions"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/cloud"
@@ -20,27 +21,89 @@ var LaunchInstances = jobs.LaunchInstances.Extend(actions.Job{
 
 // createLaunchInstancesInput is in charge of populating the data for the generic LaunchInstances job input.
 func createLaunchInstancesInput(store actions.Store, tx *gorm.DB, deployment *actions.Deployment, value interface{}) (interface{}, error) {
+  fmt.Printf("\n\nLaunching!\n\n")
 	startData := value.(*StartSimulationData)
 
 	subnet, zone := startData.Platform().Store().Machines().SubnetAndZone()
-	sim, err := startData.Services().Simulations().Get(startData.GroupID)
+
+  // \todo What is this? This line segfaults.
+	/*sim, err := startData.Services().Simulations().Get(startData.GroupID)
 	if err != nil {
 		return nil, err
 	}
+  */
+
+  initScript := "bash"
+  tags := []cloud.Tag{
+		{
+			Resource: "instance",
+			Map: map[string]string{
+				"Name":                       "nps-name",
+				"cloudsim_groupid":           string(startData.GroupID),
+				"CloudsimGroupID":            string(startData.GroupID),
+				"project":                    "nps",
+				"Cloudsim":                   "True",
+				"cloudsim-application":       "nps",
+				// "cloudsim-simulation-worker": m.NamePrefixValue,
+				// "cloudsim_node_type":         nodeType,
+				// clusterKey:                   "owned",
+			},
+		},
+  }
 
 	input := []cloud.CreateMachinesInput{
 		{
+      // \TODO: What is this, and how do I set the value?
+      // \todo: My issue with patterns like `startData.Platform().Store().Machines().InstanceProfile()` is that it's very difficult to follow.
+      //
+      // Figured out that this can be traced back to env.machineStore, which
+      // in turn reads the following environment variable:
+      //     CLOUDSIM_MACHINES_INSTANCE_PROFILE
 			InstanceProfile: startData.Platform().Store().Machines().InstanceProfile(),
+      // \TODO: What is this, and how do I set the value?
+      //
+      // This is set from the CLOUDSIM_MACHINES_KEY_NAME environment variable
 			KeyName:         startData.Platform().Store().Machines().KeyName(),
+
+      // This appears to be the Ec2 machine type.
+      // \todo: How is this configured?
+      //
+      // This is set from the CLOUDSIM_MACHINES_TYPE environment variable
 			Type:            startData.Platform().Store().Machines().Type(),
+
+      // \todo: This is the AMI? Not a Docker image?
+      // \todo: How is this configured?
+      //
+      // This is set from the CLOUDSIM_MACHINES_BASE_IMAGE environment variable
 			Image:           startData.Platform().Store().Machines().BaseImage(),
+
+      // \todo: What is this?
 			MinCount:        1,
+
+      // \todo: What is this?
 			MaxCount:        1,
+
+      // \todo: How is this configured?
+      //
+      // This is set from the CLOUDSIM_MACHINES_FIREWALL_RULES environment
+      // variable
 			FirewallRules:   startData.Platform().Store().Machines().FirewallRules(),
+
+      // \todo: What is this and how is this configured?
 			SubnetID:        subnet,
+
+      // \todo: What is this and how is this configured?
 			Zone:            zone,
-			Tags:            startData.Platform().Store().Machines().Tags(sim, "gzserver", "gzserver"),
-			InitScript:      startData.Platform().Store().Machines().InitScript(),
+
+      // \todo: What is this and how is this configured?
+			//Tags:            startData.Platform().Store().Machines().Tags(sim, "gzserver", "gzserver"),
+			Tags:            tags,
+
+      // \todo: What is this and how is this configured?
+			//InitScript:      startData.Platform().Store().Machines().InitScript(),
+			InitScript:      &initScript,
+
+      // \todo: What is this and what is a good value?
 			Retries:         10,
 		},
 	}

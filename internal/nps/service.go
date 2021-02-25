@@ -29,8 +29,22 @@ type StartSimulationData struct {
 	state.PlatformGetter
 	state.ServicesGetter
   platform             platform.Platform
+  //services             subtapp.Services
   GroupID              simulations.GroupID
+  // CreateMachinesInput  []cloud.CreateMachinesInput
+  // CreateMachinesOutput []cloud.CreateMachinesOutput
 }
+
+// Services returns the underlying application services.
+// \todo I really hate this pattern. 
+//     1. StartSimulationData *must* have a state.ServicesGetter.
+//     2. You then *must* define this function. But there is no compile-time
+//        error if you don't implement this function.
+//     3. If you fail to implement this function, then a segfaul will occur 
+//        due to invalid memory address in a route handler.
+/*func (s *StartSimulationData) Services() application.Services {
+  return s.services
+}*/
 
 // Platform returns the underlying platform.
 func (s *StartSimulationData) Platform() platform.Platform {
@@ -71,6 +85,9 @@ func NewService(db *gorm.DB, logger ign.Logger) Service {
 
   storage, machines, _ := aws.InitializeAWS("us-east1", logger)
   store := env.NewStore()
+
+  // base := application.NewServices(simulationService, userService)
+  // services := npsapp.NewServices(base)
 
 	s := &service {
     applicationName: applicationName,
@@ -193,6 +210,7 @@ func (s *service) StartSimulation(ctx context.Context, groupID simulations.Group
   state := &StartSimulationData{
     // Copy the platform information. 
     platform: s.platform,
+    // service: s.services,
     // Copy the group id.
     GroupID: groupID,
   }
@@ -202,7 +220,7 @@ func (s *service) StartSimulation(ctx context.Context, groupID simulations.Group
 		ApplicationName: &s.applicationName,
 		ActionName:      actionNameStartSimulation,
 	}
-	err := s.actions.Execute(store, s.db, execInput, groupID)
+	err := s.actions.Execute(store, s.db, execInput, state)
 	if err != nil {
 		return err
 	}
@@ -254,6 +272,10 @@ func (s *service) Update(groupID simulations.GroupID, simulation simulations.Sim
 }
 
 func (s *service) GetRobots(groupID simulations.GroupID) ([]simulations.Robot, error) {
+	panic("implement me")
+}
+
+func (s *service) GetWebsocketToken(groupID simulations.GroupID) (string, error) {
 	panic("implement me")
 }
 
