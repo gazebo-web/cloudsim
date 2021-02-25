@@ -25,9 +25,10 @@ import (
 
 func TestLaunchCommsBridgeCopyPods(t *testing.T) {
 	db, err := gorm.GetDBFromEnvVars()
+	defer db.Close()
 	require.NoError(t, err)
 
-	err = actions.MigrateDB(db)
+	err = actions.CleanAndMigrateDB(db)
 	require.NoError(t, err)
 
 	// Set up logger

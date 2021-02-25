@@ -311,6 +311,8 @@ func TestServiceGetNonexistentAction(t *testing.T) {
 
 func TestProcessJobs(t *testing.T) {
 	tr := setupTest(t)
+	defer tr.db.Close()
+
 	td := getTestData(t)
 	std := serviceTestData
 	service := newTestService(t)
@@ -394,6 +396,8 @@ func TestProcessJobs(t *testing.T) {
 
 func TestProcessJobsFailedJobErrorHandler(t *testing.T) {
 	tr := setupTest(t)
+	defer tr.db.Close()
+
 	td := getTestData(t)
 	std := serviceTestData
 	service := newTestService(t)
@@ -474,6 +478,8 @@ func TestProcessJobsFailedJobErrorHandler(t *testing.T) {
 
 func TestProcessJobsNilOutput(t *testing.T) {
 	tr := setupTest(t)
+	defer tr.db.Close()
+
 	std := serviceTestData
 	service := newTestService(t)
 	jobInput := &ServiceTestStruct{}
@@ -607,6 +613,7 @@ func testServiceUpdateJobsForRollback(t *testing.T, jobs Jobs) {
 //   Tests
 func TestExecuteInvalidAction(t *testing.T) {
 	tr := setupTest(t)
+	defer tr.db.Close()
 
 	service := newTestService(t)
 	executeInput := &ExecuteInput{
@@ -618,6 +625,8 @@ func TestExecuteInvalidAction(t *testing.T) {
 
 func TestExecute(t *testing.T) {
 	tr := setupTest(t)
+	defer tr.db.Close()
+
 	std := serviceTestData
 	service := newTestService(t)
 
@@ -642,6 +651,8 @@ func TestExecute(t *testing.T) {
 
 func TestExecuteResumeAction(t *testing.T) {
 	tr := setupTest(t)
+	defer tr.db.Close()
+
 	td := getTestData(t)
 	std := serviceTestData
 	service := newTestService(t)
@@ -677,6 +688,8 @@ func TestExecuteResumeAction(t *testing.T) {
 
 func TestExecuteRollback(t *testing.T) {
 	tr := setupTest(t)
+	defer tr.db.Close()
+
 	std := serviceTestData
 	service := newTestService(t)
 
@@ -706,6 +719,8 @@ func TestExecuteRollback(t *testing.T) {
 
 func TestExecuteResumeRollback(t *testing.T) {
 	tr := setupTest(t)
+	defer tr.db.Close()
+
 	td := getTestData(t)
 	std := serviceTestData
 	service := newTestService(t)

@@ -2,7 +2,7 @@ package simulations
 
 import (
 	"github.com/stretchr/testify/assert"
-	"gitlab.com/ignitionrobotics/web/ign-go"
+	gormUtils "gitlab.com/ignitionrobotics/web/cloudsim/pkg/utils/db/gorm"
 	"testing"
 )
 
@@ -47,17 +47,12 @@ func TestSubTCreateSimulation_robotImageBelongsToECROwner(t *testing.T) {
 }
 
 func TestCountSimulationsByCircuitReturnsZero(t *testing.T) {
-	// Get database config
-	config, err := ign.NewDatabaseConfigFromEnvVars()
-	if err != nil {
-		t.FailNow()
-	}
-
 	// Initialize database
-	db, err := ign.InitDbWithCfg(&config)
+	db, err := gormUtils.GetTestDBFromEnvVars()
 	if err != nil {
 		t.FailNow()
 	}
+	defer db.Close()
 
 	db.DropTableIfExists(&SimulationDeployment{})
 
@@ -75,17 +70,12 @@ func TestCountSimulationsByCircuitReturnsZero(t *testing.T) {
 }
 
 func TestCountSimulationByCircuitReturnsCountWhenCircuitIsSubmitted(t *testing.T) {
-	// Get database config
-	config, err := ign.NewDatabaseConfigFromEnvVars()
-	if err != nil {
-		t.FailNow()
-	}
-
 	// Initialize database
-	db, err := ign.InitDbWithCfg(&config)
+	db, err := gormUtils.GetTestDBFromEnvVars()
 	if err != nil {
 		t.FailNow()
 	}
+	defer db.Close()
 
 	db.DropTableIfExists(&SimulationDeployment{})
 
@@ -119,17 +109,12 @@ func TestCountSimulationByCircuitReturnsCountWhenCircuitIsSubmitted(t *testing.T
 }
 
 func TestCountSimulationByCircuitReturnsCountWhenCircuitGetsSuperseded(t *testing.T) {
-	// Get database config
-	config, err := ign.NewDatabaseConfigFromEnvVars()
-	if err != nil {
-		t.FailNow()
-	}
-
 	// Initialize database
-	db, err := ign.InitDbWithCfg(&config)
+	db, err := gormUtils.GetTestDBFromEnvVars()
 	if err != nil {
 		t.FailNow()
 	}
+	defer db.Close()
 
 	db.DropTableIfExists(&SimulationDeployment{})
 
