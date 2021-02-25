@@ -5,6 +5,7 @@ import (
 	"context"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/jinzhu/gorm"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/actions"
 	sim "gitlab.com/ignitionrobotics/web/cloudsim/simulations"
 	"log"
 )
@@ -26,6 +27,7 @@ func DBMigrate(ctx context.Context, db *gorm.DB) {
 			&sim.CircuitCustomRule{},
 			&sim.SubTQualifiedParticipant{},
 		)
+		_ = actions.MigrateDB(db)
 
 		migrateMultiSimRoles(ctx, db)
 		migrateCircuitRules(ctx, db)
@@ -146,6 +148,7 @@ func DBDropModels(ctx context.Context, db *gorm.DB) {
 
 	if db != nil {
 		// IMPORTANT NOTE: DROP TABLE order is important, due to FKs
+		_ = actions.DropDB(db)
 		db.DropTableIfExists(
 			&sim.SimulationDeploymentsSubTValue{},
 			&sim.SimulationDeployment{},

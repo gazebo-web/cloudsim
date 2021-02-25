@@ -113,6 +113,8 @@ func TestValue(t *testing.T) {
 
 func TestSetDeploymentJobDataAndGetDeploymentJobData(t *testing.T) {
 	tr := setupTest(t)
+	defer tr.db.Close()
+
 	td := getTestData(t)
 	dsdtd := deploymentJobDataTestData
 

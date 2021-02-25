@@ -8,7 +8,6 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	gormUtils "gitlab.com/ignitionrobotics/web/cloudsim/pkg/utils/db/gorm"
-	"gitlab.com/ignitionrobotics/web/ign-go"
 	"strconv"
 
 	// "strconv"
@@ -56,12 +55,11 @@ func TestSimulationDeployment_Clone(t *testing.T) {
 
 func TestGetRemainingSubmissions(t *testing.T) {
 	// Get database config
-	config, err := ign.NewDatabaseConfigFromEnvVars()
-	require.NoError(t, err)
-
-	// Initialize database
-	db, err := ign.InitDbWithCfg(&config)
-	require.NoError(t, err)
+	db, err := gormUtils.GetTestDBFromEnvVars()
+	if err != nil {
+		t.FailNow()
+	}
+	defer db.Close()
 
 	db.DropTableIfExists(&SimulationDeployment{})
 	db.DropTableIfExists(&CircuitCustomRule{})
@@ -230,12 +228,13 @@ func (suite *MachineInstanceTestSuite) TestMachineInstances_updateMachinesStatus
 }
 
 func TestUpdateScore(t *testing.T) {
-	// Get database config
-	config, err := ign.NewDatabaseConfigFromEnvVars()
-	require.NoError(t, err)
-
 	// Initialize database
-	db, err := ign.InitDbWithCfg(&config)
+	db, err := gormUtils.GetTestDBFromEnvVars()
+	if err != nil {
+		t.FailNow()
+	}
+	defer db.Close()
+
 	require.NoError(t, err)
 
 	require.NoError(t, db.DropTableIfExists(&SimulationDeployment{}).Error)
@@ -282,4 +281,8 @@ func TestUpdateScore(t *testing.T) {
 	var dbSimDep SimulationDeployment
 	require.NoError(t, db.Model(&SimulationDeployment{}).Where("id = ?", simDep.ID).First(&dbSimDep).Error)
 	assert.Equal(t, dbSimDep.Score, &updatedScore)
+}
+
+func (suite *MachineInstanceTestSuite) TearDownSuite() {
+	suite.db.Close()
 }
