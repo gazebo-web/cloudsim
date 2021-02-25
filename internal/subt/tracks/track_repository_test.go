@@ -4,6 +4,7 @@ import (
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/mysql"
 	"github.com/stretchr/testify/suite"
+	utilsgorm "gitlab.com/ignitionrobotics/web/cloudsim/pkg/utils/db/gorm"
 	"gitlab.com/ignitionrobotics/web/ign-go"
 	"testing"
 )
@@ -19,10 +20,10 @@ type trackRepositoryTestSuite struct {
 }
 
 func (s *trackRepositoryTestSuite) SetupTest() {
-	var db *gorm.DB
-	dbConfig, err := ign.NewDatabaseConfigFromEnvVars()
-	s.NoError(err)
-	db, err = ign.InitDbWithCfg(&dbConfig)
+	db, err := utilsgorm.GetTestDBFromEnvVars()
+	if err != nil {
+		s.FailNow("Failed to initialize the database.")
+	}
 	s.db = db
 	s.db.DropTableIfExists(&Track{})
 	s.db.AutoMigrate(&Track{})
