@@ -84,7 +84,7 @@ func (m *machineEnvStore) subnet() string {
 // zone calculates and returns the zone id for the current subnetZoneIndex.
 func (m *machineEnvStore) zone() string {
 	i := m.subnetZoneIndex % len(m.ZonesValue)
-	return m.SubnetsValue[i]
+	return m.ZonesValue[i]
 }
 
 // Timeout calculates the time duration in seconds for the current NodeReadyTimeout value.

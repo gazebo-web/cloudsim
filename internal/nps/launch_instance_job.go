@@ -4,6 +4,8 @@ package nps
 
 import (
   "fmt"
+  "encoding/base64"
+  "strings"
 	"github.com/jinzhu/gorm"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/actions"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/cloud"
@@ -27,6 +29,8 @@ func createLaunchInstancesInput(store actions.Store, tx *gorm.DB, deployment *ac
   // \todo this doesn't return the correct zone. It looks like a subnet 
   // is returned in both parameters.
 	subnet, zone := startData.Platform().Store().Machines().SubnetAndZone()
+  fmt.Printf("\n\n\nBadZone[%s]\n\n",zone)
+  fmt.Printf("\n\n\nBadSubnet[%s]\n\n", subnet)
   zone = "us-east-1c"
 
   // \todo What is this? This line segfaults.
@@ -36,7 +40,23 @@ func createLaunchInstancesInput(store actions.Store, tx *gorm.DB, deployment *ac
 	}
   */
 
-  initScript := "bash"
+  command := `
+  #!/bin/bash
+  set -x
+  set -o xtrace
+  /etc/eks/bootstrap.sh %s %s
+  `
+
+  arguments := []string{
+    // Allow the node to contain unlimited pods
+    "--use-max-pods false",
+  }
+  clusterName := "web-cloudsim-testing"
+  initScript := fmt.Sprintf(command, clusterName,
+  strings.Join(arguments, " "))
+  initScript = base64.StdEncoding.EncodeToString([]byte(initScript))
+
+  clusterKey := "kubernetes.io/cluster/web-cloudsim-testing"
   tags := []cloud.Tag{
 		{
 			Resource: "instance",
@@ -49,7 +69,10 @@ func createLaunchInstancesInput(store actions.Store, tx *gorm.DB, deployment *ac
 				"cloudsim-application":       "nps",
 				// "cloudsim-simulation-worker": m.NamePrefixValue,
 				// "cloudsim_node_type":         nodeType,
-				// clusterKey:                   "owned",
+
+        // Note: `clusterKey` is extremely important. Without it, the EC2 node
+        // will not join the cluster.
+				clusterKey:                   "owned",
 			},
 		},
   }
@@ -112,7 +135,7 @@ func createLaunchInstancesInput(store actions.Store, tx *gorm.DB, deployment *ac
 	}
 
   // \todo: Is this needed?
-	// startData.CreateMachinesInput = input
+	startData.CreateMachinesInput = input
 	store.SetState(startData)
 	return jobs.LaunchInstancesInput(input), nil
 }

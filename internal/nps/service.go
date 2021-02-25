@@ -17,6 +17,7 @@ import (
   "gitlab.com/ignitionrobotics/web/cloudsim/pkg/platform"
   "gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulator/state"
   "gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/kubernetes"
+  "gitlab.com/ignitionrobotics/web/cloudsim/pkg/cloud"
   "gitlab.com/ignitionrobotics/web/cloudsim/pkg/cloud/aws"
   "gitlab.com/ignitionrobotics/web/cloudsim/pkg/env"
   ignapp "gitlab.com/ignitionrobotics/web/cloudsim/pkg/application"
@@ -31,8 +32,11 @@ type StartSimulationData struct {
   platform             platform.Platform
   //services             subtapp.Services
   GroupID              simulations.GroupID
-  // CreateMachinesInput  []cloud.CreateMachinesInput
-  // CreateMachinesOutput []cloud.CreateMachinesOutput
+
+  // \todo: What is this used for? I'm using it launch_instance_job.go for some reason.
+  CreateMachinesInput  []cloud.CreateMachinesInput
+  // \todo: What is this used for? I'm using it launch_instance_job.go for some reason.
+  CreateMachinesOutput []cloud.CreateMachinesOutput
 }
 
 // Services returns the underlying application services.
