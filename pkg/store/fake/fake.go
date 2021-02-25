@@ -45,6 +45,18 @@ type Ign struct {
 	*mock.Mock
 }
 
+// GetWebsocketHost mocks the GetWebsocketHost method.
+func (f *Ign) GetWebsocketHost() string {
+	args := f.Called()
+	return args.String(0)
+}
+
+// GetWebsocketPath mocks the GetWebsocketPath method.
+func (f *Ign) GetWebsocketPath(groupID simulations.GroupID) string {
+	args := f.Called(groupID)
+	return args.String(0)
+}
+
 // AccessKeyLabel mocks the AccessKeyLabel method.
 func (f *Ign) AccessKeyLabel() string {
 	args := f.Called()

@@ -28,7 +28,7 @@ func TestLaunchInstances(t *testing.T) {
 	require.NoError(t, err)
 
 	// Migrate db for actions
-	actions.MigrateDB(db)
+	actions.CleanAndMigrateDB(db)
 
 	// Initialize simulation
 	gid := simulations.GroupID("aaaa-bbbb-cccc-dddd")
