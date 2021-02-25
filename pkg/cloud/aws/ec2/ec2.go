@@ -92,7 +92,7 @@ func (m *machines) newRunInstancesInput(createMachines cloud.CreateMachinesInput
 		},
 		TagSpecifications: tagSpec,
 		UserData:          createMachines.InitScript,
-		SecurityGroups:    securityGroups,
+		// SecurityGroups:    securityGroups,
 	}
 }
 
@@ -120,9 +120,13 @@ func (m *machines) createTags(input []cloud.Tag) []*ec2.TagSpecification {
 // returns a different error code than ErrCodeDryRunOperation.
 func (m *machines) runInstanceDryRun(input *ec2.RunInstancesInput) error {
 	input.SetDryRun(true)
+  fmt.Printf("runInstanceDryRun\n")
+  fmt.Println(input)
 	_, err := m.API.RunInstances(input)
 	awsErr, ok := err.(awserr.Error)
 	if !ok || awsErr.Code() != ErrCodeDryRunOperation {
+    // Output some errors please.
+    fmt.Println(err)
 		return cloud.ErrDryRunFailed
 	}
 	return nil

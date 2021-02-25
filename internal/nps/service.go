@@ -83,7 +83,8 @@ type service struct {
 func NewService(db *gorm.DB, logger ign.Logger) Service {
   cluster, _ := kubernetes.InitializeKubernetes(logger)
 
-  storage, machines, _ := aws.InitializeAWS("us-east1", logger)
+  // \todo the region string is very error prone. Can the `aws` interface provide a list of regions to choose from?
+  storage, machines, _ := aws.InitializeAWS("us-east-1", logger)
   store := env.NewStore()
 
   // base := application.NewServices(simulationService, userService)

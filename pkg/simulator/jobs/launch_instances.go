@@ -1,6 +1,7 @@
 package jobs
 
 import (
+  "fmt"
 	"github.com/jinzhu/gorm"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/actions"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/cloud"
@@ -32,6 +33,7 @@ func launchInstances(store actions.Store, tx *gorm.DB, deployment *actions.Deplo
 	// Parse the input
 	in := value.(LaunchInstancesInput)
 
+  fmt.Printf("Creating a machine...maybe??\n")
 	// Trigger the machine creation.
 	out, err := s.Platform().Machines().Create(in)
 

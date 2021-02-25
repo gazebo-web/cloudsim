@@ -24,7 +24,10 @@ func createLaunchInstancesInput(store actions.Store, tx *gorm.DB, deployment *ac
   fmt.Printf("\n\nLaunching!\n\n")
 	startData := value.(*StartSimulationData)
 
+  // \todo this doesn't return the correct zone. It looks like a subnet 
+  // is returned in both parameters.
 	subnet, zone := startData.Platform().Store().Machines().SubnetAndZone()
+  zone = "us-east-1c"
 
   // \todo What is this? This line segfaults.
 	/*sim, err := startData.Services().Simulations().Get(startData.GroupID)
