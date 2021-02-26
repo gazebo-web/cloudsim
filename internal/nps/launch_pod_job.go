@@ -14,8 +14,8 @@ import (
 /////////////////////////////////////////////
 var LaunchGazeboServerPod = jobs.LaunchPods.Extend(actions.Job{
 	Name:            "launch-gzserver-pod",
-	PreHooks:        []actions.JobFunc{prepareGazeboCreatePodInput},
-	// PostHooks:       []actions.JobFunc{},
+	PreHooks:        []actions.JobFunc{setStartState, prepareGazeboCreatePodInput},
+	PostHooks:       []actions.JobFunc{returnState},
 	// RollbackHandler: rollbackPodCreation,
 	InputType:       actions.GetJobDataType(&StartSimulationData{}),
 	OutputType:      actions.GetJobDataType(&StartSimulationData{}),

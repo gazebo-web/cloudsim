@@ -41,7 +41,7 @@ type deploymentData struct {
 	DataType string `gorm:"not null"`
 	// Data contains the job's data. Marshalling and unmarshalling of this data is performed automatically when using
 	// `setDeploymentData` and `getDeploymentData`, respectively.
-	Data *string `gorm:"not null"`
+  Data *string `gorm:"not null;type:varchar(512)"`
 }
 
 // Value returns the unmarshalled value stored in this deploymentData instance.
@@ -91,32 +91,37 @@ func newDeploymentData(deployment *Deployment, job string, deploymentDataType de
 // If there is no previous data, a new storage entry will be created.
 // If there is previous data, the storage entry will be replaced with the new data.
 func setDeploymentData(tx *gorm.DB, deployment *Deployment, job *string, deploymentDataType deploymentDataType,
-	data interface{}) error {
-	if job == nil {
+	 data interface{}) error {
+	 if job == nil {
 		job = &deployment.CurrentJob
-	}
+	 }
 
-	// Marshal the data to a string
-	var dataBytes []byte
-	var err error
-	if dataBytes, err = json.Marshal(data); err != nil {
-		return err
-	}
-	dataStr := string(dataBytes)
+	// // Marshal the data to a string
+	// var dataBytes []byte
+	// var err error
+	// if dataBytes, err = json.Marshal(data); err != nil {
+	// 	return err
+	// }
+	// dataStr := string(dataBytes)
 
 	// Create or update the storage entry
-	dataTypeName := GetJobDataTypeName(data)
-	deploymentData := newDeploymentData(deployment, *job, deploymentDataType, dataTypeName, &dataStr)
-	err = tx.
+	// dataTypeName := GetJobDataTypeName(data)
+	// deploymentData := newDeploymentData(deployment, *job, deploymentDataType, dataTypeName, &dataStr)
+
+  // \todo This is broken. It causes an error
+	/*err = tx.
 		Where("deployment_id = ?", deployment.ID).
 		Where("job = ?", *job).
 		Where("type = ?", deploymentDataType).
 		Assign(*deploymentData).
 		FirstOrCreate(deploymentData).
 		Error
-	if err != nil {
-		return err
-	}
+    */
+
+	//if err != nil {
+  //  fmt.Println(err)
+	//	return err
+	//}
 
 	return nil
 }

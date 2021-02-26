@@ -16,7 +16,7 @@ import (
 var LaunchInstances = jobs.LaunchInstances.Extend(actions.Job{
 	Name:       "launch-instances",
 	PreHooks:   []actions.JobFunc{createLaunchInstancesInput},
-	//PostHooks:  []actions.JobFunc{checkLaunchInstancesOutput, saveLaunchInstancesOutput, returnState},
+	PostHooks:  []actions.JobFunc{checkLaunchInstancesOutput, saveLaunchInstancesOutput, returnState},
 	InputType:  actions.GetJobDataType(&StartSimulationData{}),
 	OutputType: actions.GetJobDataType(&StartSimulationData{}),
 })
@@ -130,7 +130,7 @@ func createLaunchInstancesInput(store actions.Store, tx *gorm.DB, deployment *ac
 			InitScript:      &initScript,
 
       // \todo: What is this and what is a good value?
-			Retries:         10,
+			Retries:         1,
 		},
 	}
 
@@ -141,9 +141,9 @@ func createLaunchInstancesInput(store actions.Store, tx *gorm.DB, deployment *ac
 }
 
 // checkLaunchInstancesOutput checks that the requested instances matches the amount of created instances.
-/*func checkLaunchInstancesOutput(store actions.Store, tx *gorm.DB, deployment *actions.Deployment, value interface{}) (interface{}, error) {
+func checkLaunchInstancesOutput(store actions.Store, tx *gorm.DB, deployment *actions.Deployment, value interface{}) (interface{}, error) {
 	out := value.(jobs.LaunchInstancesOutput)
-	s := store.State().(*state.StartSimulation)
+	s := store.State().(*StartSimulationData)
 	var requested int64
 	for _, c := range s.CreateMachinesInput {
 		requested += c.MinCount
@@ -157,11 +157,12 @@ func createLaunchInstancesInput(store actions.Store, tx *gorm.DB, deployment *ac
 	}
 	return out, nil
 }
+
 // saveLaunchInstancesOutput saves the list of machines created in the store.
 func saveLaunchInstancesOutput(store actions.Store, tx *gorm.DB, deployment *actions.Deployment, value interface{}) (interface{}, error) {
 	out := value.(jobs.LaunchInstancesOutput)
-	s := store.State().(*state.StartSimulation)
+	s := store.State().(*StartSimulationData)
 	s.CreateMachinesOutput = out
 	store.SetState(s)
 	return s, nil
-}*/
+}

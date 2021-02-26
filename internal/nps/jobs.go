@@ -7,6 +7,8 @@ import (
 // JobsStartSimulation groups the jobs needed to start a simulation.
 var JobsStartSimulation = actions.Jobs{
 	LaunchInstances,
+  WaitForInstances,
+  WaitForNodes,
 	LaunchGazeboServerPod,
 }
 
