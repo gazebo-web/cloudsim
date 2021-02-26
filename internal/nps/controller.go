@@ -5,6 +5,7 @@ package nps
 
 import (
 	"fmt"
+  "errors"
 	"github.com/go-playground/form"
 	"github.com/jinzhu/gorm"
 	"gitlab.com/ignitionrobotics/web/ign-go"
@@ -64,15 +65,22 @@ func (ctrl *controller) Start(tx *gorm.DB, w http.ResponseWriter, r *http.Reques
 		return nil, ign.NewErrorMessageWithArgs(ign.ErrorFormInvalidValue, errs, getDecodeErrorsExtraInfo(errs))
 	}
 
+  // An image form field is required. This is the docker image to run.
+  if req.Image == "" {
+		return nil, ign.NewErrorMessageWithBase(ign.ErrorMissingField, errors.New("Missing 'image' form field"))
+  }
+
+  // Make sure the some arguments are set. The arguments are passed to the
+  // docker image.
+  if req.Args == "" {
+		return nil, ign.NewErrorMessageWithBase(ign.ErrorMissingField, errors.New("Missing 'args' form field"))
+  }
+
 	// Hand off the start request data to the service.
 	res, err := ctrl.service.Start(r.Context(), req)
 	if err != nil {
 		return nil, ign.NewErrorMessageWithBase(ign.ErrorForm, err)
 	}
-
-	// Remove after addressing next comment
-  fmt.Printf("&&&&&&&&&&&&&&&&&&&&&&&&&\n")
-	fmt.Println(res)
 
 	// Send response to the user
   return res, nil

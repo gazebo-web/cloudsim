@@ -35,7 +35,6 @@ var Wait = &actions.Job{
 // 		Waiting for pods to have an ip assigned.
 // 		Waiting for pods to be on the "Ready" state.
 func wait(store actions.Store, tx *gorm.DB, deployment *actions.Deployment, value interface{}) (interface{}, error) {
-  fmt.Printf("\n\nwait\n\n")
 	input, ok := value.(WaitInput)
 	if !ok {
     fmt.Println(simulator.ErrInvalidInput)
@@ -43,7 +42,6 @@ func wait(store actions.Store, tx *gorm.DB, deployment *actions.Deployment, valu
 	}
 
 	err := input.Request.Wait(input.Timeout, input.PollFrequency)
-  fmt.Printf("\n\ndone waiting\n\n")
 	return WaitOutput{
 		Error: err,
 	}, nil

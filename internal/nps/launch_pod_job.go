@@ -31,13 +31,12 @@ func prepareGazeboCreatePodInput(store actions.Store, tx *gorm.DB, deployment *a
     return nil, err
   }
 
-
 	// What is this, and why is it needed???
 	// namespace := startData.Platform().Store().Orchestrator().Namespace()
   fmt.Printf("-------------------------\n")
 
 	// TODO: Get ports from Ignition Store
-	ports := []int32{11345, 11311}
+	ports := []int32{11345, 11311, 8080, 6080}
 
 	// Set up container configuration
 	privileged := true
@@ -67,8 +66,7 @@ func prepareGazeboCreatePodInput(store actions.Store, tx *gorm.DB, deployment *a
 	}
 
 	envVars := map[string]string{
-		"DISPLAY":          ":0",
-		"TERM":             "",
+		"DISPLAY":          "",
 		"QT_X11_NO_MITSHM": "1",
 		"XAUTHORITY":       "/tmp/.docker.xauth",
 		"USE_XVFB":         "1",
@@ -99,10 +97,15 @@ func prepareGazeboCreatePodInput(store actions.Store, tx *gorm.DB, deployment *a
       // \todo: What does this do?
 			TerminationGracePeriodSeconds: 0,
 
-      // NodeSelector defines the node where the pod should run in.
-      // \todo: What does this mean, and how do I know what value to put in???
-			NodeSelector:                  orchestrator.NewSelector(map[string]string{
-    "cloudsim_groupid": startData.GroupID.String() }),
+      // NodeSelector defines the node where the pod should run in. This is
+      // very important and must be set correctly to match a lable on a Node
+      // otherwise the pod will not run and remain in a `pending` state.
+      //
+      // A Node's labels are set when launching an instance via
+      // `KUBELET_EXTRA_ARGS=--node-labels=KEY=VALUE` in a
+      //   `/etc/systemd/system/kubelet.service.d/20-labels-taints.conf` file.
+			NodeSelector:                  orchestrator.NewSelector(map[string]string{ "cloudsim_groupid": startData.GroupID.String() }),
+			// For testing NodeSelector:                  orchestrator.NewSelector(map[string]string{ "nps": "true" }),
 
       // Containers is the list of containers that should be created inside the pod.
       // \todo: What is a container? 

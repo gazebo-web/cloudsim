@@ -29,9 +29,7 @@ func createLaunchInstancesInput(store actions.Store, tx *gorm.DB, deployment *ac
   // \todo this doesn't return the correct zone. It looks like a subnet 
   // is returned in both parameters.
 	subnet, zone := startData.Platform().Store().Machines().SubnetAndZone()
-  fmt.Printf("\n\n\nBadZone[%s]\n\n",zone)
-  fmt.Printf("\n\n\nBadSubnet[%s]\n\n", subnet)
-  zone = "us-east-1c"
+  // zone = "us-east-1c"
 
   // \todo What is this? This line segfaults.
 	/*sim, err := startData.Services().Simulations().Get(startData.GroupID)
@@ -44,9 +42,27 @@ func createLaunchInstancesInput(store actions.Store, tx *gorm.DB, deployment *ac
   #!/bin/bash
   set -x
   set -o xtrace
-  /etc/eks/bootstrap.sh %s %s
-  `
+  cat > /etc/systemd/system/kubelet.service.d/20-labels-taints.conf <<EOF
+[Service]
+Environment="KUBELET_EXTRA_ARGS=--node-labels=cloudsim_groupid=` + startData.GroupID.String() + `"
+EOF
 
+  /etc/eks/bootstrap.sh %s %s
+`
+
+  /* This is for testing purposes
+  command := `
+  #!/bin/bash
+  set -x
+  set -o xtrace
+  cat > /etc/systemd/system/kubelet.service.d/20-labels-taints.conf <<EOF
+[Service]
+Environment="KUBELET_EXTRA_ARGS=--node-labels=nps=true"
+EOF
+
+  /etc/eks/bootstrap.sh %s %s
+`
+*/
   arguments := []string{
     // Allow the node to contain unlimited pods
     "--use-max-pods false",

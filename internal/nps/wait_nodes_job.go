@@ -34,7 +34,9 @@ func createWaitForNodesInput(store actions.Store, tx *gorm.DB, deployment *actio
 
 	w := s.Platform().Orchestrator().Nodes().WaitForCondition(res, orchestrator.ReadyCondition)
 
-	return &jobs.WaitInput{
+  // \todo Sequencing jobs in the current format requires passing around interfaces of the correct type. If a type is not correct, the build is fine but the job sequence will error out. It's very difficult to figure out where the problem is.
+  // It would be nice to have some kind of type of compile-time checking.
+	return jobs.WaitInput{
 		Request:       w,
 		PollFrequency: s.Platform().Store().Machines().PollFrequency(),
 		Timeout:       s.Platform().Store().Machines().Timeout(),
