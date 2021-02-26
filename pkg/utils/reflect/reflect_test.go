@@ -6,6 +6,16 @@ import (
 	"testing"
 )
 
+type Tester interface {
+	Value() interface{}
+}
+
+type Test struct {
+	value int
+}
+
+func (t *Test) Value() interface{} { return t.value }
+
 func TestAppendToSliceInt(t *testing.T) {
 	slice := make([]int, 0)
 	assert.NoError(t, AppendToSlice(&slice, 1, 2, 3))
@@ -241,4 +251,35 @@ func TestNewCollectionValueInstanceNotSliceError(t *testing.T) {
 	value := 0
 	_, err := NewCollectionValueInstance(value)
 	assert.Equal(t, ErrNotCollection, err)
+}
+
+func TestSetValueElementaryValue(t *testing.T) {
+	var out int
+	expected := 1
+	assert.Nil(t, SetValue(&out, 1))
+	assert.Equal(t, expected, out)
+}
+
+func TestSetValueStructPointer(t *testing.T) {
+	out := Test{}
+	expected := 1
+	assert.Nil(t, SetValue(&out, Test{expected}))
+	assert.Equal(t, expected, out.value)
+}
+
+func TestSetValueInterface(t *testing.T) {
+	var out Tester
+	expected := 1
+	assert.Nil(t, SetValue(&out, &Test{expected}))
+	assert.Equal(t, expected, out.Value())
+}
+
+func TestSetValueNotPointerError(t *testing.T) {
+	out := 1
+	assert.Equal(t, ErrNotPointer, SetValue(out, Test{}))
+}
+
+func TestSetValueInvalidOutValueError(t *testing.T) {
+	out := 1
+	assert.Equal(t, ErrInvalidOutValue, SetValue(&out, Test{}))
 }

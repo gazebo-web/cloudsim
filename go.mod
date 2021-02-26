@@ -25,6 +25,7 @@ require (
 	github.com/joho/godotenv v1.3.0
 	github.com/lib/pq v1.8.0 // indirect
 	github.com/mattn/go-pointer v0.0.0-20180825124634-49522c3f3791
+	github.com/mitchellh/mapstructure v1.1.2
 	github.com/onsi/ginkgo v1.14.1 // indirect
 	github.com/onsi/gomega v1.10.2 // indirect
 	github.com/panjf2000/ants v0.0.0-20190122063359-2ba69cd1384d
