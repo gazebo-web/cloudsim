@@ -6,11 +6,36 @@ import (
 )
 
 var (
-	// ErrNotPointer is returned when a function receives a parameter that is not a pointer
+	// ErrNotPointer is returned when a function receives a parameter that is not a pointer.
 	ErrNotPointer = errors.New("out value is not pointer")
-	// ErrNotCollection is returned when a function receives a parameter that is not a collection
+	// ErrNotCollection is returned when a function receives a parameter that is not a collection.
 	ErrNotCollection = errors.New("out value is not collection")
+	// ErrInvalidOutValue is returned when an out value cannot be set to the target value.
+	ErrInvalidOutValue = errors.New("invalid out value type")
 )
+
+// SetValue sets the `out` parameter to the specified value.
+// `out` must be a pointer.
+func SetValue(out interface{}, value interface{}) (err error) {
+	// Handle panics
+	defer func() {
+		if p := recover(); p != nil {
+			err = ErrInvalidOutValue
+		}
+	}()
+
+	// Get the pointer value
+	p := reflect.ValueOf(out)
+	if p.Kind() != reflect.Ptr {
+		return ErrNotPointer
+	}
+
+	v := reflect.ValueOf(value)
+	pv := p.Elem()
+	pv.Set(v)
+
+	return nil
+}
 
 // AppendToSlice appends values to a slice.
 // `out` must be a pointer to a slice.
