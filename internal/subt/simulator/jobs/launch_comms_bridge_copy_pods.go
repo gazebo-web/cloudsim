@@ -62,7 +62,7 @@ func prepareCommsBridgeCreateCopyPodInput(store actions.Store, tx *gorm.DB, depl
 		secretAccessKey := string(secret.Data[s.Platform().Store().Ignition().SecretAccessKeyLabel()])
 
 		pods = append(pods, orchestrator.CreatePodInput{
-			Name:                          subtapp.GetPodNameCommsBridgeCopy(s.GroupID, subtapp.GetRobotID(i+1)),
+			Name:                          subtapp.GetPodNameCommsBridgeCopy(s.GroupID, subtapp.GetRobotID(i)),
 			Namespace:                     ns,
 			Labels:                        subtapp.GetPodLabelsCommsBridgeCopy(s.GroupID, s.ParentGroupID, r).Map(),
 			RestartPolicy:                 orchestrator.RestartPolicyNever,

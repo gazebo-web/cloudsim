@@ -3,6 +3,7 @@ package tracks
 import (
 	"github.com/jinzhu/gorm"
 	"github.com/stretchr/testify/suite"
+	utilsgorm "gitlab.com/ignitionrobotics/web/cloudsim/pkg/utils/db/gorm"
 	"gitlab.com/ignitionrobotics/web/ign-go"
 	"gopkg.in/go-playground/validator.v9"
 	"testing"
@@ -20,10 +21,10 @@ type trackServiceTestSuite struct {
 }
 
 func (s *trackServiceTestSuite) SetupTest() {
-	var db *gorm.DB
-	dbConfig, err := ign.NewDatabaseConfigFromEnvVars()
-	s.NoError(err)
-	db, err = ign.InitDbWithCfg(&dbConfig)
+	db, err := utilsgorm.GetTestDBFromEnvVars()
+	if err != nil {
+		s.FailNow("Failed to initialize the database.")
+	}
 	s.db = db
 	s.db.DropTableIfExists(&Track{})
 	s.db.AutoMigrate(&Track{})
