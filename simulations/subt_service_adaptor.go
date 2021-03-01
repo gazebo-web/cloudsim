@@ -1,6 +1,7 @@
 package simulations
 
 import (
+	"errors"
 	"github.com/jinzhu/gorm"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
 )
@@ -9,6 +10,18 @@ import (
 // It acts as an adaptor between the legacy code and the new code introduced in the code refactor.
 type SimulationServiceAdaptor struct {
 	db *gorm.DB
+}
+
+// GetWebsocketToken gets the authorization token to connect a websocket server for the given simulation.
+func (sa *SimulationServiceAdaptor) GetWebsocketToken(groupID simulations.GroupID) (string, error) {
+	dep, err := GetSimulationDeployment(sa.db, groupID.String())
+	if err != nil {
+		return "", err
+	}
+	if dep.AuthorizationToken == nil {
+		return "", errors.New("missing access token")
+	}
+	return *dep.AuthorizationToken, nil
 }
 
 // Get gets a simulation deployment with the given GroupID.
