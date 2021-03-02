@@ -10,7 +10,7 @@ import (
 	"github.com/johannesboyne/gofakes3"
 	"github.com/johannesboyne/gofakes3/backend/s3mem"
 	"github.com/stretchr/testify/suite"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/cloud"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/storage"
 	"gitlab.com/ignitionrobotics/web/ign-go"
 	"net/http"
 	"net/http/httptest"
@@ -35,7 +35,7 @@ type s3StorageTestSuite struct {
 	suite.Suite
 	s3      *s3test
 	api     s3iface.S3API
-	storage cloud.Storage
+	storage storage.Storage
 }
 
 func (s *s3StorageTestSuite) SetupTest() {
@@ -71,7 +71,7 @@ func (s *s3StorageTestSuite) TestNewStorage() {
 	api := s3.New(s.s3.Session)
 	logger := ign.NewLoggerNoRollbar("s3StorageTestSuite", ign.VerbosityDebug)
 	st := NewStorage(api, logger)
-	obj, ok := st.(*storage)
+	obj, ok := st.(*s3Storage)
 	s.True(ok)
 	s.NotNil(obj.API)
 }
@@ -82,7 +82,7 @@ func (s *s3StorageTestSuite) TestUpload_OK() {
 
 	bslice := []byte("test")
 	file := bytes.NewReader(bslice)
-	err = s.storage.Upload(cloud.UploadInput{
+	err = s.storage.Upload(storage.UploadInput{
 		Bucket:        "bucket",
 		Key:           "key",
 		File:          file,
@@ -95,7 +95,7 @@ func (s *s3StorageTestSuite) TestUpload_OK() {
 func (s *s3StorageTestSuite) TestUpload_BucketDoesntExist() {
 	bslice := []byte("test")
 	file := bytes.NewReader(bslice)
-	err := s.storage.Upload(cloud.UploadInput{
+	err := s.storage.Upload(storage.UploadInput{
 		Bucket:        "bucket",
 		Key:           "key",
 		File:          file,
@@ -111,7 +111,7 @@ func (s *s3StorageTestSuite) TestUpload_MissingBucketName() {
 
 	bslice := []byte("test")
 	file := bytes.NewReader(bslice)
-	err = s.storage.Upload(cloud.UploadInput{
+	err = s.storage.Upload(storage.UploadInput{
 		Bucket:        "",
 		Key:           "key",
 		File:          file,
@@ -127,7 +127,7 @@ func (s *s3StorageTestSuite) TestUpload_MissingKey() {
 
 	bslice := []byte("test")
 	file := bytes.NewReader(bslice)
-	err = s.storage.Upload(cloud.UploadInput{
+	err = s.storage.Upload(storage.UploadInput{
 		Bucket:        "bucket",
 		Key:           "",
 		File:          file,
@@ -142,7 +142,7 @@ func (s *s3StorageTestSuite) TestUpload_MissingFile() {
 	s.NoError(err)
 
 	bslice := []byte("test")
-	err = s.storage.Upload(cloud.UploadInput{
+	err = s.storage.Upload(storage.UploadInput{
 		Bucket:        "bucket",
 		Key:           "key",
 		File:          nil,
@@ -150,7 +150,7 @@ func (s *s3StorageTestSuite) TestUpload_MissingFile() {
 		ContentType:   http.DetectContentType(bslice),
 	})
 	s.Error(err)
-	s.Equal(cloud.ErrMissingFile, err)
+	s.Equal(storage.ErrMissingFile, err)
 }
 
 func (s *s3StorageTestSuite) TestUpload_FileLengthMismatch() {
@@ -159,7 +159,7 @@ func (s *s3StorageTestSuite) TestUpload_FileLengthMismatch() {
 
 	bslice := []byte("test")
 	file := bytes.NewReader(bslice)
-	err = s.storage.Upload(cloud.UploadInput{
+	err = s.storage.Upload(storage.UploadInput{
 		Bucket:        "bucket",
 		Key:           "key",
 		File:          file,
@@ -175,7 +175,7 @@ func (s *s3StorageTestSuite) TestUpload_BadContentType() {
 
 	bslice := []byte("test")
 	file := bytes.NewReader(bslice)
-	err = s.storage.Upload(cloud.UploadInput{
+	err = s.storage.Upload(storage.UploadInput{
 		Bucket:        "bucket",
 		Key:           "key",
 		File:          file,
@@ -183,7 +183,7 @@ func (s *s3StorageTestSuite) TestUpload_BadContentType() {
 		ContentType:   "test",
 	})
 	s.Error(err)
-	s.Equal(cloud.ErrBadContentType, err)
+	s.Equal(storage.ErrBadContentType, err)
 }
 
 func (s *s3StorageTestSuite) TestGetURL() {
@@ -192,7 +192,7 @@ func (s *s3StorageTestSuite) TestGetURL() {
 
 	bslice := []byte("test")
 	file := bytes.NewReader(bslice)
-	err = s.storage.Upload(cloud.UploadInput{
+	err = s.storage.Upload(storage.UploadInput{
 		Bucket:        "bucket",
 		Key:           "key",
 		File:          file,
