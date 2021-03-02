@@ -93,8 +93,33 @@ func (dep *SimulationDeployment) GetGroupID() simulations.GroupID {
 }
 
 func (dep *SimulationDeployment) GetStatus() simulations.Status {
-	switch dep.DeploymentStatus {
-	// TODO: Add statuses
+	switch *dep.DeploymentStatus {
+	case simPending.ToInt():
+		return simulations.StatusPending
+	case simLaunchingNodes.ToInt():
+		return simulations.StatusLaunchingInstances
+	case simLaunchingPods.ToInt():
+		return simulations.StatusLaunchingPods
+	case simParentLaunching.ToInt():
+		return simulations.StatusUnknown
+	case simParentLaunchingWithErrors.ToInt():
+		return simulations.StatusUnknown
+	case simRunning.ToInt():
+		return simulations.StatusRunning
+	case simTerminateRequested.ToInt():
+		return simulations.StatusTerminateRequested
+	case simDeletingPods.ToInt():
+		return simulations.StatusDeletingPods
+	case simDeletingNodes.ToInt():
+		return simulations.StatusDeletingNodes
+	case simTerminatingInstances.ToInt():
+		return simulations.StatusTerminatingInstances
+	case simTerminated.ToInt():
+		return simulations.StatusTerminated
+	case simRejected.ToInt():
+		return simulations.StatusRejected
+	case simSuperseded.ToInt():
+		return simulations.StatusSuperseded
 	default:
 		return simulations.StatusUnknown
 	}
@@ -572,6 +597,26 @@ func convertStatus(status simulations.Status) DeploymentStatus {
 	switch status {
 	case simulations.StatusPending:
 		return simPending
+	case simulations.StatusLaunchingInstances:
+		return simLaunchingNodes
+	case simulations.StatusLaunchingPods:
+		return simLaunchingPods
+	case simulations.StatusRunning:
+		return simRunning
+	case simulations.StatusTerminateRequested:
+		return simTerminateRequested
+	case simulations.StatusDeletingPods:
+		return simDeletingPods
+	case simulations.StatusDeletingNodes:
+		return simDeletingNodes
+	case simulations.StatusTerminatingInstances:
+		return simTerminatingInstances
+	case simulations.StatusTerminated:
+		return simTerminated
+	case simulations.StatusRejected:
+		return simRejected
+	case simulations.StatusSuperseded:
+		return simSuperseded
 	default:
 		return simPending
 	}

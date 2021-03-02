@@ -7,7 +7,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/johannesboyne/gofakes3"
 	"github.com/johannesboyne/gofakes3/backend/s3mem"
-	uuid "github.com/satori/go.uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	subtapp "gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/application"
@@ -40,15 +39,12 @@ func TestStartSimulationAction(t *testing.T) {
 	// Set up context
 	ctx := context.Background()
 
-	// Define simulation GroupID.
-	gid := simulations.GroupID(uuid.NewV4().String())
-
 	// Connect to the database
 	db, err := gorm.GetTestDBFromEnvVars()
 	require.NoError(t, err)
 
 	// Clean and migrate database
-	err = gorm.CleanAndMigrateModels(db, &legacy.SimulationDeployment{})
+	err = gorm.CleanAndMigrateModels(db, &legacy.SimulationDeployment{}, &tracks.Track{})
 	require.NoError(t, err)
 
 	// Migrate actions
@@ -107,6 +103,34 @@ func TestStartSimulationAction(t *testing.T) {
 	// Initialize base application services
 	simService := legacy.NewSubTSimulationServiceAdaptor(db)
 
+	extra := legacy.ExtraInfoSubT{
+		Circuit: "Urban Circuit 1",
+		Robots: []legacy.SubTRobot{
+			{
+				Name:    "X1",
+				Type:    "X1",
+				Image:   "test.org/image",
+				Credits: 270,
+			},
+		},
+	}
+
+	extraInfo, err := extra.ToJSON()
+	require.NoError(t, err)
+
+	sim, err := simService.Create(simulations.CreateSimulationInput{
+		Name:      "sim-test",
+		Owner:     "sysadmin",
+		Creator:   "sysadmin",
+		Image:     []string{"test.org/image"},
+		Private:   false,
+		StopOnEnd: false,
+		Extra:     *extraInfo,
+		Track:     "Urban Circuit 1",
+		Robots:    "X1",
+	})
+	require.NoError(t, err)
+
 	// Initializing permissions
 	perm := permissions.Permissions{}
 	err = perm.Init(db, "sysadmin")
@@ -127,6 +151,18 @@ func TestStartSimulationAction(t *testing.T) {
 	// Initialize track services.
 	trackService := tracks.NewService(trackRepository, v, logger)
 
+	// Create testing track
+	_, err = trackService.Create(tracks.CreateTrackInput{
+		Name:          "Urban Circuit 1",
+		Image:         "test.org/image",
+		BridgeImage:   "test.org/bridge-image",
+		StatsTopic:    "/stats",
+		WarmupTopic:   "/warmup",
+		MaxSimSeconds: 720,
+		Public:        true,
+	})
+	require.NoError(t, err)
+
 	// Initialize summary service.
 	summaryService := summaries.NewService(db)
 
@@ -142,6 +178,6 @@ func TestStartSimulationAction(t *testing.T) {
 	})
 
 	// Start the simulation.
-	err = s.Start(ctx, gid)
+	err = s.Start(ctx, sim.GetGroupID())
 	assert.NoError(t, err)
 }

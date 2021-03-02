@@ -67,6 +67,15 @@ var (
 	// StatusProcessingResults is used when a simulation's score and stats are being extracted from a gazebo server.
 	StatusProcessingResults Status = "processing-results"
 
+	// StatusTerminatingInstances is used when simulation instances are being deleted.
+	StatusTerminatingInstances Status = "terminating-instances"
+
+	// StatusTerminated is used when a simulation has been terminated.
+	StatusTerminated Status = "terminated"
+
+	// StatusSuperseded is used when a simulation has been superseded
+	StatusSuperseded Status = "superseded"
+
 	// StatusUnknown is used to represent an unknown status.
 	StatusUnknown Status = "unknown"
 )

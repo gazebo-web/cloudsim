@@ -122,7 +122,7 @@ func (m *machines) runInstanceDryRun(input *ec2.RunInstancesInput) error {
 	input.SetDryRun(true)
 	_, err := m.API.RunInstances(input)
 	awsErr, ok := err.(awserr.Error)
-	if !ok || awsErr.Code() != ErrCodeDryRunOperation {
+	if !ok && awsErr.Code() != ErrCodeDryRunOperation {
 		return cloud.ErrDryRunFailed
 	}
 	return nil

@@ -3,6 +3,7 @@ package mock
 import (
 	"crypto/rand"
 	"errors"
+	"fmt"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/aws/aws-sdk-go/service/ec2/ec2iface"
@@ -25,7 +26,7 @@ func NewEC2() ec2iface.EC2API {
 // RunInstances mocks RunInstances.
 func (e *ec2api) RunInstances(input *ec2.RunInstancesInput) (*ec2.Reservation, error) {
 	if input.DryRun != nil && *input.DryRun {
-		return nil, awserr.New("ErrCodeDryRunOperation", "dry run operation", errors.New("dry run error"))
+		return nil, awserr.New("DryRunOperation", "dry run operation", errors.New("dry run error"))
 	}
 
 	var i int64
@@ -39,6 +40,9 @@ func (e *ec2api) RunInstances(input *ec2.RunInstancesInput) (*ec2.Reservation, e
 		}
 
 		var instance ec2.Instance
+
+		instanceId := fmt.Sprintf("i-%s", id)
+		instance.InstanceId = &instanceId
 
 		for _, tag := range input.TagSpecifications {
 			instance.Tags = append(instance.Tags, tag.Tags...)

@@ -3,6 +3,7 @@ package simulations
 import (
 	"errors"
 	"github.com/jinzhu/gorm"
+	uuid "github.com/satori/go.uuid"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
 )
 
@@ -10,6 +11,36 @@ import (
 // It acts as an adaptor between the legacy code and the new code introduced in the code refactor.
 type SimulationServiceAdaptor struct {
 	db *gorm.DB
+}
+
+// Create creates a simulation (SimulationDeployment) from the given input.
+func (sa *SimulationServiceAdaptor) Create(input simulations.CreateSimulationInput) (simulations.Simulation, error) {
+	dep, err := NewSimulationDeployment()
+	if err != nil {
+		return nil, err
+	}
+
+	gid := simulations.GroupID(uuid.NewV4().String()).String()
+
+	image := SliceToStr(input.Image)
+
+	dep.Owner = &input.Owner
+	dep.Name = &input.Name
+	dep.Creator = &input.Creator
+	dep.Private = &input.Private
+	dep.StopOnEnd = &input.StopOnEnd
+	dep.Image = &image
+	dep.GroupID = &gid
+	dep.DeploymentStatus = simPending.ToPtr()
+	dep.Extra = &input.Extra
+	dep.ExtraSelector = &input.Track
+	dep.Robots = &input.Robots
+	dep.Held = false
+
+	if err := sa.db.Model(&SimulationDeployment{}).Create(dep).Error; err != nil {
+		return nil, err
+	}
+	return dep, nil
 }
 
 // GetWebsocketToken gets the authorization token to connect a websocket server for the given simulation.

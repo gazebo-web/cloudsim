@@ -11,6 +11,7 @@ var JobsStartSimulation = actions.Jobs{
 	jobs.CheckStartSimulationIsNotParent,
 	jobs.CheckSimulationNoErrors,
 	jobs.SetSimulationStatusToLaunchInstances,
+	jobs.LaunchInstances,
 }
 
 // JobsStopSimulation groups the jobs needed to stop a simulation.

@@ -36,7 +36,7 @@ func launchInstances(store actions.Store, tx *gorm.DB, deployment *actions.Deplo
 	out, err := s.Platform().Machines().Create(in)
 
 	// Set job data with the list of instances
-	if dataErr := deployment.SetJobData(tx, nil, jobLaunchInstancesDataKey, LaunchInstancesOutput(out)); err != nil {
+	if dataErr := deployment.SetJobData(tx, nil, jobLaunchInstancesDataKey, LaunchInstancesOutput(out)); dataErr != nil {
 		return nil, dataErr
 	}
 
@@ -59,7 +59,10 @@ func removeCreatedInstances(store actions.Store, tx *gorm.DB, deployment *action
 	}
 
 	// Parse the list of instances
-	createdInstances := data.(LaunchInstancesOutput)
+	createdInstances, ok := data.(LaunchInstancesOutput)
+	if !ok {
+		return nil, err
+	}
 
 	// Terminate the instances
 	for _, c := range createdInstances {
