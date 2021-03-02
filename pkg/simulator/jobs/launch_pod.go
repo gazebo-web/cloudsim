@@ -3,18 +3,19 @@ package jobs
 import (
 	"github.com/jinzhu/gorm"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/actions"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/components/pods"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/resource"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulator"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulator/state"
 )
 
 // LaunchPodsInput is the input of the LaunchPods job.
-type LaunchPodsInput []orchestrator.CreatePodInput
+type LaunchPodsInput []pods.CreatePodInput
 
 // LaunchPodsOutput is the output of the LaunchPods job.
 // This struct was set in place to let the post-hook handle errors.
 type LaunchPodsOutput struct {
-	Resources []orchestrator.Resource
+	Resources []resource.Resource
 	Error     error
 }
 
@@ -35,16 +36,16 @@ func launchPods(store actions.Store, tx *gorm.DB, deployment *actions.Deployment
 
 	if len(input) == 0 {
 		return LaunchPodsOutput{
-			Resources: []orchestrator.Resource{},
+			Resources: []resource.Resource{},
 			Error:     nil,
 		}, nil
 	}
 
-	var created []orchestrator.Resource
+	var created []resource.Resource
 	var err error
 
 	for _, in := range input {
-		var res orchestrator.Resource
+		var res resource.Resource
 		res, err = s.Platform().Orchestrator().Pods().Create(in)
 		if err != nil {
 			return nil, err

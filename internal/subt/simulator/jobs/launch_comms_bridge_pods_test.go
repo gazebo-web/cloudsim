@@ -9,9 +9,9 @@ import (
 	tfake "gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/tracks/fake"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/actions"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/application"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/kubernetes"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/kubernetes/pods"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/kubernetes/spdy"
+	kubernetesPods "gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/components/pods/implementations/kubernetes"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/components/spdy"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/implementations/kubernetes"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/platform"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
 	simfake "gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations/fake"
@@ -59,7 +59,7 @@ func TestLaunchCommsBridgePods(t *testing.T) {
 
 	// Set up kubernetes component
 	client := kfake.NewSimpleClientset()
-	po := pods.NewPods(client, spdyInit, logger)
+	po := kubernetesPods.NewPods(client, spdyInit, logger)
 	ks := kubernetes.NewCustomKubernetes(kubernetes.Config{
 		Pods: po,
 	})

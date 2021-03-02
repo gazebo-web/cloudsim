@@ -4,10 +4,10 @@ import (
 	"github.com/stretchr/testify/assert"
 	"gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/simulator/state"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/actions"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/kubernetes"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/kubernetes/pods"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/kubernetes/spdy"
+	kubernetesPods "gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/components/pods/implementations/kubernetes"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/components/spdy"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/implementations/kubernetes"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/resource"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/platform"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
 	sfake "gitlab.com/ignitionrobotics/web/cloudsim/pkg/store/fake"
@@ -39,7 +39,7 @@ func TestWaitForGazeboServerPod(t *testing.T) {
 		},
 	}
 	client := fake.NewSimpleClientset(initialPod)
-	po := pods.NewPods(client, spdyInit, logger)
+	po := kubernetesPods.NewPods(client, spdyInit, logger)
 	ks := kubernetes.NewCustomKubernetes(kubernetes.Config{
 		Nodes:           nil,
 		Pods:            po,
@@ -59,10 +59,10 @@ func TestWaitForGazeboServerPod(t *testing.T) {
 	store := actions.NewStore(s)
 
 	// Mock gazebo server pod
-	s.GazeboServerPod = orchestrator.NewResource(
+	s.GazeboServerPod = resource.NewResource(
 		"test",
 		"default",
-		orchestrator.NewSelector(map[string]string{
+		resource.NewSelector(map[string]string{
 			"app": "test",
 		}),
 	)

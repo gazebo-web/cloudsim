@@ -5,8 +5,8 @@ import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/application"
 	"gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/simulator/state"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/actions"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/gloo"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/components/ingresses"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/components/ingresses/implementations/gloo"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulator/jobs"
 )
 
@@ -33,7 +33,7 @@ func prepareConfigureIngressInputUsingGloo(store actions.Store, tx *gorm.DB, dep
 
 	matcher := gloo.GenerateRegexMatcher(application.GetSimulationIngressPath(s.GroupID))
 	action := gloo.GenerateRouteAction(ns, s.UpstreamName)
-	paths := []orchestrator.Path{gloo.NewPath(s.GroupID.String(), matcher, action)}
+	paths := []ingresses.Path{gloo.NewPath(s.GroupID.String(), matcher, action)}
 
 	return jobs.ConfigureIngressInput{
 		Name:      name,

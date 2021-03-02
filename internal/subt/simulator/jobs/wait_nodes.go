@@ -5,7 +5,7 @@ import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/application"
 	"gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/simulator/state"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/actions"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/resource"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulator/jobs"
 )
 
@@ -27,9 +27,9 @@ func createWaitForNodesInput(store actions.Store, tx *gorm.DB, deployment *actio
 
 	selector := application.GetNodeLabelsBase(s.GroupID)
 
-	res := orchestrator.NewResource("", "", selector)
+	res := resource.NewResource("", "", selector)
 
-	w := s.Platform().Orchestrator().Nodes().WaitForCondition(res, orchestrator.ReadyCondition)
+	w := s.Platform().Orchestrator().Nodes().WaitForCondition(res, resource.ReadyCondition)
 
 	return &jobs.WaitInput{
 		Request:       w,
