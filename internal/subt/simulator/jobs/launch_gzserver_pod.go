@@ -7,7 +7,7 @@ import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/simulations"
 	"gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/simulator/state"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/actions"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/components/pods"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulator/jobs"
 	"time"
 )
@@ -60,7 +60,7 @@ func prepareGazeboCreatePodInput(store actions.Store, tx *gorm.DB, deployment *a
 	// TODO: Get ports from Ignition Store
 	ports := []int32{11345, 11311}
 
-	volumes := []orchestrator.Volume{
+	volumes := []pods.Volume{
 		{
 			Name:      "logs",
 			MountPath: s.Platform().Store().Ignition().GazeboServerLogsPath(),
@@ -105,10 +105,10 @@ func prepareGazeboCreatePodInput(store actions.Store, tx *gorm.DB, deployment *a
 			Name:                          subtapp.GetPodNameGazeboServer(s.GroupID),
 			Namespace:                     namespace,
 			Labels:                        subtapp.GetPodLabelsGazeboServer(s.GroupID, s.ParentGroupID).Map(),
-			RestartPolicy:                 orchestrator.RestartPolicyNever,
+			RestartPolicy:                 pods.RestartPolicyNever,
 			TerminationGracePeriodSeconds: s.Platform().Store().Orchestrator().TerminationGracePeriod(),
 			NodeSelector:                  subtapp.GetNodeLabelsGazeboServer(s.GroupID),
-			Containers: []orchestrator.Container{
+			Containers: []pods.Container{
 				{
 					Name:                     subtapp.GetContainerNameGazeboServer(),
 					Image:                    track.Image,

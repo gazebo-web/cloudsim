@@ -3,17 +3,18 @@ package jobs
 import (
 	"github.com/jinzhu/gorm"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/actions"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/components/network"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/resource"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulator/state"
 )
 
 // CreateNetworkPoliciesInput is the input for the CreateNetworkPolicies job.
-type CreateNetworkPoliciesInput []orchestrator.CreateNetworkPolicyInput
+type CreateNetworkPoliciesInput []network.CreateNetworkPolicyInput
 
 // CreateNetworkPoliciesOutput is the output of the CreateNetworkPolicies job.
 type CreateNetworkPoliciesOutput struct {
 	// Resource is the representation of the network policies that were created.
-	Resource []orchestrator.Resource
+	Resource []resource.Resource
 
 	// Error has a reference to the latest error thrown when creating the network policies.
 	Error error
@@ -30,7 +31,7 @@ func createNetworkPolicies(store actions.Store, tx *gorm.DB, deployment *actions
 
 	input := value.(CreateNetworkPoliciesInput)
 
-	resources := make([]orchestrator.Resource, 0, len(input))
+	resources := make([]resource.Resource, 0, len(input))
 	for _, in := range input {
 		res, err := s.Platform().Orchestrator().NetworkPolicies().Create(in)
 

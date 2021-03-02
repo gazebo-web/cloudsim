@@ -6,7 +6,7 @@ import (
 	subt "gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/simulations"
 	"gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/simulator/state"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/actions"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/components/pods"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulator/jobs"
 )
 
@@ -31,21 +31,21 @@ func prepareFieldComputerPodInput(store actions.Store, tx *gorm.DB, deployment *
 
 	subtSim := sim.(subt.Simulation)
 
-	pods := make([]orchestrator.CreatePodInput, len(subtSim.GetRobots()))
+	podInputs := make([]pods.CreatePodInput, len(subtSim.GetRobots()))
 
 	for i, r := range subtSim.GetRobots() {
 		robotID := subtapp.GetRobotID(i)
 		// Create field computer input
 		privileged := false
 		allowPrivilegesEscalation := true
-		pods[i] = orchestrator.CreatePodInput{
+		podInputs[i] = pods.CreatePodInput{
 			Name:                          subtapp.GetPodNameFieldComputer(s.GroupID, robotID),
 			Namespace:                     s.Platform().Store().Orchestrator().Namespace(),
 			Labels:                        subtapp.GetPodLabelsFieldComputer(s.GroupID, s.ParentGroupID).Map(),
-			RestartPolicy:                 orchestrator.RestartPolicyNever,
+			RestartPolicy:                 pods.RestartPolicyNever,
 			TerminationGracePeriodSeconds: s.Platform().Store().Orchestrator().TerminationGracePeriod(),
 			NodeSelector:                  subtapp.GetNodeLabelsFieldComputer(s.GroupID, r),
-			Containers: []orchestrator.Container{
+			Containers: []pods.Container{
 				{
 					Name:                     subtapp.GetContainerNameFieldComputer(),
 					Image:                    subtSim.GetImage(),
@@ -59,5 +59,5 @@ func prepareFieldComputerPodInput(store actions.Store, tx *gorm.DB, deployment *
 		}
 	}
 
-	return jobs.LaunchPodsInput(pods), nil
+	return jobs.LaunchPodsInput(podInputs), nil
 }

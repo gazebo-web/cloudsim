@@ -7,7 +7,7 @@ import (
 	subt "gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/simulations"
 	"gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/simulator/state"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/actions"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/components/pods"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulator/jobs"
 	"path"
 )
@@ -38,7 +38,7 @@ func prepareCommsBridgePodInput(store actions.Store, tx *gorm.DB, deployment *ac
 		return nil, err
 	}
 
-	var pods []orchestrator.CreatePodInput
+	var podInputs []pods.CreatePodInput
 
 	for i, r := range subtSim.GetRobots() {
 		childMarsupial := "false"
@@ -54,23 +54,23 @@ func prepareCommsBridgePodInput(store actions.Store, tx *gorm.DB, deployment *ac
 		privileged := true
 		allowPrivilegesEscalation := true
 
-		volumes := []orchestrator.Volume{
+		volumes := []pods.Volume{
 			{
 				Name:         "logs",
 				HostPath:     logMountPath,
-				HostPathType: orchestrator.HostPathDirectoryOrCreate,
+				HostPathType: pods.HostPathDirectoryOrCreate,
 				MountPath:    s.Platform().Store().Ignition().ROSLogsPath(),
 			},
 		}
 
-		pods = append(pods, orchestrator.CreatePodInput{
+		podInputs = append(podInputs, pods.CreatePodInput{
 			Name:                          subtapp.GetPodNameCommsBridge(s.GroupID, subtapp.GetRobotID(i)),
 			Namespace:                     s.Platform().Store().Orchestrator().Namespace(),
 			Labels:                        subtapp.GetPodLabelsCommsBridge(s.GroupID, s.ParentGroupID, r).Map(),
-			RestartPolicy:                 orchestrator.RestartPolicyNever,
+			RestartPolicy:                 pods.RestartPolicyNever,
 			TerminationGracePeriodSeconds: s.Platform().Store().Orchestrator().TerminationGracePeriod(),
 			NodeSelector:                  subtapp.GetNodeLabelsFieldComputer(s.GroupID, r),
-			Containers: []orchestrator.Container{
+			Containers: []pods.Container{
 				{
 					Name:  subtapp.GetContainerNameCommsBridge(),
 					Image: track.BridgeImage,
@@ -98,5 +98,5 @@ func prepareCommsBridgePodInput(store actions.Store, tx *gorm.DB, deployment *ac
 
 	}
 
-	return jobs.LaunchPodsInput(pods), nil
+	return jobs.LaunchPodsInput(podInputs), nil
 }

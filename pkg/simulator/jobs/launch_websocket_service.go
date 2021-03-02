@@ -3,18 +3,19 @@ package jobs
 import (
 	"github.com/jinzhu/gorm"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/actions"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/components/services"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/resource"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulator"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulator/state"
 )
 
 // LaunchWebsocketServiceInput is the input of the LaunchWebsocketService job.
-type LaunchWebsocketServiceInput orchestrator.CreateServiceInput
+type LaunchWebsocketServiceInput services.CreateServiceInput
 
 // LaunchWebsocketServiceOutput is the output of the LaunchWebsocketService job.
 // This struct was set in place to let the post-hook handle errors.
 type LaunchWebsocketServiceOutput struct {
-	Resource orchestrator.Resource
+	Resource resource.Resource
 	Error    error
 }
 
@@ -34,7 +35,7 @@ func launchWebsocketService(store actions.Store, tx *gorm.DB, deployment *action
 	}
 
 	// Create service
-	res, err := s.Platform().Orchestrator().Services().Create(orchestrator.CreateServiceInput(input))
+	res, err := s.Platform().Orchestrator().Services().Create(services.CreateServiceInput(input))
 
 	return LaunchWebsocketServiceOutput{
 		Resource: res,

@@ -5,7 +5,7 @@ import (
 	subtapp "gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/application"
 	"gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/simulator/state"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/actions"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/resource"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulator/jobs"
 )
 
@@ -22,10 +22,10 @@ var WaitSimulationPods = jobs.Wait.Extend(actions.Job{
 func createSimulationWaitRequest(store actions.Store, tx *gorm.DB, deployment *actions.Deployment, value interface{}) (interface{}, error) {
 	s := value.(*state.StartSimulation)
 
-	res := orchestrator.NewResource("", "", subtapp.GetPodLabelsBase(s.GroupID, s.ParentGroupID))
+	res := resource.NewResource("", "", subtapp.GetPodLabelsBase(s.GroupID, s.ParentGroupID))
 
 	// Create wait for condition request
-	req := s.Platform().Orchestrator().Pods().WaitForCondition(res, orchestrator.ReadyCondition)
+	req := s.Platform().Orchestrator().Pods().WaitForCondition(res, resource.ReadyCondition)
 
 	// Get timeout and poll frequency from store
 	timeout := s.Platform().Store().Machines().Timeout()
