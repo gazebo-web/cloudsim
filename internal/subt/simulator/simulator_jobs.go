@@ -20,6 +20,22 @@ var JobsStartSimulation = actions.Jobs{
 	jobs.CreateNetworkPolicyGazeboServer,
 	jobs.LaunchGazeboServerPod,
 	jobs.WaitForGazeboServerPod,
+	jobs.GetGazeboIP,
+	jobs.LaunchWebsocketService,
+	jobs.WaitUpstream,
+	jobs.ConfigureIngressGloo,
+	jobs.CreateNetworkPolicyCommsBridges,
+	jobs.CreateNetworkPolicyFieldComputers,
+	jobs.LaunchCommsBridgePods,
+	jobs.LaunchCommsBridgeCopyPods,
+	jobs.WaitForCommsBridgePod,
+	jobs.GetCommsBridgePodIP,
+	jobs.LaunchFieldComputerPods,
+	jobs.SetSimulationStatusToWaitPods,
+	jobs.WaitSimulationPods,
+	jobs.SetWebsocketConnection,
+	jobs.AddRunningSimulation,
+	jobs.SetSimulationStatusToRunning,
 }
 
 // JobsStopSimulation groups the jobs needed to stop a simulation.
