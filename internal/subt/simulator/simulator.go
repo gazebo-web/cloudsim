@@ -18,9 +18,6 @@ const (
 	// actionNameStopSimulation is the name used to register the stop simulation action.
 	actionNameStopSimulation = "stop-simulation"
 
-	// actionNameRestartSimulation is the name used to register the restart simulation action.
-	actionNameRestartSimulation = "restart-simulation"
-
 	// applicationName is the name of the current simulator's application.
 	applicationName = "subt"
 )
@@ -44,7 +41,7 @@ func (s *subTSimulator) Start(ctx context.Context, groupID simulations.GroupID) 
 		ActionName:      actionNameStartSimulation,
 	}
 
-	err := s.actions.Execute(store, s.db, execInput, groupID)
+	err := s.actions.Execute(store, s.db, execInput, state)
 	if err != nil {
 		return err
 	}
@@ -85,6 +82,7 @@ func NewSimulator(config Config) simulator.Simulator {
 		applicationName: applicationName,
 		services:        config.ApplicationServices,
 		actions:         config.ActionService,
+		db:              config.DB,
 	}
 }
 
@@ -92,9 +90,8 @@ func NewSimulator(config Config) simulator.Simulator {
 // It panics whenever an action could not be registered.
 func registerActions(name string, service actions.Servicer) {
 	actions := map[string]actions.Jobs{
-		actionNameStartSimulation:   JobsStartSimulation,
-		actionNameStopSimulation:    JobsStopSimulation,
-		actionNameRestartSimulation: JobsRestartSimulation,
+		actionNameStartSimulation: JobsStartSimulation,
+		actionNameStopSimulation:  JobsStopSimulation,
 	}
 
 	for actionName, jobs := range actions {

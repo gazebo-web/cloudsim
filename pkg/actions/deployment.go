@@ -46,7 +46,7 @@ func (Deployment) TableName() string {
 // newDeployment creates a new Deployment entry in persistent storage and returns a pointer to it.
 func newDeployment(tx *gorm.DB, action *Action) (*Deployment, error) {
 	// Create the deployment
-	deployment := &Deployment{
+	deployment := Deployment{
 		UUID:       uuid.NewV4().String(),
 		Action:     action.Name,
 		CurrentJob: action.Jobs[0].Name,
@@ -55,11 +55,11 @@ func newDeployment(tx *gorm.DB, action *Action) (*Deployment, error) {
 
 	// Create the storage record
 	// TODO: This should use an interface to allow swapping to different storages in the future.
-	if err := tx.Create(deployment).Error; err != nil {
+	if err := tx.Model(&Deployment{}).Create(&deployment).Error; err != nil {
 		return nil, err
 	}
 
-	return deployment, nil
+	return &deployment, nil
 }
 
 // getDeployment gets the deployment for a given a uuid

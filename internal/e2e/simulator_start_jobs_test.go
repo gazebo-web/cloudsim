@@ -116,7 +116,7 @@ func TestStartSimulationAction(t *testing.T) {
 	userService, err := users.NewService(ctx, &perm, db, "sysadmin")
 	require.NoError(t, err)
 
-	baseapp := application.NewServices(simService, userService)
+	baseApp := application.NewServices(simService, userService)
 
 	// Initialize track repository.
 	trackRepository := tracks.NewRepository(db, logger)
@@ -131,7 +131,7 @@ func TestStartSimulationAction(t *testing.T) {
 	summaryService := summaries.NewService(db)
 
 	// Initialize subt application.
-	app := subtapp.NewServices(baseapp, trackService, summaryService)
+	app := subtapp.NewServices(baseApp, trackService, summaryService)
 
 	// Initialize simulator
 	s := simulator.NewSimulator(simulator.Config{
