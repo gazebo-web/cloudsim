@@ -6,7 +6,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/client"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3iface"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/cloud"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/storage"
 	"gitlab.com/ignitionrobotics/web/ign-go"
 	"net/http"
 	"time"
@@ -17,17 +17,17 @@ func NewAPI(config client.ConfigProvider) s3iface.S3API {
 	return s3.New(config)
 }
 
-// storage is a cloud.Storage implementation.
-type storage struct {
+// s3Storage is a storage.Storage implementation.
+type s3Storage struct {
 	API    s3iface.S3API
 	Logger ign.Logger
 }
 
 // Upload uploads a file to the cloud storage.
-func (s storage) Upload(input cloud.UploadInput) error {
+func (s s3Storage) Upload(input storage.UploadInput) error {
 	s.Logger.Debug(fmt.Sprintf("Upload input: %+v", input))
 	if input.File == nil {
-		return cloud.ErrMissingFile
+		return storage.ErrMissingFile
 	}
 
 	var bslice []byte
@@ -39,7 +39,7 @@ func (s storage) Upload(input cloud.UploadInput) error {
 
 	if http.DetectContentType(bslice) != input.ContentType {
 		s.Logger.Debug(fmt.Sprintf("Invalid content type. Actual: %s. Expected: %s.", http.DetectContentType(bslice), input.ContentType))
-		return cloud.ErrBadContentType
+		return storage.ErrBadContentType
 	}
 
 	_, err = s.API.PutObject(&s3.PutObjectInput{
@@ -61,7 +61,7 @@ func (s storage) Upload(input cloud.UploadInput) error {
 }
 
 // GetURL returns an URL to access the given bucket with the given key.
-func (s storage) GetURL(bucket string, key string, expiresIn time.Duration) (string, error) {
+func (s s3Storage) GetURL(bucket string, key string, expiresIn time.Duration) (string, error) {
 	s.Logger.Debug(fmt.Sprintf("Getting URL for bucket [%s] and key [%s]. Expiration in: %s", bucket, key, expiresIn.String()))
 	req, _ := s.API.GetObjectRequest(&s3.GetObjectInput{
 		Bucket: &bucket,
@@ -76,9 +76,9 @@ func (s storage) GetURL(bucket string, key string, expiresIn time.Duration) (str
 	return u, nil
 }
 
-// NewStorage initializes a new cloud.Storage implementation using s3.
-func NewStorage(api s3iface.S3API, logger ign.Logger) cloud.Storage {
-	return &storage{
+// NewStorage initializes a new storage.Storage implementation using s3.
+func NewStorage(api s3iface.S3API, logger ign.Logger) storage.Storage {
+	return &s3Storage{
 		API:    api,
 		Logger: logger,
 	}
