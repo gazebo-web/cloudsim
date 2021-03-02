@@ -52,7 +52,7 @@ func TestStartSimulationAction(t *testing.T) {
 	require.NoError(t, err)
 
 	// Migrate actions
-	err = actions.MigrateDB(db)
+	err = actions.CleanAndMigrateDB(db)
 	require.NoError(t, err)
 
 	// Initialize logger
