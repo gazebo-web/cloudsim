@@ -16,6 +16,9 @@ var JobsStartSimulation = actions.Jobs{
 	jobs.WaitForInstances,
 	jobs.SetSimulationStatusToWaitNodes,
 	jobs.WaitForNodes,
+	jobs.SetSimulationStatusToLaunchPods,
+	jobs.CreateNetworkPolicyGazeboServer,
+	jobs.LaunchGazeboServerPod,
 }
 
 // JobsStopSimulation groups the jobs needed to stop a simulation.
