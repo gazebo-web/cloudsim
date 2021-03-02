@@ -2,6 +2,7 @@ package jobs
 
 import (
 	"github.com/jinzhu/gorm"
+	subtapp "gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/application"
 	"gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/simulator/state"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/actions"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator"
@@ -23,8 +24,14 @@ func createWaitRequestForGzServerPod(store actions.Store, tx *gorm.DB, deploymen
 
 	store.SetState(s)
 
+	name := subtapp.GetPodNameGazeboServer(s.GroupID)
+	ns := s.Platform().Store().Orchestrator().Namespace()
+	labels := subtapp.GetPodLabelsGazeboServerCopy(s.GroupID, s.ParentGroupID)
+
+	res := orchestrator.NewResource(name, ns, labels)
+
 	// Create wait for condition request
-	req := s.Platform().Orchestrator().Pods().WaitForCondition(s.GazeboServerPod, orchestrator.HasIPStatusCondition)
+	req := s.Platform().Orchestrator().Pods().WaitForCondition(res, orchestrator.HasIPStatusCondition)
 
 	// Get timeout and poll frequency from store
 	timeout := s.Platform().Store().Machines().Timeout()
