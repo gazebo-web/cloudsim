@@ -1,12 +1,13 @@
 package mock
 
 import (
-	"crypto/rand"
 	"errors"
 	"fmt"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/aws/aws-sdk-go/service/ec2/ec2iface"
+	"k8s.io/apimachinery/pkg/util/rand"
+	"log"
 	"strings"
 )
 
@@ -34,14 +35,18 @@ func (e *ec2api) RunInstances(input *ec2.RunInstancesInput) (*ec2.Reservation, e
 	var instances []*ec2.Instance
 
 	for i = 0; i < *input.MaxCount; i++ {
-		id := make([]byte, 10)
-		if _, err := rand.Read(id); err != nil {
-			return nil, err
+		var id []rune
+		for i := 0; i < 5; i++ {
+			id = append(id, rune(rand.Intn(90-65)+65))  // [A-Z]
+			id = append(id, rune(rand.Intn(57-48)+48))  // [0-9]
+			id = append(id, rune(rand.Intn(122-97)+97)) // [a-z]
 		}
 
 		var instance ec2.Instance
 
-		instanceId := fmt.Sprintf("i-%s", id)
+		log.Println(id)
+
+		instanceId := fmt.Sprintf("i-%s", string(id))
 		instance.InstanceId = &instanceId
 
 		for _, tag := range input.TagSpecifications {

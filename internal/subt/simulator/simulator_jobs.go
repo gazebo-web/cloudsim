@@ -12,6 +12,10 @@ var JobsStartSimulation = actions.Jobs{
 	jobs.CheckSimulationNoErrors,
 	jobs.SetSimulationStatusToLaunchInstances,
 	jobs.LaunchInstances,
+	jobs.SetSimulationStatusToWaitInstances,
+	jobs.WaitForInstances,
+	jobs.SetSimulationStatusToWaitNodes,
+	jobs.WaitForNodes,
 }
 
 // JobsStopSimulation groups the jobs needed to stop a simulation.
