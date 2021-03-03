@@ -48,7 +48,10 @@ func getDecodeErrorsExtraInfo(err error) []string {
 
 // Start handles the `/start` route.
 //
-// Flow: user --> POST /start --> controller.Start()
+// Origin: user --> POST /start --> controller.Start()
+// Next:
+//     * On success --> service.Start
+//     * On fail --> return error
 func (ctrl *controller) Start(tx *gorm.DB, w http.ResponseWriter, r *http.Request) (interface{}, *ign.ErrMsg) {
 
 	// Parse form's values and files.
@@ -57,23 +60,27 @@ func (ctrl *controller) Start(tx *gorm.DB, w http.ResponseWriter, r *http.Reques
 	}
 	defer r.MultipartForm.RemoveAll()
 
-	// Get needed data to start simulation from the HTTP request, pass it to the Start Request
+	// Get needed data to start simulation from the HTTP request, pass it to the
+  // Start Request
 	var req StartRequest
 
 	if errs := ctrl.formDecoder.Decode(&req, r.Form); errs != nil {
 		fmt.Printf("Failed to decode form")
-		return nil, ign.NewErrorMessageWithArgs(ign.ErrorFormInvalidValue, errs, getDecodeErrorsExtraInfo(errs))
+		return nil, ign.NewErrorMessageWithArgs(ign.ErrorFormInvalidValue, errs,
+      getDecodeErrorsExtraInfo(errs))
 	}
 
   // An image form field is required. This is the docker image to run.
   if req.Image == "" {
-		return nil, ign.NewErrorMessageWithBase(ign.ErrorMissingField, errors.New("Missing 'image' form field"))
+		return nil, ign.NewErrorMessageWithBase(ign.ErrorMissingField,
+      errors.New("Missing 'image' form field"))
   }
 
   // Make sure the some arguments are set. The arguments are passed to the
   // docker image.
   if req.Args == "" {
-		return nil, ign.NewErrorMessageWithBase(ign.ErrorMissingField, errors.New("Missing 'args' form field"))
+		return nil, ign.NewErrorMessageWithBase(ign.ErrorMissingField,
+      errors.New("Missing 'args' form field"))
   }
 
 	// Hand off the start request data to the service.
@@ -87,6 +94,11 @@ func (ctrl *controller) Start(tx *gorm.DB, w http.ResponseWriter, r *http.Reques
 }
 
 // Stop handles the `/stop` route.
+//
+// Origin: user --> POST /start --> controller.Start()
+// Next:
+//     * On success --> service.Start
+//     * On fail --> return error
 func (ctrl *controller) Stop(w http.ResponseWriter, r *http.Request) {
 	// Parse request
 

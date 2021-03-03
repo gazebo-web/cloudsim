@@ -13,65 +13,43 @@ import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
 	"gitlab.com/ignitionrobotics/web/ign-go"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/actions"
-	// "gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulator/jobs"
   "gitlab.com/ignitionrobotics/web/cloudsim/pkg/platform"
-  "gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulator/state"
   "gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/kubernetes"
-  "gitlab.com/ignitionrobotics/web/cloudsim/pkg/cloud"
   "gitlab.com/ignitionrobotics/web/cloudsim/pkg/cloud/aws"
   "gitlab.com/ignitionrobotics/web/cloudsim/pkg/env"
   ignapp "gitlab.com/ignitionrobotics/web/cloudsim/pkg/application"
 
 )
 
-// StartSimulation is the state of the action that starts a simulation.
-// WTF is this??
-type StartSimulationData struct {
-	state.PlatformGetter
-	state.ServicesGetter
-  platform             platform.Platform
-  //services             subtapp.Services
-  GroupID              simulations.GroupID
-
-  // \todo: What is this used for? I'm using it launch_instance_job.go for some reason.
-  CreateMachinesInput  []cloud.CreateMachinesInput
-  // \todo: What is this used for? I'm using it launch_instance_job.go for some reason.
-  CreateMachinesOutput []cloud.CreateMachinesOutput
-}
-
-// Services returns the underlying application services.
-// \todo I really hate this pattern. 
-//     1. StartSimulationData *must* have a state.ServicesGetter.
-//     2. You then *must* define this function. But there is no compile-time
-//        error if you don't implement this function.
-//     3. If you fail to implement this function, then a segfaul will occur 
-//        due to invalid memory address in a route handler.
-/*func (s *StartSimulationData) Services() application.Services {
-  return s.services
-}*/
-
-// Platform returns the underlying platform.
-func (s *StartSimulationData) Platform() platform.Platform {
-  return s.platform
-}
-
 // Service implements the busniess logic behind the controller. A request
 // comes into the controller, which then executes the appropriate function(s)
 // in this service in order to handle the request.
 type Service interface {
 	simulations.Service
+
+  // Start will run the StartSimulationAction to launch cloud machines
+  // and a docker image.
 	Start(ctx context.Context, request StartRequest) (*StartResponse, error)
+
+  // Stop will run the StopSimulationAction to terminate clouds machines.
 	Stop(ctx context.Context, request StopRequest) (*StopResponse, error)
 
-	StartSimulation(ctx context.Context, groupID simulations.GroupID) error
-	StopSimulation(ctx context.Context, groupID simulations.GroupID) error
+  // StartQueueHandler processes entries in the startQueue.
+	StartQueueHandler(ctx context.Context, groupID simulations.GroupID) error
 
+  // StopQueueHandler processes entries in the startQueue.
+	StopQueueHandler(ctx context.Context, groupID simulations.GroupID) error
+
+  // GetStartQueue returns the start queue
 	GetStartQueue() *ign.Queue
+
+  // GetStopQueue returns the stop queue
 	GetStopQueue() *ign.Queue
 }
 
 // service stores data necessary to implement Service functions.
 type service struct {
+  // applicationName is the name of the application.
   applicationName string
 	repository domain.Repository
 	startQueue *ign.Queue
@@ -85,28 +63,32 @@ type service struct {
 
 // NewService creates a new simulation service instance.
 func NewService(db *gorm.DB, logger ign.Logger) Service {
+  // This gets a reference to the Kubernetes cluster that the services can use.
   cluster, _ := kubernetes.InitializeKubernetes(logger)
 
-  // \todo the region string is very error prone. Can the `aws` interface provide a list of regions to choose from?
+  // \todo the region string is very error prone. Can the `aws` interface
+  // provide a list of regions to choose from?
   storage, machines, _ := aws.InitializeAWS("us-east-1", logger)
-  store := env.NewStore()
 
-  // base := application.NewServices(simulationService, userService)
-  // services := npsapp.NewServices(base)
+  // \todo Why do I need to make a Store here?
+  store := env.NewStore()
 
 	s := &service {
     applicationName: applicationName,
 		// Create a new repository to hold simulation instance data.
 		repository: gormrepo.NewRepository(db, logger, &Simulation{}),
-		// Create the start simulation queue
+		// Create the start simulation queue. The start queue is used to process
+    // simulation start requests.
 		startQueue: ign.NewQueue(),
-		// Create the stop simulation queue
+		// Create the stop simulation queue. The stop queue is used to process
+    // simulation stop requests.
 		stopQueue: ign.NewQueue(),
 		// Store the logger
 		logger: logger,
+    // Store the database reference.
     db: db,
     actions: actions.NewService(),
-    // \todo: What is this, and how do I define each part?
+    // \todo: What is a "Platform"?
     platform: platform.NewPlatform(platform.Components{
       // \todo How do you create a machine?
       Machines: machines,
@@ -124,73 +106,13 @@ func NewService(db *gorm.DB, logger ign.Logger) Service {
   registerActions(applicationName, s.actions)
 
 	// Create a queue to handle start requests.
-	go queueHandler(s.startQueue, s.StartSimulation, s.logger)
+	go queueHandler(s.startQueue, s.StartQueueHandler, s.logger)
 
 	// Create a queue to handle stop requests.
 	go queueHandler(s.stopQueue, s.StopSimulation, s.logger)
 
 	return s
 }
-
-// registerActions register a set of actions into the given service with the given application's name.
-// It panics whenever an action could not be registered.
-// \todo: This seems like a useful utility function.
-func registerActions(name string, service actions.Servicer) {
-
-	actions := map[string]actions.Jobs{
-		actionNameStartSimulation: JobsStartSimulation,
-		// actionNameStopSimulation:  JobsStopSimulation,
-	}
-	for actionName, jobs := range actions {
-    fmt.Printf("Name[%s] ActionName[%s]\n", name, actionName)
-    for _, j := range jobs {
-      fmt.Printf("Job Name[%s]\n", j.Name)
-    }
-		err := registerAction(name, service, actionName, jobs)
-		if err != nil {
-			panic(err)
-		}
-	}
-}
-
-// registerAction registers the given jobs as a new action called actionName.
-// The action gets registered into the given service for the given application name.
-// \todo: This seems like a useful utility function.
-func registerAction(applicationName string, service actions.Servicer, actionName string, jobs actions.Jobs) error {
-	action, err := actions.NewAction(jobs)
-	if err != nil {
-		return err
-	}
-	err = service.RegisterAction(&applicationName, actionName, action)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-// queueHandler is in charge of getting the next element from the queue and passing it to the do function.
-func queueHandler(queue *ign.Queue, do func(ctx context.Context, gid simulations.GroupID) error, logger ign.Logger) {
-	for {
-		element, em := queue.DequeueOrWaitForNextElement()
-		if em != nil {
-			logger.Error("queue: failed to dequeue next element, error:", em.BaseError)
-			continue
-		}
-		gid, ok := element.(simulations.GroupID)
-		if !ok {
-			logger.Error("queue: invalid input data")
-			continue
-		}
-		ctx := context.Background()
-		err := do(ctx, gid)
-		if err != nil {
-			logger.Error("queue: failed perform operation on the next element, error:", err)
-			logger.Debug("queue: pushing element into the queue:", gid)
-			queue.Enqueue(gid)
-		}
-	}
-}
-
 // GetStartQueue returns the start queue
 func (s *service) GetStartQueue() *ign.Queue {
 	return s.startQueue
@@ -201,12 +123,11 @@ func (s *service) GetStopQueue() *ign.Queue {
 	return s.stopQueue
 }
 
-
-// StartSimulation is called from service.Start(), and it should actually start
-// the simulation running.
+// StartQueueHandler is called from service.Start(), and it should actually
+// start the simulation running.
 //
-// Flow: user --> POST /start --> controller.Start() --> service.Start() --> service.StartSimulation
-func (s *service) StartSimulation(ctx context.Context, groupID simulations.GroupID) error {
+// Origin: user --> POST /start --> controller.Start() --> service.Start() --> service.StartQueueHandler
+func (s *service) StartQueueHandler(ctx context.Context, groupID simulations.GroupID) error {
 
   // You must create a data structure to hold data that is then "stored" in a
   // NewStore on the following line. This store and the data contained in the 
@@ -247,7 +168,7 @@ func (s *service) StartSimulation(ctx context.Context, groupID simulations.Group
   }
   */
 
-	fmt.Printf("StartSimulation for groupID[%s]\n", groupID)
+	fmt.Printf("Starting simulation for groupID[%s]\n", groupID)
 	return nil
 }
 
@@ -286,11 +207,11 @@ func (s *service) GetWebsocketToken(groupID simulations.GroupID) (string, error)
 
 // Start is called from the Start function in controller.go.
 //
-// Flow: user --> POST /start --> controller.Start() --> service.Start()
+// Origin: user --> POST /start --> controller.Start() --> service.Start()
+// Next: StartQueueHandler
 func (s *service) Start(ctx context.Context, request StartRequest) (*StartResponse, error) {
-	// Business logic
-
-	// Validate request
+	// Add business logic here to validate a request, update a database table,
+  // etc.
 
 	// Create a simulation
   sim := Simulation{
@@ -313,7 +234,7 @@ func (s *service) Start(ctx context.Context, request StartRequest) (*StartRespon
 
   gid := simulations.GroupID(sim.GroupID)
 
-  // This will cause `StartSimulation` to be called because a groupId has been
+  // This will cause `StartQueueHandler` to be called because a groupId has been
   // push into the `startQueue` which is processed by the `queueHandler`.
 	s.startQueue.Enqueue(gid)
 
@@ -322,13 +243,13 @@ func (s *service) Start(ctx context.Context, request StartRequest) (*StartRespon
   }, nil
 }
 
+// Stop is called from the Stop function in controller.go.
+//
+// Origin: user --> POST /stop --> controller.Stop() --> service.Stop()
+// Next: StopQueueHandler
 func (s *service) Stop(ctx context.Context, request StopRequest) (*StopResponse, error) {
-	// Business logic
-
-	// Validate request
-
-	// Mark simulation as stopped
-
+	// Add business logic here to validate a request, update a database table,
+  // etc.
 	// Send the group id to the queue
 	gid := simulations.GroupID("test")
 
@@ -336,3 +257,67 @@ func (s *service) Stop(ctx context.Context, request StopRequest) (*StopResponse,
 
 	return &StopResponse{}, nil
 }
+
+///////////////////////////////////////
+// It would be nice to make the following function general purpose functions
+// that live in the main Cloudsim codebase
+
+// registerActions registers a set of actions into the given service with the given application's name.
+// It panics whenever an action could not be registered.
+// \todo: This seems like a useful utility function that should exist in the 
+// main cloudsim code. This was copied from the subt application.
+func registerActions(name string, service actions.Servicer) {
+
+	actions := map[string]actions.Jobs{
+		actionNameStartSimulation: StartSimulationAction,
+		actionNameStopSimulation:  StopSimulationAction,
+	}
+	for actionName, jobs := range actions {
+		err := registerAction(name, service, actionName, jobs)
+		if err != nil {
+			panic(err)
+		}
+	}
+}
+
+// registerAction registers the given jobs as a new action called actionName.
+// The action gets registered into the given service for the given application name.
+// \todo: This seems like a useful utility function that should exist in the 
+// main cloudsim code. This was copied from the subt application.
+func registerAction(applicationName string, service actions.Servicer, actionName string, jobs actions.Jobs) error {
+	action, err := actions.NewAction(jobs)
+	if err != nil {
+		return err
+	}
+	err = service.RegisterAction(&applicationName, actionName, action)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// queueHandler is in charge of getting the next element from the queue and passing it to the do function.
+// \todo: This seems like a useful utility function that should exist in the 
+// main cloudsim code. This was copied from the subt application.
+func queueHandler(queue *ign.Queue, do func(ctx context.Context, gid simulations.GroupID) error, logger ign.Logger) {
+	for {
+		element, em := queue.DequeueOrWaitForNextElement()
+		if em != nil {
+			logger.Error("queue: failed to dequeue next element, error:", em.BaseError)
+			continue
+		}
+		gid, ok := element.(simulations.GroupID)
+		if !ok {
+			logger.Error("queue: invalid input data")
+			continue
+		}
+		ctx := context.Background()
+		err := do(ctx, gid)
+		if err != nil {
+			logger.Error("queue: failed perform operation on the next element, error:", err)
+			logger.Debug("queue: pushing element into the queue:", gid)
+			queue.Enqueue(gid)
+		}
+	}
+}
+///////////////////////////////////////
