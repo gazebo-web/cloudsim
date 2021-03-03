@@ -43,5 +43,7 @@ func getCommsBridgeIP(store actions.Store, tx *gorm.DB, deployment *actions.Depl
 
 	s.CommsBridgeIPs = ips
 
+	store.SetState(s)
+
 	return s, nil
 }

@@ -31,6 +31,8 @@ import (
 	"gitlab.com/ignitionrobotics/web/fuelserver/permissions"
 	"gitlab.com/ignitionrobotics/web/ign-go"
 	"gopkg.in/go-playground/validator.v9"
+	apiv1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	kfake "k8s.io/client-go/kubernetes/fake"
 	"net/http/httptest"
 	"testing"
@@ -104,16 +106,16 @@ func TestStartSimulationAction(t *testing.T) {
 	// Initialize base application services
 	simService := legacy.NewSubTSimulationServiceAdaptor(db)
 
+	robot := legacy.SubTRobot{
+		Name:    "X1",
+		Type:    "X1",
+		Image:   "test.org/image",
+		Credits: 270,
+	}
+
 	extra := legacy.ExtraInfoSubT{
 		Circuit: "Urban Circuit 1",
-		Robots: []legacy.SubTRobot{
-			{
-				Name:    "X1",
-				Type:    "X1",
-				Image:   "test.org/image",
-				Credits: 270,
-			},
-		},
+		Robots:  []legacy.SubTRobot{robot},
 	}
 
 	extraInfo, err := extra.ToJSON()
@@ -218,11 +220,100 @@ func TestStartSimulationAction(t *testing.T) {
 			DisableDefaultActions: true,
 		})
 
+		kClient := kfake.NewSimpleClientset(&apiv1.Pod{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      subtapp.GetPodNameGazeboServer(sim.GetGroupID()),
+				Namespace: p.Store().Orchestrator().Namespace(),
+				Labels:    subtapp.GetPodLabelsGazeboServer(sim.GetGroupID(), nil).Map(),
+			},
+			Spec: apiv1.PodSpec{},
+			Status: apiv1.PodStatus{
+				Conditions: []apiv1.PodCondition{
+					{
+						Type:   apiv1.PodInitialized,
+						Status: apiv1.ConditionTrue,
+					},
+					{
+						Type:   apiv1.PodScheduled,
+						Status: apiv1.ConditionTrue,
+					},
+					{
+						Type:   apiv1.PodReady,
+						Status: apiv1.ConditionTrue,
+					},
+				},
+				PodIP: "1.1.1.1",
+			},
+		})
+
+		*kubernetesClientset = *kClient
+
 		startActions, err := actions.NewAction(actions.Jobs{
+			jobs.WaitForGazeboServerPod,
 			jobs.CreateNetworkPolicyCommsBridges,
 			jobs.CreateNetworkPolicyFieldComputers,
 			jobs.LaunchCommsBridgePods,
 			jobs.LaunchCommsBridgeCopyPods,
+		})
+		require.NoError(t, err)
+
+		appName := simulator.ApplicationName
+		actionService.RegisterAction(&appName, simulator.ActionNameStartSimulation, startActions)
+
+		// Start the simulation.
+		err = s.Start(ctx, sim.GetGroupID())
+		assert.NoError(t, err)
+	})
+
+	t.Run("Third phase", func(t *testing.T) {
+		actionService := actions.NewService()
+
+		// Initialize simulator
+		s := simulator.NewSimulator(simulator.Config{
+			DB:                    db,
+			Platform:              p,
+			ApplicationServices:   app,
+			ActionService:         actionService,
+			DisableDefaultActions: true,
+		})
+
+		kClient := kfake.NewSimpleClientset(&apiv1.Pod{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      subtapp.GetPodNameCommsBridge(sim.GetGroupID(), subtapp.GetRobotID(0)),
+				Namespace: p.Store().Orchestrator().Namespace(),
+				Labels:    subtapp.GetPodLabelsCommsBridge(sim.GetGroupID(), nil, &robot).Map(),
+			},
+			Spec: apiv1.PodSpec{},
+			Status: apiv1.PodStatus{
+				Conditions: []apiv1.PodCondition{
+					{
+						Type:   apiv1.PodInitialized,
+						Status: apiv1.ConditionTrue,
+					},
+					{
+						Type:   apiv1.PodScheduled,
+						Status: apiv1.ConditionTrue,
+					},
+					{
+						Type:   apiv1.PodReady,
+						Status: apiv1.ConditionTrue,
+					},
+				},
+				PodIP: "1.1.1.1",
+			},
+		})
+
+		*kubernetesClientset = *kClient
+
+		startActions, err := actions.NewAction(actions.Jobs{
+			jobs.WaitForCommsBridgePod,
+			jobs.GetCommsBridgePodIP,
+			jobs.LaunchFieldComputerPods,
+			jobs.SetSimulationStatusToWaitPods,
+			// jobs.WaitSimulationPods,
+			// jobs.SetWebsocketConnection,
+			// jobs.AddRunningSimulation,
+			jobs.SetSimulationStatusToRunning,
 		})
 		require.NoError(t, err)
 
