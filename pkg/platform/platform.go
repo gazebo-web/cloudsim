@@ -1,7 +1,7 @@
 package platform
 
 import (
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/cloud"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/machines"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/runsim"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/secrets"
@@ -17,8 +17,8 @@ type Platform interface {
 	// Storage returns a storage.Storage component.
 	Storage() storage.Storage
 
-	// Machines returns a cloud.Machines component.
-	Machines() cloud.Machines
+	// Machines returns a machines.Machines component.
+	Machines() machines.Machines
 
 	// Orchestrator returns a orchestrator.Cluster component.
 	Orchestrator() orchestrator.Cluster
@@ -35,7 +35,7 @@ type Platform interface {
 
 // Components lists the components used to initialize a Platform.
 type Components struct {
-	Machines cloud.Machines
+	Machines machines.Machines
 	Storage  storage.Storage
 	Cluster  orchestrator.Cluster
 	Store    store.Store
@@ -56,7 +56,7 @@ func NewPlatform(components Components) Platform {
 // platform is a Platform implementation.
 type platform struct {
 	storage            storage.Storage
-	machines           cloud.Machines
+	machines           machines.Machines
 	orchestrator       orchestrator.Cluster
 	store              store.Store
 	secrets            secrets.Secrets
@@ -78,8 +78,8 @@ func (p *platform) Storage() storage.Storage {
 	return p.storage
 }
 
-// Machines returns a cloud.Machines implementation.
-func (p *platform) Machines() cloud.Machines {
+// Machines returns a machines.Machines implementation.
+func (p *platform) Machines() machines.Machines {
 	return p.machines
 }
 

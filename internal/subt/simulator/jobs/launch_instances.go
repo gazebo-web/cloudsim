@@ -5,7 +5,7 @@ import (
 	"github.com/jinzhu/gorm"
 	"gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/simulator/state"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/actions"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/cloud"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/machines"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulator/jobs"
 )
 
@@ -28,7 +28,7 @@ func createLaunchInstancesInput(store actions.Store, tx *gorm.DB, deployment *ac
 		return nil, err
 	}
 
-	input := []cloud.CreateMachinesInput{
+	input := []machines.CreateMachinesInput{
 		{
 			InstanceProfile: s.Platform().Store().Machines().InstanceProfile(),
 			KeyName:         s.Platform().Store().Machines().KeyName(),
@@ -57,7 +57,7 @@ func createLaunchInstancesInput(store actions.Store, tx *gorm.DB, deployment *ac
 			Machines().
 			Tags(sim, "field-computer", fmt.Sprintf("fc-%s", r.Name()))
 
-		input = append(input, cloud.CreateMachinesInput{
+		input = append(input, machines.CreateMachinesInput{
 			InstanceProfile: s.Platform().Store().Machines().InstanceProfile(),
 			KeyName:         s.Platform().Store().Machines().KeyName(),
 			Type:            s.Platform().Store().Machines().Type(),

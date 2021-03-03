@@ -3,7 +3,7 @@ package env
 import (
 	"fmt"
 	"github.com/caarlos0/env"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/cloud"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/machines"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/store"
 	"time"
@@ -106,10 +106,10 @@ func (m *machineEnvStore) SubnetAndZone() (string, string) {
 }
 
 // Tags creates a set of tags for a certain machine using the given simulation, nodeType and nameSuffix.
-func (m *machineEnvStore) Tags(simulation simulations.Simulation, nodeType string, nameSuffix string) []cloud.Tag {
+func (m *machineEnvStore) Tags(simulation simulations.Simulation, nodeType string, nameSuffix string) []machines.Tag {
 	name := fmt.Sprintf("%s-%s-%s", m.NamePrefixValue, simulation.GetGroupID(), nameSuffix)
 	clusterKey := fmt.Sprintf("kubernetes.io/cluster/%s", m.ClusterNameValue)
-	return []cloud.Tag{
+	return []machines.Tag{
 		{
 			Resource: "instance",
 			Map: map[string]string{

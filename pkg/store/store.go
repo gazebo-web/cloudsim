@@ -1,7 +1,7 @@
 package store
 
 import (
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/cloud"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/machines"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
 	"time"
 )
@@ -35,7 +35,7 @@ type Machines interface {
 	SubnetAndZone() (string, string)
 
 	// Tags returns a set of tags that will be set to the machine.
-	Tags(simulation simulations.Simulation, nodeType string, nameSuffix string) []cloud.Tag
+	Tags(simulation simulations.Simulation, nodeType string, nameSuffix string) []machines.Tag
 
 	// InitScript returns the script that will be run when creating the machine.
 	InitScript() *string

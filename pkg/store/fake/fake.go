@@ -2,7 +2,7 @@ package fake
 
 import (
 	"github.com/stretchr/testify/mock"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/cloud"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/machines"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/store"
 	"time"
@@ -212,9 +212,9 @@ func (f Machines) SubnetAndZone() (string, string) {
 }
 
 // Tags mocks the Tags method.
-func (f Machines) Tags(simulation simulations.Simulation, nodeType string, nameSuffix string) []cloud.Tag {
+func (f Machines) Tags(simulation simulations.Simulation, nodeType string, nameSuffix string) []machines.Tag {
 	args := f.Called(simulation, nodeType, nameSuffix)
-	return args.Get(0).([]cloud.Tag)
+	return args.Get(0).([]machines.Tag)
 }
 
 // InitScript mocks the InitScript method.

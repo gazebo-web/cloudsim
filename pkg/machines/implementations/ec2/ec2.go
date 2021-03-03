@@ -7,7 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/client"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/aws/aws-sdk-go/service/ec2/ec2iface"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/cloud"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/machines"
 	"gitlab.com/ignitionrobotics/web/ign-go"
 	"regexp"
 	"time"
@@ -34,24 +34,24 @@ func NewAPI(config client.ConfigProvider) ec2iface.EC2API {
 	return ec2.New(config)
 }
 
-// machines is a cloud.Machines implementation.
-type machines struct {
+// ec2Machines is a machines.Machines implementation.
+type ec2Machines struct {
 	API    ec2iface.EC2API
 	Logger ign.Logger
 }
 
 // isValidKeyName checks that the given keyName is valid.
-func (m *machines) isValidKeyName(keyName string) bool {
+func (m *ec2Machines) isValidKeyName(keyName string) bool {
 	return len(keyName) != 0 && keyName != ""
 }
 
 // isValidMachineCount checks that the given min and max values are valid machine count values.
-func (m *machines) isValidMachineCount(min, max int64) bool {
+func (m *ec2Machines) isValidMachineCount(min, max int64) bool {
 	return min > 0 && max > 0 && min <= max
 }
 
 // isValidSubnetID checks that the given subnet name is a valid for AWS.
-func (m *machines) isValidSubnetID(subnet string) bool {
+func (m *ec2Machines) isValidSubnetID(subnet string) bool {
 	length := len(subnet)
 	if length != shortSubnetLength && length != longSubnetLength {
 		return false
@@ -65,7 +65,7 @@ func (m *machines) isValidSubnetID(subnet string) bool {
 }
 
 // newRunInstancesInput initializes the configuration to run EC2 instances with the given input.
-func (m *machines) newRunInstancesInput(createMachines cloud.CreateMachinesInput) *ec2.RunInstancesInput {
+func (m *ec2Machines) newRunInstancesInput(createMachines machines.CreateMachinesInput) *ec2.RunInstancesInput {
 	var iamProfile *ec2.IamInstanceProfileSpecification
 	iamProfile = &ec2.IamInstanceProfileSpecification{
 		Arn:  createMachines.InstanceProfile,
@@ -97,7 +97,7 @@ func (m *machines) newRunInstancesInput(createMachines cloud.CreateMachinesInput
 }
 
 // createTags creates an array of ec2.TagSpecification from the given tag input.
-func (m *machines) createTags(input []cloud.Tag) []*ec2.TagSpecification {
+func (m *ec2Machines) createTags(input []machines.Tag) []*ec2.TagSpecification {
 	var tagSpec []*ec2.TagSpecification
 	for _, tag := range input {
 		var tags []*ec2.Tag
@@ -118,40 +118,40 @@ func (m *machines) createTags(input []cloud.Tag) []*ec2.TagSpecification {
 // runInstanceDryRun runs a new EC2 instance using dry run mode.
 // It will return an cloud.ErrDryRunFailed if the EC2 transaction
 // returns a different error code than ErrCodeDryRunOperation.
-func (m *machines) runInstanceDryRun(input *ec2.RunInstancesInput) error {
+func (m *ec2Machines) runInstanceDryRun(input *ec2.RunInstancesInput) error {
 	input.SetDryRun(true)
 	_, err := m.API.RunInstances(input)
 	awsErr, ok := err.(awserr.Error)
 	if !ok || awsErr.Code() != ErrCodeDryRunOperation {
-		return cloud.ErrDryRunFailed
+		return machines.ErrDryRunFailed
 	}
 	return nil
 }
 
 // sleepNSecondsBeforeMaxRetries pauses the current thread for n seconds.
-func (m *machines) sleepNSecondsBeforeMaxRetries(n, max int) {
+func (m *ec2Machines) sleepNSecondsBeforeMaxRetries(n, max int) {
 	if n < max {
 		time.Sleep(time.Second * time.Duration(n))
 	}
 }
 
 // parseRunInstanceError parses the given awserr.Error and returns an error from the list of generic errors.
-func (m *machines) parseRunInstanceError(err error) error {
+func (m *ec2Machines) parseRunInstanceError(err error) error {
 	awsErr, ok := err.(awserr.Error)
 	if !ok {
-		return cloud.ErrUnknown
+		return machines.ErrUnknown
 	}
 	switch awsErr.Code() {
 	case ErrCodeInsufficientInstanceCapacity:
-		return cloud.ErrInsufficientMachines
+		return machines.ErrInsufficientMachines
 	case ErrCodeRequestLimitExceeded:
-		return cloud.ErrRequestsLimitExceeded
+		return machines.ErrRequestsLimitExceeded
 	}
-	return cloud.ErrUnknown
+	return machines.ErrUnknown
 }
 
 // runInstance is a wrapper for the EC2 RunInstances method.
-func (m *machines) runInstance(input *ec2.RunInstancesInput) (*ec2.Reservation, error) {
+func (m *ec2Machines) runInstance(input *ec2.RunInstancesInput) (*ec2.Reservation, error) {
 	input.SetDryRun(false)
 	r, err := m.API.RunInstances(input)
 	if err != nil {
@@ -161,15 +161,15 @@ func (m *machines) runInstance(input *ec2.RunInstancesInput) (*ec2.Reservation, 
 }
 
 // create creates a single EC2 instance.
-func (m *machines) create(input cloud.CreateMachinesInput) (*cloud.CreateMachinesOutput, error) {
+func (m *ec2Machines) create(input machines.CreateMachinesInput) (*machines.CreateMachinesOutput, error) {
 	if !m.isValidKeyName(input.KeyName) {
-		return nil, cloud.ErrMissingKeyName
+		return nil, machines.ErrMissingKeyName
 	}
 	if !m.isValidMachineCount(input.MinCount, input.MaxCount) {
-		return nil, cloud.ErrInvalidMachinesCount
+		return nil, machines.ErrInvalidMachinesCount
 	}
 	if !m.isValidSubnetID(input.SubnetID) {
-		return nil, cloud.ErrInvalidSubnetID
+		return nil, machines.ErrInvalidSubnetID
 	}
 
 	runInstanceInput := m.newRunInstancesInput(input)
@@ -181,7 +181,7 @@ func (m *machines) create(input cloud.CreateMachinesInput) (*cloud.CreateMachine
 			break
 		}
 		if try == input.Retries {
-			return nil, cloud.ErrUnknown
+			return nil, machines.ErrUnknown
 		}
 	}
 
@@ -190,7 +190,7 @@ func (m *machines) create(input cloud.CreateMachinesInput) (*cloud.CreateMachine
 		return nil, err
 	}
 
-	var output cloud.CreateMachinesOutput
+	var output machines.CreateMachinesOutput
 	for _, i := range reservation.Instances {
 		output.Instances = append(output.Instances, *i.InstanceId)
 	}
@@ -203,9 +203,9 @@ func (m *machines) create(input cloud.CreateMachinesInput) (*cloud.CreateMachine
 // You need to destroy the required machines when an error occurs.
 // A single cloud.CreateMachinesOutput instance will be returned for every
 // cloud.CreateMachinesInput passed by parameter.
-func (m *machines) Create(inputs []cloud.CreateMachinesInput) (created []cloud.CreateMachinesOutput, err error) {
+func (m *ec2Machines) Create(inputs []machines.CreateMachinesInput) (created []machines.CreateMachinesOutput, err error) {
 	m.Logger.Debug(fmt.Sprintf("Creating machines with the following input: %+v", inputs))
-	var c *cloud.CreateMachinesOutput
+	var c *machines.CreateMachinesOutput
 	for _, input := range inputs {
 		c, err = m.create(input)
 		if err != nil {
@@ -221,9 +221,9 @@ func (m *machines) Create(inputs []cloud.CreateMachinesInput) (created []cloud.C
 // terminate terminates EC2 instances.
 // It returns an error if no instances names are provided.
 // It also returns an error if the underlying TerminateInstances request fails.
-func (m *machines) terminate(input cloud.TerminateMachinesInput) error {
+func (m *ec2Machines) terminate(input machines.TerminateMachinesInput) error {
 	if input.Instances == nil || len(input.Instances) == 0 {
-		return cloud.ErrMissingMachineNames
+		return machines.ErrMissingMachineNames
 	}
 	terminateInstancesInput := &ec2.TerminateInstancesInput{
 		DryRun:      aws.Bool(false),
@@ -234,7 +234,7 @@ func (m *machines) terminate(input cloud.TerminateMachinesInput) error {
 }
 
 // Terminate terminates EC2 machines.
-func (m *machines) Terminate(input cloud.TerminateMachinesInput) error {
+func (m *ec2Machines) Terminate(input machines.TerminateMachinesInput) error {
 	m.Logger.Debug(fmt.Sprintf("Terminating machines with the following input: %+v", input))
 	err := m.terminate(input)
 	if err != nil {
@@ -246,7 +246,7 @@ func (m *machines) Terminate(input cloud.TerminateMachinesInput) error {
 }
 
 // createFilters creates a set of filters from the given input.
-func (m *machines) createFilters(input map[string][]string) []*ec2.Filter {
+func (m *ec2Machines) createFilters(input map[string][]string) []*ec2.Filter {
 	var filters []*ec2.Filter
 	for k, v := range input {
 		filters = append(filters, &ec2.Filter{
@@ -258,7 +258,7 @@ func (m *machines) createFilters(input map[string][]string) []*ec2.Filter {
 }
 
 // Count counts EC2 machines.
-func (m *machines) Count(input cloud.CountMachinesInput) int {
+func (m *ec2Machines) Count(input machines.CountMachinesInput) int {
 	m.Logger.Debug(fmt.Sprintf("Counting machines with the following parameters: %+v", input))
 	filters := m.createFilters(input.Filters)
 	out, err := m.API.DescribeInstances(&ec2.DescribeInstancesInput{
@@ -278,7 +278,7 @@ func (m *machines) Count(input cloud.CountMachinesInput) int {
 }
 
 // WaitOK waits for EC2 machines to be in the OK status.
-func (m *machines) WaitOK(input []cloud.WaitMachinesOKInput) error {
+func (m *ec2Machines) WaitOK(input []machines.WaitMachinesOKInput) error {
 	m.Logger.Debug(fmt.Sprintf("Waiting for machines to be OK: %+v", input))
 
 	// Collect all instance ids in a single slice
@@ -300,9 +300,9 @@ func (m *machines) WaitOK(input []cloud.WaitMachinesOKInput) error {
 	return nil
 }
 
-// NewMachines initializes a new cloud.Machines implementation using EC2.
-func NewMachines(api ec2iface.EC2API, logger ign.Logger) cloud.Machines {
-	return &machines{
+// NewMachines initializes a new machines.Machines implementation using EC2.
+func NewMachines(api ec2iface.EC2API, logger ign.Logger) machines.Machines {
+	return &ec2Machines{
 		API:    api,
 		Logger: logger,
 	}

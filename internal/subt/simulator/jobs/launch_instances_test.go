@@ -9,7 +9,7 @@ import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/tracks"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/actions"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/application"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/cloud"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/machines"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/platform"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
 	simfake "gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations/fake"
@@ -58,7 +58,7 @@ func TestLaunchInstances(t *testing.T) {
 	machineConfigStore.On("BaseImage").Return("osrf/test-image")
 	machineConfigStore.On("FirewallRules").Return([]string{"sg-12345"})
 
-	machineConfigStore.On("Tags", sim, "gzserver", "gzserver").Return([]cloud.Tag{
+	machineConfigStore.On("Tags", sim, "gzserver", "gzserver").Return([]machines.Tag{
 		{
 			Resource: "instance",
 			Map: map[string]string{
@@ -67,7 +67,7 @@ func TestLaunchInstances(t *testing.T) {
 		},
 	})
 
-	machineConfigStore.On("Tags", sim, "field-computer", "fc-TEST-X1").Return([]cloud.Tag{
+	machineConfigStore.On("Tags", sim, "field-computer", "fc-TEST-X1").Return([]machines.Tag{
 		{
 			Resource: "instance",
 			Map: map[string]string{
@@ -108,15 +108,15 @@ func TestLaunchInstances(t *testing.T) {
 
 type instancesLauncher struct {
 	TimesCalled int
-	cloud.Machines
+	machines.Machines
 }
 
-// Create mocks the create method of the cloud.Machines interface.
-func (i *instancesLauncher) Create(input []cloud.CreateMachinesInput) ([]cloud.CreateMachinesOutput, error) {
+// Create mocks the create method of the machines.Machines interface.
+func (i *instancesLauncher) Create(input []machines.CreateMachinesInput) ([]machines.CreateMachinesOutput, error) {
 	i.TimesCalled++
-	var output []cloud.CreateMachinesOutput
+	var output []machines.CreateMachinesOutput
 	for _, in := range input {
-		var out cloud.CreateMachinesOutput
+		var out machines.CreateMachinesOutput
 		for i := 0; i < int(in.MaxCount); i++ {
 			out.Instances = append(out.Instances, fmt.Sprintf("%s-%d", in.Type, i))
 		}
