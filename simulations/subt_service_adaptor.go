@@ -5,12 +5,24 @@ import (
 	"github.com/jinzhu/gorm"
 	uuid "github.com/satori/go.uuid"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
+	"time"
 )
 
 // SimulationServiceAdaptor implements the simulations.Service interface.
 // It acts as an adaptor between the legacy code and the new code introduced in the code refactor.
 type SimulationServiceAdaptor struct {
 	db *gorm.DB
+}
+
+// MarkStopped marks a simulation with the time where it has stopped running.
+func (sa *SimulationServiceAdaptor) MarkStopped(groupID simulations.GroupID) error {
+	at := time.Now()
+	if err := sa.db.Model(&SimulationDeployment{}).Where("group_id = ?", groupID).Update(SimulationDeployment{
+		StoppedAt: &at,
+	}).Error; err != nil {
+		return err
+	}
+	return nil
 }
 
 // Create creates a simulation (SimulationDeployment) from the given input.
