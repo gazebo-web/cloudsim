@@ -14,8 +14,8 @@ import (
 
 func TestSetStoppedAt(t *testing.T) {
 	simservice := fake.NewService()
-	base := application.NewServices(simservice)
-	app := subtapp.NewServices(base, nil)
+	base := application.NewServices(simservice, nil)
+	app := subtapp.NewServices(base, nil, nil)
 
 	gid := simulations.GroupID("aaaa-bbbb-cccc-dddd")
 
@@ -31,8 +31,8 @@ func TestSetStoppedAt(t *testing.T) {
 
 func TestSetStoppedAtWithError(t *testing.T) {
 	simservice := fake.NewService()
-	base := application.NewServices(simservice)
-	app := subtapp.NewServices(base, nil)
+	base := application.NewServices(simservice, nil)
+	app := subtapp.NewServices(base, nil, nil)
 
 	gid := simulations.GroupID("aaaa-bbbb-cccc-dddd")
 
