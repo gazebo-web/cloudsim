@@ -26,7 +26,7 @@ func createWaitRequestForGzServerPod(store actions.Store, tx *gorm.DB, deploymen
 
 	name := subtapp.GetPodNameGazeboServer(s.GroupID)
 	ns := s.Platform().Store().Orchestrator().Namespace()
-	labels := subtapp.GetPodLabelsGazeboServerCopy(s.GroupID, s.ParentGroupID)
+	labels := subtapp.GetPodLabelsGazeboServer(s.GroupID, s.ParentGroupID)
 
 	res := orchestrator.NewResource(name, ns, labels)
 

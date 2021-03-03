@@ -251,7 +251,6 @@ func (p *pods) isPodReady(pod *apiv1.Pod) (bool, error) {
 }
 
 func (p *pods) podHasIP(pod *apiv1.Pod) bool {
-	p.Logger.Debug("Pod IP:", pod.Status.PodIP)
 	return pod.Status.PodIP != ""
 }
 

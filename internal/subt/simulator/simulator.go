@@ -12,14 +12,14 @@ import (
 )
 
 const (
-	// actionNameStartSimulation is the name used to register the start simulation action.
-	actionNameStartSimulation = "start-simulation"
+	// ActionNameStartSimulation is the name used to register the start simulation action.
+	ActionNameStartSimulation = "start-simulation"
 
-	// actionNameStopSimulation is the name used to register the stop simulation action.
-	actionNameStopSimulation = "stop-simulation"
+	// ActionNameStopSimulation is the name used to register the stop simulation action.
+	ActionNameStopSimulation = "stop-simulation"
 
-	// applicationName is the name of the current simulator's application.
-	applicationName = "subt"
+	// ApplicationName is the name of the current simulator's application.
+	ApplicationName = "subt"
 )
 
 // subTSimulator is a simulator.Simulator implementation.
@@ -38,7 +38,7 @@ func (s *subTSimulator) Start(ctx context.Context, groupID simulations.GroupID) 
 
 	execInput := &actions.ExecuteInput{
 		ApplicationName: &s.applicationName,
-		ActionName:      actionNameStartSimulation,
+		ActionName:      ActionNameStartSimulation,
 	}
 
 	err := s.actions.Execute(store, s.db, execInput, state)
@@ -56,7 +56,7 @@ func (s *subTSimulator) Stop(ctx context.Context, groupID simulations.GroupID) e
 
 	execInput := &actions.ExecuteInput{
 		ApplicationName: &s.applicationName,
-		ActionName:      actionNameStopSimulation,
+		ActionName:      ActionNameStopSimulation,
 	}
 
 	err := s.actions.Execute(store, s.db, execInput, groupID)
@@ -68,18 +68,21 @@ func (s *subTSimulator) Stop(ctx context.Context, groupID simulations.GroupID) e
 
 // Config is used to initialize a new simulator for SubT.
 type Config struct {
-	DB                  *gorm.DB
-	Platform            platform.Platform
-	ApplicationServices subtapp.Services
-	ActionService       actions.Servicer
+	DB                    *gorm.DB
+	Platform              platform.Platform
+	ApplicationServices   subtapp.Services
+	ActionService         actions.Servicer
+	DisableDefaultActions bool
 }
 
 // NewSimulator initializes a new Simulator implementation for SubT.
 func NewSimulator(config Config) simulator.Simulator {
-	registerActions(applicationName, config.ActionService)
+	if !config.DisableDefaultActions {
+		registerActions(ApplicationName, config.ActionService)
+	}
 	return &subTSimulator{
 		platform:        config.Platform,
-		applicationName: applicationName,
+		applicationName: ApplicationName,
 		services:        config.ApplicationServices,
 		actions:         config.ActionService,
 		db:              config.DB,
@@ -90,8 +93,8 @@ func NewSimulator(config Config) simulator.Simulator {
 // It panics whenever an action could not be registered.
 func registerActions(name string, service actions.Servicer) {
 	actions := map[string]actions.Jobs{
-		actionNameStartSimulation: JobsStartSimulation,
-		actionNameStopSimulation:  JobsStopSimulation,
+		ActionNameStartSimulation: JobsStartSimulation,
+		ActionNameStopSimulation:  JobsStopSimulation,
 	}
 
 	for actionName, jobs := range actions {

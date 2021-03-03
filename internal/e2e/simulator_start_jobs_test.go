@@ -11,6 +11,7 @@ import (
 	"github.com/stretchr/testify/require"
 	subtapp "gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/application"
 	"gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/simulator"
+	"gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/simulator/jobs"
 	"gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/summaries"
 	"gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/tracks"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/actions"
@@ -169,13 +170,35 @@ func TestStartSimulationAction(t *testing.T) {
 	// Initialize subt application.
 	app := subtapp.NewServices(baseApp, trackService, summaryService)
 
+	actionService := actions.NewService()
+
 	// Initialize simulator
 	s := simulator.NewSimulator(simulator.Config{
-		DB:                  db,
-		Platform:            p,
-		ApplicationServices: app,
-		ActionService:       actions.NewService(),
+		DB:                    db,
+		Platform:              p,
+		ApplicationServices:   app,
+		ActionService:         actionService,
+		DisableDefaultActions: true,
 	})
+
+	startActions, err := actions.NewAction(actions.Jobs{
+		jobs.CheckSimulationPendingStatus,
+		jobs.CheckStartSimulationIsNotParent,
+		jobs.CheckSimulationNoErrors,
+		jobs.SetSimulationStatusToLaunchInstances,
+		jobs.LaunchInstances,
+		jobs.SetSimulationStatusToWaitInstances,
+		jobs.WaitForInstances,
+		jobs.SetSimulationStatusToWaitNodes,
+		jobs.WaitForNodes,
+		jobs.SetSimulationStatusToLaunchPods,
+		jobs.CreateNetworkPolicyGazeboServer,
+		jobs.LaunchGazeboServerPod,
+	})
+	require.NoError(t, err)
+
+	appName := simulator.ApplicationName
+	actionService.RegisterAction(&appName, simulator.ActionNameStartSimulation, startActions)
 
 	// Start the simulation.
 	err = s.Start(ctx, sim.GetGroupID())
