@@ -6,7 +6,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/stretchr/testify/assert"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/cloud"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/machines"
 	"gitlab.com/ignitionrobotics/web/ign-go"
 	"testing"
 	"time"
@@ -18,19 +18,19 @@ func TestNewMachines(t *testing.T) {
 	ec := ec2.New(s)
 	logger := ign.NewLoggerNoRollbar("TestNewMachines", ign.VerbosityDebug)
 	m := NewMachines(ec, logger)
-	e, ok := m.(*machines)
+	e, ok := m.(*ec2Machines)
 	assert.True(t, ok)
 	assert.NotNil(t, e.API)
 }
 
 func TestIsValidKeyName(t *testing.T) {
-	m := &machines{}
+	m := &ec2Machines{}
 	assert.False(t, m.isValidKeyName(""))
 	assert.True(t, m.isValidKeyName("testKey"))
 }
 
 func TestIsValidMachineCount(t *testing.T) {
-	m := &machines{}
+	m := &ec2Machines{}
 	assert.False(t, m.isValidMachineCount(-1, -1))
 	assert.False(t, m.isValidMachineCount(-1, 0))
 	assert.False(t, m.isValidMachineCount(0, -1))
@@ -43,7 +43,7 @@ func TestIsValidMachineCount(t *testing.T) {
 }
 
 func TestIsValidSubnetID(t *testing.T) {
-	m := &machines{}
+	m := &ec2Machines{}
 	assert.False(t, m.isValidSubnetID(""))
 	assert.False(t, m.isValidSubnetID("test"))
 	assert.False(t, m.isValidSubnetID("test-1234"))
@@ -60,7 +60,7 @@ func TestIsValidSubnetID(t *testing.T) {
 }
 
 func TestSleep0Seconds(t *testing.T) {
-	m := &machines{}
+	m := &ec2Machines{}
 	before := time.Now()
 	m.sleepNSecondsBeforeMaxRetries(0, 10)
 	now := time.Now()
@@ -68,7 +68,7 @@ func TestSleep0Seconds(t *testing.T) {
 }
 
 func TestSleep1Seconds(t *testing.T) {
-	m := &machines{}
+	m := &ec2Machines{}
 	before := time.Now()
 	m.sleepNSecondsBeforeMaxRetries(1, 10)
 	now := time.Now()
@@ -76,7 +76,7 @@ func TestSleep1Seconds(t *testing.T) {
 }
 
 func TestSleep0SecondsWhenIsMax(t *testing.T) {
-	m := &machines{}
+	m := &ec2Machines{}
 	before := time.Now()
 	m.sleepNSecondsBeforeMaxRetries(10, 10)
 	now := time.Now()
@@ -84,10 +84,10 @@ func TestSleep0SecondsWhenIsMax(t *testing.T) {
 }
 
 func TestNewRunInstanceInput(t *testing.T) {
-	m := &machines{}
+	m := &ec2Machines{}
 	instanceProfile := "arn"
 	script := "bash"
-	out := m.newRunInstancesInput(cloud.CreateMachinesInput{
+	out := m.newRunInstancesInput(machines.CreateMachinesInput{
 		InstanceProfile: &instanceProfile,
 		KeyName:         "key-name",
 		Type:            "t2.large",
@@ -97,7 +97,7 @@ func TestNewRunInstanceInput(t *testing.T) {
 		FirewallRules:   []string{"first-rule", "second-rule"},
 		SubnetID:        "subnet-id",
 		Zone:            "zone-a",
-		Tags: []cloud.Tag{
+		Tags: []machines.Tag{
 			{
 				Resource: "instance",
 				Map: map[string]string{
@@ -139,9 +139,9 @@ func TestNewRunInstanceInput(t *testing.T) {
 }
 
 func TestCreateTags(t *testing.T) {
-	m := &machines{}
+	m := &ec2Machines{}
 
-	tags := []cloud.Tag{
+	tags := []machines.Tag{
 		{
 			Resource: "instance",
 			Map: map[string]string{
@@ -159,7 +159,7 @@ func TestCreateTags(t *testing.T) {
 }
 
 func TestCreateFilters(t *testing.T) {
-	m := &machines{}
+	m := &ec2Machines{}
 
 	output := m.createFilters(map[string][]string{
 		"instance-state-name": {
@@ -177,14 +177,14 @@ func TestCreateFilters(t *testing.T) {
 }
 
 func TestParseRunInstanceError(t *testing.T) {
-	m := &machines{}
+	m := &ec2Machines{}
 
 	err := m.parseRunInstanceError(errors.New("internal error"))
-	assert.Equal(t, cloud.ErrUnknown, err)
+	assert.Equal(t, machines.ErrUnknown, err)
 
 	err = m.parseRunInstanceError(awserr.New(ErrCodeInsufficientInstanceCapacity, "test", nil))
-	assert.Equal(t, cloud.ErrInsufficientMachines, err)
+	assert.Equal(t, machines.ErrInsufficientMachines, err)
 
 	err = m.parseRunInstanceError(awserr.New(ErrCodeRequestLimitExceeded, "test", nil))
-	assert.Equal(t, cloud.ErrRequestsLimitExceeded, err)
+	assert.Equal(t, machines.ErrRequestsLimitExceeded, err)
 }

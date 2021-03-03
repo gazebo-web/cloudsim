@@ -3,7 +3,7 @@ package state
 import (
 	subtapp "gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/application"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/application"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/cloud"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/machines"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/resource"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/platform"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
@@ -19,8 +19,8 @@ type StartSimulation struct {
 	services             subtapp.Services
 	GroupID              simulations.GroupID
 	GazeboServerPod      resource.Resource
-	CreateMachinesInput  []cloud.CreateMachinesInput
-	CreateMachinesOutput []cloud.CreateMachinesOutput
+	CreateMachinesInput  []machines.CreateMachinesInput
+	CreateMachinesOutput []machines.CreateMachinesOutput
 	ParentGroupID        *simulations.GroupID
 	UpstreamName         string
 	GazeboServerIP       string

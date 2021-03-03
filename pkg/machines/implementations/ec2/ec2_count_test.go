@@ -6,7 +6,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/aws/aws-sdk-go/service/ec2/ec2iface"
 	"github.com/stretchr/testify/suite"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/cloud"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/machines"
 	"gitlab.com/ignitionrobotics/web/ign-go"
 	"testing"
 )
@@ -18,7 +18,7 @@ func TestCountMachines(t *testing.T) {
 type ec2CountMachinesTestSuite struct {
 	suite.Suite
 	ec2API   *mockEC2Count
-	machines cloud.Machines
+	machines machines.Machines
 }
 
 func (s *ec2CountMachinesTestSuite) SetupTest() {
@@ -30,7 +30,7 @@ func (s *ec2CountMachinesTestSuite) SetupTest() {
 func (s *ec2CountMachinesTestSuite) TestCount_ReturnZeroWhenThereAreNoMachines() {
 	s.ec2API.InternalError = nil
 	s.ec2API.ReturnMachines = false
-	result := s.machines.Count(cloud.CountMachinesInput{
+	result := s.machines.Count(machines.CountMachinesInput{
 		Filters: nil,
 	})
 	s.Equal(0, result)
@@ -38,7 +38,7 @@ func (s *ec2CountMachinesTestSuite) TestCount_ReturnZeroWhenThereAreNoMachines()
 
 func (s *ec2CountMachinesTestSuite) TestCount_ReturnErrorWhenThereIsAnInternalAWSError() {
 	s.ec2API.InternalError = errors.New("test error")
-	result := s.machines.Count(cloud.CountMachinesInput{
+	result := s.machines.Count(machines.CountMachinesInput{
 		Filters: nil,
 	})
 	s.Equal(-1, result)
@@ -47,7 +47,7 @@ func (s *ec2CountMachinesTestSuite) TestCount_ReturnErrorWhenThereIsAnInternalAW
 func (s *ec2CountMachinesTestSuite) TestCount_GetAllMachines() {
 	s.ec2API.InternalError = nil
 	s.ec2API.ReturnMachines = true
-	result := s.machines.Count(cloud.CountMachinesInput{
+	result := s.machines.Count(machines.CountMachinesInput{
 		Filters: nil,
 	})
 	s.Equal(3, result)
@@ -56,7 +56,7 @@ func (s *ec2CountMachinesTestSuite) TestCount_GetAllMachines() {
 func (s *ec2CountMachinesTestSuite) TestCount_GetMachinesWithFilters() {
 	s.ec2API.InternalError = nil
 	s.ec2API.ReturnMachines = true
-	result := s.machines.Count(cloud.CountMachinesInput{
+	result := s.machines.Count(machines.CountMachinesInput{
 		Filters: map[string][]string{
 			"tag:cloudsim-simulation-worker": {
 				"name-prefix",
