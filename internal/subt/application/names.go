@@ -79,6 +79,10 @@ func GetServiceNameWebsocket(groupID simulations.GroupID) string {
 	return fmt.Sprintf("%s-%s-websocket", simPrefix, groupID.String())
 }
 
+func GetCommsBridgeLogsFilename(groupID simulations.GroupID, robotName string) string {
+	return fmt.Sprintf("%s-fc-%s-commsbridge.tar.gz", groupID, robotName)
+}
+
 // GetGazeboLogsFilename returns the filename of the file that contains simulation logs.
 func GetGazeboLogsFilename(groupID simulations.GroupID) string {
 	return fmt.Sprintf("%s.tar.gz", groupID.String())

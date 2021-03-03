@@ -55,7 +55,7 @@ func uploadLogs(store actions.Store, tx *gorm.DB, deployment *actions.Deployment
 	logsBucket := s.Platform().Store().Ignition().LogsBucket()
 
 	// Attempt to upload robot logs
-	for i := range robots {
+	for i, robot := range robots {
 		robotID := subtapp.GetRobotID(i)
 		name := subtapp.GetPodNameCommsBridgeCopy(s.GroupID, robotID)
 		res, err := s.Platform().Orchestrator().Pods().Get(name, ns)
@@ -63,7 +63,7 @@ func uploadLogs(store actions.Store, tx *gorm.DB, deployment *actions.Deployment
 			continue
 		}
 
-		filename := subtapp.GetGazeboLogsFilename(s.GroupID)
+		filename := subtapp.GetCommsBridgeLogsFilename(s.GroupID, robot.Name())
 		bucket := filepath.Join(logsBucket, subtapp.GetSimulationLogKey(s.GroupID, *sim.GetOwner()))
 
 		scriptParams := uploadLogsScript{
