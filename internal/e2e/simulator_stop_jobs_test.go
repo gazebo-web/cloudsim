@@ -188,6 +188,8 @@ func TestStopSimulationAction(t *testing.T) {
 
 		stopAction, err := actions.NewAction(actions.Jobs{
 			jobs.CheckSimulationTerminateRequestedStatus,
+			jobs.SetSimulationStatusToProcessingResults,
+			jobs.CheckStopSimulationIsNotParent,
 		})
 		require.NoError(t, err)
 
