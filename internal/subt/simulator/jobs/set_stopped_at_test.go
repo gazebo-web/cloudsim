@@ -19,7 +19,7 @@ func TestSetStoppedAt(t *testing.T) {
 
 	gid := simulations.GroupID("aaaa-bbbb-cccc-dddd")
 
-	simservice.On("Stop", gid).Return(error(nil))
+	simservice.On("MarkStopped", gid).Return(error(nil))
 
 	initialState := state.NewStopSimulation(nil, app, gid)
 	s := actions.NewStore(initialState)
@@ -36,7 +36,7 @@ func TestSetStoppedAtWithError(t *testing.T) {
 
 	gid := simulations.GroupID("aaaa-bbbb-cccc-dddd")
 
-	simservice.On("Stop", gid).Return(errors.New("test error"))
+	simservice.On("MarkStopped", gid).Return(errors.New("test error"))
 
 	initialState := state.NewStopSimulation(nil, app, gid)
 	s := actions.NewStore(initialState)
