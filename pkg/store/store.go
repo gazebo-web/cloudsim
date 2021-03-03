@@ -113,6 +113,9 @@ type Ignition interface {
 	// For AWS, it returns: `aws-secret-access-key`
 	SecretAccessKeyLabel() string
 
+	// LogsBucket returns the bucket for saving simulation logs.
+	LogsBucket() string
+
 	// GetWebsocketHost returns the host of the websocket URL.
 	GetWebsocketHost() string
 
