@@ -56,6 +56,9 @@ type Machines interface {
 
 	// NamePrefix returns the name prefix that should be used when creating a machine.
 	NamePrefix() string
+
+	// ClusterName returns the cluster's name where to launch simulations.
+	ClusterName() string
 }
 
 // Orchestrator provides different information to manage a cluster.

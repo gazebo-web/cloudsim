@@ -275,6 +275,12 @@ func (f Machines) NamePrefix() string {
 	return args.String(0)
 }
 
+// ClusterName mocks the ClusterName method.
+func (f Machines) ClusterName() string {
+	args := f.Called()
+	return args.String(0)
+}
+
 // NewFakeMachines initializes a new store.Machines implementation.
 func NewFakeMachines() *Machines {
 	return &Machines{
