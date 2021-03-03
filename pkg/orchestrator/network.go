@@ -50,4 +50,6 @@ type CreateNetworkPolicyInput struct {
 type NetworkPolicies interface {
 	// Create creates a new network policy.
 	Create(input CreateNetworkPolicyInput) (Resource, error)
+	// Remove removes a network policy.
+	Remove(name, namespace string) error
 }
