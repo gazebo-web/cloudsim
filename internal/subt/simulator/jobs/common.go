@@ -83,3 +83,34 @@ func rollbackPodCreation(store actions.Store, tx *gorm.DB, deployment *actions.D
 
 	return nil, nil
 }
+
+// checkLaunchServiceError checks if the output from the jobs.LaunchWebsocketService has an error.
+func checkLaunchServiceError(store actions.Store, tx *gorm.DB, deployment *actions.Deployment, value interface{}) (interface{}, error) {
+	output := value.(jobs.LaunchWebsocketServiceOutput)
+	if output.Error == nil {
+		return value, nil
+	}
+	return nil, output.Error
+}
+
+// readFileContentFromCopyPod reads the file content located in the given path
+// of a certain pod in the given namespace.
+func readFileContentFromPod(p orchestrator.Pods, podName, namespace, path string) ([]byte, error) {
+	res, err := p.Get(podName, namespace)
+	if err != nil {
+		return nil, err
+	}
+
+	reader, err := p.Reader(res).File(path)
+	if err != nil {
+		return nil, err
+	}
+
+	var c []byte
+	_, err = reader.Read(c)
+	if err != nil {
+		return nil, err
+	}
+
+	return c, nil
+}

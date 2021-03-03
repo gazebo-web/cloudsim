@@ -4,6 +4,7 @@ import (
 	"github.com/jinzhu/gorm"
 	"github.com/stretchr/testify/suite"
 	"gitlab.com/ignitionrobotics/web/cloudsim/internal/pkg/domain"
+	utilsgorm "gitlab.com/ignitionrobotics/web/cloudsim/pkg/utils/db/gorm"
 	"gitlab.com/ignitionrobotics/web/ign-go"
 	"reflect"
 	"testing"
@@ -22,11 +23,10 @@ type testRepositorySuite struct {
 }
 
 func (s *testRepositorySuite) SetupTest() {
-	var db *gorm.DB
-	dbConfig, err := ign.NewDatabaseConfigFromEnvVars()
-	s.NoError(err)
-	db, err = ign.InitDbWithCfg(&dbConfig)
-	s.NoError(err)
+	db, err := utilsgorm.GetTestDBFromEnvVars()
+	if err != nil {
+		s.FailNow("Failed to initialize the database.")
+	}
 	s.db = db
 	s.db.DropTableIfExists(&test{})
 	s.db.AutoMigrate(&test{})
@@ -88,7 +88,6 @@ func (s testRepositorySuite) TestGetByValue() {
 	s.Equal("Test1", result[0].Name, "First database entry should have name Test1.")
 	s.Len(result, 1, "The result slice should be length=1.")
 }
-
 
 func (s testRepositorySuite) TestGetAll() {
 	s.init()
@@ -166,7 +165,7 @@ func (s testRepositorySuite) TestDeleteInvalid() {
 func (s testRepositorySuite) TestUpdate() {
 	s.init()
 
-	err := s.repository.update("Test1", map[string]interface{}{ "name": "Test111", "value": 12345 })
+	err := s.repository.update("Test1", map[string]interface{}{"name": "Test111", "value": 12345})
 	s.NoError(err, "Should not throw an error when updating an entity.")
 
 	_, err = s.repository.getByName("Test1")
@@ -182,7 +181,7 @@ func (s testRepositorySuite) TestUpdate() {
 func (s testRepositorySuite) TestUpdateAll() {
 	s.init()
 
-	err := s.repository.updateAll(map[string]interface{}{ "name": "Test123" })
+	err := s.repository.updateAll(map[string]interface{}{"name": "Test123"})
 	s.NoError(err, "Should not throw an error when updating all entities.")
 
 	result, err := s.repository.getAll()
@@ -195,7 +194,7 @@ func (s testRepositorySuite) TestUpdateAll() {
 
 func (s testRepositorySuite) TestUpdateZeroValue() {
 	s.init()
-	err := s.repository.update("Test1", map[string]interface{}{ "value": 0 })
+	err := s.repository.update("Test1", map[string]interface{}{"value": 0})
 	s.NoError(err, "Should not throw an error when updating an entity.")
 
 	result, err := s.repository.getByName("Test1")
@@ -214,7 +213,7 @@ func (s testRepositorySuite) TestUpdateInvalid() {
 func (s testRepositorySuite) TestUpdateSomeValues() {
 	s.init()
 
-	err := s.repository.updateSome([]string{"Test1", "Test2"}, map[string]interface{}{ "value": 99 })
+	err := s.repository.updateSome([]string{"Test1", "Test2"}, map[string]interface{}{"value": 99})
 
 	result, err := s.repository.getAll()
 	s.NoError(err, "Should not throw an error when getting the updated entities.")

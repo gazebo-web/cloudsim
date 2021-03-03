@@ -10,12 +10,13 @@ import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations/fake"
 	"testing"
+	"time"
 )
 
-func TestCheckSimIsParent(t *testing.T) {
+func TestCheckSimIsNotParent(t *testing.T) {
 	// Initialize simulation
 	gid := simulations.GroupID("aaaa-bbbb-cccc-dddd")
-	sim := fake.NewSimulation(gid, simulations.StatusPending, simulations.SimSingle, nil, "test")
+	sim := fake.NewSimulation(gid, simulations.StatusPending, simulations.SimSingle, nil, "test", 1*time.Minute)
 
 	// Initialize fake simulation service
 	svc := fake.NewService()
@@ -25,13 +26,13 @@ func TestCheckSimIsParent(t *testing.T) {
 	trackService := tfake.NewService()
 
 	// Create SubT application service
-	app := subtapp.NewServices(application.NewServices(svc), trackService)
+	app := subtapp.NewServices(application.NewServices(svc, nil), trackService, nil)
 
 	// Initialize job input and store
 	input := state.NewStartSimulation(nil, app, gid)
 	s := actions.NewStore(input)
 
-	result, err := CheckSimulationIsNotParent.Run(s, nil, nil, input)
+	result, err := CheckStartSimulationIsNotParent.Run(s, nil, nil, input)
 	assert.NoError(t, err)
 
 	output, ok := result.(*state.StartSimulation)
@@ -41,10 +42,10 @@ func TestCheckSimIsParent(t *testing.T) {
 
 }
 
-func TestCheckSimIsParent_ErrSimIsParent(t *testing.T) {
+func TestCheckSimIsNotParent_ErrSimIsParent(t *testing.T) {
 	// Initialize simulation
 	gid := simulations.GroupID("aaaa-bbbb-cccc-dddd")
-	sim := fake.NewSimulation(gid, simulations.StatusPending, simulations.SimParent, nil, "test")
+	sim := fake.NewSimulation(gid, simulations.StatusPending, simulations.SimParent, nil, "test", 1*time.Minute)
 
 	// Initialize fake simulation service
 	svc := fake.NewService()
@@ -54,13 +55,13 @@ func TestCheckSimIsParent_ErrSimIsParent(t *testing.T) {
 	trackService := tfake.NewService()
 
 	// Create SubT application service
-	app := subtapp.NewServices(application.NewServices(svc), trackService)
+	app := subtapp.NewServices(application.NewServices(svc, nil), trackService, nil)
 
 	// Initialize job input and store
 	input := state.NewStartSimulation(nil, app, gid)
 	s := actions.NewStore(input)
 
-	_, err := CheckSimulationIsNotParent.Run(s, nil, nil, input)
+	_, err := CheckStartSimulationIsNotParent.Run(s, nil, nil, input)
 	assert.Error(t, err)
 	assert.Equal(t, simulations.ErrIncorrectKind, err)
 }

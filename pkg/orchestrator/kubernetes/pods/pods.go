@@ -20,6 +20,29 @@ type pods struct {
 	Logger ign.Logger
 }
 
+// Get gets a pod with the certain name and in the given namespace and returns a resource that identifies that pod.
+func (p *pods) Get(name, namespace string) (orchestrator.Resource, error) {
+	p.Logger.Debug(fmt.Sprintf("Getting pod with name [%s] in namespace [%s]", name, namespace))
+
+	pod, err := p.API.CoreV1().Pods(namespace).Get(name, metav1.GetOptions{})
+	if err != nil {
+		p.Logger.Debug(fmt.Sprintf(
+			"Getting pod with name [%s] in namespace [%s] failed. Error: %+v.",
+			name, namespace, err,
+		))
+		return nil, err
+	}
+
+	selector := orchestrator.NewSelector(pod.Labels)
+
+	p.Logger.Debug(fmt.Sprintf(
+		"Getting pod with name [%s] in namespace [%s] succeeded.",
+		name, namespace,
+	))
+
+	return orchestrator.NewResource(name, namespace, selector), nil
+}
+
 // Create creates a new pod with the information given in orchestrator.CreatePodInput.
 func (p *pods) Create(input orchestrator.CreatePodInput) (orchestrator.Resource, error) {
 	p.Logger.Debug(fmt.Sprintf("Creating new pod. Input: %+v", input))
@@ -35,6 +58,7 @@ func (p *pods) Create(input orchestrator.CreatePodInput) (orchestrator.Resource,
 			volumeMounts = append(volumeMounts, apiv1.VolumeMount{
 				Name:      v.Name,
 				MountPath: v.MountPath,
+				SubPath:   v.SubPath,
 			})
 		}
 
@@ -228,6 +252,40 @@ func (p *pods) isPodReady(pod *apiv1.Pod) (bool, error) {
 
 func (p *pods) podHasIP(pod *apiv1.Pod) bool {
 	return pod.Status.PodIP != ""
+}
+
+// GetIP gets the IP for the pod identified with the given name in the current namespace.
+// It will return an error if no IP has been assigned to the pod when calling this method.
+// This job assumes that the pod is ready and can be accessed immediately. A WaitForCondition job must be executed at some point
+// before executing this job to ensure that the pod is ready and has an IP assigned (orchestrator.HasIPStatusCondition).
+func (p *pods) GetIP(name, namespace string) (string, error) {
+	p.Logger.Debug(fmt.Sprintf("Getting IP from pod with name [%s] in namespace [%s]", name, namespace))
+
+	pod, err := p.API.CoreV1().Pods(namespace).Get(name, metav1.GetOptions{})
+	if err != nil {
+		p.Logger.Debug(fmt.Sprintf(
+			"Getting IP from pod with name [%s] in namespace [%s] failed. Error: %+v.",
+			name, namespace, err,
+		))
+		return "", err
+	}
+
+	if !p.podHasIP(pod) {
+		err = orchestrator.ErrPodHasNoIP
+
+		p.Logger.Debug(fmt.Sprintf(
+			"Getting IP from pod with name [%s] in namespace [%s] failed. Error: %+v.",
+			name, namespace, err,
+		))
+		return "", err
+	}
+
+	p.Logger.Debug(fmt.Sprintf(
+		"Getting IP from pod with name [%s] in namespace [%s] succeeded.",
+		name, namespace,
+	))
+
+	return pod.Status.PodIP, nil
 }
 
 // NewPods initializes a new orchestrator.Pods implementation for managing Kubernetes Pods.

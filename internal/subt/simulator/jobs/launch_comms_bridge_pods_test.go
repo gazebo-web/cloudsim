@@ -13,7 +13,6 @@ import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/kubernetes/pods"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/kubernetes/spdy"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/platform"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/secrets"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
 	simfake "gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations/fake"
 	sfake "gitlab.com/ignitionrobotics/web/cloudsim/pkg/store/fake"
@@ -26,18 +25,18 @@ import (
 
 func TestLaunchCommsBridgePods(t *testing.T) {
 	db, err := gorm.GetDBFromEnvVars()
+	defer db.Close()
 	require.NoError(t, err)
 
-	err = actions.MigrateDB(db)
+	err = actions.CleanAndMigrateDB(db)
 	require.NoError(t, err)
 
 	// Set up logger
-	logger := ign.NewLoggerNoRollbar("TestLaunchGazeboServerPod", ign.VerbosityDebug)
+	logger := ign.NewLoggerNoRollbar("TestLaunchCommsBridgePods", ign.VerbosityDebug)
 
 	// Set up store
 	storeIgnition := sfake.NewFakeIgnition()
 	storeOrchestrator := sfake.NewFakeOrchestrator()
-	secretsManager := secrets.NewFakeSecrets()
 	fakeStore := sfake.NewFakeStore(nil, storeOrchestrator, storeIgnition)
 
 	// Mock ignition store methods for this test
@@ -46,7 +45,7 @@ func TestLaunchCommsBridgePods(t *testing.T) {
 	storeIgnition.On("Verbosity").Return("0")
 	storeIgnition.On("LogsCopyEnabled").Return(true)
 	storeIgnition.On("SecretsName").Return("aws-secrets")
-	storeIgnition.On("Region").Return("aws-secrets")
+	storeIgnition.On("Region").Return("us-west-1")
 	storeIgnition.On("AccessKeyLabel").Return("aws-access-key-id")
 	storeIgnition.On("SecretAccessKeyLabel").Return("aws-secret-access-key")
 
@@ -54,11 +53,6 @@ func TestLaunchCommsBridgePods(t *testing.T) {
 	storeOrchestrator.On("Namespace").Return("default")
 	storeOrchestrator.On("TerminationGracePeriod").Return(time.Second)
 	storeOrchestrator.On("Nameservers").Return([]string{"8.8.8.8", "8.8.4.4"})
-
-	secretsManager.On("Get").Return(&secrets.Secret{Data: map[string][]byte{
-		"aws-access-key-id":     []byte("12345678910"),
-		"aws-secret-access-key": []byte("secret"),
-	}}, error(nil))
 
 	// Set up SPDY initializer with fake implementation
 	spdyInit := spdy.NewSPDYFakeInitializer()
@@ -74,7 +68,6 @@ func TestLaunchCommsBridgePods(t *testing.T) {
 	p := platform.NewPlatform(platform.Components{
 		Cluster: ks,
 		Store:   fakeStore,
-		Secrets: secretsManager,
 	})
 
 	// Initialize generic simulation service
@@ -119,7 +112,7 @@ func TestLaunchCommsBridgePods(t *testing.T) {
 	}, error(nil))
 
 	// Create SubT application service
-	app := subtapp.NewServices(application.NewServices(simservice), trackService)
+	app := subtapp.NewServices(application.NewServices(simservice, nil), trackService, nil)
 
 	// Create new state: Start simulation state.
 	s := state.NewStartSimulation(p, app, gid)

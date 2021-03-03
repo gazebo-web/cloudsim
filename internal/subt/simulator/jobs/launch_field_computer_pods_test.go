@@ -23,9 +23,10 @@ import (
 
 func TestLaunchFieldComputerPods(t *testing.T) {
 	db, err := gorm.GetDBFromEnvVars()
+	defer db.Close()
 	require.NoError(t, err)
 
-	err = actions.MigrateDB(db)
+	err = actions.CleanAndMigrateDB(db)
 	require.NoError(t, err)
 
 	// Set up logger
@@ -80,7 +81,7 @@ func TestLaunchFieldComputerPods(t *testing.T) {
 	simservice.On("Get", gid).Return(sim, error(nil))
 
 	// Create SubT application service
-	app := subtapp.NewServices(application.NewServices(simservice), nil)
+	app := subtapp.NewServices(application.NewServices(simservice, nil), nil, nil)
 
 	// Create new state: Start simulation state.
 	s := state.NewStartSimulation(p, app, gid)

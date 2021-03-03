@@ -2,6 +2,7 @@ package simulations
 
 import (
 	"errors"
+	"time"
 )
 
 var (
@@ -57,8 +58,14 @@ var (
 	// StatusTerminateRequested is used when a simulation has been scheduled to be terminated.
 	StatusTerminateRequested Status = "terminate-requested"
 
-	// StatusDeletingPods is used when a simulation is being shutdown.
+	// StatusDeletingPods is used when the pods of a certain simulation are being deleted.
 	StatusDeletingPods Status = "deleting-pods"
+
+	// StatusDeletingNodes is used when the nodes of a certain simulation are being deleted.
+	StatusDeletingNodes Status = "deleting-nodes"
+
+	// StatusProcessingResults is used when a simulation's score and stats are being extracted from a gazebo server.
+	StatusProcessingResults Status = "processing-results"
 )
 
 // Kind is used to identify if a Simulation is a single simulation or a multisim.
@@ -92,15 +99,18 @@ type Simulation interface {
 	// SetStatus sets a given status to the simulation.
 	SetStatus(status Status)
 
-	// Kind returns the current simulation's kind.
+	// GetKind returns the current simulation's kind.
 	GetKind() Kind
 
 	// IsKind checks if the current simulation is of the given kind.
 	IsKind(Kind) bool
 
-	// Error returns the current simulation's error. It returns nil if the simulation doesn't have an error.
+	// GetError returns the current simulation's error. It returns nil if the simulation doesn't have an error.
 	GetError() *Error
 
-	// Image returns the simulation's docker image. This image is used as the solution image.
+	// GetImage returns the simulation's docker image. This image is used as the solution image.
 	GetImage() string
+
+	// GetValidFor returns the amount of time that the simulation is considered valid.
+	GetValidFor() time.Duration
 }

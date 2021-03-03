@@ -40,16 +40,16 @@ import (
 
 // TODO these methods should be part of ign-fuelserver to avoid duplicating this initialization code.
 
-// UserAccessorDataMock allows us to configure the UserAccessor with mock data used in tests.
+// UserAccessorDataMock allows us to configure the Service with mock data used in tests.
 type UserAccessorDataMock struct {
-	ua              *UserAccessorImpl
+	ua              *service
 	sysadminIdentiy string
 	app             string
 }
 
 // NewUserAccessorDataMock ...
-func NewUserAccessorDataMock(ctx context.Context, ua UserAccessor, sysadminIdentiy, application string) *UserAccessorDataMock {
-	useracc := ua.(*UserAccessorImpl)
+func NewUserAccessorDataMock(ctx context.Context, ua Service, sysadminIdentiy, application string) *UserAccessorDataMock {
+	useracc := ua.(*service)
 	mock := UserAccessorDataMock{
 		ua:              useracc,
 		sysadminIdentiy: sysadminIdentiy,

@@ -4,23 +4,15 @@ import (
 	"fmt"
 	"github.com/jinzhu/gorm"
 	"github.com/stretchr/testify/assert"
-	"gitlab.com/ignitionrobotics/web/ign-go"
+	gormUtils "gitlab.com/ignitionrobotics/web/cloudsim/pkg/utils/db/gorm"
 	"testing"
 	"time"
 )
 
 func TestMarkPreviousSubmissionsSuperseded(t *testing.T) {
 	// Get database config
-	config, err := ign.NewDatabaseConfigFromEnvVars()
-	if err != nil {
-		t.FailNow()
-	}
-
-	// Initialize database
-	db, err := ign.InitDbWithCfg(&config)
-	if err != nil {
-		t.FailNow()
-	}
+	db, err := gormUtils.GetTestDBFromEnvVars()
+	defer db.Close()
 
 	db.DropTableIfExists(&SimulationDeployment{})
 

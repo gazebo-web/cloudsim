@@ -26,6 +26,11 @@ func GetPodNameCommsBridgeCopy(groupID simulations.GroupID, robotID string) stri
 	return fmt.Sprintf("%s-copy", GetPodNameCommsBridge(groupID, robotID))
 }
 
+// GetPodNameGazeboServerCopy is used to generate the name for the gzserver copy pod.
+func GetPodNameGazeboServerCopy(groupID simulations.GroupID) string {
+	return fmt.Sprintf("%s-copy", GetPodNameGazeboServer(groupID))
+}
+
 // GetPodNameGazeboServer is used to generate the name for the gazebo server pod.
 func GetPodNameGazeboServer(groupID simulations.GroupID) string {
 	return fmt.Sprintf("%s-%s-gzserver", simPrefix, groupID)
@@ -33,8 +38,14 @@ func GetPodNameGazeboServer(groupID simulations.GroupID) string {
 
 // GetRobotID returns a robot identification name in the following form:
 // rbtN with N being the given id.
+// id requires that zero-indexes are used when calling GetRobotID.
 func GetRobotID(id int) string {
-	return fmt.Sprintf("%s%d", robotPrefix, id)
+	return fmt.Sprintf("%s%d", robotPrefix, id+1)
+}
+
+// GetContainerNameGazeboServer returns the gzserver container name.
+func GetContainerNameGazeboServer() string {
+	return "gzserver-container"
 }
 
 // GetContainerNameCommsBridge returns the comms bridge container name.
@@ -52,7 +63,17 @@ func GetContainerNameFieldComputer() string {
 	return "field-computer"
 }
 
+// GetContainerNameGazeboServerCopy returns the gzserver copy container name.
+func GetContainerNameGazeboServerCopy() string {
+	return "copy-to-s3"
+}
+
 // GetSimulationIngressPath gets the path to the gzserver websocket server for a certain simulation.
 func GetSimulationIngressPath(groupID simulations.GroupID) string {
 	return fmt.Sprintf("/simulations/%s", groupID.String())
+}
+
+// GetServiceNameWebsocket returns the websocket name for the given GroupID.
+func GetServiceNameWebsocket(groupID simulations.GroupID) string {
+	return fmt.Sprintf("%s-%s-websocket", simPrefix, groupID)
 }

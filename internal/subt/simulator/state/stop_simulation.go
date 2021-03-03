@@ -12,6 +12,24 @@ type StopSimulation struct {
 	platform platform.Platform
 	services subtapp.Services
 	GroupID  simulations.GroupID
+	Score    float64
+	Stats    simulations.Statistics
+	RunData  string
+}
+
+// Platform returns the underlying platform.
+func (s *StopSimulation) Platform() platform.Platform {
+	return s.platform
+}
+
+// Services returns the underlying application services.
+func (s *StopSimulation) Services() application.Services {
+	return s.services
+}
+
+// SubTServices returns the subt specific application services.
+func (s *StopSimulation) SubTServices() subtapp.Services {
+	return s.services
 }
 
 // Platform returns the underlying platform.

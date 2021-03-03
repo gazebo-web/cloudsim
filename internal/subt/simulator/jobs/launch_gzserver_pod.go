@@ -27,9 +27,6 @@ func prepareGazeboCreatePodInput(store actions.Store, tx *gorm.DB, deployment *a
 	// Set up namespace
 	namespace := s.Platform().Store().Orchestrator().Namespace()
 
-	// Get pod name
-	podName := subtapp.GetPodNameGazeboServer(s.GroupID)
-
 	// Get simulation
 	sim, err := s.Services().Simulations().Get(s.GroupID)
 	if err != nil {
@@ -44,13 +41,6 @@ func prepareGazeboCreatePodInput(store actions.Store, tx *gorm.DB, deployment *a
 	if err != nil {
 		return nil, err
 	}
-
-	// Assign track's image as container image.
-	containerImage := track.Image
-
-	// Get terminate grace period
-	terminationGracePeriod := s.Platform().Store().Orchestrator().TerminationGracePeriod()
-
 	// Generate gazebo command args
 	runCommand := gazebo.Generate(gazebo.LaunchConfig{
 		World:              track.World,
@@ -110,19 +100,18 @@ func prepareGazeboCreatePodInput(store actions.Store, tx *gorm.DB, deployment *a
 
 	nameservers := s.Platform().Store().Orchestrator().Nameservers()
 
-	// Create the input for the operation
-	input := []orchestrator.CreatePodInput{
+	return jobs.LaunchPodsInput{
 		{
-			Name:                          podName,
+			Name:                          subtapp.GetPodNameGazeboServer(s.GroupID),
 			Namespace:                     namespace,
 			Labels:                        subtapp.GetPodLabelsGazeboServer(s.GroupID, s.ParentGroupID).Map(),
 			RestartPolicy:                 orchestrator.RestartPolicyNever,
-			TerminationGracePeriodSeconds: terminationGracePeriod,
+			TerminationGracePeriodSeconds: s.Platform().Store().Orchestrator().TerminationGracePeriod(),
 			NodeSelector:                  subtapp.GetNodeLabelsGazeboServer(s.GroupID),
 			Containers: []orchestrator.Container{
 				{
-					Name:                     "gzserver-container",
-					Image:                    containerImage,
+					Name:                     subtapp.GetContainerNameGazeboServer(),
+					Image:                    track.Image,
 					Args:                     runCommand,
 					Privileged:               &privileged,
 					AllowPrivilegeEscalation: &allowPrivilegeEscalation,
@@ -134,7 +123,5 @@ func prepareGazeboCreatePodInput(store actions.Store, tx *gorm.DB, deployment *a
 			Volumes:     volumes,
 			Nameservers: nameservers,
 		},
-	}
-
-	return jobs.LaunchPodsInput(input), nil
+	}, nil
 }

@@ -4,6 +4,7 @@ import (
 	subt "gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/simulations"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations/fake"
+	"time"
 )
 
 // SimulationConfig is used to configure a fake subt simulation.
@@ -51,7 +52,7 @@ func (s *simulation) GetTrack() string {
 // NewSimulation initializes a new Simulation interface using a fake implementation.
 func NewSimulation(config SimulationConfig) subt.Simulation {
 	return &simulation{
-		Simulation: fake.NewSimulation(config.GroupID, config.Status, config.Kind, config.Error, config.Image),
+		Simulation: fake.NewSimulation(config.GroupID, config.Status, config.Kind, config.Error, config.Image, 1*time.Minute),
 		track:      config.Track,
 	}
 }

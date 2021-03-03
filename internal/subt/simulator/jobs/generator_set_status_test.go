@@ -11,6 +11,7 @@ import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations/fake"
 	"testing"
+	"time"
 )
 
 func TestGenerateSetSimulationStatusJob(t *testing.T) {
@@ -26,18 +27,18 @@ func TestGenerateSetSimulationStatusJob(t *testing.T) {
 
 	// Initialize simulation
 	gid := simulations.GroupID("aaaa-bbbb-cccc-dddd")
-	sim := fake.NewSimulation(gid, simulations.StatusPending, simulations.SimSingle, nil, "test")
+	sim := fake.NewSimulation(gid, simulations.StatusPending, simulations.SimSingle, nil, "test", 1*time.Minute)
 
 	// Initialize fake simulation service
 	svc := fake.NewService()
 	svc.On("UpdateStatus", gid, simulations.StatusRunning).Return(error(nil)).Run(func(args mock.Arguments) {
 		sim.SetStatus(simulations.StatusRunning)
 	})
-	app := application.NewServices(svc)
+	app := application.NewServices(svc, nil)
 
 	tracksService := tracks.NewService(nil, nil, nil)
 
-	subt := subtapp.NewServices(app, tracksService)
+	subt := subtapp.NewServices(app, tracksService, nil)
 
 	// Initialize store
 	initialState := state.NewStartSimulation(nil, subt, gid)

@@ -1,7 +1,9 @@
 package env
 
 import (
+	"fmt"
 	"github.com/caarlos0/env"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/store"
 )
 
@@ -36,6 +38,19 @@ type ignitionEnvStore struct {
 
 	// SecretsNameValue is the CLOUDSIM_IGN_SECRETS_NAME value that will used to get credentials for cloud providers.
 	SecretsNameValue string `env:"CLOUDSIM_IGN_SECRETS_NAME"`
+
+	// WebsocketHostValue is the CLOUDSIM_WEBSOCKET_HOST that will be used as host to connect to simulation's websocket servers.
+	WebsocketHostValue string `env:"CLOUDSIM_SUBT_WEBSOCKET_HOST"`
+}
+
+// GetWebsocketHost returns the host of the websocket address for connecting to simulation websocket servers.
+func (i *ignitionEnvStore) GetWebsocketHost() string {
+	return i.WebsocketHostValue
+}
+
+// GetWebsocketPath returns the path of the websocket address for the given simulation's group id.
+func (i *ignitionEnvStore) GetWebsocketPath(groupID simulations.GroupID) string {
+	return fmt.Sprintf("simulations/%s", groupID.String())
 }
 
 // AccessKeyLabel returns the access key label to get the credentials for a certain cloud provider.

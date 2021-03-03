@@ -16,25 +16,27 @@ import (
 	envfake "gitlab.com/ignitionrobotics/web/cloudsim/pkg/store/fake"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/utils/db/gorm"
 	"testing"
+	"time"
 )
 
 func TestLaunchInstances(t *testing.T) {
 	// Initialize database
 	db, err := gorm.GetDBFromEnvVars()
+	defer db.Close()
 
 	// If the database fails to connect, fail instantly.
 	require.NoError(t, err)
 
 	// Migrate db for actions
-	actions.MigrateDB(db)
+	actions.CleanAndMigrateDB(db)
 
 	// Initialize simulation
 	gid := simulations.GroupID("aaaa-bbbb-cccc-dddd")
-	sim := simfake.NewSimulation(gid, simulations.StatusPending, simulations.SimSingle, nil, "test")
+	sim := simfake.NewSimulation(gid, simulations.StatusPending, simulations.SimSingle, nil, "test", 1*time.Minute)
 
 	// Initialize fake simulation service
 	svc := simfake.NewService()
-	app := application.NewServices(svc)
+	app := application.NewServices(svc, nil)
 
 	svc.On("Get", gid).Return(sim, error(nil)).Once()
 
@@ -88,7 +90,7 @@ func TestLaunchInstances(t *testing.T) {
 
 	tracksService := tracks.NewService(nil, nil, nil)
 
-	subt := subtapp.NewServices(app, tracksService)
+	subt := subtapp.NewServices(app, tracksService, nil)
 
 	// Create initial state
 	initialState := state.NewStartSimulation(p, subt, gid)

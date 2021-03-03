@@ -531,6 +531,38 @@ func loadSubTRobotTypes(cfg *subTSpecificsConfig) {
 			"CERBERUS_GAGARIN_SENSOR_CONFIG_1",
 			115,
 		),
+		"CERBERUS_ANYMAL_C_SENSOR_CONFIG_1": generateSubTRobotType(
+			cfg,
+			"openrobotics",
+			"CERBERUS_ANYMAL_C_SENSOR_CONFIG_1",
+			"ANYMAL_C",
+			"CERBERUS_ANYMAL_C_SENSOR_CONFIG_1",
+			280,
+		),
+		"CERBERUS_ANYMAL_C_SENSOR_CONFIG_2": generateSubTRobotType(
+			cfg,
+			"openrobotics",
+			"CERBERUS_ANYMAL_C_SENSOR_CONFIG_2",
+			"ANYMAL_C",
+			"CERBERUS_ANYMAL_C_SENSOR_CONFIG_2",
+			305,
+		),
+		"CERBERUS_RMF_SENSOR_CONFIG_1": generateSubTRobotType(
+			cfg,
+			"openrobotics",
+			"CERBERUS_RMF_SENSOR_CONFIG_1",
+			"RMF",
+			"CERBERUS_RMF_SENSOR_CONFIG_1",
+			55,
+		),
+		"COSTAR_SHAFTER_SENSOR_CONFIG_1": generateSubTRobotType(
+			cfg,
+			"openrobotics",
+			"COSTAR_SHAFTER_SENSOR_CONFIG_1",
+			"SHAFTER",
+			"COSTAR_SHAFTER_SENSOR_CONFIG_1",
+			110,
+		),
 	}
 }
 

@@ -203,9 +203,9 @@ func TestPods_CreateSuccess(t *testing.T) {
 				Args:                     nil,
 				Privileged:               nil,
 				AllowPrivilegeEscalation: nil,
-				Ports:   nil,
-				Volumes: nil,
-				EnvVars: nil,
+				Ports:                    nil,
+				Volumes:                  nil,
+				EnvVars:                  nil,
 			},
 		},
 		Volumes:     nil,
@@ -260,9 +260,9 @@ func TestPods_CreateFailsWhenPodAlreadyExists(t *testing.T) {
 				Args:                     nil,
 				Privileged:               nil,
 				AllowPrivilegeEscalation: nil,
-				Ports:   nil,
-				Volumes: nil,
-				EnvVars: nil,
+				Ports:                    nil,
+				Volumes:                  nil,
+				EnvVars:                  nil,
 			},
 		},
 		Volumes:     nil,
@@ -317,4 +317,42 @@ func TestPods_DeleteSuccess(t *testing.T) {
 
 	_, err = client.CoreV1().Pods("default").Get("test", metav1.GetOptions{})
 	assert.Error(t, err)
+}
+
+func TestPods_GetFails(t *testing.T) {
+	client := fake.NewSimpleClientset()
+	f := spdy.NewSPDYFakeInitializer()
+	logger := ign.NewLoggerNoRollbar("TestPods", ign.VerbosityDebug)
+	p := NewPods(client, f, logger)
+
+	_, err := p.Get("test", "default")
+
+	assert.Error(t, err)
+}
+
+func TestPods_GetSuccess(t *testing.T) {
+	pod := &apiv1.Pod{
+		TypeMeta: metav1.TypeMeta{},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "test",
+			Namespace: "default",
+			Labels: map[string]string{
+				"app": "test",
+			},
+		},
+		Spec: apiv1.PodSpec{},
+		Status: apiv1.PodStatus{
+			Conditions: []apiv1.PodCondition{},
+			Phase:      apiv1.PodFailed,
+		},
+	}
+
+	client := fake.NewSimpleClientset(pod)
+	f := spdy.NewSPDYFakeInitializer()
+	logger := ign.NewLoggerNoRollbar("TestPods", ign.VerbosityDebug)
+	p := NewPods(client, f, logger)
+
+	_, err := p.Get("test", "default")
+
+	assert.NoError(t, err)
 }
