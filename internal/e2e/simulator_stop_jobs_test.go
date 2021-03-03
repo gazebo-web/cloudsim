@@ -196,9 +196,16 @@ func TestStopSimulationAction(t *testing.T) {
 			// jobs.ReadScore,
 			// jobs.ReadStats,
 			// jobs.ReadRunData,
+			jobs.SaveScore,
 			jobs.SaveSummary,
 			jobs.SendSummaryEmail,
 			jobs.SetSimulationStatusToDeletingPods,
+			// jobs.RemoveIngressRulesGloo,
+			jobs.RemoveWebsocketService,
+			jobs.RemoveNetworkPolicies,
+			jobs.SetSimulationStatusToDeletingNodes,
+			jobs.RemoveInstances,
+			jobs.SetSimulationStatusToTerminated,
 		})
 		require.NoError(t, err)
 
