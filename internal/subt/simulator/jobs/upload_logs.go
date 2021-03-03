@@ -51,10 +51,10 @@ func uploadLogs(store actions.Store, tx *gorm.DB, deployment *actions.Deployment
 	// Get the namespace
 	ns := s.Platform().Store().Orchestrator().Namespace()
 
-	// Get the bucket where to save logs
+	// Get the bucket to save logs into
 	logsBucket := s.Platform().Store().Ignition().LogsBucket()
 
-	// Attempt uploading robot logs
+	// Attempt to upload robot logs
 	for i := range robots {
 		robotID := subtapp.GetRobotID(i)
 		name := subtapp.GetPodNameCommsBridgeCopy(s.GroupID, robotID)
@@ -110,7 +110,7 @@ func uploadLogs(store actions.Store, tx *gorm.DB, deployment *actions.Deployment
 
 // uploadSingleLogs is a helper function in charge of running a certain script in scriptFilepath with the given scriptParams.
 // It will run this script inside the containerName using the orchestrator.Executor implementation passed as an argument.
-// It will return an error if parsing the script template of executing the script returns an error.
+// It will return an error if parsing the script template or executing the script returns an error.
 func uploadSingleLogs(exec orchestrator.Executor, containerName string, scriptFilepath string, scriptParams uploadLogsScript) error {
 	script, err := ign.ParseTemplate(scriptFilepath, scriptParams)
 	if err != nil {
