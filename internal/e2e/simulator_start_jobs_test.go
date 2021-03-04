@@ -123,7 +123,7 @@ func TestStartSimulationAction(t *testing.T) {
 
 	sim, err := simService.Create(simulations.CreateSimulationInput{
 		Name:      "sim-test",
-		Owner:     "sysadmin",
+		Owner:     nil,
 		Creator:   "sysadmin",
 		Image:     []string{"test.org/image"},
 		Private:   false,

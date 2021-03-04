@@ -88,6 +88,10 @@ type SimulationDeployment struct {
 	Score *float64 `json:"score,omitempty"`
 }
 
+func (dep *SimulationDeployment) GetName() string {
+	return *dep.Name
+}
+
 func (dep *SimulationDeployment) IsProcessed() bool {
 	return dep.Processed
 }

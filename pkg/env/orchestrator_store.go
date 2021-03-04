@@ -1,6 +1,7 @@
 package env
 
 import (
+	"github.com/caarlos0/env"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/store"
 	"time"
 )
@@ -63,5 +64,9 @@ func (o orchestratorEnvStore) Namespace() string {
 
 // newOrchestratorStore initializes a new store.Orchestrator implementation using orchestratorEnvStore.
 func newOrchestratorStore() store.Orchestrator {
-	return &orchestratorEnvStore{}
+	var s orchestratorEnvStore
+	if err := env.Parse(&s); err != nil {
+		panic(err)
+	}
+	return &s
 }

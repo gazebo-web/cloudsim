@@ -18,6 +18,7 @@ import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/application"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/cloud/aws/ec2"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/cloud/aws/s3"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/email"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/env"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/mock"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/kubernetes"
@@ -30,9 +31,14 @@ import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/users"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/utils/db/gorm"
 	legacy "gitlab.com/ignitionrobotics/web/cloudsim/simulations"
+	"gitlab.com/ignitionrobotics/web/fuelserver/bundles/subt"
+	fuelusers "gitlab.com/ignitionrobotics/web/fuelserver/bundles/users"
 	"gitlab.com/ignitionrobotics/web/fuelserver/permissions"
 	"gitlab.com/ignitionrobotics/web/ign-go"
 	"gopkg.in/go-playground/validator.v9"
+	apiv1 "k8s.io/api/core/v1"
+	networkingv1 "k8s.io/api/networking/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	kfake "k8s.io/client-go/kubernetes/fake"
 	"net/http/httptest"
 	"testing"
@@ -47,7 +53,15 @@ func TestStopSimulationAction(t *testing.T) {
 	require.NoError(t, err)
 
 	// Clean and migrate database
-	err = gorm.CleanAndMigrateModels(db, &legacy.SimulationDeployment{}, &tracks.Track{})
+	err = gorm.CleanAndMigrateModels(
+		db,
+		&legacy.SimulationDeployment{},
+		&tracks.Track{},
+		&subt.CompetitionScore{},
+		&simulations.Summary{},
+		&fuelusers.User{},
+		&fuelusers.Organization{},
+	)
 	require.NoError(t, err)
 
 	// Migrate actions
@@ -57,8 +71,42 @@ func TestStopSimulationAction(t *testing.T) {
 	// Initialize logger
 	logger := ign.NewLoggerNoRollbar("Cloudsim", ign.VerbosityDebug)
 
+	// Initialize base application services
+	simService := legacy.NewSubTSimulationServiceAdaptor(db)
+
+	robot := legacy.SubTRobot{
+		Name:    "X1",
+		Type:    "X1",
+		Image:   "test.org/image",
+		Credits: 270,
+	}
+
+	extra := legacy.ExtraInfoSubT{
+		Circuit: "Urban Circuit 1",
+		Robots:  []legacy.SubTRobot{robot},
+	}
+
+	extraInfo, err := extra.ToJSON()
+	require.NoError(t, err)
+
+	sim, err := simService.Create(simulations.CreateSimulationInput{
+		Name:      "sim-test",
+		Owner:     nil,
+		Creator:   "sysadmin",
+		Image:     []string{"test.org/image"},
+		Private:   false,
+		StopOnEnd: false,
+		Extra:     *extraInfo,
+		Track:     "Urban Circuit 1",
+		Robots:    "X1",
+	})
+	require.NoError(t, err)
+
 	// Initialize mock for EC2
-	ec2api := mock.NewEC2()
+	ec2api := mock.NewEC2(
+		mock.NewEC2Instance("test-fc-1", subtapp.GetTagsInstanceSpecific("field-computer", sim.GetGroupID(), "sim", "cloudsim", "field-computer")),
+		mock.NewEC2Instance("test-gz-1", subtapp.GetTagsInstanceSpecific("gzserver", sim.GetGroupID(), "sim", "cloudsim", "gzserver")),
+	)
 
 	// Initialize mock for S3
 	storageBackend := s3mem.New()
@@ -93,6 +141,9 @@ func TestStopSimulationAction(t *testing.T) {
 
 	runsimManager := runsim.NewManager()
 
+	// Initialize email API using mocks.
+	emailAPI := mock.NewSES()
+
 	// Initialize platform components
 	c := platform.Components{
 		Machines:           ec2.NewMachines(ec2api, logger),
@@ -101,41 +152,11 @@ func TestStopSimulationAction(t *testing.T) {
 		Store:              configStore,
 		Secrets:            secrets,
 		RunningSimulations: runsimManager,
+		EmailSender:        email.NewEmailSender(emailAPI),
 	}
 
 	// Initialize platform
 	p := platform.NewPlatform(c)
-
-	// Initialize base application services
-	simService := legacy.NewSubTSimulationServiceAdaptor(db)
-
-	robot := legacy.SubTRobot{
-		Name:    "X1",
-		Type:    "X1",
-		Image:   "test.org/image",
-		Credits: 270,
-	}
-
-	extra := legacy.ExtraInfoSubT{
-		Circuit: "Urban Circuit 1",
-		Robots:  []legacy.SubTRobot{robot},
-	}
-
-	extraInfo, err := extra.ToJSON()
-	require.NoError(t, err)
-
-	sim, err := simService.Create(simulations.CreateSimulationInput{
-		Name:      "sim-test",
-		Owner:     "sysadmin",
-		Creator:   "sysadmin",
-		Image:     []string{"test.org/image"},
-		Private:   false,
-		StopOnEnd: false,
-		Extra:     *extraInfo,
-		Track:     "Urban Circuit 1",
-		Robots:    "X1",
-	})
-	require.NoError(t, err)
 
 	// Simulation should be set to terminate requested.
 	err = simService.UpdateStatus(sim.GetGroupID(), simulations.StatusTerminateRequested)
@@ -181,51 +202,109 @@ func TestStopSimulationAction(t *testing.T) {
 	// Initialize subt application.
 	app := subtapp.NewServices(baseApp, trackService, summaryService)
 
-	t.Run("First phase", func(t *testing.T) {
-		actionService := actions.NewService()
+	actionService := actions.NewService()
 
-		// Initialize simulator
-		s := simulator.NewSimulator(simulator.Config{
-			DB:                    db,
-			Platform:              p,
-			ApplicationServices:   app,
-			ActionService:         actionService,
-			DisableDefaultActions: true,
-		})
-
-		rs := runsim.NewRunningSimulation(sim.GetGroupID(), int64(maxSimSeconds), sim.GetValidFor())
-
-		err := runsimManager.Add(sim.GetGroupID(), rs, ignws.NewPubSubTransporterMock())
-		require.NoError(t, err)
-
-		stopAction, err := actions.NewAction(actions.Jobs{
-			jobs.CheckSimulationTerminateRequestedStatus,
-			jobs.CheckStopSimulationIsNotParent,
-			jobs.SetStoppedAt,
-			jobs.RemoveRunningSimulation,
-			jobs.SetSimulationStatusToProcessingResults,
-			jobs.UploadLogs,
-			// jobs.ReadScore,
-			// jobs.ReadStats,
-			// jobs.ReadRunData,
-			jobs.SaveScore,
-			jobs.SaveSummary,
-			jobs.SendSummaryEmail,
-			jobs.SetSimulationStatusToDeletingPods,
-			// jobs.RemoveIngressRulesGloo,
-			jobs.RemoveWebsocketService,
-			jobs.RemoveNetworkPolicies,
-			jobs.SetSimulationStatusToDeletingNodes,
-			jobs.RemoveInstances,
-			jobs.SetSimulationStatusToTerminated,
-		})
-		require.NoError(t, err)
-
-		appName := simulator.ApplicationName
-		actionService.RegisterAction(&appName, simulator.ActionNameStopSimulation, stopAction)
-
-		// Start the simulation.
-		err = s.Stop(ctx, sim.GetGroupID())
-		assert.NoError(t, err)
+	// Initialize simulator
+	s := simulator.NewSimulator(simulator.Config{
+		DB:                    db,
+		Platform:              p,
+		ApplicationServices:   app,
+		ActionService:         actionService,
+		DisableDefaultActions: true,
 	})
+
+	rs := runsim.NewRunningSimulation(sim.GetGroupID(), int64(maxSimSeconds), sim.GetValidFor())
+	ws := ignws.NewPubSubTransporterMock()
+
+	ws.On("Disconnect").Return()
+	ws.On("IsConnected").Return(false)
+
+	err = runsimManager.Add(sim.GetGroupID(), rs, ws)
+	require.NoError(t, err)
+
+	username := "sysadmin"
+	email := "test@openrobotics.org"
+	name := "Tester"
+	require.NoError(t, db.Model(&fuelusers.User{}).Create(&fuelusers.User{
+		Name:     &name,
+		Username: &username,
+		Email:    &email,
+	}).Error)
+
+	*kubernetesClientset = *kfake.NewSimpleClientset(
+		&apiv1.Service{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      subtapp.GetServiceNameWebsocket(sim.GetGroupID()),
+				Namespace: "default",
+			},
+		},
+		&networkingv1.NetworkPolicy{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      subtapp.GetPodNameGazeboServer(sim.GetGroupID()),
+				Namespace: "default",
+			},
+		},
+		&networkingv1.NetworkPolicy{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      subtapp.GetPodNameCommsBridge(sim.GetGroupID(), subtapp.GetRobotID(0)),
+				Namespace: "default",
+			},
+		},
+		&networkingv1.NetworkPolicy{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      subtapp.GetPodNameFieldComputer(sim.GetGroupID(), subtapp.GetRobotID(0)),
+				Namespace: "default",
+			},
+		},
+		&apiv1.Pod{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      subtapp.GetPodNameGazeboServer(sim.GetGroupID()),
+				Namespace: "default",
+			},
+		},
+		&apiv1.Pod{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      subtapp.GetPodNameCommsBridge(sim.GetGroupID(), subtapp.GetRobotID(0)),
+				Namespace: "default",
+			},
+		},
+		&apiv1.Pod{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      subtapp.GetPodNameFieldComputer(sim.GetGroupID(), subtapp.GetRobotID(0)),
+				Namespace: "default",
+			},
+		},
+	)
+
+	stopAction, err := actions.NewAction(actions.Jobs{
+		jobs.CheckSimulationTerminateRequestedStatus,
+		jobs.CheckStopSimulationIsNotParent,
+		jobs.SetStoppedAt,
+		jobs.DisconnectWebsocket,
+		jobs.RemoveRunningSimulation,
+		jobs.SetSimulationStatusToProcessingResults,
+		jobs.UploadLogs,
+		// jobs.ReadScore,
+		// jobs.ReadStats,
+		// jobs.ReadRunData,
+		// jobs.SaveScore,
+		jobs.SaveSummary,
+		jobs.SendSummaryEmail,
+		jobs.SetSimulationStatusToDeletingPods,
+		// jobs.RemoveIngressRulesGloo,
+		jobs.RemoveWebsocketService,
+		jobs.RemoveNetworkPolicies,
+		jobs.RemovePods,
+		jobs.SetSimulationStatusToDeletingNodes,
+		jobs.RemoveInstances,
+		jobs.SetSimulationStatusToTerminated,
+	})
+	require.NoError(t, err)
+
+	appName := simulator.ApplicationName
+	actionService.RegisterAction(&appName, simulator.ActionNameStopSimulation, stopAction)
+
+	// Start the simulation.
+	err = s.Stop(ctx, sim.GetGroupID())
+	assert.NoError(t, err)
 }

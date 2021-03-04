@@ -28,7 +28,7 @@ type ignitionEnvStore struct {
 	IgnIPValue string `env:"CLOUDSIM_IGN_IP"`
 
 	// VerbosityValue is the IGN_VERBOSE value that will be passed to Pods launched for SubT.
-	VerbosityValue string `env:"CLOUDSIM_IGN_VERBOSITY"`
+	VerbosityValue string `env:"CLOUDSIM_IGN_VERBOSITY" envDefault:"2"`
 
 	// LogsCopyEnabledValue is the CLOUDSIM_IGN_LOGS_COPY_ENABLED value that will used to define if logs should be copied.
 	LogsCopyEnabledValue bool `env:"CLOUDSIM_IGN_LOGS_COPY_ENABLED"`
@@ -49,7 +49,7 @@ type ignitionEnvStore struct {
 	DefaultRecipientsValue []string `env:"CLOUDSIM_IGN_DEFAULT_RECIPIENTS"`
 
 	// DefaultSenderValue is the email address used to send emails.
-	DefaultSenderValue string `env:"CLOUDSIM_IGN_DEFAULT_SENDER"`
+	DefaultSenderValue string `env:"CLOUDSIM_IGN_DEFAULT_SENDER,required"`
 }
 
 // DefaultRecipients returns the list of default summary email recipients.

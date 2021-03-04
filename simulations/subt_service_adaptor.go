@@ -51,7 +51,7 @@ func (sa *SimulationServiceAdaptor) Create(input simulations.CreateSimulationInp
 
 	image := SliceToStr(input.Image)
 
-	dep.Owner = &input.Owner
+	dep.Owner = input.Owner
 	dep.Name = &input.Name
 	dep.Creator = &input.Creator
 	dep.Private = &input.Private
