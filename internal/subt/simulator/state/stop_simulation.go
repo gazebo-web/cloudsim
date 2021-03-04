@@ -14,6 +14,7 @@ type StopSimulation struct {
 	GroupID  simulations.GroupID
 	Score    float64
 	Stats    simulations.Statistics
+	Summary  simulations.Summary
 	RunData  string
 }
 
