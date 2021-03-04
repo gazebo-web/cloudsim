@@ -38,23 +38,25 @@ type Platform interface {
 
 // Components lists the components used to initialize a Platform.
 type Components struct {
-	Machines    cloud.Machines
-	Storage     cloud.Storage
-	Cluster     orchestrator.Cluster
-	Store       store.Store
-	Secrets     secrets.Secrets
-	EmailSender email.Sender
+	Machines           cloud.Machines
+	Storage            cloud.Storage
+	Cluster            orchestrator.Cluster
+	Store              store.Store
+	Secrets            secrets.Secrets
+	EmailSender        email.Sender
+	RunningSimulations runsim.Manager
 }
 
 // NewPlatform initializes a new platform using the given components.
 func NewPlatform(components Components) Platform {
 	return &platform{
-		storage:      components.Storage,
-		machines:     components.Machines,
-		orchestrator: components.Cluster,
-		store:        components.Store,
-		secrets:      components.Secrets,
-		email:        components.EmailSender,
+		storage:            components.Storage,
+		machines:           components.Machines,
+		orchestrator:       components.Cluster,
+		store:              components.Store,
+		secrets:            components.Secrets,
+		email:              components.EmailSender,
+		runningSimulations: components.RunningSimulations,
 	}
 }
 

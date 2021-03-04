@@ -23,8 +23,10 @@ import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/kubernetes"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/kubernetes/spdy"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/platform"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/runsim"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/secrets"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
+	ignws "gitlab.com/ignitionrobotics/web/cloudsim/pkg/transport/ign"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/users"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/utils/db/gorm"
 	legacy "gitlab.com/ignitionrobotics/web/cloudsim/simulations"
@@ -89,13 +91,16 @@ func TestStopSimulationAction(t *testing.T) {
 	// Initialize secrets
 	secrets := secrets.NewKubernetesSecrets(kubernetesClientset.CoreV1())
 
+	runsimManager := runsim.NewManager()
+
 	// Initialize platform components
 	c := platform.Components{
-		Machines: ec2.NewMachines(ec2api, logger),
-		Storage:  s3.NewStorage(storageAPI, logger),
-		Cluster:  cluster,
-		Store:    configStore,
-		Secrets:  secrets,
+		Machines:           ec2.NewMachines(ec2api, logger),
+		Storage:            s3.NewStorage(storageAPI, logger),
+		Cluster:            cluster,
+		Store:              configStore,
+		Secrets:            secrets,
+		RunningSimulations: runsimManager,
 	}
 
 	// Initialize platform
@@ -156,6 +161,8 @@ func TestStopSimulationAction(t *testing.T) {
 	// Initialize track services.
 	trackService := tracks.NewService(trackRepository, v, logger)
 
+	maxSimSeconds := 720
+
 	// Create testing track
 	_, err = trackService.Create(tracks.CreateTrackInput{
 		Name:          "Urban Circuit 1",
@@ -163,7 +170,7 @@ func TestStopSimulationAction(t *testing.T) {
 		BridgeImage:   "test.org/bridge-image",
 		StatsTopic:    "/stats",
 		WarmupTopic:   "/warmup",
-		MaxSimSeconds: 720,
+		MaxSimSeconds: maxSimSeconds,
 		Public:        true,
 	})
 	require.NoError(t, err)
@@ -185,6 +192,11 @@ func TestStopSimulationAction(t *testing.T) {
 			ActionService:         actionService,
 			DisableDefaultActions: true,
 		})
+
+		rs := runsim.NewRunningSimulation(sim.GetGroupID(), int64(maxSimSeconds), sim.GetValidFor())
+
+		err := runsimManager.Add(sim.GetGroupID(), rs, ignws.NewPubSubTransporterMock())
+		require.NoError(t, err)
 
 		stopAction, err := actions.NewAction(actions.Jobs{
 			jobs.CheckSimulationTerminateRequestedStatus,
