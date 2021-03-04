@@ -88,6 +88,18 @@ type SimulationDeployment struct {
 	Score *float64 `json:"score,omitempty"`
 }
 
+func (dep *SimulationDeployment) IsProcessed() bool {
+	return dep.Processed
+}
+
+func (dep *SimulationDeployment) GetOwner() *string {
+	return dep.Owner
+}
+
+func (dep *SimulationDeployment) GetCreator() string {
+	return *dep.Creator
+}
+
 func (dep *SimulationDeployment) GetGroupID() simulations.GroupID {
 	return simulations.GroupID(*dep.GroupID)
 }

@@ -14,6 +14,21 @@ type SimulationServiceAdaptor struct {
 	db *gorm.DB
 }
 
+// UpdateScore updates the score of a certain simulation deployment.
+func (sa *SimulationServiceAdaptor) UpdateScore(groupID simulations.GroupID, score *float64) error {
+	dep, err := GetSimulationDeployment(sa.db, groupID.String())
+	if err != nil {
+		return err
+	}
+
+	em := dep.UpdateScore(sa.db, score)
+	if em != nil {
+		return em.BaseError
+	}
+
+	return nil
+}
+
 // MarkStopped marks a simulation with the time where it has stopped running.
 func (sa *SimulationServiceAdaptor) MarkStopped(groupID simulations.GroupID) error {
 	at := time.Now()
