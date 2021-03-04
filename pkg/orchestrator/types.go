@@ -67,7 +67,7 @@ func (s selector) String() string {
 	for key, value := range s {
 		out += fmt.Sprintf("%s=%s", key, value)
 		count--
-		if count > 1 {
+		if count >= 1 {
 			out += ","
 		}
 	}
