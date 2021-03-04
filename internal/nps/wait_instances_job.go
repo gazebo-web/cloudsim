@@ -1,7 +1,6 @@
 package nps
 
 import (
-  "fmt"
 	"github.com/jinzhu/gorm"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/actions"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulator/jobs"
@@ -18,16 +17,17 @@ var WaitForInstances = jobs.WaitForInstances.Extend(actions.Job{
 
 // createWaitForInstancesInput is the pre hook in charge of passing the list of created instances to the execute function.
 func createWaitForInstancesInput(store actions.Store, tx *gorm.DB, deployment *actions.Deployment, value interface{}) (interface{}, error) {
-  fmt.Printf("\n\n11\n\n")
-	s := value.(*StartSimulationData)
-  fmt.Printf("\n\n12\n\n")
+	startData := value.(*StartSimulationData)
 
-	store.SetState(s)
+  var simEntry Simulation
+  if err := tx.Where("group_id = ?", startData.GroupID.String()).First(&simEntry).Error; err != nil {
+    return nil, err
+  }
+  simEntry.Status = "Waiting for cloud instances to launch."
+  tx.Save(&simEntry)
+
+	store.SetState(startData)
   // s := store.State().(*StartSimulationData)
-  fmt.Printf("\n\n13\n\n")
 
-  fmt.Println("-------------------------------------------------------")
-  fmt.Println(s.CreateMachinesInput)
-  fmt.Println("-------------------------------------------------------")
-	return jobs.WaitForInstancesInput(s.CreateMachinesOutput), nil
+	return jobs.WaitForInstancesInput(startData.CreateMachinesOutput), nil
 }

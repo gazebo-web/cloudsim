@@ -26,10 +26,17 @@ func createLaunchInstancesInput(store actions.Store, tx *gorm.DB, deployment *ac
   fmt.Printf("\n\nLaunching!\n\n")
 	startData := value.(*StartSimulationData)
 
-  // \todo this doesn't return the correct zone. It looks like a subnet 
-  // is returned in both parameters.
+  var simEntry Simulation
+  if err := tx.Where("group_id = ?", startData.GroupID.String()).First(&simEntry).Error; err != nil {
+    return nil, err
+  }
+  simEntry.Status = "Launching cloud instances."
+  tx.Save(&simEntry)
+
+  // Get the subtnet and zone to use. This will return bad values unless
+  // you set the correct environment variables.
+  // \todo: Return an error if the environment variables have not been set.
 	subnet, zone := startData.Platform().Store().Machines().SubnetAndZone()
-  // zone = "us-east-1c"
 
   // \todo What is this? This line segfaults.
 	/*sim, err := startData.Services().Simulations().Get(startData.GroupID)
@@ -38,6 +45,9 @@ func createLaunchInstancesInput(store actions.Store, tx *gorm.DB, deployment *ac
 	}
   */
 
+  // This is a magic command that lets the EC2 machine join the Kubernetes
+  // cluster.
+  // \todo Make this easier to find and customize.
   command := `
   #!/bin/bash
   set -x
@@ -63,10 +73,13 @@ EOF
   /etc/eks/bootstrap.sh %s %s
 `
 */
+
+  // \todo Copied from Subt. Is this needed?
   arguments := []string{
     // Allow the node to contain unlimited pods
     "--use-max-pods false",
   }
+
   clusterName := "web-cloudsim-testing"
   initScript := fmt.Sprintf(command, clusterName,
   strings.Join(arguments, " "))

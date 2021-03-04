@@ -9,8 +9,6 @@ import (
 )
 
 // Simulation represents the simulation that will be launched in the cloud.
-// A copy of this entity could be found in the following path:
-// simulations/models.go:15
 type Simulation struct {
   // Override default GORM Model fields
   ID        uint      `gorm:"primary_key" json:"-"`
@@ -22,13 +20,17 @@ type Simulation struct {
 
   Name string `json:"name"`
   GroupID string `json:"groupid"`
+  Status string `json:"status"`
 
   // The docker to run
   Image string `json:"image"`
 
   // Comma separated list of arguments to pass into the docker image
   Args string `json:"args"`
+  URI string `json:"uri"`
+  IP string `json:"ip"`
 }
+type Simulations []Simulation
 
 func (s *Simulation) TableName() string {
 	return "simulations"

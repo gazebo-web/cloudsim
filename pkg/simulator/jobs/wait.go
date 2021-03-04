@@ -1,7 +1,6 @@
 package jobs
 
 import (
-  "fmt"
 	"github.com/jinzhu/gorm"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/actions"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulator"
@@ -37,7 +36,6 @@ var Wait = &actions.Job{
 func wait(store actions.Store, tx *gorm.DB, deployment *actions.Deployment, value interface{}) (interface{}, error) {
 	input, ok := value.(WaitInput)
 	if !ok {
-    fmt.Println(simulator.ErrInvalidInput)
 		return nil, simulator.ErrInvalidInput
 	}
 

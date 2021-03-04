@@ -6,6 +6,7 @@ package nps
 import (
 	"fmt"
   "errors"
+  "github.com/gorilla/mux"
 	"github.com/go-playground/form"
 	"github.com/jinzhu/gorm"
 	"gitlab.com/ignitionrobotics/web/ign-go"
@@ -16,6 +17,8 @@ import (
 type Controller interface {
 	Start(tx *gorm.DB, w http.ResponseWriter, r *http.Request) (interface{}, *ign.ErrMsg)
 	Stop(w http.ResponseWriter, r *http.Request)
+	ListSimulations(tx *gorm.DB, w http.ResponseWriter, r *http.Request) (interface{}, *ign.ErrMsg)
+	GetSimulation(tx *gorm.DB, w http.ResponseWriter, r *http.Request) (interface{}, *ign.ErrMsg)
 }
 
 type controller struct {
@@ -114,4 +117,72 @@ func (ctrl *controller) Stop(w http.ResponseWriter, r *http.Request) {
 	fmt.Println(res)
 
 	// Send response to the user
+}
+
+// ListSimulations handles the `/simulations` route.
+//
+// Origin: user --> GET /simulations --> controller.ListSimulations()
+// Next:
+//     * On success --> return ListResponse
+//     * On fail --> return error
+func (ctrl *controller) ListSimulations(tx *gorm.DB, w http.ResponseWriter, r *http.Request) (interface{}, *ign.ErrMsg) {
+
+	/*req := ListRequest{}
+
+	// Hand off the start request data to the service.
+	res, err := ctrl.service.List(r.Context(), req)
+	if err != nil {
+		return nil, ign.NewErrorMessageWithBase(ign.ErrorForm, err)
+	}*/
+
+  var simulations Simulations
+  tx.Find(&simulations)
+
+  var response ListResponse
+  for _, sim := range simulations {
+    response.Simulations = append(response.Simulations, GetSimulationResponse{
+      Name: sim.Name,
+      GroupID: sim.GroupID,
+      Status: sim.Status,
+      Image: sim.Image,
+      Args: sim.Args,
+      URI: sim.URI,
+      IP: sim.IP,
+    })
+  }
+
+	// Send the group id to the queue
+	return &response, nil
+
+	// Send response to the user
+  // return res, nil
+}
+
+// GetSimulation handles the `/simulation/{id}` route.
+//
+// Origin: user --> GET /simulation/{id} --> controller.GetSimulation()
+// Next:
+//     * On success --> service.GetSimulation
+//     * On fail --> return error
+func (ctrl *controller) GetSimulation(tx *gorm.DB, w http.ResponseWriter, r *http.Request) (interface{}, *ign.ErrMsg) {
+  groupID, ok := mux.Vars(r)["groupid"]
+  if !ok {
+    return nil, ign.NewErrorMessage(ign.ErrorIDNotInRequest)
+  }
+
+  var simulation Simulation
+  if err := tx.Where("group_id=?", groupID).First(&simulation).Error; err != nil {
+    return nil, ign.NewErrorMessageWithBase(ign.ErrorIDNotFound, err)
+  }
+
+	// Send response to the user
+  return GetSimulationResponse{
+      Name: simulation.Name,
+      GroupID: simulation.GroupID,
+      Status: simulation.Status,
+      Image: simulation.Image,
+      Args: simulation.Args,
+      URI: simulation.URI,
+      IP: simulation.IP,
+  }, nil
 }

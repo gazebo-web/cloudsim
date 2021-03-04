@@ -1,6 +1,14 @@
 package nps
 
 // This file defines the API routes.
+// Make sure your ~/.kube/config is set appropriately. 
+//     * For testing use:
+//         aws eks update-kubeconfig --name web-cloudsim-testing --kubeconfig=$HOME/.kube/config
+//
+//
+// Debugging commands
+// 1. kubectl --kubeconfig=/home/nkoenig/.kube/config -n web-cloudsim-integration get no
+// 2. kubectl --kubeconfig=/home/nkoenig/.kube/config -n web-cloudsim-integration get po
 
 import (
 	"gitlab.com/ignitionrobotics/web/ign-go"
@@ -15,10 +23,10 @@ func (app *application) GetAPIRoutes() ign.Routes {
 	// Return the routes for this application. See also IGN's router.go
 	return ign.Routes{
 		// Example usage:
-    //     curl -X POST http://localhost:8000/1.0/start -F "image=osrf/ros:melodic-desktop-full" -F "arg=gazebo"
+    //     curl -X POST http://localhost:8000/1.0/start -F "image=osrf/ros:melodic-desktop-full" -F "args=gazebo"
 		ign.Route{
 			Name:        "Start simulation",
-			Description: "This is a description for starting a simulation",
+			Description: "This is a route for starting a simulation",
 			URI:         "/start",
 			Methods: []ign.Method{
 				{
@@ -34,7 +42,7 @@ func (app *application) GetAPIRoutes() ign.Routes {
 		//     curl -X POST http://localhost:8000/1.0/stop
 		ign.Route{
 			Name:        "Stop simulation",
-			Description: "This is a description for stopping a simulation",
+			Description: "This is a route for stopping a simulation",
 			URI:         "/stop",
 			Methods: []ign.Method{
 				{
@@ -46,5 +54,38 @@ func (app *application) GetAPIRoutes() ign.Routes {
 				},
 			},
 		},
+		// Example usage:
+    //     curl -X POST http://localhost:8000/1.0/simulations
+		ign.Route{
+			Name:        "List simulations",
+			Description: "This is a route for listing simulations",
+			URI:         "/simulations",
+			Methods: []ign.Method{
+				{
+					Type:        "GET",
+					Description: "List simulations",
+					Handlers: ign.FormatHandlers{
+						ign.FormatHandler{Handler: ign.JSONResult(ctrl.ListSimulations)},
+					},
+				},
+			},
+		},
+		// Example usage:
+    //     curl -X POST http://localhost:8000/1.0/simulations/{groupid}
+		ign.Route{
+			Name:        "Get simulation",
+			Description: "This is a route for acquiring information about a simulation",
+			URI:         "/simulations/{groupid}",
+			Methods: []ign.Method{
+				{
+					Type:        "GET",
+					Description: "Get information about a simulation",
+					Handlers: ign.FormatHandlers{
+						ign.FormatHandler{Handler: ign.JSONResult(ctrl.GetSimulation)},
+					},
+				},
+			},
+		},
+
 	}
 }

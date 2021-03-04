@@ -15,6 +15,8 @@ var StartSimulationAction = actions.Jobs{
   WaitForInstances,
   WaitForNodes,
 	LaunchGazeboServerPod,
+  WaitForPod,
+  GetPodIP,
 }
 
 // StartSimulationData contains information is that is passed to each job in
@@ -24,12 +26,14 @@ type StartSimulationData struct {
 	state.ServicesGetter
   platform             platform.Platform
   GroupID              simulations.GroupID
+  IP                   string
 
   // \todo: What is this used for? I'm using it launch_instance_job.go for some reason.
   CreateMachinesInput  []cloud.CreateMachinesInput
   // \todo: What is this used for? I'm using it launch_instance_job.go for some reason.
   CreateMachinesOutput []cloud.CreateMachinesOutput
 }
+
 // Platform returns the underlying platform contained in StartSimulationData
 // See state.PlatformGetter in the StartSimulationData struct.
 func (s *StartSimulationData) Platform() platform.Platform {

@@ -109,10 +109,11 @@ func NewService(db *gorm.DB, logger ign.Logger) Service {
 	go queueHandler(s.startQueue, s.StartQueueHandler, s.logger)
 
 	// Create a queue to handle stop requests.
-	go queueHandler(s.stopQueue, s.StopSimulation, s.logger)
+	go queueHandler(s.stopQueue, s.StopQueueHandler, s.logger)
 
 	return s
 }
+
 // GetStartQueue returns the start queue
 func (s *service) GetStartQueue() *ign.Queue {
 	return s.startQueue
@@ -146,35 +147,18 @@ func (s *service) StartQueueHandler(ctx context.Context, groupID simulations.Gro
 		ApplicationName: &s.applicationName,
 		ActionName:      actionNameStartSimulation,
 	}
-	err := s.actions.Execute(store, s.db, execInput, state)
+  err := s.actions.Execute(store, s.db, execInput, state)
 	if err != nil {
 		return err
 	}
-
-  // \todo: What is this, why do I need it, and how do I create it?
-  /* OLD
-   action := &actions.Deployment{}
-
-  // \todo: What is this, why do I need it, and how do I create it?
-  launchPodsInput := jobs.LaunchPodsInput{}
-
-  // Run the job. This will launch the docker container, hooray!!
-  _, err := LaunchGazeboServerPod.Run(store, s.db, action, launchPodsInput)
-
-  // Check for errors, always a good thing to do.
-  if err != nil {
-    fmt.Printf("\n\nError launching pod\n\n")
-    fmt.Println(err)
-  }
-  */
 
 	fmt.Printf("Starting simulation for groupID[%s]\n", groupID)
 	return nil
 }
 
-func (s *service) StopSimulation(ctx context.Context, groupID simulations.GroupID) error {
+func (s *service) StopQueueHandler(ctx context.Context, groupID simulations.GroupID) error {
 
-	panic("todo: StopSimulation")
+	panic("todo: StopQueueHandler")
 }
 
 func (s *service) Get(groupID simulations.GroupID) (simulations.Simulation, error) {
@@ -213,7 +197,8 @@ func (s *service) Start(ctx context.Context, request StartRequest) (*StartRespon
 	// Add business logic here to validate a request, update a database table,
   // etc.
 
-	// Create a simulation
+
+  // This creates the database entry to keep track of simulation instances.
   sim := Simulation{
     CreatedAt: time.Now(),
     UpdatedAt: time.Now(),
@@ -223,6 +208,7 @@ func (s *service) Start(ctx context.Context, request StartRequest) (*StartRespon
 
     // Create a group id
     GroupID: uuid.NewV4().String(),
+    Status: "starting",
 
     Image: request.Image,
     Args: request.Args,
@@ -239,7 +225,15 @@ func (s *service) Start(ctx context.Context, request StartRequest) (*StartRespon
 	s.startQueue.Enqueue(gid)
 
 	return &StartResponse{
-    URI: "http://localhost:3030",
+    Message: "Simulation instance is starting. Use the URI to get status updates",
+    Simulation : GetSimulationResponse{
+      Name: sim.Name,
+      GroupID: sim.GroupID,
+      Status: sim.Status,
+      Image: sim.Image,
+      Args: sim.Args,
+      URI: "http://localhost:8000/1.0/simulations/" + sim.GroupID,
+    },
   }, nil
 }
 
@@ -258,6 +252,31 @@ func (s *service) Stop(ctx context.Context, request StopRequest) (*StopResponse,
 	return &StopResponse{}, nil
 }
 
+// ListSimulations is called from the ListSimulations function in
+// controller.go.
+//
+// Origin: user --> GET /list --> controller.ListSimulations() --> service.ListSimulations()
+/*func (s *service) ListSimulations(ctx context.Context, request ListRequest) (*ListResponse, error) {
+
+  var simulations Simulations
+  s.db.Find(&simulations)
+
+  var response ListResponse
+  for _, sim := range simulations {
+    response.Simulations = append(response.Simulations, ListResponseSimulation{
+      Name: sim.Name,
+      GroupID: sim.GroupID,
+      Status: sim.Status,
+      Image: sim.Image,
+      Args: sim.Args,
+      URI: sim.URI,
+    })
+  }
+
+	// Send the group id to the queue
+	return &response, nil
+}*/
+
 ///////////////////////////////////////
 // It would be nice to make the following function general purpose functions
 // that live in the main Cloudsim codebase
@@ -270,7 +289,7 @@ func registerActions(name string, service actions.Servicer) {
 
 	actions := map[string]actions.Jobs{
 		actionNameStartSimulation: StartSimulationAction,
-		actionNameStopSimulation:  StopSimulationAction,
+		// actionNameStopSimulation:  StopSimulationAction,
 	}
 	for actionName, jobs := range actions {
 		err := registerAction(name, service, actionName, jobs)

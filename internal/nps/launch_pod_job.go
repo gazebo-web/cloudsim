@@ -3,7 +3,7 @@ package nps
 // This file implements the launch pod job. 
 
 import (
-	"fmt"
+  "fmt"
 	"strings"
 	"github.com/jinzhu/gorm"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/actions"
@@ -22,18 +22,19 @@ var LaunchGazeboServerPod = jobs.LaunchPods.Extend(actions.Job{
 })
 
 func prepareGazeboCreatePodInput(store actions.Store, tx *gorm.DB, deployment *actions.Deployment, value interface{}) (interface{}, error) {
-  fmt.Printf("\n\nCreating Pods!\n\n")
 
+  fmt.Printf("\n\nprepareGazeboCreatePodInput\n\n")
 	startData := store.State().(*StartSimulationData)
 
   var sim Simulation
   if err := tx.Where("group_id = ?", startData.GroupID.String()).First(&sim).Error; err != nil {
     return nil, err
   }
+  sim.Status = "Creating docker image (pod)."
+  tx.Save(&sim)
 
 	// What is this, and why is it needed???
 	// namespace := startData.Platform().Store().Orchestrator().Namespace()
-  fmt.Printf("-------------------------\n")
 
 	// TODO: Get ports from Ignition Store
 	ports := []int32{11345, 11311, 8080, 6080}
@@ -87,7 +88,13 @@ func prepareGazeboCreatePodInput(store actions.Store, tx *gorm.DB, deployment *a
 
       // Labels are the map of labels that will be applied to the pod.
       // \todo: What are the labels used for?
-      Labels:                        map[string]string{"key":"value"},
+      // \todo: I think these labels are very important for referencing 
+      // kubernetes resources in other places, just as jobs.
+      Labels:                        map[string]string{
+        "cloudsim": "true",
+        "nps": "true",
+        "cloudsim_groupid": startData.GroupID.String(),
+      },
 
       // RestartPolicy defines how the pod should react after an error.
       // \todo: What are the restart policies, and how do I choose one?
@@ -98,13 +105,14 @@ func prepareGazeboCreatePodInput(store actions.Store, tx *gorm.DB, deployment *a
 			TerminationGracePeriodSeconds: 0,
 
       // NodeSelector defines the node where the pod should run in. This is
-      // very important and must be set correctly to match a lable on a Node
+      // very important and must be set correctly to match a label on a Node
       // otherwise the pod will not run and remain in a `pending` state.
       //
       // A Node's labels are set when launching an instance via
       // `KUBELET_EXTRA_ARGS=--node-labels=KEY=VALUE` in a
       //   `/etc/systemd/system/kubelet.service.d/20-labels-taints.conf` file.
-			NodeSelector:                  orchestrator.NewSelector(map[string]string{ "cloudsim_groupid": startData.GroupID.String() }),
+			NodeSelector:                  orchestrator.NewSelector(
+        map[string]string{ "cloudsim_groupid": startData.GroupID.String()}),
 			// For testing NodeSelector:                  orchestrator.NewSelector(map[string]string{ "nps": "true" }),
 
       // Containers is the list of containers that should be created inside the pod.
