@@ -45,6 +45,18 @@ type Ign struct {
 	*mock.Mock
 }
 
+// DefaultRecipients mocks the DefaultRecipients method.
+func (f *Ign) DefaultRecipients() []string {
+	args := f.Called()
+	return args.Get(0).([]string)
+}
+
+// DefaultSender mocks the DefaultSender method.
+func (f *Ign) DefaultSender() string {
+	args := f.Called()
+	return args.String(0)
+}
+
 // GetWebsocketHost mocks the GetWebsocketHost method.
 func (f *Ign) GetWebsocketHost() string {
 	args := f.Called()

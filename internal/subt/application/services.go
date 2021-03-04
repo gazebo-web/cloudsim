@@ -1,7 +1,7 @@
 package application
 
 import (
-	"gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/statistics"
+	"gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/summaries"
 	"gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/tracks"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/application"
 )
@@ -10,18 +10,18 @@ import (
 type Services interface {
 	application.Services
 	Tracks() tracks.Service
-	Statistics() statistics.Service
+	Summaries() summaries.Service
 }
 
 // services is a Services implementation.
 type services struct {
 	application.Services
-	tracks     tracks.Service
-	statistics statistics.Service
+	tracks    tracks.Service
+	summaries summaries.Service
 }
 
-func (s *services) Statistics() statistics.Service {
-	return s.statistics
+func (s *services) Summaries() summaries.Service {
+	return s.summaries
 }
 
 // Tracks returns a Track service.
@@ -30,10 +30,10 @@ func (s *services) Tracks() tracks.Service {
 }
 
 // NewServices initializes a new Services implementation using a base generic service.
-func NewServices(base application.Services, tracks tracks.Service, statistics statistics.Service) Services {
+func NewServices(base application.Services, tracks tracks.Service, summaries summaries.Service) Services {
 	return &services{
-		Services:   base,
-		tracks:     tracks,
-		statistics: statistics,
+		Services:  base,
+		tracks:    tracks,
+		summaries: summaries,
 	}
 }
