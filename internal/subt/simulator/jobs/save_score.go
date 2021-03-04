@@ -9,7 +9,7 @@ import (
 )
 
 // SaveScore is a job in charge of persisting the score from a certain simulation
-var SaveScore = actions.Job{
+var SaveScore = &actions.Job{
 	Name:       "save-simulation-score",
 	PreHooks:   []actions.JobFunc{setStopState},
 	Execute:    saveScore,
