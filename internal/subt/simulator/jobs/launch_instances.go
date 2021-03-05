@@ -3,6 +3,7 @@ package jobs
 import (
 	"fmt"
 	"github.com/jinzhu/gorm"
+	subtapp "gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/application"
 	"gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/simulator/state"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/actions"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/cloud"
@@ -23,10 +24,8 @@ func createLaunchInstancesInput(store actions.Store, tx *gorm.DB, deployment *ac
 	s := value.(*state.StartSimulation)
 	subnet, zone := s.Platform().Store().Machines().SubnetAndZone()
 
-	sim, err := s.Services().Simulations().Get(s.GroupID)
-	if err != nil {
-		return nil, err
-	}
+	prefix := s.Platform().Store().Machines().NamePrefix()
+	clusterName := s.Platform().Store().Machines().ClusterName()
 
 	input := []cloud.CreateMachinesInput{
 		{
@@ -39,7 +38,7 @@ func createLaunchInstancesInput(store actions.Store, tx *gorm.DB, deployment *ac
 			FirewallRules:   s.Platform().Store().Machines().FirewallRules(),
 			SubnetID:        subnet,
 			Zone:            zone,
-			Tags:            s.Platform().Store().Machines().Tags(sim, "gzserver", "gzserver"),
+			Tags:            subtapp.GetTagsInstanceSpecific(prefix, s.GroupID, "gzserver", clusterName, "gzserver"),
 			InitScript:      s.Platform().Store().Machines().InitScript(),
 			Retries:         10,
 		},
@@ -51,11 +50,7 @@ func createLaunchInstancesInput(store actions.Store, tx *gorm.DB, deployment *ac
 	}
 
 	for _, r := range robots {
-		tags := s.
-			Platform().
-			Store().
-			Machines().
-			Tags(sim, "field-computer", fmt.Sprintf("fc-%s", r.Name()))
+		tags := subtapp.GetTagsInstanceSpecific(prefix, s.GroupID, fmt.Sprintf("fc-%s", r.Name()), clusterName, "field-computer")
 
 		input = append(input, cloud.CreateMachinesInput{
 			InstanceProfile: s.Platform().Store().Machines().InstanceProfile(),
