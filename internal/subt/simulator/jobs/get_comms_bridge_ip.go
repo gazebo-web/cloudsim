@@ -8,6 +8,7 @@ import (
 )
 
 // GetCommsBridgePodIP is a job in charge of getting the IP from the simulation's comms bridge pods.
+// WaitForCommsBridgePods should be run before running this job.
 var GetCommsBridgePodIP = &actions.Job{
 	Name:       "get-comms-bridge-pod-ip",
 	PreHooks:   []actions.JobFunc{setStartState},
@@ -17,7 +18,7 @@ var GetCommsBridgePodIP = &actions.Job{
 	OutputType: actions.GetJobDataType(&state.StartSimulation{}),
 }
 
-// getGazeboIP gets the gazebo server pod IP and assigns it to the start simulation state.
+// getCommsBridgeIP gets all coms bridge server pod IPs and assigns them to the start simulation state.
 func getCommsBridgeIP(store actions.Store, tx *gorm.DB, deployment *actions.Deployment, value interface{}) (interface{}, error) {
 	s := store.State().(*state.StartSimulation)
 
@@ -42,6 +43,7 @@ func getCommsBridgeIP(store actions.Store, tx *gorm.DB, deployment *actions.Depl
 	}
 
 	s.CommsBridgeIPs = ips
+	store.SetState(s)
 
 	return s, nil
 }

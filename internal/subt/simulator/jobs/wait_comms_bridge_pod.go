@@ -9,9 +9,9 @@ import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulator/jobs"
 )
 
-// WaitForCommsBridgePod waits for the simulation comms bridge pod to have an IP.
-var WaitForCommsBridgePod = jobs.Wait.Extend(actions.Job{
-	Name:       "wait-gazebo-server-pod",
+// WaitForCommsBridgePods waits for the simulation comms bridge pods to have an IP.
+var WaitForCommsBridgePods = jobs.Wait.Extend(actions.Job{
+	Name:       "wait-comms-bridge-pods",
 	PreHooks:   []actions.JobFunc{createWaitRequestForCommsBridgePod},
 	PostHooks:  []actions.JobFunc{checkWaitError, returnState},
 	InputType:  actions.GetJobDataType(&state.StartSimulation{}),
