@@ -4,7 +4,6 @@ package nps
 
 import (
 	"context"
-	"fmt"
 	"time"
 	"github.com/jinzhu/gorm"
   "github.com/satori/go.uuid"
@@ -137,9 +136,9 @@ func (s *service) StartQueueHandler(ctx context.Context, groupID simulations.Gro
   state := &StartSimulationData{
     // Copy the platform information. 
     platform: s.platform,
-    // service: s.services,
     // Copy the group id.
     GroupID: groupID,
+    logger: s.logger,
   }
   store := actions.NewStore(state)
 
@@ -152,7 +151,7 @@ func (s *service) StartQueueHandler(ctx context.Context, groupID simulations.Gro
 		return err
 	}
 
-	fmt.Printf("Starting simulation for groupID[%s]\n", groupID)
+  s.logger.Info("Starting simulation for groupID[%s]\n", groupID)
 	return nil
 }
 
