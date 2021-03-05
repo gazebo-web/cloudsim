@@ -18,10 +18,17 @@ type fakeSimulation struct {
 	creator   string
 }
 
+// IsProcessed returns if the simulation is processed.
+func (f *fakeSimulation) IsProcessed() bool {
+	return f.processed
+}
+
+// GetOwner returns the simulation's owner.
 func (f *fakeSimulation) GetOwner() *string {
 	return f.owner
 }
 
+// GetCreator returns the simulation's creator.
 func (f *fakeSimulation) GetCreator() string {
 	return f.creator
 }
@@ -29,11 +36,6 @@ func (f *fakeSimulation) GetCreator() string {
 // GetValidFor returns the valid duration.
 func (f *fakeSimulation) GetValidFor() time.Duration {
 	return f.validFor
-}
-
-// IsProcessed returns true if the simulation has been processed.
-func (f *fakeSimulation) IsProcessed() bool {
-	return f.processed
 }
 
 // HasStatus returns true if the given status matches with the current status.
