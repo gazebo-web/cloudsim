@@ -10,25 +10,25 @@ import (
 
 // Simulation represents the simulation that will be launched in the cloud.
 type Simulation struct {
-  // Override default GORM Model fields
-  ID        uint      `gorm:"primary_key" json:"-"`
-  CreatedAt time.Time `gorm:"type:timestamp(3) NULL" json:"created_at"`
-  UpdatedAt time.Time `json:"updated_at"`
-  DeletedAt *time.Time `gorm:"type:timestamp(2) NULL" sql:"index" json:"-"`
-  // Timestamp in which this simulation was stopped/terminated.
-  StoppedAt *time.Time `gorm:"type:timestamp(3) NULL" json:"stopped_at,omitempty"`
+	// Override default GORM Model fields
+	ID        uint       `gorm:"primary_key" json:"-"`
+	CreatedAt time.Time  `gorm:"type:timestamp(3) NULL" json:"created_at"`
+	UpdatedAt time.Time  `json:"updated_at"`
+	DeletedAt *time.Time `gorm:"type:timestamp(2) NULL" sql:"index" json:"-"`
+	// Timestamp in which this simulation was stopped/terminated.
+	StoppedAt *time.Time `gorm:"type:timestamp(3) NULL" json:"stopped_at,omitempty"`
 
-  Name string `json:"name"`
-  GroupID string `json:"groupid"`
-  Status string `json:"status"`
+	Name    string `json:"name"`
+	GroupID string `json:"groupid"`
+	Status  string `json:"status"`
 
-  // The docker to run
-  Image string `json:"image"`
+	// The docker to run
+	Image string `json:"image"`
 
-  // Comma separated list of arguments to pass into the docker image
-  Args string `json:"args"`
-  URI string `json:"uri"`
-  IP string `json:"ip"`
+	// Comma separated list of arguments to pass into the docker image
+	Args string `json:"args"`
+	URI  string `json:"uri"`
+	IP   string `json:"ip"`
 }
 type Simulations []Simulation
 

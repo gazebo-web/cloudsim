@@ -4,10 +4,10 @@ package nps
 // application creates an instance of a controller by calling `NewController`.
 
 import (
+	"errors"
 	"fmt"
-  "errors"
-  "github.com/gorilla/mux"
 	"github.com/go-playground/form"
+	"github.com/gorilla/mux"
 	"github.com/jinzhu/gorm"
 	"gitlab.com/ignitionrobotics/web/ign-go"
 	"net/http"
@@ -64,27 +64,27 @@ func (ctrl *controller) Start(tx *gorm.DB, w http.ResponseWriter, r *http.Reques
 	defer r.MultipartForm.RemoveAll()
 
 	// Get needed data to start simulation from the HTTP request, pass it to the
-  // Start Request
+	// Start Request
 	var req StartRequest
 
 	if errs := ctrl.formDecoder.Decode(&req, r.Form); errs != nil {
 		fmt.Printf("Failed to decode form")
 		return nil, ign.NewErrorMessageWithArgs(ign.ErrorFormInvalidValue, errs,
-      getDecodeErrorsExtraInfo(errs))
+			getDecodeErrorsExtraInfo(errs))
 	}
 
-  // An image form field is required. This is the docker image to run.
-  if req.Image == "" {
+	// An image form field is required. This is the docker image to run.
+	if req.Image == "" {
 		return nil, ign.NewErrorMessageWithBase(ign.ErrorMissingField,
-      errors.New("Missing 'image' form field"))
-  }
+			errors.New("Missing 'image' form field"))
+	}
 
-  // Make sure the some arguments are set. The arguments are passed to the
-  // docker image.
-  if req.Args == "" {
+	// Make sure the some arguments are set. The arguments are passed to the
+	// docker image.
+	if req.Args == "" {
 		return nil, ign.NewErrorMessageWithBase(ign.ErrorMissingField,
-      errors.New("Missing 'args' form field"))
-  }
+			errors.New("Missing 'args' form field"))
+	}
 
 	// Hand off the start request data to the service.
 	res, err := ctrl.service.Start(r.Context(), req)
@@ -93,7 +93,7 @@ func (ctrl *controller) Start(tx *gorm.DB, w http.ResponseWriter, r *http.Reques
 	}
 
 	// Send response to the user
-  return res, nil
+	return res, nil
 }
 
 // Stop handles the `/stop` route.
@@ -135,27 +135,27 @@ func (ctrl *controller) ListSimulations(tx *gorm.DB, w http.ResponseWriter, r *h
 		return nil, ign.NewErrorMessageWithBase(ign.ErrorForm, err)
 	}*/
 
-  var simulations Simulations
-  tx.Find(&simulations)
+	var simulations Simulations
+	tx.Find(&simulations)
 
-  var response ListResponse
-  for _, sim := range simulations {
-    response.Simulations = append(response.Simulations, GetSimulationResponse{
-      Name: sim.Name,
-      GroupID: sim.GroupID,
-      Status: sim.Status,
-      Image: sim.Image,
-      Args: sim.Args,
-      URI: sim.URI,
-      IP: sim.IP,
-    })
-  }
+	var response ListResponse
+	for _, sim := range simulations {
+		response.Simulations = append(response.Simulations, GetSimulationResponse{
+			Name:    sim.Name,
+			GroupID: sim.GroupID,
+			Status:  sim.Status,
+			Image:   sim.Image,
+			Args:    sim.Args,
+			URI:     sim.URI,
+			IP:      sim.IP,
+		})
+	}
 
 	// Send the group id to the queue
 	return &response, nil
 
 	// Send response to the user
-  // return res, nil
+	// return res, nil
 }
 
 // GetSimulation handles the `/simulation/{id}` route.
@@ -165,24 +165,24 @@ func (ctrl *controller) ListSimulations(tx *gorm.DB, w http.ResponseWriter, r *h
 //     * On success --> service.GetSimulation
 //     * On fail --> return error
 func (ctrl *controller) GetSimulation(tx *gorm.DB, w http.ResponseWriter, r *http.Request) (interface{}, *ign.ErrMsg) {
-  groupID, ok := mux.Vars(r)["groupid"]
-  if !ok {
-    return nil, ign.NewErrorMessage(ign.ErrorIDNotInRequest)
-  }
+	groupID, ok := mux.Vars(r)["groupid"]
+	if !ok {
+		return nil, ign.NewErrorMessage(ign.ErrorIDNotInRequest)
+	}
 
-  var simulation Simulation
-  if err := tx.Where("group_id=?", groupID).First(&simulation).Error; err != nil {
-    return nil, ign.NewErrorMessageWithBase(ign.ErrorIDNotFound, err)
-  }
+	var simulation Simulation
+	if err := tx.Where("group_id=?", groupID).First(&simulation).Error; err != nil {
+		return nil, ign.NewErrorMessageWithBase(ign.ErrorIDNotFound, err)
+	}
 
 	// Send response to the user
-  return GetSimulationResponse{
-      Name: simulation.Name,
-      GroupID: simulation.GroupID,
-      Status: simulation.Status,
-      Image: simulation.Image,
-      Args: simulation.Args,
-      URI: simulation.URI,
-      IP: simulation.IP,
-  }, nil
+	return GetSimulationResponse{
+		Name:    simulation.Name,
+		GroupID: simulation.GroupID,
+		Status:  simulation.Status,
+		Image:   simulation.Image,
+		Args:    simulation.Args,
+		URI:     simulation.URI,
+		IP:      simulation.IP,
+	}, nil
 }
