@@ -19,7 +19,7 @@ type executor struct {
 }
 
 // Cmd is used to run a command in a container inside a resource.
-func (e *executor) Cmd(command []string) error {
+func (e *executor) Cmd(container string, command []string) error {
 	e.logger.Debug(fmt.Sprintf("Running command [%s] on pod [%s]", command, e.pod.Name()))
 
 	// Prepare buffers
@@ -37,7 +37,7 @@ func (e *executor) Cmd(command []string) error {
 	err := runExec(runExecInput{
 		kubernetes: e.API,
 		namespace:  e.pod.Namespace(),
-		name:       e.pod.Name(),
+		name:       container,
 		command:    command,
 		options:    options,
 		spdy:       e.spdyInit,
@@ -54,9 +54,9 @@ func (e *executor) Cmd(command []string) error {
 }
 
 // Script is used to run a bash script inside a container.
-func (e *executor) Script(script string) error {
+func (e *executor) Script(container, script string) error {
 	e.logger.Debug(fmt.Sprintf("Running script [%s] on pod [%s]", script, e.pod.Name()))
-	return e.Cmd([]string{"sh", "-c", script})
+	return e.Cmd(container, []string{"sh", "-c", script})
 }
 
 // newExecutor initializes a new executor.
