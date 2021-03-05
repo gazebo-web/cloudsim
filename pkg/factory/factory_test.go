@@ -35,7 +35,7 @@ type testFactorySuite struct {
 	String  string
 	Bool    bool
 	Ptr     *Test
-	m       map[string]interface{}
+	m       ConfigValues
 	test    Test
 }
 
@@ -49,7 +49,7 @@ func (s *testFactorySuite) SetupTest() {
 		Bool:    false,
 	}
 
-	s.m = map[string]interface{}{
+	s.m = ConfigValues{
 		"integer": s.Integer,
 		"string":  s.String,
 		"bool":    s.Bool,

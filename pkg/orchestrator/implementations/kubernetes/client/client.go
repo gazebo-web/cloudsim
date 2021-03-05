@@ -1,4 +1,4 @@
-package kubernetes
+package client
 
 import (
 	"k8s.io/client-go/kubernetes"
@@ -10,8 +10,17 @@ import (
 
 // GetConfig returns the rest config for accessing a Kubernetes master.
 // It reads the configuration from the default .kube config path.
-func GetConfig() (*rest.Config, error) {
-	path := filepath.Join(os.Getenv("HOME"), ".kube", "config")
+func GetConfig(path string) (*rest.Config, error) {
+	// Use the default config if no config is specified.
+	// Check the KUBECONFIG env var
+	if path == "" {
+		path = os.Getenv("KUBECONFIG")
+	}
+	// If the path is still empty, default to the user's .kube directory config
+	if path == "" {
+		path = filepath.Join(os.Getenv("HOME"), ".kube", "config")
+	}
+	// Get the config
 	config, err := clientcmd.BuildConfigFromFlags("", path)
 	if err != nil {
 		return nil, err

@@ -10,7 +10,7 @@ const (
 	S3 = "s3"
 )
 
-// Factory provides a factory to create Machines implementations.
+// Factory provides a factory to create Storage implementations.
 var Factory = factorymap.Map{
 	S3: s3factory.NewFunc,
 }

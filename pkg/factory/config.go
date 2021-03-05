@@ -8,5 +8,8 @@ type Config struct {
 	// Config contains configuration data required by the factory to create the request object.
 	// Note that the factory creating the object has no way to know about the implementation details of the object
 	// being created. As such, the NewFunc creating the object will need to marshal the data contained in the config.
-	Config map[string]interface{} `yaml:"config"`
+	Config ConfigValues `yaml:"config"`
 }
+
+// ConfigValues contains configuration values for a Config.
+type ConfigValues map[string]interface{}

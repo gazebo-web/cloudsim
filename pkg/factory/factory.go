@@ -120,7 +120,7 @@ type Factory interface {
 // `out` must be a pointer to a value able to contain the expected type.
 func SetValue(out interface{}, value interface{}) error {
 	switch value.(type) {
-	case map[string]interface{}:
+	case map[string]interface{}, ConfigValues:
 		return mapstructure.Decode(value, out)
 	default:
 		return reflect.SetValue(out, value)
