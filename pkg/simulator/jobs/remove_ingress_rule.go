@@ -34,17 +34,23 @@ func removeIngressRules(store actions.Store, tx *gorm.DB, deployment *actions.De
 
 	res, err := s.Platform().Orchestrator().Ingresses().Get(input.Name, input.Namespace)
 	if err != nil {
-		return RemoveIngressRulesOutput{Error: err}, nil
+		return RemoveIngressRulesOutput{
+			Error: err,
+		}, nil
 	}
 
 	rule, err := s.Platform().Orchestrator().IngressRules().Get(res, input.Host)
 	if err != nil {
-		return RemoveIngressRulesOutput{Error: err}, nil
+		return RemoveIngressRulesOutput{
+			Error: err,
+		}, nil
 	}
 
 	err = s.Platform().Orchestrator().IngressRules().Remove(rule, input.Paths...)
 	if err != nil {
-		return RemoveIngressRulesOutput{Error: err}, nil
+		return RemoveIngressRulesOutput{
+			Error: err,
+		}, nil
 	}
 
 	return RemoveIngressRulesOutput{Error: nil}, nil
