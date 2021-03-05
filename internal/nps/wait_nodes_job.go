@@ -1,7 +1,6 @@
 package nps
 
 import (
-  "fmt"
 	"github.com/jinzhu/gorm"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/actions"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator"
@@ -20,9 +19,11 @@ var WaitForNodes = jobs.Wait.Extend(actions.Job{
 
 // createWaitForNodesInput creates the input for the main wait job. This JobFunc is a pre-hook of the WaitForNodes job.
 func createWaitForNodesInput(store actions.Store, tx *gorm.DB, deployment *actions.Deployment, value interface{}) (interface{}, error) {
-  fmt.Printf("\n\ncreateWaitForNodesInput\n\n")
 	startData := value.(*StartSimulationData)
 
+  // Update the database entry with the latest status
+  // \todo Help needed: I think this is not the recommended method to update 
+  // the database.
   var simEntry Simulation
   if err := tx.Where("group_id = ?", startData.GroupID.String()).First(&simEntry).Error; err != nil {
     return nil, err
@@ -32,18 +33,16 @@ func createWaitForNodesInput(store actions.Store, tx *gorm.DB, deployment *actio
 
 	store.SetState(startData)
 
-  // \todo: What is this and how do I choose a good value?
-  selector := orchestrator.NewSelector(map[string]string{
-    "cloudsim_groupid": startData.GroupID.String(),
-  })
+  // The NodeSelector was created in the LaunchInstances 
+  // \todo Improvment: Check that startData.NodeSelector was created.
+	res := orchestrator.NewResource("", "", startData.NodeSelector)
 
-	res := orchestrator.NewResource("", "", selector)
+	w := startData.Platform().Orchestrator().Nodes().WaitForCondition(res,
+    orchestrator.ReadyCondition)
 
-	w := startData.Platform().Orchestrator().Nodes().WaitForCondition(res, orchestrator.ReadyCondition)
-
-  fmt.Printf("\n\ndone createWaitForNodesInput\n\n")
-  // \todo Sequencing jobs in the current format requires passing around interfaces of the correct type. If a type is not correct, the build is fine but the job sequence will error out. It's very difficult to figure out where the problem is.
-  // It would be nice to have some kind of type of compile-time checking.
+  // \todo Improvement: Each job has to return the correct type, but the
+  // signature of the job functions call for an `interface{}` return type. This
+  // make it very difficul to know that a function should return.
 	return jobs.WaitInput{
 		Request:       w,
 		PollFrequency: startData.Platform().Store().Machines().PollFrequency(),

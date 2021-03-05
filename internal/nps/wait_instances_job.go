@@ -17,8 +17,12 @@ var WaitForInstances = jobs.WaitForInstances.Extend(actions.Job{
 
 // createWaitForInstancesInput is the pre hook in charge of passing the list of created instances to the execute function.
 func createWaitForInstancesInput(store actions.Store, tx *gorm.DB, deployment *actions.Deployment, value interface{}) (interface{}, error) {
+  // Get the start simulation data for this job.
 	startData := value.(*StartSimulationData)
 
+  // Update the database entry with the latest status
+  // \todo Help needed: I think this is not the recommended method to update 
+  // the database.
   var simEntry Simulation
   if err := tx.Where("group_id = ?", startData.GroupID.String()).First(&simEntry).Error; err != nil {
     return nil, err
@@ -27,7 +31,6 @@ func createWaitForInstancesInput(store actions.Store, tx *gorm.DB, deployment *a
   tx.Save(&simEntry)
 
 	store.SetState(startData)
-  // s := store.State().(*StartSimulationData)
 
 	return jobs.WaitForInstancesInput(startData.CreateMachinesOutput), nil
 }

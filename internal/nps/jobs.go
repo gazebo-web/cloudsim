@@ -1,7 +1,9 @@
 package nps
 
 import (
+	"gitlab.com/ignitionrobotics/web/ign-go"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/actions"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator"
   "gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulator/state"
   "gitlab.com/ignitionrobotics/web/cloudsim/pkg/platform"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
@@ -14,7 +16,7 @@ var StartSimulationAction = actions.Jobs{
 	LaunchInstances,
   WaitForInstances,
   WaitForNodes,
-	LaunchGazeboServerPod,
+	LaunchPod,
   WaitForPod,
   GetPodIP,
 }
@@ -27,7 +29,11 @@ type StartSimulationData struct {
   platform             platform.Platform
   GroupID              simulations.GroupID
   IP                   string
-
+  // NodeSelector allows a job to select the correct running kubernetes  node.
+  NodeSelector         orchestrator.Selector
+  // PodSelector allows a job to select the correct running kubernetes pod.
+  PodSelector          orchestrator.Selector
+  logger               ign.Logger
   // \todo: What is this used for? I'm using it launch_instance_job.go for some reason.
   CreateMachinesInput  []cloud.CreateMachinesInput
   // \todo: What is this used for? I'm using it launch_instance_job.go for some reason.

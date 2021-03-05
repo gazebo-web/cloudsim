@@ -3,7 +3,6 @@ package nps
 // This file implements the launch pod job. 
 
 import (
-  "fmt"
 	"strings"
 	"github.com/jinzhu/gorm"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/actions"
@@ -12,20 +11,22 @@ import (
 )
 
 /////////////////////////////////////////////
-var LaunchGazeboServerPod = jobs.LaunchPods.Extend(actions.Job{
-	Name:            "launch-gzserver-pod",
-	PreHooks:        []actions.JobFunc{setStartState, prepareGazeboCreatePodInput},
+var LaunchPod = jobs.LaunchPods.Extend(actions.Job{
+	Name:            "launch-pod",
+	PreHooks:        []actions.JobFunc{setStartState, prepareCreatePodInput},
 	PostHooks:       []actions.JobFunc{returnState},
 	// RollbackHandler: rollbackPodCreation,
 	InputType:       actions.GetJobDataType(&StartSimulationData{}),
 	OutputType:      actions.GetJobDataType(&StartSimulationData{}),
 })
 
-func prepareGazeboCreatePodInput(store actions.Store, tx *gorm.DB, deployment *actions.Deployment, value interface{}) (interface{}, error) {
+func prepareCreatePodInput(store actions.Store, tx *gorm.DB, deployment *actions.Deployment, value interface{}) (interface{}, error) {
 
-  fmt.Printf("\n\nprepareGazeboCreatePodInput\n\n")
 	startData := store.State().(*StartSimulationData)
 
+  // Update the database entry with the latest status
+  // \todo Help needed: I think this is not the recommended method to update 
+  // the database.
   var sim Simulation
   if err := tx.Where("group_id = ?", startData.GroupID.String()).First(&sim).Error; err != nil {
     return nil, err
@@ -33,10 +34,18 @@ func prepareGazeboCreatePodInput(store actions.Store, tx *gorm.DB, deployment *a
   sim.Status = "Creating docker image (pod)."
   tx.Save(&sim)
 
-	// What is this, and why is it needed???
-	// namespace := startData.Platform().Store().Orchestrator().Namespace()
+	// Namespace is the orchestrator namespace where simulations should be
+  // launched.
+  // \todo MAJOR ERROR: I would assume that this would return the value in
+  // CLOUDSIM_MACHINES_ORCHESTRATOR_NAMESPACE. It is empty.
+  // namespace := startData.Platform().Store().Orchestrator().Namespace()
+  // if namespace == "default" || namespace == "" {
+  //   startData.logger.Error("CLOUDSIM_ORCHESTRATOR_NAMESPACE has not been set")
+  //   return nil errors.New("CLOUDSIM_ORCHESTRATOR_NAMESPACE has not been set")
+  // }
+  namespace := "web-cloudsim-integration"
 
-	// TODO: Get ports from Ignition Store
+	// \todo Improvment: Get ports dynamically.
 	ports := []int32{11345, 11311, 8080, 6080}
 
 	// Set up container configuration
@@ -73,8 +82,15 @@ func prepareGazeboCreatePodInput(store actions.Store, tx *gorm.DB, deployment *a
 		"USE_XVFB":         "1",
 	}
 
-  // \todo: Are the regular nameservers? Are they manadatory?
+  // \todo Help needed: Are the regular nameservers? Are they manadatory?
   nameservers := startData.Platform().Store().Orchestrator().Nameservers()
+  labels := map[string]string{
+        "cloudsim": "true",
+        "nps": "true",
+        "cloudsim_groupid": startData.GroupID.String(),
+      }
+
+  startData.PodSelector = orchestrator.NewSelector(labels)
 
 	return jobs.LaunchPodsInput{
 		{
@@ -83,25 +99,20 @@ func prepareGazeboCreatePodInput(store actions.Store, tx *gorm.DB, deployment *a
 			Name:                          sim.Name,
 
       // Namespace is the namespace where the pod will live in.
-      // \todo: What is a namespace?
-			Namespace:                     "web-cloudsim-integration",
+			Namespace:                     namespace,
 
       // Labels are the map of labels that will be applied to the pod.
-      // \todo: What are the labels used for?
-      // \todo: I think these labels are very important for referencing 
+      // These labels are very important in order to reference
       // kubernetes resources in other places, just as jobs.
-      Labels:                        map[string]string{
-        "cloudsim": "true",
-        "nps": "true",
-        "cloudsim_groupid": startData.GroupID.String(),
-      },
+      Labels:                        labels,
 
       // RestartPolicy defines how the pod should react after an error.
-      // \todo: What are the restart policies, and how do I choose one?
+      // \todo Help needed: What are the restart policies, and how do I
+      // choose one?
 			RestartPolicy:                 orchestrator.RestartPolicyNever,
 
       // TerminationGracePeriodSeconds is the time duration in seconds the pod needs to terminate gracefully.
-      // \todo: What does this do?
+      // \todo Help needed: What does this do?
 			TerminationGracePeriodSeconds: 0,
 
       // NodeSelector defines the node where the pod should run in. This is
@@ -111,12 +122,9 @@ func prepareGazeboCreatePodInput(store actions.Store, tx *gorm.DB, deployment *a
       // A Node's labels are set when launching an instance via
       // `KUBELET_EXTRA_ARGS=--node-labels=KEY=VALUE` in a
       //   `/etc/systemd/system/kubelet.service.d/20-labels-taints.conf` file.
-			NodeSelector:                  orchestrator.NewSelector(
-        map[string]string{ "cloudsim_groupid": startData.GroupID.String()}),
-			// For testing NodeSelector:                  orchestrator.NewSelector(map[string]string{ "nps": "true" }),
+			NodeSelector:                  startData.NodeSelector,
 
       // Containers is the list of containers that should be created inside the pod.
-      // \todo: What is a container? 
 			Containers: []orchestrator.Container{
         {
           // Name is the container's name.
@@ -139,7 +147,6 @@ func prepareGazeboCreatePodInput(store actions.Store, tx *gorm.DB, deployment *a
 			},
 			Volumes:     volumes,
 
-      // \todo: Is this required?
 			Nameservers: nameservers,
 		},
 	}, nil
