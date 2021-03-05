@@ -23,6 +23,6 @@ type Summary struct {
 	ModelCountStdDev float64 `json:"model_count_std_dev" gorm:"-"`
 	// Sources stores the group ids of the children used to generate this summary. Only used by simulations.SimParent.
 	Sources string `json:"-"`
-	// RunData has the simulation run data.
+	// RunData contains specific simulation run information. It should only be passed for single sims.
 	RunData string `json:"-" gorm:"-"`
 }
