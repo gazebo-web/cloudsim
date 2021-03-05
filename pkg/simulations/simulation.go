@@ -17,6 +17,9 @@ var (
 
 	// ErrSimulationWithError is returned when a simulation has an error.
 	ErrSimulationWithError = errors.New("simulation with error")
+
+	// ErrSimulationProcessed is returned when simulation is trying to be processed twice.
+	ErrSimulationProcessed = errors.New("simulation has been processed")
 )
 
 // GroupID is an universally unique identifier that identifies a Simulation.

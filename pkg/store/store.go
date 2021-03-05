@@ -116,6 +116,12 @@ type Ignition interface {
 	// LogsBucket returns the bucket for saving simulation logs.
 	LogsBucket() string
 
+	// DefaultRecipients returns the list of default emails to send summary emails to.
+	DefaultRecipients() []string
+
+	// DefaultSender returns the default sender for emails.
+	DefaultSender() string
+
 	// GetWebsocketHost returns the host of the websocket URL.
 	GetWebsocketHost() string
 
