@@ -45,6 +45,12 @@ type Ign struct {
 	*mock.Mock
 }
 
+// LogsBucket mocks the LogsBucket method.
+func (f *Ign) LogsBucket() string {
+	args := f.Called()
+	return args.String(0)
+}
+
 // GetWebsocketHost mocks the GetWebsocketHost method.
 func (f *Ign) GetWebsocketHost() string {
 	args := f.Called()

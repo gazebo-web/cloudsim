@@ -39,8 +39,16 @@ type ignitionEnvStore struct {
 	// SecretsNameValue is the CLOUDSIM_IGN_SECRETS_NAME value that will used to get credentials for cloud providers.
 	SecretsNameValue string `env:"CLOUDSIM_IGN_SECRETS_NAME"`
 
+	// LogsBucketValue is the CLOUDSIM_AWS_GZ_LOGS_BUCKET value that will be used to upload logs.
+	LogsBucketValue string `env:"CLOUDSIM_AWS_GZ_LOGS_BUCKET"`
+
 	// WebsocketHostValue is the CLOUDSIM_WEBSOCKET_HOST that will be used as host to connect to simulation's websocket servers.
 	WebsocketHostValue string `env:"CLOUDSIM_SUBT_WEBSOCKET_HOST"`
+}
+
+// LogsBucket returns the bucket to upload simulation logs to.
+func (i *ignitionEnvStore) LogsBucket() string {
+	return i.LogsBucketValue
 }
 
 // GetWebsocketHost returns the host of the websocket address for connecting to simulation websocket servers.

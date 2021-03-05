@@ -3,6 +3,7 @@ package application
 import (
 	"fmt"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
+	"net/url"
 )
 
 // simPrefix is used to identify simulation pods.
@@ -75,5 +76,21 @@ func GetSimulationIngressPath(groupID simulations.GroupID) string {
 
 // GetServiceNameWebsocket returns the websocket name for the given GroupID.
 func GetServiceNameWebsocket(groupID simulations.GroupID) string {
-	return fmt.Sprintf("%s-%s-websocket", simPrefix, groupID)
+	return fmt.Sprintf("%s-%s-websocket", simPrefix, groupID.String())
+}
+
+// GetCommsBridgeLogsFilename returns the filename for comms bridge logs.
+func GetCommsBridgeLogsFilename(groupID simulations.GroupID, robotName string) string {
+	return fmt.Sprintf("%s-fc-%s-commsbridge.tar.gz", groupID, robotName)
+}
+
+// GetGazeboLogsFilename returns the filename of the file that contains simulation logs.
+func GetGazeboLogsFilename(groupID simulations.GroupID) string {
+	return fmt.Sprintf("%s.tar.gz", groupID.String())
+}
+
+// GetSimulationLogKey returns the path for logs inside a copy pod.
+func GetSimulationLogKey(groupID simulations.GroupID, owner string) string {
+	escaped := url.PathEscape(owner)
+	return fmt.Sprintf("/gz-logs/%s/%s/", escaped, groupID)
 }
