@@ -14,6 +14,7 @@ import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/components/services"
 	kubernetesServices "gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/components/services/implementations/kubernetes"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/components/spdy"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/implementations/kubernetes/client"
 	"gitlab.com/ignitionrobotics/web/ign-go"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/kubernetes/fake"
@@ -71,7 +72,7 @@ func (k *k8s) NetworkPolicies() network.Policies {
 }
 
 // Config is used to group the inputs for NewCustomKubernetes.
-// It includes all the needed subcomponents for Kubernetes.
+// It includes all the needed subcomponents required by Kubernetes.
 type Config struct {
 	Nodes           nodes.Nodes
 	Pods            pods.Pods
@@ -122,12 +123,13 @@ func NewFakeKubernetes(logger ign.Logger) orchestrator.Cluster {
 }
 
 // InitializeKubernetes initializes a new Kubernetes orchestrator.
-func InitializeKubernetes(logger ign.Logger) (orchestrator.Cluster, error) {
-	config, err := GetConfig()
+// `kubeconfig` is the path to the target cluster's kubeconfig file. If it is empty, the default config is used.
+func InitializeKubernetes(kubeconfig string, logger ign.Logger) (orchestrator.Cluster, error) {
+	config, err := client.GetConfig(kubeconfig)
 	if err != nil {
 		return nil, err
 	}
-	client, err := NewAPI(config)
+	client, err := client.NewAPI(config)
 	if err != nil {
 		return nil, err
 	}

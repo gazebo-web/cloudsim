@@ -148,7 +148,7 @@ func (s *factoryMapSuite) TestNewType1() {
 	value := 1
 	cfg := &factory.Config{
 		Type: type1,
-		Config: map[string]interface{}{
+		Config: factory.ConfigValues{
 			"Value": value,
 		},
 	}
@@ -171,7 +171,7 @@ func (s *factoryMapSuite) TestNewType1MissingDependencies() {
 	value := 1
 	cfg := &factory.Config{
 		Type: type1,
-		Config: map[string]interface{}{
+		Config: factory.ConfigValues{
 			"Value": value,
 		},
 	}
@@ -188,7 +188,7 @@ func (s *factoryMapSuite) TestNewType2() {
 	value := "test"
 	cfg := &factory.Config{
 		Type: type2,
-		Config: map[string]interface{}{
+		Config: factory.ConfigValues{
 			"Value": value,
 		},
 	}
@@ -206,7 +206,7 @@ func (s *factoryMapSuite) TestNewType3() {
 	value := false
 	cfg := &factory.Config{
 		Type: type3,
-		Config: map[string]interface{}{
+		Config: factory.ConfigValues{
 			"Value": value,
 		},
 	}
@@ -228,7 +228,7 @@ func (s *factoryMapSuite) TestRegister() {
 	value := false
 	cfg := &factory.Config{
 		Type: type4,
-		Config: map[string]interface{}{
+		Config: factory.ConfigValues{
 			"Value": value,
 		},
 	}
