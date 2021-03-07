@@ -33,6 +33,6 @@ spec:
                   fieldPath: status.podIP
           envFrom:
             - configMapRef:
-                name: cloudsim-config
+                name: $KUBERNETES_CONFIG_MAP
       nodeSelector:
         server: "true"
