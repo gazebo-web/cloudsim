@@ -55,7 +55,7 @@ func (app *application) GetAPIRoutes() ign.Routes {
 			},
 		},
 		// Example usage:
-		//     curl -X POST http://localhost:8000/1.0/simulations
+		//     curl -X GET http://localhost:8000/1.0/simulations
 		ign.Route{
 			Name:        "List simulations",
 			Description: "This is a route for listing simulations",

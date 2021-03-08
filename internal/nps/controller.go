@@ -186,3 +186,8 @@ func (ctrl *controller) GetSimulation(tx *gorm.DB, w http.ResponseWriter, r *htt
 		IP:      simulation.IP,
 	}, nil
 }
+
+// Healthz returns a string to confirm that cloudsim is running.
+func Healthz(tx *gorm.DB, w http.ResponseWriter, r *http.Request) (interface{}, *ign.ErrMsg) {
+	return "Cloudsim is up", nil
+}
