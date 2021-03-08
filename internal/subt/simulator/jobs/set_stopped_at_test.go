@@ -14,12 +14,12 @@ import (
 
 func TestSetStoppedAt(t *testing.T) {
 	simservice := fake.NewService()
-	base := application.NewServices(simservice)
-	app := subtapp.NewServices(base, nil)
+	base := application.NewServices(simservice, nil)
+	app := subtapp.NewServices(base, nil, nil)
 
 	gid := simulations.GroupID("aaaa-bbbb-cccc-dddd")
 
-	simservice.On("Stop", gid).Return(error(nil))
+	simservice.On("MarkStopped", gid).Return(error(nil))
 
 	initialState := state.NewStopSimulation(nil, app, gid)
 	s := actions.NewStore(initialState)
@@ -31,12 +31,12 @@ func TestSetStoppedAt(t *testing.T) {
 
 func TestSetStoppedAtWithError(t *testing.T) {
 	simservice := fake.NewService()
-	base := application.NewServices(simservice)
-	app := subtapp.NewServices(base, nil)
+	base := application.NewServices(simservice, nil)
+	app := subtapp.NewServices(base, nil, nil)
 
 	gid := simulations.GroupID("aaaa-bbbb-cccc-dddd")
 
-	simservice.On("Stop", gid).Return(errors.New("test error"))
+	simservice.On("MarkStopped", gid).Return(errors.New("test error"))
 
 	initialState := state.NewStopSimulation(nil, app, gid)
 	s := actions.NewStore(initialState)

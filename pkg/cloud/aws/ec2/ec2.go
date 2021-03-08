@@ -219,7 +219,7 @@ func (m *machines) Create(inputs []cloud.CreateMachinesInput) (created []cloud.C
 }
 
 // terminateByID terminates EC2 instances by instances ID.
-// It returns an error if no instances ids are provided.
+// It returns an error if no instance ids are provided.
 // It also returns an error if the underlying TerminateInstances request fails.
 func (m *machines) terminateByID(instances []string) error {
 	_, err := m.API.TerminateInstances(&ec2.TerminateInstancesInput{
@@ -237,6 +237,9 @@ func (m *machines) terminateByFilters(filters map[string][]string) error {
 		MaxResults: aws.Int64(1000),
 		Filters:    m.createFilters(filters),
 	})
+	if err != nil {
+		return err
+	}
 
 	var instanceIds []string
 	for _, r := range out.Reservations {
@@ -245,12 +248,7 @@ func (m *machines) terminateByFilters(filters map[string][]string) error {
 		}
 	}
 
-	_, err = m.API.TerminateInstances(&ec2.TerminateInstancesInput{
-		DryRun:      aws.Bool(false),
-		InstanceIds: aws.StringSlice(instanceIds),
-	})
-
-	return err
+	return m.terminateByID(instanceIds)
 }
 
 // Terminate terminates EC2 machines by either passing instances ids or filters.

@@ -8,7 +8,7 @@ import (
 	ignws "gitlab.com/ignitionrobotics/web/cloudsim/pkg/transport/ign"
 )
 
-// SetWebsocketConnection is a job in charge of setting a websocket connection to the gazebo server.
+// SetWebsocketConnection is a job in charge of setting a websocket connection to the Ignition Gazebo server.
 var SetWebsocketConnection = &actions.Job{
 	Name:            "set-ws-conn",
 	PreHooks:        []actions.JobFunc{setStartState},

@@ -42,6 +42,7 @@ type removePodsTestSuite struct {
 	ApplicationServices subtapp.Services
 	Robots              []simulations.Robot
 	Pods                []corev1.Pod
+	AnotherGroupID      simulations.GroupID
 }
 
 func (s *removePodsTestSuite) SetupTest() {
@@ -66,6 +67,7 @@ func (s *removePodsTestSuite) SetupTest() {
 	s.Require().NoError(err)
 
 	s.GroupID = "aaaa-bbbb-cccc-dddd"
+	s.AnotherGroupID = "eeee-bbbb-cccc-dddd"
 
 	robot := simfake.NewRobot("test", "x1")
 
@@ -115,6 +117,25 @@ func (s *removePodsTestSuite) SetupTest() {
 				Labels:    subtapp.GetPodLabelsCommsBridgeCopy(s.GroupID, nil, robot).Map(),
 			},
 		},
+		// ----------------------------------------
+		// Another Gazebo server
+		&corev1.Pod{
+			TypeMeta: metav1.TypeMeta{},
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      subtapp.GetPodNameGazeboServer(s.AnotherGroupID),
+				Namespace: s.Namespace,
+				Labels:    subtapp.GetPodLabelsGazeboServer(s.AnotherGroupID, nil).Map(),
+			},
+		},
+		// Another Gazebo copy pod
+		&corev1.Pod{
+			TypeMeta: metav1.TypeMeta{},
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      subtapp.GetPodNameGazeboServerCopy(s.AnotherGroupID),
+				Namespace: s.Namespace,
+				Labels:    subtapp.GetPodLabelsGazeboServerCopy(s.AnotherGroupID, nil).Map(),
+			},
+		},
 	)
 
 	po := pods.NewPods(s.Client, nil, s.Logger)
@@ -146,6 +167,25 @@ func (s *removePodsTestSuite) SetupTest() {
 }
 
 func (s *removePodsTestSuite) TestRemovePodsSuccess() {
-	_, err := RemovePods.Run(s.ActionStore, s.DB, &actions.Deployment{}, s.StopSimulationState)
+	// When removing pods, it should only delete pods that are related to the correct GroupID.
+	// In this case, we're using AnotherGroupID to demonstrate that case scenario.
+	_, err := s.Platform.Orchestrator().Pods().Get(subtapp.GetPodNameGazeboServer(s.AnotherGroupID), s.Namespace)
+	// And we require that getting the AnotherGroupID gazebo server pod doesn't return error. (It exists)
+	s.Require().NoError(err)
+
+	// Run the job to remove pods for GroupID
+	_, err = RemovePods.Run(s.ActionStore, s.DB, &actions.Deployment{}, s.StopSimulationState)
 	s.Assert().NoError(err)
+
+	// After removing pods for GroupID, pods for AnotherGroupID should still be there. (It should still exist)
+	_, err = s.Platform.Orchestrator().Pods().Get(subtapp.GetPodNameGazeboServer(s.AnotherGroupID), s.Namespace)
+	s.Require().NoError(err)
+
+	// And getting pods with GroupID should return an error.
+	_, err = s.Platform.Orchestrator().Pods().Get(subtapp.GetPodNameGazeboServer(s.GroupID), s.Namespace)
+	s.Assert().Error(err)
+}
+
+func (s *removePodsTestSuite) TurnDownTest() {
+	s.DB.Close()
 }
