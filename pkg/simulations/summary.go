@@ -21,8 +21,8 @@ type Summary struct {
 	ModelCountAvg float64 `json:"model_count_avg"`
 	// ModelCountStdDev is the standard deviation value of the model count. Only used by simulations.SimParent.
 	ModelCountStdDev float64 `json:"model_count_std_dev" gorm:"-"`
-	// Sources is used save all the children group ids. Only used by simulations.SimParent.
+	// Sources stores the group ids of the children used to generate this summary. Only used by simulations.SimParent.
 	Sources string `json:"-"`
-	// RunData has the simulation run data.
+	// RunData contains specific simulation run information. It should only be passed for single sims.
 	RunData string `json:"-" gorm:"-"`
 }

@@ -35,7 +35,7 @@ type Service interface {
 	// GetRobots returns the robot list of the simulation with the given GroupID.
 	GetRobots(groupID GroupID) ([]Robot, error)
 
-	// Stop marks a simulation identified with the given Group ID as stopped.
+	// MarkStopped marks a simulation identified with the given Group ID as stopped.
 	MarkStopped(groupID GroupID) error
 
 	// GetWebsocketToken returns a websocket token for a certain simulation with the given GroupID.

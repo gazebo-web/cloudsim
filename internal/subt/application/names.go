@@ -79,6 +79,7 @@ func GetServiceNameWebsocket(groupID simulations.GroupID) string {
 	return fmt.Sprintf("%s-%s-websocket", simPrefix, groupID.String())
 }
 
+// GetCommsBridgeLogsFilename returns the filename for comms bridge logs.
 func GetCommsBridgeLogsFilename(groupID simulations.GroupID, robotName string) string {
 	return fmt.Sprintf("%s-fc-%s-commsbridge.tar.gz", groupID, robotName)
 }

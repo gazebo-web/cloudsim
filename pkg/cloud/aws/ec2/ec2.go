@@ -224,7 +224,7 @@ func (m *machines) Create(inputs []cloud.CreateMachinesInput) (created []cloud.C
 }
 
 // terminateByID terminates EC2 instances by instances ID.
-// It returns an error if no instances ids are provided.
+// It returns an error if no instance ids are provided.
 // It also returns an error if the underlying TerminateInstances request fails.
 func (m *machines) terminateByID(instances []string) error {
 	_, err := m.API.TerminateInstances(&ec2.TerminateInstancesInput{

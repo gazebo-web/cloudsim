@@ -62,7 +62,7 @@ func (s *Service) Get(groupID simulations.GroupID) (simulations.Simulation, erro
 	return sim, args.Error(1)
 }
 
-// Stop is a mock for the Stop method.
+// MarkStopped is a mock for the MarkStopped method.
 func (s *Service) MarkStopped(groupID simulations.GroupID) error {
 	args := s.Called(groupID)
 	return args.Error(0)
