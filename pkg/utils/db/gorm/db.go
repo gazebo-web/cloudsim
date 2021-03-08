@@ -42,7 +42,7 @@ func GetDBFromEnvVars() (*gorm.DB, error) {
 		return nil, err
 	}
 	// Use the test database
-	dbConfig.Name += "_test"
+	// dbConfig.Name += "_test"
 
 	// Connect to the db
 	db, err := ign.InitDbWithCfg(dbConfig)

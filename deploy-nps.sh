@@ -14,10 +14,12 @@ docker pull $CI_REGISTRY_IMAGE || true
 docker build --no-cache --tag $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA --tag $CI_REGISTRY_IMAGE:next -f Dockerfile.nps .
 docker login -u natekoenig@gmail.com -p beUuW-Nnz3pcBZcxoTwL registry.gitlab.com/ignitionrobotics/web/cloudsim
 docker push $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA
- 
+  
 envsubst < "./deployments/00-namespace.yaml"
 envsubst < "./deployments/00-namespace.yaml"  | kubectl apply -f -
 envsubst < "./deployments/01-deployment.yaml"
 envsubst < "./deployments/01-deployment.yaml" | kubectl apply -f -
 envsubst < "./deployments/02-blue-green.yaml"
 envsubst < "./deployments/02-blue-green.yaml" | kubectl apply -f -
+# envsubst < "./deployments/03-nps-load-balancer.yaml"
+# envsubst < "./deployments/03-nps-load-balancer.yaml" | kubectl apply -f -
