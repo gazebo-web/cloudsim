@@ -88,10 +88,30 @@ type SimulationDeployment struct {
 	Score *float64 `json:"score,omitempty"`
 }
 
+// IsProcessed returns true if the SimulationDeployment has been processed.
+func (dep *SimulationDeployment) IsProcessed() bool {
+	return dep.Processed
+}
+
+// GetOwner returns the SimulationDeployment's Owner.
+func (dep *SimulationDeployment) GetOwner() *string {
+	return dep.Owner
+}
+
+// GetCreator returns the SimulationDeployment's Creator. It returns an empty string if no creator has been assigned.
+func (dep *SimulationDeployment) GetCreator() string {
+	if dep.Creator == nil {
+		return ""
+	}
+	return *dep.Creator
+}
+
+// GetGroupID returns the SimulationDeployment's GroupID.
 func (dep *SimulationDeployment) GetGroupID() simulations.GroupID {
 	return simulations.GroupID(*dep.GroupID)
 }
 
+// GetStatus returns the SimulationDeployment's DeploymentStatus.
 func (dep *SimulationDeployment) GetStatus() simulations.Status {
 	switch dep.DeploymentStatus {
 	// TODO: Add statuses
@@ -100,22 +120,27 @@ func (dep *SimulationDeployment) GetStatus() simulations.Status {
 	}
 }
 
+// HasStatus checks that the SimulationDeployment's DeploymentStatus is equal to the given status.
 func (dep *SimulationDeployment) HasStatus(status simulations.Status) bool {
 	return dep.GetStatus() == status
 }
 
+// SetStatus sets the SimulationDeployment's DeploymentStatus to the given status.
 func (dep *SimulationDeployment) SetStatus(status simulations.Status) {
 	dep.setStatus(status)
 }
 
+// GetKind returns the SimulationDeployment's Kind. It parses the MultiSim field into a Kind.
 func (dep *SimulationDeployment) GetKind() simulations.Kind {
 	return simulations.Kind(dep.MultiSim)
 }
 
+// IsKind checks that the SimulationDeployment
 func (dep *SimulationDeployment) IsKind(kind simulations.Kind) bool {
 	return dep.GetKind() == kind
 }
 
+// GetError returns the SimulationDeployment's ErrorStatus
 func (dep *SimulationDeployment) GetError() *simulations.Error {
 	if dep.ErrorStatus == nil {
 		return nil
@@ -124,6 +149,7 @@ func (dep *SimulationDeployment) GetError() *simulations.Error {
 	return &err
 }
 
+// GetImage returns the SimulationDeployment's image.
 func (dep *SimulationDeployment) GetImage() string {
 	if dep.Image == nil {
 		return ""
@@ -131,6 +157,7 @@ func (dep *SimulationDeployment) GetImage() string {
 	return *dep.Image
 }
 
+// GetValidFor returns the SimulationDeployment's ValidFor parsed as time.Duration.
 func (dep *SimulationDeployment) GetValidFor() time.Duration {
 	if dep.ValidFor == nil {
 		return 0
@@ -142,6 +169,7 @@ func (dep *SimulationDeployment) GetValidFor() time.Duration {
 	return d
 }
 
+// GetTrack returns the SimulationDeployment's circuit name.
 func (dep *SimulationDeployment) GetTrack() string {
 	info, err := ReadExtraInfoSubT(dep)
 	if err != nil {
@@ -150,10 +178,12 @@ func (dep *SimulationDeployment) GetTrack() string {
 	return info.Circuit
 }
 
+// GetToken returns the SimulationDeployment's websocket authorization token.
 func (dep *SimulationDeployment) GetToken() *string {
 	return dep.AuthorizationToken
 }
 
+// GetRobots parses the robots from the extra field and returns them as a slice of robots.
 func (dep *SimulationDeployment) GetRobots() []simulations.Robot {
 	info, err := ReadExtraInfoSubT(dep)
 	if err != nil {
@@ -168,6 +198,7 @@ func (dep *SimulationDeployment) GetRobots() []simulations.Robot {
 	return result
 }
 
+// GetMarsupials parses the extra field and returns the marsupials.
 func (dep *SimulationDeployment) GetMarsupials() []simulations.Marsupial {
 	info, err := ReadExtraInfoSubT(dep)
 	if err != nil {
