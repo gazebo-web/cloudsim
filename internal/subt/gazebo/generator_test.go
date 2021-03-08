@@ -43,13 +43,13 @@ func TestGenerate(t *testing.T) {
 	assert.Equal(t, fmt.Sprintf("websocketAdminAuthKey:=%s", token), cmd[6])
 	assert.Equal(t, fmt.Sprintf("websocketMaxConnections:=%d", maxConn), cmd[7])
 
-	assert.Equal(t, fmt.Sprintf("robotName1:=%s", fakeRobotA.Name()), cmd[8])
-	assert.Equal(t, fmt.Sprintf("robotConfig1:=%s", fakeRobotA.Kind()), cmd[9])
+	assert.Equal(t, fmt.Sprintf("robotName1:=%s", fakeRobotA.GetName()), cmd[8])
+	assert.Equal(t, fmt.Sprintf("robotConfig1:=%s", fakeRobotA.GetKind()), cmd[9])
 
-	assert.Equal(t, fmt.Sprintf("robotName2:=%s", fakeRobotB.Name()), cmd[10])
-	assert.Equal(t, fmt.Sprintf("robotConfig2:=%s", fakeRobotB.Kind()), cmd[11])
+	assert.Equal(t, fmt.Sprintf("robotName2:=%s", fakeRobotB.GetName()), cmd[10])
+	assert.Equal(t, fmt.Sprintf("robotConfig2:=%s", fakeRobotB.GetKind()), cmd[11])
 
-	assert.Equal(t, fmt.Sprintf("marsupial1:=%s:%s", fakeRobotA.Name(), fakeRobotB.Name()), cmd[12])
+	assert.Equal(t, fmt.Sprintf("marsupial1:=%s:%s", fakeRobotA.GetName(), fakeRobotB.GetName()), cmd[12])
 
 	assert.Equal(t, fmt.Sprintf("ros:=%t", true), cmd[13])
 }
