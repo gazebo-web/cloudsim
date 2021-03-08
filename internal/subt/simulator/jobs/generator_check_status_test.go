@@ -35,6 +35,7 @@ func TestCheckSimulationStatus_Success(t *testing.T) {
 	job := GenerateCheckStatusJob(CheckStatusJobConfig{
 		Name:       "test",
 		Status:     simulations.StatusPending,
+		PreHooks:   []actions.JobFunc{setStartState, generateCheckStartSimulationStatusInputPreHook(simulations.StatusPending)},
 		InputType:  &state.StartSimulation{},
 		OutputType: &state.StartSimulation{},
 	})
@@ -69,6 +70,7 @@ func TestCheckSimulationStatus_ErrSimInvaludStatus(t *testing.T) {
 
 	job := GenerateCheckStatusJob(CheckStatusJobConfig{
 		Name:       "test",
+		PreHooks:   []actions.JobFunc{setStartState, generateCheckStartSimulationStatusInputPreHook(simulations.StatusPending)},
 		Status:     simulations.StatusPending,
 		InputType:  &state.StartSimulation{},
 		OutputType: &state.StartSimulation{},
