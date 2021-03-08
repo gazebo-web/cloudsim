@@ -91,3 +91,12 @@ var SetSimulationStatusToProcessingResults = GenerateSetSimulationStatusJob(Gene
 	OutputType: &state.StopSimulation{},
 	PreHooks:   []actions.JobFunc{setStopState, returnGroupIDFromStopState},
 })
+
+// SetSimulationStatusToDeletingNodes is used to set a simulation status to terminated.
+var SetSimulationStatusToTerminated = GenerateSetSimulationStatusJob(GenerateSetSimulationStatusConfig{
+	Name:       "set-simulation-status-terminated",
+	Status:     simulations.StatusTerminated,
+	InputType:  &state.StopSimulation{},
+	OutputType: &state.StopSimulation{},
+	PreHooks:   []actions.JobFunc{setStopState, returnGroupIDFromStopState},
+})

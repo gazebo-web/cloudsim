@@ -5,11 +5,16 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/jinzhu/gorm"
+	subtsim "gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/simulations"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
 	"gitlab.com/ignitionrobotics/web/ign-go"
 	"strconv"
 	"strings"
 	"time"
 )
+
+// Force SimulationDeployment to implement simulations.Simulation interface.
+var _ subtsim.Simulation = (*SimulationDeployment)(nil)
 
 // SimulationDeployment represents a cloudsim simulation .
 type SimulationDeployment struct {
@@ -81,6 +86,160 @@ type SimulationDeployment struct {
 	AuthorizationToken *string `json:"-"`
 	// Score has the simulation's score. It's updated when the simulations finishes and gets processed.
 	Score *float64 `json:"score,omitempty"`
+}
+
+// IsProcessed returns true if the SimulationDeployment has been processed.
+func (dep *SimulationDeployment) IsProcessed() bool {
+	return dep.Processed
+}
+
+// GetOwner returns the SimulationDeployment's Owner.
+func (dep *SimulationDeployment) GetOwner() *string {
+	return dep.Owner
+}
+
+// GetCreator returns the SimulationDeployment's Creator. It returns an empty string if no creator has been assigned.
+func (dep *SimulationDeployment) GetCreator() string {
+	if dep.Creator == nil {
+		return ""
+	}
+	return *dep.Creator
+}
+
+// GetGroupID returns the SimulationDeployment's GroupID.
+func (dep *SimulationDeployment) GetName() string {
+	return *dep.Name
+}
+
+func (dep *SimulationDeployment) GetGroupID() simulations.GroupID {
+	return simulations.GroupID(*dep.GroupID)
+}
+
+// GetStatus returns the SimulationDeployment's DeploymentStatus.
+func (dep *SimulationDeployment) GetStatus() simulations.Status {
+	switch *dep.DeploymentStatus {
+	case simPending.ToInt():
+		return simulations.StatusPending
+	case simLaunchingNodes.ToInt():
+		return simulations.StatusLaunchingInstances
+	case simLaunchingPods.ToInt():
+		return simulations.StatusLaunchingPods
+	case simParentLaunching.ToInt():
+		return simulations.StatusUnknown
+	case simParentLaunchingWithErrors.ToInt():
+		return simulations.StatusUnknown
+	case simRunning.ToInt():
+		return simulations.StatusRunning
+	case simTerminateRequested.ToInt():
+		return simulations.StatusTerminateRequested
+	case simDeletingPods.ToInt():
+		return simulations.StatusDeletingPods
+	case simDeletingNodes.ToInt():
+		return simulations.StatusDeletingNodes
+	case simTerminatingInstances.ToInt():
+		return simulations.StatusTerminatingInstances
+	case simTerminated.ToInt():
+		return simulations.StatusTerminated
+	case simRejected.ToInt():
+		return simulations.StatusRejected
+	case simSuperseded.ToInt():
+		return simulations.StatusSuperseded
+	default:
+		return simulations.StatusUnknown
+	}
+}
+
+// HasStatus checks that the SimulationDeployment's DeploymentStatus is equal to the given status.
+func (dep *SimulationDeployment) HasStatus(status simulations.Status) bool {
+	return dep.GetStatus() == status
+}
+
+// SetStatus sets the SimulationDeployment's DeploymentStatus to the given status.
+func (dep *SimulationDeployment) SetStatus(status simulations.Status) {
+	dep.setStatus(status)
+}
+
+// GetKind returns the SimulationDeployment's Kind. It parses the MultiSim field into a Kind.
+func (dep *SimulationDeployment) GetKind() simulations.Kind {
+	return simulations.Kind(dep.MultiSim)
+}
+
+// IsKind checks that the SimulationDeployment
+func (dep *SimulationDeployment) IsKind(kind simulations.Kind) bool {
+	return dep.GetKind() == kind
+}
+
+// GetError returns the SimulationDeployment's ErrorStatus
+func (dep *SimulationDeployment) GetError() *simulations.Error {
+	if dep.ErrorStatus == nil {
+		return nil
+	}
+	err := simulations.Error(*dep.ErrorStatus)
+	return &err
+}
+
+// GetImage returns the SimulationDeployment's image.
+func (dep *SimulationDeployment) GetImage() string {
+	if dep.Image == nil {
+		return ""
+	}
+	return *dep.Image
+}
+
+// GetValidFor returns the SimulationDeployment's ValidFor parsed as time.Duration.
+func (dep *SimulationDeployment) GetValidFor() time.Duration {
+	if dep.ValidFor == nil {
+		return 0
+	}
+	d, err := time.ParseDuration(*dep.ValidFor)
+	if err != nil {
+		return 0
+	}
+	return d
+}
+
+// GetTrack returns the SimulationDeployment's circuit name.
+func (dep *SimulationDeployment) GetTrack() string {
+	info, err := ReadExtraInfoSubT(dep)
+	if err != nil {
+		return ""
+	}
+	return info.Circuit
+}
+
+// GetToken returns the SimulationDeployment's websocket authorization token.
+func (dep *SimulationDeployment) GetToken() *string {
+	return dep.AuthorizationToken
+}
+
+// GetRobots parses the robots from the extra field and returns them as a slice of robots.
+func (dep *SimulationDeployment) GetRobots() []simulations.Robot {
+	info, err := ReadExtraInfoSubT(dep)
+	if err != nil {
+		return nil
+	}
+	result := make([]simulations.Robot, len(info.Robots))
+	for i, robot := range info.Robots {
+		r := new(SubTRobot)
+		*r = robot
+		result[i] = r
+	}
+	return result
+}
+
+// GetMarsupials parses the extra field and returns the marsupials.
+func (dep *SimulationDeployment) GetMarsupials() []simulations.Marsupial {
+	info, err := ReadExtraInfoSubT(dep)
+	if err != nil {
+		return nil
+	}
+	result := make([]simulations.Marsupial, len(info.Marsupials))
+	for i, marsupial := range info.Marsupials {
+		m := new(SubTMarsupial)
+		*m = marsupial
+		result[i] = m
+	}
+	return result
 }
 
 // NewSimulationDeployment creates and initializes a simulation deployment struct.
@@ -463,6 +622,19 @@ func (dep *SimulationDeployment) MarkAsMultiSimChild(tx *gorm.DB, parent *Simula
 		return ign.NewErrorMessageWithBase(ign.ErrorDbSave, err)
 	}
 	return nil
+}
+
+func (dep *SimulationDeployment) setStatus(status simulations.Status) {
+	dep.DeploymentStatus = convertStatus(status).ToPtr()
+}
+
+func convertStatus(status simulations.Status) DeploymentStatus {
+	switch status {
+	case simulations.StatusPending:
+		return simPending
+	default:
+		return simPending
+	}
 }
 
 // SimulationDeployments is a slice of SimulationDeployment

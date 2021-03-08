@@ -23,7 +23,7 @@ var CheckStopSimulationIsNotParent = GenerateCheckSimulationNotOfKindJob(
 	ConfigCheckSimulationNotOfKindJob{
 		Name:               "check-stop-simulation-no-parent",
 		Kind:               simulations.SimParent,
-		PreHooks:           []actions.JobFunc{setStartState, setStopState},
+		PreHooks:           []actions.JobFunc{setStopState},
 		PreparationPreHook: generateCheckStopSimulationNotOfKindInputPreHook(simulations.SimParent),
 		InputType:          &state.StopSimulation{},
 		OutputType:         &state.StopSimulation{},

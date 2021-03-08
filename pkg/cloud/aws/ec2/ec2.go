@@ -98,6 +98,11 @@ func (m *machines) newRunInstancesInput(createMachines cloud.CreateMachinesInput
 
 // createTags creates an array of ec2.TagSpecification from the given tag input.
 func (m *machines) createTags(input []cloud.Tag) []*ec2.TagSpecification {
+	return CreateTagSpecifications(input)
+}
+
+// CreateTagSpecifications converts a set of tags into ec2 tag specifications.
+func CreateTagSpecifications(input []cloud.Tag) []*ec2.TagSpecification {
 	var tagSpec []*ec2.TagSpecification
 	for _, tag := range input {
 		var tags []*ec2.Tag

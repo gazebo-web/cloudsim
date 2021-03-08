@@ -12,7 +12,7 @@ import (
 
 // ReadStats is a job in charge of reading the statistics from a gzserver copy pod for the simulation that is being processed.
 var ReadStats = &actions.Job{
-	Name:       "read-simulation-score",
+	Name:       "read-simulation-stats",
 	PreHooks:   []actions.JobFunc{setStopState},
 	Execute:    readStats,
 	PostHooks:  []actions.JobFunc{returnState},

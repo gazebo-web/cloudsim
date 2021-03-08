@@ -53,7 +53,7 @@ func prepareFieldComputerPodInput(store actions.Store, tx *gorm.DB, deployment *
 					Privileged:               &privileged,
 					AllowPrivilegeEscalation: &allowPrivilegesEscalation,
 					EnvVars: map[string]string{
-						"ROBOT_NAME":     r.Name(),
+						"ROBOT_NAME":     r.GetName(),
 						"ROS_MASTER_URI": fmt.Sprintf("http://%s:11311", s.CommsBridgeIPs[i]),
 					},
 				},

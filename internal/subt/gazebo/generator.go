@@ -86,15 +86,15 @@ func Generate(params LaunchConfig) []string {
 	// robotName1:=xxx robotConfig1:=yyy robotName2:=xxx robotConfig2:=yyy (Note the numbers).
 	for i, robot := range params.Robots {
 		cmd = append(cmd,
-			fmt.Sprintf("%s%d:=%s", keyRobotName, i+1, robot.Name()),
-			fmt.Sprintf("%s%d:=%s", keyRobotConfig, i+1, robot.Kind()),
+			fmt.Sprintf("%s%d:=%s", keyRobotName, i+1, robot.GetName()),
+			fmt.Sprintf("%s%d:=%s", keyRobotConfig, i+1, robot.GetKind()),
 		)
 	}
 
 	// Pass marsupial names to the gzserver Pod.
 	// marsupialN:=<parent>:<child>
 	for i, marsupial := range params.Marsupials {
-		cmd = append(cmd, fmt.Sprintf("%s%d:=%s:%s", keyMarsupial, i+1, marsupial.Parent().Name(), marsupial.Child().Name()))
+		cmd = append(cmd, fmt.Sprintf("%s%d:=%s:%s", keyMarsupial, i+1, marsupial.GetParent().GetName(), marsupial.GetChild().GetName()))
 	}
 
 	cmd = append(cmd, fmt.Sprintf("%s:=%t", keyRos, params.RosEnabled))

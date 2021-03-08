@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/jinzhu/gorm"
 	"gitlab.com/ignitionrobotics/web/cloudsim/globals"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
 	"strings"
 	"time"
 )
@@ -45,6 +46,8 @@ func (cs *SubTCreateSimulation) robotImagesBelongToECROwner() bool {
 	return true
 }
 
+var _ simulations.Robot = (*SubTRobot)(nil)
+
 // SubTRobot is an internal type used to describe a single SubT robot (field-computer) request.
 type SubTRobot struct {
 	Name    string
@@ -53,10 +56,35 @@ type SubTRobot struct {
 	Credits int
 }
 
+func (s *SubTRobot) GetName() string {
+	return s.Name
+}
+
+func (s *SubTRobot) GetKind() string {
+	return s.Type
+}
+
+func (s *SubTRobot) IsEqual(robot simulations.Robot) bool {
+	return s.Name == robot.GetName()
+}
+
+var _ simulations.Marsupial = (*SubTMarsupial)(nil)
+
 // SubTMarsupial is an internal type used to describe marsupial vehicles in SubT.
 type SubTMarsupial struct {
 	Parent string
 	Child  string
+
+	parentRobot simulations.Robot
+	childRobot  simulations.Robot
+}
+
+func (s *SubTMarsupial) GetParent() simulations.Robot {
+	return s.parentRobot
+}
+
+func (s *SubTMarsupial) GetChild() simulations.Robot {
+	return s.childRobot
 }
 
 // metadataSubT is a struct use to hold the Metadata information added by SubT to
