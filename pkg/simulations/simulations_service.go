@@ -5,9 +5,6 @@ type Service interface {
 	// Get returns a simulation with the given GroupID.
 	Get(groupID GroupID) (Simulation, error)
 
-	// Reject rejects a simulation with the given GroupID.
-	Reject(groupID GroupID) (Simulation, error)
-
 	// GetParent returns the child simulation's parent with the given GroupID.
 	GetParent(groupID GroupID) (Simulation, error)
 
