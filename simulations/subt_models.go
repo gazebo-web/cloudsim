@@ -167,12 +167,12 @@ func (s *subTCircuitService) Create(input tracks.CreateTrackInput) (*tracks.Trac
 }
 
 // Get returns the tracks.Track representation of the SubTCircuitRules identified by the given circuit name.
-func (s *subTCircuitService) Get(name string) (*tracks.Track, error) {
+func (s *subTCircuitService) Get(name string, worldID int) (*tracks.Track, error) {
 	c, err := GetCircuitRules(s.db, name)
 	if err != nil {
 		return nil, err
 	}
-	return c.ToTrack(0), nil
+	return c.ToTrack(worldID), nil
 }
 
 // GetAll returns a slice with all the SubTCircuitRules represented as tracks.Track.
@@ -225,8 +225,10 @@ type SubTCircuitRules struct {
 // ToTrack generates a representation of a tracks.Track from the current SubTCircuitRules.
 func (r *SubTCircuitRules) ToTrack(id int) *tracks.Track {
 	maxSimSeconds, _ := strconv.Atoi(*r.WorldMaxSimSeconds)
+
 	seed, _ := strconv.Atoi(strings.Split(*r.Seeds, ",")[id])
 	world := strings.Split(*r.Worlds, ",")[id]
+
 	return &tracks.Track{
 		Name:          *r.Circuit,
 		Image:         *r.Image,
