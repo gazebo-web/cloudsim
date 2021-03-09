@@ -46,8 +46,8 @@ func (e *ec2api) RunInstances(input *ec2.RunInstancesInput) (*ec2.Reservation, e
 
 		log.Println(id)
 
-		instanceId := fmt.Sprintf("i-%s", string(id))
-		instance.InstanceId = &instanceId
+		instanceID := fmt.Sprintf("i-%s", string(id))
+		instance.InstanceId = &instanceID
 
 		for _, tag := range input.TagSpecifications {
 			instance.Tags = append(instance.Tags, tag.Tags...)
