@@ -2,8 +2,6 @@ package simulations
 
 import (
 	"fmt"
-	"github.com/jinzhu/gorm"
-	"gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/tracks"
 	"gopkg.in/go-playground/validator.v9"
 	"html"
 	"strings"
@@ -566,43 +564,6 @@ func loadSubTRobotTypes(cfg *subTSpecificsConfig) {
 			110,
 		),
 	}
-}
-
-var _ tracks.Service = (*subTCircuitService)(nil)
-
-// subTCircuitService implements the tracks.Service interface for the SubTCircuitRules.
-type subTCircuitService struct {
-	db *gorm.DB
-}
-
-// Create creates a new SubTCircuitRules based on the tracks.CreateTrackInput input.
-func (s *subTCircuitService) Create(input tracks.CreateTrackInput) (*tracks.Track, error) {
-	panic("not implemented")
-}
-
-// Get returns the tracks.Track representation of the SubTCircuitRules identified by the given circuit name.
-func (s *subTCircuitService) Get(name string) (*tracks.Track, error) {
-	c, err := GetCircuitRules(s.db, name)
-	if err != nil {
-		return nil, err
-	}
-	return c.ToTrack(0), nil
-}
-
-// GetAll returns a slice with all the SubTCircuitRules represented as tracks.Track.
-func (s *subTCircuitService) GetAll() ([]tracks.Track, error) {
-	panic("not implemented")
-}
-
-// Update updates a SubTCircuitRules identified by the given circuit name.
-// Information from the tracks.UpdateTrackInput input will be used to update the SubTCircuitRules fields.
-func (s *subTCircuitService) Update(name string, input tracks.UpdateTrackInput) (*tracks.Track, error) {
-	panic("not implemented")
-}
-
-// Delete deletes a SubTCircuitRules with the given circuit name.
-func (s *subTCircuitService) Delete(name string) (*tracks.Track, error) {
-	panic("not implemented")
 }
 
 // SubTCircuits holds the list of available circuits in SubT.

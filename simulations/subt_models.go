@@ -149,6 +149,48 @@ func countSimulationsByCircuit(tx *gorm.DB, owner, circuit string) (*int, error)
 	return &count, nil
 }
 
+// NewTracksService initializes a new tracks.Service implementation using subTCircuitService.
+func NewTracksService(db *gorm.DB) tracks.Service {
+	return &subTCircuitService{
+		db: db,
+	}
+}
+
+// subTCircuitService implements the tracks.Service interface for the SubTCircuitRules.
+type subTCircuitService struct {
+	db *gorm.DB
+}
+
+// Create creates a new SubTCircuitRules based on the tracks.CreateTrackInput input.
+func (s *subTCircuitService) Create(input tracks.CreateTrackInput) (*tracks.Track, error) {
+	panic("not implemented")
+}
+
+// Get returns the tracks.Track representation of the SubTCircuitRules identified by the given circuit name.
+func (s *subTCircuitService) Get(name string) (*tracks.Track, error) {
+	c, err := GetCircuitRules(s.db, name)
+	if err != nil {
+		return nil, err
+	}
+	return c.ToTrack(0), nil
+}
+
+// GetAll returns a slice with all the SubTCircuitRules represented as tracks.Track.
+func (s *subTCircuitService) GetAll() ([]tracks.Track, error) {
+	panic("not implemented")
+}
+
+// Update updates a SubTCircuitRules identified by the given circuit name.
+// Information from the tracks.UpdateTrackInput input will be used to update the SubTCircuitRules fields.
+func (s *subTCircuitService) Update(name string, input tracks.UpdateTrackInput) (*tracks.Track, error) {
+	panic("not implemented")
+}
+
+// Delete deletes a SubTCircuitRules with the given circuit name.
+func (s *subTCircuitService) Delete(name string) (*tracks.Track, error) {
+	panic("not implemented")
+}
+
 // SubTCircuitRules holds the rules associated to a given circuit. Eg which worlds
 // to run and how many times.
 type SubTCircuitRules struct {
