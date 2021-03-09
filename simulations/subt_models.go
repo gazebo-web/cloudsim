@@ -6,7 +6,9 @@ import (
 	"fmt"
 	"github.com/jinzhu/gorm"
 	"gitlab.com/ignitionrobotics/web/cloudsim/globals"
+	"gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/tracks"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -176,6 +178,24 @@ type SubTCircuitRules struct {
 	// All the participants that were not added to the qualified participants table will be rejected when submitting
 	// a new simulation for this circuit.
 	RequiresQualification *bool `json:"-"`
+}
+
+// ToTrack generates a representation of a tracks.Track from the current SubTCircuitRules.
+func (r *SubTCircuitRules) ToTrack(id int) *tracks.Track {
+	maxSimSeconds, _ := strconv.Atoi(*r.WorldMaxSimSeconds)
+	seed, _ := strconv.Atoi(strings.Split(*r.Seeds, ",")[id])
+	world := strings.Split(*r.Worlds, ",")[id]
+	return &tracks.Track{
+		Name:          *r.Circuit,
+		Image:         *r.Image,
+		BridgeImage:   *r.BridgeImage,
+		StatsTopic:    *r.WorldStatsTopics,
+		WarmupTopic:   *r.WorldWarmupTopics,
+		MaxSimSeconds: maxSimSeconds,
+		Public:        false,
+		Seed:          &seed,
+		World:         world,
+	}
 }
 
 // GetPendingCircuitRules gets a list of circuits that are scheduled for competition
