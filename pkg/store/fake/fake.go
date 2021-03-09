@@ -57,6 +57,12 @@ func (f *Ign) DefaultSender() string {
 	return args.String(0)
 }
 
+// LogsBucket mocks the LogsBucket method.
+func (f *Ign) LogsBucket() string {
+	args := f.Called()
+	return args.String(0)
+}
+
 // GetWebsocketHost mocks the GetWebsocketHost method.
 func (f *Ign) GetWebsocketHost() string {
 	args := f.Called()
@@ -265,6 +271,12 @@ func (f Machines) Limit() int {
 
 // NamePrefix mocks the NamePrefix method.
 func (f Machines) NamePrefix() string {
+	args := f.Called()
+	return args.String(0)
+}
+
+// ClusterName mocks the ClusterName method.
+func (f Machines) ClusterName() string {
 	args := f.Called()
 	return args.String(0)
 }

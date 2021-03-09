@@ -1,6 +1,7 @@
 package network
 
 import (
+	"fmt"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator"
 	"gitlab.com/ignitionrobotics/web/ign-go"
 	networkingv1 "k8s.io/api/networking/v1"
@@ -13,6 +14,19 @@ import (
 type networkPolicies struct {
 	API    kubernetes.Interface
 	Logger ign.Logger
+}
+
+// Remove removes a network policy with the given name and living in the given namespace.
+func (np *networkPolicies) Remove(name, namespace string) error {
+	np.Logger.Debug(fmt.Sprintf("Removing network policy with name [%s] in namespace [%s]", name, namespace))
+
+	err := np.API.NetworkingV1().NetworkPolicies(namespace).Delete(name, &metav1.DeleteOptions{})
+	if err != nil {
+		np.Logger.Debug(fmt.Sprintf("Removing network policy with name [%s] in namespace [%s] failed. Error: %s", name, namespace, err))
+		return err
+	}
+	np.Logger.Debug(fmt.Sprintf("Removing network policy with name [%s] in namespace [%s] succeeded.", name, namespace))
+	return nil
 }
 
 // Create creates a network policy.
@@ -39,12 +53,16 @@ func (np *networkPolicies) Create(input orchestrator.CreateNetworkPolicyInput) (
 		},
 	}
 
+	np.Logger.Debug(fmt.Sprintf("Creating network policy with name [%s] in namespace [%s]", input.Name, input.Namespace))
+
 	// Create network policy
 	_, err := np.API.NetworkingV1().NetworkPolicies(input.Namespace).Create(createNetworkPolicy)
 	if err != nil {
+		np.Logger.Debug(fmt.Sprintf("Creating network policy with name [%s] in namespace [%s] failed. Error: %s", input.Name, input.Namespace, err))
 		return nil, err
 	}
 
+	np.Logger.Debug(fmt.Sprintf("Creating network policy with name [%s] in namespace [%s] succeeded", input.Name, input.Namespace))
 	return orchestrator.NewResource(input.Name, input.Namespace, orchestrator.NewSelector(input.Labels)), nil
 }
 
