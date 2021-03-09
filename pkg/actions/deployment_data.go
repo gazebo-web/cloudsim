@@ -41,7 +41,7 @@ type deploymentData struct {
 	DataType string `gorm:"not null"`
 	// Data contains the job's data. Marshalling and unmarshalling of this data is performed automatically when using
 	// `setDeploymentData` and `getDeploymentData`, respectively.
-  Data *string `gorm:"not null;type:varchar(512)"`
+	Data *string `gorm:"not null;type:text"`
 }
 
 // Value returns the unmarshalled value stored in this deploymentData instance.
@@ -119,7 +119,6 @@ func setDeploymentData(tx *gorm.DB, deployment *Deployment, job *string, deploym
     */
 
 	//if err != nil {
-  //  fmt.Println(err)
 	//	return err
 	//}
 

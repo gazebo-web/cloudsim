@@ -30,7 +30,7 @@ func (s *ec2TerminateMachinesTestSuite) TestTerminate_ErrorWhenNilMachineNames()
 		Instances: nil,
 	})
 	s.Error(err)
-	s.Equal(cloud.ErrMissingMachineNames, err)
+	s.Equal(cloud.ErrInvalidTerminateRequest, err)
 	s.Equal(0, s.ec2API.TerminateInstancesCalls)
 }
 
@@ -39,7 +39,7 @@ func (s *ec2TerminateMachinesTestSuite) TestTerminate_ErrorWhenEmptyMachineNames
 		Instances: []string{},
 	})
 	s.Error(err)
-	s.Equal(cloud.ErrMissingMachineNames, err)
+	s.Equal(cloud.ErrInvalidTerminateRequest, err)
 	s.Equal(0, s.ec2API.TerminateInstancesCalls)
 }
 

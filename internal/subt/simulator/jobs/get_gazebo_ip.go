@@ -8,6 +8,7 @@ import (
 )
 
 // GetGazeboIP is a job in charge of getting the IP from the simulation's gazebo server pod.
+// WaitForGazeboServerPod should be run before running this job.
 var GetGazeboIP = &actions.Job{
 	Name:       "get-gzserver-pod-ip",
 	PreHooks:   []actions.JobFunc{setStartState},
