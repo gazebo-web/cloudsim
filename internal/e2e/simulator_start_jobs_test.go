@@ -306,7 +306,7 @@ func TestStartSimulationAction(t *testing.T) {
 		*kubernetesClientset = *kClient
 
 		startActions, err := actions.NewAction(actions.Jobs{
-			jobs.WaitForCommsBridgePod,
+			jobs.WaitForCommsBridgePods,
 			jobs.GetCommsBridgePodIP,
 			jobs.LaunchFieldComputerPods,
 			jobs.SetSimulationStatusToWaitPods,
