@@ -33,6 +33,9 @@ func launchInstances(store actions.Store, tx *gorm.DB, deployment *actions.Deplo
 	in := value.(LaunchInstancesInput)
 
 	// Trigger the machine creation.
+	// If Machines.Create returns an error, it will return any machines that were successfully requested and provisioned 
+	// until the error was encountered. This job does not end if an error is returned here. Instead, the next block is 
+	// executed to store the set of machines that were provisioned so that they can be terminated by the rollback handler.
 	out, err := s.Platform().Machines().Create(in)
 
 	// Set job data with the list of instances
