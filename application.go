@@ -24,6 +24,7 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/pkg/errors"
 	"gitlab.com/ignitionrobotics/web/cloudsim/globals"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/migrations"
 	useracc "gitlab.com/ignitionrobotics/web/cloudsim/pkg/users"
 	sim "gitlab.com/ignitionrobotics/web/cloudsim/simulations"
 	"gitlab.com/ignitionrobotics/web/cloudsim/simulations/gloo"
@@ -179,10 +180,10 @@ func init() {
 	logger.Info("[application.go] Started using database: " + globals.Server.DbConfig.Name)
 
 	// Migrate database tables
-	DBMigrate(logCtx, globals.Server.Db)
-	DBAddDefaultData(logCtx, globals.Server.Db)
+	migrations.DBMigrate(logCtx, globals.Server.Db)
+	migrations.DBAddDefaultData(logCtx, globals.Server.Db)
 	// After loading initial data, apply custom indexes. Eg: fulltext indexes
-	DBAddCustomIndexes(logCtx, globals.Server.Db)
+	migrations.DBAddCustomIndexes(logCtx, globals.Server.Db)
 
 	sim.HTTPHandlerInstance, err = sim.NewHTTPHandler(logCtx, globals.UserAccessor)
 	if err != nil {

@@ -1,4 +1,4 @@
-package main
+package migrations
 
 // Import this file's dependencies
 import (
