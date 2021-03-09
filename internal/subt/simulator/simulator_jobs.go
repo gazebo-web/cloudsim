@@ -28,7 +28,7 @@ var JobsStartSimulation = actions.Jobs{
 	jobs.CreateNetworkPolicyFieldComputers,
 	jobs.LaunchCommsBridgePods,
 	jobs.LaunchCommsBridgeCopyPods,
-	jobs.WaitForCommsBridgePod,
+	jobs.WaitForCommsBridgePods,
 	jobs.GetCommsBridgePodIP,
 	jobs.LaunchFieldComputerPods,
 	jobs.SetSimulationStatusToWaitPods,

@@ -172,18 +172,17 @@ func TestStartSimulationAction(t *testing.T) {
 	// Initialize subt application.
 	app := subtapp.NewServices(baseApp, trackService, summaryService)
 
+	actionService := actions.NewService()
+
+	s := simulator.NewSimulator(simulator.Config{
+		DB:                    db,
+		Platform:              p,
+		ApplicationServices:   app,
+		ActionService:         actionService,
+		DisableDefaultActions: true,
+	})
+
 	t.Run("First phase", func(t *testing.T) {
-		actionService := actions.NewService()
-
-		// Initialize simulator
-		s := simulator.NewSimulator(simulator.Config{
-			DB:                    db,
-			Platform:              p,
-			ApplicationServices:   app,
-			ActionService:         actionService,
-			DisableDefaultActions: true,
-		})
-
 		startActions, err := actions.NewAction(actions.Jobs{
 			jobs.CheckSimulationPendingStatus,
 			jobs.CheckStartSimulationIsNotParent,
@@ -209,17 +208,6 @@ func TestStartSimulationAction(t *testing.T) {
 	})
 
 	t.Run("Second phase", func(t *testing.T) {
-		actionService := actions.NewService()
-
-		// Initialize simulator
-		s := simulator.NewSimulator(simulator.Config{
-			DB:                    db,
-			Platform:              p,
-			ApplicationServices:   app,
-			ActionService:         actionService,
-			DisableDefaultActions: true,
-		})
-
 		kClient := kfake.NewSimpleClientset(&apiv1.Pod{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      subtapp.GetPodNameGazeboServer(sim.GetGroupID()),
@@ -266,17 +254,6 @@ func TestStartSimulationAction(t *testing.T) {
 	})
 
 	t.Run("Third phase", func(t *testing.T) {
-		actionService := actions.NewService()
-
-		// Initialize simulator
-		s := simulator.NewSimulator(simulator.Config{
-			DB:                    db,
-			Platform:              p,
-			ApplicationServices:   app,
-			ActionService:         actionService,
-			DisableDefaultActions: true,
-		})
-
 		kClient := kfake.NewSimpleClientset(&apiv1.Pod{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      subtapp.GetPodNameCommsBridge(sim.GetGroupID(), subtapp.GetRobotID(0)),
@@ -310,7 +287,11 @@ func TestStartSimulationAction(t *testing.T) {
 			jobs.GetCommsBridgePodIP,
 			jobs.LaunchFieldComputerPods,
 			jobs.SetSimulationStatusToWaitPods,
+			// NOTE: This job have been commented out because we don't have a mechanism to return
+			// a list of pods based in a group of labels, as the WaitSimulationPods job does.
 			// jobs.WaitSimulationPods,
+
+			// NOTE: This jobs should be commented out once we have a mechanism to better mock the Websocket connection.
 			// jobs.SetWebsocketConnection,
 			// jobs.AddRunningSimulation,
 			jobs.SetSimulationStatusToRunning,

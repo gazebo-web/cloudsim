@@ -88,6 +88,20 @@ type SimulationDeployment struct {
 	Score *float64 `json:"score,omitempty"`
 }
 
+// GetWorldIndex returns the simulation's world index.
+func (dep *SimulationDeployment) GetWorldIndex() int {
+	extra, err := ReadExtraInfoSubT(dep)
+	if err != nil {
+		return 0
+	}
+
+	if extra.WorldIndex == nil {
+		return 0
+	}
+
+	return *extra.WorldIndex
+}
+
 // IsProcessed returns true if the SimulationDeployment has been processed.
 func (dep *SimulationDeployment) IsProcessed() bool {
 	return dep.Processed

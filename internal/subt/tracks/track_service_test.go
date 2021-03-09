@@ -107,14 +107,14 @@ func (s *trackServiceTestSuite) TestGetOne_Exists() {
 		Public:        false,
 	})
 
-	result, err := s.service.Get(createdTrack.Name)
+	result, err := s.service.Get(createdTrack.Name, 0)
 
 	s.NoError(err)
 	s.Equal(createdTrack.Name, result.Name)
 }
 
 func (s *trackServiceTestSuite) TestGetOne_NonExistent() {
-	_, err := s.service.Get("Test")
+	_, err := s.service.Get("Test", 0)
 	s.Error(err)
 }
 
@@ -130,7 +130,7 @@ func (s *trackServiceTestSuite) TestUpdate() {
 	})
 	s.NoError(err)
 
-	before, err := s.service.Get("Virtual TestA")
+	before, err := s.service.Get("Virtual TestA", 0)
 	s.NoError(err)
 
 	updatedTrackInput := UpdateTrackInput{
@@ -145,7 +145,7 @@ func (s *trackServiceTestSuite) TestUpdate() {
 
 	s.service.Update("Virtual TestA", updatedTrackInput)
 
-	result, err := s.service.Get("Virtual TestB")
+	result, err := s.service.Get("Virtual TestB", 0)
 	s.NoError(err)
 
 	s.Equal(before.ID, result.ID)
@@ -187,14 +187,14 @@ func (s *trackServiceTestSuite) TestDelete() {
 	})
 	s.NoError(err)
 
-	before, err := s.service.Get("Virtual TestA")
+	before, err := s.service.Get("Virtual TestA", 0)
 	s.NoError(err)
 
 	after, err := s.service.Delete(before.Name)
 
 	s.Equal(before.ID, after.ID)
 
-	result, err := s.service.Get(before.Name)
+	result, err := s.service.Get(before.Name, 0)
 	s.Error(err)
 	s.Nil(result)
 }

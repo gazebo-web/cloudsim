@@ -18,6 +18,9 @@ type Simulation interface {
 	// GetMarsupials returns the list of marsupials from a certain simulation.
 	GetMarsupials() []simulations.Marsupial
 
+	// GetWorldIndex returns the WorldIndex id.
+	GetWorldIndex() int
+
 	// GetName returns the simulation's name.
 	GetName() string
 }
