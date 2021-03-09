@@ -62,7 +62,7 @@ func GetTestDBFromEnvVars() (*gorm.DB, error) {
 	}
 
 	// Add the test name suffix
-	dbConfig.Name += "_test"
+	// dbConfig.Name += "_test"
 
 	// Connect to the db
 	db, err := ign.InitDbWithCfg(dbConfig)

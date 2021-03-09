@@ -27,7 +27,7 @@ type Service interface {
 
 	// Start will run the StartSimulationAction to launch cloud machines
 	// and a docker image.
-	Start(ctx context.Context, request StartRequest) (*StartResponse, error)
+	Start(tx *gorm.DB, ctx context.Context, request StartRequest) (*StartResponse, error)
 
 	// Stop will run the StopSimulationAction to terminate clouds machines.
 	Stop(ctx context.Context, request StopRequest) (*StopResponse, error)
@@ -191,7 +191,7 @@ func (s *service) GetWebsocketToken(groupID simulations.GroupID) (string, error)
 //
 // Origin: user --> POST /start --> controller.Start() --> service.Start()
 // Next: StartQueueHandler
-func (s *service) Start(ctx context.Context, request StartRequest) (*StartResponse, error) {
+func (s *service) Start(tx *gorm.DB, ctx context.Context, request StartRequest) (*StartResponse, error) {
 	// Add business logic here to validate a request, update a database table,
 	// etc.
 
@@ -211,7 +211,7 @@ func (s *service) Start(ctx context.Context, request StartRequest) (*StartRespon
 		Args:  request.Args,
 	}
 
-	if err := s.db.Create(&sim).Error; err != nil {
+	if err := tx.Create(&sim).Error; err != nil {
 		return nil, err
 	}
 
@@ -229,7 +229,7 @@ func (s *service) Start(ctx context.Context, request StartRequest) (*StartRespon
 			Status:  sim.Status,
 			Image:   sim.Image,
 			Args:    sim.Args,
-			URI:     "http://localhost:8000/1.0/simulations/" + sim.GroupID,
+			URI:     "simulations/" + sim.GroupID,
 		},
 	}, nil
 }

@@ -87,7 +87,7 @@ func (ctrl *controller) Start(tx *gorm.DB, w http.ResponseWriter, r *http.Reques
 	}
 
 	// Hand off the start request data to the service.
-	res, err := ctrl.service.Start(r.Context(), req)
+	res, err := ctrl.service.Start(tx, r.Context(), req)
 	if err != nil {
 		return nil, ign.NewErrorMessageWithBase(ign.ErrorForm, err)
 	}
