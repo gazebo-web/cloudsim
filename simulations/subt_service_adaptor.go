@@ -55,6 +55,11 @@ func (sa *SimulationServiceAdaptor) GetWebsocketToken(groupID simulations.GroupI
 	return *dep.AuthorizationToken, nil
 }
 
+// MarkStopped marks a SimulationDeployment as stopped.
+func (sa *SimulationServiceAdaptor) MarkStopped(groupID simulations.GroupID) error {
+	panic("implement me")
+}
+
 // Get gets a simulation deployment with the given GroupID.
 func (sa *SimulationServiceAdaptor) Get(groupID simulations.GroupID) (simulations.Simulation, error) {
 	result, err := GetSimulationDeployment(sa.db, groupID.String())

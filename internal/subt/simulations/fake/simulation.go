@@ -29,6 +29,11 @@ type simulation struct {
 	marsupials []simulations.Marsupial
 }
 
+// GetWorldIndex returns the world index.
+func (s *simulation) GetWorldIndex() int {
+	return 0
+}
+
 // GetToken returns the access token of a simulation.
 func (s *simulation) GetToken() *string {
 	return s.token
