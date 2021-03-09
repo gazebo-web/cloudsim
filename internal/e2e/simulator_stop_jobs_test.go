@@ -284,13 +284,18 @@ func TestStopSimulationAction(t *testing.T) {
 		jobs.RemoveRunningSimulation,
 		jobs.SetSimulationStatusToProcessingResults,
 		jobs.UploadLogs,
+		// TODO: These jobs have been postponed from being tested because we're not able to read files from pods right now.
 		// jobs.ReadScore,
 		// jobs.ReadStats,
 		// jobs.ReadRunData,
+
+		// TODO: Since no score has been read, this job fails.
 		// jobs.SaveScore,
 		jobs.SaveSummary,
 		jobs.SendSummaryEmail,
 		jobs.SetSimulationStatusToDeletingPods,
+
+		// TODO: We haven't configure the gloo fake client, and therefore we can't test removing rules from the Gloo ingress.
 		// jobs.RemoveIngressRulesGloo,
 		jobs.RemoveWebsocketService,
 		jobs.RemoveNetworkPolicies,
