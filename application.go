@@ -269,16 +269,7 @@ func init() {
 	if cfg.isGoTest {
 		pFactory = sim.SynchronicPoolFactory
 	}
-	sim.SimServImpl, err = sim.NewSimulationsService(
-		logCtx,
-		globals.Server.Db,
-		nm,
-		kcli,
-		glooClientset,
-		pFactory,
-		userAccessor,
-		cfg.isGoTest,
-	)
+	sim.SimServImpl, err = sim.NewSimulationsService(logCtx, globals.Server.Db, nm, kcli, glooClientset, pFactory, userAccessor, cfg.isGoTest, cfg.awsSession)
 	if err != nil {
 		// Log and shutdown the app , if there is an error during startup
 		logger.Critical("Critical error trying to create Simulations services", err)
