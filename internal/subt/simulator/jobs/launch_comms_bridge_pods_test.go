@@ -15,7 +15,7 @@ import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/platform"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
 	simfake "gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations/fake"
-	sfake "gitlab.com/ignitionrobotics/web/cloudsim/pkg/store/fake"
+	sfake "gitlab.com/ignitionrobotics/web/cloudsim/pkg/store/implementations/fake"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/utils/db/gorm"
 	"gitlab.com/ignitionrobotics/web/ign-go"
 	kfake "k8s.io/client-go/kubernetes/fake"

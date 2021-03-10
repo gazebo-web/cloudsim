@@ -17,6 +17,6 @@ type Config struct {
 }
 
 // Validate validates that the config values are valid.
-func (d *Config) Validate() error {
-	return validate.DefaultStructValidator(d)
+func (c *Config) Validate() error {
+	return validate.DefaultStructValidator(c)
 }

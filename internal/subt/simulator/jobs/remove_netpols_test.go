@@ -11,7 +11,7 @@ import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/platform"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
 	simfake "gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations/fake"
-	sfake "gitlab.com/ignitionrobotics/web/cloudsim/pkg/store/fake"
+	sfake "gitlab.com/ignitionrobotics/web/cloudsim/pkg/store/implementations/fake"
 	"gitlab.com/ignitionrobotics/web/ign-go"
 	networkingv1 "k8s.io/api/networking/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
