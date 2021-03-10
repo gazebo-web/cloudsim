@@ -1,10 +1,10 @@
-package main
+package migrations
 
 // Import this file's dependencies
 import (
 	"context"
-	_ "github.com/go-sql-driver/mysql"
 	"github.com/jinzhu/gorm"
+	"gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/tracks"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/actions"
 	sim "gitlab.com/ignitionrobotics/web/cloudsim/simulations"
 	"log"
@@ -26,6 +26,7 @@ func DBMigrate(ctx context.Context, db *gorm.DB) {
 			&sim.SubTCircuitRules{},
 			&sim.CircuitCustomRule{},
 			&sim.SubTQualifiedParticipant{},
+			&tracks.Track{},
 		)
 		_ = actions.MigrateDB(db)
 
@@ -156,6 +157,7 @@ func DBDropModels(ctx context.Context, db *gorm.DB) {
 			&sim.SubTCircuitRules{},
 			&sim.CircuitCustomRule{},
 			&sim.SubTQualifiedParticipant{},
+			&tracks.Track{},
 		)
 
 		// Now also remove many_to_many tables, because they are not automatically removed.
