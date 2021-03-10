@@ -63,10 +63,10 @@ func (o orchestratorEnvStore) Namespace() string {
 }
 
 // newOrchestratorStore initializes a new store.Orchestrator implementation using orchestratorEnvStore.
-func newOrchestratorStore() store.Orchestrator {
-	var s orchestratorEnvStore
-	if err := env.Parse(&s); err != nil {
-		panic(err)
+func newOrchestratorStore() (store.Orchestrator, error) {
+	var o orchestratorEnvStore
+	if err := env.Parse(&o); err != nil {
+		return nil, err
 	}
-	return &s
+	return o, nil
 }
