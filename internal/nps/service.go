@@ -3,10 +3,9 @@ package nps
 // This file implement the cloudsim/pkg/simulations service for this application.
 
 import (
-  "fmt"
 	"context"
 	"github.com/jinzhu/gorm"
-	// "github.com/satori/go.uuid"
+	"github.com/satori/go.uuid"
 	"gitlab.com/ignitionrobotics/web/cloudsim/internal/pkg/domain"
 	gormrepo "gitlab.com/ignitionrobotics/web/cloudsim/internal/pkg/repositories/gorm"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/actions"
@@ -70,6 +69,7 @@ func NewService(db *gorm.DB, logger ign.Logger) Service {
 	storage, machines, _ := aws.InitializeAWS("us-east-1", logger)
 
 	// \todo Why do I need to make a Store here?
+  // Holy hell. This is needed in order to read the environment variables.
 	store := env.NewStore()
 
 	s := &service{
@@ -156,7 +156,6 @@ func (s *service) StartQueueHandler(ctx context.Context, groupID simulations.Gro
 }
 
 func (s *service) StopQueueHandler(ctx context.Context, groupID simulations.GroupID) error {
-  fmt.Printf("Stop QueueHandler")
 	// You must create a data structure to hold data that is then "stored" in a
 	// NewStore on the following line. This store and the data contained in the
 	// store is passed into the jobs, which perform the work of launching
@@ -182,7 +181,7 @@ func (s *service) StopQueueHandler(ctx context.Context, groupID simulations.Grou
 		return err
 	}
 
-	s.logger.Info("Stoping simulation for groupID[%s]\n", groupID)
+	s.logger.Info("Stopping simulation for groupID[%s]\n", groupID)
 	return nil
 
   return nil
@@ -234,10 +233,10 @@ func (s *service) Start(tx *gorm.DB, ctx context.Context, request StartRequest) 
 		UpdatedAt: time.Now(),
 
 		// Name of the simulation
-		Name: "nps-test-sim",
+		Name: request.Name,
 
 		// Create a group id
-		GroupID: "testing",//uuid.NewV4().String(),
+		GroupID: uuid.NewV4().String(),
 		Status:  "starting",
 
 		Image: request.Image,
@@ -262,7 +261,6 @@ func (s *service) Start(tx *gorm.DB, ctx context.Context, request StartRequest) 
 			Status:  sim.Status,
 			Image:   sim.Image,
 			Args:    sim.Args,
-			URI:     "simulations/" + sim.GroupID,
 		},
 	}, nil
 }
@@ -273,12 +271,29 @@ func (s *service) Start(tx *gorm.DB, ctx context.Context, request StartRequest) 
 // Next: StopQueueHandler
 func (s *service) Stop(tx *gorm.DB, ctx context.Context, request StopRequest) (*StopResponse, error) {
 
-  fmt.Printf("Stop service\n")
+	// Update the database entry with the latest status
+	// \todo Help needed: I think this is not the recommended method to update
+	// the database.
+	var simEntry Simulation
+	if err := tx.Where("group_id = ?", request.GroupID).First(&simEntry).Error; err != nil {
+		return nil, err
+	}
+	simEntry.Status = "Stopping."
+	tx.Save(&simEntry)
 
 	// Send the group id to the queue
 	s.stopQueue.Enqueue(simulations.GroupID(request.GroupID))
 
-	return &StopResponse{}, nil
+  return &StopResponse{
+		Message: "Simulation instance is stopping.",
+		Simulation: GetSimulationResponse{
+			Name:    simEntry.Name,
+			GroupID: simEntry.GroupID,
+			Status:  simEntry.Status,
+			Image:   simEntry.Image,
+			Args:    simEntry.Args,
+		},
+	}, nil
 }
 
 // ListSimulations is called from the ListSimulations function in

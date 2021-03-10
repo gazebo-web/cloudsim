@@ -1,7 +1,6 @@
 package actions
 
 import (
-  "fmt"
 	"errors"
 	"github.com/jinzhu/gorm"
 	uuid "github.com/satori/go.uuid"
@@ -123,7 +122,6 @@ func (d *Deployment) setStatus(tx *gorm.DB, status DeploymentStatus) error {
 
 // SetJobData creates a job data entry of a specific type for a job in this deployment.
 func (d *Deployment) SetJobData(tx *gorm.DB, job *string, dataType deploymentDataType, data interface{}) error {
-  fmt.Printf("SetJobData\n\n")
 	return setDeploymentData(tx, d, job, dataType, data)
 }
 

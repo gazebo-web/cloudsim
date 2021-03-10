@@ -3,6 +3,7 @@ package nps
 // This file implements the launch pod job.
 
 import (
+  "errors"
 	"github.com/jinzhu/gorm"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/actions"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator"
@@ -38,12 +39,12 @@ func prepareCreatePodInput(store actions.Store, tx *gorm.DB, deployment *actions
 	// launched.
 	// \todo MAJOR ERROR: I would assume that this would return the value in
 	// CLOUDSIM_MACHINES_ORCHESTRATOR_NAMESPACE. It is empty.
-	// namespace := startData.Platform().Store().Orchestrator().Namespace()
-	// if namespace == "default" || namespace == "" {
-	//   startData.logger.Error("CLOUDSIM_ORCHESTRATOR_NAMESPACE has not been set")
-	//   return nil errors.New("CLOUDSIM_ORCHESTRATOR_NAMESPACE has not been set")
-	// }
-	namespace := "web-cloudsim-integration"
+	namespace := startData.Platform().Store().Orchestrator().Namespace()
+	if namespace == "default" || namespace == "" {
+	   startData.logger.Error("In prepareCreatePodInput, CLOUDSIM_ORCHESTRATOR_NAMESPACE has not been set")
+	   return nil, errors.New("CLOUDSIM_ORCHESTRATOR_NAMESPACE has not been set")
+	}
+	// namespace := "web-cloudsim-integration"
 
 	// \todo Improvment: Get ports dynamically.
 	ports := []int32{11345, 11311, 8080, 6080}

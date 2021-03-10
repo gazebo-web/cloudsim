@@ -1,6 +1,7 @@
 package env
 
 import (
+	"github.com/caarlos0/env"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/store"
 	"time"
 )
@@ -22,7 +23,7 @@ type orchestratorEnvStore struct {
 
 	// IngressNameValue is the name of the Kubernetes Ingress used to route client requests from the Internet to
 	// different internal services. This configuration is required to enable websocket connections to simulations.
-	IngressNameValue string `env:"SUBT_ORCHESTRATOR_INGRESS_NAME,required"`
+	IngressNameValue string `env:"SUBT_ORCHESTRATOR_INGRESS_NAME"`
 
 	// IngressHostValue contains the address of the host used to route incoming websocket connections.
 	// It is used to select a specific rule to modify in an ingress.
@@ -63,5 +64,10 @@ func (o orchestratorEnvStore) Namespace() string {
 
 // newOrchestratorStore initializes a new store.Orchestrator implementation using orchestratorEnvStore.
 func newOrchestratorStore() store.Orchestrator {
-	return &orchestratorEnvStore{}
+  var orchEnvStore orchestratorEnvStore
+	if err := env.Parse(&orchEnvStore); err != nil {
+		panic(err)
+	}
+
+	return orchEnvStore
 }

@@ -68,9 +68,14 @@ func (ctrl *controller) Start(tx *gorm.DB, w http.ResponseWriter, r *http.Reques
 	var req StartRequest
 
 	if errs := ctrl.formDecoder.Decode(&req, r.Form); errs != nil {
-		fmt.Printf("Failed to decode form")
 		return nil, ign.NewErrorMessageWithArgs(ign.ErrorFormInvalidValue, errs,
 			getDecodeErrorsExtraInfo(errs))
+	}
+
+	// A name form field is required. This is the name of the pod.
+	if req.Name == "" {
+		return nil, ign.NewErrorMessageWithBase(ign.ErrorMissingField,
+			errors.New("Missing 'name' form field"))
 	}
 
 	// An image form field is required. This is the docker image to run.
@@ -103,7 +108,6 @@ func (ctrl *controller) Start(tx *gorm.DB, w http.ResponseWriter, r *http.Reques
 //     * On success --> service.Start
 //     * On fail --> return error
 func (ctrl *controller) Stop(tx *gorm.DB, w http.ResponseWriter, r *http.Request) (interface{}, *ign.ErrMsg) {
-  fmt.Printf("Stop controller\n")
   // Get the groupid from the route
 	groupID, ok := mux.Vars(r)["groupid"]
 	if !ok {

@@ -21,6 +21,7 @@ type StartRequest struct {
 	// image is the docker image to run
 	Image string `form:"image"`
 	Args  string `form:"args"`
+  Name  string `form:"name"`
 }
 
 // StartResponse is the response to the request of starting a simulation.
@@ -36,6 +37,8 @@ type StopRequest struct {
 
 // StopResponse is the response to the request of stopping a simulation.
 type StopResponse struct {
+	Message    string `json:"message"`
+	Simulation GetSimulationResponse
 }
 
 // ListRequest is the request to stop a simulation.

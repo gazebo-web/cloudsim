@@ -1,6 +1,7 @@
 package nps
 
 import (
+  "errors"
   "fmt"
 	"github.com/jinzhu/gorm"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/actions"
@@ -53,13 +54,11 @@ func prepareRemovePodsInput(store actions.Store, tx *gorm.DB, deployment *action
 	// launched.
 	// \todo MAJOR ERROR: I would assume that this would return the value in
 	// CLOUDSIM_MACHINES_ORCHESTRATOR_NAMESPACE. It is empty.
-	// namespace := startData.Platform().Store().Orchestrator().Namespace()
-	// if namespace == "default" || namespace == "" {
-	//   startData.logger.Error("CLOUDSIM_ORCHESTRATOR_NAMESPACE has not been set")
-	//   return nil errors.New("CLOUDSIM_ORCHESTRATOR_NAMESPACE has not been set")
-	// }
-	// namespace := stopData.Platform().Store().Orchestrator().Namespace()
-	namespace := "web-cloudsim-integration"
+	namespace := stopData.Platform().Store().Orchestrator().Namespace()
+	if namespace == "default" || namespace == "" {
+	   stopData.logger.Error("CLOUDSIM_ORCHESTRATOR_NAMESPACE has not been set")
+	   return nil, errors.New("CLOUDSIM_ORCHESTRATOR_NAMESPACE has not been set")
+	 }
 
   // Create a selector for the pod to remove
 	labels := map[string]string{

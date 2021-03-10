@@ -1,6 +1,7 @@
 package nps
 
 import (
+  "errors"
 	"github.com/jinzhu/gorm"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/actions"
 )
@@ -24,15 +25,22 @@ func getIP(store actions.Store, tx *gorm.DB, deployment *actions.Deployment, val
 		return nil, err
 	}
 
+	// Namespace is the orchestrator namespace where simulations should be
+	// launched.
+	// \todo MAJOR ERROR: I would assume that this would return the value in
+	// CLOUDSIM_MACHINES_ORCHESTRATOR_NAMESPACE. It is empty.
+	namespace := startData.Platform().Store().Orchestrator().Namespace()
+	if namespace == "default" || namespace == "" {
+	   startData.logger.Error("CLOUDSIM_ORCHESTRATOR_NAMESPACE has not been set")
+	   return nil, errors.New("CLOUDSIM_ORCHESTRATOR_NAMESPACE has not been set")
+	}
+
 	ip, err := startData.Platform().Orchestrator().Pods().GetIP(
 		// This is the name of the Pod, set in launch_pod_job.go
 		simEntry.Name,
 
 		// This is set by the CLOUDSIM_ORCHESTRATOR_NAMESPACE
-		// envrionment variable
-		// \todo MARJOR ERROR: This is not actually set by CLOUDSIM_ORCHESTRATOR_NAMESPACE. Hardcoding for now.
-		// startData.Platform().Store().Orchestrator().Namespace()
-		"web-cloudsim-integration")
+		namespace)
 
 	if err != nil {
 		return nil, err
