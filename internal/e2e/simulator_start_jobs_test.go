@@ -19,6 +19,7 @@ import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/cloud/aws/ec2"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/cloud/aws/s3"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/env"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/migrations"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/mock"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/kubernetes"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/kubernetes/spdy"
@@ -47,8 +48,8 @@ func TestStartSimulationAction(t *testing.T) {
 	require.NoError(t, err)
 
 	// Clean and migrate database
-	err = gorm.CleanAndMigrateModels(db, &legacy.SimulationDeployment{}, &tracks.Track{})
-	require.NoError(t, err)
+	migrations.DBDropModels(context.Background(), db)
+	migrations.DBMigrate(context.Background(), db)
 
 	// Migrate actions
 	err = actions.CleanAndMigrateDB(db)
