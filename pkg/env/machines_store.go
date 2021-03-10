@@ -151,10 +151,10 @@ func (m *machineEnvStore) InitScript() *string {
 }
 
 // newMachinesStore initializes a new store.Machines implementation using machineEnvStore.
-func newMachinesStore() store.Machines {
+func newMachinesStore() (store.Machines, error) {
 	var m machineEnvStore
 	if err := env.Parse(&m); err != nil {
-		panic(err)
+		return nil, err
 	}
-	return &m
+	return &m, nil
 }
