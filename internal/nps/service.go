@@ -3,9 +3,10 @@ package nps
 // This file implement the cloudsim/pkg/simulations service for this application.
 
 import (
+  "fmt"
 	"context"
 	"github.com/jinzhu/gorm"
-	"github.com/satori/go.uuid"
+	// "github.com/satori/go.uuid"
 	"gitlab.com/ignitionrobotics/web/cloudsim/internal/pkg/domain"
 	gormrepo "gitlab.com/ignitionrobotics/web/cloudsim/internal/pkg/repositories/gorm"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/actions"
@@ -30,7 +31,7 @@ type Service interface {
 	Start(tx *gorm.DB, ctx context.Context, request StartRequest) (*StartResponse, error)
 
 	// Stop will run the StopSimulationAction to terminate clouds machines.
-	Stop(ctx context.Context, request StopRequest) (*StopResponse, error)
+	Stop(tx *gorm.DB, ctx context.Context, request StopRequest) (*StopResponse, error)
 
 	// StartQueueHandler processes entries in the startQueue.
 	StartQueueHandler(ctx context.Context, groupID simulations.GroupID) error
@@ -155,8 +156,36 @@ func (s *service) StartQueueHandler(ctx context.Context, groupID simulations.Gro
 }
 
 func (s *service) StopQueueHandler(ctx context.Context, groupID simulations.GroupID) error {
+  fmt.Printf("Stop QueueHandler")
+	// You must create a data structure to hold data that is then "stored" in a
+	// NewStore on the following line. This store and the data contained in the
+	// store is passed into the jobs, which perform the work of launching
+	// K8 nodes (cloud machines) and K8 pods (docker containers).
+	state := &StopSimulationData{
+		// Copy the platform information.
+		platform: s.platform,
+		// Copy the group id.
+		GroupID: groupID,
+		logger:  s.logger,
+	}
+	store := actions.NewStore(state)
 
-	panic("todo: StopQueueHandler")
+  // Create the action
+	execInput := &actions.ExecuteInput{
+		ApplicationName: &s.applicationName,
+		ActionName:      actionNameStopSimulation,
+	}
+
+  // Execute the action
+	err := s.actions.Execute(store, s.db, execInput, state)
+	if err != nil {
+		return err
+	}
+
+	s.logger.Info("Stoping simulation for groupID[%s]\n", groupID)
+	return nil
+
+  return nil
 }
 
 func (s *service) Get(groupID simulations.GroupID) (simulations.Simulation, error) {
@@ -208,7 +237,7 @@ func (s *service) Start(tx *gorm.DB, ctx context.Context, request StartRequest) 
 		Name: "nps-test-sim",
 
 		// Create a group id
-		GroupID: uuid.NewV4().String(),
+		GroupID: "testing",//uuid.NewV4().String(),
 		Status:  "starting",
 
 		Image: request.Image,
@@ -242,13 +271,12 @@ func (s *service) Start(tx *gorm.DB, ctx context.Context, request StartRequest) 
 //
 // Origin: user --> POST /stop --> controller.Stop() --> service.Stop()
 // Next: StopQueueHandler
-func (s *service) Stop(ctx context.Context, request StopRequest) (*StopResponse, error) {
-	// Add business logic here to validate a request, update a database table,
-	// etc.
-	// Send the group id to the queue
-	gid := simulations.GroupID("test")
+func (s *service) Stop(tx *gorm.DB, ctx context.Context, request StopRequest) (*StopResponse, error) {
 
-	s.stopQueue.Enqueue(gid)
+  fmt.Printf("Stop service\n")
+
+	// Send the group id to the queue
+	s.stopQueue.Enqueue(simulations.GroupID(request.GroupID))
 
 	return &StopResponse{}, nil
 }
@@ -290,7 +318,7 @@ func registerActions(name string, service actions.Servicer) {
 
 	actions := map[string]actions.Jobs{
 		actionNameStartSimulation: StartSimulationAction,
-		// actionNameStopSimulation:  StopSimulationAction,
+		actionNameStopSimulation:  StopSimulationAction,
 	}
 	for actionName, jobs := range actions {
 		err := registerAction(name, service, actionName, jobs)
@@ -335,8 +363,6 @@ func queueHandler(queue *ign.Queue, do func(ctx context.Context, gid simulations
 		err := do(ctx, gid)
 		if err != nil {
 			logger.Error("queue: failed perform operation on the next element, error:", err)
-			logger.Debug("queue: pushing element into the queue:", gid)
-			queue.Enqueue(gid)
 		}
 	}
 }

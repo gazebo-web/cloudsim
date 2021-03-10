@@ -16,7 +16,7 @@ import (
 // Controller is an interface designed to handle route requests.
 type Controller interface {
 	Start(tx *gorm.DB, w http.ResponseWriter, r *http.Request) (interface{}, *ign.ErrMsg)
-	Stop(w http.ResponseWriter, r *http.Request)
+	Stop(tx *gorm.DB, w http.ResponseWriter, r *http.Request) (interface{}, *ign.ErrMsg)
 	ListSimulations(tx *gorm.DB, w http.ResponseWriter, r *http.Request) (interface{}, *ign.ErrMsg)
 	GetSimulation(tx *gorm.DB, w http.ResponseWriter, r *http.Request) (interface{}, *ign.ErrMsg)
 }
@@ -102,21 +102,32 @@ func (ctrl *controller) Start(tx *gorm.DB, w http.ResponseWriter, r *http.Reques
 // Next:
 //     * On success --> service.Start
 //     * On fail --> return error
-func (ctrl *controller) Stop(w http.ResponseWriter, r *http.Request) {
-	// Parse request
-
-	// Get needed data to stop simulation from the HTTP request, pass it to the Stop Request
-	req := StopRequest{}
-
-	res, err := ctrl.service.Stop(r.Context(), req)
-	if err != nil {
-		// Send error message
+func (ctrl *controller) Stop(tx *gorm.DB, w http.ResponseWriter, r *http.Request) (interface{}, *ign.ErrMsg) {
+  fmt.Printf("Stop controller\n")
+  // Get the groupid from the route
+	groupID, ok := mux.Vars(r)["groupid"]
+	if !ok {
+		return nil, ign.NewErrorMessage(ign.ErrorIDNotInRequest)
 	}
 
-	// Remove after addressing next comment
-	fmt.Println(res)
+  // Get the matching simulation
+	var simulation Simulation
+	if err := tx.Where("group_id=?", groupID).First(&simulation).Error; err != nil {
+		return nil, ign.NewErrorMessageWithBase(ign.ErrorIDNotFound, err)
+	}
+
+	// Construct the stop request to send to the service
+	req := StopRequest{
+    GroupID: simulation.GroupID,
+  }
+
+	res, err := ctrl.service.Stop(tx, r.Context(), req)
+	if err != nil {
+		return nil, ign.NewErrorMessageWithBase(ign.ErrorForm, err)
+	}
 
 	// Send response to the user
+	return res, nil
 }
 
 // ListSimulations handles the `/simulations` route.

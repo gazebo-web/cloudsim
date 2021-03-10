@@ -12,7 +12,6 @@ package nps
 
 import (
 	"gitlab.com/ignitionrobotics/web/ign-go"
-	"net/http"
 )
 
 // GetAPIRoutes returns the routes used by this application.
@@ -43,13 +42,13 @@ func (app *application) GetAPIRoutes() ign.Routes {
 		ign.Route{
 			Name:        "Stop simulation",
 			Description: "This is a route for stopping a simulation",
-			URI:         "/stop",
+			URI:         "/stop/{groupid}",
 			Methods: []ign.Method{
 				{
 					Type:        "POST",
 					Description: "Stop simulations",
 					Handlers: ign.FormatHandlers{
-						ign.FormatHandler{Handler: http.HandlerFunc(ctrl.Stop)},
+						ign.FormatHandler{Handler: ign.JSONResult(ctrl.Stop)},
 					},
 				},
 			},

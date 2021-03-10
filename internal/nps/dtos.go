@@ -31,6 +31,7 @@ type StartResponse struct {
 
 // StopRequest is the request to stop a simulation.
 type StopRequest struct {
+	GroupID   string    `json:"groupid"`
 }
 
 // StopResponse is the response to the request of stopping a simulation.

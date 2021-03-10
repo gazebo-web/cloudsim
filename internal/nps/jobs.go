@@ -47,9 +47,30 @@ func (s *StartSimulationData) Platform() platform.Platform {
 }
 
 // StopSimulationAction groups the jobs needed to stop a simulation.
-var StopSimulationAction = actions.Jobs{}
+var StopSimulationAction = actions.Jobs{
+  RemovePods,
+  RemoveInstances,
+}
 
 // StopSimulationData contains information is that is passed to each job in
 // the StopSimulationAction.
 type StopSimulationData struct {
+	state.PlatformGetter
+	state.ServicesGetter
+	platform platform.Platform
+	GroupID  simulations.GroupID
+	// NodeSelector allows a job to select the correct running kubernetes  node.
+	NodeSelector orchestrator.Selector
+	// PodSelector allows a job to select the correct running kubernetes pod.
+	PodSelector orchestrator.Selector
+	logger      ign.Logger
+  PodList     []orchestrator.Resource
+}
+
+// Platform returns the underlying platform contained in StartSimulationData
+// See state.PlatformGetter in the StartSimulationData struct.
+//
+// \todo Major Improvement needed: If this function is not defined, then a job can fail with little to no meaningful output. The only way to know it's missing is to dive into the job's implementation, see that the job fails when calling Platform() and remember that you forgot to implement this function. This pattern needd to be improved. 
+func (s *StopSimulationData) Platform() platform.Platform {
+	return s.platform
 }
