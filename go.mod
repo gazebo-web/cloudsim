@@ -13,6 +13,7 @@ require (
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/elastic/go-elasticsearch/v8 v8.0.0-20200916133832-96c1726edbaa // indirect
 	github.com/fatih/color v1.10.0 // indirect
+	github.com/fatih/structtag v1.2.0
 	github.com/go-playground/form v3.1.4+incompatible
 	github.com/go-sql-driver/mysql v1.5.0
 	github.com/golang/protobuf v1.4.2

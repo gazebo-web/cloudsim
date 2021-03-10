@@ -8,7 +8,7 @@ import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/implementations/kubernetes"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/platform"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
-	sfake "gitlab.com/ignitionrobotics/web/cloudsim/pkg/store/fake"
+	sfake "gitlab.com/ignitionrobotics/web/cloudsim/pkg/store/implementations/fake"
 	"gitlab.com/ignitionrobotics/web/ign-go"
 	kfake "k8s.io/client-go/kubernetes/fake"
 	"testing"

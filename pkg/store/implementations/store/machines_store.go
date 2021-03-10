@@ -1,28 +1,28 @@
-package env
+package store
 
 import (
 	"fmt"
 	"github.com/caarlos0/env"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/machines"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/store"
+	storepkg "gitlab.com/ignitionrobotics/web/cloudsim/pkg/store"
 	"time"
 )
 
-// machineEnvStore is a store.Machines implementation.
+// machinesStore is a store.Machines implementation.
 // It contains all the information needed by application jobs to launch simulations.
-type machineEnvStore struct {
+type machinesStore struct {
 	// InstanceProfileValue is the ARN used to configure EC2 machines.
-	InstanceProfileValue string `env:"CLOUDSIM_MACHINES_INSTANCE_PROFILE" envDefault:"arn:aws:iam::200670743174:instance-profile/aws-eks-role-cloudsim-worker"`
+	InstanceProfileValue string `default:"arn:aws:iam::200670743174:instance-profile/aws-eks-role-cloudsim-worker" env:"CLOUDSIM_MACHINES_INSTANCE_PROFILE"`
 
 	// KeyNameValue is the name of the SSH key used for a new instance.
-	KeyNameValue string `env:"CLOUDSIM_MACHINES_KEY_NAME" envDefault:"ignitionFuel"`
+	KeyNameValue string `default:"ignitionFuel" env:"CLOUDSIM_MACHINES_KEY_NAME"`
 
 	// MachineTypeValue is the type of instance that will be created.
-	MachineTypeValue string `env:"CLOUDSIM_MACHINES_TYPE" envDefault:"g3.4xlarge"`
+	MachineTypeValue string `default:"g3.4xlarge" env:"CLOUDSIM_MACHINES_TYPE"`
 
 	// FirewallRulesValue is a set of firewall rules that will be applied to a new instance.
-	FirewallRulesValue []string `env:"CLOUDSIM_MACHINES_FIREWALL_RULES" envSeparator:"," envDefault:"sg-0c5c791266694a3ca"`
+	FirewallRulesValue []string `default:"[\"sg-0c5c791266694a3ca\"]" env:"CLOUDSIM_MACHINES_FIREWALL_RULES" envSeparator:","`
 
 	// SubnetsValue is a slice of AWS subnet IDs to launch simulations in. (Example: subnet-1270518251)
 	SubnetsValue []string `env:"CLOUDSIM_MACHINES_SUBNETS,required" envSeparator:","`
@@ -31,19 +31,19 @@ type machineEnvStore struct {
 	ZonesValue []string `env:"CLOUDSIM_MACHINES_ZONES,required" envSeparator:","`
 
 	// MachinesLimitValue is the maximum number of machines that Cloudsim can have running at the same time.
-	MachinesLimitValue int `env:"CLOUDSIM_MACHINES_LIMIT" envDefault:"-1"`
+	MachinesLimitValue int `default:"-1" env:"CLOUDSIM_MACHINES_LIMIT"`
 
 	// BaseImageValue is the Amazon Machine Image name that is used as base image for the a new instance.
-	BaseImageValue string `env:"CLOUDSIM_MACHINES_BASE_IMAGE" envDefault:"ami-08861f7e7b409ed0c"`
+	BaseImageValue string `default:"ami-08861f7e7b409ed0c" env:"CLOUDSIM_MACHINES_BASE_IMAGE"`
 
 	// NamePrefixValue is the prefix used when naming a new instance.
-	NamePrefixValue string `env:"CLOUDSIM_MACHINES_NAME_PREFIX,required" envDefault:"cloudsim-subt-node"`
+	NamePrefixValue string `default:"cloudsim-subt-node" env:"CLOUDSIM_MACHINES_NAME_PREFIX,required"`
 
 	// ClusterNameValue contains the name of the cluster EC2 instances will join.
 	ClusterNameValue string `env:"CLOUDSIM_MACHINES_CLUSTER_NAME,required"`
 
 	// NodeReadyTimeout is the total amount of time in seconds that the machine creation process will wait.
-	NodeReadyTimeout uint `env:"CLOUDSIM_MACHINES_NODE_READY_TIMEOUT_SECONDS" envDefault:"300"`
+	NodeReadyTimeout uint `default:"300" env:"CLOUDSIM_MACHINES_NODE_READY_TIMEOUT_SECONDS"`
 
 	// subnetZoneIndex is used as round robin index for setting different subnets and zones to different machines.
 	subnetZoneIndex int
@@ -51,68 +51,68 @@ type machineEnvStore struct {
 
 // ClusterName returns the cluster name.
 // In AWS: It returns the EKS cluster name.
-func (m *machineEnvStore) ClusterName() string {
+func (m *machinesStore) ClusterName() string {
 	return m.ClusterNameValue
 }
 
 // BaseImage returns the base image value read from env vars.
 // In AWS, the base image is the Amazon Machine Image (AMI).
-func (m *machineEnvStore) BaseImage() string {
+func (m *machinesStore) BaseImage() string {
 	return m.BaseImageValue
 }
 
 // InstanceProfile returns the instance profile value read from env vars.
-func (m *machineEnvStore) InstanceProfile() *string {
+func (m *machinesStore) InstanceProfile() *string {
 	return &m.InstanceProfileValue
 }
 
 // KeyName returns the key name value read from env vars.
-func (m *machineEnvStore) KeyName() string {
+func (m *machinesStore) KeyName() string {
 	return m.KeyNameValue
 }
 
 // Type returns the type value read from env vars.
-func (m *machineEnvStore) Type() string {
+func (m *machinesStore) Type() string {
 	return m.MachineTypeValue
 }
 
 // FirewallRules returns the firewall rules value read from env vars.
-func (m *machineEnvStore) FirewallRules() []string {
+func (m *machinesStore) FirewallRules() []string {
 	return m.FirewallRulesValue
 }
 
 // subnet calculates and returns the subnet id for the current subnetZoneIndex.
-func (m *machineEnvStore) subnet() string {
+func (m *machinesStore) subnet() string {
 	i := m.subnetZoneIndex % len(m.SubnetsValue)
 	return m.SubnetsValue[i]
 }
 
 // zone calculates and returns the zone id for the current subnetZoneIndex.
-func (m *machineEnvStore) zone() string {
+func (m *machinesStore) zone() string {
 	i := m.subnetZoneIndex % len(m.ZonesValue)
 	return m.SubnetsValue[i]
 }
 
 // Timeout calculates the time duration in seconds for the current NodeReadyTimeout value.
-func (m *machineEnvStore) Timeout() time.Duration {
+func (m *machinesStore) Timeout() time.Duration {
 	return time.Duration(m.NodeReadyTimeout) * time.Second
 }
 
 // PollFrequency returns a time duration of 2 seconds.
-func (m *machineEnvStore) PollFrequency() time.Duration {
+func (m *machinesStore) PollFrequency() time.Duration {
 	return 2 * time.Second
 }
 
 // SubnetAndZone returns the subnet and zone.
 // It performs a round robin operation incrementing the subnetZoneIndex.
-func (m *machineEnvStore) SubnetAndZone() (string, string) {
+func (m *machinesStore) SubnetAndZone() (string, string) {
 	subnet, zone := m.subnet(), m.zone()
 	m.subnetZoneIndex++
 	return subnet, zone
 }
 
 // Tags creates a set of tags for a certain machine using the given simulation, nodeType and nameSuffix.
-func (m *machineEnvStore) Tags(simulation simulations.Simulation, nodeType string, nameSuffix string) []machines.Tag {
+func (m *machinesStore) Tags(simulation simulations.Simulation, nodeType string, nameSuffix string) []machines.Tag {
 	name := fmt.Sprintf("%s-%s-%s", m.NamePrefixValue, simulation.GetGroupID(), nameSuffix)
 	clusterKey := fmt.Sprintf("kubernetes.io/cluster/%s", m.ClusterNameValue)
 	return []machines.Tag{
@@ -135,24 +135,25 @@ func (m *machineEnvStore) Tags(simulation simulations.Simulation, nodeType strin
 }
 
 // NamePrefix returns the name prefix value.
-func (m *machineEnvStore) NamePrefix() string {
+func (m *machinesStore) NamePrefix() string {
 	return m.NamePrefixValue
 }
 
 // Limit returns the maximum amount of machines that can be created.
-func (m *machineEnvStore) Limit() int {
+func (m *machinesStore) Limit() int {
 	return m.MachinesLimitValue
 }
 
 // InitScript returns the script that will be run when the machine gets created.
 // TODO: Address this function when implementing the corresponding job.
-func (m *machineEnvStore) InitScript() *string {
+func (m *machinesStore) InitScript() *string {
 	return nil
 }
 
-// newMachinesStore initializes a new store.Machines implementation using machineEnvStore.
-func newMachinesStore() store.Machines {
-	var m machineEnvStore
+// newMachinesStoreFromEnvVars initializes a new store.Machines implementation using environment variables to
+// configure a machinesStore object.
+func newMachinesStoreFromEnvVars() storepkg.Machines {
+	var m machinesStore
 	if err := env.Parse(&m); err != nil {
 		panic(err)
 	}
