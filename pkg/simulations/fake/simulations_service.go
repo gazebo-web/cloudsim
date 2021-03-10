@@ -16,6 +16,13 @@ func (s *Service) UpdateScore(groupID simulations.GroupID, score *float64) error
 	return args.Error(0)
 }
 
+// Create mocks the Create method.
+func (s *Service) Create(input simulations.CreateSimulationInput) (simulations.Simulation, error) {
+	args := s.Called(input)
+	sim := args.Get(0).(simulations.Simulation)
+	return sim, args.Error(1)
+}
+
 // GetWebsocketToken mocks the GetWebsocketToken method.
 func (s *Service) GetWebsocketToken(groupID simulations.GroupID) (string, error) {
 	args := s.Called(groupID)

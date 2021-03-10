@@ -130,10 +130,10 @@ func (i *ignitionEnvStore) IP() string {
 }
 
 // newIgnitionStore initializes a new store.Ignition implementation using ignitionEnvStore.
-func newIgnitionStore() store.Ignition {
+func newIgnitionStore() (store.Ignition, error) {
 	var i ignitionEnvStore
 	if err := env.Parse(&i); err != nil {
-		panic(err)
+		return nil, err
 	}
-	return &i
+	return &i, nil
 }
