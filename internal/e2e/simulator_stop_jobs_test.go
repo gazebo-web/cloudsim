@@ -20,6 +20,7 @@ import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/cloud/aws/s3"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/email"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/env"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/migrations"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/mock"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/kubernetes"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/kubernetes/spdy"
@@ -31,7 +32,6 @@ import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/users"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/utils/db/gorm"
 	legacy "gitlab.com/ignitionrobotics/web/cloudsim/simulations"
-	"gitlab.com/ignitionrobotics/web/fuelserver/bundles/subt"
 	fuelusers "gitlab.com/ignitionrobotics/web/fuelserver/bundles/users"
 	"gitlab.com/ignitionrobotics/web/fuelserver/permissions"
 	"gitlab.com/ignitionrobotics/web/ign-go"
@@ -52,13 +52,12 @@ func TestStopSimulationAction(t *testing.T) {
 	db, err := gorm.GetTestDBFromEnvVars()
 	require.NoError(t, err)
 
+	migrations.DBDropModels(context.Background(), db)
+	migrations.DBMigrate(context.Background(), db)
+
 	// Clean and migrate database
 	err = gorm.CleanAndMigrateModels(
 		db,
-		&legacy.SimulationDeployment{},
-		&tracks.Track{},
-		&subt.CompetitionScore{},
-		&simulations.Summary{},
 		&fuelusers.User{},
 		&fuelusers.Organization{},
 	)
