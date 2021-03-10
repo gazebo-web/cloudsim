@@ -56,14 +56,17 @@ type SubTRobot struct {
 	Credits int
 }
 
+// GetName returns the SubTRobot's name.
 func (s *SubTRobot) GetName() string {
 	return s.Name
 }
 
+// GetKind returns the SubTRobot's type.
 func (s *SubTRobot) GetKind() string {
 	return s.Type
 }
 
+// IsEqual asserts that the given robot is the same as the current one.
 func (s *SubTRobot) IsEqual(robot simulations.Robot) bool {
 	return s.Name == robot.GetName()
 }
@@ -79,10 +82,12 @@ type SubTMarsupial struct {
 	childRobot  simulations.Robot
 }
 
+// GetParent returns the parent robot from the SubTMarsupial.
 func (s *SubTMarsupial) GetParent() simulations.Robot {
 	return s.parentRobot
 }
 
+// GetChild returns the child robot from the SubTMarsupial.
 func (s *SubTMarsupial) GetChild() simulations.Robot {
 	return s.childRobot
 }
