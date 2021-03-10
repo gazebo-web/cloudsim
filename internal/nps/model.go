@@ -80,6 +80,17 @@ func (s *Simulation) GetValidFor() time.Duration {
 	panic("implement me")
 }
 
+func (s *Simulation)  GetCreator() string {
+	panic("implement me")
+}
+
+func (s *Simulation)  GetOwner() *string {
+	panic("implement me")
+}
+
+func (s *Simulation)  IsProcessed() bool {
+	panic("implement me")
+}
 func NewSimulation() simulations.Simulation {
 	return &Simulation{}
 }

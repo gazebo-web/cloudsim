@@ -187,6 +187,10 @@ func (s *service) GetWebsocketToken(groupID simulations.GroupID) (string, error)
 	panic("implement me")
 }
 
+func (s *service) MarkStopped(groupID simulations.GroupID) (error) {
+	panic("implement me")
+}
+
 // Start is called from the Start function in controller.go.
 //
 // Origin: user --> POST /start --> controller.Start() --> service.Start()

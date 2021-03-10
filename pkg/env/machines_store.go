@@ -66,11 +66,6 @@ func (m *machineEnvStore) InstanceProfile() *string {
 	return &m.InstanceProfileValue
 }
 
-// ClusterName returns the cluster name value read from env vars.
-func (m *machineEnvStore) ClusterName() *string {
-	return &m.ClusterNameValue
-}
-
 // KeyName returns the key name value read from env vars.
 func (m *machineEnvStore) KeyName() string {
 	return m.KeyNameValue

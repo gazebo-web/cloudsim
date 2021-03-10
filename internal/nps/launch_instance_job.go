@@ -65,7 +65,7 @@ EOF
 
 	// The cluster name is read from the CLOUDSIM_MACHINES_CLUSTER_NAME
 	// environment variable.
-	clusterName := *startData.Platform().Store().Machines().ClusterName()
+	clusterName := startData.Platform().Store().Machines().ClusterName()
 	initScript := fmt.Sprintf(command, clusterName,
 		strings.Join(arguments, " "))
 	initScript = base64.StdEncoding.EncodeToString([]byte(initScript))
