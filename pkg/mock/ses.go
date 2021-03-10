@@ -15,7 +15,7 @@ func (s *sesAPI) SendEmail(*ses.SendEmailInput) (*ses.SendEmailOutput, error) {
 	return nil, nil
 }
 
-// NewEC2 initializes a new ec2iface.EC2API implementation.
+// NewSES initializes a new sesiface.SESAPI implementation.
 func NewSES() sesiface.SESAPI {
 	return &sesAPI{}
 }

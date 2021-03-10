@@ -23,8 +23,8 @@ type ec2api struct {
 func NewEC2Instance(id string, tags []cloud.Tag) ec2.Instance {
 	var instance ec2.Instance
 
-	instanceId := fmt.Sprintf("i-%s", id)
-	instance.InstanceId = &instanceId
+	instanceID := fmt.Sprintf("i-%s", id)
+	instance.InstanceId = &instanceID
 
 	tagSpec := ec22.CreateTagSpecifications(tags)
 
