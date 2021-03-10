@@ -4,8 +4,11 @@ package nps
 // application creates an instance of a controller by calling `NewController`.
 
 import (
+	"context"
 	"errors"
 	"fmt"
+	"gitlab.com/ignitionrobotics/web/fuelserver/bundles/users"
+	useracc "gitlab.com/ignitionrobotics/web/cloudsim/pkg/users"
 	"github.com/go-playground/form"
 	"github.com/gorilla/mux"
 	"github.com/jinzhu/gorm"
@@ -15,9 +18,9 @@ import (
 
 // Controller is an interface designed to handle route requests.
 type Controller interface {
-	Start(tx *gorm.DB, w http.ResponseWriter, r *http.Request) (interface{}, *ign.ErrMsg)
-	Stop(tx *gorm.DB, w http.ResponseWriter, r *http.Request) (interface{}, *ign.ErrMsg)
-	ListSimulations(tx *gorm.DB, w http.ResponseWriter, r *http.Request) (interface{}, *ign.ErrMsg)
+	Start(user *users.User, tx *gorm.DB, w http.ResponseWriter, r *http.Request) (interface{}, *ign.ErrMsg)
+	Stop(user *users.User, tx *gorm.DB, w http.ResponseWriter, r *http.Request) (interface{}, *ign.ErrMsg)
+	ListSimulations(user *users.User, tx *gorm.DB, w http.ResponseWriter, r *http.Request) (interface{}, *ign.ErrMsg)
 	GetSimulation(tx *gorm.DB, w http.ResponseWriter, r *http.Request) (interface{}, *ign.ErrMsg)
 }
 
@@ -55,7 +58,7 @@ func getDecodeErrorsExtraInfo(err error) []string {
 // Next:
 //     * On success --> service.Start
 //     * On fail --> return error
-func (ctrl *controller) Start(tx *gorm.DB, w http.ResponseWriter, r *http.Request) (interface{}, *ign.ErrMsg) {
+func (ctrl *controller) Start(user *users.User, tx *gorm.DB, w http.ResponseWriter, r *http.Request) (interface{}, *ign.ErrMsg) {
 
 	// Parse form's values and files.
 	if err := r.ParseMultipartForm(0); err != nil {
@@ -92,7 +95,7 @@ func (ctrl *controller) Start(tx *gorm.DB, w http.ResponseWriter, r *http.Reques
 	}
 
 	// Hand off the start request data to the service.
-	res, err := ctrl.service.Start(tx, r.Context(), req)
+	res, err := ctrl.service.Start(user, tx, r.Context(), req)
 	if err != nil {
 		return nil, ign.NewErrorMessageWithBase(ign.ErrorForm, err)
 	}
@@ -107,7 +110,7 @@ func (ctrl *controller) Start(tx *gorm.DB, w http.ResponseWriter, r *http.Reques
 // Next:
 //     * On success --> service.Start
 //     * On fail --> return error
-func (ctrl *controller) Stop(tx *gorm.DB, w http.ResponseWriter, r *http.Request) (interface{}, *ign.ErrMsg) {
+func (ctrl *controller) Stop(user *users.User, tx *gorm.DB, w http.ResponseWriter, r *http.Request) (interface{}, *ign.ErrMsg) {
   // Get the groupid from the route
 	groupID, ok := mux.Vars(r)["groupid"]
 	if !ok {
@@ -125,7 +128,7 @@ func (ctrl *controller) Stop(tx *gorm.DB, w http.ResponseWriter, r *http.Request
     GroupID: simulation.GroupID,
   }
 
-	res, err := ctrl.service.Stop(tx, r.Context(), req)
+	res, err := ctrl.service.Stop(user, tx, r.Context(), req)
 	if err != nil {
 		return nil, ign.NewErrorMessageWithBase(ign.ErrorForm, err)
 	}
@@ -140,18 +143,10 @@ func (ctrl *controller) Stop(tx *gorm.DB, w http.ResponseWriter, r *http.Request
 // Next:
 //     * On success --> return ListResponse
 //     * On fail --> return error
-func (ctrl *controller) ListSimulations(tx *gorm.DB, w http.ResponseWriter, r *http.Request) (interface{}, *ign.ErrMsg) {
-
-	/*req := ListRequest{}
-
-	// Hand off the start request data to the service.
-	res, err := ctrl.service.List(r.Context(), req)
-	if err != nil {
-		return nil, ign.NewErrorMessageWithBase(ign.ErrorForm, err)
-	}*/
+func (ctrl *controller) ListSimulations(user *users.User, tx *gorm.DB, w http.ResponseWriter, r *http.Request) (interface{}, *ign.ErrMsg) {
 
 	var simulations Simulations
-	tx.Find(&simulations)
+	tx.Where("owner = ?", user.Username).Find(&simulations)
 
 	var response ListResponse
 	for _, sim := range simulations {
@@ -206,3 +201,36 @@ func (ctrl *controller) GetSimulation(tx *gorm.DB, w http.ResponseWriter, r *htt
 func Healthz(tx *gorm.DB, w http.ResponseWriter, r *http.Request) (interface{}, *ign.ErrMsg) {
 	return "Cloudsim is up", nil
 }
+
+////////////////////////////////////////////////
+// All of the following is to handle user access in routes
+// HTTPHandler is used to invoke inner logic based on incoming Http requests.
+type HTTPHandler struct {
+	UserAccessor useracc.Service
+}
+
+// HTTPHandlerInstance is the default HTTPHandler instance. It is used by routes.go.
+var HTTPHandlerInstance *HTTPHandler
+
+// NewHTTPHandler creates a new HTTPHandler.
+func NewHTTPHandler(ctx context.Context, ua useracc.Service) (*HTTPHandler, error) {
+	return &HTTPHandler{
+		UserAccessor: ua,
+	}, nil
+}
+
+type handlerWithUser func(user *users.User, tx *gorm.DB, w http.ResponseWriter, r *http.Request) (interface{}, *ign.ErrMsg)
+
+// WithUser is a middleware that checks for a valid user from the JWT and passes
+// the user to the handlerWithUser.
+func WithUser(handler handlerWithUser) ign.HandlerWithResult {
+	return func(tx *gorm.DB, w http.ResponseWriter, r *http.Request) (interface{}, *ign.ErrMsg) {
+		// Get JWT user. Fail if invalid or missing
+		user, ok, em := HTTPHandlerInstance.UserAccessor.UserFromJWT(r)
+		if !ok {
+			return nil, em
+		}
+		return handler(user, tx, w, r)
+	}
+}
+////////////////////////////////////////////////

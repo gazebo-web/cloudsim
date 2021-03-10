@@ -4,11 +4,13 @@ package nps
 
 import (
 	"context"
+  "errors"
 	"github.com/jinzhu/gorm"
 	"github.com/satori/go.uuid"
 	"gitlab.com/ignitionrobotics/web/cloudsim/internal/pkg/domain"
 	gormrepo "gitlab.com/ignitionrobotics/web/cloudsim/internal/pkg/repositories/gorm"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/actions"
+	"gitlab.com/ignitionrobotics/web/fuelserver/bundles/users"
 	ignapp "gitlab.com/ignitionrobotics/web/cloudsim/pkg/application"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/cloud/aws"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/env"
@@ -27,10 +29,10 @@ type Service interface {
 
 	// Start will run the StartSimulationAction to launch cloud machines
 	// and a docker image.
-	Start(tx *gorm.DB, ctx context.Context, request StartRequest) (*StartResponse, error)
+	Start(user *users.User, tx *gorm.DB, ctx context.Context, request StartRequest) (*StartResponse, error)
 
 	// Stop will run the StopSimulationAction to terminate clouds machines.
-	Stop(tx *gorm.DB, ctx context.Context, request StopRequest) (*StopResponse, error)
+	Stop(user *users.User, tx *gorm.DB, ctx context.Context, request StopRequest) (*StopResponse, error)
 
 	// StartQueueHandler processes entries in the startQueue.
 	StartQueueHandler(ctx context.Context, groupID simulations.GroupID) error
@@ -223,7 +225,7 @@ func (s *service) MarkStopped(groupID simulations.GroupID) (error) {
 //
 // Origin: user --> POST /start --> controller.Start() --> service.Start()
 // Next: StartQueueHandler
-func (s *service) Start(tx *gorm.DB, ctx context.Context, request StartRequest) (*StartResponse, error) {
+func (s *service) Start(user *users.User, tx *gorm.DB, ctx context.Context, request StartRequest) (*StartResponse, error) {
 	// Add business logic here to validate a request, update a database table,
 	// etc.
 
@@ -231,6 +233,8 @@ func (s *service) Start(tx *gorm.DB, ctx context.Context, request StartRequest) 
 	sim := Simulation{
 		CreatedAt: time.Now(),
 		UpdatedAt: time.Now(),
+
+    Owner: *user.Username,
 
 		// Name of the simulation
 		Name: request.Name,
@@ -256,6 +260,7 @@ func (s *service) Start(tx *gorm.DB, ctx context.Context, request StartRequest) 
 	return &StartResponse{
 		Message: "Simulation instance is starting. Use the URI to get status updates",
 		Simulation: GetSimulationResponse{
+      Owner:   sim.Owner,
 			Name:    sim.Name,
 			GroupID: sim.GroupID,
 			Status:  sim.Status,
@@ -269,7 +274,7 @@ func (s *service) Start(tx *gorm.DB, ctx context.Context, request StartRequest) 
 //
 // Origin: user --> POST /stop --> controller.Stop() --> service.Stop()
 // Next: StopQueueHandler
-func (s *service) Stop(tx *gorm.DB, ctx context.Context, request StopRequest) (*StopResponse, error) {
+func (s *service) Stop(user *users.User, tx *gorm.DB, ctx context.Context, request StopRequest) (*StopResponse, error) {
 
 	// Update the database entry with the latest status
 	// \todo Help needed: I think this is not the recommended method to update
@@ -278,6 +283,10 @@ func (s *service) Stop(tx *gorm.DB, ctx context.Context, request StopRequest) (*
 	if err := tx.Where("group_id = ?", request.GroupID).First(&simEntry).Error; err != nil {
 		return nil, err
 	}
+
+  if simEntry.Owner != *user.Username {
+    return nil, errors.New("Authorization failed")
+  }
 	simEntry.Status = "Stopping."
 	tx.Save(&simEntry)
 
@@ -295,31 +304,6 @@ func (s *service) Stop(tx *gorm.DB, ctx context.Context, request StopRequest) (*
 		},
 	}, nil
 }
-
-// ListSimulations is called from the ListSimulations function in
-// controller.go.
-//
-// Origin: user --> GET /list --> controller.ListSimulations() --> service.ListSimulations()
-/*func (s *service) ListSimulations(ctx context.Context, request ListRequest) (*ListResponse, error) {
-
-  var simulations Simulations
-  s.db.Find(&simulations)
-
-  var response ListResponse
-  for _, sim := range simulations {
-    response.Simulations = append(response.Simulations, ListResponseSimulation{
-      Name: sim.Name,
-      GroupID: sim.GroupID,
-      Status: sim.Status,
-      Image: sim.Image,
-      Args: sim.Args,
-      URI: sim.URI,
-    })
-  }
-
-	// Send the group id to the queue
-	return &response, nil
-}*/
 
 ///////////////////////////////////////
 // It would be nice to make the following function general purpose functions

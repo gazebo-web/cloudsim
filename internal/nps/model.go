@@ -17,6 +17,7 @@ type Simulation struct {
 	DeletedAt *time.Time `gorm:"type:timestamp(2) NULL" sql:"index" json:"-"`
 	// Timestamp in which this simulation was stopped/terminated.
 	StoppedAt *time.Time `gorm:"type:timestamp(3) NULL" json:"stopped_at,omitempty"`
+  Owner   string `json:"owner"`
 
 	Name    string `json:"name"`
 	GroupID string `json:"groupid"`

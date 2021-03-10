@@ -6,6 +6,7 @@ import (
 
 type GetSimulationResponse struct {
 	CreatedAt time.Time `json:"created_at"`
+  Owner     string    `json:"owner"`
 	Name      string    `json:"name"`
 	GroupID   string    `json:"groupid"`
 	Status    string    `json:"status"`
