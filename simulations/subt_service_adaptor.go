@@ -11,10 +11,17 @@ type SimulationServiceAdaptor struct {
 	db *gorm.DB
 }
 
+// UpdateScore updates a simulation's score.
+func (sa *SimulationServiceAdaptor) UpdateScore(groupID simulations.GroupID, score *float64) error {
+	panic("implement me")
+}
+
+// MarkStopped marks a simulation as stopped.
 func (sa *SimulationServiceAdaptor) MarkStopped(groupID simulations.GroupID) error {
 	panic("implement me")
 }
 
+// GetWebsocketToken returns a simulation's websocket authorization token.
 func (sa *SimulationServiceAdaptor) GetWebsocketToken(groupID simulations.GroupID) (string, error) {
 	panic("implement me")
 }
