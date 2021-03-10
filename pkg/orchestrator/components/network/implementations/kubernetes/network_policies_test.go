@@ -157,29 +157,29 @@ func (s *networkPoliciesTestSuite) TestCreateNetworkPolicy() {
 
 func (s *networkPoliciesTestSuite) TestRemoveNetworkPolicy() {
 	// Create a network policy
-	res, err := s.networkPolicies.Create(orchestrator.CreateNetworkPolicyInput{
+	res, err := s.networkPolicies.Create(network.CreateNetworkPolicyInput{
 		Name:      "test-np",
 		Namespace: "default",
 		Labels: map[string]string{
 			"app": "test",
 			"np":  "true",
 		},
-		PodSelector: orchestrator.NewSelector(s.pod.Labels),
-		PeersFrom: []orchestrator.Selector{
-			orchestrator.NewSelector(map[string]string{
+		PodSelector: resource.NewSelector(s.pod.Labels),
+		PeersFrom: []resource.Selector{
+			resource.NewSelector(map[string]string{
 				"app": "test",
 			}),
 		},
-		PeersTo: []orchestrator.Selector{
-			orchestrator.NewSelector(map[string]string{
+		PeersTo: []resource.Selector{
+			resource.NewSelector(map[string]string{
 				"app": "test",
 			}),
 		},
-		Ingresses: orchestrator.NetworkIngressRule{
+		Ingresses: network.IngressRule{
 			Ports:    []int32{1111, 2222, 3333},
 			IPBlocks: []string{"10.0.0.3/24"},
 		},
-		Egresses: orchestrator.NetworkEgressRule{
+		Egresses: network.EgressRule{
 			Ports:         []int32{1111, 2222, 3333},
 			IPBlocks:      []string{"10.0.0.3/24"},
 			AllowOutbound: true,

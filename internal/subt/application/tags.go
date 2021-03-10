@@ -2,13 +2,13 @@ package application
 
 import (
 	"fmt"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/cloud"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/machines"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
 )
 
 // GetTagsInstanceBase returns the base tags to identify cloud instances.
-func GetTagsInstanceBase(gid simulations.GroupID) []cloud.Tag {
-	return []cloud.Tag{
+func GetTagsInstanceBase(gid simulations.GroupID) []machines.Tag {
+	return []machines.Tag{
 		{
 			Resource: "instance",
 			Map: map[string]string{
@@ -24,10 +24,10 @@ func GetTagsInstanceBase(gid simulations.GroupID) []cloud.Tag {
 }
 
 // GetTagsInstanceSpecific returns the specific tags to identify a single cloud instance.
-func GetTagsInstanceSpecific(prefix string, gid simulations.GroupID, suffix string, clusterName, nodeType string) []cloud.Tag {
+func GetTagsInstanceSpecific(prefix string, gid simulations.GroupID, suffix string, clusterName, nodeType string) []machines.Tag {
 	name := fmt.Sprintf("%s-%s-%s", prefix, gid.String(), suffix)
 	clusterKey := fmt.Sprintf("kubernetes.io/cluster/%s", clusterName)
-	return []cloud.Tag{
+	return []machines.Tag{
 		{
 			Resource: "instance",
 			Map: map[string]string{

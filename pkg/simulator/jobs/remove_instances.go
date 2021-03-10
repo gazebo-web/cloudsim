@@ -3,13 +3,13 @@ package jobs
 import (
 	"github.com/jinzhu/gorm"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/actions"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/cloud"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/machines"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulator/state"
 )
 
 // RemoveInstancesInput is the input of the RemoveInstances job.
 // It's used to pass the list of instances to remove.
-type RemoveInstancesInput []cloud.TerminateMachinesInput
+type RemoveInstancesInput []machines.TerminateMachinesInput
 
 // RemoveInstances is a generic job to remove instances.
 var RemoveInstances = &actions.Job{

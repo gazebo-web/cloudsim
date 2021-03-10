@@ -24,7 +24,7 @@ type s3Storage struct {
 	Logger ign.Logger
 }
 
-func (s storage) PrepareAddress(bucket, key string) string {
+func (s s3Storage) PrepareAddress(bucket, key string) string {
 	return fmt.Sprintf("s3://%s", filepath.Join(bucket, key))
 }
 

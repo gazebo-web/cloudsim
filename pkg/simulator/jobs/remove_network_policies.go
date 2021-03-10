@@ -3,17 +3,17 @@ package jobs
 import (
 	"github.com/jinzhu/gorm"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/actions"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/resource"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulator/state"
 )
 
 // RemoveNetworkPoliciesInput is the input for the RemoveNetworkPolicies job.
-type RemoveNetworkPoliciesInput []orchestrator.Resource
+type RemoveNetworkPoliciesInput []resource.Resource
 
 // RemoveNetworkPoliciesOutput is the output of the RemoveNetworkPolicies job.
 type RemoveNetworkPoliciesOutput struct {
 	// Resource is the representation of the network policies that were removed.
-	Resource []orchestrator.Resource
+	Resource []resource.Resource
 
 	// Error has a reference to the latest error thrown when removing the network policies.
 	Error error
@@ -30,7 +30,7 @@ func removeNetworkPolicies(store actions.Store, tx *gorm.DB, deployment *actions
 
 	input := value.(RemoveNetworkPoliciesInput)
 
-	resources := make([]orchestrator.Resource, 0, len(input))
+	resources := make([]resource.Resource, 0, len(input))
 	for _, in := range input {
 		err := s.Platform().Orchestrator().NetworkPolicies().Remove(in.Name(), in.Namespace())
 
