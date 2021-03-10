@@ -133,7 +133,8 @@ func TestStopSimulationAction(t *testing.T) {
 	cluster := kubernetes.NewDefaultKubernetes(kubernetesClientset, fakeSPDY, logger)
 
 	// Initialize env vars
-	configStore := env.NewStore()
+	configStore, err := env.NewStore()
+	require.NoError(t, err)
 
 	// Initialize secrets
 	secrets := secrets.NewKubernetesSecrets(kubernetesClientset.CoreV1())
