@@ -120,11 +120,15 @@ func (dep *SimulationDeployment) GetCreator() string {
 	return *dep.Creator
 }
 
-// GetGroupID returns the SimulationDeployment's GroupID.
+// GetName returns the SimulationsDeployment's Name. t returns an empty string if no name has been assigned.
 func (dep *SimulationDeployment) GetName() string {
+	if dep.Name == nil {
+		return ""
+	}
 	return *dep.Name
 }
 
+// GetGroupID returns the SimulationDeployment's GroupID.
 func (dep *SimulationDeployment) GetGroupID() simulations.GroupID {
 	return simulations.GroupID(*dep.GroupID)
 }
