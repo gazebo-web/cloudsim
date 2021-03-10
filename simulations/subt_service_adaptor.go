@@ -13,6 +13,11 @@ type SimulationServiceAdaptor struct {
 	db *gorm.DB
 }
 
+// UpdateScore updates a simulation's score.
+func (sa *SimulationServiceAdaptor) UpdateScore(groupID simulations.GroupID, score *float64) error {
+	panic("implement me")
+}
+
 // Create creates a simulation (SimulationDeployment) from the given input.
 func (sa *SimulationServiceAdaptor) Create(input simulations.CreateSimulationInput) (simulations.Simulation, error) {
 	dep, err := NewSimulationDeployment()
@@ -43,7 +48,7 @@ func (sa *SimulationServiceAdaptor) Create(input simulations.CreateSimulationInp
 	return dep, nil
 }
 
-// GetWebsocketToken gets the authorization token to connect a websocket server for the given simulation.
+// GetWebsocketToken returns a simulation's websocket authorization token.
 func (sa *SimulationServiceAdaptor) GetWebsocketToken(groupID simulations.GroupID) (string, error) {
 	dep, err := GetSimulationDeployment(sa.db, groupID.String())
 	if err != nil {
