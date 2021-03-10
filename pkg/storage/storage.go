@@ -29,4 +29,6 @@ type Storage interface {
 	Upload(input UploadInput) error
 	// GetURL returns the URL of the given bucket and key from a cloud storage.
 	GetURL(bucket string, key string, expiresIn time.Duration) (string, error)
+	// PrepareAddress returns the address for the given bucket with the given key.
+	PrepareAddress(bucket, key string) string
 }

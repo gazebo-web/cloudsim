@@ -2,6 +2,7 @@ package platform
 
 import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/machines"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/email"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/runsim"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/secrets"
@@ -31,15 +32,19 @@ type Platform interface {
 
 	// RunningSimulations returns a runsim.Manager component.
 	RunningSimulations() runsim.Manager
+
+	// EmailSender returns an email.Sender component.
+	EmailSender() email.Sender
 }
 
 // Components lists the components used to initialize a Platform.
 type Components struct {
-	Machines machines.Machines
-	Storage  storage.Storage
-	Cluster  orchestrator.Cluster
-	Store    store.Store
-	Secrets  secrets.Secrets
+	Machines    machines.Machines
+	Storage     storage.Storage
+	Cluster     orchestrator.Cluster
+	Store       store.Store
+	Secrets     secrets.Secrets
+	EmailSender email.Sender
 }
 
 // NewPlatform initializes a new platform using the given components.
@@ -50,6 +55,7 @@ func NewPlatform(components Components) Platform {
 		orchestrator: components.Cluster,
 		store:        components.Store,
 		secrets:      components.Secrets,
+		email:        components.EmailSender,
 	}
 }
 
@@ -61,6 +67,12 @@ type platform struct {
 	store              store.Store
 	secrets            secrets.Secrets
 	runningSimulations runsim.Manager
+	email              email.Sender
+}
+
+// EmailSender returns a email.Sender implementation.
+func (p *platform) EmailSender() email.Sender {
+	return p.email
 }
 
 // RunningSimulations returns a runsim.Manager implementation.

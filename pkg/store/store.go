@@ -56,6 +56,9 @@ type Machines interface {
 
 	// NamePrefix returns the name prefix that should be used when creating a machine.
 	NamePrefix() string
+
+	// ClusterName returns the cluster's name where to launch simulations.
+	ClusterName() string
 }
 
 // Orchestrator provides different information to manage a cluster.
@@ -112,6 +115,15 @@ type Ignition interface {
 	// SecretAccessKeyLabel returns the secret access key label to get the credentials for a certain cloud provider.
 	// For AWS, it returns: `aws-secret-access-key`
 	SecretAccessKeyLabel() string
+
+	// LogsBucket returns the bucket for saving simulation logs.
+	LogsBucket() string
+
+	// DefaultRecipients returns the list of default emails to send summary emails to.
+	DefaultRecipients() []string
+
+	// DefaultSender returns the default sender for emails.
+	DefaultSender() string
 
 	// GetWebsocketHost returns the host of the websocket URL.
 	GetWebsocketHost() string

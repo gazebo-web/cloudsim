@@ -5,7 +5,6 @@ import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/actions"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/components/services"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/resource"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulator"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulator/state"
 )
 
@@ -29,10 +28,7 @@ func launchWebsocketService(store actions.Store, tx *gorm.DB, deployment *action
 	s := store.State().(state.PlatformGetter)
 
 	// Parse input
-	input, ok := value.(LaunchWebsocketServiceInput)
-	if !ok {
-		return nil, simulator.ErrInvalidInput
-	}
+	input := value.(LaunchWebsocketServiceInput)
 
 	// Create service
 	res, err := s.Platform().Orchestrator().Services().Create(services.CreateServiceInput(input))

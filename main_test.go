@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/stretchr/testify/mock"
 	"gitlab.com/ignitionrobotics/web/cloudsim/globals"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/migrations"
 	ignws "gitlab.com/ignitionrobotics/web/cloudsim/pkg/transport/ign"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/users"
 	sim "gitlab.com/ignitionrobotics/web/cloudsim/simulations"
@@ -132,17 +133,17 @@ func packageTearDown(ctx context.Context) {
 }
 
 func cleanDBTables(ctx context.Context) {
-	DBDropModels(ctx, globals.Server.Db)
+	migrations.DBDropModels(ctx, globals.Server.Db)
 }
 
 func createDBTablesAndData(ctx context.Context, worldStatsTopic, worldWarmupTopic string) {
-	DBMigrate(ctx, globals.Server.Db)
+	migrations.DBMigrate(ctx, globals.Server.Db)
 	// After removing tables we can ask casbin to re initialize
 	if err := globals.Permissions.Reload(sysAdminForTest); err != nil {
 		log.Fatal("Error reloading casbin policies", err)
 	}
 	// Apply custom indexes. Eg: fulltext indexes
-	DBAddCustomIndexes(ctx, globals.Server.Db)
+	migrations.DBAddCustomIndexes(ctx, globals.Server.Db)
 
 	// Insert SubT Circuit Rules
 	circuits := []*sim.SubTCircuitRules{
@@ -273,5 +274,5 @@ func createDBTablesAndData(ctx context.Context, worldStatsTopic, worldWarmupTopi
 	// HACK application "subt" shouldn't be hardcoded here.
 	mockUsers := users.NewUserAccessorDataMock(ctx, globals.UserAccessor, sysAdminIdentityForTest, "subt")
 	mockUsers.ReloadEverything(ctx)
-	DBAddDefaultData(ctx, globals.Server.Db)
+	migrations.DBAddDefaultData(ctx, globals.Server.Db)
 }

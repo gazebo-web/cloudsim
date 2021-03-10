@@ -9,6 +9,7 @@ import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/storage"
 	"gitlab.com/ignitionrobotics/web/ign-go"
 	"net/http"
+	"path/filepath"
 	"time"
 )
 
@@ -21,6 +22,10 @@ func NewAPI(config client.ConfigProvider) s3iface.S3API {
 type s3Storage struct {
 	API    s3iface.S3API
 	Logger ign.Logger
+}
+
+func (s storage) PrepareAddress(bucket, key string) string {
+	return fmt.Sprintf("s3://%s", filepath.Join(bucket, key))
 }
 
 // Upload uploads a file to the cloud storage.

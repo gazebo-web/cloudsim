@@ -49,6 +49,12 @@ type machineEnvStore struct {
 	subnetZoneIndex int
 }
 
+// ClusterName returns the cluster name.
+// In AWS: It returns the EKS cluster name.
+func (m *machineEnvStore) ClusterName() string {
+	return m.ClusterNameValue
+}
+
 // BaseImage returns the base image value read from env vars.
 // In AWS, the base image is the Amazon Machine Image (AMI).
 func (m *machineEnvStore) BaseImage() string {
