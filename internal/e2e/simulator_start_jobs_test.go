@@ -19,6 +19,7 @@ import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/cloud/aws/ec2"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/cloud/aws/s3"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/env"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/migrations"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/mock"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/kubernetes"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/kubernetes/spdy"
@@ -47,8 +48,8 @@ func TestStartSimulationAction(t *testing.T) {
 	require.NoError(t, err)
 
 	// Clean and migrate database
-	err = gorm.CleanAndMigrateModels(db, &legacy.SimulationDeployment{}, &tracks.Track{})
-	require.NoError(t, err)
+	migrations.DBDropModels(context.Background(), db)
+	migrations.DBMigrate(context.Background(), db)
 
 	// Migrate actions
 	err = actions.CleanAndMigrateDB(db)
@@ -172,17 +173,17 @@ func TestStartSimulationAction(t *testing.T) {
 	// Initialize subt application.
 	app := subtapp.NewServices(baseApp, trackService, summaryService)
 
-	actionService := actions.NewService()
-
-	s := simulator.NewSimulator(simulator.Config{
-		DB:                    db,
-		Platform:              p,
-		ApplicationServices:   app,
-		ActionService:         actionService,
-		DisableDefaultActions: true,
-	})
-
 	t.Run("First phase", func(t *testing.T) {
+		actionService := actions.NewService()
+
+		s := simulator.NewSimulator(simulator.Config{
+			DB:                    db,
+			Platform:              p,
+			ApplicationServices:   app,
+			ActionService:         actionService,
+			DisableDefaultActions: true,
+		})
+
 		startActions, err := actions.NewAction(actions.Jobs{
 			jobs.CheckSimulationPendingStatus,
 			jobs.CheckStartSimulationIsNotParent,
@@ -208,6 +209,16 @@ func TestStartSimulationAction(t *testing.T) {
 	})
 
 	t.Run("Second phase", func(t *testing.T) {
+		actionService := actions.NewService()
+
+		s := simulator.NewSimulator(simulator.Config{
+			DB:                    db,
+			Platform:              p,
+			ApplicationServices:   app,
+			ActionService:         actionService,
+			DisableDefaultActions: true,
+		})
+
 		kClient := kfake.NewSimpleClientset(&apiv1.Pod{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      subtapp.GetPodNameGazeboServer(sim.GetGroupID()),
@@ -234,7 +245,7 @@ func TestStartSimulationAction(t *testing.T) {
 			},
 		})
 
-		*kubernetesClientset = *kClient
+		CopyDeepKubernetesClientset(kubernetesClientset, kClient)
 
 		startActions, err := actions.NewAction(actions.Jobs{
 			jobs.WaitForGazeboServerPod,
@@ -254,6 +265,16 @@ func TestStartSimulationAction(t *testing.T) {
 	})
 
 	t.Run("Third phase", func(t *testing.T) {
+		actionService := actions.NewService()
+
+		s := simulator.NewSimulator(simulator.Config{
+			DB:                    db,
+			Platform:              p,
+			ApplicationServices:   app,
+			ActionService:         actionService,
+			DisableDefaultActions: true,
+		})
+
 		kClient := kfake.NewSimpleClientset(&apiv1.Pod{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      subtapp.GetPodNameCommsBridge(sim.GetGroupID(), subtapp.GetRobotID(0)),
@@ -280,7 +301,7 @@ func TestStartSimulationAction(t *testing.T) {
 			},
 		})
 
-		*kubernetesClientset = *kClient
+		CopyDeepKubernetesClientset(kubernetesClientset, kClient)
 
 		startActions, err := actions.NewAction(actions.Jobs{
 			jobs.WaitForCommsBridgePods,
@@ -305,4 +326,12 @@ func TestStartSimulationAction(t *testing.T) {
 		err = s.Start(ctx, sim.GetGroupID())
 		assert.NoError(t, err)
 	})
+}
+
+// CopyDeepKubernetesClientset performs a deep copy of the content from the second argument into the first argument.
+func CopyDeepKubernetesClientset(to *kfake.Clientset, from *kfake.Clientset) {
+	to.Resources = from.Resources
+	to.ProxyReactionChain = from.ProxyReactionChain
+	to.ReactionChain = from.ReactionChain
+	to.WatchReactionChain = from.WatchReactionChain
 }

@@ -21,7 +21,7 @@ type serviceCreate interface {
 
 // serviceRead has the business logic for reading one or multiple Tracks.
 type serviceRead interface {
-	Get(name string, id int) (*Track, error)
+	Get(name string, worldID int) (*Track, error)
 	GetAll() ([]Track, error)
 }
 

@@ -70,7 +70,7 @@ func (sa *SimulationServiceAdaptor) Create(input simulations.CreateSimulationInp
 	return dep, nil
 }
 
-// GetWebsocketToken gets the authorization token to connect a websocket server for the given simulation.
+// GetWebsocketToken returns a simulation's websocket authorization token.
 func (sa *SimulationServiceAdaptor) GetWebsocketToken(groupID simulations.GroupID) (string, error) {
 	dep, err := GetSimulationDeployment(sa.db, groupID.String())
 	if err != nil {
@@ -80,11 +80,6 @@ func (sa *SimulationServiceAdaptor) GetWebsocketToken(groupID simulations.GroupI
 		return "", errors.New("missing access token")
 	}
 	return *dep.AuthorizationToken, nil
-}
-
-// MarkStopped marks a SimulationDeployment as stopped.
-func (sa *SimulationServiceAdaptor) MarkStopped(groupID simulations.GroupID) error {
-	panic("implement me")
 }
 
 // Get gets a simulation deployment with the given GroupID.

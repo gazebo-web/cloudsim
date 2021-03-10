@@ -47,12 +47,17 @@ func saveScore(store actions.Store, tx *gorm.DB, deployment *actions.Deployment,
 
 		parentGroupID := parent.GetGroupID().String()
 
-		s.SubTServices().Users().AddScore(&parentGroupID, &applicationName, &track, sim.GetOwner(), s.Score, &gid)
-
+		em := s.SubTServices().Users().AddScore(&parentGroupID, &applicationName, &track, sim.GetOwner(), s.Score, &gid)
+		if em != nil {
+			return nil, em.BaseError
+		}
 		return s, nil
 	}
 
-	s.SubTServices().Users().AddScore(&gid, &applicationName, &track, sim.GetOwner(), s.Score, &gid)
+	em := s.SubTServices().Users().AddScore(&gid, &applicationName, &track, sim.GetOwner(), s.Score, &gid)
+	if em != nil {
+		return nil, em.BaseError
+	}
 
 	return s, nil
 
