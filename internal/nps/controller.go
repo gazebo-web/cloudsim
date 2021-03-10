@@ -21,7 +21,7 @@ type Controller interface {
 	Start(user *users.User, tx *gorm.DB, w http.ResponseWriter, r *http.Request) (interface{}, *ign.ErrMsg)
 	Stop(user *users.User, tx *gorm.DB, w http.ResponseWriter, r *http.Request) (interface{}, *ign.ErrMsg)
 	ListSimulations(user *users.User, tx *gorm.DB, w http.ResponseWriter, r *http.Request) (interface{}, *ign.ErrMsg)
-	GetSimulation(tx *gorm.DB, w http.ResponseWriter, r *http.Request) (interface{}, *ign.ErrMsg)
+	GetSimulation(user *users.User, tx *gorm.DB, w http.ResponseWriter, r *http.Request) (interface{}, *ign.ErrMsg)
 }
 
 type controller struct {
@@ -174,7 +174,7 @@ func (ctrl *controller) ListSimulations(user *users.User, tx *gorm.DB, w http.Re
 // Next:
 //     * On success --> service.GetSimulation
 //     * On fail --> return error
-func (ctrl *controller) GetSimulation(tx *gorm.DB, w http.ResponseWriter, r *http.Request) (interface{}, *ign.ErrMsg) {
+func (ctrl *controller) GetSimulation(user *users.User, tx *gorm.DB, w http.ResponseWriter, r *http.Request) (interface{}, *ign.ErrMsg) {
 	groupID, ok := mux.Vars(r)["groupid"]
 	if !ok {
 		return nil, ign.NewErrorMessage(ign.ErrorIDNotInRequest)
@@ -184,6 +184,10 @@ func (ctrl *controller) GetSimulation(tx *gorm.DB, w http.ResponseWriter, r *htt
 	if err := tx.Where("group_id=?", groupID).First(&simulation).Error; err != nil {
 		return nil, ign.NewErrorMessageWithBase(ign.ErrorIDNotFound, err)
 	}
+
+  if simulation.Owner != *user.Username {
+    return nil, ign.NewErrorMessage(ign.ErrorUnauthorized)
+  }
 
 	// Send response to the user
 	return GetSimulationResponse{

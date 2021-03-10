@@ -78,12 +78,13 @@ func (app *application) GetAPIRoutes() ign.Routes {
 			Name:        "Get simulation",
 			Description: "This is a route for acquiring information about a simulation",
 			URI:         "/simulations/{groupid}",
-			Methods: []ign.Method{
-				{
+      Methods: ign.Methods{},
+			SecureMethods: ign.SecureMethods{
+				ign.Method{
 					Type:        "GET",
 					Description: "Get information about a simulation",
 					Handlers: ign.FormatHandlers{
-						ign.FormatHandler{Handler: ign.JSONResult(ctrl.GetSimulation)},
+						ign.FormatHandler{Handler: ign.JSONResult(WithUser(ctrl.GetSimulation))},
 					},
 				},
 			},
