@@ -10,6 +10,12 @@ type Service struct {
 	*mock.Mock
 }
 
+// UpdateScore mocks the UpdateScore method.
+func (s *Service) UpdateScore(groupID simulations.GroupID, score *float64) error {
+	args := s.Called(groupID, score)
+	return args.Error(0)
+}
+
 // GetWebsocketToken mocks the GetWebsocketToken method.
 func (s *Service) GetWebsocketToken(groupID simulations.GroupID) (string, error) {
 	args := s.Called(groupID)
