@@ -17,6 +17,9 @@ type Simulation interface {
 
 	// GetMarsupials returns the list of marsupials from a certain simulation.
 	GetMarsupials() []simulations.Marsupial
+
+	// GetWorldIndex returns the WorldIndex id.
+	GetWorldIndex() int
 }
 
 // IsRobotChildMarsupial checks if the given robot is a child from the given slice of marsupials.

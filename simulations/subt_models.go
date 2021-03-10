@@ -6,7 +6,9 @@ import (
 	"fmt"
 	"github.com/jinzhu/gorm"
 	"gitlab.com/ignitionrobotics/web/cloudsim/globals"
+	"gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/tracks"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -56,17 +58,17 @@ type SubTRobot struct {
 	Credits int
 }
 
-// GetName returns the SubTRobot's name.
+// GetName returns the robot name.
 func (s *SubTRobot) GetName() string {
 	return s.Name
 }
 
-// GetKind returns the SubTRobot's type.
+// GetKind returns the robot type.
 func (s *SubTRobot) GetKind() string {
 	return s.Type
 }
 
-// IsEqual asserts that the given robot is the same as the current one.
+// IsEqual asserts the given robot equals the current robot.
 func (s *SubTRobot) IsEqual(robot simulations.Robot) bool {
 	return s.Name == robot.GetName()
 }
@@ -82,12 +84,12 @@ type SubTMarsupial struct {
 	childRobot  simulations.Robot
 }
 
-// GetParent returns the parent robot from the SubTMarsupial.
+// GetParent returns the parent robot.
 func (s *SubTMarsupial) GetParent() simulations.Robot {
 	return s.parentRobot
 }
 
-// GetChild returns the child robot from the SubTMarsupial.
+// GetChild returns the child robot.
 func (s *SubTMarsupial) GetChild() simulations.Robot {
 	return s.childRobot
 }
@@ -147,6 +149,48 @@ func countSimulationsByCircuit(tx *gorm.DB, owner, circuit string) (*int, error)
 	return &count, nil
 }
 
+// NewTracksService initializes a new tracks.Service implementation using subTCircuitService.
+func NewTracksService(db *gorm.DB) tracks.Service {
+	return &subTCircuitService{
+		db: db,
+	}
+}
+
+// subTCircuitService implements the tracks.Service interface for the SubTCircuitRules.
+type subTCircuitService struct {
+	db *gorm.DB
+}
+
+// Create creates a new SubTCircuitRules based on the tracks.CreateTrackInput input.
+func (s *subTCircuitService) Create(input tracks.CreateTrackInput) (*tracks.Track, error) {
+	panic("not implemented")
+}
+
+// Get returns the tracks.Track representation of the SubTCircuitRules identified by the given circuit name.
+func (s *subTCircuitService) Get(name string, worldID int) (*tracks.Track, error) {
+	c, err := GetCircuitRules(s.db, name)
+	if err != nil {
+		return nil, err
+	}
+	return c.ToTrack(worldID), nil
+}
+
+// GetAll returns a slice with all the SubTCircuitRules represented as tracks.Track.
+func (s *subTCircuitService) GetAll() ([]tracks.Track, error) {
+	panic("not implemented")
+}
+
+// Update updates a SubTCircuitRules identified by the given circuit name.
+// Information from the tracks.UpdateTrackInput input will be used to update the SubTCircuitRules fields.
+func (s *subTCircuitService) Update(name string, input tracks.UpdateTrackInput) (*tracks.Track, error) {
+	panic("not implemented")
+}
+
+// Delete deletes a SubTCircuitRules with the given circuit name.
+func (s *subTCircuitService) Delete(name string) (*tracks.Track, error) {
+	panic("not implemented")
+}
+
 // SubTCircuitRules holds the rules associated to a given circuit. Eg which worlds
 // to run and how many times.
 type SubTCircuitRules struct {
@@ -176,6 +220,26 @@ type SubTCircuitRules struct {
 	// All the participants that were not added to the qualified participants table will be rejected when submitting
 	// a new simulation for this circuit.
 	RequiresQualification *bool `json:"-"`
+}
+
+// ToTrack generates a representation of a tracks.Track from the current SubTCircuitRules.
+func (r *SubTCircuitRules) ToTrack(id int) *tracks.Track {
+	maxSimSeconds, _ := strconv.Atoi(*r.WorldMaxSimSeconds)
+
+	seed, _ := strconv.Atoi(strings.Split(*r.Seeds, ",")[id])
+	world := strings.Split(*r.Worlds, ",")[id]
+
+	return &tracks.Track{
+		Name:          *r.Circuit,
+		Image:         *r.Image,
+		BridgeImage:   *r.BridgeImage,
+		StatsTopic:    *r.WorldStatsTopics,
+		WarmupTopic:   *r.WorldWarmupTopics,
+		MaxSimSeconds: maxSimSeconds,
+		Public:        false,
+		Seed:          &seed,
+		World:         world,
+	}
 }
 
 // GetPendingCircuitRules gets a list of circuits that are scheduled for competition
