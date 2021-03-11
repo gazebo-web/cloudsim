@@ -1,8 +1,11 @@
 package simulations
 
 import (
+	"errors"
 	"github.com/jinzhu/gorm"
+	uuid "github.com/satori/go.uuid"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
+	"time"
 )
 
 // SimulationServiceAdaptor implements the simulations.Service interface.
@@ -11,19 +14,72 @@ type SimulationServiceAdaptor struct {
 	db *gorm.DB
 }
 
-// UpdateScore updates a simulation's score.
+// UpdateScore updates the score of a certain simulation deployment.
 func (sa *SimulationServiceAdaptor) UpdateScore(groupID simulations.GroupID, score *float64) error {
-	panic("implement me")
+	dep, err := GetSimulationDeployment(sa.db, groupID.String())
+	if err != nil {
+		return err
+	}
+
+	em := dep.UpdateScore(sa.db, score)
+	if em != nil {
+		return em.BaseError
+	}
+
+	return nil
 }
 
-// MarkStopped marks a simulation as stopped.
+// MarkStopped marks a simulation with the time where it has stopped running.
 func (sa *SimulationServiceAdaptor) MarkStopped(groupID simulations.GroupID) error {
-	panic("implement me")
+	at := time.Now()
+	if err := sa.db.Model(&SimulationDeployment{}).Where("group_id = ?", groupID).Update(SimulationDeployment{
+		StoppedAt: &at,
+	}).Error; err != nil {
+		return err
+	}
+	return nil
+}
+
+// Create creates a simulation (SimulationDeployment) from the given input.
+func (sa *SimulationServiceAdaptor) Create(input simulations.CreateSimulationInput) (simulations.Simulation, error) {
+	dep, err := NewSimulationDeployment()
+	if err != nil {
+		return nil, err
+	}
+
+	gid := simulations.GroupID(uuid.NewV4().String()).String()
+
+	image := SliceToStr(input.Image)
+
+	dep.Owner = input.Owner
+	dep.Name = &input.Name
+	dep.Creator = &input.Creator
+	dep.Private = &input.Private
+	dep.StopOnEnd = &input.StopOnEnd
+	dep.Image = &image
+	dep.GroupID = &gid
+	dep.DeploymentStatus = simPending.ToPtr()
+	dep.Extra = &input.Extra
+	dep.ExtraSelector = &input.Track
+	dep.Robots = &input.Robots
+	dep.Held = false
+
+	if err := sa.db.Model(&SimulationDeployment{}).Create(dep).Error; err != nil {
+		return nil, err
+	}
+	return dep, nil
 }
 
 // GetWebsocketToken returns a simulation's websocket authorization token.
 func (sa *SimulationServiceAdaptor) GetWebsocketToken(groupID simulations.GroupID) (string, error) {
-	panic("implement me")
+	dep, err := GetSimulationDeployment(sa.db, groupID.String())
+	if err != nil {
+		return "", err
+	}
+	if dep.AuthorizationToken == nil {
+		return "", errors.New("missing access token")
+	}
+	return *dep.AuthorizationToken, nil
 }
 
 // Get gets a simulation deployment with the given GroupID.

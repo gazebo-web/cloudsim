@@ -15,12 +15,12 @@ func (f fakeRobot) IsEqual(robot simulations.Robot) bool {
 	return f.GetName() == robot.GetName()
 }
 
-// Name returns the fake robot's name.
+// GetName returns the fake robot's name.
 func (f fakeRobot) GetName() string {
 	return f.name
 }
 
-// Kind returns the fake robot's kind.
+// GetKind returns the fake robot's kind.
 func (f fakeRobot) GetKind() string {
 	return f.kind
 }

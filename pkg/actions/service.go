@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/jinzhu/gorm"
+	"log"
 )
 
 var (
@@ -196,6 +197,7 @@ func (s *service) processJobs(store Store, tx *gorm.DB, action *Action, executeI
 		}
 
 		// Run the job
+		log.Printf("[Actions] Running job [%s]\n", job.Name)
 		jobInput, err = job.Run(store, tx, deployment, jobInput)
 		// If an error was found, add it to the deployment and return
 		if err != nil {
@@ -204,6 +206,7 @@ func (s *service) processJobs(store Store, tx *gorm.DB, action *Action, executeI
 			}
 			return err
 		}
+		log.Printf("[Actions] Job [%s] has successfully finished\n", job.Name)
 	}
 
 	return nil

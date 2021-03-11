@@ -21,7 +21,7 @@ var WaitForNodes = jobs.Wait.Extend(actions.Job{
 
 // createWaitForNodesInput creates the input for the main wait job. This JobFunc is a pre-hook of the WaitForNodes job.
 func createWaitForNodesInput(store actions.Store, tx *gorm.DB, deployment *actions.Deployment, value interface{}) (interface{}, error) {
-	s := value.(state.StartSimulation)
+	s := value.(*state.StartSimulation)
 
 	store.SetState(s)
 
@@ -31,7 +31,7 @@ func createWaitForNodesInput(store actions.Store, tx *gorm.DB, deployment *actio
 
 	w := s.Platform().Orchestrator().Nodes().WaitForCondition(res, orchestrator.ReadyCondition)
 
-	return &jobs.WaitInput{
+	return jobs.WaitInput{
 		Request:       w,
 		PollFrequency: s.Platform().Store().Machines().PollFrequency(),
 		Timeout:       s.Platform().Store().Machines().Timeout(),

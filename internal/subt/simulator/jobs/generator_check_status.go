@@ -22,16 +22,32 @@ type CheckStatusJobConfig struct {
 func GenerateCheckStatusJob(config CheckStatusJobConfig) *actions.Job {
 	return jobs.CheckSimulationStatus.Extend(actions.Job{
 		Name:       config.Name,
-		PreHooks:   append(config.PreHooks, generateCheckSimulationStatusInputPreHook(config.Status)),
+		PreHooks:   append(config.PreHooks),
 		PostHooks:  append(config.PostHooks, assertStatus, returnState),
 		InputType:  actions.GetJobDataType(config.InputType),
 		OutputType: actions.GetJobDataType(config.OutputType),
 	})
 }
 
-func generateCheckSimulationStatusInputPreHook(status simulations.Status) actions.JobFunc {
+func generateCheckStartSimulationStatusInputPreHook(status simulations.Status) actions.JobFunc {
 	return func(store actions.Store, tx *gorm.DB, deployment *actions.Deployment, value interface{}) (interface{}, error) {
 		s := value.(*state.StartSimulation)
+
+		sim, err := s.Services().Simulations().Get(s.GroupID)
+		if err != nil {
+			return nil, err
+		}
+
+		return jobs.CheckSimulationStatusInput{
+			Simulation: sim,
+			Status:     status,
+		}, nil
+	}
+}
+
+func generateCheckStopSimulationStatusInputPreHook(status simulations.Status) actions.JobFunc {
+	return func(store actions.Store, tx *gorm.DB, deployment *actions.Deployment, value interface{}) (interface{}, error) {
+		s := value.(*state.StopSimulation)
 
 		sim, err := s.Services().Simulations().Get(s.GroupID)
 		if err != nil {

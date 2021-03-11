@@ -23,10 +23,16 @@ type SimulationConfig struct {
 // simulation is a fake simulation implementation.
 type simulation struct {
 	simulations.Simulation
+	name       string
 	track      string
 	token      *string
 	robots     []simulations.Robot
 	marsupials []simulations.Marsupial
+}
+
+// GetName returns the simulation name.
+func (s *simulation) GetName() string {
+	return s.name
 }
 
 // GetWorldIndex returns the world index.

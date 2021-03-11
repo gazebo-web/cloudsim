@@ -22,8 +22,10 @@ import (
 func TestWaitForGazeboServerPod(t *testing.T) {
 	logger := ign.NewLoggerNoRollbar("TestWaitForGazeboServerPod", ign.VerbosityDebug)
 	storeMachines := sfake.NewFakeMachines()
-	fakeStore := sfake.NewFakeStore(storeMachines, nil, nil)
+	orchestratorStore := sfake.NewFakeOrchestrator()
+	fakeStore := sfake.NewFakeStore(storeMachines, orchestratorStore, nil)
 	spdyInit := spdy.NewSPDYFakeInitializer()
+
 	initialPod := &apiv1.Pod{
 		TypeMeta: metav1.TypeMeta{},
 		ObjectMeta: metav1.ObjectMeta{
@@ -70,6 +72,7 @@ func TestWaitForGazeboServerPod(t *testing.T) {
 
 	storeMachines.On("Timeout").Return(1 * time.Second)
 	storeMachines.On("PollFrequency").Return(1 * time.Second)
+	orchestratorStore.On("Namespace").Return("default")
 
 	result, err := WaitForGazeboServerPod.Run(store, nil, &actions.Deployment{CurrentJob: "test"}, s)
 	assert.NoError(t, err)

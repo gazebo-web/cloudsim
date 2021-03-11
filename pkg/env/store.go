@@ -25,10 +25,25 @@ func (e *envStore) Machines() store.Machines {
 }
 
 // NewStore initializes a new store.Store implementation using envStore.
-func NewStore() store.Store {
-	return &envStore{
-		machines:     newMachinesStore(),
-		ignition:     newIgnitionStore(),
-		orchestrator: newOrchestratorStore(),
+func NewStore() (store.Store, error) {
+
+	machines, err := newMachinesStore()
+	if err != nil {
+		return nil, err
 	}
+
+	ignition, err := newIgnitionStore()
+	if err != nil {
+		return nil, err
+	}
+
+	orchestrator, err := newOrchestratorStore()
+	if err != nil {
+		return nil, err
+	}
+	return &envStore{
+		machines:     machines,
+		ignition:     ignition,
+		orchestrator: orchestrator,
+	}, nil
 }

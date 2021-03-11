@@ -1,6 +1,7 @@
 package env
 
 import (
+	"github.com/caarlos0/env"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/store"
 	"time"
 )
@@ -28,7 +29,7 @@ type orchestratorEnvStore struct {
 	// It is used to select a specific rule to modify in an ingress.
 	// The ingress resource referenced by the `IngressName` configuration must contain at least one rule with a host
 	// value matching this configuration.
-	IngressHostValue string
+	IngressHostValue string `env:"CLOUDSIM_ORCHESTRATOR_INGRESS_HOST,required"`
 }
 
 // IngressNamespace returns the ingress namespace.
@@ -62,6 +63,10 @@ func (o orchestratorEnvStore) Namespace() string {
 }
 
 // newOrchestratorStore initializes a new store.Orchestrator implementation using orchestratorEnvStore.
-func newOrchestratorStore() store.Orchestrator {
-	return &orchestratorEnvStore{}
+func newOrchestratorStore() (store.Orchestrator, error) {
+	var o orchestratorEnvStore
+	if err := env.Parse(&o); err != nil {
+		return nil, err
+	}
+	return o, nil
 }

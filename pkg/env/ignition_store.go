@@ -28,7 +28,7 @@ type ignitionEnvStore struct {
 	IgnIPValue string `env:"CLOUDSIM_IGN_IP"`
 
 	// VerbosityValue is the IGN_VERBOSE value that will be passed to Pods launched for SubT.
-	VerbosityValue string `env:"CLOUDSIM_IGN_VERBOSITY"`
+	VerbosityValue string `env:"CLOUDSIM_IGN_VERBOSITY" envDefault:"2"`
 
 	// LogsCopyEnabledValue is the CLOUDSIM_IGN_LOGS_COPY_ENABLED value that will used to define if logs should be copied.
 	LogsCopyEnabledValue bool `env:"CLOUDSIM_IGN_LOGS_COPY_ENABLED"`
@@ -42,19 +42,14 @@ type ignitionEnvStore struct {
 	// LogsBucketValue is the CLOUDSIM_AWS_GZ_LOGS_BUCKET value that will be used to upload logs.
 	LogsBucketValue string `env:"CLOUDSIM_AWS_GZ_LOGS_BUCKET"`
 
+	// WebsocketHostValue is the CLOUDSIM_WEBSOCKET_HOST that will be used as host to connect to simulation's websocket servers.
+	WebsocketHostValue string `env:"CLOUDSIM_SUBT_WEBSOCKET_HOST"`
+
 	// DefaultRecipientsValue has the list of emails that should always receive summaries.
 	DefaultRecipientsValue []string `env:"CLOUDSIM_IGN_DEFAULT_RECIPIENTS"`
 
 	// DefaultSenderValue is the email address used to send emails.
-	DefaultSenderValue string `env:"CLOUDSIM_IGN_DEFAULT_SENDER"`
-
-	// WebsocketHostValue is the CLOUDSIM_WEBSOCKET_HOST that will be used as host to connect to simulation's websocket servers.
-	WebsocketHostValue string `env:"CLOUDSIM_SUBT_WEBSOCKET_HOST"`
-}
-
-// LogsBucket returns the bucket to upload simulation logs to.
-func (i *ignitionEnvStore) LogsBucket() string {
-	return i.LogsBucketValue
+	DefaultSenderValue string `env:"CLOUDSIM_IGN_DEFAULT_SENDER,required"`
 }
 
 // DefaultRecipients returns the list of default summary email recipients.
@@ -65,6 +60,11 @@ func (i *ignitionEnvStore) DefaultRecipients() []string {
 // DefaultSender returns the default email address used to send emails.
 func (i *ignitionEnvStore) DefaultSender() string {
 	return i.DefaultSenderValue
+}
+
+// LogsBucket returns the bucket to upload simulation logs to.
+func (i *ignitionEnvStore) LogsBucket() string {
+	return i.LogsBucketValue
 }
 
 // GetWebsocketHost returns the host of the websocket address for connecting to simulation websocket servers.
@@ -130,10 +130,10 @@ func (i *ignitionEnvStore) IP() string {
 }
 
 // newIgnitionStore initializes a new store.Ignition implementation using ignitionEnvStore.
-func newIgnitionStore() store.Ignition {
+func newIgnitionStore() (store.Ignition, error) {
 	var i ignitionEnvStore
 	if err := env.Parse(&i); err != nil {
-		panic(err)
+		return nil, err
 	}
-	return &i
+	return &i, nil
 }

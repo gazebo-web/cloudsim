@@ -20,6 +20,9 @@ type Simulation interface {
 
 	// GetWorldIndex returns the WorldIndex id.
 	GetWorldIndex() int
+
+	// GetName returns the simulation's name.
+	GetName() string
 }
 
 // IsRobotChildMarsupial checks if the given robot is a child from the given slice of marsupials.
