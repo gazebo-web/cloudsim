@@ -3,24 +3,40 @@ package simulations
 import (
 	"context"
 	"fmt"
+	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/ses"
 	"github.com/caarlos0/env"
 	"github.com/jinzhu/gorm"
 	"github.com/panjf2000/ants"
 	"github.com/pkg/errors"
 	"github.com/satori/go.uuid"
 	"gitlab.com/ignitionrobotics/web/cloudsim/globals"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/cloud/aws/ec2"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/cloud/aws/s3"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/email"
+	envVars "gitlab.com/ignitionrobotics/web/cloudsim/pkg/env"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/gloo"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/kubernetes"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/kubernetes/network"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/kubernetes/nodes"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/kubernetes/pods"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/kubernetes/services"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/kubernetes/spdy"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/platform"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/runsim"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/secrets"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/transport"
 	ignws "gitlab.com/ignitionrobotics/web/cloudsim/pkg/transport/ign"
 	useracc "gitlab.com/ignitionrobotics/web/cloudsim/pkg/users"
 	"gitlab.com/ignitionrobotics/web/cloudsim/queues"
-	"gitlab.com/ignitionrobotics/web/cloudsim/simulations/gloo"
+	gloocli "gitlab.com/ignitionrobotics/web/cloudsim/simulations/gloo"
 	"gitlab.com/ignitionrobotics/web/fuelserver/bundles/users"
 	per "gitlab.com/ignitionrobotics/web/fuelserver/permissions"
 	"gitlab.com/ignitionrobotics/web/ign-go"
 	"gitlab.com/ignitionrobotics/web/ign-go/scheduler"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/client-go/kubernetes"
+	kubecli "k8s.io/client-go/kubernetes"
 	"net/http"
 	"strconv"
 	"strings"
@@ -129,9 +145,9 @@ type Service struct {
 	// ErrorLaunchingCloudInstanceNotEnoughResources error. True by default.
 	AllowRequeuing bool
 	// A reference to the kubernetes client
-	clientset kubernetes.Interface
+	clientset kubecli.Interface
 	// A reference to the Gloo client
-	glooClientset gloo.Clientset
+	glooClientset gloocli.Clientset
 	// A reference to the nodes manager implementation
 	hostsSvc NodeManager
 	DB       *gorm.DB
@@ -167,6 +183,17 @@ type Service struct {
 	userAccessor             useracc.Service
 	poolNotificationCallback PoolNotificationCallback
 	scheduler                *scheduler.Scheduler
+
+	// From aws go documentation:
+	// Sessions should be cached when possible, because creating a new Session
+	// will load all configuration values from the environment, and config files
+	// each time the Session is created. Sharing the Session value across all of
+	// your service clients will ensure the configuration is loaded the fewest
+	// number of times possible.
+	session *session.Session
+
+	platform platform.Platform
+	logger   ign.Logger
 }
 
 // SimServImpl holds the instance of the Simulations Service. It is set at initialization.
@@ -249,8 +276,7 @@ type PoolFactory func(poolSize int, jobF func(interface{})) (JobPool, error)
 // ///////////////////////////////////////////////////////////////////////
 
 // NewSimulationsService creates a new simulations service
-func NewSimulationsService(ctx context.Context, db *gorm.DB, nm NodeManager, kcli kubernetes.Interface,
-	gloo gloo.Clientset, pf PoolFactory, ua useracc.Service, isTest bool) (SimService, error) {
+func NewSimulationsService(ctx context.Context, db *gorm.DB, nm NodeManager, kcli kubecli.Interface, gloo gloocli.Clientset, pf PoolFactory, ua useracc.Service, isTest bool, session *session.Session) (SimService, error) {
 
 	var err error
 	s := Service{}
@@ -265,6 +291,7 @@ func NewSimulationsService(ctx context.Context, db *gorm.DB, nm NodeManager, kcl
 	s.lockRunningSimulations = sync.RWMutex{}
 	s.applications = map[string]ApplicationType{}
 	s.scheduler = scheduler.GetInstance()
+	s.session = session
 
 	// Read configuration from environment
 	s.cfg = simServConfig{
@@ -414,6 +441,13 @@ func (s *Service) Start(ctx context.Context) error {
 	s.StartExpiredSimulationsCleaner()
 	s.StartMultiSimStatusUpdater()
 	RegisterSchedulableTasks(s, ctx, s.DB)
+
+	var err error
+	s.platform, err = s.initPlatform()
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -450,7 +484,7 @@ func (s *Service) GetApplications() map[string]ApplicationType {
 // initializeRunningSimulationsFromCluster finds the existing Pods in the Kubernetes
 // cluster and initializes the internal set of runningSimulations.
 // Note: after a server restart there can be inconsistencies between DB data and
-// live kubernetes. This function is not responsible for sanitizing such inconsistencies.
+// live kubecli. This function is not responsible for sanitizing such inconsistencies.
 // TODO: There should be another call for SystemAdmins to list inconsistencies and allow them
 // to act on those.
 func (s *Service) initializeRunningSimulationsFromCluster(ctx context.Context, tx *gorm.DB) error {
@@ -2263,4 +2297,62 @@ func (s *Service) QueueRemoveElement(ctx context.Context, user *users.User, grou
 		return nil, ign.NewErrorMessage(ign.ErrorUnauthorized)
 	}
 	return s.launchHandlerQueue.Remove(groupID)
+}
+
+func (s *Service) initPlatform() (platform.Platform, error) {
+	s.logger = ign.NewLoggerNoRollbar("[Ignition Cloudsim - SubT]", ign.VerbosityDebug)
+
+	machines := ec2.NewMachines(globals.EC2Svc, s.logger)
+
+	storage := s3.NewStorage(globals.S3Svc, s.logger)
+
+	restConfig, err := kubernetes.GetConfig()
+	if err != nil {
+		return nil, err
+	}
+
+	kubernetesClient, err := kubernetes.NewAPI(restConfig)
+	if err != nil {
+		return nil, err
+	}
+
+	glooClientset, err := gloocli.NewClientset(context.Background(), &gloocli.ClientsetConfig{
+		KubeConfig:             restConfig,
+		IsGoTest:               s.cfg.IsTest,
+		ConnectToCloudServices: true,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	cluster := kubernetes.NewCustomKubernetes(kubernetes.Config{
+		Nodes:           nodes.NewNodes(kubernetesClient, s.logger),
+		Pods:            pods.NewPods(kubernetesClient, spdy.NewSPDYInitializer(restConfig), s.logger),
+		Ingresses:       gloo.NewVirtualServices(glooClientset.Gateway(), s.logger, glooClientset.Gloo()),
+		IngressRules:    gloo.NewVirtualHosts(glooClientset.Gateway(), s.logger),
+		Services:        services.NewServices(kubernetesClient, s.logger),
+		NetworkPolicies: network.NewNetworkPolicies(kubernetesClient, s.logger),
+	})
+
+	store, err := envVars.NewStore()
+	if err != nil {
+		return nil, err
+	}
+
+	kubernetesSecrets := secrets.NewKubernetesSecrets(kubernetesClient.CoreV1())
+
+	sesAPI := ses.New(s.session)
+	emailSender := email.NewEmailSender(sesAPI)
+
+	runningSimulations := runsim.NewManager()
+
+	return platform.NewPlatform(platform.Components{
+		Machines:           machines,
+		Storage:            storage,
+		Cluster:            cluster,
+		Store:              store,
+		Secrets:            kubernetesSecrets,
+		EmailSender:        emailSender,
+		RunningSimulations: runningSimulations,
+	}), nil
 }
