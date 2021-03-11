@@ -455,6 +455,8 @@ func (s *Service) Start(ctx context.Context) error {
 
 	var err error
 
+	s.logger = ign.NewLoggerNoRollbar("[Ignition Cloudsim - SubT]", ign.VerbosityDebug)
+
 	s.logger.Info("Initializing Cloudsim platform")
 	s.platform, err = s.initPlatform()
 	if err != nil {
@@ -2322,7 +2324,6 @@ func (s *Service) QueueRemoveElement(ctx context.Context, user *users.User, grou
 }
 
 func (s *Service) initPlatform() (platform.Platform, error) {
-	s.logger = ign.NewLoggerNoRollbar("[Ignition Cloudsim - SubT]", ign.VerbosityDebug)
 
 	machines := ec2.NewMachines(globals.EC2Svc, s.logger)
 
