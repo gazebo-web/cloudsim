@@ -466,6 +466,9 @@ func (s *Service) Start(ctx context.Context) error {
 	s.logger.Info("Initializing application services")
 	s.applicationServices = s.initApplicationServices()
 
+	s.logger.Info("Initializing action service")
+	s.actionService = actions.NewService()
+
 	s.logger.Info("Initializing Simulator using Kubernetes and AWS")
 	s.simulator = s.initSimulator()
 
