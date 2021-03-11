@@ -2318,7 +2318,7 @@ func (s *Service) initPlatform() (platform.Platform, error) {
 
 	glooClientset, err := gloocli.NewClientset(context.Background(), &gloocli.ClientsetConfig{
 		KubeConfig:             restConfig,
-		IsGoTest:               false,
+		IsGoTest:               s.cfg.IsTest,
 		ConnectToCloudServices: true,
 	})
 	if err != nil {
