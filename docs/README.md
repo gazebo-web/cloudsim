@@ -5,25 +5,7 @@
 
 ## Table of contents
 
-- [What is Ignition Cloudsim?](#what-is-ignition-cloudsim)
-- [Components](#components)
-    - [Simulator](#simulator)
-    - [Platform](#platform)
-        - [Machines](#machines)
-        - [Storage](#storage)
-        - [Orchestrator](#orchestrator)
-            - [Nodes](#nodes)
-            - [Pods](#pods)
-            - [Ingresses](#ingresses)
-            - [Ingress Rules](#ingress-rules)
-            - [Services](#services)
-            - [Network Policies](#network-policies)
-        - [Store](#store)
-        - [Secrets](#secrets)
-    - [Application services](#application-services)
-        - [Users](#users)
-        - [Simulations](#simulations)
-- [Configuring a Platform](#configuring-a-platform)
+[[_TOC_]]
 
 ## What is Ignition Cloudsim?
 
@@ -63,7 +45,7 @@ In the following sections we'll describe each component that a Platform is compo
 
 #### Machines
 
-The Machines component is in charge of requesting instances to cloud providers in where to launch simulations. It also
+The Machines component is in charge of requesting instances to cloud providers in which to launch simulations. It also
 provides methods to terminate instances, and count the amount of instances running on a specific Platform.
 
 An AWS EC2 implementation of this component can be found in the `ignitionrobotics.com/web/cloudsim/pkg/cloud/aws/ec2`
@@ -83,7 +65,7 @@ package.
 
 #### Orchestrator
 
-The Orchestrator component is also a meta-component that includes a set of different sub-components to interact with
+The Orchestrator component is a meta-component that includes a set of different sub-components to interact with
 different resources inside a cluster.
 
 The next sections will include a brief description of the managers available for these resources.
@@ -176,8 +158,7 @@ application, and therefore, the Ignition Cloudsim API.
 #### Simulations
 
 The simulations interface represents a service that manages a set of simulations. These simulations are a representation
-of a simulation running on a specific Platform. A simulation includes specific configuration to launch, like the image
-that needs to be used for robots.
+of a simulation running on a specific Platform. A simulation includes specific configuration to launch, like the images to run on each pod.
 
 ## Configuring a Platform
 
