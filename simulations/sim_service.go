@@ -888,8 +888,9 @@ func (s *Service) workerStartSimulation(payload interface{}) {
 
 	err = s.simulator.Start(context.TODO(), simulations.GroupID(groupID))
 	if err != nil {
-		s.requeueSimulation(simDep)
+		// s.requeueSimulation(simDep)
 		s.notify(PoolStartSimulation, groupID, nil, ign.NewErrorMessageWithBase(ign.ErrorUnexpected, err))
+		return
 	}
 
 	s.notify(PoolStartSimulation, groupID, simDep, nil)
@@ -908,6 +909,7 @@ func (s *Service) workerTerminateSimulation(payload interface{}) {
 	err := s.simulator.Stop(context.TODO(), simulations.GroupID(groupID))
 	if err != nil {
 		s.notify(PoolShutdownSimulation, groupID, nil, ign.NewErrorMessageWithBase(ign.ErrorUnexpected, err))
+		return
 	}
 
 	simDep, err := GetSimulationDeployment(s.DB, groupID)
