@@ -878,24 +878,21 @@ func (s *Service) workerStartSimulation(payload interface{}) {
 		return
 	}
 
-	// bind a specific logger to the worker
-	reqID := fmt.Sprintf("worker-start-sim-%s", groupID)
-	newLogger := logger(s.baseCtx).Clone(reqID)
-	workerCtx := ign.NewContextWithLogger(s.baseCtx, newLogger)
-
-	newLogger.Info("Worker about to invoke StartSimulation for groupID: " + groupID)
+	s.logger.Info("Worker about to invoke StartSimulation for groupID: " + groupID)
 
 	simDep, err := GetSimulationDeployment(s.DB, groupID)
 	if err != nil {
-		logger(workerCtx).Error(fmt.Sprintf("startSimulation - %v", err))
+		s.logger.Error(fmt.Sprintf("startSimulation - %v", err))
 		return
 	}
 
-	res, em := s.startSimulation(workerCtx, s.DB, simDep)
-	if res == launcherRelaunchNeeded {
+	err = s.simulator.Start(context.TODO(), simulations.GroupID(groupID))
+	if err != nil {
 		s.requeueSimulation(simDep)
+		s.notify(PoolStartSimulation, groupID, nil, ign.NewErrorMessageWithBase(ign.ErrorUnexpected, err))
 	}
-	s.notify(PoolStartSimulation, groupID, res, em)
+
+	s.notify(PoolStartSimulation, groupID, simDep, nil)
 }
 
 // ///////////////////////////////////////////////////////////////////////
@@ -907,14 +904,18 @@ func (s *Service) workerTerminateSimulation(payload interface{}) {
 	if !ok {
 		return
 	}
-	// bind a specific logger to the worker-
-	reqID := fmt.Sprintf("worker-finish-sim-%s", groupID)
-	newLogger := logger(s.baseCtx).Clone(reqID)
-	workerCtx := ign.NewContextWithLogger(s.baseCtx, newLogger)
 
-	newLogger.Info("Worker about to invoke ShutdownSimulation for groupID: " + groupID)
-	res, em := s.shutdownSimulation(workerCtx, s.DB, groupID)
-	s.notify(PoolShutdownSimulation, groupID, res, em)
+	err := s.simulator.Stop(context.TODO(), simulations.GroupID(groupID))
+	if err != nil {
+		s.notify(PoolShutdownSimulation, groupID, nil, ign.NewErrorMessageWithBase(ign.ErrorUnexpected, err))
+	}
+
+	simDep, err := GetSimulationDeployment(s.DB, groupID)
+	if err != nil {
+		s.logger.Error(fmt.Sprintf("stopSimulation - %v", err))
+		return
+	}
+	s.notify(PoolShutdownSimulation, groupID, simDep, nil)
 }
 
 // ///////////////////////////////////////////////////////////////////////
