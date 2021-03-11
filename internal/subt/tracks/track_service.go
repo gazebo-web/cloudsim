@@ -21,7 +21,7 @@ type serviceCreate interface {
 
 // serviceRead has the business logic for reading one or multiple Tracks.
 type serviceRead interface {
-	Get(name string) (*Track, error)
+	Get(name string, worldID int) (*Track, error)
 	GetAll() ([]Track, error)
 }
 
@@ -59,7 +59,7 @@ func (s service) Create(input CreateTrackInput) (*Track, error) {
 }
 
 // Get gets a Track with the given name.
-func (s service) Get(name string) (*Track, error) {
+func (s service) Get(name string, id int) (*Track, error) {
 	s.logger.Debug(" [Track.Service] Getting Track with name: ", name)
 	track, err := s.repository.Get(name)
 	if err != nil {
@@ -90,7 +90,7 @@ func (s service) Update(name string, input UpdateTrackInput) (*Track, error) {
 		s.logger.Debug(fmt.Sprintf(" [Track.Service] Validating input failed. Error: %+v", err))
 		return nil, err
 	}
-	track, err := s.Get(name)
+	track, err := s.Get(name, 0)
 	if err != nil {
 		return nil, err
 	}
@@ -107,7 +107,7 @@ func (s service) Update(name string, input UpdateTrackInput) (*Track, error) {
 // Delete removes the track with the given name.
 func (s service) Delete(name string) (*Track, error) {
 	s.logger.Debug(fmt.Sprintf(" [Track.Service] Removing track with name: %s", name))
-	input, err := s.Get(name)
+	input, err := s.Get(name, 0)
 	if err != nil {
 		return nil, err
 	}

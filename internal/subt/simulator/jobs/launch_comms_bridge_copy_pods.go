@@ -14,7 +14,7 @@ import (
 
 // LaunchCommsBridgeCopyPods launches the list of comms bridge copy pods.
 var LaunchCommsBridgeCopyPods = jobs.LaunchPods.Extend(actions.Job{
-	Name:            "launch-comms-bridge-pods",
+	Name:            "launch-comms-bridge-copy-pods",
 	PreHooks:        []actions.JobFunc{setStartState, prepareCommsBridgeCreateCopyPodInput},
 	PostHooks:       []actions.JobFunc{checkLaunchPodsError, returnState},
 	RollbackHandler: rollbackPodCreation,

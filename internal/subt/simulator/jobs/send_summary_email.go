@@ -1,7 +1,10 @@
 package jobs
 
 import (
+	"bytes"
+	"encoding/json"
 	"github.com/jinzhu/gorm"
+	subt "gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/simulations"
 	"gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/simulator/state"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/actions"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
@@ -52,12 +55,9 @@ func sendSummaryEmail(store actions.Store, tx *gorm.DB, deployment *actions.Depl
 	// Get default sender
 	sender := s.Platform().Store().Ignition().DefaultSender()
 
-	// Get owner
-	owner := sim.GetOwner()
-
 	// If there's an owner assigned, add the organization email
-	if owner != nil {
-		org, em := s.Services().Users().GetOrganization(*owner)
+	if sim.GetOwner() != nil {
+		org, em := s.Services().Users().GetOrganization(*sim.GetOwner())
 		if em != nil {
 			return nil, em.BaseError
 		}
@@ -67,8 +67,28 @@ func sendSummaryEmail(store actions.Store, tx *gorm.DB, deployment *actions.Depl
 		}
 	}
 
+	subtSim := sim.(subt.Simulation)
+
+	var marshaledSummary bytes.Buffer
+	b, err := json.MarshalIndent(s.Summary, "", "  ")
+	if err != nil {
+		return nil, err
+	}
+
+	_, err = marshaledSummary.Write(b)
+	if err != nil {
+		return nil, err
+	}
+
 	// Send the email
-	err = s.Platform().EmailSender().Send(recipients, sender, "Simulation summary", "simulations/email-templates/simulation_summary.html", s.Summary)
+	err = s.Platform().EmailSender().Send(recipients, sender, "Simulation summary", "simulations/email-templates/simulation_summary.html", map[string]interface{}{
+		"Name":    *user.Name,
+		"Circuit": subtSim.GetTrack(),
+		"SimName": subtSim.GetName(),
+		"GroupID": subtSim.GetGroupID(),
+		"Summary": marshaledSummary,
+		"RunData": s.Summary.RunData,
+	})
 	if err != nil {
 		return nil, err
 	}

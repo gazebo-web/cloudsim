@@ -6,7 +6,9 @@ import (
 	"github.com/jinzhu/gorm"
 	"gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/tracks"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/actions"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
 	sim "gitlab.com/ignitionrobotics/web/cloudsim/simulations"
+	"gitlab.com/ignitionrobotics/web/fuelserver/bundles/subt"
 	"log"
 )
 
@@ -27,6 +29,8 @@ func DBMigrate(ctx context.Context, db *gorm.DB) {
 			&sim.CircuitCustomRule{},
 			&sim.SubTQualifiedParticipant{},
 			&tracks.Track{},
+			&subt.CompetitionScore{},
+			&simulations.Summary{},
 		)
 		_ = actions.MigrateDB(db)
 
@@ -158,6 +162,8 @@ func DBDropModels(ctx context.Context, db *gorm.DB) {
 			&sim.CircuitCustomRule{},
 			&sim.SubTQualifiedParticipant{},
 			&tracks.Track{},
+			&subt.CompetitionScore{},
+			&simulations.Summary{},
 		)
 
 		// Now also remove many_to_many tables, because they are not automatically removed.
