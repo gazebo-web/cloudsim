@@ -24,6 +24,7 @@ const (
 
 	// applicationName is the name of the current simulator's application.
 	applicationName = "nps"
+  applicationVersion = "0.1.0"
 )
 
 // Application is an interface designed to manage this application.
@@ -61,7 +62,7 @@ type application struct {
 // An application is returned on success, or nil on error.
 func NewApplication(apiVersion string, logger ign.Logger) (Application, error) {
 
-	logger.Debug("Creating the application")
+	logger.Debug("Creating ", applicationName, " version ", applicationVersion)
 
 	// This will use the following environment variables to create a database
 	// connection

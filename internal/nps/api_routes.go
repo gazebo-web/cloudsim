@@ -9,6 +9,14 @@ package nps
 // Debugging commands
 // 1. kubectl --kubeconfig=/home/nkoenig/.kube/config -n web-cloudsim-integration get no
 // 2. kubectl --kubeconfig=/home/nkoenig/.kube/config -n web-cloudsim-integration get po
+//
+// Debug deployments
+//
+// 1. kubectl -n web-cloudsim-nps-staging describe canary
+// 2. kubectl -n flagger logs deployment/flagger
+// 3. kubectl -n flagger logs deployment/flagger-loadtester
+// 4. kubectl -n web-cloudsim-nps-staging edit deploy web-cloudsim-nps-primary
+// 5. kubectl -n web-cloudsim-nps-staging edit cm cloudsim-config-nps-primary
 
 import (
 	"gitlab.com/ignitionrobotics/web/ign-go"

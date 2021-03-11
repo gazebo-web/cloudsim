@@ -153,7 +153,7 @@ func (s *service) StartQueueHandler(ctx context.Context, groupID simulations.Gro
 		return err
 	}
 
-	s.logger.Info("Starting simulation for groupID[%s]\n", groupID)
+  s.logger.Info("Starting simulation for groupID: ", groupID)
 	return nil
 }
 
@@ -183,7 +183,7 @@ func (s *service) StopQueueHandler(ctx context.Context, groupID simulations.Grou
 		return err
 	}
 
-	s.logger.Info("Stopping simulation for groupID[%s]\n", groupID)
+	s.logger.Info("Stopping simulation for groupID:", groupID)
 	return nil
 
   return nil

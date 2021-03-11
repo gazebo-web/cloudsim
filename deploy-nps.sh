@@ -21,5 +21,3 @@ envsubst < "./deployments/01-deployment.yaml"
 envsubst < "./deployments/01-deployment.yaml" | kubectl apply -f -
 envsubst < "./deployments/02-blue-green.yaml"
 envsubst < "./deployments/02-blue-green.yaml" | kubectl apply -f -
-# envsubst < "./deployments/03-nps-load-balancer.yaml"
-# envsubst < "./deployments/03-nps-load-balancer.yaml" | kubectl apply -f -
