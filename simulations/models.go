@@ -650,6 +650,26 @@ func convertStatus(status simulations.Status) DeploymentStatus {
 	switch status {
 	case simulations.StatusPending:
 		return simPending
+	case simulations.StatusLaunchingInstances:
+		return simLaunchingNodes
+	case simulations.StatusLaunchingPods:
+		return simLaunchingPods
+	case simulations.StatusRunning:
+		return simRunning
+	case simulations.StatusTerminateRequested:
+		return simTerminateRequested
+	case simulations.StatusDeletingPods:
+		return simDeletingPods
+	case simulations.StatusDeletingNodes:
+		return simDeletingNodes
+	case simulations.StatusTerminatingInstances:
+		return simTerminatingInstances
+	case simulations.StatusTerminated:
+		return simTerminated
+	case simulations.StatusRejected:
+		return simRejected
+	case simulations.StatusSuperseded:
+		return simSuperseded
 	default:
 		return simPending
 	}

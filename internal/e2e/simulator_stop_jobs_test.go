@@ -101,6 +101,9 @@ func TestStopSimulationAction(t *testing.T) {
 	})
 	require.NoError(t, err)
 
+	err = simService.UpdateStatus(sim.GetGroupID(), simulations.StatusTerminateRequested)
+	require.NoError(t, err)
+
 	// Initialize mock for EC2
 	ec2api := mock.NewEC2(
 		mock.NewEC2Instance("test-fc-1", subtapp.GetTagsInstanceSpecific("field-computer", sim.GetGroupID(), "sim", "cloudsim", "field-computer")),
@@ -202,17 +205,6 @@ func TestStopSimulationAction(t *testing.T) {
 	// Initialize subt application.
 	app := subtapp.NewServices(baseApp, trackService, summaryService)
 
-	actionService := actions.NewService()
-
-	// Initialize simulator
-	s := simulator.NewSimulator(simulator.Config{
-		DB:                    db,
-		Platform:              p,
-		ApplicationServices:   app,
-		ActionService:         actionService,
-		DisableDefaultActions: true,
-	})
-
 	rs := runsim.NewRunningSimulation(sim.GetGroupID(), int64(maxSimSeconds), sim.GetValidFor())
 	ws := ignws.NewPubSubTransporterMock()
 
@@ -306,10 +298,21 @@ func TestStopSimulationAction(t *testing.T) {
 	})
 	require.NoError(t, err)
 
+	actionService := actions.NewService()
+
+	// Initialize simulator
+	s := simulator.NewSimulator(simulator.Config{
+		DB:                    db,
+		Platform:              p,
+		ApplicationServices:   app,
+		ActionService:         actionService,
+		DisableDefaultActions: true,
+	})
+
 	appName := simulator.ApplicationName
 	actionService.RegisterAction(&appName, simulator.ActionNameStopSimulation, stopAction)
 
-	// Start the simulation.
+	// Stop the simulation.
 	err = s.Stop(ctx, sim.GetGroupID())
 	assert.NoError(t, err)
 }
