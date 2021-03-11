@@ -277,7 +277,13 @@ func init() {
 		log.Fatalf("%+v\n", err)
 	}
 	sim.SimServImpl.RegisterApplication(logCtx, subT)
-	sim.SimServImpl.Start(logCtx)
+
+	err = sim.SimServImpl.Start(logCtx)
+	if err != nil {
+		// Log and shutdown the app , if there is an error during startup
+		logger.Critical("Critical error starting SubT Application", err)
+		log.Fatalf("%+v\n", err)
+	}
 }
 
 /////////////////////////////////////////////////
