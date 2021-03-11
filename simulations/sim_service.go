@@ -893,6 +893,7 @@ func (s *Service) workerStartSimulation(payload interface{}) {
 	}
 
 	err = s.simulator.Start(context.TODO(), simulations.GroupID(groupID))
+	// TODO Only respond to retryable errors
 	if err != nil {
 		// s.requeueSimulation(simDep)
 		s.notify(PoolStartSimulation, groupID, nil, ign.NewErrorMessageWithBase(ign.ErrorUnexpected, err))
