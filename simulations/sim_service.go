@@ -2334,9 +2334,12 @@ func (s *Service) initPlatform() (platform.Platform, error) {
 		NetworkPolicies: network.NewNetworkPolicies(kubernetesClient, s.logger),
 	})
 
-	store := envVars.NewStore()
+	store, err := envVars.NewStore()
+	if err != nil {
+		return nil, err
+	}
 
-	secrets := secrets.NewKubernetesSecrets(kubernetesClient.CoreV1())
+	kubernetesSecrets := secrets.NewKubernetesSecrets(kubernetesClient.CoreV1())
 
 	sesAPI := ses.New(s.session)
 	emailSender := email.NewEmailSender(sesAPI)
@@ -2348,7 +2351,7 @@ func (s *Service) initPlatform() (platform.Platform, error) {
 		Storage:            storage,
 		Cluster:            cluster,
 		Store:              store,
-		Secrets:            secrets,
+		Secrets:            kubernetesSecrets,
 		EmailSender:        emailSender,
 		RunningSimulations: runningSimulations,
 	}), nil
