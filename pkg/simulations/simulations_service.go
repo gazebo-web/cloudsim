@@ -3,7 +3,7 @@ package simulations
 // CreateSimulationInput contains all the information needed to create a simulation.
 type CreateSimulationInput struct {
 	Name      string
-	Owner     string
+	Owner     *string
 	Creator   string
 	Image     []string
 	Private   bool

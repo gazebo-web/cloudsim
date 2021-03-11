@@ -7,7 +7,7 @@ import (
 )
 
 // SaveSummary is a job in charge of persisting the summary of a certain simulation
-var SaveSummary = actions.Job{
+var SaveSummary = &actions.Job{
 	Name:       "save-simulation-summary",
 	PreHooks:   []actions.JobFunc{setStopState},
 	Execute:    saveSummary,

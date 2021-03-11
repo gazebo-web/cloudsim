@@ -5,6 +5,7 @@ import (
 	"github.com/jinzhu/gorm"
 	uuid "github.com/satori/go.uuid"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
+	"time"
 )
 
 // SimulationServiceAdaptor implements the simulations.Service interface.
@@ -13,9 +14,30 @@ type SimulationServiceAdaptor struct {
 	db *gorm.DB
 }
 
-// UpdateScore updates a simulation's score.
+// UpdateScore updates the score of a certain simulation deployment.
 func (sa *SimulationServiceAdaptor) UpdateScore(groupID simulations.GroupID, score *float64) error {
-	panic("implement me")
+	dep, err := GetSimulationDeployment(sa.db, groupID.String())
+	if err != nil {
+		return err
+	}
+
+	em := dep.UpdateScore(sa.db, score)
+	if em != nil {
+		return em.BaseError
+	}
+
+	return nil
+}
+
+// MarkStopped marks a simulation with the time where it has stopped running.
+func (sa *SimulationServiceAdaptor) MarkStopped(groupID simulations.GroupID) error {
+	at := time.Now()
+	if err := sa.db.Model(&SimulationDeployment{}).Where("group_id = ?", groupID).Update(SimulationDeployment{
+		StoppedAt: &at,
+	}).Error; err != nil {
+		return err
+	}
+	return nil
 }
 
 // Create creates a simulation (SimulationDeployment) from the given input.
@@ -29,7 +51,7 @@ func (sa *SimulationServiceAdaptor) Create(input simulations.CreateSimulationInp
 
 	image := SliceToStr(input.Image)
 
-	dep.Owner = &input.Owner
+	dep.Owner = input.Owner
 	dep.Name = &input.Name
 	dep.Creator = &input.Creator
 	dep.Private = &input.Private
@@ -58,11 +80,6 @@ func (sa *SimulationServiceAdaptor) GetWebsocketToken(groupID simulations.GroupI
 		return "", errors.New("missing access token")
 	}
 	return *dep.AuthorizationToken, nil
-}
-
-// MarkStopped marks a SimulationDeployment as stopped.
-func (sa *SimulationServiceAdaptor) MarkStopped(groupID simulations.GroupID) error {
-	panic("implement me")
 }
 
 // Get gets a simulation deployment with the given GroupID.

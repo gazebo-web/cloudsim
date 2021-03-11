@@ -59,7 +59,7 @@ func (s *subTSimulator) Stop(ctx context.Context, groupID simulations.GroupID) e
 		ActionName:      ActionNameStopSimulation,
 	}
 
-	err := s.actions.Execute(store, s.db, execInput, groupID)
+	err := s.actions.Execute(store, s.db, execInput, state)
 	if err != nil {
 		return err
 	}

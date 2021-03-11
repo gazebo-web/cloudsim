@@ -6,6 +6,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/aws/aws-sdk-go/service/ec2/ec2iface"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/cloud"
+	ec22 "gitlab.com/ignitionrobotics/web/cloudsim/pkg/cloud/aws/ec2"
 	"k8s.io/apimachinery/pkg/util/rand"
 	"log"
 	"strings"
@@ -17,10 +19,39 @@ type ec2api struct {
 	Instances map[string]ec2.Instance
 }
 
+// NewEC2Instance initializes a new ec2.Instance.
+func NewEC2Instance(id string, tags []cloud.Tag) ec2.Instance {
+	var instance ec2.Instance
+
+	instanceID := fmt.Sprintf("i-%s", id)
+	instance.InstanceId = &instanceID
+
+	tagSpec := ec22.CreateTagSpecifications(tags)
+
+	var tagList []*ec2.Tag
+	for _, tag := range tagSpec {
+		tagList = append(tagList, tag.Tags...)
+	}
+
+	instance.SetTags(tagList)
+
+	return instance
+}
+
 // NewEC2 initializes a new ec2iface.EC2API implementation.
-func NewEC2() ec2iface.EC2API {
+func NewEC2(objects ...ec2.Instance) ec2iface.EC2API {
+	instances := make(map[string]ec2.Instance)
+
+	for _, instance := range objects {
+		var id string
+		_, err := fmt.Sscanf(*instance.InstanceId, "i-%s", &id)
+		if err != nil {
+			panic(err)
+		}
+		instances[id] = instance
+	}
 	return &ec2api{
-		Instances: make(map[string]ec2.Instance),
+		Instances: instances,
 	}
 }
 
