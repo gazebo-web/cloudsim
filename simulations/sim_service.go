@@ -454,13 +454,17 @@ func (s *Service) Start(ctx context.Context) error {
 	RegisterSchedulableTasks(s, ctx, s.DB)
 
 	var err error
+
+	s.logger.Info("Initializing Cloudsim platform")
 	s.platform, err = s.initPlatform()
 	if err != nil {
 		return err
 	}
 
+	s.logger.Info("Initializing application services")
 	s.applicationServices = s.initApplicationServices()
 
+	s.logger.Info("Initializing Simulator using Kubernetes and AWS")
 	s.simulator = s.initSimulator()
 
 	return nil
