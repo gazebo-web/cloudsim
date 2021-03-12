@@ -15,7 +15,7 @@ import (
 var CreateNetworkPolicyGazeboServer = jobs.CreateNetworkPolicies.Extend(actions.Job{
 	Name:       "create-netpol-gzserver",
 	PreHooks:   []actions.JobFunc{setStartState, prepareNetworkPolicyGazeboServerInput},
-	PostHooks:  []actions.JobFunc{returnState},
+	PostHooks:  []actions.JobFunc{checkCreateNetworkPoliciesError, returnState},
 	InputType:  actions.GetJobDataType(&state.StartSimulation{}),
 	OutputType: actions.GetJobDataType(&state.StartSimulation{}),
 })
@@ -83,7 +83,7 @@ func prepareNetworkPolicyGazeboServerInput(store actions.Store, tx *gorm.DB, dep
 var CreateNetworkPolicyFieldComputers = jobs.CreateNetworkPolicies.Extend(actions.Job{
 	Name:            "create-netpol-field-computers",
 	PreHooks:        []actions.JobFunc{setStartState, prepareNetworkPolicyFieldComputersInput},
-	PostHooks:       []actions.JobFunc{returnState},
+	PostHooks:       []actions.JobFunc{checkCreateNetworkPoliciesError, returnState},
 	RollbackHandler: nil,
 	InputType:       actions.GetJobDataType(&state.StartSimulation{}),
 	OutputType:      actions.GetJobDataType(&state.StartSimulation{}),
@@ -146,7 +146,7 @@ func prepareNetworkPolicyFieldComputersInput(store actions.Store, tx *gorm.DB, d
 var CreateNetworkPolicyCommsBridges = jobs.CreateNetworkPolicies.Extend(actions.Job{
 	Name:       "create-netpol-comms-bridges",
 	PreHooks:   []actions.JobFunc{setStartState, prepareNetworkPolicyCommsBridgesInput},
-	PostHooks:  []actions.JobFunc{returnState},
+	PostHooks:  []actions.JobFunc{checkCreateNetworkPoliciesError, returnState},
 	InputType:  actions.GetJobDataType(&state.StartSimulation{}),
 	OutputType: actions.GetJobDataType(&state.StartSimulation{}),
 })
