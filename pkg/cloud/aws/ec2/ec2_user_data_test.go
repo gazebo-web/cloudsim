@@ -1,4 +1,4 @@
-package scripts
+package ec2
 
 import (
 	"bytes"
