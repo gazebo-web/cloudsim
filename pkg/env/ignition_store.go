@@ -5,6 +5,7 @@ import (
 	"github.com/caarlos0/env"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/store"
+	"net"
 )
 
 // ignitionEnvStore is the implementation of store.Ignition using env vars.
@@ -126,7 +127,30 @@ func (i *ignitionEnvStore) Verbosity() string {
 
 // IP returns the Cloudsim server's IP address to use when creating NetworkPolicies.
 func (i *ignitionEnvStore) IP() string {
-	return i.IgnIPValue
+	ip, err := getLocalIPAddressString()
+	if err != nil {
+		return ""
+	}
+	return ip
+}
+
+// getLocalIPAddressString returns the local IP address used by Ignition Store IP() method.
+func getLocalIPAddressString() (string, error) {
+	addrs, err := net.InterfaceAddrs()
+	if err != nil {
+		return "", err
+	}
+	var ip string
+	for _, address := range addrs {
+		// check the address type and if it is not a loopback the display it
+		if ipnet, ok := address.(*net.IPNet); ok && !ipnet.IP.IsLoopback() {
+			if ipnet.IP.To4() != nil {
+				ip = ipnet.IP.String()
+				break
+			}
+		}
+	}
+	return ip, nil
 }
 
 // newIgnitionStore initializes a new store.Ignition implementation using ignitionEnvStore.
