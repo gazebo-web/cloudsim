@@ -123,11 +123,6 @@ func TestNewRunInstanceInput(t *testing.T) {
 	assert.Equal(t, int64(1), *out.MinCount)
 	assert.Equal(t, int64(2), *out.MaxCount)
 
-	assert.NotNil(t, out.SecurityGroups)
-	assert.Len(t, out.SecurityGroups, 2)
-	assert.Equal(t, "first-rule", *out.SecurityGroups[0])
-	assert.Equal(t, "second-rule", *out.SecurityGroups[1])
-
 	assert.NotNil(t, out.SubnetId)
 	assert.Equal(t, "subnet-id", *out.SubnetId)
 
