@@ -35,6 +35,9 @@ func (m *nodes) WaitForCondition(resource orchestrator.Resource, condition orche
 		if err != nil {
 			return false, err
 		}
+		if len(nodes.Items) == 0 {
+			return false, nil
+		}
 		for _, n := range nodes.Items {
 			if !m.isConditionSetAsExpected(n, condition) {
 				var node = new(apiv1.Node)
