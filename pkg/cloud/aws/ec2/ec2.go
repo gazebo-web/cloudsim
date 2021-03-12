@@ -1,6 +1,7 @@
 package ec2
 
 import (
+	"bytes"
 	"fmt"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
@@ -10,6 +11,8 @@ import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/cloud"
 	"gitlab.com/ignitionrobotics/web/ign-go"
 	"regexp"
+	"strings"
+	"text/template"
 	"time"
 )
 
@@ -65,7 +68,7 @@ func (m *machines) isValidSubnetID(subnet string) bool {
 }
 
 // newRunInstancesInput initializes the configuration to run EC2 instances with the given input.
-func (m *machines) newRunInstancesInput(createMachines cloud.CreateMachinesInput) *ec2.RunInstancesInput {
+func (m *machines) newRunInstancesInput(createMachines cloud.CreateMachinesInput, userData string) *ec2.RunInstancesInput {
 	var iamProfile *ec2.IamInstanceProfileSpecification
 	iamProfile = &ec2.IamInstanceProfileSpecification{
 		Arn:  createMachines.InstanceProfile,
@@ -78,6 +81,7 @@ func (m *machines) newRunInstancesInput(createMachines cloud.CreateMachinesInput
 	}
 
 	tagSpec := m.createTags(createMachines.Tags)
+
 	return &ec2.RunInstancesInput{
 		InstanceType:       aws.String(createMachines.Type),
 		ImageId:            aws.String(createMachines.Image),
@@ -91,7 +95,7 @@ func (m *machines) newRunInstancesInput(createMachines cloud.CreateMachinesInput
 			AvailabilityZone: aws.String(createMachines.Zone),
 		},
 		TagSpecifications: tagSpec,
-		UserData:          createMachines.InitScript,
+		UserData:          &userData,
 		SecurityGroups:    securityGroups,
 	}
 }
@@ -177,7 +181,12 @@ func (m *machines) create(input cloud.CreateMachinesInput) (*cloud.CreateMachine
 		return nil, cloud.ErrInvalidSubnetID
 	}
 
-	runInstanceInput := m.newRunInstancesInput(input)
+	userData, err := m.createUserData(input)
+	if err != nil {
+		return nil, err
+	}
+
+	runInstanceInput := m.newRunInstancesInput(input, userData)
 
 	for try := 1; try <= input.Retries; try++ {
 		if err := m.runInstanceDryRun(runInstanceInput); err != nil {
@@ -341,6 +350,34 @@ func (m *machines) WaitOK(input []cloud.WaitMachinesOKInput) error {
 
 	m.Logger.Debug(fmt.Sprintf("Waiting for machines to be OK: %+v succeeded.", input))
 	return nil
+}
+
+// createUserData generates a bash command to make the node join the cluster.
+func (m *machines) createUserData(input cloud.CreateMachinesInput) (string, error) {
+	tmpl, err := template.ParseFiles("ec2_user_data.sh")
+	if err != nil {
+		return "", err
+	}
+
+	var b []byte
+	buffer := bytes.NewBuffer(b)
+
+	labels := make([]string, 0, len(input.Labels))
+
+	for k, v := range input.Labels {
+		labels = append(labels, fmt.Sprintf("%s=%s", k, v))
+	}
+
+	err = tmpl.Execute(buffer, map[string]interface{}{
+		"Labels":      strings.Join(labels, ","),
+		"ClusterName": "testing-cluster-name",
+		"Args":        "--use-max-pods false",
+	})
+	if err != nil {
+		return "", err
+	}
+
+	return buffer.String(), nil
 }
 
 // NewMachines initializes a new cloud.Machines implementation using EC2.

@@ -107,7 +107,7 @@ func TestNewRunInstanceInput(t *testing.T) {
 		},
 		InitScript: &script,
 		Retries:    1,
-	})
+	}, "bash")
 
 	assert.NotNil(t, out.IamInstanceProfile.Arn)
 	assert.Equal(t, "arn", *out.IamInstanceProfile.Arn)
