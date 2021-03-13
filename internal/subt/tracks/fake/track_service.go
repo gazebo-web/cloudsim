@@ -17,8 +17,8 @@ func (s *Service) Create(input tracks.CreateTrackInput) (*tracks.Track, error) {
 }
 
 // Get mocks the Get method.
-func (s *Service) Get(name string) (*tracks.Track, error) {
-	args := s.Called(name)
+func (s *Service) Get(name string, worldID int) (*tracks.Track, error) {
+	args := s.Called(name, worldID)
 	return args.Get(0).(*tracks.Track), args.Error(1)
 }
 

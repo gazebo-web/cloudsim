@@ -10,7 +10,7 @@ import (
 )
 
 // ReadRunData is a job in charge of reading the run data from a gzserver copy pod for the simulation that is being processed.
-var ReadRunData = actions.Job{
+var ReadRunData = &actions.Job{
 	Name:       "read-simulation-run-data",
 	PreHooks:   []actions.JobFunc{setStopState},
 	Execute:    readRunData,

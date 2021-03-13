@@ -50,7 +50,7 @@ func createLaunchInstancesInput(store actions.Store, tx *gorm.DB, deployment *ac
 	}
 
 	for _, r := range robots {
-		tags := subtapp.GetTagsInstanceSpecific(prefix, s.GroupID, fmt.Sprintf("fc-%s", r.Name()), clusterName, "field-computer")
+		tags := subtapp.GetTagsInstanceSpecific(prefix, s.GroupID, fmt.Sprintf("fc-%s", r.GetName()), clusterName, "field-computer")
 
 		input = append(input, machines.CreateMachinesInput{
 			InstanceProfile: s.Platform().Store().Machines().InstanceProfile(),

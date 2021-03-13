@@ -90,7 +90,7 @@ func (m *machinesStore) subnet() string {
 // zone calculates and returns the zone id for the current subnetZoneIndex.
 func (m *machinesStore) zone() string {
 	i := m.subnetZoneIndex % len(m.ZonesValue)
-	return m.SubnetsValue[i]
+	return m.ZonesValue[i]
 }
 
 // Timeout calculates the time duration in seconds for the current NodeReadyTimeout value.
@@ -152,10 +152,10 @@ func (m *machinesStore) InitScript() *string {
 
 // newMachinesStoreFromEnvVars initializes a new store.Machines implementation using environment variables to
 // configure a machinesStore object.
-func newMachinesStoreFromEnvVars() storepkg.Machines {
+func newMachinesStoreFromEnvVars() (storepkg.Machines, error) {
 	var m machinesStore
 	if err := env.Parse(&m); err != nil {
-		panic(err)
+		return nil, err
 	}
-	return &m
+	return &m, nil
 }

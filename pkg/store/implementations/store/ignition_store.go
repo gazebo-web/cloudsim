@@ -28,7 +28,7 @@ type ignitionStore struct {
 	IgnIPValue string `env:"CLOUDSIM_IGN_IP"`
 
 	// VerbosityValue is the IGN_VERBOSE value that will be passed to Pods launched for SubT.
-	VerbosityValue string `env:"CLOUDSIM_IGN_VERBOSITY"`
+	VerbosityValue string `default:"2" env:"CLOUDSIM_IGN_VERBOSITY"`
 
 	// LogsCopyEnabledValue is the CLOUDSIM_IGN_LOGS_COPY_ENABLED value that will used to define if logs should be copied.
 	LogsCopyEnabledValue bool `env:"CLOUDSIM_IGN_LOGS_COPY_ENABLED"`
@@ -46,7 +46,7 @@ type ignitionStore struct {
 	DefaultRecipientsValue []string `env:"CLOUDSIM_IGN_DEFAULT_RECIPIENTS"`
 
 	// DefaultSenderValue is the email address used to send emails.
-	DefaultSenderValue string `env:"CLOUDSIM_IGN_DEFAULT_SENDER"`
+	DefaultSenderValue string `validate:"required" env:"CLOUDSIM_IGN_DEFAULT_SENDER"`
 
 	// WebsocketHostValue is the CLOUDSIM_WEBSOCKET_HOST that will be used as host to connect to simulation's websocket servers.
 	WebsocketHostValue string `env:"CLOUDSIM_SUBT_WEBSOCKET_HOST"`
@@ -131,10 +131,10 @@ func (i *ignitionStore) IP() string {
 
 // newIgnitionStoreFromEnvVars initializes a new store.Ignition implementation using environment variables to
 // configure an ignitionStore object.
-func newIgnitionStoreFromEnvVars() storepkg.Ignition {
+func newIgnitionStoreFromEnvVars() (storepkg.Ignition, error) {
 	var i ignitionStore
 	if err := env.Parse(&i); err != nil {
-		panic(err)
+		return nil, err
 	}
-	return &i
+	return &i, nil
 }

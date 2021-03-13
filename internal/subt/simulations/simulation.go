@@ -17,12 +17,18 @@ type Simulation interface {
 
 	// GetMarsupials returns the list of marsupials from a certain simulation.
 	GetMarsupials() []simulations.Marsupial
+
+	// GetWorldIndex returns the WorldIndex id.
+	GetWorldIndex() int
+
+	// GetName returns the simulation's name.
+	GetName() string
 }
 
 // IsRobotChildMarsupial checks if the given robot is a child from the given slice of marsupials.
 func IsRobotChildMarsupial(marsupials []simulations.Marsupial, robot simulations.Robot) bool {
 	for _, m := range marsupials {
-		if robot.IsEqual(m.Child()) {
+		if robot.IsEqual(m.GetChild()) {
 			return true
 		}
 	}

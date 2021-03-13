@@ -40,15 +40,12 @@ func (s selector) Map() map[string]string {
 // String returns the selector in string format.
 func (s selector) String() string {
 	var out string
-	count := len(s)
+	var labels []string
 	for key, value := range s {
-		out += fmt.Sprintf("%s=%s", key, value)
-		count--
-		if count > 1 {
-			out += ","
-		}
+		out = fmt.Sprintf("%s=%s", key, value)
+		labels = append(labels, out)
 	}
-	return out
+	return strings.Join(labels, ",")
 }
 
 // NewSelector initializes a new Selector from the given map.

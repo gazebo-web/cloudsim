@@ -63,7 +63,7 @@ func uploadLogs(store actions.Store, tx *gorm.DB, deployment *actions.Deployment
 			continue
 		}
 
-		filename := subtapp.GetCommsBridgeLogsFilename(s.GroupID, robot.Name())
+		filename := subtapp.GetCommsBridgeLogsFilename(s.GroupID, robot.GetName())
 		bucket := filepath.Join(logsBucket, subtapp.GetSimulationLogKey(s.GroupID, *sim.GetOwner()))
 
 		scriptParams := uploadLogsScript{

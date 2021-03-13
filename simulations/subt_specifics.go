@@ -7,7 +7,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3iface"
@@ -186,13 +185,6 @@ type subTSpecificsConfig struct {
 // SubTApplication represents an application used to tailor SubT simulation requests.
 type SubTApplication struct {
 	cfg subTSpecificsConfig
-	// From aws go documentation:
-	// Sessions should be cached when possible, because creating a new Session
-	// will load all configuration values from the environment, and config files
-	// each time the Session is created. Sharing the Session value across all of
-	// your service clients will ensure the configuration is loaded the fewest
-	// number of times possible.
-	sess *session.Session
 	// s3 clients are safe to use concurrently.
 	s3Svc            s3iface.S3API
 	schedulableTasks []SchedulableTask

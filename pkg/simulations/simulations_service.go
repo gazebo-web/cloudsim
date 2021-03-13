@@ -1,12 +1,24 @@
 package simulations
 
+// CreateSimulationInput contains all the information needed to create a simulation.
+type CreateSimulationInput struct {
+	Name      string
+	Owner     *string
+	Creator   string
+	Image     []string
+	Private   bool
+	StopOnEnd bool
+	Extra     string
+	Track     string
+	Robots    string
+}
+
 // Service is a generic simulation service interface.
 type Service interface {
+	Create(input CreateSimulationInput) (Simulation, error)
+
 	// Get returns a simulation with the given GroupID.
 	Get(groupID GroupID) (Simulation, error)
-
-	// Reject rejects a simulation with the given GroupID.
-	Reject(groupID GroupID) (Simulation, error)
 
 	// GetParent returns the child simulation's parent with the given GroupID.
 	GetParent(groupID GroupID) (Simulation, error)

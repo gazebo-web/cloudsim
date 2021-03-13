@@ -29,7 +29,7 @@ type orchestratorStore struct {
 	// It is used to select a specific rule to modify in an ingress.
 	// The ingress resource referenced by the `IngressName` configuration must contain at least one rule with a host
 	// value matching this configuration.
-	IngressHostValue string `env:"SUBT_WEBSOCKET_HOST"`
+	IngressHostValue string `validate:"required" env:"CLOUDSIM_ORCHESTRATOR_INGRESS_HOST"`
 }
 
 // IngressNamespace returns the ingress namespace.
@@ -64,10 +64,10 @@ func (o orchestratorStore) Namespace() string {
 
 // newOrchestratorStoreFromEnvVars initializes a new store.Orchestrator implementation using environment variables to
 // configure an orchestratorStore object.
-func newOrchestratorStoreFromEnvVars() storepkg.Orchestrator {
+func newOrchestratorStoreFromEnvVars() (storepkg.Orchestrator, error) {
 	var o orchestratorStore
 	if err := env.Parse(&o); err != nil {
-		panic(err)
+		return nil, err
 	}
-	return &o
+	return &o, nil
 }
