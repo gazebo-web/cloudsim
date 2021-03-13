@@ -6,8 +6,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/aws/aws-sdk-go/service/ec2/ec2iface"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/cloud"
-	ec22 "gitlab.com/ignitionrobotics/web/cloudsim/pkg/cloud/aws/ec2"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/machines"
+	ec2Impl "gitlab.com/ignitionrobotics/web/cloudsim/pkg/machines/implementations/ec2"
 	"k8s.io/apimachinery/pkg/util/rand"
 	"log"
 	"strings"
@@ -20,13 +20,13 @@ type ec2api struct {
 }
 
 // NewEC2Instance initializes a new ec2.Instance.
-func NewEC2Instance(id string, tags []cloud.Tag) ec2.Instance {
+func NewEC2Instance(id string, tags []machines.Tag) ec2.Instance {
 	var instance ec2.Instance
 
 	instanceID := fmt.Sprintf("i-%s", id)
 	instance.InstanceId = &instanceID
 
-	tagSpec := ec22.CreateTagSpecifications(tags)
+	tagSpec := ec2Impl.CreateTagSpecifications(tags)
 
 	var tagList []*ec2.Tag
 	for _, tag := range tagSpec {

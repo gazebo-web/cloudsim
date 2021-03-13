@@ -24,11 +24,25 @@ func (e *store) Machines() storepkg.Machines {
 	return e.machines
 }
 
-// NewStoreFromEnvVars initializes a new store.Store implementation using store.
-func NewStoreFromEnvVars() storepkg.Store {
-	return &store{
-		machines:     newMachinesStoreFromEnvVars(),
-		ignition:     newIgnitionStoreFromEnvVars(),
-		orchestrator: newOrchestratorStoreFromEnvVars(),
+// NewStoreFromEnvVars initializes a new store.Store implementation using environment variables.
+func NewStoreFromEnvVars() (storepkg.Store, error) {
+	machines, err := newMachinesStoreFromEnvVars()
+	if err != nil {
+		return nil, err
 	}
+
+	ignition, err := newIgnitionStoreFromEnvVars()
+	if err != nil {
+		return nil, err
+	}
+
+	orchestrator, err := newOrchestratorStoreFromEnvVars()
+	if err != nil {
+		return nil, err
+	}
+	return &store{
+		machines:     machines,
+		ignition:     ignition,
+		orchestrator: orchestrator,
+	}, nil
 }

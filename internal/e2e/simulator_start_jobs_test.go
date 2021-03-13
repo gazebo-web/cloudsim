@@ -16,16 +16,16 @@ import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/tracks"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/actions"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/application"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/cloud/aws/ec2"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/cloud/aws/s3"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/env"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/machines/implementations/ec2"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/migrations"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/mock"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/kubernetes"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/kubernetes/spdy"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/components/spdy"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/implementations/kubernetes"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/platform"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/secrets"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/storage/implementations/s3"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/store/implementations/store"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/users"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/utils/db/gorm"
 	legacy "gitlab.com/ignitionrobotics/web/cloudsim/simulations"
@@ -87,7 +87,7 @@ func TestStartSimulationAction(t *testing.T) {
 	cluster := kubernetes.NewDefaultKubernetes(kubernetesClientset, fakeSPDY, logger)
 
 	// Initialize env vars
-	configStore, err := env.NewStore()
+	configStore, err := store.NewStoreFromEnvVars()
 	require.NoError(t, err)
 
 	// Initialize secrets

@@ -35,19 +35,25 @@ func (s *testStoreFactorySuite) TestNewStore() {
 			"machinesStore": factory.ConfigValues{
 				"keyNameValue": key,
 			},
-			"ignitionStore": factory.ConfigValues{},
+			"ignitionStore": factory.ConfigValues{
+				"defaultSenderValue": "test@ignitionrobotics.org",
+			},
 			"orchestratorStore": factory.ConfigValues{
 				"ingressNameValue": "test",
+				"ingressHostValue": "test.com",
 			},
 		},
 	}
 
 	var store store.Store
-	s.Equal(nil, Factory.New(&config, nil, &store))
-	s.NotEqual(nil, store)
-	s.NotEqual(nil, store.Machines())
-	s.NotEqual(nil, store.Ignition())
-	s.NotEqual(nil, store.Orchestrator())
+	err := Factory.New(&config, nil, &store)
+	if err != nil {
+		s.FailNow(err.Error())
+	}
+	s.Require().NotNil(store)
+	s.Require().NotNil(store.Machines())
+	s.Require().NotNil(store.Ignition())
+	s.Require().NotNil(store.Orchestrator())
 
 	// Validate the type of the returned object
 	s.Equal("*store.store", reflect.TypeOf(store).String())
@@ -57,6 +63,6 @@ func (s *testStoreFactorySuite) TestNewStore() {
 
 	// Validate default value
 	machineType, err := structs.GetFieldTagValue(store.Machines(), "MachineTypeValue", "default")
-	s.Equal(nil, err)
+	s.Require().Nil(err)
 	s.Equal(machineType, store.Machines().Type())
 }

@@ -3,8 +3,11 @@ package store
 import (
 	"fmt"
 	"github.com/caarlos0/env"
+	"github.com/creasty/defaults"
+	defaulter "gitlab.com/ignitionrobotics/web/cloudsim/pkg/defaults"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
 	storepkg "gitlab.com/ignitionrobotics/web/cloudsim/pkg/store"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/validate"
 )
 
 // ignitionStore is the implementation of store.Ignition using env vars.
@@ -50,6 +53,12 @@ type ignitionStore struct {
 
 	// WebsocketHostValue is the CLOUDSIM_WEBSOCKET_HOST that will be used as host to connect to simulation's websocket servers.
 	WebsocketHostValue string `env:"CLOUDSIM_SUBT_WEBSOCKET_HOST"`
+}
+
+// SetDefaults sets default values for the store.
+func (i *ignitionStore) SetDefaults() error {
+	defaults.MustSet(i)
+	return nil
 }
 
 // LogsBucket returns the bucket to upload simulation logs to.
@@ -132,9 +141,19 @@ func (i *ignitionStore) IP() string {
 // newIgnitionStoreFromEnvVars initializes a new store.Ignition implementation using environment variables to
 // configure an ignitionStore object.
 func newIgnitionStoreFromEnvVars() (storepkg.Ignition, error) {
+	// Load store from env vars
 	var i ignitionStore
 	if err := env.Parse(&i); err != nil {
 		return nil, err
 	}
+	// Set default values
+	if err := defaulter.SetDefaults(&i); err != nil {
+		return nil, err
+	}
+	// Validate values
+	if err := validate.Validate(i); err != nil {
+		return nil, err
+	}
+
 	return &i, nil
 }

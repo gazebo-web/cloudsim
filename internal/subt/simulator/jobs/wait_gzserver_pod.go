@@ -28,7 +28,7 @@ func createWaitRequestForGzServerPod(store actions.Store, tx *gorm.DB, deploymen
 	ns := s.Platform().Store().Orchestrator().Namespace()
 	labels := subtapp.GetPodLabelsGazeboServer(s.GroupID, s.ParentGroupID)
 
-	res := orchestrator.NewResource(name, ns, labels)
+	res := resource.NewResource(name, ns, labels)
 
 	// Create wait for condition request
 	req := s.Platform().Orchestrator().Pods().WaitForCondition(res, resource.HasIPStatusCondition)

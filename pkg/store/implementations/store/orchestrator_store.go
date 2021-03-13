@@ -2,7 +2,10 @@ package store
 
 import (
 	"github.com/caarlos0/env"
+	"github.com/creasty/defaults"
+	defaulter "gitlab.com/ignitionrobotics/web/cloudsim/pkg/defaults"
 	storepkg "gitlab.com/ignitionrobotics/web/cloudsim/pkg/store"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/validate"
 	"time"
 )
 
@@ -25,49 +28,65 @@ type orchestratorStore struct {
 	// different internal services. This configuration is required to enable websocket connections to simulations.
 	IngressNameValue string `validate:"required" env:"SUBT_ORCHESTRATOR_INGRESS_NAME"`
 
-	// IngressHostValue contains the address of the host used to route incoming websocket connections.
+	// IngressHostValue contains the domain URL used to route incoming websocket connections.
 	// It is used to select a specific rule to modify in an ingress.
 	// The ingress resource referenced by the `IngressName` configuration must contain at least one rule with a host
 	// value matching this configuration.
 	IngressHostValue string `validate:"required" env:"CLOUDSIM_ORCHESTRATOR_INGRESS_HOST"`
 }
 
+// SetDefaults sets default values for the store.
+func (o *orchestratorStore) SetDefaults() error {
+	defaults.MustSet(o)
+	return nil
+}
+
 // IngressNamespace returns the ingress namespace.
-func (o orchestratorStore) IngressNamespace() string {
+func (o *orchestratorStore) IngressNamespace() string {
 	return o.IngressNamespaceValue
 }
 
 // IngressName returns the ingress name.
-func (o orchestratorStore) IngressName() string {
+func (o *orchestratorStore) IngressName() string {
 	return o.IngressNameValue
 }
 
 // IngressHost returns the ingress host.
-func (o orchestratorStore) IngressHost() string {
+func (o *orchestratorStore) IngressHost() string {
 	return o.IngressHostValue
 }
 
 // TerminationGracePeriod duration that pods need to terminate gracefully.
-func (o orchestratorStore) TerminationGracePeriod() time.Duration {
+func (o *orchestratorStore) TerminationGracePeriod() time.Duration {
 	return time.Duration(o.TerminationGracePeriodSecondsValue) * time.Second
 }
 
 // Nameservers returns a slice of the nameservers used to expose simulations to the internet.
-func (o orchestratorStore) Nameservers() []string {
+func (o *orchestratorStore) Nameservers() []string {
 	return o.NameserverValues
 }
 
 // Namespace returns the base namespace that should be used for simulations.
-func (o orchestratorStore) Namespace() string {
+func (o *orchestratorStore) Namespace() string {
 	return o.NamespaceValue
 }
 
 // newOrchestratorStoreFromEnvVars initializes a new store.Orchestrator implementation using environment variables to
 // configure an orchestratorStore object.
 func newOrchestratorStoreFromEnvVars() (storepkg.Orchestrator, error) {
+	// Load store from env vars
 	var o orchestratorStore
 	if err := env.Parse(&o); err != nil {
 		return nil, err
 	}
+	// Set default values
+	if err := defaulter.SetDefaults(&o); err != nil {
+		return nil, err
+	}
+	// Validate values
+	if err := validate.Validate(o); err != nil {
+		return nil, err
+	}
+
 	return &o, nil
 }

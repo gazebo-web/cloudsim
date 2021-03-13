@@ -1,6 +1,9 @@
 package resource
 
-import "fmt"
+import (
+	"fmt"
+	"strings"
+)
 
 // Selector is used to identify a certain resource.
 type Selector interface {

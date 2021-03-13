@@ -3,9 +3,12 @@ package store
 import (
 	"fmt"
 	"github.com/caarlos0/env"
+	"github.com/creasty/defaults"
+	defaulter "gitlab.com/ignitionrobotics/web/cloudsim/pkg/defaults"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/machines"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
 	storepkg "gitlab.com/ignitionrobotics/web/cloudsim/pkg/store"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/validate"
 	"time"
 )
 
@@ -47,6 +50,12 @@ type machinesStore struct {
 
 	// subnetZoneIndex is used as round robin index for setting different subnets and zones to different machines.
 	subnetZoneIndex int
+}
+
+// SetDefaults sets default values for the store.
+func (m *machinesStore) SetDefaults() error {
+	defaults.MustSet(m)
+	return nil
 }
 
 // ClusterName returns the cluster name.
@@ -153,9 +162,19 @@ func (m *machinesStore) InitScript() *string {
 // newMachinesStoreFromEnvVars initializes a new store.Machines implementation using environment variables to
 // configure a machinesStore object.
 func newMachinesStoreFromEnvVars() (storepkg.Machines, error) {
+	// Load store from env vars
 	var m machinesStore
 	if err := env.Parse(&m); err != nil {
 		return nil, err
 	}
+	// Set default values
+	if err := defaulter.SetDefaults(&m); err != nil {
+		return nil, err
+	}
+	// Validate values
+	if err := validate.Validate(&m); err != nil {
+		return nil, err
+	}
+
 	return &m, nil
 }

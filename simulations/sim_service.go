@@ -11,20 +11,21 @@ import (
 	"github.com/pkg/errors"
 	"github.com/satori/go.uuid"
 	"gitlab.com/ignitionrobotics/web/cloudsim/globals"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/cloud/aws/ec2"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/cloud/aws/s3"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/email"
-	envVars "gitlab.com/ignitionrobotics/web/cloudsim/pkg/env"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/gloo"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/kubernetes"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/kubernetes/network"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/kubernetes/nodes"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/kubernetes/pods"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/kubernetes/services"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/kubernetes/spdy"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/machines/implementations/ec2"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/components/ingresses/implementations/gloo"
+	network "gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/components/network/implementations/kubernetes"
+	nodes "gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/components/nodes/implementations/kubernetes"
+	pods "gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/components/pods/implementations/kubernetes"
+	services "gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/components/services/implementations/kubernetes"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/components/spdy"
+	cluster "gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/implementations/kubernetes"
+	kubernetes "gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/implementations/kubernetes/client"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/platform"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/runsim"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/secrets"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/storage/implementations/s3"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/store/implementations/store"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/transport"
 	ignws "gitlab.com/ignitionrobotics/web/cloudsim/pkg/transport/ign"
 	useracc "gitlab.com/ignitionrobotics/web/cloudsim/pkg/users"
@@ -2306,7 +2307,7 @@ func (s *Service) initPlatform() (platform.Platform, error) {
 
 	storage := s3.NewStorage(globals.S3Svc, s.logger)
 
-	restConfig, err := kubernetes.GetConfig()
+	restConfig, err := kubernetes.GetConfig("")
 	if err != nil {
 		return nil, err
 	}
@@ -2325,7 +2326,7 @@ func (s *Service) initPlatform() (platform.Platform, error) {
 		return nil, err
 	}
 
-	cluster := kubernetes.NewCustomKubernetes(kubernetes.Config{
+	cluster := cluster.NewCustomKubernetes(cluster.Config{
 		Nodes:           nodes.NewNodes(kubernetesClient, s.logger),
 		Pods:            pods.NewPods(kubernetesClient, spdy.NewSPDYInitializer(restConfig), s.logger),
 		Ingresses:       gloo.NewVirtualServices(glooClientset.Gateway(), s.logger, glooClientset.Gloo()),
@@ -2334,7 +2335,7 @@ func (s *Service) initPlatform() (platform.Platform, error) {
 		NetworkPolicies: network.NewNetworkPolicies(kubernetesClient, s.logger),
 	})
 
-	store, err := envVars.NewStore()
+	store, err := store.NewStoreFromEnvVars()
 	if err != nil {
 		return nil, err
 	}
