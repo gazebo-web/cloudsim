@@ -47,7 +47,12 @@ func prepareCreatePodInput(store actions.Store, tx *gorm.DB, deployment *actions
 	// namespace := "web-cloudsim-integration"
 
 	// \todo Improvment: Get ports dynamically.
-	ports := []int32{11345, 11311, 8080, 6080}
+	ports := []orchestrator.ContainerPort{
+    orchestrator.ContainerPort{
+      ContainerPort: 8080,
+      HostPort: 8080,
+    },
+  }
 
 	// Set up container configuration
 	privileged := true
@@ -93,7 +98,10 @@ func prepareCreatePodInput(store actions.Store, tx *gorm.DB, deployment *actions
 
 	startData.PodSelector = orchestrator.NewSelector(labels)
 
-	args := strings.Split(sim.Args, ",")
+  var args []string
+  if sim.Args != "" {
+    args = strings.Split(sim.Args, ",")
+  }
 	startData.logger.Info("Launching pod. Image[", sim.Image, "] Args[", args, "]")
 	return jobs.LaunchPodsInput{
 		{
@@ -151,6 +159,8 @@ func prepareCreatePodInput(store actions.Store, tx *gorm.DB, deployment *actions
 			Volumes: volumes,
 
 			Nameservers: nameservers,
+
+      HostNetwork: true,
 		},
 	}, nil
 }
