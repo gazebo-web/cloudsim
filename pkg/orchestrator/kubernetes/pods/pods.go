@@ -65,7 +65,10 @@ func (p *pods) Create(input orchestrator.CreatePodInput) (orchestrator.Resource,
 		// Setup ports
 		var ports []apiv1.ContainerPort
 		for _, port := range c.Ports {
-			ports = append(ports, apiv1.ContainerPort{ContainerPort: port})
+			ports = append(ports, apiv1.ContainerPort{
+				ContainerPort: port.ContainerPort,
+				HostPort:      port.HostPort,
+			})
 		}
 
 		// Setup env vars
@@ -124,6 +127,7 @@ func (p *pods) Create(input orchestrator.CreatePodInput) (orchestrator.Resource,
 			TerminationGracePeriodSeconds: &terminationGracePeriod,
 			Containers:                    containers,
 			Volumes:                       volumes,
+			HostNetwork:                   input.HostNetwork,
 			// These DNS servers provide alternative DNS server from the internet
 			// in case the cluster DNS service isn't available
 			DNSConfig: &apiv1.PodDNSConfig{
