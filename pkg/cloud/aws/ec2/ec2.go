@@ -128,7 +128,7 @@ func (m *machines) runInstanceDryRun(input *ec2.RunInstancesInput) error {
 	_, err := m.API.RunInstances(input)
 	awsErr, ok := err.(awserr.Error)
 	if !ok || awsErr.Code() != ErrCodeDryRunOperation {
-		return fmt.Errorf("%s: %w", cloud.ErrDryRunFailed, awsErr)
+		return fmt.Errorf("%w: %s", cloud.ErrDryRunFailed, awsErr)
 	}
 	return nil
 }
@@ -152,7 +152,7 @@ func (m *machines) parseRunInstanceError(err error) error {
 	case ErrCodeRequestLimitExceeded:
 		return cloud.ErrRequestsLimitExceeded
 	}
-	return fmt.Errorf("%s: %w", cloud.ErrUnknown, err)
+	return fmt.Errorf("%w: %s", cloud.ErrUnknown, err)
 }
 
 // runInstance is a wrapper for the EC2 RunInstances method.
