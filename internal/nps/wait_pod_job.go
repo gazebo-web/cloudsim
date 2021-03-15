@@ -28,7 +28,7 @@ func createWaitRequestForPod(store actions.Store, tx *gorm.DB, deployment *actio
 	if err := tx.Where("group_id = ?", startData.GroupID.String()).First(&simEntry).Error; err != nil {
 		return nil, err
 	}
-	simEntry.Status = "Waiting for docker image (pod) IP."
+	simEntry.Status = "Waiting for docker image."
 	tx.Save(&simEntry)
 
 	store.SetState(startData)
@@ -45,7 +45,7 @@ func createWaitRequestForPod(store actions.Store, tx *gorm.DB, deployment *actio
 
 	// Create wait for condition request
 	req := startData.Platform().Orchestrator().Pods().WaitForCondition(
-		orchestratorResource, orchestrator.HasIPStatusCondition)
+		orchestratorResource, orchestrator.ReadyCondition)
 
 	// Get timeout and poll frequency from store
 	timeout := startData.Platform().Store().Machines().Timeout()

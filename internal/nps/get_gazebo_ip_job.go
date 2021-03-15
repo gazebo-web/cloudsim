@@ -4,6 +4,7 @@ import (
 	"errors"
 	"github.com/jinzhu/gorm"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/actions"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator"
 )
 
 // GetPodIP is a job in charge of getting the IP from a server pod.
@@ -35,22 +36,21 @@ func getIP(store actions.Store, tx *gorm.DB, deployment *actions.Deployment, val
 		return nil, errors.New("CLOUDSIM_ORCHESTRATOR_NAMESPACE has not been set")
 	}
 
-	ip, err := startData.Platform().Orchestrator().Pods().GetIP(
-		// This is the name of the Pod, set in launch_pod_job.go
-		simEntry.Name,
-
-		// This is set by the CLOUDSIM_ORCHESTRATOR_NAMESPACE
-		namespace)
+	// Get the address of the node, which is publically accessible.
+	address, err := startData.Platform().Orchestrator().Nodes().GetExternalDNSAddress(orchestrator.NewResource("", "", startData.NodeSelector))
 
 	if err != nil {
 		return nil, err
 	}
+	if len(address) == 0 || address == nil {
+		return nil, errors.New("Unable to get node address")
+	}
 
-	simEntry.Status = "IP has been acquired."
-	simEntry.IP = ip
+	simEntry.Status = "Address has been acquired."
+  simEntry.URI = "http://" + address[0] + ":8080/vnc.html"
 	tx.Save(&simEntry)
 
-	startData.IP = ip
+	startData.URI = simEntry.URI
 
 	return startData, nil
 }

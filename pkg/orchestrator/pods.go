@@ -55,11 +55,11 @@ type Volume struct {
 }
 
 // ContainerPort represents a network port in a single container.
-type ContainerPort struct{
-  // Number of port to expose on the pod's IP address.
+type ContainerPort struct {
+	// Number of port to expose on the pod's IP address.
 	ContainerPort int32
 
-  // Number of port to expose on the host.
+	// Number of port to expose on the host.
 	HostPort int32
 }
 
@@ -117,10 +117,10 @@ type CreatePodInput struct {
 	Volumes []Volume
 	// Nameservers are the list of DNS Nameservers that will be used to expose the pod to the internet.
 	Nameservers []string
-  // Host networking requested for this pod. Use the host's network namespace.
-  // If this option is set, the ports that will be used must be specified.
-  // Default to false.
-  HostNetwork bool
+	// Host networking requested for this pod. Use the host's network namespace.
+	// If this option is set, the ports that will be used must be specified.
+	// Default to false.
+	HostNetwork bool
 }
 
 // Pods groups a set of methods to perform an operation with a Pod.

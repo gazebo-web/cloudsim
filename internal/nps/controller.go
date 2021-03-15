@@ -153,7 +153,6 @@ func (ctrl *controller) ListSimulations(user *users.User, tx *gorm.DB, w http.Re
 			Image:   sim.Image,
 			Args:    sim.Args,
 			URI:     sim.URI,
-			IP:      sim.IP,
 		})
 	}
 
@@ -193,7 +192,6 @@ func (ctrl *controller) GetSimulation(user *users.User, tx *gorm.DB, w http.Resp
 		Image:   simulation.Image,
 		Args:    simulation.Args,
 		URI:     simulation.URI,
-		IP:      simulation.IP,
 	}, nil
 }
 

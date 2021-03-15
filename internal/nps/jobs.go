@@ -28,7 +28,7 @@ type StartSimulationData struct {
 	state.ServicesGetter
 	platform platform.Platform
 	GroupID  simulations.GroupID
-	IP       string
+	URI       string
 	// NodeSelector allows a job to select the correct running kubernetes  node.
 	NodeSelector orchestrator.Selector
 	// PodSelector allows a job to select the correct running kubernetes pod.

@@ -54,6 +54,30 @@ func (m *nodes) WaitForCondition(resource orchestrator.Resource, condition orche
 	return waiter.NewWaitRequest(job)
 }
 
+// GetExternalDNSAddress returns the external DNS address.
+func (m *nodes) GetExternalDNSAddress(resource orchestrator.Resource) ([]string, error) {
+	// Prepare options
+	opts := metav1.ListOptions{
+		LabelSelector: resource.Selector().String(),
+	}
+
+	nodes, err := m.API.CoreV1().Nodes().List(opts)
+	if err != nil {
+		return nil, err
+	}
+
+	var result []string
+	for _, n := range nodes.Items {
+		for _, address := range n.Status.Addresses {
+			if address.Type == apiv1.NodeExternalDNS {
+				result = append(result, address.Address)
+			}
+		}
+	}
+
+	return result, err
+}
+
 // isConditionSetAsExpected checks if the given Kubernetes Resource matches the expected condition.
 func (m *nodes) isConditionSetAsExpected(node apiv1.Node, expected orchestrator.Condition) bool {
 	for _, cond := range node.Status.Conditions {

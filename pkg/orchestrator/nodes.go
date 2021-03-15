@@ -13,4 +13,5 @@ var (
 // Nodes groups a set of methods to register nodes into a cluster.
 type Nodes interface {
 	WaitForCondition(node Resource, condition Condition) waiter.Waiter
+	GetExternalDNSAddress(resource Resource) ([]string, error)
 }

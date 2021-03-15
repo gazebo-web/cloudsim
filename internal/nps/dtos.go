@@ -14,7 +14,6 @@ type GetSimulationResponse struct {
 	Image string `json:"image"`
 	Args  string `json:"args"`
 	URI   string `json:"uri"`
-	IP    string `json:"ip"`
 }
 
 // StartRequest is the request used to start a simulation.

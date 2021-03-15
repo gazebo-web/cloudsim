@@ -48,11 +48,11 @@ func prepareCreatePodInput(store actions.Store, tx *gorm.DB, deployment *actions
 
 	// \todo Improvment: Get ports dynamically.
 	ports := []orchestrator.ContainerPort{
-    orchestrator.ContainerPort{
-      ContainerPort: 8080,
-      HostPort: 8080,
-    },
-  }
+		orchestrator.ContainerPort{
+			ContainerPort: 8080,
+			HostPort:      8080,
+		},
+	}
 
 	// Set up container configuration
 	privileged := true
@@ -98,10 +98,10 @@ func prepareCreatePodInput(store actions.Store, tx *gorm.DB, deployment *actions
 
 	startData.PodSelector = orchestrator.NewSelector(labels)
 
-  var args []string
-  if sim.Args != "" {
-    args = strings.Split(sim.Args, ",")
-  }
+	var args []string
+	if sim.Args != "" {
+		args = strings.Split(sim.Args, ",")
+	}
 	startData.logger.Info("Launching pod. Image[", sim.Image, "] Args[", args, "]")
 	return jobs.LaunchPodsInput{
 		{
@@ -160,7 +160,7 @@ func prepareCreatePodInput(store actions.Store, tx *gorm.DB, deployment *actions
 
 			Nameservers: nameservers,
 
-      HostNetwork: true,
+			HostNetwork: true,
 		},
 	}, nil
 }
