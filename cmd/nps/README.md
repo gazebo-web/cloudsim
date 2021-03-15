@@ -37,5 +37,5 @@ curl -X GET -H "Private-Token: YOUR_TOKEN" https://staging-cloudsim-nps.ignition
 8. Stop the simulation using:
 
 ```
-url -X POST -H "Private-Token: YOUR_TOKEN" https://staging-cloudsim-nps.ignitionrobotics.org/1.0/stop/GROUP_ID`
+curl -X POST -H "Private-Token: YOUR_TOKEN" https://staging-cloudsim-nps.ignitionrobotics.org/1.0/stop/GROUP_ID`
 ```
