@@ -13,6 +13,7 @@ import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/implementations/kubernetes"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/platform"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/secrets"
+	fakeSecrets "gitlab.com/ignitionrobotics/web/cloudsim/pkg/secrets/implementations/fake"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
 	simfake "gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations/fake"
 	sfake "gitlab.com/ignitionrobotics/web/cloudsim/pkg/store/implementations/fake"
@@ -66,7 +67,7 @@ func TestLaunchGazeboServerCopyPod(t *testing.T) {
 	})
 
 	ctx := mock.AnythingOfType("*context.emptyCtx")
-	secretsManager := secrets.NewFakeSecrets()
+	secretsManager := fakeSecrets.NewFakeSecrets()
 	secretsManager.On("Get", ctx, "aws-secrets", "default").Return(&secrets.Secret{Data: map[string][]byte{
 		"aws-access-key-id":     []byte("12345678910"),
 		"aws-secret-access-key": []byte("secret"),

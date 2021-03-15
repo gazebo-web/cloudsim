@@ -13,6 +13,7 @@ import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/implementations/kubernetes"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/platform"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/secrets"
+	fakeSecrets "gitlab.com/ignitionrobotics/web/cloudsim/pkg/secrets/implementations/fake"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
 	simfake "gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations/fake"
 	sfake "gitlab.com/ignitionrobotics/web/cloudsim/pkg/store/implementations/fake"
@@ -37,7 +38,7 @@ func TestLaunchCommsBridgeCopyPods(t *testing.T) {
 	// Set up store
 	storeIgnition := sfake.NewFakeIgnition()
 	storeOrchestrator := sfake.NewFakeOrchestrator()
-	secretsManager := secrets.NewFakeSecrets()
+	secretsManager := fakeSecrets.NewFakeSecrets()
 	fakeStore := sfake.NewFakeStore(nil, storeOrchestrator, storeIgnition)
 
 	// Mock ignition store methods for this test
