@@ -1,7 +1,7 @@
 package nps
 
 import (
-  "errors"
+	"errors"
 	"github.com/jinzhu/gorm"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/actions"
 )
@@ -31,8 +31,8 @@ func getIP(store actions.Store, tx *gorm.DB, deployment *actions.Deployment, val
 	// CLOUDSIM_MACHINES_ORCHESTRATOR_NAMESPACE. It is empty.
 	namespace := startData.Platform().Store().Orchestrator().Namespace()
 	if namespace == "default" || namespace == "" {
-	   startData.logger.Error("CLOUDSIM_ORCHESTRATOR_NAMESPACE has not been set")
-	   return nil, errors.New("CLOUDSIM_ORCHESTRATOR_NAMESPACE has not been set")
+		startData.logger.Error("CLOUDSIM_ORCHESTRATOR_NAMESPACE has not been set")
+		return nil, errors.New("CLOUDSIM_ORCHESTRATOR_NAMESPACE has not been set")
 	}
 
 	ip, err := startData.Platform().Orchestrator().Pods().GetIP(

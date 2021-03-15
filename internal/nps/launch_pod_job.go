@@ -3,7 +3,7 @@ package nps
 // This file implements the launch pod job.
 
 import (
-  "errors"
+	"errors"
 	"github.com/jinzhu/gorm"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/actions"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator"
@@ -41,8 +41,8 @@ func prepareCreatePodInput(store actions.Store, tx *gorm.DB, deployment *actions
 	// CLOUDSIM_MACHINES_ORCHESTRATOR_NAMESPACE. It is empty.
 	namespace := startData.Platform().Store().Orchestrator().Namespace()
 	if namespace == "default" || namespace == "" {
-	   startData.logger.Error("In prepareCreatePodInput, CLOUDSIM_ORCHESTRATOR_NAMESPACE has not been set")
-	   return nil, errors.New("CLOUDSIM_ORCHESTRATOR_NAMESPACE has not been set")
+		startData.logger.Error("In prepareCreatePodInput, CLOUDSIM_ORCHESTRATOR_NAMESPACE has not been set")
+		return nil, errors.New("CLOUDSIM_ORCHESTRATOR_NAMESPACE has not been set")
 	}
 	// namespace := "web-cloudsim-integration"
 
@@ -93,6 +93,8 @@ func prepareCreatePodInput(store actions.Store, tx *gorm.DB, deployment *actions
 
 	startData.PodSelector = orchestrator.NewSelector(labels)
 
+	args := strings.Split(sim.Args, ",")
+	startData.logger.Info("Launching pod. Image[", sim.Image, "] Args[", args, "]")
 	return jobs.LaunchPodsInput{
 		{
 			// Name is the name of the pod that will be created.
@@ -133,7 +135,7 @@ func prepareCreatePodInput(store actions.Store, tx *gorm.DB, deployment *actions
 					// Image is the image running inside the container.
 					Image: sim.Image,
 					// Args passed to the Command. Cannot be updated.
-					Args: strings.Split(sim.Args, ","),
+					Args: args,
 					// Privileged defines if the container should run in privileged mode.
 					Privileged: &privileged,
 					// AllowPrivilegeEscalation is used to define if the container is allowed to scale its privileges.

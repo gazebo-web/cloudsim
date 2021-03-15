@@ -1,8 +1,8 @@
 package nps
 
 import (
-  "errors"
-  "fmt"
+	"errors"
+	"fmt"
 	"github.com/jinzhu/gorm"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/actions"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator"
@@ -36,7 +36,7 @@ func checkRemovePodsNoError(store actions.Store, tx *gorm.DB, deployment *action
 // prepareRemovePodsInput is a pre-hook in charge of setting up the selector
 // needed for the generic jobs to delete pods.
 func prepareRemovePodsInput(store actions.Store, tx *gorm.DB, deployment *actions.Deployment, value interface{}) (interface{}, error) {
-  fmt.Printf("\nRemoving a pod\n")
+	fmt.Printf("\nRemoving a pod\n")
 
 	stopData := store.State().(*StopSimulationData)
 
@@ -56,11 +56,11 @@ func prepareRemovePodsInput(store actions.Store, tx *gorm.DB, deployment *action
 	// CLOUDSIM_MACHINES_ORCHESTRATOR_NAMESPACE. It is empty.
 	namespace := stopData.Platform().Store().Orchestrator().Namespace()
 	if namespace == "default" || namespace == "" {
-	   stopData.logger.Error("CLOUDSIM_ORCHESTRATOR_NAMESPACE has not been set")
-	   return nil, errors.New("CLOUDSIM_ORCHESTRATOR_NAMESPACE has not been set")
-	 }
+		stopData.logger.Error("CLOUDSIM_ORCHESTRATOR_NAMESPACE has not been set")
+		return nil, errors.New("CLOUDSIM_ORCHESTRATOR_NAMESPACE has not been set")
+	}
 
-  // Create a selector for the pod to remove
+	// Create a selector for the pod to remove
 	labels := map[string]string{
 		"cloudsim":         "true",
 		"nps":              "true",
@@ -70,8 +70,8 @@ func prepareRemovePodsInput(store actions.Store, tx *gorm.DB, deployment *action
 
 	// Create a list of pods to remove. This application has only one.
 	list := []orchestrator.Resource{
-    orchestrator.NewResource(sim.Name, namespace, stopData.PodSelector),
-  }
+		orchestrator.NewResource(sim.Name, namespace, stopData.PodSelector),
+	}
 
 	// And if logs are enabled, gazebo server copy pod.
 	// if s.Platform().Store().Ignition().LogsCopyEnabled() {

@@ -44,18 +44,18 @@ func launchPods(store actions.Store, tx *gorm.DB, deployment *actions.Deployment
 	var err error
 
 	for _, in := range input {
-    // Must check each function returns a valid pointer, otherwise a crash
-    // could occur.
-    if s.Platform() != nil && s.Platform().Orchestrator() != nil &&
-      s.Platform().Orchestrator().Pods() != nil {
-		  var res orchestrator.Resource
+		// Must check each function returns a valid pointer, otherwise a crash
+		// could occur.
+		if s.Platform() != nil && s.Platform().Orchestrator() != nil &&
+			s.Platform().Orchestrator().Pods() != nil {
+			var res orchestrator.Resource
 
-		  res, err = s.Platform().Orchestrator().Pods().Create(in)
-		  if err != nil {
-		  	return nil, err
-		  }
-		  created = append(created, res)
-    }
+			res, err = s.Platform().Orchestrator().Pods().Create(in)
+			if err != nil {
+				return nil, err
+			}
+			created = append(created, res)
+		}
 	}
 
 	return LaunchPodsOutput{

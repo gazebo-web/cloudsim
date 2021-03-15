@@ -91,10 +91,10 @@ func newDeploymentData(deployment *Deployment, job string, deploymentDataType de
 // If there is no previous data, a new storage entry will be created.
 // If there is previous data, the storage entry will be replaced with the new data.
 func setDeploymentData(tx *gorm.DB, deployment *Deployment, job *string, deploymentDataType deploymentDataType,
-	 data interface{}) error {
-	 if job == nil {
+	data interface{}) error {
+	if job == nil {
 		job = &deployment.CurrentJob
-	 }
+	}
 
 	// // Marshal the data to a string
 	// var dataBytes []byte
@@ -108,15 +108,15 @@ func setDeploymentData(tx *gorm.DB, deployment *Deployment, job *string, deploym
 	// dataTypeName := GetJobDataTypeName(data)
 	// deploymentData := newDeploymentData(deployment, *job, deploymentDataType, dataTypeName, &dataStr)
 
-  // \todo This is broken. It causes an error
+	// \todo This is broken. It causes an error
 	/*err = tx.
-		Where("deployment_id = ?", deployment.ID).
-		Where("job = ?", *job).
-		Where("type = ?", deploymentDataType).
-		Assign(*deploymentData).
-		FirstOrCreate(deploymentData).
-		Error
-    */
+	Where("deployment_id = ?", deployment.ID).
+	Where("job = ?", *job).
+	Where("type = ?", deploymentDataType).
+	Assign(*deploymentData).
+	FirstOrCreate(deploymentData).
+	Error
+	*/
 
 	//if err != nil {
 	//	return err

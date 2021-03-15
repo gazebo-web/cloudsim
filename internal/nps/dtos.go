@@ -6,7 +6,7 @@ import (
 
 type GetSimulationResponse struct {
 	CreatedAt time.Time `json:"created_at"`
-  Owner     string    `json:"owner"`
+	Owner     string    `json:"owner"`
 	Name      string    `json:"name"`
 	GroupID   string    `json:"groupid"`
 	Status    string    `json:"status"`
@@ -22,7 +22,7 @@ type StartRequest struct {
 	// image is the docker image to run
 	Image string `form:"image"`
 	Args  string `form:"args"`
-  Name  string `form:"name"`
+	Name  string `form:"name"`
 }
 
 // StartResponse is the response to the request of starting a simulation.
@@ -33,7 +33,7 @@ type StartResponse struct {
 
 // StopRequest is the request to stop a simulation.
 type StopRequest struct {
-	GroupID   string    `json:"groupid"`
+	GroupID string `json:"groupid"`
 }
 
 // StopResponse is the response to the request of stopping a simulation.

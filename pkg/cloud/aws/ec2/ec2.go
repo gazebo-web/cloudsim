@@ -92,10 +92,10 @@ func (m *machines) newRunInstancesInput(createMachines cloud.CreateMachinesInput
 		},
 		TagSpecifications: tagSpec,
 		UserData:          createMachines.InitScript,
-    // \todo I got this error when attempting to launch a machine:
-    //     `InvalidParameterCombination: The parameter groupName cannot be used with the parameter subnet`
-    //
-    // My understanding is that you should use either `SecurityGroupIds` or `SecurityGroups` with the preference being `SecurityGroupIds`
+		// \todo I got this error when attempting to launch a machine:
+		//     `InvalidParameterCombination: The parameter groupName cannot be used with the parameter subnet`
+		//
+		// My understanding is that you should use either `SecurityGroupIds` or `SecurityGroups` with the preference being `SecurityGroupIds`
 		// SecurityGroups:    securityGroups,
 	}
 }
@@ -124,13 +124,13 @@ func (m *machines) createTags(input []cloud.Tag) []*ec2.TagSpecification {
 // returns a different error code than ErrCodeDryRunOperation.
 func (m *machines) runInstanceDryRun(input *ec2.RunInstancesInput) error {
 	input.SetDryRun(true)
-  fmt.Printf("runInstanceDryRun\n")
-  fmt.Println(input)
+	fmt.Printf("runInstanceDryRun\n")
+	fmt.Println(input)
 	_, err := m.API.RunInstances(input)
 	awsErr, ok := err.(awserr.Error)
 	if !ok || awsErr.Code() != ErrCodeDryRunOperation {
-    // Output some errors please.
-    fmt.Println(err)
+		// Output some errors please.
+		fmt.Println(err)
 		return cloud.ErrDryRunFailed
 	}
 	return nil

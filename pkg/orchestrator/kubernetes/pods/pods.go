@@ -192,8 +192,8 @@ func (p *pods) WaitForCondition(resource orchestrator.Resource, condition orches
 		condition, resource.Selector(),
 	))
 
-  fmt.Printf("\n\nWaitForCondition. Selector[%s]\n\n",
-    resource.Selector().String())
+	fmt.Printf("\n\nWaitForCondition. Selector[%s]\n\n",
+		resource.Selector().String())
 	// Prepare options
 	opts := metav1.ListOptions{
 		LabelSelector: resource.Selector().String(),
@@ -206,9 +206,9 @@ func (p *pods) WaitForCondition(resource orchestrator.Resource, condition orches
 		// Get list of pods
 		po, err := p.API.CoreV1().Pods(resource.Namespace()).List(opts)
 		if err != nil {
-      fmt.Printf("\n\nWaitForConditionError 1\n\n")
-      fmt.Printf("\n\nResource Namespace[%s]\n\n",resource.Namespace())
-      fmt.Printf("\n\nResource Opts[%v]\n\n", opts)
+			fmt.Printf("\n\nWaitForConditionError 1\n\n")
+			fmt.Printf("\n\nResource Namespace[%s]\n\n", resource.Namespace())
+			fmt.Printf("\n\nResource Opts[%v]\n\n", opts)
 			return false, err
 		}
 
@@ -221,7 +221,7 @@ func (p *pods) WaitForCondition(resource orchestrator.Resource, condition orches
 			case orchestrator.ReadyCondition:
 				ready, err = p.isPodReady(&i)
 				if err != nil {
-          fmt.Printf("\n\nWaitForConditionError 2\n\n")
+					fmt.Printf("\n\nWaitForConditionError 2\n\n")
 					return false, err
 				}
 				break

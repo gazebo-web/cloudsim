@@ -17,7 +17,7 @@ type Simulation struct {
 	DeletedAt *time.Time `gorm:"type:timestamp(2) NULL" sql:"index" json:"-"`
 	// Timestamp in which this simulation was stopped/terminated.
 	StoppedAt *time.Time `gorm:"type:timestamp(3) NULL" json:"stopped_at,omitempty"`
-  Owner   string `json:"owner"`
+	Owner     string     `json:"owner"`
 
 	Name    string `json:"name"`
 	GroupID string `json:"groupid"`
@@ -81,15 +81,15 @@ func (s *Simulation) GetValidFor() time.Duration {
 	panic("implement me")
 }
 
-func (s *Simulation)  GetCreator() string {
+func (s *Simulation) GetCreator() string {
 	panic("implement me")
 }
 
-func (s *Simulation)  GetOwner() *string {
+func (s *Simulation) GetOwner() *string {
 	panic("implement me")
 }
 
-func (s *Simulation)  IsProcessed() bool {
+func (s *Simulation) IsProcessed() bool {
 	panic("implement me")
 }
 func NewSimulation() simulations.Simulation {

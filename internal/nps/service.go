@@ -4,19 +4,19 @@ package nps
 
 import (
 	"context"
-  "errors"
+	"errors"
 	"github.com/jinzhu/gorm"
 	"github.com/satori/go.uuid"
 	"gitlab.com/ignitionrobotics/web/cloudsim/internal/pkg/domain"
 	gormrepo "gitlab.com/ignitionrobotics/web/cloudsim/internal/pkg/repositories/gorm"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/actions"
-	"gitlab.com/ignitionrobotics/web/fuelserver/bundles/users"
 	ignapp "gitlab.com/ignitionrobotics/web/cloudsim/pkg/application"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/cloud/aws"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/env"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/kubernetes"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/platform"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
+	"gitlab.com/ignitionrobotics/web/fuelserver/bundles/users"
 	"gitlab.com/ignitionrobotics/web/ign-go"
 	"time"
 )
@@ -71,7 +71,7 @@ func NewService(db *gorm.DB, logger ign.Logger) Service {
 	storage, machines, _ := aws.InitializeAWS("us-east-1", logger)
 
 	// \todo Why do I need to make a Store here?
-  // Holy hell. This is needed in order to read the environment variables.
+	// Holy hell. This is needed in order to read the environment variables.
 	store := env.NewStore()
 
 	s := &service{
@@ -153,7 +153,7 @@ func (s *service) StartQueueHandler(ctx context.Context, groupID simulations.Gro
 		return err
 	}
 
-  s.logger.Info("Starting simulation for groupID: ", groupID)
+	s.logger.Info("Starting simulation for groupID: ", groupID)
 	return nil
 }
 
@@ -171,13 +171,13 @@ func (s *service) StopQueueHandler(ctx context.Context, groupID simulations.Grou
 	}
 	store := actions.NewStore(state)
 
-  // Create the action
+	// Create the action
 	execInput := &actions.ExecuteInput{
 		ApplicationName: &s.applicationName,
 		ActionName:      actionNameStopSimulation,
 	}
 
-  // Execute the action
+	// Execute the action
 	err := s.actions.Execute(store, s.db, execInput, state)
 	if err != nil {
 		return err
@@ -186,7 +186,7 @@ func (s *service) StopQueueHandler(ctx context.Context, groupID simulations.Grou
 	s.logger.Info("Stopping simulation for groupID:", groupID)
 	return nil
 
-  return nil
+	return nil
 }
 
 func (s *service) Get(groupID simulations.GroupID) (simulations.Simulation, error) {
@@ -217,7 +217,7 @@ func (s *service) GetWebsocketToken(groupID simulations.GroupID) (string, error)
 	panic("implement me")
 }
 
-func (s *service) MarkStopped(groupID simulations.GroupID) (error) {
+func (s *service) MarkStopped(groupID simulations.GroupID) error {
 	panic("implement me")
 }
 
@@ -234,7 +234,7 @@ func (s *service) Start(user *users.User, tx *gorm.DB, ctx context.Context, requ
 		CreatedAt: time.Now(),
 		UpdatedAt: time.Now(),
 
-    Owner: *user.Username,
+		Owner: *user.Username,
 
 		// Name of the simulation
 		Name: request.Name,
@@ -260,7 +260,7 @@ func (s *service) Start(user *users.User, tx *gorm.DB, ctx context.Context, requ
 	return &StartResponse{
 		Message: "Simulation instance is starting. Use the URI to get status updates",
 		Simulation: GetSimulationResponse{
-      Owner:   sim.Owner,
+			Owner:   sim.Owner,
 			Name:    sim.Name,
 			GroupID: sim.GroupID,
 			Status:  sim.Status,
@@ -284,16 +284,16 @@ func (s *service) Stop(user *users.User, tx *gorm.DB, ctx context.Context, reque
 		return nil, err
 	}
 
-  if simEntry.Owner != *user.Username {
-    return nil, errors.New("Authorization failed")
-  }
+	if simEntry.Owner != *user.Username {
+		return nil, errors.New("Authorization failed")
+	}
 	simEntry.Status = "Stopping."
 	tx.Save(&simEntry)
 
 	// Send the group id to the queue
 	s.stopQueue.Enqueue(simulations.GroupID(request.GroupID))
 
-  return &StopResponse{
+	return &StopResponse{
 		Message: "Simulation instance is stopping.",
 		Simulation: GetSimulationResponse{
 			Name:    simEntry.Name,

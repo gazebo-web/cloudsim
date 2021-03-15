@@ -31,28 +31,28 @@ func (app *application) GetAPIRoutes() ign.Routes {
 	return ign.Routes{
 		// Example usage:
 		//     curl -X POST -H "Private-Token: TOKEN" http://localhost:8000/1.0/start -F "image=osrf/ros:melodic-desktop-full" -F "args=gazebo" -F "name=my_test_name"
-    ign.Route{
-      Name:        "Start simulation",
-      Description: "This is a route for starting a simulation",
-      URI:         "/start",
-      Methods: ign.Methods{},
-      SecureMethods: ign.SecureMethods{
-        ign.Method{
-            Type:        "POST",
-            Description: "Start simulations",
-            Handlers: ign.FormatHandlers{
-              ign.FormatHandler{Handler: ign.JSONResult(WithUser(ctrl.Start))},
-            },
-        },
-      },
-    },
+		ign.Route{
+			Name:        "Start simulation",
+			Description: "This is a route for starting a simulation",
+			URI:         "/start",
+			Methods:     ign.Methods{},
+			SecureMethods: ign.SecureMethods{
+				ign.Method{
+					Type:        "POST",
+					Description: "Start simulations",
+					Handlers: ign.FormatHandlers{
+						ign.FormatHandler{Handler: ign.JSONResult(WithUser(ctrl.Start))},
+					},
+				},
+			},
+		},
 		// Example usage:
 		//     curl -X POST -H "Private-Token: TOKEN" http://localhost:8000/1.0/stop/{groupid}
 		ign.Route{
 			Name:        "Stop simulation",
 			Description: "This is a route for stopping a simulation",
 			URI:         "/stop/{groupid}",
-      Methods: ign.Methods{},
+			Methods:     ign.Methods{},
 			SecureMethods: ign.SecureMethods{
 				ign.Method{
 					Type:        "POST",
@@ -69,7 +69,7 @@ func (app *application) GetAPIRoutes() ign.Routes {
 			Name:        "List simulations",
 			Description: "This is a route for listing simulations",
 			URI:         "/simulations",
-      Methods: ign.Methods{},
+			Methods:     ign.Methods{},
 			SecureMethods: ign.SecureMethods{
 				ign.Method{
 					Type:        "GET",
@@ -81,12 +81,12 @@ func (app *application) GetAPIRoutes() ign.Routes {
 			},
 		},
 		// Example usage:
-    //     curl -X POST -H "Private-Token: TOKEN" http://localhost:8000/1.0/simulations/{groupid}
+		//     curl -X POST -H "Private-Token: TOKEN" http://localhost:8000/1.0/simulations/{groupid}
 		ign.Route{
 			Name:        "Get simulation",
 			Description: "This is a route for acquiring information about a simulation",
 			URI:         "/simulations/{groupid}",
-      Methods: ign.Methods{},
+			Methods:     ign.Methods{},
 			SecureMethods: ign.SecureMethods{
 				ign.Method{
 					Type:        "GET",

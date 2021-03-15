@@ -7,13 +7,14 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"gitlab.com/ignitionrobotics/web/fuelserver/bundles/users"
-	useracc "gitlab.com/ignitionrobotics/web/cloudsim/pkg/users"
 	"github.com/go-playground/form"
 	"github.com/gorilla/mux"
 	"github.com/jinzhu/gorm"
+	useracc "gitlab.com/ignitionrobotics/web/cloudsim/pkg/users"
+	"gitlab.com/ignitionrobotics/web/fuelserver/bundles/users"
 	"gitlab.com/ignitionrobotics/web/ign-go"
 	"net/http"
+	"strings"
 )
 
 // Controller is an interface designed to handle route requests.
@@ -75,6 +76,8 @@ func (ctrl *controller) Start(user *users.User, tx *gorm.DB, w http.ResponseWrit
 			getDecodeErrorsExtraInfo(errs))
 	}
 
+	// The name must be lowercase
+	req.Name = strings.ToLower(req.Name)
 	// A name form field is required. This is the name of the pod.
 	if req.Name == "" {
 		return nil, ign.NewErrorMessageWithBase(ign.ErrorMissingField,
@@ -85,13 +88,6 @@ func (ctrl *controller) Start(user *users.User, tx *gorm.DB, w http.ResponseWrit
 	if req.Image == "" {
 		return nil, ign.NewErrorMessageWithBase(ign.ErrorMissingField,
 			errors.New("Missing 'image' form field"))
-	}
-
-	// Make sure the some arguments are set. The arguments are passed to the
-	// docker image.
-	if req.Args == "" {
-		return nil, ign.NewErrorMessageWithBase(ign.ErrorMissingField,
-			errors.New("Missing 'args' form field"))
 	}
 
 	// Hand off the start request data to the service.
@@ -111,13 +107,13 @@ func (ctrl *controller) Start(user *users.User, tx *gorm.DB, w http.ResponseWrit
 //     * On success --> service.Start
 //     * On fail --> return error
 func (ctrl *controller) Stop(user *users.User, tx *gorm.DB, w http.ResponseWriter, r *http.Request) (interface{}, *ign.ErrMsg) {
-  // Get the groupid from the route
+	// Get the groupid from the route
 	groupID, ok := mux.Vars(r)["groupid"]
 	if !ok {
 		return nil, ign.NewErrorMessage(ign.ErrorIDNotInRequest)
 	}
 
-  // Get the matching simulation
+	// Get the matching simulation
 	var simulation Simulation
 	if err := tx.Where("group_id=?", groupID).First(&simulation).Error; err != nil {
 		return nil, ign.NewErrorMessageWithBase(ign.ErrorIDNotFound, err)
@@ -125,8 +121,8 @@ func (ctrl *controller) Stop(user *users.User, tx *gorm.DB, w http.ResponseWrite
 
 	// Construct the stop request to send to the service
 	req := StopRequest{
-    GroupID: simulation.GroupID,
-  }
+		GroupID: simulation.GroupID,
+	}
 
 	res, err := ctrl.service.Stop(user, tx, r.Context(), req)
 	if err != nil {
@@ -185,9 +181,9 @@ func (ctrl *controller) GetSimulation(user *users.User, tx *gorm.DB, w http.Resp
 		return nil, ign.NewErrorMessageWithBase(ign.ErrorIDNotFound, err)
 	}
 
-  if simulation.Owner != *user.Username {
-    return nil, ign.NewErrorMessage(ign.ErrorUnauthorized)
-  }
+	if simulation.Owner != *user.Username {
+		return nil, ign.NewErrorMessage(ign.ErrorUnauthorized)
+	}
 
 	// Send response to the user
 	return GetSimulationResponse{
@@ -237,4 +233,5 @@ func WithUser(handler handlerWithUser) ign.HandlerWithResult {
 		return handler(user, tx, w, r)
 	}
 }
+
 ////////////////////////////////////////////////
