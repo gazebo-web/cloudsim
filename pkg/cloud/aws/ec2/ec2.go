@@ -187,7 +187,7 @@ func (m *machines) create(input cloud.CreateMachinesInput) (*cloud.CreateMachine
 			break
 		}
 		if try == input.Retries {
-			return nil, fmt.Errorf("%s: max retries, with error: %w", cloud.ErrUnknown, err)
+			return nil, fmt.Errorf("%w: max retries, with error: %s", cloud.ErrUnknown, err)
 		}
 	}
 
