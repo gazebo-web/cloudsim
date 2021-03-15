@@ -166,7 +166,7 @@ func prepareNetworkPolicyCommsBridgesInput(store actions.Store, tx *gorm.DB, dep
 	for i, r := range robots {
 		robotID := subtapp.GetRobotID(i)
 		input[i] = orchestrator.CreateNetworkPolicyInput{
-			Name:        subtapp.GetPodNameFieldComputer(s.GroupID, robotID),
+			Name:        subtapp.GetPodNameCommsBridge(s.GroupID, robotID),
 			Namespace:   s.Platform().Store().Orchestrator().Namespace(),
 			Labels:      subtapp.GetPodLabelsBase(s.GroupID, s.ParentGroupID).Map(),
 			PodSelector: subtapp.GetPodLabelsCommsBridge(s.GroupID, s.ParentGroupID, r),
