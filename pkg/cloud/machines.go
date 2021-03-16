@@ -72,7 +72,7 @@ type CreateMachinesInput struct {
 	// Tags is a group of Tag that is being used to identify a machine.
 	Tags []Tag
 
-	// Deprecated: InitScript is the initialization script that will be executed when the machine gets created.
+	// InitScript is the initialization script that will be executed when the machine gets created.
 	InitScript *string
 
 	// Retries is the max amount of retries that will be executed when running in dry run mode.
