@@ -144,12 +144,6 @@ func (m *machineEnvStore) Limit() int {
 	return m.MachinesLimitValue
 }
 
-// InitScript returns the script that will be run when the machine gets created.
-// TODO: Address this function when implementing the corresponding job.
-func (m *machineEnvStore) InitScript() *string {
-	return nil
-}
-
 // newMachinesStore initializes a new store.Machines implementation using machineEnvStore.
 func newMachinesStore() (store.Machines, error) {
 	var m machineEnvStore

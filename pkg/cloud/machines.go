@@ -78,6 +78,10 @@ type CreateMachinesInput struct {
 	// Retries is the max amount of retries that will be executed when running in dry run mode.
 	// Suggested value: 10.
 	Retries int
+
+	// Labels is the map of labels that will be assigned to the node when it joins the cluster.
+	// In AWS, it will be the labels that are assigned to the node in order to join the EKS cluster.
+	Labels map[string]string
 }
 
 // CreateMachinesOutput is the output for the Machines.Create operation.

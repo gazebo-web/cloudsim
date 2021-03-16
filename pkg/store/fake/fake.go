@@ -235,16 +235,6 @@ func (f Machines) Tags(simulation simulations.Simulation, nodeType string, nameS
 	return args.Get(0).([]cloud.Tag)
 }
 
-// InitScript mocks the InitScript method.
-func (f Machines) InitScript() *string {
-	args := f.Called()
-	result := args.String(0)
-	if len(result) == 0 {
-		return nil
-	}
-	return &result
-}
-
 // BaseImage mocks the BaseImage method.
 func (f Machines) BaseImage() string {
 	args := f.Called()
