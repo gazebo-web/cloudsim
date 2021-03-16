@@ -2327,6 +2327,7 @@ func (s *Service) QueueRemoveElement(ctx context.Context, user *users.User, grou
 	return s.launchHandlerQueue.Remove(groupID)
 }
 
+// TODO: Make initPlatform independent of Service by receiving arguments with the needed config.
 func (s *Service) initPlatform() (platform.Platform, error) {
 
 	machines := ec2.NewMachines(globals.EC2Svc, s.logger)
@@ -2384,6 +2385,7 @@ func (s *Service) initPlatform() (platform.Platform, error) {
 	}), nil
 }
 
+// TODO: Make initApplicationServices independent of Service by receiving arguments with the needed config.
 func (s *Service) initApplicationServices() subtapp.Services {
 	s.serviceAdaptor = NewSubTSimulationServiceAdaptor(s.DB)
 	base := application.NewServices(s.serviceAdaptor, s.userAccessor)
@@ -2392,6 +2394,7 @@ func (s *Service) initApplicationServices() subtapp.Services {
 	return subtapp.NewServices(base, trackService, summaryService)
 }
 
+// TODO: Make initSimulator independent of Service by receiving arguments with the needed config.
 func (s *Service) initSimulator() simulator.Simulator {
 	return subtSimulator.NewSimulator(subtSimulator.Config{
 		DB:                    s.DB,
