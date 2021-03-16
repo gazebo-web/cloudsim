@@ -895,7 +895,7 @@ func (s *Service) workerStartSimulation(payload interface{}) {
 		return
 	}
 
-	err = s.simulator.Start(context.TODO(), simulations.GroupID(groupID))
+	err = s.simulator.Start(s.baseCtx, simulations.GroupID(groupID))
 	// TODO Only respond to retryable errors
 	if err != nil {
 		// s.requeueSimulation(simDep)
@@ -916,7 +916,7 @@ func (s *Service) workerTerminateSimulation(payload interface{}) {
 		return
 	}
 
-	err := s.simulator.Stop(context.TODO(), simulations.GroupID(groupID))
+	err := s.simulator.Stop(s.baseCtx, simulations.GroupID(groupID))
 	if err != nil {
 		s.notify(PoolShutdownSimulation, groupID, nil, ign.NewErrorMessageWithBase(ign.ErrorUnexpected, err))
 		return
