@@ -190,7 +190,7 @@ func (m *machines) create(input cloud.CreateMachinesInput) (*cloud.CreateMachine
 		*input.InitScript = userData
 	}
 
-	runInstanceInput := m.newRunInstancesInput(input, userData)
+	runInstanceInput := m.newRunInstancesInput(input)
 
 	for try := 1; try <= input.Retries; try++ {
 		if err := m.runInstanceDryRun(runInstanceInput); err != nil {
