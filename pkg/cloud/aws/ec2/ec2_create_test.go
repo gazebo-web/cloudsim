@@ -198,8 +198,8 @@ func (s *ec2CreateMachinesTestSuite) TestCreate_ErrorWithDryRunMode() {
 		},
 	}
 	_, err := s.machines.Create(input)
-	s.Error(err)
-	s.Equal(cloud.ErrUnknown, err)
+	s.Require().Error(err)
+	s.Assert().True(errors.Is(err, cloud.ErrUnknown))
 }
 
 type mockEC2Create struct {
