@@ -91,7 +91,7 @@ func TestStartSimulationAction(t *testing.T) {
 	require.NoError(t, err)
 
 	// Initialize secrets
-	secrets := secrets.NewKubernetesSecrets(kubernetesClientset.CoreV1())
+	secretsManager := secrets.NewKubernetesSecrets(kubernetesClientset.CoreV1())
 
 	// Initialize platform components
 	c := platform.Components{
@@ -99,7 +99,7 @@ func TestStartSimulationAction(t *testing.T) {
 		Storage:  s3.NewStorage(storageAPI, logger),
 		Cluster:  cluster,
 		Store:    configStore,
-		Secrets:  secrets,
+		Secrets:  secretsManager,
 	}
 
 	// Initialize platform
@@ -177,6 +177,43 @@ func TestStartSimulationAction(t *testing.T) {
 	t.Run("First phase", func(t *testing.T) {
 		actionService := actions.NewService()
 
+		kClient := kfake.NewSimpleClientset(
+			&apiv1.Node{
+				TypeMeta: metav1.TypeMeta{},
+				ObjectMeta: metav1.ObjectMeta{
+					Name:   subtapp.GetPodNameGazeboServer(sim.GetGroupID()),
+					Labels: subtapp.GetNodeLabelsGazeboServer(sim.GetGroupID()).Map(),
+				},
+				Spec: apiv1.NodeSpec{},
+				Status: apiv1.NodeStatus{
+					Conditions: []apiv1.NodeCondition{
+						{
+							Type:   "Ready",
+							Status: "True",
+						},
+					},
+				},
+			},
+			&apiv1.Node{
+				TypeMeta: metav1.TypeMeta{},
+				ObjectMeta: metav1.ObjectMeta{
+					Name:   subtapp.GetPodNameFieldComputer(sim.GetGroupID(), subtapp.GetRobotID(0)),
+					Labels: subtapp.GetNodeLabelsFieldComputer(sim.GetGroupID(), &robot).Map(),
+				},
+				Spec: apiv1.NodeSpec{},
+				Status: apiv1.NodeStatus{
+					Conditions: []apiv1.NodeCondition{
+						{
+							Type:   "Ready",
+							Status: "True",
+						},
+					},
+				},
+			},
+		)
+
+		CopyDeepKubernetesClientset(kubernetesClientset, kClient)
+
 		s := simulator.NewSimulator(simulator.Config{
 			DB:                    db,
 			Platform:              p,
@@ -220,31 +257,33 @@ func TestStartSimulationAction(t *testing.T) {
 			DisableDefaultActions: true,
 		})
 
-		kClient := kfake.NewSimpleClientset(&apiv1.Pod{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      subtapp.GetPodNameGazeboServer(sim.GetGroupID()),
-				Namespace: p.Store().Orchestrator().Namespace(),
-				Labels:    subtapp.GetPodLabelsGazeboServer(sim.GetGroupID(), nil).Map(),
-			},
-			Spec: apiv1.PodSpec{},
-			Status: apiv1.PodStatus{
-				Conditions: []apiv1.PodCondition{
-					{
-						Type:   apiv1.PodInitialized,
-						Status: apiv1.ConditionTrue,
-					},
-					{
-						Type:   apiv1.PodScheduled,
-						Status: apiv1.ConditionTrue,
-					},
-					{
-						Type:   apiv1.PodReady,
-						Status: apiv1.ConditionTrue,
-					},
+		kClient := kfake.NewSimpleClientset(
+			&apiv1.Pod{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      subtapp.GetPodNameGazeboServer(sim.GetGroupID()),
+					Namespace: p.Store().Orchestrator().Namespace(),
+					Labels:    subtapp.GetPodLabelsGazeboServer(sim.GetGroupID(), nil).Map(),
 				},
-				PodIP: "1.1.1.1",
+				Spec: apiv1.PodSpec{},
+				Status: apiv1.PodStatus{
+					Conditions: []apiv1.PodCondition{
+						{
+							Type:   apiv1.PodInitialized,
+							Status: apiv1.ConditionTrue,
+						},
+						{
+							Type:   apiv1.PodScheduled,
+							Status: apiv1.ConditionTrue,
+						},
+						{
+							Type:   apiv1.PodReady,
+							Status: apiv1.ConditionTrue,
+						},
+					},
+					PodIP: "1.1.1.1",
+				},
 			},
-		})
+		)
 
 		CopyDeepKubernetesClientset(kubernetesClientset, kClient)
 
