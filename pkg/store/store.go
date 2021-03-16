@@ -37,9 +37,6 @@ type Machines interface {
 	// Tags returns a set of tags that will be set to the machine.
 	Tags(simulation simulations.Simulation, nodeType string, nameSuffix string) []cloud.Tag
 
-	// InitScript returns the script that will be run when creating the machine.
-	InitScript() *string
-
 	// BaseImage returns the base image that will be used when creating the machine.
 	BaseImage() string
 
