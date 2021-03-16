@@ -11,6 +11,11 @@ import (
 	"github.com/pkg/errors"
 	"github.com/satori/go.uuid"
 	"gitlab.com/ignitionrobotics/web/cloudsim/globals"
+	subtapp "gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/application"
+	subtSimulator "gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/simulator"
+	"gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/summaries"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/actions"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/application"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/cloud/aws/ec2"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/cloud/aws/s3"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/email"
@@ -25,6 +30,8 @@ import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/platform"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/runsim"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/secrets"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulator"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/transport"
 	ignws "gitlab.com/ignitionrobotics/web/cloudsim/pkg/transport/ign"
 	useracc "gitlab.com/ignitionrobotics/web/cloudsim/pkg/users"
@@ -192,8 +199,12 @@ type Service struct {
 	// number of times possible.
 	session *session.Session
 
-	platform platform.Platform
-	logger   ign.Logger
+	platform            platform.Platform
+	logger              ign.Logger
+	applicationServices subtapp.Services
+	actionService       actions.Servicer
+	simulator           simulator.Simulator
+	serviceAdaptor      simulations.Service
 }
 
 // SimServImpl holds the instance of the Simulations Service. It is set at initialization.
@@ -447,6 +458,10 @@ func (s *Service) Start(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
+
+	s.applicationServices = s.initApplicationServices()
+
+	s.simulator = s.initSimulator()
 
 	return nil
 }
@@ -2299,6 +2314,7 @@ func (s *Service) QueueRemoveElement(ctx context.Context, user *users.User, grou
 	return s.launchHandlerQueue.Remove(groupID)
 }
 
+// TODO: Make initPlatform independent of Service by receiving arguments with the needed config.
 func (s *Service) initPlatform() (platform.Platform, error) {
 	s.logger = ign.NewLoggerNoRollbar("[Ignition Cloudsim - SubT]", ign.VerbosityDebug)
 
@@ -2355,4 +2371,24 @@ func (s *Service) initPlatform() (platform.Platform, error) {
 		EmailSender:        emailSender,
 		RunningSimulations: runningSimulations,
 	}), nil
+}
+
+// TODO: Make initApplicationServices independent of Service by receiving arguments with the needed config.
+func (s *Service) initApplicationServices() subtapp.Services {
+	s.serviceAdaptor = NewSubTSimulationServiceAdaptor(s.DB)
+	base := application.NewServices(s.serviceAdaptor, s.userAccessor)
+	trackService := NewTracksService(s.DB)
+	summaryService := summaries.NewService(s.DB)
+	return subtapp.NewServices(base, trackService, summaryService)
+}
+
+// TODO: Make initSimulator independent of Service by receiving arguments with the needed config.
+func (s *Service) initSimulator() simulator.Simulator {
+	return subtSimulator.NewSimulator(subtSimulator.Config{
+		DB:                    s.DB,
+		Platform:              s.platform,
+		ApplicationServices:   s.applicationServices,
+		ActionService:         s.actionService,
+		DisableDefaultActions: false,
+	})
 }
