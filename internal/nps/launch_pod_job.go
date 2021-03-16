@@ -107,7 +107,7 @@ func prepareCreatePodInput(store actions.Store, tx *gorm.DB, deployment *actions
 		{
 			// Name is the name of the pod that will be created.
 			// \todo: Should this be unique, and where is name used?
-			Name: sim.Name,
+			Name: startData.GroupID.String(),
 
 			// Namespace is the namespace where the pod will live in.
 			Namespace: namespace,
@@ -139,7 +139,7 @@ func prepareCreatePodInput(store actions.Store, tx *gorm.DB, deployment *actions
 			Containers: []orchestrator.Container{
 				{
 					// Name is the container's name.
-					Name: sim.Name,
+					Name: startData.GroupID.String(),
 					// Image is the image running inside the container.
 					Image: sim.Image,
 					// Args passed to the Command. Cannot be updated.

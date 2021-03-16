@@ -30,7 +30,7 @@ func (app *application) GetAPIRoutes() ign.Routes {
 	// Return the routes for this application. See also IGN's router.go
 	return ign.Routes{
 		// Example usage:
-		//     curl -X POST -H "Private-Token: TOKEN" http://localhost:8000/1.0/start -F "image=osrf/ros:melodic-desktop-full" -F "args=gazebo" -F "name=my_test_name"
+		//     curl -X POST -H "Private-Token: TOKEN" http://localhost:8001/1.0/start -F "image=osrf/ros:melodic-desktop-full" -F "args=gazebo" -F "name=my_test_name"
 		ign.Route{
 			Name:        "Start simulation",
 			Description: "This is a route for starting a simulation",
@@ -47,7 +47,7 @@ func (app *application) GetAPIRoutes() ign.Routes {
 			},
 		},
 		// Example usage:
-		//     curl -X POST -H "Private-Token: TOKEN" http://localhost:8000/1.0/stop/{groupid}
+		//     curl -X POST -H "Private-Token: TOKEN" http://localhost:8001/1.0/stop/{groupid}
 		ign.Route{
 			Name:        "Stop simulation",
 			Description: "This is a route for stopping a simulation",
@@ -64,7 +64,7 @@ func (app *application) GetAPIRoutes() ign.Routes {
 			},
 		},
 		// Example usage:
-		//     curl -X GET -H "Private-Token: TOKEN" http://localhost:8000/1.0/simulations
+		//     curl -X GET -H "Private-Token: TOKEN" http://localhost:8001/1.0/simulations
 		ign.Route{
 			Name:        "List simulations",
 			Description: "This is a route for listing simulations",
@@ -81,7 +81,7 @@ func (app *application) GetAPIRoutes() ign.Routes {
 			},
 		},
 		// Example usage:
-		//     curl -X POST -H "Private-Token: TOKEN" http://localhost:8000/1.0/simulations/{groupid}
+		//     curl -X POST -H "Private-Token: TOKEN" http://localhost:8001/1.0/simulations/{groupid}
 		ign.Route{
 			Name:        "Get simulation",
 			Description: "This is a route for acquiring information about a simulation",
