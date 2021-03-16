@@ -129,7 +129,7 @@ func (m *machines) runInstanceDryRun(input *ec2.RunInstancesInput) error {
 	_, err := m.API.RunInstances(input)
 	awsErr, ok := err.(awserr.Error)
 	if !ok || awsErr.Code() != ErrCodeDryRunOperation {
-		return errors.Wrap(cloud.ErrUnknown, awsErr.Message())
+		return errors.Wrap(cloud.ErrUnknown, err.Error())
 	}
 	return nil
 }
