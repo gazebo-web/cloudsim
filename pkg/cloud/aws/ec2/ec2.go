@@ -178,12 +178,12 @@ func (m *machines) create(input cloud.CreateMachinesInput) (*cloud.CreateMachine
 	}
 
 	if input.InitScript == nil {
-		input.InitScript = new(string)
 		userData, err := m.createUserData(input)
 		if err != nil {
 			return nil, err
 		}
-		*input.InitScript = base64.StdEncoding.EncodeToString([]byte(userData))
+		userData = base64.StdEncoding.EncodeToString([]byte(userData))
+		input.InitScript = &userData
 	}
 
 	runInstanceInput := m.newRunInstancesInput(input)
