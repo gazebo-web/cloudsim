@@ -70,7 +70,7 @@ func prepareRemovePodsInput(store actions.Store, tx *gorm.DB, deployment *action
 
 	// Create a list of pods to remove. This application has only one.
 	list := []orchestrator.Resource{
-		orchestrator.NewResource(sim.Name, namespace, stopData.PodSelector),
+		orchestrator.NewResource(stopData.GroupID.String(), namespace, stopData.PodSelector),
 	}
 
 	// And if logs are enabled, gazebo server copy pod.
