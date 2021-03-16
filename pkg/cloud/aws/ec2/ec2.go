@@ -2,6 +2,7 @@ package ec2
 
 import (
 	"bytes"
+	"encoding/base64"
 	"fmt"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
@@ -181,6 +182,7 @@ func (m *machines) create(input cloud.CreateMachinesInput) (*cloud.CreateMachine
 		if err != nil {
 			return nil, err
 		}
+		userData = base64.StdEncoding.EncodeToString([]byte(userData))
 		input.InitScript = &userData
 	}
 
