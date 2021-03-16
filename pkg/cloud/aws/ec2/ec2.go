@@ -68,7 +68,7 @@ func (m *machines) isValidSubnetID(subnet string) bool {
 }
 
 // newRunInstancesInput initializes the configuration to run EC2 instances with the given input.
-func (m *machines) newRunInstancesInput(createMachines cloud.CreateMachinesInput, userData string) *ec2.RunInstancesInput {
+func (m *machines) newRunInstancesInput(createMachines cloud.CreateMachinesInput) *ec2.RunInstancesInput {
 	var iamProfile *ec2.IamInstanceProfileSpecification
 	iamProfile = &ec2.IamInstanceProfileSpecification{
 		Arn:  createMachines.InstanceProfile,
@@ -95,7 +95,7 @@ func (m *machines) newRunInstancesInput(createMachines cloud.CreateMachinesInput
 			AvailabilityZone: aws.String(createMachines.Zone),
 		},
 		TagSpecifications: tagSpec,
-		UserData:          &userData,
+		UserData:          createMachines.InitScript,
 		SecurityGroups:    securityGroups,
 	}
 }
@@ -181,9 +181,13 @@ func (m *machines) create(input cloud.CreateMachinesInput) (*cloud.CreateMachine
 		return nil, cloud.ErrInvalidSubnetID
 	}
 
-	userData, err := m.createUserData(input)
-	if err != nil {
-		return nil, err
+	if input.InitScript == nil {
+		input.InitScript = new(string)
+		userData, err := m.createUserData(input)
+		if err != nil {
+			return nil, err
+		}
+		*input.InitScript = userData
 	}
 
 	runInstanceInput := m.newRunInstancesInput(input, userData)
