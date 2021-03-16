@@ -64,6 +64,7 @@ func createLaunchInstancesInput(store actions.Store, tx *gorm.DB, deployment *ac
 			Zone:            zone,
 			Tags:            tags,
 			Retries:         10,
+			Labels:          subtapp.GetNodeLabelsFieldComputer(s.GroupID, r).Map(),
 		})
 	}
 
