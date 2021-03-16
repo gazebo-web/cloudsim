@@ -73,11 +73,6 @@ func (m *machines) newRunInstancesInput(createMachines cloud.CreateMachinesInput
 		Name: nil,
 	}
 
-	var securityGroups []*string
-	for _, sg := range createMachines.FirewallRules {
-		securityGroups = append(securityGroups, aws.String(sg))
-	}
-
 	tagSpec := m.createTags(createMachines.Tags)
 	return &ec2.RunInstancesInput{
 		InstanceType:       aws.String(createMachines.Type),
@@ -93,7 +88,6 @@ func (m *machines) newRunInstancesInput(createMachines cloud.CreateMachinesInput
 		},
 		TagSpecifications: tagSpec,
 		UserData:          createMachines.InitScript,
-		SecurityGroups:    securityGroups,
 	}
 }
 

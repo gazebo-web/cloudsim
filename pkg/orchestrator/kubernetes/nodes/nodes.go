@@ -1,6 +1,7 @@
 package nodes
 
 import (
+	"errors"
 	"fmt"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/waiter"
@@ -8,6 +9,11 @@ import (
 	apiv1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
+)
+
+var (
+	// ErrMissingNodes is returned when no nodes have been found.
+	ErrMissingNodes = errors.New("missing nodes")
 )
 
 // nodes is a orchestrator.Nodes implementation.
@@ -34,6 +40,9 @@ func (m *nodes) WaitForCondition(resource orchestrator.Resource, condition orche
 		nodes, err := m.API.CoreV1().Nodes().List(opts)
 		if err != nil {
 			return false, err
+		}
+		if len(nodes.Items) == 0 {
+			return false, ErrMissingNodes
 		}
 		for _, n := range nodes.Items {
 			if !m.isConditionSetAsExpected(n, condition) {
