@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/client"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/aws/aws-sdk-go/service/ec2/ec2iface"
+	"github.com/pkg/errors"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/cloud"
 	"gitlab.com/ignitionrobotics/web/ign-go"
 	"regexp"
@@ -122,7 +123,7 @@ func (m *machines) runInstanceDryRun(input *ec2.RunInstancesInput) error {
 	_, err := m.API.RunInstances(input)
 	awsErr, ok := err.(awserr.Error)
 	if !ok || awsErr.Code() != ErrCodeDryRunOperation {
-		return cloud.ErrDryRunFailed
+		return errors.Wrap(cloud.ErrUnknown, err.Error())
 	}
 	return nil
 }
@@ -146,7 +147,7 @@ func (m *machines) parseRunInstanceError(err error) error {
 	case ErrCodeRequestLimitExceeded:
 		return cloud.ErrRequestsLimitExceeded
 	}
-	return cloud.ErrUnknown
+	return errors.Wrap(cloud.ErrUnknown, err.Error())
 }
 
 // runInstance is a wrapper for the EC2 RunInstances method.
@@ -174,13 +175,14 @@ func (m *machines) create(input cloud.CreateMachinesInput) (*cloud.CreateMachine
 	runInstanceInput := m.newRunInstancesInput(input)
 
 	for try := 1; try <= input.Retries; try++ {
-		if err := m.runInstanceDryRun(runInstanceInput); err != nil {
+		var err error
+		if err = m.runInstanceDryRun(runInstanceInput); err != nil {
 			m.sleepNSecondsBeforeMaxRetries(try, input.Retries)
 		} else {
 			break
 		}
 		if try == input.Retries {
-			return nil, cloud.ErrUnknown
+			return nil, errors.Wrap(cloud.ErrUnknown, fmt.Sprintf("max retries, with error: %s", err.Error()))
 		}
 	}
 
