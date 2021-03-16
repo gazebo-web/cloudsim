@@ -126,6 +126,7 @@ func (i *ignitionEnvStore) Verbosity() string {
 }
 
 // IP returns the Cloudsim server's IP address to use when creating NetworkPolicies.
+// If the IP address cannot be obtained, an empty string will be returned.
 func (i *ignitionEnvStore) IP() string {
 	ip, err := network.GetLocalIPAddressString()
 	if err != nil {
