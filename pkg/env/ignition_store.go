@@ -24,10 +24,6 @@ type ignitionEnvStore struct {
 	// SidecarContainerLogsPathValue is the path inside the sidecar container where the logs volume will be mounted.
 	SidecarContainerLogsPathValue string `env:"CLOUDSIM_IGN_SIDECAR_CONTAINER_LOGS_VOLUME_MOUNT_PATH" envDefault:"/tmp/logs"`
 
-	// IgnIPValue is the Cloudsim server's IP address to use when creating NetworkPolicies.
-	// See 'docker-entrypoint.sh' script located at the root folder of this project.
-	IgnIPValue string `env:"CLOUDSIM_IGN_IP"`
-
 	// VerbosityValue is the IGN_VERBOSE value that will be passed to Pods launched for SubT.
 	VerbosityValue string `env:"CLOUDSIM_IGN_VERBOSITY" envDefault:"2"`
 
@@ -126,6 +122,7 @@ func (i *ignitionEnvStore) Verbosity() string {
 }
 
 // IP returns the Cloudsim server's IP address to use when creating NetworkPolicies.
+// If the IP address cannot be obtained, an empty string will be returned.
 func (i *ignitionEnvStore) IP() string {
 	ip, err := network.GetLocalIPAddressString()
 	if err != nil {
