@@ -175,6 +175,9 @@ func (m *machines) create(input cloud.CreateMachinesInput) (*cloud.CreateMachine
 	if !m.isValidSubnetID(input.SubnetID) {
 		return nil, cloud.ErrInvalidSubnetID
 	}
+	if !m.isValidClusterID(input.ClusterID) {
+		return nil, cloud.ErrInvalidClusterID
+	}
 
 	if input.InitScript == nil {
 		userData, err := m.createUserData(input)
