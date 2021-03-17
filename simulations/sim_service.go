@@ -455,7 +455,7 @@ func (s *Service) Start(ctx context.Context) error {
 
 	var err error
 
-	s.logger = ign.NewLoggerNoRollbar("[Ignition Cloudsim - SubT]", ign.VerbosityDebug)
+	s.logger = ign.NewLoggerNoRollbar("Ignition Cloudsim - SubT", ign.VerbosityDebug)
 
 	s.logger.Info("Initializing Cloudsim platform")
 	s.platform, err = s.initPlatform()
