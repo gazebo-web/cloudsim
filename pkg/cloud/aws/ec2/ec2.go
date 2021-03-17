@@ -182,6 +182,7 @@ func (m *machines) create(input cloud.CreateMachinesInput) (*cloud.CreateMachine
 		if err != nil {
 			return nil, err
 		}
+		// EC2 requires that user data strings are encoded in base64
 		userData = base64.StdEncoding.EncodeToString([]byte(userData))
 		input.InitScript = &userData
 	}
