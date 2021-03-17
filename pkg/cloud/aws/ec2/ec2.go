@@ -68,6 +68,11 @@ func (m *machines) isValidSubnetID(subnet string) bool {
 	return matched
 }
 
+// isValidClusterID checks that the given cluster ID is valid.
+func (m *machines) isValidClusterID(clusterID string) bool {
+	return len(clusterID) > 0
+}
+
 // newRunInstancesInput initializes the configuration to run EC2 instances with the given input.
 func (m *machines) newRunInstancesInput(createMachines cloud.CreateMachinesInput) *ec2.RunInstancesInput {
 	var iamProfile *ec2.IamInstanceProfileSpecification
