@@ -40,6 +40,8 @@ func createLaunchInstancesInput(store actions.Store, tx *gorm.DB, deployment *ac
 			Zone:            zone,
 			Tags:            subtapp.GetTagsInstanceSpecific(prefix, s.GroupID, "gzserver", clusterName, "gzserver"),
 			Retries:         10,
+			Labels:          subtapp.GetNodeLabelsGazeboServer(s.GroupID).Map(),
+			ClusterID:       clusterName,
 		},
 	}
 
@@ -63,6 +65,8 @@ func createLaunchInstancesInput(store actions.Store, tx *gorm.DB, deployment *ac
 			Zone:            zone,
 			Tags:            tags,
 			Retries:         10,
+			Labels:          subtapp.GetNodeLabelsFieldComputer(s.GroupID, r).Map(),
+			ClusterID:       clusterName,
 		})
 	}
 
