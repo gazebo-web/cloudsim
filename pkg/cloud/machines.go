@@ -82,6 +82,10 @@ type CreateMachinesInput struct {
 	// Labels is the map of labels that will be assigned to the node when it joins the cluster.
 	// In AWS, it will be the labels that are assigned to the node in order to join the EKS cluster.
 	Labels map[string]string
+
+	// ClusterID identifies the cluster that the nodes should join.
+	// In AWS: It's the cluster name.
+	ClusterID string
 }
 
 // CreateMachinesOutput is the output for the Machines.Create operation.
