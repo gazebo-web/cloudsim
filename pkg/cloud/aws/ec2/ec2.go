@@ -369,7 +369,7 @@ func (m *machines) createUserData(input cloud.CreateMachinesInput) (string, erro
 
 	err = tmpl.Execute(buffer, map[string]interface{}{
 		"Labels":      strings.Join(labels, ","),
-		"ClusterName": "testing-cluster-name",
+		"ClusterName": input.ClusterID,
 		"Args":        "--use-max-pods false",
 	})
 	if err != nil {
