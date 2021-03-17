@@ -25,6 +25,8 @@ var (
 	ErrMissingMachineFilters = errors.New("missing machine filters")
 	// ErrInvalidTerminateRequest is used to return an error when validating a termination machine request fails.
 	ErrInvalidTerminateRequest = errors.New("invalid terminate machines request")
+	// ErrInvalidClusterID is returned when an invalid cluster id is passed when creating machines.
+	ErrInvalidClusterID = errors.New("invalid cluster id")
 )
 
 // Tag is a group of key-value pairs for a certain resource.
