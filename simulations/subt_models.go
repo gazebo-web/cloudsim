@@ -8,9 +8,17 @@ import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/globals"
 	"gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/tracks"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
+	"gitlab.com/ignitionrobotics/web/ign-go"
 	"strconv"
 	"strings"
 	"time"
+)
+
+var (
+	// ErrInvalidSeedID is returned when an invalid seed id is provided
+	ErrInvalidSeedID = errors.New("invalid seed id")
+	// ErrInvalidWorldID is returned when an invalid world id is provided
+	ErrInvalidWorldID = errors.New("invalid world id")
 )
 
 // SubTCreateSimulation is a CreateSimulation request extension that adds specfic
@@ -150,15 +158,17 @@ func countSimulationsByCircuit(tx *gorm.DB, owner, circuit string) (*int, error)
 }
 
 // NewTracksService initializes a new tracks.Service implementation using subTCircuitService.
-func NewTracksService(db *gorm.DB) tracks.Service {
+func NewTracksService(db *gorm.DB, logger ign.Logger) tracks.Service {
 	return &subTCircuitService{
-		db: db,
+		db:     db,
+		logger: logger,
 	}
 }
 
 // subTCircuitService implements the tracks.Service interface for the SubTCircuitRules.
 type subTCircuitService struct {
-	db *gorm.DB
+	db     *gorm.DB
+	logger ign.Logger
 }
 
 // Create creates a new SubTCircuitRules based on the tracks.CreateTrackInput input.
@@ -168,11 +178,19 @@ func (s *subTCircuitService) Create(input tracks.CreateTrackInput) (*tracks.Trac
 
 // Get returns the tracks.Track representation of the SubTCircuitRules identified by the given circuit name.
 func (s *subTCircuitService) Get(name string, worldID int) (*tracks.Track, error) {
+	s.logger.Debug(fmt.Sprintf("Getting circuit rule with name [%s] and WorldID [%d]", name, worldID))
 	c, err := GetCircuitRules(s.db, name)
 	if err != nil {
+		s.logger.Debug(fmt.Sprintf("Failed to get circuit rule with name [%s] and WorldID [%d] with error: %s", name, worldID, err))
 		return nil, err
 	}
-	return c.ToTrack(worldID), nil
+	track, err := c.ToTrack(worldID)
+	if err != nil {
+		s.logger.Debug(fmt.Sprintf("Failed to create track representation for circuit rule with name [%s] and WorldID [%d] with error: %s", name, worldID, err))
+		return nil, err
+	}
+	s.logger.Debug(fmt.Sprintf("Returning circuit rule represented as a Track: %+v", track))
+	return track, nil
 }
 
 // GetAll returns a slice with all the SubTCircuitRules represented as tracks.Track.
@@ -223,11 +241,33 @@ type SubTCircuitRules struct {
 }
 
 // ToTrack generates a representation of a tracks.Track from the current SubTCircuitRules.
-func (r *SubTCircuitRules) ToTrack(id int) *tracks.Track {
-	maxSimSeconds, _ := strconv.Atoi(*r.WorldMaxSimSeconds)
+func (r *SubTCircuitRules) ToTrack(id int) (*tracks.Track, error) {
+	maxSimSeconds, err := strconv.Atoi(*r.WorldMaxSimSeconds)
+	if err != nil {
+		return nil, err
+	}
 
-	seed, _ := strconv.Atoi(strings.Split(*r.Seeds, ",")[id])
-	world := strings.Split(*r.Worlds, ",")[id]
+	var seed *int
+	if r.Seeds != nil {
+		seeds := strings.Split(*r.Seeds, ",")
+		if len(seeds) < id {
+			return nil, ErrInvalidSeedID
+		}
+
+		s, err := strconv.Atoi(seeds[id])
+		if err != nil {
+			return nil, err
+		}
+
+		seed = &s
+	}
+
+	worlds := strings.Split(*r.Worlds, ",")
+	if len(worlds) < id {
+		return nil, ErrInvalidWorldID
+	}
+
+	world := worlds[id]
 
 	return &tracks.Track{
 		Name:          *r.Circuit,
@@ -237,9 +277,9 @@ func (r *SubTCircuitRules) ToTrack(id int) *tracks.Track {
 		WarmupTopic:   *r.WorldWarmupTopics,
 		MaxSimSeconds: maxSimSeconds,
 		Public:        false,
-		Seed:          &seed,
+		Seed:          seed,
 		World:         world,
-	}
+	}, nil
 }
 
 // GetPendingCircuitRules gets a list of circuits that are scheduled for competition

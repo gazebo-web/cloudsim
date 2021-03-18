@@ -2389,7 +2389,7 @@ func (s *Service) initPlatform() (platform.Platform, error) {
 func (s *Service) initApplicationServices() subtapp.Services {
 	s.serviceAdaptor = NewSubTSimulationServiceAdaptor(s.DB)
 	base := application.NewServices(s.serviceAdaptor, s.userAccessor)
-	trackService := NewTracksService(s.DB)
+	trackService := NewTracksService(s.DB, s.logger)
 	summaryService := summaries.NewService(s.DB)
 	return subtapp.NewServices(base, trackService, summaryService)
 }
