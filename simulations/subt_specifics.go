@@ -131,6 +131,9 @@ const (
 	CircuitCaveCircuitWorld7   string = "Cave Circuit World 7"
 	CircuitCaveCircuitWorld8   string = "Cave Circuit World 8"
 	CircuitFinalsQual          string = "Finals Qualification"
+	CircuitFinalsPractice1     string = "Finals Practice 1"
+	CircuitFinalsPractice2     string = "Finals Practice 2"
+	CircuitFinalsPractice3     string = "Finals Practice 3"
 
 	// Container names
 	GazeboServerContainerName    string = "gzserver-container"
