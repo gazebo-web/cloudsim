@@ -31,12 +31,27 @@ type handlerWithUser func(user *users.User, tx *gorm.DB, w http.ResponseWriter, 
 
 // WithUser is a middleware that checks for a valid user from the JWT and passes
 // the user to the handlerWithUser.
+// If the user is not present or invalid, an error is returned.
 func WithUser(handler handlerWithUser) ign.HandlerWithResult {
 	return func(tx *gorm.DB, w http.ResponseWriter, r *http.Request) (interface{}, *ign.ErrMsg) {
 		// Get JWT user. Fail if invalid or missing
 		user, ok, em := HTTPHandlerInstance.UserAccessor.UserFromJWT(r)
 		if !ok {
 			return nil, em
+		}
+		return handler(user, tx, w, r)
+	}
+}
+
+// WithUserOrAnonymous is a middleware that checks for a valid user from the JWT and passes
+// the user to the handlerWithUser.
+// If the user is not present or invalid, a nil user is passed.
+func WithUserOrAnonymous(handler handlerWithUser) ign.HandlerWithResult {
+	return func(tx *gorm.DB, w http.ResponseWriter, r *http.Request) (interface{}, *ign.ErrMsg) {
+		// Get JWT user. Fail if invalid or missing
+		user, ok, _ := HTTPHandlerInstance.UserAccessor.UserFromJWT(r)
+		if !ok {
+			return handler(nil, tx, w, r)
 		}
 		return handler(user, tx, w, r)
 	}
@@ -184,6 +199,18 @@ func CloudsimSimulationList(user *users.User, tx *gorm.DB,
 		circuit = &params["circuit"][0]
 	}
 
+	var owner *string
+	if len(params["owner"]) > 0 && len(params["owner"][0]) > 0 {
+		owner = &params["owner"][0]
+	}
+
+	var private *bool
+	if len(params["private"]) > 0 && len(params["private"][0]) > 0 {
+		if flag, err := strconv.ParseBool(params["private"][0]); err == nil {
+			private = &flag
+		}
+	}
+
 	sims, pagination, em := SimServImpl.SimulationDeploymentList(
 		r.Context(),
 		pr,
@@ -196,6 +223,8 @@ func CloudsimSimulationList(user *users.User, tx *gorm.DB,
 		user,
 		sptr(getDefaultApplicationName()),
 		includeChildren,
+		owner,
+		private,
 	)
 	if em != nil {
 		return nil, em
