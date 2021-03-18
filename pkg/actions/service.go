@@ -234,6 +234,8 @@ func (s *service) rollback(store Store, tx *gorm.DB, action *Action, executeInpu
 			return err
 		}
 
+		log.Printf("[Actions] Running rollback handler for job [%s]\n", job.Name)
+
 		// Run rollback logic for the current job if defined
 		if job.RollbackHandler != nil {
 			_, handlerErr := job.RollbackHandler(store, tx, deployment, nil, err)
@@ -249,6 +251,8 @@ func (s *service) rollback(store Store, tx *gorm.DB, action *Action, executeInpu
 				return err
 			}
 		}
+
+		log.Printf("[Actions] Rollback handler for job [%s] has successfully finished\n", job.Name)
 	}
 
 	return err
