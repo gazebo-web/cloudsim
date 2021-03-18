@@ -66,6 +66,11 @@ type SubTRobot struct {
 	Credits int
 }
 
+// GetImage returns the robot image.
+func (s *SubTRobot) GetImage() string {
+	return s.Image
+}
+
 // GetName returns the robot name.
 func (s *SubTRobot) GetName() string {
 	return s.Name
