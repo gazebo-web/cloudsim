@@ -36,11 +36,6 @@ func connectWebsocket(store actions.Store, tx *gorm.DB, deployment *actions.Depl
 		return nil, err
 	}
 
-	err = t.Connect()
-	if err != nil {
-		return nil, err
-	}
-
 	s.WebsocketConnection = t
 	store.SetState(s)
 
