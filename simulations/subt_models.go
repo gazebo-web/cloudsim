@@ -8,6 +8,7 @@ import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/globals"
 	"gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/tracks"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
+	"gitlab.com/ignitionrobotics/web/ign-go"
 	"strconv"
 	"strings"
 	"time"
@@ -157,15 +158,17 @@ func countSimulationsByCircuit(tx *gorm.DB, owner, circuit string) (*int, error)
 }
 
 // NewTracksService initializes a new tracks.Service implementation using subTCircuitService.
-func NewTracksService(db *gorm.DB) tracks.Service {
+func NewTracksService(db *gorm.DB, logger ign.Logger) tracks.Service {
 	return &subTCircuitService{
-		db: db,
+		db:     db,
+		logger: logger,
 	}
 }
 
 // subTCircuitService implements the tracks.Service interface for the SubTCircuitRules.
 type subTCircuitService struct {
-	db *gorm.DB
+	db     *gorm.DB
+	logger ign.Logger
 }
 
 // Create creates a new SubTCircuitRules based on the tracks.CreateTrackInput input.
@@ -175,11 +178,19 @@ func (s *subTCircuitService) Create(input tracks.CreateTrackInput) (*tracks.Trac
 
 // Get returns the tracks.Track representation of the SubTCircuitRules identified by the given circuit name.
 func (s *subTCircuitService) Get(name string, worldID int) (*tracks.Track, error) {
+	s.logger.Debug(fmt.Sprintf("Getting circuit rule with name [%s] and WorldID [%d]", name, worldID))
 	c, err := GetCircuitRules(s.db, name)
 	if err != nil {
+		s.logger.Debug(fmt.Sprintf("Failed to get circuit rule with name [%s] and WorldID [%d] with error: %s", name, worldID, err))
 		return nil, err
 	}
-	return c.ToTrack(worldID), nil
+	track, err := c.ToTrack(worldID)
+	if err != nil {
+		s.logger.Debug(fmt.Sprintf("Failed to create track representation for circuit rule with name [%s] and WorldID [%d] with error: %s", name, worldID, err))
+		return nil, err
+	}
+	s.logger.Debug(fmt.Sprintf("Returning circuit rule represented as a Track: %+v", track))
+	return track, nil
 }
 
 // GetAll returns a slice with all the SubTCircuitRules represented as tracks.Track.
