@@ -13,6 +13,13 @@ import (
 	"time"
 )
 
+var (
+	// ErrInvalidSeedID is returned when an invalid seed id is provided
+	ErrInvalidSeedID = errors.New("invalid seed id")
+	// ErrInvalidWorldID is returned when an invalid world id is provided
+	ErrInvalidWorldID = errors.New("invalid world id")
+)
+
 // SubTCreateSimulation is a CreateSimulation request extension that adds specfic
 // fields and validations for SubT application.
 type SubTCreateSimulation struct {
