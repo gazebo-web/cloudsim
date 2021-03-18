@@ -223,11 +223,33 @@ type SubTCircuitRules struct {
 }
 
 // ToTrack generates a representation of a tracks.Track from the current SubTCircuitRules.
-func (r *SubTCircuitRules) ToTrack(id int) *tracks.Track {
-	maxSimSeconds, _ := strconv.Atoi(*r.WorldMaxSimSeconds)
+func (r *SubTCircuitRules) ToTrack(id int) (*tracks.Track, error) {
+	maxSimSeconds, err := strconv.Atoi(*r.WorldMaxSimSeconds)
+	if err != nil {
+		return nil, err
+	}
 
-	seed, _ := strconv.Atoi(strings.Split(*r.Seeds, ",")[id])
-	world := strings.Split(*r.Worlds, ",")[id]
+	var seed *int
+	if r.Seeds != nil {
+		seeds := strings.Split(*r.Seeds, ",")
+		if len(seeds) < id {
+			return nil, ErrInvalidSeedID
+		}
+
+		s, err := strconv.Atoi(seeds[id])
+		if err != nil {
+			return nil, err
+		}
+
+		seed = &s
+	}
+
+	worlds := strings.Split(*r.Worlds, ",")
+	if len(worlds) < id {
+		return nil, ErrInvalidWorldID
+	}
+
+	world := worlds[id]
 
 	return &tracks.Track{
 		Name:          *r.Circuit,
@@ -237,9 +259,9 @@ func (r *SubTCircuitRules) ToTrack(id int) *tracks.Track {
 		WarmupTopic:   *r.WorldWarmupTopics,
 		MaxSimSeconds: maxSimSeconds,
 		Public:        false,
-		Seed:          &seed,
+		Seed:          seed,
 		World:         world,
-	}
+	}, nil
 }
 
 // GetPendingCircuitRules gets a list of circuits that are scheduled for competition
