@@ -688,6 +688,9 @@ var SubTCircuits = []string{
 	CircuitCaveCircuitWorld7,
 	CircuitCaveCircuitWorld8,
 	CircuitFinalsQual,
+	CircuitFinalsPractice1,
+	CircuitFinalsPractice2,
+	CircuitFinalsPractice3,
 }
 
 // SubTCompetitionCircuits is the list of circuits that are used for competitions.
