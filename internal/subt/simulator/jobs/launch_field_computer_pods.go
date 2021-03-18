@@ -49,7 +49,7 @@ func prepareFieldComputerPodInput(store actions.Store, tx *gorm.DB, deployment *
 			Containers: []orchestrator.Container{
 				{
 					Name:                     subtapp.GetContainerNameFieldComputer(),
-					Image:                    subtSim.GetImage(),
+					Image:                    r.GetImage(),
 					Privileged:               &privileged,
 					AllowPrivilegeEscalation: &allowPrivilegesEscalation,
 					EnvVars: map[string]string{

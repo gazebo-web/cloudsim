@@ -6,6 +6,8 @@ type Robot interface {
 	GetName() string
 	// GetKind returns the robot's type. It's the robot config type.
 	GetKind() string
+	// GetImage returns the robot's image. It will be used as the robot brain.
+	GetImage() string
 	// IsEqual returns true if the given robot is the same robot.
 	IsEqual(Robot) bool
 }
