@@ -255,7 +255,7 @@ func (r *SubTCircuitRules) ToTrack(id int) (*tracks.Track, error) {
 	var seed *int
 	if r.Seeds != nil {
 		seeds := strings.Split(*r.Seeds, ",")
-		if len(seeds) < id {
+		if id > len(seeds) {
 			return nil, ErrInvalidSeedID
 		}
 
