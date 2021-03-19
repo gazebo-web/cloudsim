@@ -1,7 +1,6 @@
 package jobs
 
 import (
-	"fmt"
 	"github.com/jinzhu/gorm"
 	subtapp "gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/application"
 	subt "gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/simulations"
@@ -52,10 +51,7 @@ func prepareFieldComputerPodInput(store actions.Store, tx *gorm.DB, deployment *
 					Image:                    r.GetImage(),
 					Privileged:               &privileged,
 					AllowPrivilegeEscalation: &allowPrivilegesEscalation,
-					EnvVars: map[string]string{
-						"ROBOT_NAME":     r.GetName(),
-						"ROS_MASTER_URI": fmt.Sprintf("http://%s:11311", s.CommsBridgeIPs[i]),
-					},
+					EnvVars:                  subtapp.GetEnvVarsFieldComputer(r.GetName(), s.CommsBridgeIPs[i]),
 				},
 			},
 		}
