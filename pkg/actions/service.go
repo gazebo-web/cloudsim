@@ -38,7 +38,9 @@ type service struct {
 
 // NewService returns a pointer to an action Servicer implementation.
 func NewService(logger ign.Logger) Servicer {
-	service := &service{}
+	service := &service{
+		logger: logger,
+	}
 	service.actions = make(map[string]*Action, 0)
 
 	return service
