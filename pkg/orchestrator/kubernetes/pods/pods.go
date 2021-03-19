@@ -207,6 +207,10 @@ func (p *pods) WaitForCondition(resource orchestrator.Resource, condition orches
 			return false, err
 		}
 
+		if len(po.Items) == 0 {
+			return false, orchestrator.ErrMissingPods
+		}
+
 		// Iterate over list of pods
 		for _, i := range po.Items {
 			var ready bool
