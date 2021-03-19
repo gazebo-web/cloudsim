@@ -467,7 +467,9 @@ func (s *Service) Start(ctx context.Context) error {
 	s.applicationServices = s.initApplicationServices()
 
 	s.logger.Info("Initializing action service")
-	s.actionService = actions.NewService()
+
+	// TODO: Make Verbosity depend on env var
+	s.actionService = actions.NewService(ign.NewLoggerNoRollbar("Worker", ign.VerbosityDebug))
 
 	s.logger.Info("Initializing Simulator using Kubernetes and AWS")
 	s.simulator = s.initSimulator()
