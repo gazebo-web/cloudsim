@@ -38,7 +38,9 @@ type service struct {
 
 // NewService returns a pointer to an action Servicer implementation.
 func NewService(logger ign.Logger) Servicer {
-	service := &service{}
+	service := &service{
+		logger: logger,
+	}
 	service.actions = make(map[string]*Action, 0)
 
 	return service
@@ -199,17 +201,17 @@ func (s *service) processJobs(store Store, tx *gorm.DB, action *Action, executeI
 		}
 
 		// Run the job
-		s.logger.Debug(fmt.Sprintf("Running job [%s]", job.Name))
+		s.logger.Debug(fmt.Sprintf("Running job [%s] for deployment [%s]", job.Name, deployment.UUID))
 		jobInput, err = job.Run(store, tx, deployment, jobInput)
 		// If an error was found, add it to the deployment and return
 		if err != nil {
-			s.logger.Debug(fmt.Sprintf("Running job [%s] has failed with error: %s.", job.Name, err))
+			s.logger.Debug(fmt.Sprintf("Running job [%s] for deployment [%s] has failed with error: %s.", job.Name, deployment.UUID, err))
 			if err := deployment.addJobError(tx, nil, err); err != nil {
 				return err
 			}
 			return err
 		}
-		s.logger.Debug(fmt.Sprintf("Running job [%s] has successfully finished.", job.Name))
+		s.logger.Debug(fmt.Sprintf("Running job [%s] for deployment [%s] has successfully finished.", job.Name, deployment.UUID))
 	}
 
 	return nil
@@ -239,7 +241,7 @@ func (s *service) rollback(store Store, tx *gorm.DB, action *Action, executeInpu
 
 		// Run rollback logic for the current job if defined
 		if job.RollbackHandler != nil {
-			s.logger.Debug(fmt.Sprintf("Running rollback handler for job [%s]", job.Name))
+			s.logger.Debug(fmt.Sprintf("Running rollback handler for job [%s] on deployment [%s]", job.Name, deployment.UUID))
 			_, handlerErr := job.RollbackHandler(store, tx, deployment, nil, err)
 
 			// If an error was found, add it to the deployment and return
@@ -250,10 +252,10 @@ func (s *service) rollback(store Store, tx *gorm.DB, action *Action, executeInpu
 					return err
 				}
 
-				s.logger.Debug(fmt.Sprintf("Running rollback handler for job [%s] failed with error: %s.", job.Name, handlerErr))
+				s.logger.Debug(fmt.Sprintf("Running rollback handler for job [%s] on deployment [%s] failed with error: %s.", job.Name, deployment.UUID, handlerErr))
 				return err
 			}
-			s.logger.Debug(fmt.Sprintf("Running rollback handler for job [%s] succeeded.", job.Name))
+			s.logger.Debug(fmt.Sprintf("Running rollback handler for job [%s] on deployment [%s] succeeded.", job.Name, deployment.UUID))
 		}
 	}
 
