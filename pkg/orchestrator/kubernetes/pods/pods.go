@@ -7,6 +7,7 @@ import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/waiter"
 	"gitlab.com/ignitionrobotics/web/ign-go"
 	apiv1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	podutil "k8s.io/kubernetes/pkg/api/v1/pod"
@@ -75,6 +76,14 @@ func (p *pods) Create(input orchestrator.CreatePodInput) (orchestrator.Resource,
 				Name:  k,
 				Value: v,
 			})
+		}
+
+		var resourceLimit map[apiv1.ResourceName]resource.Quantity
+		if len(c.ResourceLimits) > 0 {
+			resourceLimit = make(map[apiv1.ResourceName]resource.Quantity, len(c.ResourceLimits))
+			for k, v := range c.ResourceLimits {
+				resourceLimit[apiv1.ResourceName(k)] = resource.MustParse(v)
+			}
 		}
 
 		// Add new container to list of containers
