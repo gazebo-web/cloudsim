@@ -47,7 +47,7 @@ func prepareFieldComputerPodInput(store actions.Store, tx *gorm.DB, deployment *
 			Containers: []orchestrator.Container{
 				{
 					Name:                     subtapp.GetContainerNameFieldComputer(),
-					Image:                    subtSim.GetImage(),
+					Image:                    r.GetImage(),
 					AllowPrivilegeEscalation: &allowPrivilegesEscalation,
 					EnvVars:                  subtapp.GetEnvVarsFieldComputer(r.GetName(), s.CommsBridgeIPs[i]),
 				},
