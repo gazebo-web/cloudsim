@@ -14,7 +14,9 @@ import (
 	"gitlab.com/ignitionrobotics/web/ign-go"
 	apiv1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/kubernetes/fake"
+	k8testing "k8s.io/client-go/testing"
 	"testing"
 	"time"
 )
@@ -41,6 +43,13 @@ func TestWaitForGazeboServerPod(t *testing.T) {
 		},
 	}
 	client := fake.NewSimpleClientset(initialPod)
+	client.AddReactor("list", "pods", func(action k8testing.Action) (handled bool, ret runtime.Object, err error) {
+		handled = true
+		ret = initialPod
+		err = nil
+		return
+	})
+
 	po := pods.NewPods(client, spdyInit, logger)
 	ks := kubernetes.NewCustomKubernetes(kubernetes.Config{
 		Nodes:           nil,
