@@ -2,9 +2,9 @@ package jobs
 
 import (
 	"github.com/stretchr/testify/assert"
+	subtapp "gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/application"
 	"gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/simulator/state"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/actions"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/kubernetes"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/kubernetes/pods"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/kubernetes/spdy"
@@ -14,9 +14,7 @@ import (
 	"gitlab.com/ignitionrobotics/web/ign-go"
 	apiv1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/kubernetes/fake"
-	k8testing "k8s.io/client-go/testing"
 	"testing"
 	"time"
 )
@@ -28,14 +26,14 @@ func TestWaitForGazeboServerPod(t *testing.T) {
 	fakeStore := sfake.NewFakeStore(storeMachines, orchestratorStore, nil)
 	spdyInit := spdy.NewSPDYFakeInitializer()
 
+	gid := simulations.GroupID("aaaa-bbbb-cccc-dddd")
+
 	initialPod := &apiv1.Pod{
 		TypeMeta: metav1.TypeMeta{},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      "test",
+			Name:      subtapp.GetPodNameGazeboServer(gid),
 			Namespace: "default",
-			Labels: map[string]string{
-				"app": "test",
-			},
+			Labels:    subtapp.GetPodLabelsGazeboServer(gid, nil).Map(),
 		},
 		Spec: apiv1.PodSpec{},
 		Status: apiv1.PodStatus{
@@ -43,12 +41,6 @@ func TestWaitForGazeboServerPod(t *testing.T) {
 		},
 	}
 	client := fake.NewSimpleClientset(initialPod)
-	client.AddReactor("list", "pods", func(action k8testing.Action) (handled bool, ret runtime.Object, err error) {
-		handled = true
-		ret = initialPod
-		err = nil
-		return
-	})
 
 	po := pods.NewPods(client, spdyInit, logger)
 	ks := kubernetes.NewCustomKubernetes(kubernetes.Config{
@@ -65,19 +57,8 @@ func TestWaitForGazeboServerPod(t *testing.T) {
 		Store:   fakeStore,
 	})
 
-	gid := simulations.GroupID("aaaa-bbbb-cccc-dddd")
 	s := state.NewStartSimulation(p, nil, gid)
 	store := actions.NewStore(s)
-
-	// Mock gazebo server pod
-	s.GazeboServerPod = orchestrator.NewResource(
-		"test",
-		"default",
-		orchestrator.NewSelector(map[string]string{
-			"app": "test",
-		}),
-	)
-	store.SetState(s)
 
 	storeMachines.On("Timeout").Return(1 * time.Second)
 	storeMachines.On("PollFrequency").Return(1 * time.Second)
@@ -90,5 +71,4 @@ func TestWaitForGazeboServerPod(t *testing.T) {
 	assert.True(t, ok)
 
 	assert.Equal(t, gid, output.GroupID)
-	assert.NotNil(t, output.GazeboServerPod)
 }
