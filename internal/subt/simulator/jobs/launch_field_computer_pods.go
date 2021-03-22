@@ -36,8 +36,7 @@ func prepareFieldComputerPodInput(store actions.Store, tx *gorm.DB, deployment *
 	for i, r := range subtSim.GetRobots() {
 		robotID := subtapp.GetRobotID(i)
 		// Create field computer input
-		privileged := false
-		allowPrivilegesEscalation := true
+		allowPrivilegesEscalation := false
 		pods[i] = orchestrator.CreatePodInput{
 			Name:                          subtapp.GetPodNameFieldComputer(s.GroupID, robotID),
 			Namespace:                     s.Platform().Store().Orchestrator().Namespace(),
@@ -48,8 +47,7 @@ func prepareFieldComputerPodInput(store actions.Store, tx *gorm.DB, deployment *
 			Containers: []orchestrator.Container{
 				{
 					Name:                     subtapp.GetContainerNameFieldComputer(),
-					Image:                    r.GetImage(),
-					Privileged:               &privileged,
+					Image:                    subtSim.GetImage(),
 					AllowPrivilegeEscalation: &allowPrivilegesEscalation,
 					EnvVars:                  subtapp.GetEnvVarsFieldComputer(r.GetName(), s.CommsBridgeIPs[i]),
 				},
