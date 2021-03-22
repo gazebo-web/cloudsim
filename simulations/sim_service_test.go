@@ -4,17 +4,17 @@ import (
 	"fmt"
 	"github.com/jinzhu/gorm"
 	"github.com/stretchr/testify/assert"
-	"gitlab.com/ignitionrobotics/web/ign-go"
+	useracc "gitlab.com/ignitionrobotics/web/cloudsim/pkg/users"
 	gormUtils "gitlab.com/ignitionrobotics/web/cloudsim/pkg/utils/db/gorm"
 	"gitlab.com/ignitionrobotics/web/fuelserver/bundles/users"
-	useracc "gitlab.com/ignitionrobotics/web/cloudsim/pkg/users"
 	per "gitlab.com/ignitionrobotics/web/fuelserver/permissions"
+	"gitlab.com/ignitionrobotics/web/ign-go"
 	"testing"
 	"time"
 )
 
 type fakeUserAccessorPrivateSimulations struct {
-  useracc.UserAccessor
+	useracc.Service
 }
 
 func TestMarkPreviousSubmissionsSuperseded(t *testing.T) {
