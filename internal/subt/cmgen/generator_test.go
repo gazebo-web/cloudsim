@@ -55,7 +55,8 @@ func TestGenerateGazebo(t *testing.T) {
 }
 
 func TestGenerateCommsBridge(t *testing.T) {
-	CommsBridge()
+	var cmd []string
+	cmd := CommsBridge()
 }
 
 func CommsBridge() {
