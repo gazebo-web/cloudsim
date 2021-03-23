@@ -69,31 +69,31 @@ func TestGenerateCommsBridge(t *testing.T) {
 		thirdWorld  = "cloudsim_sim.ign;worldName:=tunnel_circuit_03;circuit:=tunnel"
 	)
 
-	cmd, err := CommsBridge(firstWorld, 0, "X1")
+	cmd, err := CommsBridge(firstWorld, 0, "X1", "X1_CONFIG_A", true)
 	assert.IsType(t, []string{}, cmd)
 	assert.NotNil(t, cmd)
 	assert.Nil(t, err)
 	assert.NotEmpty(t, cmd[0])
-	assert.Equal(t, cmd[0], "worldName:=tunnel_circuit_01")
-	assert.Equal(t, cmd[1], "robotName1:=X1")
-	// assert.Equal(t, cmd[2], "robotConfig1:=X1")
-	// assert.Equal(t, cmd[3], "headless:=true")
-	// assert.Equal(t, cmd[3], "marsupial:=X2")
+	assert.Equal(t, "worldName:=tunnel_circuit_01", cmd[0])
+	assert.Equal(t, "robotName1:=X1", cmd[1])
+	assert.Equal(t, "robotConfig1:=X1_CONFIG_A", cmd[2])
+	assert.Equal(t, "headless:=true", cmd[3])
+	assert.Equal(t, "marsupial:=true", cmd[4])
 
-	cmd, err = CommsBridge(secondWorld, 0, "X1")
-	assert.Equal(t, cmd[0], "worldName:=tunnel_circuit_02")
+	cmd, err = CommsBridge(secondWorld, 0, "X1", "X1_CONFIG_A", true)
+	assert.Equal(t, "worldName:=tunnel_circuit_02", cmd[0])
 
-	cmd, err = CommsBridge(thirdWorld, 0, "X1")
-	assert.Equal(t, cmd[0], "worldName:=tunnel_circuit_03")
+	cmd, err = CommsBridge(thirdWorld, 0, "X1", "X1_CONFIG_A", true)
+	assert.Equal(t, "worldName:=tunnel_circuit_03", cmd[0])
 
-	cmd, err = CommsBridge("", 0, "X1")
+	cmd, err = CommsBridge("", 0, "X1", "X1_CONFIG_A", true)
 	assert.Equal(t, ErrEmptyWorld, err)
 
 }
 
 var ErrEmptyWorld = errors.New("empty world")
 
-func CommsBridge(world string, robotNumber int, robotName string) ([]string, error) {
+func CommsBridge(world string, robotNumber int, robotName string, robotType string, childMarsupial bool) ([]string, error) {
 	params := strings.Split(world, ";")
 	var worldNameParam string
 	for _, param := range params {
@@ -110,5 +110,8 @@ func CommsBridge(world string, robotNumber int, robotName string) ([]string, err
 	return []string{
 		worldNameParam,
 		fmt.Sprintf("robotName%d:=%s", robotNumber+1, robotName),
+		fmt.Sprintf("robotConfig%d:=%s", robotNumber+1, robotType),
+		"headless:=true",
+		fmt.Sprintf("marsupial:=%t", childMarsupial),
 	}, nil
 }
