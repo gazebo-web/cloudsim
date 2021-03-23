@@ -59,6 +59,6 @@ func TestGenerateCommsBridge(t *testing.T) {
 	cmd := CommsBridge()
 }
 
-func CommsBridge() {
-
+func CommsBridge() []string {
+	return nil
 }
