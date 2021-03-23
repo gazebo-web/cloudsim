@@ -106,12 +106,15 @@ func (p *pods) Create(input orchestrator.CreatePodInput) (orchestrator.Resource,
 
 	// Set up volumes
 	var volumes []apiv1.Volume
+
 	for _, v := range input.Volumes {
+		hostPathType := apiv1.HostPathType(v.HostPathType)
 		volumes = append(volumes, apiv1.Volume{
 			Name: v.Name,
 			VolumeSource: apiv1.VolumeSource{
 				HostPath: &apiv1.HostPathVolumeSource{
 					Path: v.HostPath,
+					Type: &hostPathType,
 				},
 			},
 		})
