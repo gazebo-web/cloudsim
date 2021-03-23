@@ -58,8 +58,10 @@ func TestGenerateCommsBridge(t *testing.T) {
 	cmd := CommsBridge()
 	assert.IsType(t, []string{}, cmd)
 	assert.NotNil(t, cmd)
+	assert.NotEmpty(t, cmd[0])
+	assert.Contains(t, cmd[0], "worldName:=")
 }
 
 func CommsBridge() []string {
-	return []string{"test"}
+	return []string{"worldName:="}
 }
