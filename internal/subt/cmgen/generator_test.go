@@ -9,7 +9,7 @@ import (
 	"time"
 )
 
-func TestGenerate(t *testing.T) {
+func TestGenerateGazebo(t *testing.T) {
 	token := "test-token"
 	maxConn := 500
 	seed := 5678
@@ -52,4 +52,8 @@ func TestGenerate(t *testing.T) {
 	assert.Equal(t, fmt.Sprintf("marsupial1:=%s:%s", fakeRobotA.GetName(), fakeRobotB.GetName()), cmd[12])
 
 	assert.Equal(t, fmt.Sprintf("ros:=%t", true), cmd[13])
+}
+
+func TestGenerateCommsBridge(t *testing.T) {
+	CommsBridge()
 }
