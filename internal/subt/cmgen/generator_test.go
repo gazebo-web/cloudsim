@@ -1,12 +1,10 @@
 package cmgen
 
 import (
-	"errors"
 	"fmt"
 	"github.com/stretchr/testify/assert"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations/fake"
-	"strings"
 	"testing"
 	"time"
 )
@@ -89,29 +87,4 @@ func TestGenerateCommsBridge(t *testing.T) {
 	cmd, err = CommsBridge("", 0, "X1", "X1_CONFIG_A", true)
 	assert.Equal(t, ErrEmptyWorld, err)
 
-}
-
-var ErrEmptyWorld = errors.New("empty world")
-
-func CommsBridge(world string, robotNumber int, robotName string, robotType string, childMarsupial bool) ([]string, error) {
-	params := strings.Split(world, ";")
-	var worldNameParam string
-	for _, param := range params {
-		if strings.Index(param, "worldName:=") != -1 {
-			worldNameParam = param
-			break
-		}
-	}
-
-	if worldNameParam == "" {
-		return nil, ErrEmptyWorld
-	}
-
-	return []string{
-		worldNameParam,
-		fmt.Sprintf("robotName%d:=%s", robotNumber+1, robotName),
-		fmt.Sprintf("robotConfig%d:=%s", robotNumber+1, robotType),
-		"headless:=true",
-		fmt.Sprintf("marsupial:=%t", childMarsupial),
-	}, nil
 }
