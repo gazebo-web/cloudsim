@@ -1,6 +1,7 @@
-package gazebo
+package cmdgen
 
 import (
+	"errors"
 	"fmt"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
 	"strings"
@@ -20,8 +21,8 @@ const (
 	keyRos                   = "ros"
 )
 
-// LaunchConfig includes the information to create the launch command arguments needed to launch gazebo server.
-type LaunchConfig struct {
+// GazeboConfig includes the information to create the launch command arguments needed to launch gazebo server.
+type GazeboConfig struct {
 	// World is a gazebo world with parameters.
 	// Example:
 	// 	"tunnel_circuit_practice.ign;worldName:=tunnel_circuit_practice_01"
@@ -52,8 +53,8 @@ type LaunchConfig struct {
 	RosEnabled bool
 }
 
-// Generate generates the needed arguments to initialize Gazebo server.
-func Generate(params LaunchConfig) []string {
+// Gazebo generates the needed arguments to initialize the gzserver.
+func Gazebo(params GazeboConfig) []string {
 	launchWorldName := params.World
 
 	// We split by ";" (semicolon), in case the configured worldToLaunch string has arguments.
@@ -100,4 +101,31 @@ func Generate(params LaunchConfig) []string {
 	cmd = append(cmd, fmt.Sprintf("%s:=%t", keyRos, params.RosEnabled))
 
 	return cmd
+}
+
+// ErrEmptyWorld is returned when an empty world name is passed when calling CommsBridge.
+var ErrEmptyWorld = errors.New("empty world")
+
+// CommsBridge generates the arguments needed to run in the comms bridge container.
+func CommsBridge(world string, robotNumber int, robotName string, robotType string, childMarsupial bool) ([]string, error) {
+	params := strings.Split(world, ";")
+	var worldNameParam string
+	for _, param := range params {
+		if strings.Index(param, "worldName:=") != -1 {
+			worldNameParam = param
+			break
+		}
+	}
+
+	if worldNameParam == "" {
+		return nil, ErrEmptyWorld
+	}
+
+	return []string{
+		worldNameParam,
+		fmt.Sprintf("robotName%d:=%s", robotNumber+1, robotName),
+		fmt.Sprintf("robotConfig%d:=%s", robotNumber+1, robotType),
+		"headless:=true",
+		fmt.Sprintf("marsupial:=%t", childMarsupial),
+	}, nil
 }
