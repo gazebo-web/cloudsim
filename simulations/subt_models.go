@@ -92,9 +92,6 @@ var _ simulations.Marsupial = (*SubTMarsupial)(nil)
 type SubTMarsupial struct {
 	Parent string
 	Child  string
-
-	parentRobot simulations.Robot
-	childRobot  simulations.Robot
 }
 
 // GetParent returns the parent robot.
