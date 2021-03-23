@@ -55,8 +55,8 @@ func TestGenerateGazebo(t *testing.T) {
 }
 
 func TestGenerateCommsBridge(t *testing.T) {
-	var cmd []string
 	cmd := CommsBridge()
+	assert.IsType(t, []string{}, cmd)
 }
 
 func CommsBridge() []string {
