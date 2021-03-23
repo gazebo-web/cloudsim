@@ -57,8 +57,9 @@ func TestGenerateGazebo(t *testing.T) {
 func TestGenerateCommsBridge(t *testing.T) {
 	cmd := CommsBridge()
 	assert.IsType(t, []string{}, cmd)
+	assert.NotNil(t, cmd)
 }
 
 func CommsBridge() []string {
-	return nil
+	return []string{"test"}
 }
