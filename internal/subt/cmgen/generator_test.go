@@ -57,3 +57,7 @@ func TestGenerateGazebo(t *testing.T) {
 func TestGenerateCommsBridge(t *testing.T) {
 	CommsBridge()
 }
+
+func CommsBridge() {
+
+}
