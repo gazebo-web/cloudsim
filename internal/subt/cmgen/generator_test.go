@@ -1,10 +1,12 @@
 package cmgen
 
 import (
+	"errors"
 	"fmt"
 	"github.com/stretchr/testify/assert"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations/fake"
+	"strings"
 	"testing"
 	"time"
 )
@@ -55,13 +57,51 @@ func TestGenerateGazebo(t *testing.T) {
 }
 
 func TestGenerateCommsBridge(t *testing.T) {
-	cmd := CommsBridge()
+	//	worldNameParam,
+	// 	fmt.Sprintf("robotName%d:=%s", robotNumber, robot.Name),
+	//	fmt.Sprintf("robotConfig%d:=%s", robotNumber, robot.Type),
+	//	"headless:=true",
+	//	fmt.Sprintf("marsupial:=%s", childMarsupial),
+
+	const (
+		firstWorld  = "cloudsim_sim.ign;worldName:=tunnel_circuit_01;circuit:=tunnel"
+		secondWorld = "cloudsim_sim.ign;worldName:=tunnel_circuit_02;circuit:=tunnel"
+		thirdWorld  = "cloudsim_sim.ign;worldName:=tunnel_circuit_03;circuit:=tunnel"
+	)
+
+	cmd, err := CommsBridge(firstWorld)
 	assert.IsType(t, []string{}, cmd)
 	assert.NotNil(t, cmd)
+	assert.Nil(t, err)
 	assert.NotEmpty(t, cmd[0])
-	assert.Contains(t, cmd[0], "worldName:=")
+	assert.Contains(t, cmd[0], "worldName:=tunnel_circuit_01")
+
+	cmd, err = CommsBridge(secondWorld)
+	assert.Contains(t, cmd[0], "worldName:=tunnel_circuit_02")
+
+	cmd, err = CommsBridge(thirdWorld)
+	assert.Contains(t, cmd[0], "worldName:=tunnel_circuit_03")
+
+	cmd, err = CommsBridge("")
+	assert.Equal(t, ErrEmptyWorld, err)
+
 }
 
-func CommsBridge() []string {
-	return []string{"worldName:="}
+var ErrEmptyWorld = errors.New("empty world")
+
+func CommsBridge(world string) ([]string, error) {
+	params := strings.Split(world, ";")
+	var worldNameParam string
+	for _, param := range params {
+		if strings.Index(param, "worldName:=") != -1 {
+			worldNameParam = param
+			break
+		}
+	}
+
+	if worldNameParam == "" {
+		return nil, ErrEmptyWorld
+	}
+
+	return []string{worldNameParam}, nil
 }
