@@ -121,8 +121,11 @@ type SubTCircuitRules struct {
 	Circuit     *string `gorm:"not null;unique" json:"-"`
 	Image       *string `json:"-"`
 	BridgeImage *string `json:"-"`
-	Worlds      *string `gorm:"size:2048" json:"-"`
-	Times       *string `json:"-"`
+	// MoleBridgeImage contains an optional Mole ROS/Pulsar bridge image URI. If not defined, the bridge will not be
+	// launched.
+	MoleBridgeImage *string `json:"-"`
+	Worlds          *string `gorm:"size:2048" json:"-"`
+	Times           *string `json:"-"`
 	// WorldStatsTopics is the topic used to track general stats of the simulation (runtime, sim runtime, etc.)
 	WorldStatsTopics *string `gorm:"size:2048" json:"-"`
 	// WorldWarmupTopics is the topic used to track when the simulation officially starts and ends
