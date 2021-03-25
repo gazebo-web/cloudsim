@@ -3,7 +3,7 @@ package jobs
 import (
 	"github.com/jinzhu/gorm"
 	subtapp "gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/application"
-	"gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/gazebo"
+	"gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/cmdgen"
 	"gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/simulations"
 	"gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/simulator/state"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/actions"
@@ -43,7 +43,7 @@ func prepareGazeboCreatePodInput(store actions.Store, tx *gorm.DB, deployment *a
 		return nil, err
 	}
 	// Generate gazebo command args
-	runCommand := gazebo.Generate(gazebo.LaunchConfig{
+	runCommand := cmdgen.Gazebo(cmdgen.GazeboConfig{
 		World:              track.World,
 		WorldMaxSimSeconds: time.Duration(track.MaxSimSeconds),
 		Seed:               track.Seed,
