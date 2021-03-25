@@ -8,6 +8,9 @@ import (
 	"time"
 )
 
+// ErrEmptyWorld is returned when an empty world name is passed when calling CommsBridge.
+var ErrEmptyWorld = errors.New("empty world")
+
 const (
 	keyDurationSec           = "durationSec"
 	keyHeadless              = "headless"
@@ -102,9 +105,6 @@ func Gazebo(params GazeboConfig) []string {
 
 	return cmd
 }
-
-// ErrEmptyWorld is returned when an empty world name is passed when calling CommsBridge.
-var ErrEmptyWorld = errors.New("empty world")
 
 // CommsBridge generates the arguments needed to run in the comms bridge container.
 func CommsBridge(world string, robotNumber int, robotName string, robotType string, childMarsupial bool) ([]string, error) {
