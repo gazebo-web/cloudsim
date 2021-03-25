@@ -66,7 +66,7 @@ func SendSimulationSummaryEmail(dep *SimulationDeployment, summary AggregatedSub
 	}
 
 	// Set template info
-	templateFilename := "simulations/email-templates/simulation_summary.html"
+	templateFilename := "simulations/email-templates/simulation_summary.gohtml"
 	templateData := struct {
 		Name    string
 		Circuit string

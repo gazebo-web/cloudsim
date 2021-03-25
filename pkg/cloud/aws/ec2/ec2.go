@@ -2,6 +2,7 @@ package ec2
 
 import (
 	"bytes"
+	"encoding/base64"
 	"fmt"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
@@ -66,6 +67,11 @@ func (m *machines) isValidSubnetID(subnet string) bool {
 		return false
 	}
 	return matched
+}
+
+// isValidClusterID checks that the given cluster ID is valid.
+func (m *machines) isValidClusterID(clusterID string) bool {
+	return len(clusterID) > 0
 }
 
 // newRunInstancesInput initializes the configuration to run EC2 instances with the given input.
@@ -175,12 +181,17 @@ func (m *machines) create(input cloud.CreateMachinesInput) (*cloud.CreateMachine
 	if !m.isValidSubnetID(input.SubnetID) {
 		return nil, cloud.ErrInvalidSubnetID
 	}
+	if !m.isValidClusterID(input.ClusterID) {
+		return nil, cloud.ErrInvalidClusterID
+	}
 
 	if input.InitScript == nil {
 		userData, err := m.createUserData(input)
 		if err != nil {
 			return nil, err
 		}
+		// EC2 requires that user data strings are encoded in base64
+		userData = base64.StdEncoding.EncodeToString([]byte(userData))
 		input.InitScript = &userData
 	}
 
@@ -369,7 +380,7 @@ func (m *machines) createUserData(input cloud.CreateMachinesInput) (string, erro
 
 	err = tmpl.Execute(buffer, map[string]interface{}{
 		"Labels":      strings.Join(labels, ","),
-		"ClusterName": "testing-cluster-name",
+		"ClusterName": input.ClusterID,
 		"Args":        "--use-max-pods false",
 	})
 	if err != nil {
