@@ -4,10 +4,18 @@ import (
 	"fmt"
 	"github.com/jinzhu/gorm"
 	"github.com/stretchr/testify/assert"
+	useracc "gitlab.com/ignitionrobotics/web/cloudsim/pkg/users"
 	gormUtils "gitlab.com/ignitionrobotics/web/cloudsim/pkg/utils/db/gorm"
+	"gitlab.com/ignitionrobotics/web/fuelserver/bundles/users"
+	per "gitlab.com/ignitionrobotics/web/fuelserver/permissions"
+	"gitlab.com/ignitionrobotics/web/ign-go"
 	"testing"
 	"time"
 )
+
+type fakeUserAccessorPrivateSimulations struct {
+	useracc.Service
+}
 
 func TestMarkPreviousSubmissionsSuperseded(t *testing.T) {
 	// Get database config
@@ -105,4 +113,58 @@ func createTestChildSims(t *testing.T, db *gorm.DB, sim *SimulationDeployment, a
 			t.FailNow()
 		}
 	}
+}
+
+func TestVerifyPermissionOverPrivateSimulation(t *testing.T) {
+	s := &Service{
+		userAccessor: &fakeUserAccessorPrivateSimulations{},
+	}
+
+	errSimNotFound := ign.NewErrorMessage(ign.ErrorSimGroupNotFound)
+	errUnauth := ign.NewErrorMessage(ign.ErrorUnauthorized)
+
+	user := &users.User{}
+	dep := &SimulationDeployment{}
+
+	// Simulation doesn't exist. Should return error.
+	err := s.VerifyPermissionOverPrivateSimulation(nil, nil)
+	assert.Equal(t, errSimNotFound.ErrCode, err.ErrCode)
+	assert.Equal(t, errSimNotFound.StatusCode, err.StatusCode)
+
+	err = s.VerifyPermissionOverPrivateSimulation(user, nil)
+	assert.Equal(t, errSimNotFound.ErrCode, err.ErrCode)
+	assert.Equal(t, errSimNotFound.StatusCode, err.StatusCode)
+
+	// Public simulation. Anyone can access.
+	dep.Private = boolptr(false)
+	err = s.VerifyPermissionOverPrivateSimulation(nil, dep)
+	assert.Nil(t, nil, err)
+
+	// Private simulation. Unknown users cannot access.
+	dep.Private = boolptr(true)
+	err = s.VerifyPermissionOverPrivateSimulation(nil, dep)
+	assert.Equal(t, errUnauth.ErrCode, err.ErrCode)
+	assert.Equal(t, errUnauth.StatusCode, err.StatusCode)
+
+	// Private simulation. User with correct jwt.
+	user.Username = sptr("test-username")
+	dep.GroupID = sptr("test-username")
+	err = s.VerifyPermissionOverPrivateSimulation(user, dep)
+	assert.Nil(t, nil, err)
+
+	// Private simulation. User without permission.
+	user.Username = sptr("test-username")
+	dep.GroupID = sptr("test-username-no-permission")
+	err = s.VerifyPermissionOverPrivateSimulation(user, dep)
+	assert.Equal(t, errUnauth.ErrCode, err.ErrCode)
+	assert.Equal(t, errUnauth.StatusCode, err.StatusCode)
+}
+
+// IsAuthorizedForResource method checks if the username has permission over the simulation using its groupID.
+// This mocked method returns true if user is equal to the groupID and false otherwise.
+func (f *fakeUserAccessorPrivateSimulations) IsAuthorizedForResource(user string, res string, action per.Action) (bool, *ign.ErrMsg) {
+	if user == res && action == per.Read {
+		return true, nil
+	}
+	return false, ign.NewErrorMessage(ign.ErrorUnauthorized)
 }
