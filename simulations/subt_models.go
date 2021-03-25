@@ -177,14 +177,14 @@ func (s *subTCircuitService) Create(input tracks.CreateTrackInput) (*tracks.Trac
 }
 
 // Get returns the tracks.Track representation of the SubTCircuitRules identified by the given circuit name.
-func (s *subTCircuitService) Get(name string, worldID int) (*tracks.Track, error) {
+func (s *subTCircuitService) Get(name string, worldID int, runID int) (*tracks.Track, error) {
 	s.logger.Debug(fmt.Sprintf("Getting circuit rule with name [%s] and WorldID [%d]", name, worldID))
 	c, err := GetCircuitRules(s.db, name)
 	if err != nil {
 		s.logger.Debug(fmt.Sprintf("Failed to get circuit rule with name [%s] and WorldID [%d] with error: %s", name, worldID, err))
 		return nil, err
 	}
-	track, err := c.ToTrack(worldID)
+	track, err := c.ToTrack(worldID, runID)
 	if err != nil {
 		s.logger.Debug(fmt.Sprintf("Failed to create track representation for circuit rule with name [%s] and WorldID [%d] with error: %s", name, worldID, err))
 		return nil, err
@@ -241,7 +241,7 @@ type SubTCircuitRules struct {
 }
 
 // ToTrack generates a representation of a tracks.Track from the current SubTCircuitRules.
-func (r *SubTCircuitRules) ToTrack(id int) (*tracks.Track, error) {
+func (r *SubTCircuitRules) ToTrack(worldID int, runID int) (*tracks.Track, error) {
 	maxSimSeconds, err := strconv.Atoi(*r.WorldMaxSimSeconds)
 	if err != nil {
 		return nil, err
@@ -250,11 +250,11 @@ func (r *SubTCircuitRules) ToTrack(id int) (*tracks.Track, error) {
 	var seed *int
 	if r.Seeds != nil {
 		seeds := strings.Split(*r.Seeds, ",")
-		if id > len(seeds) {
+		if runID > len(seeds) {
 			return nil, ErrInvalidSeedID
 		}
 
-		s, err := strconv.Atoi(seeds[id])
+		s, err := strconv.Atoi(seeds[runID])
 		if err != nil {
 			return nil, err
 		}
@@ -263,11 +263,11 @@ func (r *SubTCircuitRules) ToTrack(id int) (*tracks.Track, error) {
 	}
 
 	worlds := strings.Split(*r.Worlds, ",")
-	if len(worlds) < id {
+	if worldID > len(worlds) {
 		return nil, ErrInvalidWorldID
 	}
 
-	world := worlds[id]
+	world := worlds[worldID]
 
 	return &tracks.Track{
 		Name:          *r.Circuit,
