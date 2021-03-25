@@ -106,9 +106,19 @@ func Gazebo(params GazeboConfig) []string {
 	return cmd
 }
 
+// CommsBridgeConfig includes the information needed to generate the arguments for the
+// comms bridge container.
+type CommsBridgeConfig struct {
+	World          string
+	RobotNumber    int
+	RobotName      string
+	RobotType      string
+	ChildMarsupial bool
+}
+
 // CommsBridge generates the arguments needed to run in the comms bridge container.
-func CommsBridge(world string, robotNumber int, robotName string, robotType string, childMarsupial bool) ([]string, error) {
-	params := strings.Split(world, ";")
+func CommsBridge(config CommsBridgeConfig) ([]string, error) {
+	params := strings.Split(config.World, ";")
 	var worldNameParam string
 	for _, param := range params {
 		if strings.Index(param, "worldName:=") != -1 {
@@ -123,9 +133,9 @@ func CommsBridge(world string, robotNumber int, robotName string, robotType stri
 
 	return []string{
 		worldNameParam,
-		fmt.Sprintf("robotName%d:=%s", robotNumber+1, robotName),
-		fmt.Sprintf("robotConfig%d:=%s", robotNumber+1, robotType),
+		fmt.Sprintf("robotName%d:=%s", config.RobotNumber+1, config.RobotName),
+		fmt.Sprintf("robotConfig%d:=%s", config.RobotNumber+1, config.RobotType),
 		"headless:=true",
-		fmt.Sprintf("marsupial:=%t", childMarsupial),
+		fmt.Sprintf("marsupial:=%t", config.ChildMarsupial),
 	}, nil
 }

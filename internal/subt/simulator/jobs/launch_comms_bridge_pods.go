@@ -40,6 +40,8 @@ func prepareCommsBridgePodInput(store actions.Store, tx *gorm.DB, deployment *ac
 
 	var pods []orchestrator.CreatePodInput
 
+	marsupials := subtSim.GetMarsupials()
+
 	for i, r := range subtSim.GetRobots() {
 		hostPath := "/tmp"
 		logDirectory := "robot-logs"
@@ -58,7 +60,13 @@ func prepareCommsBridgePodInput(store actions.Store, tx *gorm.DB, deployment *ac
 			},
 		}
 
-		args, err := cmdgen.CommsBridge(track.World, i, r.GetName(), r.GetKind(), subt.IsRobotChildMarsupial(subtSim.GetMarsupials(), r))
+		args, err := cmdgen.CommsBridge(cmdgen.CommsBridgeConfig{
+			World:          track.World,
+			RobotNumber:    i,
+			RobotName:      r.GetName(),
+			RobotType:      r.GetKind(),
+			ChildMarsupial: subt.IsRobotChildMarsupial(marsupials, r),
+		})
 		if err != nil {
 			return nil, err
 		}
