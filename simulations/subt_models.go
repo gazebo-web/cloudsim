@@ -241,6 +241,7 @@ type SubTCircuitRules struct {
 }
 
 // ToTrack generates a representation of a tracks.Track from the current SubTCircuitRules.
+// It receives a worldID and runID to generate the track based on the worlds and seeds from SubTCircuitRules.
 func (r *SubTCircuitRules) ToTrack(worldID int, runID int) (*tracks.Track, error) {
 	maxSimSeconds, err := strconv.Atoi(*r.WorldMaxSimSeconds)
 	if err != nil {
