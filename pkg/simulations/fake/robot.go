@@ -8,6 +8,7 @@ type fakeRobot struct {
 	name string
 	// kind is the robot's kind.
 	kind  string
+	// image is the robot's image.
 	image string
 }
 
