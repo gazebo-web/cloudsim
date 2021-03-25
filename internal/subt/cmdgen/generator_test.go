@@ -1,4 +1,4 @@
-package gazebo
+package cmdgen
 
 import (
 	"fmt"
@@ -21,7 +21,7 @@ func TestGenerate(t *testing.T) {
 
 	duration := 1500 * time.Second
 
-	cmd := Generate(LaunchConfig{
+	cmd := Gazebo(GazeboConfig{
 		World:                   world,
 		WorldMaxSimSeconds:      duration,
 		Seed:                    &seed,
