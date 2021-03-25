@@ -63,8 +63,7 @@ func prepareCommsBridgePodInput(store actions.Store, tx *gorm.DB, deployment *ac
 		args, err := cmdgen.CommsBridge(cmdgen.CommsBridgeConfig{
 			World:          track.World,
 			RobotNumber:    i,
-			RobotName:      r.GetName(),
-			RobotType:      r.GetKind(),
+			Robot:          r,
 			ChildMarsupial: subt.IsRobotChildMarsupial(marsupials, r),
 		})
 		if err != nil {

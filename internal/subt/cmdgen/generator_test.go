@@ -64,8 +64,7 @@ func TestGenerateCommsBridge(t *testing.T) {
 	cmd, err := CommsBridge(CommsBridgeConfig{
 		World:          firstWorld,
 		RobotNumber:    0,
-		RobotName:      "X1",
-		RobotType:      "X1_CONFIG_A",
+		Robot:          fake.NewRobot("X1", "X1_CONFIG_A"),
 		ChildMarsupial: true,
 	})
 	assert.IsType(t, []string{}, cmd)
@@ -80,11 +79,13 @@ func TestGenerateCommsBridge(t *testing.T) {
 
 	cmd, err = CommsBridge(CommsBridgeConfig{
 		World: secondWorld,
+		Robot: fake.NewRobot("X1", "X1_CONFIG_A"),
 	})
 	assert.Equal(t, "worldName:=tunnel_circuit_02", cmd[0])
 
 	cmd, err = CommsBridge(CommsBridgeConfig{
 		World: thirdWorld,
+		Robot: fake.NewRobot("X1", "X1_CONFIG_A"),
 	})
 	assert.Equal(t, "worldName:=tunnel_circuit_03", cmd[0])
 
