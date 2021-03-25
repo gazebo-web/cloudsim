@@ -97,12 +97,15 @@ func (p *pods) Create(input orchestrator.CreatePodInput) (orchestrator.Resource,
 
 	// Set up volumes
 	var volumes []apiv1.Volume
+
 	for _, v := range input.Volumes {
+		hostPathType := apiv1.HostPathType(v.HostPathType)
 		volumes = append(volumes, apiv1.Volume{
 			Name: v.Name,
 			VolumeSource: apiv1.VolumeSource{
 				HostPath: &apiv1.HostPathVolumeSource{
 					Path: v.HostPath,
+					Type: &hostPathType,
 				},
 			},
 		})
@@ -205,6 +208,10 @@ func (p *pods) WaitForCondition(resource orchestrator.Resource, condition orches
 		po, err := p.API.CoreV1().Pods(resource.Namespace()).List(opts)
 		if err != nil {
 			return false, err
+		}
+
+		if len(po.Items) == 0 {
+			return false, orchestrator.ErrMissingPods
 		}
 
 		// Iterate over list of pods
