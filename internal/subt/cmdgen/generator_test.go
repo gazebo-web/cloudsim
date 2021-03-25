@@ -55,12 +55,6 @@ func TestGenerateGazebo(t *testing.T) {
 }
 
 func TestGenerateCommsBridge(t *testing.T) {
-	//	worldNameParam,
-	// 	fmt.Sprintf("robotName%d:=%s", robotNumber, robot.Name),
-	//	fmt.Sprintf("robotConfig%d:=%s", robotNumber, robot.Type),
-	//	"headless:=true",
-	//	fmt.Sprintf("marsupial:=%s", childMarsupial),
-
 	const (
 		firstWorld  = "cloudsim_sim.ign;worldName:=tunnel_circuit_01;circuit:=tunnel"
 		secondWorld = "cloudsim_sim.ign;worldName:=tunnel_circuit_02;circuit:=tunnel"
