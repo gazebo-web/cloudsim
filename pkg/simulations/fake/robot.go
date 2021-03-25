@@ -7,7 +7,14 @@ type fakeRobot struct {
 	// name is the robot's name.
 	name string
 	// kind is the robot's kind.
-	kind string
+	kind  string
+	// image is the robot's image.
+	image string
+}
+
+// GetImage returns the fake robot image.
+func (f fakeRobot) GetImage() string {
+	return f.image
 }
 
 // IsEqual checks if the given robot has the same name as the current robot.
@@ -28,7 +35,8 @@ func (f fakeRobot) GetKind() string {
 // NewRobot initializes a new fake robot.
 func NewRobot(name, kind string) simulations.Robot {
 	return &fakeRobot{
-		name: name,
-		kind: kind,
+		name:  name,
+		kind:  kind,
+		image: "test.org/image",
 	}
 }
