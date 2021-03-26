@@ -61,6 +61,15 @@ func getDecodeErrorsExtraInfo(err error) []string {
 //     * On fail --> return error
 func (ctrl *controller) Start(user *users.User, tx *gorm.DB, w http.ResponseWriter, r *http.Request) (interface{}, *ign.ErrMsg) {
 
+	// If not a system admin, then check that the user is registered.
+	if ok := HTTPHandlerInstance.UserAccessor.IsSystemAdmin(*user.Username); !ok {
+		// Check that the user is registered.
+		var registeredUser RegisteredUser
+		if err := tx.Where("username = ?", *user.Username).Find(&registeredUser).Error; err != nil {
+			return nil, ign.NewErrorMessage(ign.ErrorUnauthorized)
+		}
+	}
+
 	// Parse form's values and files.
 	if err := r.ParseMultipartForm(0); err != nil {
 		return nil, ign.NewErrorMessageWithBase(ign.ErrorForm, err)
@@ -113,24 +122,52 @@ func (ctrl *controller) Stop(user *users.User, tx *gorm.DB, w http.ResponseWrite
 		return nil, ign.NewErrorMessage(ign.ErrorIDNotInRequest)
 	}
 
-	// Get the matching simulation
-	var simulation Simulation
-	if err := tx.Where("group_id=?", groupID).First(&simulation).Error; err != nil {
-		return nil, ign.NewErrorMessageWithBase(ign.ErrorIDNotFound, err)
+	if groupID == "all" {
+		var simulations Simulations
+
+		// Get all the simulation if the user is a system admin
+		if ok := HTTPHandlerInstance.UserAccessor.IsSystemAdmin(*user.Username); ok {
+			tx.Find(&simulations)
+		} else {
+
+			// Get all the simulations owned by the user
+			if err := tx.Where("owner=?", user.Username).Find(&simulations).Error; err != nil {
+				return nil, ign.NewErrorMessageWithBase(ign.ErrorIDNotFound, err)
+			}
+		}
+
+		for _, sim := range simulations {
+			// Construct the stop request to send to the service
+			req := StopRequest{
+				GroupID: sim.GroupID,
+			}
+
+			ctrl.service.Stop(user, tx, r.Context(), req)
+		}
+
+		return "All instances stopped", nil
+
+	} else {
+		// Get the matching simulation
+		var simulation Simulation
+		if err := tx.Where("group_id=?", groupID).First(&simulation).Error; err != nil {
+			return nil, ign.NewErrorMessageWithBase(ign.ErrorIDNotFound, err)
+		}
+
+		// Construct the stop request to send to the service
+		req := StopRequest{
+			GroupID: simulation.GroupID,
+		}
+
+		res, err := ctrl.service.Stop(user, tx, r.Context(), req)
+		if err != nil {
+			return nil, ign.NewErrorMessageWithBase(ign.ErrorForm, err)
+		}
+		// Send response to the user
+		return res, nil
 	}
 
-	// Construct the stop request to send to the service
-	req := StopRequest{
-		GroupID: simulation.GroupID,
-	}
-
-	res, err := ctrl.service.Stop(user, tx, r.Context(), req)
-	if err != nil {
-		return nil, ign.NewErrorMessageWithBase(ign.ErrorForm, err)
-	}
-
-	// Send response to the user
-	return res, nil
+	return nil, nil
 }
 
 // ListSimulations handles the `/simulations` route.
@@ -142,7 +179,13 @@ func (ctrl *controller) Stop(user *users.User, tx *gorm.DB, w http.ResponseWrite
 func (ctrl *controller) ListSimulations(user *users.User, tx *gorm.DB, w http.ResponseWriter, r *http.Request) (interface{}, *ign.ErrMsg) {
 
 	var simulations Simulations
-	tx.Where("owner = ?", user.Username).Find(&simulations)
+
+	// Return all the simulation if the user is a system admin
+	if ok := HTTPHandlerInstance.UserAccessor.IsSystemAdmin(*user.Username); ok {
+		tx.Find(&simulations)
+	} else {
+		tx.Where("owner = ?", user.Username).Find(&simulations)
+	}
 
 	var response ListResponse
 	for _, sim := range simulations {

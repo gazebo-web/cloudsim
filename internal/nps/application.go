@@ -86,6 +86,7 @@ func NewApplication(apiVersion string, logger ign.Logger) (Application, error) {
 	// Update the database.
 	app.db.AutoMigrate(
 		&Simulation{},
+		&RegisteredUsers{},
 		// \todo: This is mandatory in order for jobs.LaunchInstances to work. Without this, the job will fail with "Error 1146: Table 'nps.action_deployments' doesn't exist". This seems like a hidden dependency. How about letting the job/action create the table if it's missing?
 		&actions.Deployment{},
 	)
@@ -171,7 +172,12 @@ func setupUsers(app *application, logger ign.Logger) error {
 	// Initialize permissions. This requires the `permissions/policy.conf` file.
 	logger.Debug("Initializing user permissions")
 	perm := &permissions.Permissions{}
-	err = perm.Init(app.db, "sysadmin")
+
+	// \todo Error?: I have to pass in `userCfg.SysAdmin` here in order for
+	// system administators to be loaded into the `casbin_rule` table in the
+	// cloudsim_nps DB. Passing userCfg.SysAdmin to  useracc.NewService()
+	// doesn't seem to do anything.
+	err = perm.Init(app.db, userCfg.SysAdmin)
 	if err != nil {
 		return err
 	}

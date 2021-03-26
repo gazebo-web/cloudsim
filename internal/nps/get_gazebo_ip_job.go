@@ -47,7 +47,7 @@ func getIP(store actions.Store, tx *gorm.DB, deployment *actions.Deployment, val
 	}
 
 	simEntry.Status = "Address has been acquired."
-  simEntry.URI = "http://" + address[0] + ":8080/vnc.html"
+	simEntry.URI = "http://" + address[0] + ":8080/vnc.html"
 	tx.Save(&simEntry)
 
 	startData.URI = simEntry.URI

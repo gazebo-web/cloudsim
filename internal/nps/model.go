@@ -95,3 +95,27 @@ func (s *Simulation) IsProcessed() bool {
 func NewSimulation() simulations.Simulation {
 	return &Simulation{}
 }
+
+// Simulation represents the simulation that will be launched in the cloud.
+type RegisteredUser struct {
+	// Override default GORM Model fields
+	ID        uint       `gorm:"primary_key" json:"-"`
+	CreatedAt time.Time  `gorm:"type:timestamp(3) NULL" json:"created_at"`
+	UpdatedAt time.Time  `json:"updated_at"`
+	DeletedAt *time.Time `gorm:"type:timestamp(2) NULL" sql:"index" json:"-"`
+
+	Username *string `gorm:"not null;unique" json:"username,omitempty" validate:"required,min=3,alphanum,notinblacklist"`
+}
+type RegisteredUsers []RegisteredUser
+
+func (r *RegisteredUser) TableName() string {
+	return "registered_users"
+}
+
+func (r *RegisteredUser) SingularName() string {
+	return "registered_user"
+}
+
+func (r *RegisteredUser) PluralName() string {
+	return "registered_users"
+}
