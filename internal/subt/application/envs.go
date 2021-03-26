@@ -1,6 +1,9 @@
 package application
 
-import "gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
+import (
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
+)
 
 // GetEnvVarsCommsBridge returns the env vars for the comms-bridge container.
 func GetEnvVarsCommsBridge(groupID simulations.GroupID, robotName, gzServerIP, verbosity string) map[string]string {
@@ -11,6 +14,12 @@ func GetEnvVarsCommsBridge(groupID simulations.GroupID, robotName, gzServerIP, v
 		"ROBOT_NAME":     robotName,
 		"IGN_IP":         "", // To be removed.
 		"ROS_MASTER_URI": "http://$(ROS_IP):11311",
+	}
+}
+
+func GetEnvVarsFromSourceCommsBridge() map[string]string {
+	return map[string]string{
+		"ROS_IP": orchestrator.EnvVarSourcePodIP,
 	}
 }
 

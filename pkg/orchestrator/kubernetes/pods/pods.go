@@ -80,7 +80,7 @@ func (p *pods) Create(input orchestrator.CreatePodInput) (orchestrator.Resource,
 		for key, from := range c.EnvVarsFrom {
 			envs = append(envs, apiv1.EnvVar{
 				Name:      key,
-				ValueFrom: getValueFrom(from),
+				ValueFrom: getEnvVarValueFromSource(from),
 			})
 		}
 
@@ -160,12 +160,13 @@ func (p *pods) Create(input orchestrator.CreatePodInput) (orchestrator.Resource,
 	return res, nil
 }
 
-func getValueFrom(from string) *apiv1.EnvVarSource {
+// getEnvVarValueFromSource returns an env var source for the given value identified as from where it needs to get the env var.
+func getEnvVarValueFromSource(from string) *apiv1.EnvVarSource {
 	switch from {
-	case "status.podIP":
+	case orchestrator.EnvVarSourcePodIP:
 		return &apiv1.EnvVarSource{
 			FieldRef: &apiv1.ObjectFieldSelector{
-				FieldPath: "status.podIP",
+				FieldPath: orchestrator.EnvVarSourcePodIP,
 			},
 		}
 	}
