@@ -78,6 +78,13 @@ func (p *pods) Create(input orchestrator.CreatePodInput) (orchestrator.Resource,
 			})
 		}
 
+		for key, from := range c.EnvVarsFrom {
+			envs = append(envs, apiv1.EnvVar{
+				Name:      key,
+				ValueFrom: getEnvVarValueFromSource(from),
+			})
+		}
+
 		var resourceLimit map[apiv1.ResourceName]resource.Quantity
 		if len(c.ResourceLimits) > 0 {
 			resourceLimit = make(map[apiv1.ResourceName]resource.Quantity, len(c.ResourceLimits))
@@ -160,6 +167,19 @@ func (p *pods) Create(input orchestrator.CreatePodInput) (orchestrator.Resource,
 
 	p.Logger.Debug(fmt.Sprintf("Creating new pod succeeded. Name: %s. Namespace: %s", res.Name(), res.Namespace()))
 	return res, nil
+}
+
+// getEnvVarValueFromSource returns an env var source for the given value identified as from where it needs to get the env var.
+func getEnvVarValueFromSource(from string) *apiv1.EnvVarSource {
+	switch from {
+	case orchestrator.EnvVarSourcePodIP:
+		return &apiv1.EnvVarSource{
+			FieldRef: &apiv1.ObjectFieldSelector{
+				FieldPath: orchestrator.EnvVarSourcePodIP,
+			},
+		}
+	}
+	return nil
 }
 
 // Delete deletes the pod identified by the given resource.

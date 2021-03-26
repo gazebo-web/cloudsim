@@ -87,6 +87,7 @@ func prepareCommsBridgePodInput(store actions.Store, tx *gorm.DB, deployment *ac
 						s.GazeboServerIP,
 						s.Platform().Store().Ignition().Verbosity(),
 					),
+					EnvVarsFrom: subtapp.GetEnvVarsFromSourceCommsBridge(),
 				},
 			},
 			Volumes:     volumes,
