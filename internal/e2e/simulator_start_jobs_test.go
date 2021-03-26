@@ -175,7 +175,7 @@ func TestStartSimulationAction(t *testing.T) {
 	app := subtapp.NewServices(baseApp, trackService, summaryService)
 
 	t.Run("First phase", func(t *testing.T) {
-		actionService := actions.NewService()
+		actionService := actions.NewService(logger)
 
 		kClient := kfake.NewSimpleClientset(
 			&apiv1.Node{
@@ -247,7 +247,7 @@ func TestStartSimulationAction(t *testing.T) {
 	})
 
 	t.Run("Second phase", func(t *testing.T) {
-		actionService := actions.NewService()
+		actionService := actions.NewService(logger)
 
 		s := simulator.NewSimulator(simulator.Config{
 			DB:                    db,
@@ -305,7 +305,7 @@ func TestStartSimulationAction(t *testing.T) {
 	})
 
 	t.Run("Third phase", func(t *testing.T) {
-		actionService := actions.NewService()
+		actionService := actions.NewService(logger)
 
 		s := simulator.NewSimulator(simulator.Config{
 			DB:                    db,
