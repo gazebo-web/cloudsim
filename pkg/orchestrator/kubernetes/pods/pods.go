@@ -77,6 +77,13 @@ func (p *pods) Create(input orchestrator.CreatePodInput) (orchestrator.Resource,
 			})
 		}
 
+		for key, from := range c.EnvVarsFrom {
+			envs = append(envs, apiv1.EnvVar{
+				Name:      key,
+				ValueFrom: getValueFrom(from),
+			})
+		}
+
 		// Add new container to list of containers
 		containers = append(containers, apiv1.Container{
 			Name:    c.Name,
@@ -151,6 +158,18 @@ func (p *pods) Create(input orchestrator.CreatePodInput) (orchestrator.Resource,
 
 	p.Logger.Debug(fmt.Sprintf("Creating new pod succeeded. Name: %s. Namespace: %s", res.Name(), res.Namespace()))
 	return res, nil
+}
+
+func getValueFrom(from string) *apiv1.EnvVarSource {
+	switch from {
+	case "status.podIP":
+		return &apiv1.EnvVarSource{
+			FieldRef: &apiv1.ObjectFieldSelector{
+				FieldPath: "status.podIP",
+			},
+		}
+	}
+	return nil
 }
 
 // Delete deletes the pod identified by the given resource.

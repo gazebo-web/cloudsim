@@ -86,6 +86,9 @@ type Container struct {
 
 	// EnvVars is the list of env vars that should be passed into the container.
 	EnvVars map[string]string
+
+	// EnvVars is the list of env vars that should be gotten before passing them into the container.
+	EnvVarsFrom map[string]string
 }
 
 // CreatePodInput is the input of Pods.Create method.
