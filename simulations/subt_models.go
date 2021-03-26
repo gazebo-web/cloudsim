@@ -253,7 +253,7 @@ func (r *SubTCircuitRules) ToTrack(worldID int, runID int) (*tracks.Track, error
 	var seed *int
 	if r.Seeds != nil {
 		seeds := strings.Split(*r.Seeds, ",")
-		if runID > len(seeds) {
+		if runID >= len(seeds) {
 			return nil, ErrInvalidSeedID
 		}
 
@@ -266,7 +266,7 @@ func (r *SubTCircuitRules) ToTrack(worldID int, runID int) (*tracks.Track, error
 	}
 
 	worlds := strings.Split(*r.Worlds, ",")
-	if worldID > len(worlds) {
+	if worldID >= len(worlds) {
 		return nil, ErrInvalidWorldID
 	}
 
