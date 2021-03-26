@@ -71,13 +71,7 @@ func prepareCommsBridgePodInput(store actions.Store, tx *gorm.DB, deployment *ac
 			TerminationGracePeriodSeconds: s.Platform().Store().Orchestrator().TerminationGracePeriod(),
 			NodeSelector:                  subtapp.GetNodeLabelsFieldComputer(s.GroupID, r),
 			InitContainers: []orchestrator.Container{
-				{
-					Name:    "chown-shared-volume",
-					Image:   "infrastructureascode/aws-cli:latest",
-					Command: []string{"/bin/sh"},
-					Args:    []string{"-c", fmt.Sprintf("chown %d:%d /tmp", 1000, 1000)},
-					Volumes: volumes,
-				},
+				orchestrator.NewChownContainer(volumes),
 			},
 			Containers: []orchestrator.Container{
 				{
