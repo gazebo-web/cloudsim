@@ -177,6 +177,8 @@ func (s *subTCircuitService) Create(input tracks.CreateTrackInput) (*tracks.Trac
 }
 
 // Get returns the tracks.Track representation of the SubTCircuitRules identified by the given circuit name.
+// The worldID and runID arguments are used to identify a specific world and seed configuration from a SubTCircuitRules.
+// This was put in place as a temporary solution before refactoring the SubT API where a Circuit will represent a group of Tracks.
 func (s *subTCircuitService) Get(name string, worldID int, runID int) (*tracks.Track, error) {
 	s.logger.Debug(fmt.Sprintf("Getting circuit rule with name [%s] and WorldID [%d]", name, worldID))
 	c, err := GetCircuitRules(s.db, name)
