@@ -1,6 +1,9 @@
 package application
 
-import "gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
+import (
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
+)
 
 // GetEnvVarsCommsBridge returns the env vars for the comms-bridge container.
 func GetEnvVarsCommsBridge(groupID simulations.GroupID, robotName, gzServerIP, verbosity string) map[string]string {
