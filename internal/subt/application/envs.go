@@ -17,6 +17,9 @@ func GetEnvVarsCommsBridge(groupID simulations.GroupID, robotName, gzServerIP, v
 	}
 }
 
+// GetEnvVarsFromSourceCommsBridge creates a map of the different env vars that should be configured from an external source.
+// The resultant map will result in:
+// "ENV_VAR_NAME": "SOURCE"
 func GetEnvVarsFromSourceCommsBridge() map[string]string {
 	return map[string]string{
 		"ROS_IP": orchestrator.EnvVarSourcePodIP,
