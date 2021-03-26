@@ -46,7 +46,7 @@ func addRunningSimulation(store actions.Store, tx *gorm.DB, deployment *actions.
 	subtSim := sim.(subt.Simulation)
 
 	// Get the track for the given simulation
-	t, err := s.SubTServices().Tracks().Get(subtSim.GetTrack(), subtSim.GetWorldIndex())
+	t, err := s.SubTServices().Tracks().Get(subtSim.GetTrack(), subtSim.GetWorldIndex(), subtSim.GetRunIndex())
 	if err != nil {
 		return nil, err
 	}
