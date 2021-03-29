@@ -95,6 +95,9 @@ func generateKubernetesContainers(containers []orchestrator.Container) []apiv1.C
 func (p *pods) Create(input orchestrator.CreatePodInput) (orchestrator.Resource, error) {
 	p.Logger.Debug(fmt.Sprintf("Creating new pod. Input: %+v", input))
 
+	// Set up init containers.
+	initContainers := generateKubernetesContainers(input.InitContainers)
+
 	// Set up containers for pod.
 	containers := generateKubernetesContainers(input.Containers)
 
@@ -130,6 +133,7 @@ func (p *pods) Create(input orchestrator.CreatePodInput) (orchestrator.Resource,
 		Spec: apiv1.PodSpec{
 			RestartPolicy:                 apiv1.RestartPolicy(input.RestartPolicy),
 			TerminationGracePeriodSeconds: &terminationGracePeriod,
+			InitContainers:                initContainers,
 			Containers:                    containers,
 			Volumes:                       volumes,
 			// These DNS servers provide alternative DNS server from the internet
