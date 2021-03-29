@@ -47,7 +47,8 @@ func prepareCommsBridgePodInput(store actions.Store, tx *gorm.DB, deployment *ac
 		volumes := []orchestrator.Volume{
 			{
 				Name:         "logs",
-				HostPath:     "/tmp/robot-logs",
+				HostPath:     "/tmp",
+				SubPath:      "robot-logs",
 				HostPathType: orchestrator.HostPathDirectoryOrCreate,
 				MountPath:    s.Platform().Store().Ignition().ROSLogsPath(),
 			},
