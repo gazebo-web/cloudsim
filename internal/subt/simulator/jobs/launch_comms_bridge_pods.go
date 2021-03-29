@@ -9,7 +9,6 @@ import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/actions"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulator/jobs"
-	"path"
 )
 
 // LaunchCommsBridgePods launches the list of comms bridge and copy pods.
@@ -41,10 +40,6 @@ func prepareCommsBridgePodInput(store actions.Store, tx *gorm.DB, deployment *ac
 	var pods []orchestrator.CreatePodInput
 
 	for i, r := range subtSim.GetRobots() {
-		hostPath := "/tmp"
-		logDirectory := "robot-logs"
-		logMountPath := path.Join(hostPath, logDirectory)
-
 		// Create comms bridge input
 		privileged := true
 		allowPrivilegesEscalation := true
@@ -52,7 +47,7 @@ func prepareCommsBridgePodInput(store actions.Store, tx *gorm.DB, deployment *ac
 		volumes := []orchestrator.Volume{
 			{
 				Name:         "logs",
-				HostPath:     logMountPath,
+				HostPath:     "/tmp/robot-logs",
 				HostPathType: orchestrator.HostPathDirectoryOrCreate,
 				MountPath:    s.Platform().Store().Ignition().ROSLogsPath(),
 			},
