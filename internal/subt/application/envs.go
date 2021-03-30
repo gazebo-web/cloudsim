@@ -2,6 +2,7 @@ package application
 
 import (
 	"fmt"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
 )
 
@@ -31,6 +32,13 @@ func GetEnvVarsFieldComputer(robotName string, commsBridgeIP string) map[string]
 	return map[string]string{
 		"ROBOT_NAME":     robotName,
 		"ROS_MASTER_URI": fmt.Sprintf("http://%s:11311", commsBridgeIP),
+	}
+}
+
+// GetEnvVarsFieldComputer returns the env vars for the field computer container.
+func GetEnvVarsFromSourceFieldComputer() map[string]string {
+	return map[string]string{
+		"ROS_IP": orchestrator.EnvVarSourcePodIP,
 	}
 }
 

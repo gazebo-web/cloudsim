@@ -50,6 +50,7 @@ func prepareFieldComputerPodInput(store actions.Store, tx *gorm.DB, deployment *
 					Image:                    r.GetImage(),
 					AllowPrivilegeEscalation: &allowPrivilegesEscalation,
 					EnvVars:                  subtapp.GetEnvVarsFieldComputer(r.GetName(), s.CommsBridgeIPs[i]),
+					EnvVarsFrom:              subtapp.GetEnvVarsFromSourceFieldComputer(),
 				},
 			},
 		}
