@@ -18,6 +18,7 @@ import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
 	simfake "gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations/fake"
 	sfake "gitlab.com/ignitionrobotics/web/cloudsim/pkg/store/fake"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/utils/db/gorm"
 	"gitlab.com/ignitionrobotics/web/ign-go"
 	kfake "k8s.io/client-go/kubernetes/fake"
 	"testing"
@@ -25,6 +26,13 @@ import (
 )
 
 func TestLaunchGazeboServerPod(t *testing.T) {
+	db, err := gorm.GetDBFromEnvVars()
+	defer db.Close()
+	require.NoError(t, err)
+
+	err = actions.CleanAndMigrateDB(db)
+	require.NoError(t, err)
+
 	// Set up logger
 	logger := ign.NewLoggerNoRollbar("TestLaunchGazeboServerPod", ign.VerbosityDebug)
 
@@ -125,7 +133,7 @@ func TestLaunchGazeboServerPod(t *testing.T) {
 	store := actions.NewStore(s)
 
 	// Run job
-	_, err := LaunchGazeboServerPod.Run(store, nil, &actions.Deployment{CurrentJob: "test"}, s)
+	_, err = LaunchGazeboServerPod.Run(store, db, &actions.Deployment{CurrentJob: "test"}, s)
 
 	// Check if there are any errors.
 	require.NoError(t, err)
