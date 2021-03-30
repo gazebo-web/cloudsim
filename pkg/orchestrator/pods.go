@@ -42,6 +42,7 @@ const (
 	HostPathDirectoryOrCreate = HostPathType(corev1.HostPathDirectoryOrCreate)
 )
 
+// ResourceName is the name of a certain pod resource like memory or cpu.
 type ResourceName corev1.ResourceName
 
 const (
