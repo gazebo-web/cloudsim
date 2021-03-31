@@ -49,7 +49,6 @@ func prepareFieldComputerPodInput(store actions.Store, tx *gorm.DB, deployment *
 				{
 					Name:                     subtapp.GetContainerNameFieldComputer(),
 					Image:                    r.GetImage(),
-					Privileged:               &privileged,
 					AllowPrivilegeEscalation: &allowPrivilegesEscalation,
 					EnvVars: map[string]string{
 						"ROBOT_NAME":     r.GetName(),
