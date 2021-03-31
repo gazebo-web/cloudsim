@@ -44,6 +44,14 @@ func prepareCommsBridgePodInput(store actions.Store, tx *gorm.DB, deployment *ac
 		privileged := true
 		allowPrivilegesEscalation := true
 
+		initVolumes := []orchestrator.Volume{
+			{
+				Name:      "logs",
+				HostPath:  "/tmp",
+				MountPath: "/tmp",
+			},
+		}
+
 		volumes := []orchestrator.Volume{
 			{
 				Name:         "logs",
@@ -66,7 +74,7 @@ func prepareCommsBridgePodInput(store actions.Store, tx *gorm.DB, deployment *ac
 			TerminationGracePeriodSeconds: s.Platform().Store().Orchestrator().TerminationGracePeriod(),
 			NodeSelector:                  subtapp.GetNodeLabelsFieldComputer(s.GroupID, r),
 			InitContainers: []orchestrator.Container{
-				orchestrator.NewChownContainer(volumes),
+				orchestrator.NewChownContainer(initVolumes),
 			},
 			Containers: []orchestrator.Container{
 				{
