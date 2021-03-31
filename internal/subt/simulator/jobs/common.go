@@ -57,7 +57,7 @@ func checkWaitError(store actions.Store, tx *gorm.DB, deployment *actions.Deploy
 func checkLaunchPodsError(store actions.Store, tx *gorm.DB, deployment *actions.Deployment, value interface{}) (interface{}, error) {
 	output := value.(jobs.LaunchPodsOutput)
 	if len(output.Resources) > 0 {
-		if err := deployment.SetJobData(tx, nil, actions.DeploymentJobData, output.Resources); err != nil {
+		if err := deployment.SetJobData(tx, nil, actions.DeploymentJobData, output); err != nil {
 			return nil, err
 		}
 	}
@@ -70,15 +70,15 @@ func checkLaunchPodsError(store actions.Store, tx *gorm.DB, deployment *actions.
 // rollbackPodCreation is an actions.JobErrorHandler implementation meant to be used as rollback handler to delete pods
 // that were initialized in the jobs.LaunchPods job.
 func rollbackPodCreation(store actions.Store, tx *gorm.DB, deployment *actions.Deployment, value interface{}, thrownError error) (interface{}, error) {
-	out, err := deployment.GetJobData(tx, nil, actions.DeploymentJobData)
+	data, err := deployment.GetJobData(tx, nil, actions.DeploymentJobData)
 	if err != nil {
 		return nil, err
 	}
 
 	s := store.State().(cstate.PlatformGetter)
 
-	list := out.([]orchestrator.Resource)
-	for _, pod := range list {
+	out := data.(jobs.LaunchPodsOutput)
+	for _, pod := range out.Resources {
 		_, _ = s.Platform().Orchestrator().Pods().Delete(pod)
 	}
 
