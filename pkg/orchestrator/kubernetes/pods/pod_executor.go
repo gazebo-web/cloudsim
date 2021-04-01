@@ -37,7 +37,8 @@ func (e *executor) Cmd(container string, command []string) error {
 	err := runExec(runExecInput{
 		kubernetes: e.API,
 		namespace:  e.pod.Namespace(),
-		name:       container,
+		name:       e.pod.Name(),
+		container:  container,
 		command:    command,
 		options:    options,
 		spdy:       e.spdyInit,
