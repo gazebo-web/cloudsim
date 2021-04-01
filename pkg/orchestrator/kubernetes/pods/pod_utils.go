@@ -39,6 +39,7 @@ func runExec(input runExecInput) (err error) {
 
 	// TODO: Find a way to avoid this line panicking on tests.
 	req := input.kubernetes.CoreV1().RESTClient().Post().
+		Resource("pods").
 		Namespace(input.namespace).
 		Name(input.name).
 		SubResource("exec")
