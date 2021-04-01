@@ -37,7 +37,7 @@ type ignitionEnvStore struct {
 	SecretsNameValue string `env:"CLOUDSIM_IGN_SECRETS_NAME" envDefault:"aws-secrets"`
 
 	// LogsBucketValue is the CLOUDSIM_AWS_GZ_LOGS_BUCKET value that will be used to upload logs.
-	LogsBucketValue string `env:"CLOUDSIM_AWS_GZ_LOGS_BUCKET" envDefault:"/tmp/ign"`
+	LogsBucketValue string `env:"CLOUDSIM_AWS_GZ_LOGS_BUCKET,required"`
 
 	// DefaultRecipientsValue has the list of emails that should always receive summaries.
 	DefaultRecipientsValue []string `env:"CLOUDSIM_IGN_DEFAULT_RECIPIENTS"`
