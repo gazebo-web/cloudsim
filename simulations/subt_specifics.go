@@ -1240,11 +1240,6 @@ func (sa *SubTApplication) launchApplication(ctx context.Context, s *Service, tx
 	npGz := sa.createNetworkPolicy(ctx, gazeboPodName, baseLabels, gzserverLabels, bridgeLabels)
 	// We update the networkpolicy of the GzServer to also allow outbound connections to internet.
 	npGz.Spec.Egress = append(npGz.Spec.Egress, networkingv1.NetworkPolicyEgressRule{})
-	_, err = s.clientset.NetworkingV1().NetworkPolicies(s.cfg.KubernetesNamespace).Create(npGz)
-	if err != nil {
-		logger(ctx).Error("[launchApplication] Failed to create the gzserver network policy.", err)
-		return nil, ign.NewErrorMessageWithBase(ign.ErrorK8Create, err)
-	}
 
 	// Create the gzserver Pod definition (ie. the simulation server pod)
 	// hostPath contains the path in the node that is mounted as a shared
@@ -1330,6 +1325,18 @@ func (sa *SubTApplication) launchApplication(ctx context.Context, s *Service, tx
 						{
 							Name:  "IGN_VERBOSE",
 							Value: sa.cfg.IgnVerbose,
+						},
+						{
+							Name: "ROS_IP",
+							ValueFrom: &corev1.EnvVarSource{
+								FieldRef: &corev1.ObjectFieldSelector{
+									FieldPath: "status.podIP",
+								},
+							},
+						},
+						{
+							Name:  "ROS_MASTER_URI",
+							Value: "http://$(ROS_IP):11311",
 						},
 					},
 				},
@@ -1426,34 +1433,6 @@ func (sa *SubTApplication) launchApplication(ctx context.Context, s *Service, tx
 		}
 	}
 
-	// Expose the Gazebo websocket server if an auth key is available
-	if dep.AuthorizationToken != nil && len(sa.cfg.IngressName) > 0 {
-		// Create and launch a service to expose the websocket server to the cluster
-		_, err := sa.createWebsocketService(
-			ctx,
-			s.clientset,
-			s.cfg.KubernetesNamespace,
-			dep,
-			podNamePrefix,
-			baseLabels,
-			gzserverLabels,
-		)
-		if err != nil {
-			logger(ctx).Error("[launchApplication] Failed to create websocket Kubernetes service.", err)
-			return nil, ign.NewErrorMessageWithBase(ign.ErrorK8Create, err)
-		}
-		// Add a Gloo route to allow traffic to the websocket service from the Internet
-		_, err = sa.CreateGlooVirtualServiceRoute(
-			ctx,
-			s,
-			dep,
-		)
-		if err != nil {
-			logger(ctx).Error("[launchApplication] Failed to create websocket Kubernetes ingress rule.", err)
-			return nil, ign.NewErrorMessageWithBase(ign.ErrorK8Create, err)
-		}
-	}
-
 	// Add a mole ROS/Pulsar bridge container if the circuit has one defined
 	if rules.MoleBridgeImage != nil {
 		// Get worldID
@@ -1485,10 +1464,11 @@ func (sa *SubTApplication) launchApplication(ctx context.Context, s *Service, tx
 				// Force this pod to run on the same node as the Gazebo server
 				nodeLabelKeyCloudsimNodeType: subtTypeGazebo,
 			},
-			Image:   *rules.MoleBridgeImage,
-			WorldID: worldID,
-			TeamID:  teamID,
-			GroupID: groupID,
+			Image:       *rules.MoleBridgeImage,
+			WorldID:     worldID,
+			TeamID:      teamID,
+			GroupID:     groupID,
+			ROSMasterIP: gzserverPodIP,
 		})
 
 		// Launch and wait
@@ -1505,6 +1485,61 @@ func (sa *SubTApplication) launchApplication(ctx context.Context, s *Service, tx
 			logger(ctx).Error("[launchApplication] Timed out waiting for the gzserver pod to launch.", err)
 			return nil, ign.NewErrorMessageWithBase(ign.ErrorK8Create, err)
 		}
+
+		// Add a rule to the Gazebo server network policy to allow connections to and from the mole-bridge
+		npGz.Spec.Ingress = append(npGz.Spec.Ingress, networkingv1.NetworkPolicyIngressRule{
+			From: []networkingv1.NetworkPolicyPeer{
+				{
+					PodSelector: &metav1.LabelSelector{
+						MatchLabels: labels,
+					},
+				},
+			},
+		})
+		npGz.Spec.Egress = append(npGz.Spec.Egress, networkingv1.NetworkPolicyEgressRule{
+			To: []networkingv1.NetworkPolicyPeer{
+				{
+					PodSelector: &metav1.LabelSelector{
+						MatchLabels: labels,
+					},
+				},
+			},
+		})
+	}
+
+	// Expose the Gazebo websocket server if an auth key is available
+	if dep.AuthorizationToken != nil && len(sa.cfg.IngressName) > 0 {
+		// Create and launch a service to expose the websocket server to the cluster
+		_, err := sa.createWebsocketService(
+			ctx,
+			s.clientset,
+			s.cfg.KubernetesNamespace,
+			dep,
+			podNamePrefix,
+			baseLabels,
+			gzserverLabels,
+		)
+		if err != nil {
+			logger(ctx).Error("[launchApplication] Failed to create websocket Kubernetes service.", err)
+			return nil, ign.NewErrorMessageWithBase(ign.ErrorK8Create, err)
+		}
+		// Add a Gloo route to allow traffic to the websocket service from the Internet
+		_, err = sa.CreateGlooVirtualServiceRoute(
+			ctx,
+			s,
+			dep,
+		)
+		if err != nil {
+			logger(ctx).Error("[launchApplication] Failed to create websocket Kubernetes ingress rule.", err)
+			return nil, ign.NewErrorMessageWithBase(ign.ErrorK8Create, err)
+		}
+	}
+
+	// Create the Gazebo server network policy
+	_, err = s.clientset.NetworkingV1().NetworkPolicies(s.cfg.KubernetesNamespace).Create(npGz)
+	if err != nil {
+		logger(ctx).Error("[launchApplication] Failed to create the gzserver network policy.", err)
+		return nil, ign.NewErrorMessageWithBase(ign.ErrorK8Create, err)
 	}
 
 	fcPods := map[string]*corev1.Pod{}
@@ -1977,6 +2012,18 @@ func (sa *SubTApplication) createMolePod(config *moleBridgeConfig) *corev1.Pod {
 						AllowPrivilegeEscalation: boolptr(true),
 					},
 					Env: []corev1.EnvVar{
+						{
+							Name:  "CS_PB_PULSAR_IP",
+							Value: "mole-pulsar-broker",
+						},
+						{
+							Name:  "CS_PB_PULSAR_PORT",
+							Value: "6650",
+						},
+						{
+							Name:  "CS_PB_TOPIC_REGEX",
+							Value: "^subt/",
+						},
 						{
 							Name:  "ROS_MASTER_URI",
 							Value: fmt.Sprintf("http://%s:11311", config.ROSMasterIP),
