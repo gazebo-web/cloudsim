@@ -24,6 +24,7 @@ type runExecInput struct {
 	config     *rest.Config
 	namespace  string
 	name       string
+	container  string
 	command    []string
 	options    remotecommand.StreamOptions
 	spdy       spdy.Initializer
@@ -52,7 +53,7 @@ func runExec(input runExecInput) (err error) {
 	parameterCodec := runtime.NewParameterCodec(scheme)
 	req.VersionedParams(&apiv1.PodExecOptions{
 		Command:   input.command,
-		Container: input.name,
+		Container: input.container,
 		Stdin:     input.options.Stdin != nil,
 		Stdout:    input.options.Stdout != nil,
 		Stderr:    input.options.Stderr != nil,
