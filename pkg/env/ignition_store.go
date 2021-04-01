@@ -37,7 +37,7 @@ type ignitionEnvStore struct {
 	SecretsNameValue string `env:"CLOUDSIM_IGN_SECRETS_NAME" envDefault:"aws-secrets"`
 
 	// LogsBucketValue is the CLOUDSIM_AWS_GZ_LOGS_BUCKET value that will be used to upload logs.
-	LogsBucketValue string `env:"CLOUDSIM_AWS_GZ_LOGS_BUCKET" envDefault:"/tmp/ign"`
+	LogsBucketValue string `env:"CLOUDSIM_AWS_GZ_LOGS_BUCKET,required"`
 
 	// WebsocketHostValue is the CLOUDSIM_WEBSOCKET_HOST that will be used as host to connect to simulation's websocket servers.
 	WebsocketHostValue string `env:"CLOUDSIM_SUBT_WEBSOCKET_HOST,required"`
