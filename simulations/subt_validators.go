@@ -635,6 +635,38 @@ func loadSubTRobotTypes(cfg *subTSpecificsConfig) {
 			"CSIRO_DATA61_DTR_SENSOR_CONFIG_2",
 			160,
 		),
+		"CTU_CRAS_NORLAB_X500_SENSOR_CONFIG_1": generateSubTRobotType(
+			cfg,
+			"openrobotics",
+			"CTU_CRAS_NORLAB_X500_SENSOR_CONFIG_1",
+			"X500",
+			"CTU_CRAS_NORLAB_X500_SENSOR_CONFIG_1",
+			135,
+		),
+		"CORO_KAREN_SENSOR_CONFIG_1": generateSubTRobotType(
+			cfg,
+			"openrobotics",
+			"CORO_KAREN_SENSOR_CONFIG_1",
+			"KAREN",
+			"CORO_KAREN_SENSOR_CONFIG_1",
+			150,
+		),
+		"CORO_KAREN_SENSOR_CONFIG_2": generateSubTRobotType(
+			cfg,
+			"openrobotics",
+			"CORO_KAREN_SENSOR_CONFIG_2",
+			"KAREN",
+			"CORO_KAREN_SENSOR_CONFIG_2",
+			175,
+		),
+		"CORO_PAM_SENSOR_CONFIG_1": generateSubTRobotType(
+			cfg,
+			"openrobotics",
+			"CORO_PAM_SENSOR_CONFIG_1",
+			"PAM",
+			"CORO_PAM_SENSOR_CONFIG_1",
+			70,
+		),
 	}
 }
 
