@@ -6,7 +6,6 @@ import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/kubernetes/spdy"
 	"gitlab.com/ignitionrobotics/web/ign-go"
-	"io"
 	apiv1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/remotecommand"
@@ -21,7 +20,7 @@ type reader struct {
 }
 
 // File is used to read a file from the given paths.
-func (r *reader) File(paths ...string) (io.Reader, error) {
+func (r *reader) File(paths ...string) (*bytes.Buffer, error) {
 	r.logger.Debug(fmt.Sprintf("Reading file from paths [%+v] on pod [%s]", paths, r.pod.Name()))
 
 	// Prepare buffers

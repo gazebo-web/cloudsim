@@ -1,9 +1,9 @@
 package orchestrator
 
 import (
+	"bytes"
 	"errors"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/waiter"
-	"io"
 	corev1 "k8s.io/api/core/v1"
 	"time"
 )
@@ -155,6 +155,6 @@ type Executor interface {
 
 // Reader groups a set of methods to read files and logs from a Pod.
 type Reader interface {
-	File(paths ...string) (io.Reader, error)
+	File(paths ...string) (*bytes.Buffer, error)
 	Logs(container string, lines int64) (string, error)
 }

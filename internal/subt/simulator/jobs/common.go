@@ -101,16 +101,10 @@ func readFileContentFromPod(p orchestrator.Pods, podName, namespace, path string
 		return nil, err
 	}
 
-	reader, err := p.Reader(res).File(path)
+	buff, err := p.Reader(res).File(path)
 	if err != nil {
 		return nil, err
 	}
 
-	var c []byte
-	_, err = reader.Read(c)
-	if err != nil {
-		return nil, err
-	}
-
-	return c, nil
+	return buff.Bytes(), nil
 }
