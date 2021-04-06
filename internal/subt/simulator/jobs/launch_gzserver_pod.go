@@ -17,10 +17,21 @@ var LaunchGazeboServerPod = jobs.LaunchPods.Extend(actions.Job{
 	Name:            "launch-gzserver-pod",
 	PreHooks:        []actions.JobFunc{setStartState, prepareGazeboCreatePodInput},
 	PostHooks:       []actions.JobFunc{checkLaunchPodsError, returnState},
-	RollbackHandler: rollbackPodCreation,
+	RollbackHandler: rollbackLaunchGazeboServerPod,
 	InputType:       actions.GetJobDataType(&state.StartSimulation{}),
 	OutputType:      actions.GetJobDataType(&state.StartSimulation{}),
 })
+
+func rollbackLaunchGazeboServerPod(store actions.Store, tx *gorm.DB, deployment *actions.Deployment, value interface{}, err error) (interface{}, error) {
+	s := store.State().(*state.StartSimulation)
+
+	name := subtapp.GetPodNameGazeboServer(s.GroupID)
+	ns := s.Platform().Store().Orchestrator().Namespace()
+
+	_, _ = s.Platform().Orchestrator().Pods().Delete(orchestrator.NewResource(name, ns, nil))
+
+	return nil, nil
+}
 
 func prepareGazeboCreatePodInput(store actions.Store, tx *gorm.DB, deployment *actions.Deployment, value interface{}) (interface{}, error) {
 	s := store.State().(*state.StartSimulation)
