@@ -6,7 +6,6 @@ import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/actions"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulator/jobs"
-	cstate "gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulator/state"
 )
 
 // returnState is an actions.JobFunc implementation that returns the state. It's usually used as a posthook.
@@ -65,24 +64,6 @@ func checkLaunchPodsError(store actions.Store, tx *gorm.DB, deployment *actions.
 		return value, nil
 	}
 	return nil, output.Error
-}
-
-// rollbackPodCreation is an actions.JobErrorHandler implementation meant to be used as rollback handler to delete pods
-// that were initialized in the jobs.LaunchPods job.
-func rollbackPodCreation(store actions.Store, tx *gorm.DB, deployment *actions.Deployment, value interface{}, thrownError error) (interface{}, error) {
-	out, err := deployment.GetJobData(tx, nil, actions.DeploymentJobData)
-	if err != nil {
-		return nil, err
-	}
-
-	s := store.State().(cstate.PlatformGetter)
-
-	list := out.([]orchestrator.Resource)
-	for _, pod := range list {
-		_, _ = s.Platform().Orchestrator().Pods().Delete(pod)
-	}
-
-	return nil, nil
 }
 
 // checkLaunchServiceError checks if the output from the jobs.LaunchWebsocketService has an error.
