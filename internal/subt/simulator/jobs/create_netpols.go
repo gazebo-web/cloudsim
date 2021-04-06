@@ -175,12 +175,32 @@ func prepareNetworkPolicyFieldComputersInput(store actions.Store, tx *gorm.DB, d
 // CreateNetworkPolicyCommsBridges extends the generic jobs.CreateNetworkPolicies to create a network policy for the
 // different comms bridges.
 var CreateNetworkPolicyCommsBridges = jobs.CreateNetworkPolicies.Extend(actions.Job{
-	Name:       "create-netpol-comms-bridges",
-	PreHooks:   []actions.JobFunc{setStartState, prepareNetworkPolicyCommsBridgesInput},
-	PostHooks:  []actions.JobFunc{checkCreateNetworkPoliciesError, returnState},
-	InputType:  actions.GetJobDataType(&state.StartSimulation{}),
-	OutputType: actions.GetJobDataType(&state.StartSimulation{}),
+	Name:            "create-netpol-comms-bridges",
+	PreHooks:        []actions.JobFunc{setStartState, prepareNetworkPolicyCommsBridgesInput},
+	PostHooks:       []actions.JobFunc{checkCreateNetworkPoliciesError, returnState},
+	RollbackHandler: removeCreatedNetworkPoliciesCommsBridge,
+	InputType:       actions.GetJobDataType(&state.StartSimulation{}),
+	OutputType:      actions.GetJobDataType(&state.StartSimulation{}),
 })
+
+func removeCreatedNetworkPoliciesCommsBridge(store actions.Store, tx *gorm.DB, deployment *actions.Deployment, value interface{}, err error) (interface{}, error) {
+	s := store.State().(*state.StartSimulation)
+
+	robots, err := s.Services().Simulations().GetRobots(s.GroupID)
+	if err != nil {
+		return nil, err
+	}
+
+	for i := range robots {
+		robotID := subtapp.GetRobotID(i)
+		name := subtapp.GetPodNameCommsBridge(s.GroupID, robotID)
+		ns := s.Platform().Store().Orchestrator().Namespace()
+
+		_ = s.Platform().Orchestrator().NetworkPolicies().Remove(name, ns)
+	}
+
+	return nil, nil
+}
 
 // prepareNetworkPolicyCommsBridgesInput is a pre-hook of the CreateNetworkPolicyCommsBridges job that prepares the input
 // for the generic jobs.CreateNetworkPolicies job.
