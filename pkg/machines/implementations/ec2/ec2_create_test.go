@@ -44,6 +44,25 @@ func (s *ec2CreateMachinesTestSuite) TestCreate_MissingKeyName() {
 	s.Equal(0, s.ec2API.RunInstancesCalls)
 }
 
+func (s *ec2CreateMachinesTestSuite) TestCreate_InvalidClusterID() {
+	input := []machines.CreateMachinesInput{
+		{
+			KeyName:       "key-name",
+			MinCount:      1,
+			MaxCount:      99,
+			FirewallRules: nil,
+			SubnetID:      "subnet-06fe9fdb790aa78e7",
+			Tags:          nil,
+			Retries:       0,
+			ClusterID:     "",
+		},
+	}
+	_, err := s.machines.Create(input)
+	s.Assert().Error(err)
+	s.Assert().Equal(machines.ErrInvalidClusterID, err)
+	s.Assert().Equal(0, s.ec2API.RunInstancesCalls)
+}
+
 func (s *ec2CreateMachinesTestSuite) TestCreate_InvalidCountBothZero() {
 	input := []machines.CreateMachinesInput{
 		{
@@ -157,6 +176,7 @@ func (s *ec2CreateMachinesTestSuite) TestCreate_ValidWithoutDryRunMode() {
 			SubnetID:      "subnet-06fe9fdb790aa78e7",
 			Tags:          nil,
 			Retries:       0,
+			ClusterID:     "cluster-name",
 		},
 	}
 	_, err := s.machines.Create(input)
@@ -177,6 +197,7 @@ func (s *ec2CreateMachinesTestSuite) TestCreate_ValidWithDryRunMode() {
 			SubnetID:      "subnet-06fe9fdb790aa78e7",
 			Tags:          nil,
 			Retries:       3,
+			ClusterID:     "cluster-name",
 		},
 	}
 	_, err := s.machines.Create(input)
@@ -195,11 +216,12 @@ func (s *ec2CreateMachinesTestSuite) TestCreate_ErrorWithDryRunMode() {
 			SubnetID:      "subnet-06fe9fdb790aa78e7",
 			Tags:          nil,
 			Retries:       3,
+			ClusterID:     "cluster-name",
 		},
 	}
 	_, err := s.machines.Create(input)
-	s.Error(err)
-	s.Equal(machines.ErrUnknown, err)
+	s.Require().Error(err)
+	s.Assert().True(errors.Is(err, machines.ErrUnknown))
 }
 
 type mockEC2Create struct {

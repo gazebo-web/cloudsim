@@ -11,6 +11,11 @@ import (
 	"github.com/pkg/errors"
 	"github.com/satori/go.uuid"
 	"gitlab.com/ignitionrobotics/web/cloudsim/globals"
+	subtapp "gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/application"
+	subtSimulator "gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/simulator"
+	"gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/summaries"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/actions"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/application"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/email"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/machines/implementations/ec2"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/components/ingresses/implementations/gloo"
@@ -23,7 +28,10 @@ import (
 	kubernetes "gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/implementations/kubernetes/client"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/platform"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/runsim"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/secrets"
 	secrets "gitlab.com/ignitionrobotics/web/cloudsim/pkg/secrets/implementations/kubernetes"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulator"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/storage/implementations/s3"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/store/implementations/store"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/transport"
@@ -91,7 +99,7 @@ type SimService interface {
 		groupID string, user *users.User) (interface{}, *ign.ErrMsg)
 	SimulationDeploymentList(ctx context.Context, p *ign.PaginationRequest, tx *gorm.DB, byStatus *DeploymentStatus,
 		invertStatus bool, byErrStatus *ErrorStatus, invertErrStatus bool, byCircuit *string, user *users.User,
-		application *string, includeChildren bool) (*SimulationDeployments, *ign.PaginationResult, *ign.ErrMsg)
+		application *string, includeChildren bool, owner *string, private *bool) (*SimulationDeployments, *ign.PaginationResult, *ign.ErrMsg)
 	StartSimulationAsync(ctx context.Context, tx *gorm.DB, createSim *CreateSimulation,
 		user *users.User) (interface{}, *ign.ErrMsg)
 	LaunchSimulationAsync(ctx context.Context, tx *gorm.DB, groupID string,
@@ -193,8 +201,12 @@ type Service struct {
 	// number of times possible.
 	session *session.Session
 
-	platform platform.Platform
-	logger   ign.Logger
+	platform            platform.Platform
+	logger              ign.Logger
+	applicationServices subtapp.Services
+	actionService       actions.Servicer
+	simulator           simulator.Simulator
+	serviceAdaptor      simulations.Service
 }
 
 // SimServImpl holds the instance of the Simulations Service. It is set at initialization.
@@ -448,6 +460,10 @@ func (s *Service) Start(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
+
+	s.applicationServices = s.initApplicationServices()
+
+	s.simulator = s.initSimulator()
 
 	return nil
 }
@@ -1987,7 +2003,7 @@ func (s *Service) getGazeboWorldWarmupTopic(ctx context.Context, tx *gorm.DB, de
 func (s *Service) SimulationDeploymentList(ctx context.Context, p *ign.PaginationRequest,
 	tx *gorm.DB, byStatus *DeploymentStatus, invertStatus bool,
 	byErrStatus *ErrorStatus, invertErrStatus bool, byCircuit *string, user *users.User,
-	application *string, includeChildren bool) (*SimulationDeployments, *ign.PaginationResult, *ign.ErrMsg) {
+	application *string, includeChildren bool, owner *string, private *bool) (*SimulationDeployments, *ign.PaginationResult, *ign.ErrMsg) {
 
 	// Create the DB query
 	var sims SimulationDeployments
@@ -2006,9 +2022,13 @@ func (s *Service) SimulationDeploymentList(ctx context.Context, p *ign.Paginatio
 	}
 
 	// Restrict including children to application and system admins
-	if ok, _ := s.userAccessor.CanPerformWithRole(application, *user.Username, per.Admin); !ok {
-		// Regardless of the value passed as argument, we set it to False if the requestor
-		// is neither an application or system admin.
+	if user != nil {
+		if ok, _ := s.userAccessor.CanPerformWithRole(application, *user.Username, per.Admin); !ok {
+			// Regardless of the value passed as argument, we set it to False if the requestor
+			// is neither an application or system admin.
+			includeChildren = false
+		}
+	} else {
 		includeChildren = false
 	}
 
@@ -2043,9 +2063,24 @@ func (s *Service) SimulationDeploymentList(ctx context.Context, p *ign.Paginatio
 
 	// If user belongs to the application's main Org, then he can see all simulations.
 	// Otherwise, only those simulations created by the user's team.
-	if ok, _ := s.userAccessor.CanPerformWithRole(application, *user.Username, per.Member); !ok {
-		// filter resources based on privacy setting
-		q = s.userAccessor.QueryForResourceVisibility(q, nil, user)
+	// If there is no user, only public ones.
+	if user != nil {
+		if ok, _ := s.userAccessor.CanPerformWithRole(application, *user.Username, per.Member); !ok {
+			// filter resources based on privacy setting
+			q = s.userAccessor.QueryForResourceVisibility(q, nil, user)
+		}
+	} else {
+		q = s.userAccessor.QueryForResourceVisibility(q, nil, nil)
+	}
+
+	// Filter by owner if present
+	if owner != nil {
+		q = q.Where("owner = ?", *owner)
+	}
+
+	// Filter by privacy if present
+	if private != nil {
+		q = q.Where("private = ?", *private)
 	}
 
 	pagination, err := ign.PaginateQuery(q, &sims, *p)
@@ -2066,17 +2101,17 @@ func (s *Service) SimulationDeploymentList(ctx context.Context, p *ign.Paginatio
 func (s *Service) GetSimulationDeployment(ctx context.Context, tx *gorm.DB,
 	groupID string, user *users.User) (interface{}, *ign.ErrMsg) {
 
-	// make sure the user has the correct permissions
-	if ok, em := s.userAccessor.IsAuthorizedForResource(*user.Username, groupID, per.Read); !ok {
-		return nil, em
-	}
-
 	var dep *SimulationDeployment
 	var err error
 
 	dep, err = GetSimulationDeployment(tx, groupID)
 	if err != nil {
 		return nil, ign.NewErrorMessageWithBase(ign.ErrorSimGroupNotFound, err)
+	}
+
+	// Check for user permissions if the simulation is private.
+	if err := s.VerifyPermissionOverPrivateSimulation(user, dep); err != nil {
+		return nil, err
 	}
 
 	var extra *ExtraInfoSubT
@@ -2086,7 +2121,11 @@ func (s *Service) GetSimulationDeployment(ctx context.Context, tx *gorm.DB,
 	}
 
 	// If the user is not a system admin, remove the RunIndex and WorldIndex fields.
-	if ok := s.userAccessor.IsSystemAdmin(*user.Username); !ok {
+	ok := false
+	if user != nil {
+		ok = s.userAccessor.IsSystemAdmin(*user.Username)
+	}
+	if !ok || user == nil {
 		extra.RunIndex = nil
 		extra.WorldIndex = nil
 	}
@@ -2112,22 +2151,22 @@ func (s *Service) GetSimulationWebsocketAddress(ctx context.Context, tx *gorm.DB
 		return nil, ign.NewErrorMessageWithBase(ign.ErrorSimGroupNotFound, err)
 	}
 
-	// Check that the requesting user has the correct permissions
-	username := *user.Username
+	// Check for user permissions if the simulation is private.
+	if err := s.VerifyPermissionOverPrivateSimulation(user, dep); err != nil {
+		return nil, err
+	}
+
 	// Parent simulations are not valid as they do not run simulations directly
 	if dep.isMultiSimParent() {
 		return nil, ign.NewErrorMessage(ign.ErrorInvalidSimulationStatus)
 	}
+
 	// Multisim child simulations can only be accessed by admins
-	if dep.isMultiSimChild() && !s.userAccessor.IsSystemAdmin(username) {
+	if dep.isMultiSimChild() && (user == nil || !s.userAccessor.IsSystemAdmin(*user.Username)) {
 		return nil, ign.NewErrorMessage(ign.ErrorUnauthorized)
 	}
-	// Check access permissions
-	if ok, em := s.userAccessor.IsAuthorizedForResource(username, groupID, per.Read); !ok {
-		return nil, em
-	}
 
-	// Find the specific Application handler and ask for the live logs
+	// Find the specific Application handler and ask for the websocket address
 	return s.applications[*dep.Application].getSimulationWebsocketAddress(ctx, s, tx, dep)
 }
 
@@ -2243,6 +2282,32 @@ func (s *Service) GetCompetitionRobots(applicationName string) (interface{}, *ig
 // ///////////////////////////////////////////////////////////////////////
 // ///////////////////////////////////////////////////////////////////////
 
+// VerifyPermissionOverPrivateSimulation Checks if the given user has permissions over a private simulation.
+func (s *Service) VerifyPermissionOverPrivateSimulation(user *users.User, dep *SimulationDeployment) *ign.ErrMsg {
+	// Sanity check. Make sure the simulation deployment exists.
+	if dep == nil {
+		return ign.NewErrorMessage(ign.ErrorSimGroupNotFound)
+	}
+
+	// Private Simulation. Check if user has permission over it.
+	if dep.Private != nil && *dep.Private == true {
+		// Anonymous users have no permission over private simulations.
+		if user == nil {
+			return ign.NewErrorMessage(ign.ErrorUnauthorized)
+		}
+
+		// Make sure the user has the correct permissions
+		if ok, em := s.userAccessor.IsAuthorizedForResource(*user.Username, *dep.GroupID, per.Read); !ok {
+			return em
+		}
+	}
+
+	return nil
+}
+
+// ///////////////////////////////////////////////////////////////////////
+// ///////////////////////////////////////////////////////////////////////
+
 // QueueGetElements returns a paginated list of elements from the launch queue.
 // If no page or perPage arguments are passed, it sets those value to 0 and 10 respectively.
 func (s *Service) QueueGetElements(ctx context.Context, user *users.User, page, perPage *int) ([]interface{}, *ign.ErrMsg) {
@@ -2300,6 +2365,7 @@ func (s *Service) QueueRemoveElement(ctx context.Context, user *users.User, grou
 	return s.launchHandlerQueue.Remove(groupID)
 }
 
+// TODO: Make initPlatform independent of Service by receiving arguments with the needed config.
 func (s *Service) initPlatform() (platform.Platform, error) {
 	s.logger = ign.NewLoggerNoRollbar("[Ignition Cloudsim - SubT]", ign.VerbosityDebug)
 
@@ -2356,4 +2422,24 @@ func (s *Service) initPlatform() (platform.Platform, error) {
 		EmailSender:        emailSender,
 		RunningSimulations: runningSimulations,
 	}), nil
+}
+
+// TODO: Make initApplicationServices independent of Service by receiving arguments with the needed config.
+func (s *Service) initApplicationServices() subtapp.Services {
+	s.serviceAdaptor = NewSubTSimulationServiceAdaptor(s.DB)
+	base := application.NewServices(s.serviceAdaptor, s.userAccessor)
+	trackService := NewTracksService(s.DB)
+	summaryService := summaries.NewService(s.DB)
+	return subtapp.NewServices(base, trackService, summaryService)
+}
+
+// TODO: Make initSimulator independent of Service by receiving arguments with the needed config.
+func (s *Service) initSimulator() simulator.Simulator {
+	return subtSimulator.NewSimulator(subtSimulator.Config{
+		DB:                    s.DB,
+		Platform:              s.platform,
+		ApplicationServices:   s.applicationServices,
+		ActionService:         s.actionService,
+		DisableDefaultActions: false,
+	})
 }

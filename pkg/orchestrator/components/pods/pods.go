@@ -12,6 +12,9 @@ import (
 var (
 	// ErrPodHasNoIP is returned when Pods.GetIP method is called and there's no IP assigned to the pod.
 	ErrPodHasNoIP = errors.New("pod has no ip")
+
+	// ErrMissingPods is returned when an empty list of pods is returned while waiting for them to be ready.
+	ErrMissingPods = errors.New("missing pods")
 )
 
 // RestartPolicy defines a restart policy used for pods.

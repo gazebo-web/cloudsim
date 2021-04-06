@@ -36,6 +36,9 @@ func (m *kubernetesNodes) WaitForCondition(resource resource.Resource, condition
 		if err != nil {
 			return false, err
 		}
+		if len(nodes.Items) == 0 {
+			return false, orchestrator.ErrMissingNodes
+		}
 		for _, n := range nodes.Items {
 			if !m.isConditionSetAsExpected(n, condition) {
 				var node = new(apiv1.Node)

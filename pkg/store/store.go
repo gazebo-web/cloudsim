@@ -37,9 +37,6 @@ type Machines interface {
 	// Tags returns a set of tags that will be set to the machine.
 	Tags(simulation simulations.Simulation, nodeType string, nameSuffix string) []machines.Tag
 
-	// InitScript returns the script that will be run when creating the machine.
-	InitScript() *string
-
 	// BaseImage returns the base image that will be used when creating the machine.
 	BaseImage() string
 
@@ -124,9 +121,6 @@ type Ignition interface {
 
 	// LogsBucket returns the bucket for saving simulation logs.
 	LogsBucket() string
-
-	// GetWebsocketHost returns the host of the websocket URL.
-	GetWebsocketHost() string
 
 	// GetWebsocketPath returns the path of the websocket URL for the given simulations.GroupID.
 	GetWebsocketPath(groupID simulations.GroupID) string

@@ -2,6 +2,7 @@ package jobs
 
 import (
 	"github.com/stretchr/testify/assert"
+	subtapp "gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/application"
 	"gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/simulator/state"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/actions"
 	kubernetesPods "gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/components/pods/implementations/kubernetes"
@@ -26,14 +27,14 @@ func TestWaitForGazeboServerPod(t *testing.T) {
 	fakeStore := sfake.NewFakeStore(storeMachines, orchestratorStore, nil)
 	spdyInit := spdy.NewSPDYFakeInitializer()
 
+	gid := simulations.GroupID("aaaa-bbbb-cccc-dddd")
+
 	initialPod := &apiv1.Pod{
 		TypeMeta: metav1.TypeMeta{},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      "test",
+			Name:      subtapp.GetPodNameGazeboServer(gid),
 			Namespace: "default",
-			Labels: map[string]string{
-				"app": "test",
-			},
+			Labels:    subtapp.GetPodLabelsGazeboServer(gid, nil).Map(),
 		},
 		Spec: apiv1.PodSpec{},
 		Status: apiv1.PodStatus{
@@ -41,6 +42,7 @@ func TestWaitForGazeboServerPod(t *testing.T) {
 		},
 	}
 	client := fake.NewSimpleClientset(initialPod)
+
 	po := kubernetesPods.NewPods(client, spdyInit, logger)
 	ks := kubernetes.NewCustomKubernetes(kubernetes.Config{
 		Nodes:           nil,
@@ -56,19 +58,8 @@ func TestWaitForGazeboServerPod(t *testing.T) {
 		Store:   fakeStore,
 	})
 
-	gid := simulations.GroupID("aaaa-bbbb-cccc-dddd")
 	s := state.NewStartSimulation(p, nil, gid)
 	store := actions.NewStore(s)
-
-	// Mock gazebo server pod
-	s.GazeboServerPod = resource.NewResource(
-		"test",
-		"default",
-		resource.NewSelector(map[string]string{
-			"app": "test",
-		}),
-	)
-	store.SetState(s)
 
 	storeMachines.On("Timeout").Return(1 * time.Second)
 	storeMachines.On("PollFrequency").Return(1 * time.Second)
@@ -81,5 +72,4 @@ func TestWaitForGazeboServerPod(t *testing.T) {
 	assert.True(t, ok)
 
 	assert.Equal(t, gid, output.GroupID)
-	assert.NotNil(t, output.GazeboServerPod)
 }

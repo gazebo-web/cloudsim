@@ -63,12 +63,6 @@ func (f *Ign) LogsBucket() string {
 	return args.String(0)
 }
 
-// GetWebsocketHost mocks the GetWebsocketHost method.
-func (f *Ign) GetWebsocketHost() string {
-	args := f.Called()
-	return args.String(0)
-}
-
 // GetWebsocketPath mocks the GetWebsocketPath method.
 func (f *Ign) GetWebsocketPath(groupID simulations.GroupID) string {
 	args := f.Called(groupID)
@@ -233,16 +227,6 @@ func (f Machines) SubnetAndZone() (string, string) {
 func (f Machines) Tags(simulation simulations.Simulation, nodeType string, nameSuffix string) []machines.Tag {
 	args := f.Called(simulation, nodeType, nameSuffix)
 	return args.Get(0).([]machines.Tag)
-}
-
-// InitScript mocks the InitScript method.
-func (f Machines) InitScript() *string {
-	args := f.Called()
-	result := args.String(0)
-	if len(result) == 0 {
-		return nil
-	}
-	return &result
 }
 
 // BaseImage mocks the BaseImage method.

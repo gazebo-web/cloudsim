@@ -39,8 +39,9 @@ func createLaunchInstancesInput(store actions.Store, tx *gorm.DB, deployment *ac
 			SubnetID:        subnet,
 			Zone:            zone,
 			Tags:            subtapp.GetTagsInstanceSpecific(prefix, s.GroupID, "gzserver", clusterName, "gzserver"),
-			InitScript:      s.Platform().Store().Machines().InitScript(),
 			Retries:         10,
+			Labels:          subtapp.GetNodeLabelsGazeboServer(s.GroupID).Map(),
+			ClusterID:       clusterName,
 		},
 	}
 
@@ -63,8 +64,9 @@ func createLaunchInstancesInput(store actions.Store, tx *gorm.DB, deployment *ac
 			SubnetID:        subnet,
 			Zone:            zone,
 			Tags:            tags,
-			InitScript:      s.Platform().Store().Machines().InitScript(),
 			Retries:         10,
+			Labels:          subtapp.GetNodeLabelsFieldComputer(s.GroupID, r).Map(),
+			ClusterID:       clusterName,
 		})
 	}
 

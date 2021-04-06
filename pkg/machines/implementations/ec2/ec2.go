@@ -1,15 +1,21 @@
 package ec2
 
 import (
+	"bytes"
+	"encoding/base64"
 	"fmt"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/aws/client"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/aws/aws-sdk-go/service/ec2/ec2iface"
+	"github.com/pkg/errors"
+	"github.com/pkg/errors"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/machines"
 	"gitlab.com/ignitionrobotics/web/ign-go"
 	"regexp"
+	"strings"
+	"text/template"
 	"time"
 )
 
@@ -64,6 +70,11 @@ func (m *ec2Machines) isValidSubnetID(subnet string) bool {
 	return matched
 }
 
+// isValidClusterID checks that the given cluster ID is valid.
+func (m *ec2Machines) isValidClusterID(clusterID string) bool {
+	return len(clusterID) > 0
+}
+
 // newRunInstancesInput initializes the configuration to run EC2 instances with the given input.
 func (m *ec2Machines) newRunInstancesInput(createMachines machines.CreateMachinesInput) *ec2.RunInstancesInput {
 	var iamProfile *ec2.IamInstanceProfileSpecification
@@ -72,12 +83,8 @@ func (m *ec2Machines) newRunInstancesInput(createMachines machines.CreateMachine
 		Name: nil,
 	}
 
-	var securityGroups []*string
-	for _, sg := range createMachines.FirewallRules {
-		securityGroups = append(securityGroups, aws.String(sg))
-	}
-
 	tagSpec := m.createTags(createMachines.Tags)
+
 	return &ec2.RunInstancesInput{
 		InstanceType:       aws.String(createMachines.Type),
 		ImageId:            aws.String(createMachines.Image),
@@ -92,7 +99,6 @@ func (m *ec2Machines) newRunInstancesInput(createMachines machines.CreateMachine
 		},
 		TagSpecifications: tagSpec,
 		UserData:          createMachines.InitScript,
-		SecurityGroups:    securityGroups,
 	}
 }
 
@@ -128,7 +134,7 @@ func (m *ec2Machines) runInstanceDryRun(input *ec2.RunInstancesInput) error {
 	_, err := m.API.RunInstances(input)
 	awsErr, ok := err.(awserr.Error)
 	if !ok || awsErr.Code() != ErrCodeDryRunOperation {
-		return machines.ErrDryRunFailed
+		return errors.Wrap(machines.ErrDryRunFailed, err.Error())
 	}
 	return nil
 }
@@ -152,7 +158,7 @@ func (m *ec2Machines) parseRunInstanceError(err error) error {
 	case ErrCodeRequestLimitExceeded:
 		return machines.ErrRequestsLimitExceeded
 	}
-	return machines.ErrUnknown
+	return errors.Wrap(machines.ErrUnknown, err.Error())
 }
 
 // runInstance is a wrapper for the EC2 RunInstances method.
@@ -176,17 +182,31 @@ func (m *ec2Machines) create(input machines.CreateMachinesInput) (*machines.Crea
 	if !m.isValidSubnetID(input.SubnetID) {
 		return nil, machines.ErrInvalidSubnetID
 	}
+	if !m.isValidClusterID(input.ClusterID) {
+		return nil, machines.ErrInvalidClusterID
+	}
+
+	if input.InitScript == nil {
+		userData, err := m.createUserData(input)
+		if err != nil {
+			return nil, err
+		}
+		// EC2 requires that user data strings are encoded in base64
+		userData = base64.StdEncoding.EncodeToString([]byte(userData))
+		input.InitScript = &userData
+	}
 
 	runInstanceInput := m.newRunInstancesInput(input)
 
 	for try := 1; try <= input.Retries; try++ {
-		if err := m.runInstanceDryRun(runInstanceInput); err != nil {
+		var err error
+		if err = m.runInstanceDryRun(runInstanceInput); err != nil {
 			m.sleepNSecondsBeforeMaxRetries(try, input.Retries)
 		} else {
 			break
 		}
 		if try == input.Retries {
-			return nil, machines.ErrUnknown
+			return nil, errors.Wrap(machines.ErrUnknown, fmt.Sprintf("max retries, with error: %s", err.Error()))
 		}
 	}
 
@@ -341,6 +361,34 @@ func (m *ec2Machines) WaitOK(input []machines.WaitMachinesOKInput) error {
 
 	m.Logger.Debug(fmt.Sprintf("Waiting for machines to be OK: %+v succeeded.", input))
 	return nil
+}
+
+// createUserData generates a bash command to make the node join the cluster.
+func (m *ec2Machines) createUserData(input machines.CreateMachinesInput) (string, error) {
+	tmpl, err := template.ParseFiles("ec2_user_data.sh")
+	if err != nil {
+		return "", err
+	}
+
+	var b []byte
+	buffer := bytes.NewBuffer(b)
+
+	labels := make([]string, 0, len(input.Labels))
+
+	for k, v := range input.Labels {
+		labels = append(labels, fmt.Sprintf("%s=%s", k, v))
+	}
+
+	err = tmpl.Execute(buffer, map[string]interface{}{
+		"Labels":      strings.Join(labels, ","),
+		"ClusterName": input.ClusterID,
+		"Args":        "--use-max-pods false",
+	})
+	if err != nil {
+		return "", err
+	}
+
+	return buffer.String(), nil
 }
 
 // NewMachines initializes a new machines.Machines implementation using EC2.

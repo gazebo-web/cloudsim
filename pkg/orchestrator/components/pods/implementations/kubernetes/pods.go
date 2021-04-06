@@ -44,16 +44,11 @@ func (p *kubernetesPods) Get(name, namespace string) (orchestratorResource.Resou
 	return orchestratorResource.NewResource(name, namespace, selector), nil
 }
 
-// Create creates a new pod with the information given in pods.CreatePodInput.
-func (p *kubernetesPods) Create(input pods.CreatePodInput) (orchestratorResource.Resource, error) {
-	p.Logger.Debug(fmt.Sprintf("Creating new pod. Input: %+v", input))
+// generateKubernetesContainers takes a generic set of cloudsim containers and generate their counterpart for Kubernetes.
+func generateKubernetesContainers(containers []pods.Container) []apiv1.Container {
+	var result []apiv1.Container
 
-	// Set up containers for pod.
-	var containers []apiv1.Container
-
-	// Iterate over list of containers to create
-	for _, c := range input.Containers {
-		// Set up volume mounts.
+	for _, c := range containers {
 		var volumeMounts []apiv1.VolumeMount
 		for _, v := range c.Volumes {
 			volumeMounts = append(volumeMounts, apiv1.VolumeMount{
@@ -79,7 +74,7 @@ func (p *kubernetesPods) Create(input pods.CreatePodInput) (orchestratorResource
 		}
 
 		// Add new container to list of containers
-		containers = append(containers, apiv1.Container{
+		result = append(result, apiv1.Container{
 			Name:    c.Name,
 			Image:   c.Image,
 			Command: c.Command,
@@ -94,16 +89,32 @@ func (p *kubernetesPods) Create(input pods.CreatePodInput) (orchestratorResource
 		})
 	}
 
+	return result
+}
+
+// Create creates a new pod with the information given in orchestrator.CreatePodInput.
+func (p *kubernetesPods) Create(input pods.CreatePodInput) (orchestratorResource.Resource, error) {
+	p.Logger.Debug(fmt.Sprintf("Creating new pod. Input: %+v", input))
+
+	// Set up init containers.
+	initContainers := generateKubernetesContainers(input.InitContainers)
+
+	// Set up containers for pod.
+	containers := generateKubernetesContainers(input.Containers)
+
 	p.Logger.Debug(fmt.Sprintf("List of containers: %+v", containers))
 
 	// Set up volumes
 	var volumes []apiv1.Volume
+
 	for _, v := range input.Volumes {
+		hostPathType := apiv1.HostPathType(v.HostPathType)
 		volumes = append(volumes, apiv1.Volume{
 			Name: v.Name,
 			VolumeSource: apiv1.VolumeSource{
 				HostPath: &apiv1.HostPathVolumeSource{
 					Path: v.HostPath,
+					Type: &hostPathType,
 				},
 			},
 		})
@@ -123,6 +134,7 @@ func (p *kubernetesPods) Create(input pods.CreatePodInput) (orchestratorResource
 		Spec: apiv1.PodSpec{
 			RestartPolicy:                 apiv1.RestartPolicy(input.RestartPolicy),
 			TerminationGracePeriodSeconds: &terminationGracePeriod,
+			InitContainers:                initContainers,
 			Containers:                    containers,
 			Volumes:                       volumes,
 			// These DNS servers provide alternative DNS server from the internet
@@ -208,6 +220,10 @@ func (p *kubernetesPods) WaitForCondition(resource orchestratorResource.Resource
 		po, err := p.API.CoreV1().Pods(resource.Namespace()).List(opts)
 		if err != nil {
 			return false, err
+		}
+
+		if len(po.Items) == 0 {
+			return false, pods.ErrMissingPods
 		}
 
 		// Iterate over list of pods

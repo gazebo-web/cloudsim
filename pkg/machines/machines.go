@@ -25,6 +25,8 @@ var (
 	ErrMissingMachineFilters = errors.New("missing machine filters")
 	// ErrInvalidTerminateRequest is used to return an error when validating a termination machine request fails.
 	ErrInvalidTerminateRequest = errors.New("invalid terminate machines request")
+	// ErrInvalidClusterID is returned when an invalid cluster id is passed when creating machines.
+	ErrInvalidClusterID = errors.New("invalid cluster id")
 )
 
 // Tag is a group of key-value pairs for a certain resource.
@@ -78,6 +80,14 @@ type CreateMachinesInput struct {
 	// Retries is the max amount of retries that will be executed when running in dry run mode.
 	// Suggested value: 10.
 	Retries int
+
+	// Labels is the map of labels that will be assigned to the node when it joins the cluster.
+	// In AWS, it will be the labels that are assigned to the node in order to join the EKS cluster.
+	Labels map[string]string
+
+	// ClusterID identifies the cluster that the nodes should join.
+	// In AWS: It's the cluster name.
+	ClusterID string
 }
 
 // CreateMachinesOutput is the output for the Machines.Create operation.

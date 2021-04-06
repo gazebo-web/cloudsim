@@ -298,7 +298,7 @@ func TestStopSimulationAction(t *testing.T) {
 	})
 	require.NoError(t, err)
 
-	actionService := actions.NewService()
+	actionService := actions.NewService(logger)
 
 	// Initialize simulator
 	s := simulator.NewSimulator(simulator.Config{

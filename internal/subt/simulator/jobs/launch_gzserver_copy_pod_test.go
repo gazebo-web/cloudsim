@@ -42,6 +42,7 @@ func TestLaunchGazeboServerCopyPod(t *testing.T) {
 
 	// Mock ignition store methods for this test
 	storeIgnition.On("GazeboServerLogsPath").Return("/tmp/test")
+	storeIgnition.On("SidecarContainerLogsPath").Return("/tmp/logs")
 	storeIgnition.On("IP").Return("127.0.0.1")
 	storeIgnition.On("Verbosity").Return("0")
 	storeIgnition.On("LogsCopyEnabled").Return(true)

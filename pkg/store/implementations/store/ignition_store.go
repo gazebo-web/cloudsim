@@ -8,6 +8,7 @@ import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
 	storepkg "gitlab.com/ignitionrobotics/web/cloudsim/pkg/store"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/validate"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/utils/network"
 )
 
 // ignitionStore is the implementation of store.Ignition using env vars.
@@ -25,10 +26,6 @@ type ignitionStore struct {
 
 	// SidecarContainerLogsPathValue is the path inside the sidecar container where the logs volume will be mounted.
 	SidecarContainerLogsPathValue string `default:"/tmp/logs" env:"CLOUDSIM_IGN_SIDECAR_CONTAINER_LOGS_VOLUME_MOUNT_PATH"`
-
-	// IgnIPValue is the Cloudsim server's IP address to use when creating NetworkPolicies.
-	// See 'docker-entrypoint.sh' script located at the root folder of this project.
-	IgnIPValue string `env:"CLOUDSIM_IGN_IP"`
 
 	// VerbosityValue is the IGN_VERBOSE value that will be passed to Pods launched for SubT.
 	VerbosityValue string `default:"2" env:"CLOUDSIM_IGN_VERBOSITY"`
@@ -50,9 +47,6 @@ type ignitionStore struct {
 
 	// DefaultSenderValue is the email address used to send emails.
 	DefaultSenderValue string `validate:"required" env:"CLOUDSIM_IGN_DEFAULT_SENDER"`
-
-	// WebsocketHostValue is the CLOUDSIM_WEBSOCKET_HOST that will be used as host to connect to simulation's websocket servers.
-	WebsocketHostValue string `env:"CLOUDSIM_SUBT_WEBSOCKET_HOST"`
 }
 
 // SetDefaults sets default values for the store.
@@ -74,11 +68,6 @@ func (i *ignitionStore) DefaultRecipients() []string {
 // DefaultSender returns the default email address used to send emails.
 func (i *ignitionStore) DefaultSender() string {
 	return i.DefaultSenderValue
-}
-
-// GetWebsocketHost returns the host of the websocket address for connecting to simulation websocket servers.
-func (i *ignitionStore) GetWebsocketHost() string {
-	return i.WebsocketHostValue
 }
 
 // GetWebsocketPath returns the path of the websocket address for the given simulation's group id.
@@ -134,8 +123,13 @@ func (i *ignitionStore) Verbosity() string {
 }
 
 // IP returns the Cloudsim server's IP address to use when creating NetworkPolicies.
+// If the IP address cannot be obtained, an empty string will be returned.
 func (i *ignitionStore) IP() string {
-	return i.IgnIPValue
+	ip, err := network.GetLocalIPAddressString()
+	if err != nil {
+		return ""
+	}
+	return ip
 }
 
 // newIgnitionStoreFromEnvVars initializes a new store.Ignition implementation using environment variables to
