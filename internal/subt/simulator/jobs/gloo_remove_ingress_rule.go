@@ -14,11 +14,29 @@ import (
 // the Gloo ingress.
 var RemoveIngressRulesGloo = jobs.RemoveIngressRules.Extend(actions.Job{
 	Name:       "remove-ingress-rules-gloo",
-	PreHooks:   []actions.JobFunc{setStopState, prepareRemoveIngressRulesInput},
+	PreHooks:   []actions.JobFunc{setStopState, getUpstream, prepareRemoveIngressRulesInput},
 	PostHooks:  []actions.JobFunc{checkRemoveIngressRulesError, returnState},
 	InputType:  actions.GetJobDataType(&state.StopSimulation{}),
 	OutputType: actions.GetJobDataType(&state.StopSimulation{}),
 })
+
+// getUpstream is a prehook in charge of getting the upstream name before removing it.
+func getUpstream(store actions.Store, tx *gorm.DB, deployment *actions.Deployment, value interface{}) (interface{}, error) {
+	s := store.State().(*state.StopSimulation)
+
+	vs := s.Platform().Orchestrator().Ingresses().(*gloo.VirtualServices)
+
+	ns := s.Platform().Store().Orchestrator().IngressNamespace()
+
+	res, err := vs.GetUpstream(ns, application.GetWebsocketServiceLabels(s.GroupID))
+	if err != nil {
+		return nil, err
+	}
+
+	s.UpstreamName = res.Name()
+	store.SetState(s)
+	return s, nil
+}
 
 // prepareRemoveIngressRulesInput is a pre-hook for the RemoveIngressRulesGloo job in charge of configuring the
 // the input for the generic jobs.RemoveIngressRules job.
