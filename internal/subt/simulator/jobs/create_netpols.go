@@ -96,10 +96,29 @@ var CreateNetworkPolicyFieldComputers = jobs.CreateNetworkPolicies.Extend(action
 	Name:            "create-netpol-field-computers",
 	PreHooks:        []actions.JobFunc{setStartState, prepareNetworkPolicyFieldComputersInput},
 	PostHooks:       []actions.JobFunc{checkCreateNetworkPoliciesError, returnState},
-	RollbackHandler: nil,
+	RollbackHandler: removeCreatedNetworkPoliciesFieldComputer,
 	InputType:       actions.GetJobDataType(&state.StartSimulation{}),
 	OutputType:      actions.GetJobDataType(&state.StartSimulation{}),
 })
+
+func removeCreatedNetworkPoliciesFieldComputer(store actions.Store, tx *gorm.DB, deployment *actions.Deployment, value interface{}, err error) (interface{}, error) {
+	s := store.State().(*state.StartSimulation)
+
+	robots, err := s.Services().Simulations().GetRobots(s.GroupID)
+	if err != nil {
+		return nil, err
+	}
+
+	for i := range robots {
+		robotID := subtapp.GetRobotID(i)
+		name := subtapp.GetPodNameFieldComputer(s.GroupID, robotID)
+		ns := s.Platform().Store().Orchestrator().Namespace()
+
+		_ = s.Platform().Orchestrator().NetworkPolicies().Remove(name, ns)
+	}
+
+	return nil, nil
+}
 
 // prepareNetworkPolicyFieldComputersInput is a pre-hook of the CreateNetworkPolicyFieldComputers job that prepares the input
 // for the generic jobs.CreateNetworkPolicies job.
