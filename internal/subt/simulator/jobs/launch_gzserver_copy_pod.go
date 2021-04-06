@@ -15,10 +15,21 @@ var LaunchGazeboServerCopyPod = jobs.LaunchPods.Extend(actions.Job{
 	Name:            "launch-gzserver-copy-pod",
 	PreHooks:        []actions.JobFunc{setStartState, prepareGazeboCreateCopyPodInput},
 	PostHooks:       []actions.JobFunc{checkLaunchPodsError, returnState},
-	RollbackHandler: rollbackPodCreation,
+	RollbackHandler: rollbackLaunchGazeboServerCopyPod,
 	InputType:       actions.GetJobDataType(&state.StartSimulation{}),
 	OutputType:      actions.GetJobDataType(&state.StartSimulation{}),
 })
+
+func rollbackLaunchGazeboServerCopyPod(store actions.Store, tx *gorm.DB, deployment *actions.Deployment, value interface{}, err error) (interface{}, error) {
+	s := store.State().(*state.StartSimulation)
+
+	name := subtapp.GetPodNameGazeboServerCopy(s.GroupID)
+	ns := s.Platform().Store().Orchestrator().Namespace()
+
+	_, _ = s.Platform().Orchestrator().Pods().Delete(orchestrator.NewResource(name, ns, nil))
+
+	return nil, nil
+}
 
 // prepareGazeboCreateCopyPodInput prepares the input to launch a copy pod for a gzserver.
 func prepareGazeboCreateCopyPodInput(store actions.Store, tx *gorm.DB, deployment *actions.Deployment, value interface{}) (interface{}, error) {

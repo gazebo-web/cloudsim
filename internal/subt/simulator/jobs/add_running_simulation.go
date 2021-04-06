@@ -23,7 +23,9 @@ var AddRunningSimulation = &actions.Job{
 func revertAddingRunningSimulation(store actions.Store, tx *gorm.DB, deployment *actions.Deployment, value interface{}, _ error) (interface{}, error) {
 	s := store.State().(*state.StartSimulation)
 
-	s.Platform().RunningSimulations().Free(s.GroupID)
+	if s.Platform().RunningSimulations().GetTransporter(s.GroupID).IsConnected() {
+		s.Platform().RunningSimulations().Free(s.GroupID)
+	}
 
 	err := s.Platform().RunningSimulations().Remove(s.GroupID)
 	if err != nil {
