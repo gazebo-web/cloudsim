@@ -23,7 +23,7 @@ var RemoveIngressRulesGloo = jobs.RemoveIngressRules.Extend(actions.Job{
 // prepareRemoveIngressRulesInput is a pre-hook for the RemoveIngressRulesGloo job in charge of configuring the
 // the input for the generic jobs.RemoveIngressRules job.
 func prepareRemoveIngressRulesInput(store actions.Store, tx *gorm.DB, deployment *actions.Deployment, value interface{}) (interface{}, error) {
-	s := store.State().(*state.StartSimulation)
+	s := store.State().(*state.StopSimulation)
 
 	name := s.Platform().Store().Orchestrator().IngressName()
 	host := s.Platform().Store().Orchestrator().IngressHost()
