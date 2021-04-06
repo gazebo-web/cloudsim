@@ -10,14 +10,15 @@ import (
 
 // StopSimulation is the state of the action that stops a simulation.
 type StopSimulation struct {
-	platform platform.Platform
-	services subtapp.Services
-	GroupID  simulations.GroupID
-	Score    *float64
-	Stats    simulations.Statistics
-	Summary  simulations.Summary
-	RunData  string
-	PodList  []orchestrator.Resource
+	platform     platform.Platform
+	services     subtapp.Services
+	GroupID      simulations.GroupID
+	Score        *float64
+	Stats        simulations.Statistics
+	Summary      simulations.Summary
+	RunData      string
+	PodList      []orchestrator.Resource
+	UpstreamName string
 }
 
 // Platform returns the underlying platform.
