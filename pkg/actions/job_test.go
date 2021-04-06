@@ -2,6 +2,7 @@ package actions
 
 import (
 	"github.com/jinzhu/gorm"
+	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"reflect"
@@ -349,7 +350,7 @@ func TestJobsNoRepeatedJobNames(t *testing.T) {
 	assert.Nil(t, job.validate())
 
 	jobs := &Jobs{job, job}
-	require.Equal(t, ErrJobsNamesNotUnique, jobs.noRepeatedJobNames())
+	require.True(t, errors.Is(jobs.jobNamesAreUnique(), ErrJobsNamesNotUnique))
 }
 
 func TestJobValidate(t *testing.T) {

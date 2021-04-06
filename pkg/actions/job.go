@@ -1,10 +1,10 @@
 package actions
 
 import (
-	"errors"
 	"fmt"
 	"github.com/imdario/mergo"
 	"github.com/jinzhu/gorm"
+	"github.com/pkg/errors"
 	"gopkg.in/go-playground/validator.v9"
 	"reflect"
 )
@@ -265,11 +265,13 @@ func (s *Jobs) jobsAreValid() error {
 	return nil
 }
 
-func (s *Jobs) noRepeatedJobNames() error {
+// jobNamesAreUnique checks that all job names in a job sequence are unique.
+// This is necessary to recover start from the database.
+func (s *Jobs) jobNamesAreUnique() error {
 	jobNames := make(map[string]interface{}, len(*s))
 	for _, job := range *s {
 		if _, ok := jobNames[job.Name]; ok {
-			return ErrJobsNamesNotUnique
+			return errors.Wrap(ErrJobsNamesNotUnique, fmt.Sprintf("job name %s is not unique", job.Name))
 		}
 		jobNames[job.Name] = nil
 	}
@@ -282,7 +284,7 @@ func (s *Jobs) validate() error {
 	validators := []func() error{
 		s.notEmpty,
 		s.jobsAreValid,
-		s.noRepeatedJobNames,
+		s.jobNamesAreUnique,
 	}
 
 	for _, validator := range validators {

@@ -32,14 +32,14 @@ func (m *kubernetesNodes) WaitForCondition(resource resource.Resource, condition
 	// Create job
 	job := func() (bool, error) {
 		var nodesNotReady []*apiv1.Node
-		nodes, err := m.API.CoreV1().Nodes().List(opts)
+		nodeList, err := m.API.CoreV1().Nodes().List(opts)
 		if err != nil {
 			return false, err
 		}
-		if len(nodes.Items) == 0 {
-			return false, orchestrator.ErrMissingNodes
+		if len(nodeList.Items) == 0 {
+			return false, nodes.ErrMissingNodes
 		}
-		for _, n := range nodes.Items {
+		for _, n := range nodeList.Items {
 			if !m.isConditionSetAsExpected(n, condition) {
 				var node = new(apiv1.Node)
 				*node = n
