@@ -21,6 +21,7 @@ var CreateNetworkPolicyGazeboServer = jobs.CreateNetworkPolicies.Extend(actions.
 	OutputType:      actions.GetJobDataType(&state.StartSimulation{}),
 })
 
+// removeCreatedNetworkPolicyGazeboServer removes the created network policies for a gzserver in case an error is thrown.
 func removeCreatedNetworkPolicyGazeboServer(store actions.Store, tx *gorm.DB, deployment *actions.Deployment, value interface{}, err error) (interface{}, error) {
 	s := store.State().(*state.StartSimulation)
 
@@ -101,6 +102,7 @@ var CreateNetworkPolicyFieldComputers = jobs.CreateNetworkPolicies.Extend(action
 	OutputType:      actions.GetJobDataType(&state.StartSimulation{}),
 })
 
+// removeCreatedNetworkPoliciesFieldComputer removes the created network policies for all field computers in case an error is thrown.
 func removeCreatedNetworkPoliciesFieldComputer(store actions.Store, tx *gorm.DB, deployment *actions.Deployment, value interface{}, err error) (interface{}, error) {
 	s := store.State().(*state.StartSimulation)
 
@@ -183,6 +185,7 @@ var CreateNetworkPolicyCommsBridges = jobs.CreateNetworkPolicies.Extend(actions.
 	OutputType:      actions.GetJobDataType(&state.StartSimulation{}),
 })
 
+// removeCreatedNetworkPoliciesCommsBridge removes the created network policies for all comms bridge in case an error is thrown.
 func removeCreatedNetworkPoliciesCommsBridge(store actions.Store, tx *gorm.DB, deployment *actions.Deployment, value interface{}, err error) (interface{}, error) {
 	s := store.State().(*state.StartSimulation)
 
