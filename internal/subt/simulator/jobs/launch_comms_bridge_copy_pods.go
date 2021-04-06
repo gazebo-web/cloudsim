@@ -17,10 +17,28 @@ var LaunchCommsBridgeCopyPods = jobs.LaunchPods.Extend(actions.Job{
 	Name:            "launch-comms-bridge-copy-pods",
 	PreHooks:        []actions.JobFunc{setStartState, prepareCommsBridgeCreateCopyPodInput},
 	PostHooks:       []actions.JobFunc{checkLaunchPodsError, returnState},
-	RollbackHandler: rollbackPodCreation,
+	RollbackHandler: rollbackLaunchCommsBridgeCopyPods,
 	InputType:       actions.GetJobDataType(&state.StartSimulation{}),
 	OutputType:      actions.GetJobDataType(&state.StartSimulation{}),
 })
+
+func rollbackLaunchCommsBridgeCopyPods(store actions.Store, tx *gorm.DB, deployment *actions.Deployment, value interface{}, err error) (interface{}, error) {
+	s := store.State().(*state.StartSimulation)
+
+	robots, err := s.Services().Simulations().GetRobots(s.GroupID)
+	if err != nil {
+		return nil, err
+	}
+
+	for i := range robots {
+		name := subtapp.GetPodNameCommsBridgeCopy(s.GroupID, subtapp.GetRobotID(i))
+		ns := s.Platform().Store().Orchestrator().Namespace()
+
+		_, _ = s.Platform().Orchestrator().Pods().Delete(orchestrator.NewResource(name, ns, nil))
+	}
+
+	return nil, nil
+}
 
 // prepareCommsBridgeCreateCopyPodInput prepares the input for the generic LaunchPods job to launch comms bridge pods.
 func prepareCommsBridgeCreateCopyPodInput(store actions.Store, tx *gorm.DB, deployment *actions.Deployment, value interface{}) (interface{}, error) {
