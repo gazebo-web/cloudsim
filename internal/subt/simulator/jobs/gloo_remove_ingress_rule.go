@@ -27,8 +27,7 @@ func prepareRemoveIngressRulesInput(store actions.Store, tx *gorm.DB, deployment
 
 	name := s.Platform().Store().Orchestrator().IngressName()
 	host := s.Platform().Store().Orchestrator().IngressHost()
-
-	ns := s.Platform().Store().Orchestrator().Namespace()
+	ns := s.Platform().Store().Orchestrator().IngressNamespace()
 
 	matcher := gloo.GenerateRegexMatcher(application.GetSimulationIngressPath(s.GroupID))
 	action := gloo.GenerateRouteAction(ns, s.UpstreamName)
