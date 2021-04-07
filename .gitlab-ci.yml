@@ -301,7 +301,23 @@ staging:
     - develop
   when: manual
 
-production:
+subt-staging:
+  image: registry.gitlab.com/ignitionrobotics/web/images/kubectl:latest
+  stage: deploy
+  dependencies:
+    - docker:next
+  script:
+    - *deploy_kubernetes
+  tags:
+    - testing
+    - kubernetes
+  environment:
+    name: subt-staging
+  only:
+    - develop
+  when: manual
+
+subt:
   image: registry.gitlab.com/ignitionrobotics/web/images/kubectl:latest
   stage: deploy
   dependencies:
