@@ -23,6 +23,9 @@ type Simulation interface {
 
 	// GetName returns the simulation's name.
 	GetName() string
+
+	// GetRunIndex returns the RunIndex value.
+	GetRunIndex() int
 }
 
 // IsRobotChildMarsupial checks if the given robot is a child from the given slice of marsupials.

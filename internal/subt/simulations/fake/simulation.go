@@ -30,6 +30,11 @@ type simulation struct {
 	marsupials []simulations.Marsupial
 }
 
+// GetRunIndex returns the run index.
+func (s *simulation) GetRunIndex() int {
+	return 0
+}
+
 // GetName returns the simulation name.
 func (s *simulation) GetName() string {
 	return s.name
