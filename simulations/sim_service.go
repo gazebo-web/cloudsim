@@ -454,13 +454,24 @@ func (s *Service) Start(ctx context.Context) error {
 	RegisterSchedulableTasks(s, ctx, s.DB)
 
 	var err error
+
+	s.logger = ign.NewLoggerNoRollbar("Ignition Cloudsim - SubT", ign.VerbosityDebug)
+
+	s.logger.Info("Initializing Cloudsim platform")
 	s.platform, err = s.initPlatform()
 	if err != nil {
 		return err
 	}
 
+	s.logger.Info("Initializing application services")
 	s.applicationServices = s.initApplicationServices()
 
+	s.logger.Info("Initializing action service")
+
+	// TODO: Make Verbosity depend on env var
+	s.actionService = actions.NewService(ign.NewLoggerNoRollbar("Worker", ign.VerbosityDebug))
+
+	s.logger.Info("Initializing Simulator using Kubernetes and AWS")
 	s.simulator = s.initSimulator()
 
 	return nil
@@ -878,24 +889,23 @@ func (s *Service) workerStartSimulation(payload interface{}) {
 		return
 	}
 
-	// bind a specific logger to the worker
-	reqID := fmt.Sprintf("worker-start-sim-%s", groupID)
-	newLogger := logger(s.baseCtx).Clone(reqID)
-	workerCtx := ign.NewContextWithLogger(s.baseCtx, newLogger)
-
-	newLogger.Info("Worker about to invoke StartSimulation for groupID: " + groupID)
+	s.logger.Info("Worker about to invoke StartSimulation for groupID: " + groupID)
 
 	simDep, err := GetSimulationDeployment(s.DB, groupID)
 	if err != nil {
-		logger(workerCtx).Error(fmt.Sprintf("startSimulation - %v", err))
+		s.logger.Error(fmt.Sprintf("startSimulation - %v", err))
 		return
 	}
 
-	res, em := s.startSimulation(workerCtx, s.DB, simDep)
-	if res == launcherRelaunchNeeded {
-		s.requeueSimulation(simDep)
+	err = s.simulator.Start(s.baseCtx, simulations.GroupID(groupID))
+	// TODO Only respond to retryable errors
+	if err != nil {
+		// s.requeueSimulation(simDep)
+		s.notify(PoolStartSimulation, groupID, nil, ign.NewErrorMessageWithBase(ign.ErrorUnexpected, err))
+		return
 	}
-	s.notify(PoolStartSimulation, groupID, res, em)
+
+	s.notify(PoolStartSimulation, groupID, simDep, nil)
 }
 
 // ///////////////////////////////////////////////////////////////////////
@@ -907,14 +917,19 @@ func (s *Service) workerTerminateSimulation(payload interface{}) {
 	if !ok {
 		return
 	}
-	// bind a specific logger to the worker-
-	reqID := fmt.Sprintf("worker-finish-sim-%s", groupID)
-	newLogger := logger(s.baseCtx).Clone(reqID)
-	workerCtx := ign.NewContextWithLogger(s.baseCtx, newLogger)
 
-	newLogger.Info("Worker about to invoke ShutdownSimulation for groupID: " + groupID)
-	res, em := s.shutdownSimulation(workerCtx, s.DB, groupID)
-	s.notify(PoolShutdownSimulation, groupID, res, em)
+	err := s.simulator.Stop(s.baseCtx, simulations.GroupID(groupID))
+	if err != nil {
+		s.notify(PoolShutdownSimulation, groupID, nil, ign.NewErrorMessageWithBase(ign.ErrorUnexpected, err))
+		return
+	}
+
+	simDep, err := GetSimulationDeployment(s.DB, groupID)
+	if err != nil {
+		s.logger.Error(fmt.Sprintf("stopSimulation - %v", err))
+		return
+	}
+	s.notify(PoolShutdownSimulation, groupID, simDep, nil)
 }
 
 // ///////////////////////////////////////////////////////////////////////
@@ -2365,7 +2380,6 @@ func (s *Service) QueueRemoveElement(ctx context.Context, user *users.User, grou
 
 // TODO: Make initPlatform independent of Service by receiving arguments with the needed config.
 func (s *Service) initPlatform() (platform.Platform, error) {
-	s.logger = ign.NewLoggerNoRollbar("[Ignition Cloudsim - SubT]", ign.VerbosityDebug)
 
 	machines := ec2.NewMachines(globals.EC2Svc, s.logger)
 

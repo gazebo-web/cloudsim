@@ -13,7 +13,8 @@ type CreateTrackInput struct {
 	MaxSimSeconds int `json:"max_sim_seconds" validate:"required"`
 	// Public makes a track available for launching directly.
 	// Tracks that are not public can only be launched as part of a Circuit.
-	Public bool `json:"public" validate:"required"`
+	Public bool   `json:"public" validate:"required"`
+	World  string `json:"world" validate:"required"`
 }
 
 // UpdateTrackInput is an input for updating an existent track.
@@ -29,5 +30,6 @@ type UpdateTrackInput struct {
 	MaxSimSeconds int `json:"max_sim_seconds" validate:"required"`
 	// Public makes a track available for launching directly.
 	// Tracks that are not public can only be launched as part of a Circuit.
-	Public bool `json:"public" validate:"required"`
+	Public bool   `json:"public" validate:"required"`
+	World  string `json:"world" validate:"required"`
 }

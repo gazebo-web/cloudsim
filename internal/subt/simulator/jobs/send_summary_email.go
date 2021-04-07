@@ -81,12 +81,12 @@ func sendSummaryEmail(store actions.Store, tx *gorm.DB, deployment *actions.Depl
 	}
 
 	// Send the email
-	err = s.Platform().EmailSender().Send(recipients, sender, "Simulation summary", "simulations/email-templates/simulation_summary.html", map[string]interface{}{
+	err = s.Platform().EmailSender().Send(recipients, sender, "Simulation summary", "simulations/email-templates/simulation_summary.gohtml", map[string]interface{}{
 		"Name":    *user.Name,
 		"Circuit": subtSim.GetTrack(),
 		"SimName": subtSim.GetName(),
 		"GroupID": subtSim.GetGroupID(),
-		"Summary": marshaledSummary,
+		"Summary": marshaledSummary.String(),
 		"RunData": s.Summary.RunData,
 	})
 	if err != nil {

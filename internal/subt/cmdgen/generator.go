@@ -1,6 +1,7 @@
 package cmdgen
 
 import (
+	"errors"
 	"fmt"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
 	"strings"
@@ -100,4 +101,31 @@ func Gazebo(params GazeboConfig) []string {
 	cmd = append(cmd, fmt.Sprintf("%s:=%t", keyRos, params.RosEnabled))
 
 	return cmd
+}
+
+// ErrEmptyWorld is returned when an empty world name is passed when calling CommsBridge.
+var ErrEmptyWorld = errors.New("empty world")
+
+// CommsBridge generates the arguments needed to run in the comms bridge container.
+func CommsBridge(world string, robotNumber int, robotName string, robotType string, childMarsupial bool) ([]string, error) {
+	params := strings.Split(world, ";")
+	var worldNameParam string
+	for _, param := range params {
+		if strings.Index(param, "worldName:=") != -1 {
+			worldNameParam = param
+			break
+		}
+	}
+
+	if worldNameParam == "" {
+		return nil, ErrEmptyWorld
+	}
+
+	return []string{
+		worldNameParam,
+		fmt.Sprintf("robotName%d:=%s", robotNumber+1, robotName),
+		fmt.Sprintf("robotConfig%d:=%s", robotNumber+1, robotType),
+		"headless:=true",
+		fmt.Sprintf("marsupial:=%t", childMarsupial),
+	}, nil
 }

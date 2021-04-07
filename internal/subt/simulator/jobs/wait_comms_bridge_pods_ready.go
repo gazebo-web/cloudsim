@@ -9,17 +9,17 @@ import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulator/jobs"
 )
 
-// WaitForCommsBridgePodIPs waits for the simulation comms bridge pods to have an IP.
-var WaitForCommsBridgePodIPs = jobs.Wait.Extend(actions.Job{
-	Name:       "wait-comms-bridge-pods-ips",
-	PreHooks:   []actions.JobFunc{createWaitRequestForCommsBridgePod},
+// WaitForCommsBridgePodsReady waits for the simulation comms bridge pods to be ready.
+var WaitForCommsBridgePodsReady = jobs.Wait.Extend(actions.Job{
+	Name:       "wait-comms-bridge-pods-ready",
+	PreHooks:   []actions.JobFunc{createWaitRequestForCommsBridgePodToBeReady},
 	PostHooks:  []actions.JobFunc{checkWaitError, returnState},
 	InputType:  actions.GetJobDataType(&state.StartSimulation{}),
 	OutputType: actions.GetJobDataType(&state.StartSimulation{}),
 })
 
-// createWaitRequestForCommsBridgePod is the pre hook in charge of passing the needed input to the Wait job.
-func createWaitRequestForCommsBridgePod(store actions.Store, tx *gorm.DB, deployment *actions.Deployment, value interface{}) (interface{}, error) {
+// createWaitRequestForCommsBridgePodToBeReady is the pre hook in charge of passing the needed input to the Wait job.
+func createWaitRequestForCommsBridgePodToBeReady(store actions.Store, tx *gorm.DB, deployment *actions.Deployment, value interface{}) (interface{}, error) {
 	s := value.(*state.StartSimulation)
 
 	store.SetState(s)
@@ -29,7 +29,7 @@ func createWaitRequestForCommsBridgePod(store actions.Store, tx *gorm.DB, deploy
 	// Create wait for condition request
 	// Since only the gazebo server pod has been created and already has an IP, we only need to wait until
 	// comms bridge pods have an ip.
-	req := s.Platform().Orchestrator().Pods().WaitForCondition(res, orchestrator.HasIPStatusCondition)
+	req := s.Platform().Orchestrator().Pods().WaitForCondition(res, orchestrator.ReadyCondition)
 
 	// Get timeout and poll frequency from store
 	timeout := s.Platform().Store().Machines().Timeout()

@@ -37,6 +37,7 @@ func CreateTrackFromInput(input CreateTrackInput) Track {
 		WarmupTopic:   input.WarmupTopic,
 		MaxSimSeconds: input.MaxSimSeconds,
 		Public:        input.Public,
+		World:         input.World,
 	}
 }
 
@@ -50,5 +51,6 @@ func UpdateTrackFromInput(model Track, input UpdateTrackInput) Track {
 	model.WarmupTopic = input.WarmupTopic
 	model.MaxSimSeconds = input.MaxSimSeconds
 	model.Public = input.Public
+	model.World = input.World
 	return model
 }

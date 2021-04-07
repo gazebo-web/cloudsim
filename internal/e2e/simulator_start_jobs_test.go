@@ -165,6 +165,7 @@ func TestStartSimulationAction(t *testing.T) {
 		WarmupTopic:   "/warmup",
 		MaxSimSeconds: 720,
 		Public:        true,
+		World:         "cloudsim_sim.ign;worldName:=simple_urban_01;circuit:=urban",
 	})
 	require.NoError(t, err)
 
@@ -344,7 +345,7 @@ func TestStartSimulationAction(t *testing.T) {
 		CopyDeepKubernetesClientset(kubernetesClientset, kClient)
 
 		startActions, err := actions.NewAction(actions.Jobs{
-			jobs.WaitForCommsBridgePods,
+			jobs.WaitForCommsBridgePodIPs,
 			jobs.GetCommsBridgePodIP,
 			jobs.LaunchFieldComputerPods,
 			jobs.SetSimulationStatusToWaitPods,

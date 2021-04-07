@@ -1,15 +1,14 @@
 package jobs
 
 import (
-	"fmt"
 	"github.com/jinzhu/gorm"
 	subtapp "gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/application"
+	"gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/cmdgen"
 	subt "gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/simulations"
 	"gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/simulator/state"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/actions"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulator/jobs"
-	"path"
 )
 
 // LaunchCommsBridgePods launches the list of comms bridge and copy pods.
@@ -17,10 +16,28 @@ var LaunchCommsBridgePods = jobs.LaunchPods.Extend(actions.Job{
 	Name:            "launch-comms-bridge-pods",
 	PreHooks:        []actions.JobFunc{setStartState, prepareCommsBridgePodInput},
 	PostHooks:       []actions.JobFunc{checkLaunchPodsError, returnState},
-	RollbackHandler: rollbackPodCreation,
+	RollbackHandler: rollbackLaunchCommsBridgePods,
 	InputType:       actions.GetJobDataType(&state.StartSimulation{}),
 	OutputType:      actions.GetJobDataType(&state.StartSimulation{}),
 })
+
+func rollbackLaunchCommsBridgePods(store actions.Store, tx *gorm.DB, deployment *actions.Deployment, value interface{}, err error) (interface{}, error) {
+	s := store.State().(*state.StartSimulation)
+
+	robots, err := s.Services().Simulations().GetRobots(s.GroupID)
+	if err != nil {
+		return nil, err
+	}
+
+	for i := range robots {
+		name := subtapp.GetPodNameCommsBridge(s.GroupID, subtapp.GetRobotID(i))
+		ns := s.Platform().Store().Orchestrator().Namespace()
+
+		_, _ = s.Platform().Orchestrator().Pods().Delete(orchestrator.NewResource(name, ns, nil))
+	}
+
+	return nil, nil
+}
 
 // prepareCommsBridgePodInput prepares the input for the generic LaunchPods job to launch comms bridge pods.
 func prepareCommsBridgePodInput(store actions.Store, tx *gorm.DB, deployment *actions.Deployment, value interface{}) (interface{}, error) {
@@ -41,26 +58,30 @@ func prepareCommsBridgePodInput(store actions.Store, tx *gorm.DB, deployment *ac
 	var pods []orchestrator.CreatePodInput
 
 	for i, r := range subtSim.GetRobots() {
-		childMarsupial := "false"
-		if subt.IsRobotChildMarsupial(subtSim.GetMarsupials(), r) {
-			childMarsupial = "true"
-		}
-
-		hostPath := "/tmp"
-		logDirectory := "robot-logs"
-		logMountPath := path.Join(hostPath, logDirectory)
-
 		// Create comms bridge input
 		privileged := true
 		allowPrivilegesEscalation := true
 
+		initVolumes := []orchestrator.Volume{
+			{
+				Name:      "logs",
+				HostPath:  "/tmp",
+				MountPath: "/tmp",
+			},
+		}
+
 		volumes := []orchestrator.Volume{
 			{
 				Name:         "logs",
-				HostPath:     logMountPath,
+				HostPath:     "/tmp/robot-logs",
 				HostPathType: orchestrator.HostPathDirectoryOrCreate,
 				MountPath:    s.Platform().Store().Ignition().ROSLogsPath(),
 			},
+		}
+
+		args, err := cmdgen.CommsBridge(track.World, i, r.GetName(), r.GetKind(), subt.IsRobotChildMarsupial(subtSim.GetMarsupials(), r))
+		if err != nil {
+			return nil, err
 		}
 
 		pods = append(pods, orchestrator.CreatePodInput{
@@ -71,19 +92,13 @@ func prepareCommsBridgePodInput(store actions.Store, tx *gorm.DB, deployment *ac
 			TerminationGracePeriodSeconds: s.Platform().Store().Orchestrator().TerminationGracePeriod(),
 			NodeSelector:                  subtapp.GetNodeLabelsFieldComputer(s.GroupID, r),
 			InitContainers: []orchestrator.Container{
-				orchestrator.NewChownContainer(volumes),
+				orchestrator.NewChownContainer(initVolumes),
 			},
 			Containers: []orchestrator.Container{
 				{
-					Name:  subtapp.GetContainerNameCommsBridge(),
-					Image: track.BridgeImage,
-					Args: []string{
-						track.World,
-						fmt.Sprintf("robotName%d:=%s", i, r.GetName()),
-						fmt.Sprintf("robotConfig%d:=%s", i, r.GetKind()),
-						"headless:=true",
-						fmt.Sprintf("marsupial:=%s", childMarsupial),
-					},
+					Name:                     subtapp.GetContainerNameCommsBridge(),
+					Image:                    track.BridgeImage,
+					Args:                     args,
 					Privileged:               &privileged,
 					AllowPrivilegeEscalation: &allowPrivilegesEscalation,
 					Volumes:                  volumes,

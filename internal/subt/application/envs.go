@@ -1,6 +1,7 @@
 package application
 
 import (
+	"fmt"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
 )
@@ -12,7 +13,6 @@ func GetEnvVarsCommsBridge(groupID simulations.GroupID, robotName, gzServerIP, v
 		"IGN_RELAY":      gzServerIP,
 		"IGN_VERBOSE":    verbosity,
 		"ROBOT_NAME":     robotName,
-		"IGN_IP":         "", // To be removed.
 		"ROS_MASTER_URI": "http://$(ROS_IP):11311",
 	}
 }
@@ -23,9 +23,24 @@ func GetEnvVarsCommsBridge(groupID simulations.GroupID, robotName, gzServerIP, v
 func GetEnvVarsFromSourceCommsBridge() map[string]string {
 	return map[string]string{
 		"ROS_IP": orchestrator.EnvVarSourcePodIP,
+		"IGN_IP": orchestrator.EnvVarSourcePodIP,
 	}
 }
 
+// GetEnvVarsFieldComputer returns the env vars for the field computer container.
+func GetEnvVarsFieldComputer(robotName string, commsBridgeIP string) map[string]string {
+	return map[string]string{
+		"ROBOT_NAME":     robotName,
+		"ROS_MASTER_URI": fmt.Sprintf("http://%s:11311", commsBridgeIP),
+	}
+}
+
+// GetEnvVarsFieldComputer returns the env vars for the field computer container.
+func GetEnvVarsFromSourceFieldComputer() map[string]string {
+	return map[string]string{
+		"ROS_IP": orchestrator.EnvVarSourcePodIP,
+	}
+}
 // GetEnvVarsCommsBridgeCopy returns the env vars for the comms-bridge-copy container.
 func GetEnvVarsCommsBridgeCopy(region, accessKey, secret string) map[string]string {
 	return map[string]string{
