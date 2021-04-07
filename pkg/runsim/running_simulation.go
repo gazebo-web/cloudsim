@@ -4,6 +4,7 @@ import (
 	"context"
 	"gitlab.com/ignitionrobotics/web/cloudsim/ign-transport/proto/ignition/msgs"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/transport"
 	ignws "gitlab.com/ignitionrobotics/web/cloudsim/pkg/transport/ign"
 	"sync"
 	"time"
@@ -61,7 +62,7 @@ func (rs *RunningSimulation) IsExpired() bool {
 
 // ReadWorldStats is the callback passed to the websocket client. It will be invoked
 // each time a message is received in the topic associated to this node's groupID.
-func (rs *RunningSimulation) ReadWorldStats(ctx context.Context, msg ignws.Message) error {
+func (rs *RunningSimulation) ReadWorldStats(ctx context.Context, msg transport.Message) error {
 	var m msgs.WorldStatistics
 
 	err := msg.GetPayload(&m)
@@ -95,7 +96,7 @@ func (rs *RunningSimulation) hasReachedMaxSimSeconds() bool {
 
 // ReadWarmup is the callback passed to the websocket client that will be invoked each time
 // a message is received at the /warmup/ready topic.
-func (rs *RunningSimulation) ReadWarmup(ctx context.Context, msg ignws.Message) error {
+func (rs *RunningSimulation) ReadWarmup(ctx context.Context, msg transport.Message) error {
 	var m msgs.StringMsg
 	err := msg.GetPayload(&m)
 	if err != nil {
