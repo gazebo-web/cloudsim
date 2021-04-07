@@ -70,6 +70,9 @@ func prepareCommsBridgePodInput(store actions.Store, tx *gorm.DB, deployment *ac
 			RestartPolicy:                 orchestrator.RestartPolicyNever,
 			TerminationGracePeriodSeconds: s.Platform().Store().Orchestrator().TerminationGracePeriod(),
 			NodeSelector:                  subtapp.GetNodeLabelsFieldComputer(s.GroupID, r),
+			InitContainers: []orchestrator.Container{
+				orchestrator.NewChownContainer(volumes),
+			},
 			Containers: []orchestrator.Container{
 				{
 					Name:  subtapp.GetContainerNameCommsBridge(),
