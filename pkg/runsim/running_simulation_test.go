@@ -95,7 +95,7 @@ func (s *runningSimulationTestSuite) TestReadWorldStatsWhenPaused() {
 		Payload: string(b),
 	}
 
-	err = rs.readWorldStats(context.Background(), msg)
+	err = rs.ReadWorldStats(context.Background(), msg)
 	s.Require().NoError(err)
 
 	s.Assert().Equal(statePause, rs.currentState)
@@ -127,7 +127,7 @@ func (s *runningSimulationTestSuite) TestReadWorldStatsWhenRunning() {
 		Payload: string(b),
 	}
 
-	err = rs.readWorldStats(context.Background(), msg)
+	err = rs.ReadWorldStats(context.Background(), msg)
 	s.Require().NoError(err)
 
 	s.Assert().Equal(stateRun, rs.currentState)
@@ -156,13 +156,13 @@ func (s *runningSimulationTestSuite) TestReadWarmupWhenStarted() {
 		Payload: string(b),
 	}
 
-	err = rs.readWarmup(context.Background(), msg)
+	err = rs.ReadWarmup(context.Background(), msg)
 	s.Require().NoError(err)
 
 	s.Assert().Equal(int64(30), rs.SimWarmupSeconds)
 
 	// A second started message is received by error
-	err = rs.readWarmup(context.Background(), msg)
+	err = rs.ReadWarmup(context.Background(), msg)
 	s.Require().NoError(err)
 
 	// Warmup seconds should remain the same.
@@ -191,7 +191,7 @@ func (s *runningSimulationTestSuite) TestReadWarmupWhenFinished() {
 		Payload: string(b),
 	}
 
-	err = rs.readWarmup(context.Background(), msg)
+	err = rs.ReadWarmup(context.Background(), msg)
 	s.Require().NoError(err)
 
 	s.Assert().True(rs.Finished)
