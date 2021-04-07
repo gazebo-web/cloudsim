@@ -2,7 +2,6 @@ package jobs
 
 import (
 	"context"
-	"fmt"
 	"github.com/jinzhu/gorm"
 	subtapp "gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/application"
 	subt "gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/simulations"
@@ -68,15 +67,6 @@ func prepareCommsBridgeCreateCopyPodInput(store actions.Store, tx *gorm.DB, depl
 			RestartPolicy:                 orchestrator.RestartPolicyNever,
 			TerminationGracePeriodSeconds: s.Platform().Store().Orchestrator().TerminationGracePeriod(),
 			NodeSelector:                  subtapp.GetNodeLabelsFieldComputer(s.GroupID, r),
-			InitContainers: []orchestrator.Container{
-				{
-					Name:    "chown-shared-volume",
-					Image:   "infrastructureascode/aws-cli:latest",
-					Command: []string{"/bin/sh"},
-					Args:    []string{"-c", fmt.Sprintf("chown %d:%d /tmp", 1000, 1000)},
-					Volumes: volumes,
-				},
-			},
 			Containers: []orchestrator.Container{
 				{
 					Name:    subtapp.GetContainerNameCommsBridgeCopy(),

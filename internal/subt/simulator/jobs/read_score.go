@@ -23,7 +23,7 @@ var ReadScore = &actions.Job{
 func readScore(store actions.Store, tx *gorm.DB, deployment *actions.Deployment, value interface{}) (interface{}, error) {
 	s := store.State().(*state.StopSimulation)
 
-	path := fmt.Sprintf("%s/score.yml", s.Platform().Store().Ignition().GazeboServerLogsPath())
+	path := fmt.Sprintf("%s/score.yml", s.Platform().Store().Ignition().SidecarContainerLogsPath())
 
 	body, err := readFileContentFromPod(
 		s.Platform().Orchestrator().Pods(),

@@ -48,11 +48,14 @@ func prepareFieldComputerPodInput(store actions.Store, tx *gorm.DB, deployment *
 			Containers: []orchestrator.Container{
 				{
 					Name:                     subtapp.GetContainerNameFieldComputer(),
-					Image:                    subtSim.GetImage(),
+					Image:                    r.GetImage(),
 					AllowPrivilegeEscalation: &allowPrivilegesEscalation,
 					EnvVars: map[string]string{
 						"ROBOT_NAME":     r.GetName(),
 						"ROS_MASTER_URI": fmt.Sprintf("http://%s:11311", s.CommsBridgeIPs[i]),
+					},
+					ResourceLimits: map[orchestrator.ResourceName]string{
+						orchestrator.ResourceMemory: "115Gi",
 					},
 				},
 			},

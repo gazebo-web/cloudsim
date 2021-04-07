@@ -6,6 +6,7 @@ import (
 	"github.com/jinzhu/gorm"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"gitlab.com/ignitionrobotics/web/ign-go"
 	"testing"
 )
 
@@ -222,7 +223,7 @@ var serviceTestData = struct {
 func newTestService(t *testing.T) *service {
 	td := getTestData(t)
 
-	service := NewService().(*service)
+	service := NewService(ign.NewLoggerNoRollbar("Actions", ign.VerbosityDebug)).(*service)
 
 	if err := service.RegisterAction(&td.applicationName, td.actionName, td.action); err != nil {
 		panic(fmt.Sprintf("failed to register action %s", td.actionName))
