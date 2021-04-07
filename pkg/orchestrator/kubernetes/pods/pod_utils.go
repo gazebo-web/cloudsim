@@ -20,14 +20,25 @@ var (
 
 // runExecInput is the input of runExec.
 type runExecInput struct {
+	// kubernetes has a reference to the kubernetes client.
 	kubernetes kubernetes.Interface
-	config     *rest.Config
-	namespace  string
-	name       string
-	container  string
-	command    []string
-	options    remotecommand.StreamOptions
-	spdy       spdy.Initializer
+	// config is the REST config used to perform the HTTP Request.
+	config *rest.Config
+	// namespace is the namespace where the command should be executed.
+	namespace string
+	// name is the name of the pod where the command should be executed.
+	name string
+	// container has the name of the container inside a pod that will end up running the command.
+	container string
+	// command is the actual command that will be executed, it includes the command name and the arguments,
+	// each in a new element of the slice.
+	command []string
+	// options holds information pertaining to the current streaming session:
+	// input/output streams, if the client is requesting a TTY, and a terminal size queue to
+	// support terminal resizing.
+	options remotecommand.StreamOptions
+	// spdy is used to initialize a new SPDY executor.
+	spdy spdy.Initializer
 }
 
 // runExec runs an exec operation inside a resource.
