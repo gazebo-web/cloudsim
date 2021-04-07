@@ -51,6 +51,9 @@ func prepareFieldComputerPodInput(store actions.Store, tx *gorm.DB, deployment *
 					AllowPrivilegeEscalation: &allowPrivilegesEscalation,
 					EnvVars:                  subtapp.GetEnvVarsFieldComputer(r.GetName(), s.CommsBridgeIPs[i]),
 					EnvVarsFrom:              subtapp.GetEnvVarsFromSourceFieldComputer(),
+					ResourceLimits: map[orchestrator.ResourceName]string{
+						orchestrator.ResourceMemory: "115Gi",
+					},
 				},
 			},
 		}

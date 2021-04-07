@@ -7,6 +7,7 @@ import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/waiter"
 	"gitlab.com/ignitionrobotics/web/ign-go"
 	apiv1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	podutil "k8s.io/kubernetes/pkg/api/v1/pod"
@@ -43,16 +44,11 @@ func (p *pods) Get(name, namespace string) (orchestrator.Resource, error) {
 	return orchestrator.NewResource(name, namespace, selector), nil
 }
 
-// Create creates a new pod with the information given in orchestrator.CreatePodInput.
-func (p *pods) Create(input orchestrator.CreatePodInput) (orchestrator.Resource, error) {
-	p.Logger.Debug(fmt.Sprintf("Creating new pod. Input: %+v", input))
+// generateKubernetesContainers takes a generic set of cloudsim containers and generate their counterpart for Kubernetes.
+func generateKubernetesContainers(containers []orchestrator.Container) []apiv1.Container {
+	var result []apiv1.Container
 
-	// Set up containers for pod.
-	var containers []apiv1.Container
-
-	// Iterate over list of containers to create
-	for _, c := range input.Containers {
-		// Set up volume mounts.
+	for _, c := range containers {
 		var volumeMounts []apiv1.VolumeMount
 		for _, v := range c.Volumes {
 			volumeMounts = append(volumeMounts, apiv1.VolumeMount{
@@ -85,8 +81,16 @@ func (p *pods) Create(input orchestrator.CreatePodInput) (orchestrator.Resource,
 			})
 		}
 
+		var resourceLimit map[apiv1.ResourceName]resource.Quantity
+		if len(c.ResourceLimits) > 0 {
+			resourceLimit = make(map[apiv1.ResourceName]resource.Quantity, len(c.ResourceLimits))
+			for k, v := range c.ResourceLimits {
+				resourceLimit[apiv1.ResourceName(k)] = resource.MustParse(v)
+			}
+		}
+
 		// Add new container to list of containers
-		containers = append(containers, apiv1.Container{
+		result = append(result, apiv1.Container{
 			Name:    c.Name,
 			Image:   c.Image,
 			Command: c.Command,
@@ -100,6 +104,19 @@ func (p *pods) Create(input orchestrator.CreatePodInput) (orchestrator.Resource,
 			Env:          envs,
 		})
 	}
+
+	return result
+}
+
+// Create creates a new pod with the information given in orchestrator.CreatePodInput.
+func (p *pods) Create(input orchestrator.CreatePodInput) (orchestrator.Resource, error) {
+	p.Logger.Debug(fmt.Sprintf("Creating new pod. Input: %+v", input))
+
+	// Set up init containers.
+	initContainers := generateKubernetesContainers(input.InitContainers)
+
+	// Set up containers for pod.
+	containers := generateKubernetesContainers(input.Containers)
 
 	p.Logger.Debug(fmt.Sprintf("List of containers: %+v", containers))
 
@@ -133,6 +150,7 @@ func (p *pods) Create(input orchestrator.CreatePodInput) (orchestrator.Resource,
 		Spec: apiv1.PodSpec{
 			RestartPolicy:                 apiv1.RestartPolicy(input.RestartPolicy),
 			TerminationGracePeriodSeconds: &terminationGracePeriod,
+			InitContainers:                initContainers,
 			Containers:                    containers,
 			Volumes:                       volumes,
 			// These DNS servers provide alternative DNS server from the internet
