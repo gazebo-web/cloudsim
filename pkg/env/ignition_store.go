@@ -37,10 +37,7 @@ type ignitionEnvStore struct {
 	SecretsNameValue string `env:"CLOUDSIM_IGN_SECRETS_NAME" envDefault:"aws-secrets"`
 
 	// LogsBucketValue is the CLOUDSIM_AWS_GZ_LOGS_BUCKET value that will be used to upload logs.
-	LogsBucketValue string `env:"CLOUDSIM_AWS_GZ_LOGS_BUCKET" envDefault:"/tmp/ign"`
-
-	// WebsocketHostValue is the CLOUDSIM_WEBSOCKET_HOST that will be used as host to connect to simulation's websocket servers.
-	WebsocketHostValue string `env:"CLOUDSIM_SUBT_WEBSOCKET_HOST,required"`
+	LogsBucketValue string `env:"CLOUDSIM_AWS_GZ_LOGS_BUCKET,required"`
 
 	// DefaultRecipientsValue has the list of emails that should always receive summaries.
 	DefaultRecipientsValue []string `env:"CLOUDSIM_IGN_DEFAULT_RECIPIENTS"`
@@ -62,11 +59,6 @@ func (i *ignitionEnvStore) DefaultSender() string {
 // LogsBucket returns the bucket to upload simulation logs to.
 func (i *ignitionEnvStore) LogsBucket() string {
 	return i.LogsBucketValue
-}
-
-// GetWebsocketHost returns the host of the websocket address for connecting to simulation websocket servers.
-func (i *ignitionEnvStore) GetWebsocketHost() string {
-	return i.WebsocketHostValue
 }
 
 // GetWebsocketPath returns the path of the websocket address for the given simulation's group id.

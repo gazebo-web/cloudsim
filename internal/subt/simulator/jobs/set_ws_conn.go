@@ -23,7 +23,8 @@ var SetWebsocketConnection = &actions.Job{
 func connectWebsocket(store actions.Store, tx *gorm.DB, deployment *actions.Deployment, value interface{}) (interface{}, error) {
 	s := store.State().(*state.StartSimulation)
 
-	host := s.Platform().Store().Ignition().GetWebsocketHost()
+	host := s.Platform().Store().Orchestrator().IngressHost()
+
 	path := s.Platform().Store().Ignition().GetWebsocketPath(s.GroupID)
 
 	token, err := s.SubTServices().Simulations().GetWebsocketToken(s.GroupID)
@@ -32,11 +33,6 @@ func connectWebsocket(store actions.Store, tx *gorm.DB, deployment *actions.Depl
 	}
 
 	t, err := ignws.NewIgnWebsocketTransporter(host, path, transport.WebsocketSecureScheme, token)
-	if err != nil {
-		return nil, err
-	}
-
-	err = t.Connect()
 	if err != nil {
 		return nil, err
 	}

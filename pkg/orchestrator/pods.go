@@ -42,6 +42,15 @@ const (
 	HostPathDirectoryOrCreate = HostPathType(corev1.HostPathDirectoryOrCreate)
 )
 
+// ResourceName is the name of a certain pod resource like memory or cpu.
+type ResourceName corev1.ResourceName
+
+const (
+	// ResourceMemory represents a Memory resource for a container.
+	// (500Gi = 500GiB = 500 * 1024 * 1024 * 1024)
+	ResourceMemory = ResourceName(corev1.ResourceMemory)
+)
+
 // Volume represents a storage that will be used to persist data from a certain Container.
 type Volume struct {
 	// Name is the name of the volume.
@@ -86,6 +95,9 @@ type Container struct {
 
 	// EnvVars is the list of env vars that should be passed into the container.
 	EnvVars map[string]string
+
+	// ResourceLimits defines the resource limits for a certain container.
+	ResourceLimits map[ResourceName]string
 }
 
 // CreatePodInput is the input of Pods.Create method.

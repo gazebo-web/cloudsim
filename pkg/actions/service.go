@@ -4,7 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/jinzhu/gorm"
-	"log"
+	"gitlab.com/ignitionrobotics/web/ign-go"
 )
 
 var (
@@ -33,11 +33,14 @@ type Servicer interface {
 // service provides operations to register and execute actions.
 type service struct {
 	actions map[string]*Action
+	logger  ign.Logger
 }
 
 // NewService returns a pointer to an action Servicer implementation.
-func NewService() Servicer {
-	service := &service{}
+func NewService(logger ign.Logger) Servicer {
+	service := &service{
+		logger: logger,
+	}
 	service.actions = make(map[string]*Action, 0)
 
 	return service
@@ -131,6 +134,7 @@ func (s *service) Execute(store Store, tx *gorm.DB, executeInput ExecuteInputer,
 	defer func() {
 		// Recover from panics
 		if r := recover(); r != nil {
+			s.logger.Debug("Panic:", r)
 			panicErr := fmt.Errorf("panic: %s", r)
 			if err == nil {
 				err = panicErr
@@ -197,16 +201,17 @@ func (s *service) processJobs(store Store, tx *gorm.DB, action *Action, executeI
 		}
 
 		// Run the job
-		log.Printf("[Actions] Running job [%s]\n", job.Name)
+		s.logger.Debug(fmt.Sprintf("Running job [%s] for deployment [%s]", job.Name, deployment.UUID))
 		jobInput, err = job.Run(store, tx, deployment, jobInput)
 		// If an error was found, add it to the deployment and return
 		if err != nil {
+			s.logger.Debug(fmt.Sprintf("Running job [%s] for deployment [%s] has failed with error: %s.", job.Name, deployment.UUID, err))
 			if err := deployment.addJobError(tx, nil, err); err != nil {
 				return err
 			}
 			return err
 		}
-		log.Printf("[Actions] Job [%s] has successfully finished\n", job.Name)
+		s.logger.Debug(fmt.Sprintf("Running job [%s] for deployment [%s] has successfully finished.", job.Name, deployment.UUID))
 	}
 
 	return nil
@@ -236,6 +241,7 @@ func (s *service) rollback(store Store, tx *gorm.DB, action *Action, executeInpu
 
 		// Run rollback logic for the current job if defined
 		if job.RollbackHandler != nil {
+			s.logger.Debug(fmt.Sprintf("Running rollback handler for job [%s] on deployment [%s]", job.Name, deployment.UUID))
 			_, handlerErr := job.RollbackHandler(store, tx, deployment, nil, err)
 
 			// If an error was found, add it to the deployment and return
@@ -246,8 +252,10 @@ func (s *service) rollback(store Store, tx *gorm.DB, action *Action, executeInpu
 					return err
 				}
 
+				s.logger.Debug(fmt.Sprintf("Running rollback handler for job [%s] on deployment [%s] failed with error: %s.", job.Name, deployment.UUID, handlerErr))
 				return err
 			}
+			s.logger.Debug(fmt.Sprintf("Running rollback handler for job [%s] on deployment [%s] succeeded.", job.Name, deployment.UUID))
 		}
 	}
 
