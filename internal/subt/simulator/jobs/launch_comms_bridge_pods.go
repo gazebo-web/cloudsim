@@ -1,9 +1,9 @@
 package jobs
 
 import (
-	"fmt"
 	"github.com/jinzhu/gorm"
 	subtapp "gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/application"
+	"gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/cmdgen"
 	subt "gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/simulations"
 	"gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/simulator/state"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/actions"
@@ -58,12 +58,9 @@ func prepareCommsBridgePodInput(store actions.Store, tx *gorm.DB, deployment *ac
 
 	var pods []orchestrator.CreatePodInput
 
-	for i, r := range subtSim.GetRobots() {
-		childMarsupial := "false"
-		if subt.IsRobotChildMarsupial(subtSim.GetMarsupials(), r) {
-			childMarsupial = "true"
-		}
+	marsupials := subtSim.GetMarsupials()
 
+	for i, r := range subtSim.GetRobots() {
 		hostPath := "/tmp"
 		logDirectory := "robot-logs"
 		logMountPath := path.Join(hostPath, logDirectory)
@@ -81,6 +78,16 @@ func prepareCommsBridgePodInput(store actions.Store, tx *gorm.DB, deployment *ac
 			},
 		}
 
+		args, err := cmdgen.CommsBridge(cmdgen.CommsBridgeConfig{
+			World:          track.World,
+			RobotNumber:    i,
+			Robot:          r,
+			ChildMarsupial: subt.IsRobotChildMarsupial(marsupials, r),
+		})
+		if err != nil {
+			return nil, err
+		}
+
 		pods = append(pods, orchestrator.CreatePodInput{
 			Name:                          subtapp.GetPodNameCommsBridge(s.GroupID, subtapp.GetRobotID(i)),
 			Namespace:                     s.Platform().Store().Orchestrator().Namespace(),
@@ -93,15 +100,9 @@ func prepareCommsBridgePodInput(store actions.Store, tx *gorm.DB, deployment *ac
 			},
 			Containers: []orchestrator.Container{
 				{
-					Name:  subtapp.GetContainerNameCommsBridge(),
-					Image: track.BridgeImage,
-					Args: []string{
-						track.World,
-						fmt.Sprintf("robotName%d:=%s", i, r.GetName()),
-						fmt.Sprintf("robotConfig%d:=%s", i, r.GetKind()),
-						"headless:=true",
-						fmt.Sprintf("marsupial:=%s", childMarsupial),
-					},
+					Name:                     subtapp.GetContainerNameCommsBridge(),
+					Image:                    track.BridgeImage,
+					Args:                     args,
 					Privileged:               &privileged,
 					AllowPrivilegeEscalation: &allowPrivilegesEscalation,
 					Volumes:                  volumes,
