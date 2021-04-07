@@ -18,7 +18,7 @@ type Track struct {
 	Public bool `json:"public"`
 	// Seed is the world's seed of this track. It no seed is provided, a random one will be used instead.
 	Seed *int `json:"seed"`
-	// World is the world used by gazebo where robots will move around.
+	// World is the Gazebo world where robots will be spawned in.
 	World string
 }
 

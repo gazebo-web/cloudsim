@@ -118,9 +118,9 @@ type CommsBridgeConfig struct {
 	// RobotNumber is a number from 0 to the max number of robots - 1.
 	// It usually is the index when looping over the list of robots for a certain simulation.
 	RobotNumber int
-	// Robot is the launched in the field computer linked to the comms bridge container.
+	// Robot is the robot launched in the field computer linked to the comms bridge container.
 	Robot simulations.Robot
-	// ChildMarsupial is true if the robot given in this configuration is a child marsupial.
+	// ChildMarsupial is true if the robot given in this configuration is a marsupial child.
 	ChildMarsupial bool
 }
 
