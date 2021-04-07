@@ -54,6 +54,9 @@ func prepareFieldComputerPodInput(store actions.Store, tx *gorm.DB, deployment *
 						"ROBOT_NAME":     r.GetName(),
 						"ROS_MASTER_URI": fmt.Sprintf("http://%s:11311", s.CommsBridgeIPs[i]),
 					},
+					ResourceLimits: map[orchestrator.ResourceName]string{
+						orchestrator.ResourceMemory: "115Gi",
+					},
 				},
 			},
 		}
