@@ -563,6 +563,7 @@ func (s *Service) initializeRunningSimulationsFromCluster(ctx context.Context, t
 		// deploymentStatus is Running as well.
 		if simRunning.Eq(*simDep.DeploymentStatus) {
 			// Register a new live RunningSimulation
+
 			if err := s.createRunningSimulation(ctx, tx, simDep); err != nil {
 				return err
 			}
@@ -1612,11 +1613,27 @@ func (s *Service) createRunningSimulation(ctx context.Context, tx *gorm.DB, dep 
 		return err
 	}
 
-	rs, err := NewRunningSimulation(ctx, dep, t, worldStatsTopic, worldWarmupTopic, maxSimSeconds)
+	rs := runsim.NewRunningSimulation(dep.GetGroupID(), int64(maxSimSeconds), dep.GetValidFor())
+
+	err = t.Subscribe(worldStatsTopic, func(message transport.Message) {
+		_ = rs.ReadWorldStats(context.Background(), message)
+	})
 	if err != nil {
 		return err
 	}
-	s.addRunningSimulation(rs)
+
+	err = t.Subscribe(worldWarmupTopic, func(message transport.Message) {
+		_ = rs.ReadWarmup(context.Background(), message)
+	})
+	if err != nil {
+		return err
+	}
+
+	err = s.platform.RunningSimulations().Add(dep.GetGroupID(), rs, t)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
