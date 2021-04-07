@@ -66,6 +66,11 @@ type Volume struct {
 	HostPathType HostPathType
 }
 
+const (
+	// EnvVarSourcePodIP is used to identify the Pod IP source when getting env vars.
+	EnvVarSourcePodIP = "status.podIP"
+)
+
 // Container is a represents of a standard unit of software.
 type Container struct {
 	// Name is the container's name.
@@ -95,6 +100,9 @@ type Container struct {
 
 	// EnvVars is the list of env vars that should be passed into the container.
 	EnvVars map[string]string
+
+	// EnvVars is the list of env vars that should be gotten before passing them into the container.
+	EnvVarsFrom map[string]string
 
 	// ResourceLimits defines the resource limits for a certain container.
 	ResourceLimits map[ResourceName]string
