@@ -447,15 +447,6 @@ func (s *Service) Start(ctx context.Context) error {
 		}
 	}()
 
-	// Initialize server state based on data from DB and and from kubernetes cluster Pods.
-	// Important note: it is expected that the kubernetes cluster should be running already.
-	if err := s.rebuildState(ctx, s.DB); err != nil {
-		return err
-	}
-	s.StartExpiredSimulationsCleaner()
-	s.StartMultiSimStatusUpdater()
-	RegisterSchedulableTasks(s, ctx, s.DB)
-
 	var err error
 
 	s.logger = ign.NewLoggerNoRollbar("Ignition Cloudsim - SubT", ign.VerbosityDebug)
@@ -476,6 +467,15 @@ func (s *Service) Start(ctx context.Context) error {
 
 	s.logger.Info("Initializing Simulator using Kubernetes and AWS")
 	s.simulator = s.initSimulator()
+
+	// Initialize server state based on data from DB and and from kubernetes cluster Pods.
+	// Important note: it is expected that the kubernetes cluster should be running already.
+	if err = s.rebuildState(ctx, s.DB); err != nil {
+		return err
+	}
+	s.StartExpiredSimulationsCleaner()
+	s.StartMultiSimStatusUpdater()
+	RegisterSchedulableTasks(s, ctx, s.DB)
 
 	return nil
 }
