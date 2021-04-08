@@ -32,7 +32,7 @@ func readRunData(store actions.Store, tx *gorm.DB, deployment *actions.Deploymen
 		return s, nil
 	}
 
-	path := fmt.Sprintf("%s/run.yml", s.Platform().Store().Ignition().GazeboServerLogsPath())
+	path := fmt.Sprintf("%s/run.yml", s.Platform().Store().Ignition().SidecarContainerLogsPath())
 
 	body, err := readFileContentFromPod(
 		s.Platform().Orchestrator().Pods(),

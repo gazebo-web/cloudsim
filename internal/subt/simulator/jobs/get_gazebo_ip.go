@@ -28,6 +28,7 @@ func getGazeboIP(store actions.Store, tx *gorm.DB, deployment *actions.Deploymen
 	}
 
 	s.GazeboServerIP = ip
+	store.SetState(s)
 
 	return s, nil
 }

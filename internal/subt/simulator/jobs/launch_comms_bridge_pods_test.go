@@ -101,7 +101,7 @@ func TestLaunchCommsBridgePods(t *testing.T) {
 	trackService := tfake.NewService()
 
 	// Mock Get method from tracks service
-	trackService.On("Get", trackName, 0).Return(&tracks.Track{
+	trackService.On("Get", trackName, 0, 0).Return(&tracks.Track{
 		Name:          trackName,
 		Image:         "world-image.org/image",
 		BridgeImage:   "bridge-image.org/image",

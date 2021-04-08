@@ -1,10 +1,10 @@
 package pods
 
 import (
+	"bytes"
 	"errors"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/resource"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/waiter"
-	"io"
 	corev1 "k8s.io/api/core/v1"
 	"time"
 )
@@ -43,6 +43,15 @@ const (
 	HostPathDirectoryOrCreate = HostPathType(corev1.HostPathDirectoryOrCreate)
 )
 
+// ResourceName is the name of a certain pod resource like memory or cpu.
+type ResourceName corev1.ResourceName
+
+const (
+	// ResourceMemory represents a Memory resource for a container.
+	// (500Gi = 500GiB = 500 * 1024 * 1024 * 1024)
+	ResourceMemory = ResourceName(corev1.ResourceMemory)
+)
+
 // Volume represents a storage that will be used to persist data from a certain Container.
 type Volume struct {
 	// Name is the name of the volume.
@@ -57,6 +66,11 @@ type Volume struct {
 	// HostPathType defines the mount type and mounting behavior.
 	HostPathType HostPathType
 }
+
+const (
+	// EnvVarSourcePodIP is used to identify the Pod IP source when getting env vars.
+	EnvVarSourcePodIP = "status.podIP"
+)
 
 // Container is a represents of a standard unit of software.
 type Container struct {
@@ -87,6 +101,12 @@ type Container struct {
 
 	// EnvVars is the list of env vars that should be passed into the container.
 	EnvVars map[string]string
+
+	// EnvVars is the list of env vars that should be gotten before passing them into the container.
+	EnvVarsFrom map[string]string
+
+	// ResourceLimits defines the resource limits for a certain container.
+	ResourceLimits map[ResourceName]string
 }
 
 // CreatePodInput is the input of Pods.Create method.
@@ -136,6 +156,6 @@ type Executor interface {
 
 // Reader groups a set of methods to read files and logs from a Pod.
 type Reader interface {
-	File(paths ...string) (io.Reader, error)
+	File(paths ...string) (*bytes.Buffer, error)
 	Logs(container string, lines int64) (string, error)
 }

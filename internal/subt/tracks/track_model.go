@@ -18,7 +18,7 @@ type Track struct {
 	Public bool `json:"public"`
 	// Seed is the world's seed of this track. It no seed is provided, a random one will be used instead.
 	Seed *int `json:"seed"`
-	// World is the world
+	// World is the Gazebo world where robots will be spawned in.
 	World string
 }
 
@@ -37,6 +37,7 @@ func CreateTrackFromInput(input CreateTrackInput) Track {
 		WarmupTopic:   input.WarmupTopic,
 		MaxSimSeconds: input.MaxSimSeconds,
 		Public:        input.Public,
+		World:         input.World,
 	}
 }
 
@@ -50,5 +51,6 @@ func UpdateTrackFromInput(model Track, input UpdateTrackInput) Track {
 	model.WarmupTopic = input.WarmupTopic
 	model.MaxSimSeconds = input.MaxSimSeconds
 	model.Public = input.Public
+	model.World = input.World
 	return model
 }

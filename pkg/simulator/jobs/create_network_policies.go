@@ -22,21 +22,7 @@ type CreateNetworkPoliciesOutput struct {
 
 // CreateNetworkPolicies is a generic job to be used to create network policies.
 var CreateNetworkPolicies = &actions.Job{
-	Execute:         createNetworkPolicies,
-	RollbackHandler: removeCreatedNetworkPolicies,
-}
-
-// removeCreatedNetworkPolicies acts a rollback handler for the recently created network policies.
-func removeCreatedNetworkPolicies(store actions.Store, tx *gorm.DB, deployment *actions.Deployment, value interface{}, err error) (interface{}, error) {
-	s := store.State().(state.PlatformGetter)
-
-	out := value.(CreateNetworkPoliciesOutput)
-
-	for _, r := range out.Resource {
-		_ = s.Platform().Orchestrator().NetworkPolicies().Remove(r.Name(), r.Namespace())
-	}
-
-	return nil, nil
+	Execute: createNetworkPolicies,
 }
 
 // createNetworkPolicies is used by the CreateNetworkPolicies job as the execute function.

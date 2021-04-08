@@ -25,7 +25,7 @@ func readStats(store actions.Store, tx *gorm.DB, deployment *actions.Deployment,
 	s := store.State().(*state.StopSimulation)
 
 	// Get file path
-	path := fmt.Sprintf("%s/summary.yml", s.Platform().Store().Ignition().GazeboServerLogsPath())
+	path := fmt.Sprintf("%s/summary.yml", s.Platform().Store().Ignition().SidecarContainerLogsPath())
 
 	body, err := readFileContentFromPod(
 		s.Platform().Orchestrator().Pods(),

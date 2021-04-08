@@ -12,12 +12,32 @@ import (
 
 // LaunchInstances is a job that is used to launch machine instances for simulations.
 var LaunchInstances = jobs.LaunchInstances.Extend(actions.Job{
-	Name:       "launch-instances",
-	PreHooks:   []actions.JobFunc{setStartState, createLaunchInstancesInput},
-	PostHooks:  []actions.JobFunc{checkLaunchInstancesOutput, saveLaunchInstancesOutput, returnState},
-	InputType:  actions.GetJobDataType(&state.StartSimulation{}),
-	OutputType: actions.GetJobDataType(&state.StartSimulation{}),
+	Name:            "launch-instances",
+	PreHooks:        []actions.JobFunc{setStartState, createLaunchInstancesInput},
+	PostHooks:       []actions.JobFunc{checkLaunchInstancesOutput, saveLaunchInstancesOutput, returnState},
+	RollbackHandler: removeLaunchedInstances,
+	InputType:       actions.GetJobDataType(&state.StartSimulation{}),
+	OutputType:      actions.GetJobDataType(&state.StartSimulation{}),
 })
+
+func removeLaunchedInstances(store actions.Store, tx *gorm.DB, deployment *actions.Deployment, value interface{}, err error) (interface{}, error) {
+	s := value.(*state.StartSimulation)
+	tags := subtapp.GetTagsInstanceBase(s.GroupID)
+
+	filters := make(map[string][]string)
+
+	for _, tag := range tags {
+		for k, v := range tag.Map {
+			filters[fmt.Sprintf("tag:%s", k)] = []string{v}
+		}
+	}
+
+	_ = s.Platform().Machines().Terminate(cloud.TerminateMachinesInput{
+		Filters: filters,
+	})
+
+	return nil, nil
+}
 
 // createLaunchInstancesInput is in charge of populating the data for the generic LaunchInstances job input.
 func createLaunchInstancesInput(store actions.Store, tx *gorm.DB, deployment *actions.Deployment, value interface{}) (interface{}, error) {

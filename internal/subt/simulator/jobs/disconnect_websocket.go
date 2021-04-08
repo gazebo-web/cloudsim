@@ -8,13 +8,12 @@ import (
 
 // DisconnectWebsocket is a job in charge of disconnecting the websocket client.
 var DisconnectWebsocket = &actions.Job{
-	Name:            "disconnect-websocket",
-	PreHooks:        []actions.JobFunc{setStopState},
-	Execute:         disconnectWebsocket,
-	PostHooks:       []actions.JobFunc{returnState},
-	RollbackHandler: revertWebsocketConnection,
-	InputType:       actions.GetJobDataType(&state.StopSimulation{}),
-	OutputType:      actions.GetJobDataType(&state.StopSimulation{}),
+	Name:       "disconnect-websocket",
+	PreHooks:   []actions.JobFunc{setStopState},
+	Execute:    disconnectWebsocket,
+	PostHooks:  []actions.JobFunc{returnState},
+	InputType:  actions.GetJobDataType(&state.StopSimulation{}),
+	OutputType: actions.GetJobDataType(&state.StopSimulation{}),
 }
 
 // disconnectWebsocket is in charge of disconnecting the websocket client for a certain running simulation.

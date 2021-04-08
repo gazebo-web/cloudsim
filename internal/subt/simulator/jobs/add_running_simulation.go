@@ -23,7 +23,9 @@ var AddRunningSimulation = &actions.Job{
 func revertAddingRunningSimulation(store actions.Store, tx *gorm.DB, deployment *actions.Deployment, value interface{}, _ error) (interface{}, error) {
 	s := store.State().(*state.StartSimulation)
 
-	s.Platform().RunningSimulations().Free(s.GroupID)
+	if s.Platform().RunningSimulations().GetTransporter(s.GroupID).IsConnected() {
+		s.Platform().RunningSimulations().Free(s.GroupID)
+	}
 
 	err := s.Platform().RunningSimulations().Remove(s.GroupID)
 	if err != nil {
@@ -46,7 +48,7 @@ func addRunningSimulation(store actions.Store, tx *gorm.DB, deployment *actions.
 	subtSim := sim.(subt.Simulation)
 
 	// Get the track for the given simulation
-	t, err := s.SubTServices().Tracks().Get(subtSim.GetTrack(), subtSim.GetWorldIndex())
+	t, err := s.SubTServices().Tracks().Get(subtSim.GetTrack(), subtSim.GetWorldIndex(), subtSim.GetRunIndex())
 	if err != nil {
 		return nil, err
 	}

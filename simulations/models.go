@@ -88,6 +88,20 @@ type SimulationDeployment struct {
 	Score *float64 `json:"score,omitempty"`
 }
 
+// GetRunIndex returns the simulation's run index.
+func (dep *SimulationDeployment) GetRunIndex() int {
+	extra, err := ReadExtraInfoSubT(dep)
+	if err != nil {
+		return 0
+	}
+
+	if extra.RunIndex == nil {
+		return 0
+	}
+
+	return *extra.RunIndex
+}
+
 // GetWorldIndex returns the simulation's world index.
 func (dep *SimulationDeployment) GetWorldIndex() int {
 	extra, err := ReadExtraInfoSubT(dep)

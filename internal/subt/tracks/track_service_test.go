@@ -42,6 +42,7 @@ func (s *trackServiceTestSuite) TestCreate_OK() {
 		WarmupTopic:   "/warmup",
 		MaxSimSeconds: 3600,
 		Public:        true,
+		World:         "virtual_stix_headless.ign",
 	}
 	output, err := s.service.Create(input)
 	s.NoError(err)
@@ -107,14 +108,14 @@ func (s *trackServiceTestSuite) TestGetOne_Exists() {
 		Public:        false,
 	})
 
-	result, err := s.service.Get(createdTrack.Name, 0)
+	result, err := s.service.Get(createdTrack.Name, 0, 0)
 
 	s.NoError(err)
 	s.Equal(createdTrack.Name, result.Name)
 }
 
 func (s *trackServiceTestSuite) TestGetOne_NonExistent() {
-	_, err := s.service.Get("Test", 0)
+	_, err := s.service.Get("Test", 0, 0)
 	s.Error(err)
 }
 
@@ -127,11 +128,12 @@ func (s *trackServiceTestSuite) TestUpdate() {
 		WarmupTopic:   "testA",
 		MaxSimSeconds: 30,
 		Public:        false,
+		World:         "virtual_stix_headless.ign",
 	})
-	s.NoError(err)
+	s.Require().NoError(err)
 
-	before, err := s.service.Get("Virtual TestA", 0)
-	s.NoError(err)
+	before, err := s.service.Get("Virtual TestA", 0, 0)
+	s.Require().NoError(err)
 
 	updatedTrackInput := UpdateTrackInput{
 		Name:          "Virtual TestB",
@@ -141,15 +143,18 @@ func (s *trackServiceTestSuite) TestUpdate() {
 		WarmupTopic:   "testB",
 		MaxSimSeconds: 30,
 		Public:        true,
+		World:         "virtual_testb_headless.ign",
 	}
 
-	s.service.Update("Virtual TestA", updatedTrackInput)
+	_, err = s.service.Update("Virtual TestA", updatedTrackInput)
+	s.Require().NoError(err)
 
-	result, err := s.service.Get("Virtual TestB", 0)
-	s.NoError(err)
+	result, err := s.service.Get("Virtual TestB", 0, 0)
+	s.Require().NoError(err)
 
-	s.Equal(before.ID, result.ID)
-	s.Equal(updatedTrackInput.Name, result.Name)
+	s.Assert().Equal(before.ID, result.ID)
+	s.Assert().Equal(updatedTrackInput.Name, result.Name)
+	s.Assert().Equal(updatedTrackInput.World, result.World)
 }
 
 func (s *trackServiceTestSuite) TestUpdate_InvalidInput() {
@@ -187,14 +192,14 @@ func (s *trackServiceTestSuite) TestDelete() {
 	})
 	s.NoError(err)
 
-	before, err := s.service.Get("Virtual TestA", 0)
+	before, err := s.service.Get("Virtual TestA", 0, 0)
 	s.NoError(err)
 
 	after, err := s.service.Delete(before.Name)
 
 	s.Equal(before.ID, after.ID)
 
-	result, err := s.service.Get(before.Name, 0)
+	result, err := s.service.Get(before.Name, 0, 0)
 	s.Error(err)
 	s.Nil(result)
 }

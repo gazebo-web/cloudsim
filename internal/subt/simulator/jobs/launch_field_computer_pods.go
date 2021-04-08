@@ -1,7 +1,6 @@
 package jobs
 
 import (
-	"fmt"
 	"github.com/jinzhu/gorm"
 	subtapp "gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/application"
 	subt "gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/simulations"
@@ -16,10 +15,28 @@ var LaunchFieldComputerPods = jobs.LaunchPods.Extend(actions.Job{
 	Name:            "launch-field-computer-pods",
 	PreHooks:        []actions.JobFunc{setStartState, prepareFieldComputerPodInput},
 	PostHooks:       []actions.JobFunc{checkLaunchPodsError, returnState},
-	RollbackHandler: rollbackPodCreation,
+	RollbackHandler: rollbackLaunchFieldComputerPods,
 	InputType:       actions.GetJobDataType(&state.StartSimulation{}),
 	OutputType:      actions.GetJobDataType(&state.StartSimulation{}),
 })
+
+func rollbackLaunchFieldComputerPods(store actions.Store, tx *gorm.DB, deployment *actions.Deployment, value interface{}, err error) (interface{}, error) {
+	s := store.State().(*state.StartSimulation)
+
+	robots, err := s.Services().Simulations().GetRobots(s.GroupID)
+	if err != nil {
+		return nil, err
+	}
+
+	for i := range robots {
+		name := subtapp.GetPodNameFieldComputer(s.GroupID, subtapp.GetRobotID(i))
+		ns := s.Platform().Store().Orchestrator().Namespace()
+
+		_, _ = s.Platform().Orchestrator().Pods().Delete(orchestrator.NewResource(name, ns, nil))
+	}
+
+	return nil, nil
+}
 
 // prepareFieldComputerPodInput prepares the input for the generic LaunchPods job to launch field computer pods.
 func prepareFieldComputerPodInput(store actions.Store, tx *gorm.DB, deployment *actions.Deployment, value interface{}) (interface{}, error) {
@@ -50,9 +67,10 @@ func prepareFieldComputerPodInput(store actions.Store, tx *gorm.DB, deployment *
 					Name:                     subtapp.GetContainerNameFieldComputer(),
 					Image:                    r.GetImage(),
 					AllowPrivilegeEscalation: &allowPrivilegesEscalation,
-					EnvVars: map[string]string{
-						"ROBOT_NAME":     r.GetName(),
-						"ROS_MASTER_URI": fmt.Sprintf("http://%s:11311", s.CommsBridgeIPs[i]),
+					EnvVars:                  subtapp.GetEnvVarsFieldComputer(r.GetName(), s.CommsBridgeIPs[i]),
+					EnvVarsFrom:              subtapp.GetEnvVarsFromSourceFieldComputer(),
+					ResourceLimits: map[orchestrator.ResourceName]string{
+						orchestrator.ResourceMemory: "115Gi",
 					},
 				},
 			},
