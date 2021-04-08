@@ -10,7 +10,6 @@ import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/components/pods"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/resource"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulator/jobs"
-	"path"
 )
 
 // LaunchCommsBridgePods launches the list of comms bridge and copy pods.
@@ -62,29 +61,28 @@ func prepareCommsBridgePodInput(store actions.Store, tx *gorm.DB, deployment *ac
 	marsupials := subtSim.GetMarsupials()
 
 	for i, r := range subtSim.GetRobots() {
-		hostPath := "/tmp"
-		logDirectory := "robot-logs"
-		logMountPath := path.Join(hostPath, logDirectory)
-
 		// Create comms bridge input
 		privileged := true
 		allowPrivilegesEscalation := true
 
+		initVolumes := []pods.Volume{
+			{
+				Name:      "logs",
+				HostPath:  "/tmp",
+				MountPath: "/tmp",
+			},
+		}
+
 		volumes := []pods.Volume{
 			{
 				Name:         "logs",
-				HostPath:     logMountPath,
+				HostPath:     "/tmp/robot-logs",
 				HostPathType: pods.HostPathDirectoryOrCreate,
 				MountPath:    s.Platform().Store().Ignition().ROSLogsPath(),
 			},
 		}
 
-		args, err := cmdgen.CommsBridge(cmdgen.CommsBridgeConfig{
-			World:          track.World,
-			RobotNumber:    i,
-			Robot:          r,
-			ChildMarsupial: subt.IsRobotChildMarsupial(marsupials, r),
-		})
+		args, err := cmdgen.CommsBridge(track.World, i, r.GetName(), r.GetKind(), subt.IsRobotChildMarsupial(subtSim.GetMarsupials(), r))
 		if err != nil {
 			return nil, err
 		}
@@ -97,7 +95,7 @@ func prepareCommsBridgePodInput(store actions.Store, tx *gorm.DB, deployment *ac
 			TerminationGracePeriodSeconds: s.Platform().Store().Orchestrator().TerminationGracePeriod(),
 			NodeSelector:                  subtapp.GetNodeLabelsFieldComputer(s.GroupID, r),
 			InitContainers: []pods.Container{
-				pods.NewChownContainer(volumes),
+				pods.NewChownContainer(initVolumes),
 			},
 			Containers: []pods.Container{
 				{

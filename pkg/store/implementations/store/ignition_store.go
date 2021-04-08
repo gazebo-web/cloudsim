@@ -31,13 +31,13 @@ type ignitionStore struct {
 	VerbosityValue string `default:"2" env:"CLOUDSIM_IGN_VERBOSITY"`
 
 	// LogsCopyEnabledValue is the CLOUDSIM_IGN_LOGS_COPY_ENABLED value that will used to define if logs should be copied.
-	LogsCopyEnabledValue bool `default:"false" env:"CLOUDSIM_IGN_LOGS_COPY_ENABLED"`
+	LogsCopyEnabledValue bool `default:"false" env:"CLOUDSIM_IGN_LOGS_COPY_ENABLED" envDefault:"false"`
 
 	// RegionValue is the CLOUDSIM_IGN_REGION value that will determine where to launch simulations.
-	RegionValue string `default:"us-east-1" env:"CLOUDSIM_IGN_REGION"`
+	RegionValue string `default:"us-east-1" env:"CLOUDSIM_IGN_REGION" envDefault:"us-east-1"`
 
 	// SecretsNameValue is the CLOUDSIM_IGN_SECRETS_NAME value that will used to get credentials for cloud providers.Value
-	SecretsNameValue string `default:"aws-secrets" env:"CLOUDSIM_IGN_SECRETS_NAME"`
+	SecretsNameValue string `default:"aws-secrets" env:"CLOUDSIM_IGN_SECRETS_NAME" envDefault:"aws-secrets"`
 
 	// LogsBucketValue is the CLOUDSIM_AWS_GZ_LOGS_BUCKET value that will be used to upload logs.
 	LogsBucketValue string `validate:"required" default:"/tmp/ign" env:"CLOUDSIM_AWS_GZ_LOGS_BUCKET,required"`

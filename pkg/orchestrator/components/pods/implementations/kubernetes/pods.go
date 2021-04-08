@@ -67,7 +67,6 @@ func generateKubernetesContainers(containers []pods.Container) []apiv1.Container
 
 		// Setup env vars
 		var envs []apiv1.EnvVar
-
 		for key, from := range c.EnvVarsFrom {
 			envs = append(envs, apiv1.EnvVar{
 				Name:      key,
@@ -218,7 +217,7 @@ func (p *kubernetesPods) Delete(resource orchestratorResource.Resource) (orchest
 
 // Exec creates a new executor.
 func (p *kubernetesPods) Exec(pod orchestratorResource.Resource) pods.Executor {
-	p.Logger.Debug(fmt.Sprintf("Creating new executor for pod [%s]", pod.Name()))
+	p.Logger.Debug(fmt.Sprintf("Creating new executor for pod [%s] in namespace [%s]", pod.Name(), pod.Namespace()))
 	return newExecutor(p.API, pod, p.SPDY, p.Logger)
 }
 

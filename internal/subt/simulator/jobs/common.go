@@ -56,7 +56,7 @@ func checkWaitError(store actions.Store, tx *gorm.DB, deployment *actions.Deploy
 func checkLaunchPodsError(store actions.Store, tx *gorm.DB, deployment *actions.Deployment, value interface{}) (interface{}, error) {
 	output := value.(jobs.LaunchPodsOutput)
 	if len(output.Resources) > 0 {
-		if err := deployment.SetJobData(tx, nil, actions.DeploymentJobData, output.Resources); err != nil {
+		if err := deployment.SetJobData(tx, nil, actions.DeploymentJobData, output); err != nil {
 			return nil, err
 		}
 	}

@@ -21,7 +21,8 @@ var LaunchInstances = jobs.LaunchInstances.Extend(actions.Job{
 })
 
 func removeLaunchedInstances(store actions.Store, tx *gorm.DB, deployment *actions.Deployment, value interface{}, err error) (interface{}, error) {
-	s := value.(*state.StartSimulation)
+	s := store.State().(*state.StartSimulation)
+
 	tags := subtapp.GetTagsInstanceBase(s.GroupID)
 
 	filters := make(map[string][]string)

@@ -100,23 +100,23 @@ func (s *kubernetesServices) GetAllBySelector(namespace string, selector resourc
 
 func (s *kubernetesServices) Remove(resource resource.Resource) error {
 	s.Logger.Debug(fmt.Sprintf(
-		"Removing service with name [%s] in namespace [%s] that match the following selectors: [%s].",
-		resource.Name(), resource.Namespace(), resource.Selector().String()),
+		"Removing service with name [%s] in namespace [%s].",
+		resource.Name(), resource.Namespace()),
 	)
 
 	err := s.API.CoreV1().Services(resource.Namespace()).Delete(resource.Name(), &metav1.DeleteOptions{})
 
 	if err != nil {
 		s.Logger.Debug(fmt.Sprintf(
-			"Removing service with name [%s] in namespace [%s] that match the following selectors: [%s] failed. Error: %s",
-			resource.Name(), resource.Namespace(), resource.Selector().String(), err.Error()),
+			"Removing service with name [%s] in namespace [%s] failed. Error: %s",
+			resource.Name(), resource.Namespace(), err.Error()),
 		)
 		return err
 	}
 
 	s.Logger.Debug(fmt.Sprintf(
-		"Removing service with name [%s] in namespace [%s] that match the following selectors: [%s] succeeded.",
-		resource.Name(), resource.Namespace(), resource.Selector().String()),
+		"Removing service with name [%s] in namespace [%s] succeeded.",
+		resource.Name(), resource.Namespace()),
 	)
 	return nil
 }

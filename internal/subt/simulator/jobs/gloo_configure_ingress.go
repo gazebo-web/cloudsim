@@ -59,7 +59,7 @@ func rollbackGlooIngress(store actions.Store, tx *gorm.DB, dep *actions.Deployme
 	name := s.Platform().Store().Orchestrator().IngressName()
 	host := s.Platform().Store().Orchestrator().IngressHost()
 
-	ns := s.Platform().Store().Orchestrator().Namespace()
+	ns := s.Platform().Store().Orchestrator().IngressNamespace()
 
 	resource, err := s.Platform().Orchestrator().Ingresses().Get(name, ns)
 	if err != nil {
