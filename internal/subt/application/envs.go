@@ -35,12 +35,13 @@ func GetEnvVarsFieldComputer(robotName string, commsBridgeIP string) map[string]
 	}
 }
 
-// GetEnvVarsFieldComputer returns the env vars for the field computer container.
+// GetEnvVarsFromSourceFieldComputer returns the env vars for the field computer container.
 func GetEnvVarsFromSourceFieldComputer() map[string]string {
 	return map[string]string{
 		"ROS_IP": orchestrator.EnvVarSourcePodIP,
 	}
 }
+
 // GetEnvVarsCommsBridgeCopy returns the env vars for the comms-bridge-copy container.
 func GetEnvVarsCommsBridgeCopy(region, accessKey, secret string) map[string]string {
 	return map[string]string{
