@@ -16,7 +16,7 @@ import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/tracks"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/actions"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/application"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/email"
+	email "gitlab.com/ignitionrobotics/web/cloudsim/pkg/email/implementations/ses"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/machines/implementations/ec2"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/migrations"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/mock"
@@ -155,7 +155,7 @@ func TestStopSimulationAction(t *testing.T) {
 		Store:              configStore,
 		Secrets:            secrets,
 		RunningSimulations: runsimManager,
-		EmailSender:        email.NewEmailSender(emailAPI),
+		EmailSender:        email.NewEmailSender(emailAPI, logger),
 	}
 
 	// Initialize platform

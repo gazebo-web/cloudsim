@@ -1,62 +1,63 @@
-package email
+package ses
 
 import (
 	"errors"
 	"github.com/aws/aws-sdk-go/service/ses"
 	"github.com/aws/aws-sdk-go/service/ses/sesiface"
 	"github.com/stretchr/testify/assert"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/email"
 	"testing"
 )
 
 func TestEmailReturnsErrWhenRecipientsIsEmpty(t *testing.T) {
-	s := NewEmailSender(nil)
+	s := NewEmailSender(nil, nil)
 
 	err := s.Send(nil, "example@test.org", "Some test", "test.template", nil)
 	assert.Error(t, err)
-	assert.Equal(t, ErrEmptyRecipientList, err)
+	assert.Equal(t, email.ErrEmptyRecipientList, err)
 }
 
 func TestEmailReturnsErrWhenSenderIsEmpty(t *testing.T) {
-	s := NewEmailSender(nil)
+	s := NewEmailSender(nil, nil)
 
 	err := s.Send([]string{"recipient@test.org"}, "", "Some test", "test.template", nil)
 	assert.Error(t, err)
-	assert.Equal(t, ErrEmptySender, err)
+	assert.Equal(t, email.ErrEmptySender, err)
 }
 
 func TestEmailReturnsErrWhenRecipientIsInvalid(t *testing.T) {
-	s := NewEmailSender(nil)
+	s := NewEmailSender(nil, nil)
 
 	err := s.Send([]string{"ThisIsNotAValidEmail"}, "example@test.org", "Some test", "test.template", nil)
 	assert.Error(t, err)
-	assert.Equal(t, ErrInvalidRecipient, err)
+	assert.Equal(t, email.ErrInvalidRecipient, err)
 }
 
 func TestEmailReturnsErrWhenSenderIsInvalid(t *testing.T) {
-	s := NewEmailSender(nil)
+	s := NewEmailSender(nil, nil)
 
 	err := s.Send([]string{"recipient@test.org"}, "InvalidSenderEmail", "Some test", "test.template", nil)
 	assert.Error(t, err)
-	assert.Equal(t, ErrInvalidSender, err)
+	assert.Equal(t, email.ErrInvalidSender, err)
 }
 
 func TestEmailReturnsErrWhenInvalidPath(t *testing.T) {
-	s := NewEmailSender(nil)
+	s := NewEmailSender(nil, nil)
 
 	err := s.Send([]string{"recipient@test.org"}, "example@test.org", "Some test", "test", nil)
 	assert.Error(t, err)
 }
 
 func TestEmailReturnsErrWhenDataIsNil(t *testing.T) {
-	s := NewEmailSender(&fakeSender{})
+	s := NewEmailSender(&fakeSender{}, nil)
 	err := s.Send([]string{"recipient@test.org"}, "example@test.org", "Some test", "template.gohtml", nil)
 	assert.Error(t, err)
-	assert.Equal(t, ErrInvalidData, err)
+	assert.Equal(t, email.ErrInvalidData, err)
 }
 
 func TestEmailSendingSuccess(t *testing.T) {
 	fake := fakeSender{}
-	s := NewEmailSender(&fake)
+	s := NewEmailSender(&fake, nil)
 	err := s.Send([]string{"recipient@test.org"}, "example@test.org", "Some test", "template.gohtml", struct {
 		Test string
 	}{

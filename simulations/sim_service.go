@@ -16,7 +16,7 @@ import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/summaries"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/actions"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/application"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/email"
+	email "gitlab.com/ignitionrobotics/web/cloudsim/pkg/email/implementations/ses"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/machines/implementations/ec2"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/components/ingresses/implementations/gloo"
 	network "gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/components/network/implementations/kubernetes"
@@ -2408,7 +2408,7 @@ func (s *Service) initPlatform() (platform.Platform, error) {
 	kubernetesSecrets := secrets.NewKubernetesSecrets(kubernetesClient.CoreV1())
 
 	sesAPI := ses.New(s.session)
-	emailSender := email.NewEmailSender(sesAPI)
+	emailSender := email.NewEmailSender(sesAPI, nil)
 
 	runningSimulations := runsim.NewManager()
 
