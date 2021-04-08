@@ -491,7 +491,7 @@ func (s *Service) Stop(ctx context.Context) error {
 
 // RegisterApplication registers a new application type.
 func (s *Service) RegisterApplication(ctx context.Context, app ApplicationType) {
-	s.logger.Info(fmt.Sprintf("Sim Service - Registered new Application [%s]", app.getApplicationName()))
+	logger(ctx).Info(fmt.Sprintf("Sim Service - Registered new Application [%s]", app.getApplicationName()))
 	s.applications[app.getApplicationName()] = app
 }
 
