@@ -651,7 +651,7 @@ func (s *Service) rebuildState(ctx context.Context, db *gorm.DB) error {
 		}
 
 		if d.HasStatus(simulations.StatusRunning) {
-			if s.platform.RunningSimulations().Exists(d.GetGroupID()) {
+			if !s.platform.RunningSimulations().Exists(d.GetGroupID()) {
 				s.logger.Info(fmt.Sprintf("rebuildState -- GroupID [%s] expected to be Running "+
 					"in DB but there is no matching Pod running. Marking with error", groupID))
 				// if the SimulationDeployment DB record has 'running' status but there is no matching
