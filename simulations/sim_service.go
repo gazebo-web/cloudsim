@@ -393,6 +393,9 @@ func (s *Service) CustomizeSimRequest(ctx context.Context, r *http.Request, tx *
 // Start starts this simulation service. It needs to be invoked AFTER 'Applications'
 // were registerd using 'RegisterApplication'.
 func (s *Service) Start(ctx context.Context) error {
+	// Start logger
+	s.logger = ign.NewLoggerNoRollbar("[Ignition Cloudsim - SubT]", ign.VerbosityDebug)
+
 	// Start a routine that will move 'launch' requests from the Waiting Queue into
 	// the WorkerPool. If all the Workers are busy then this goroutine will block.
 	go func() {
