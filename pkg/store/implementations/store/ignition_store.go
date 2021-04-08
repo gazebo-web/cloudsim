@@ -7,8 +7,8 @@ import (
 	defaulter "gitlab.com/ignitionrobotics/web/cloudsim/pkg/defaults"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
 	storepkg "gitlab.com/ignitionrobotics/web/cloudsim/pkg/store"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/validate"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/utils/network"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/validate"
 )
 
 // ignitionStore is the implementation of store.Ignition using env vars.
@@ -31,22 +31,22 @@ type ignitionStore struct {
 	VerbosityValue string `default:"2" env:"CLOUDSIM_IGN_VERBOSITY"`
 
 	// LogsCopyEnabledValue is the CLOUDSIM_IGN_LOGS_COPY_ENABLED value that will used to define if logs should be copied.
-	LogsCopyEnabledValue bool `env:"CLOUDSIM_IGN_LOGS_COPY_ENABLED"`
+	LogsCopyEnabledValue bool `default:"false" env:"CLOUDSIM_IGN_LOGS_COPY_ENABLED"`
 
 	// RegionValue is the CLOUDSIM_IGN_REGION value that will determine where to launch simulations.
-	RegionValue string `env:"CLOUDSIM_IGN_REGION"`
+	RegionValue string `default:"us-east-1" env:"CLOUDSIM_IGN_REGION"`
 
-	// SecretsNameValue is the CLOUDSIM_IGN_SECRETS_NAME value that will used to get credentials for cloud providers.
-	SecretsNameValue string `env:"CLOUDSIM_IGN_SECRETS_NAME"`
+	// SecretsNameValue is the CLOUDSIM_IGN_SECRETS_NAME value that will used to get credentials for cloud providers.Value
+	SecretsNameValue string `default:"aws-secrets" env:"CLOUDSIM_IGN_SECRETS_NAME"`
 
 	// LogsBucketValue is the CLOUDSIM_AWS_GZ_LOGS_BUCKET value that will be used to upload logs.
-	LogsBucketValue string `env:"CLOUDSIM_AWS_GZ_LOGS_BUCKET"`
+	LogsBucketValue string `validate:"required" default:"/tmp/ign" env:"CLOUDSIM_AWS_GZ_LOGS_BUCKET,required"`
 
 	// DefaultRecipientsValue has the list of emails that should always receive summaries.
 	DefaultRecipientsValue []string `env:"CLOUDSIM_IGN_DEFAULT_RECIPIENTS"`
 
 	// DefaultSenderValue is the email address used to send emails.
-	DefaultSenderValue string `validate:"required" env:"CLOUDSIM_IGN_DEFAULT_SENDER"`
+	DefaultSenderValue string `validate:"required" env:"CLOUDSIM_IGN_DEFAULT_SENDER,required"`
 }
 
 // SetDefaults sets default values for the store.

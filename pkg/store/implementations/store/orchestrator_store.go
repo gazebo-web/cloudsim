@@ -26,13 +26,13 @@ type orchestratorStore struct {
 
 	// IngressNameValue is the name of the Kubernetes Ingress used to route client requests from the Internet to
 	// different internal services. This configuration is required to enable websocket connections to simulations.
-	IngressNameValue string `validate:"required" env:"SUBT_ORCHESTRATOR_INGRESS_NAME"`
+	IngressNameValue string `validate:"required" env:"SUBT_ORCHESTRATOR_INGRESS_NAME,required"`
 
 	// IngressHostValue contains the domain URL used to route incoming websocket connections.
 	// It is used to select a specific rule to modify in an ingress.
 	// The ingress resource referenced by the `IngressName` configuration must contain at least one rule with a host
 	// value matching this configuration.
-	IngressHostValue string `validate:"required" env:"CLOUDSIM_ORCHESTRATOR_INGRESS_HOST"`
+	IngressHostValue string `validate:"required" env:"CLOUDSIM_ORCHESTRATOR_INGRESS_HOST,required"`
 }
 
 // SetDefaults sets default values for the store.

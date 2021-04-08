@@ -27,7 +27,7 @@ type Components struct {
 
 	// IngressRules is a configuration to instance a IngressRules implementation.
 	// It is only used if no Nodes dependency is found.
-	IngressRules *factory.Config `yaml:"ingress_rules"`
+	IngressRules *factory.Config `yaml:"ingressRules"`
 
 	// Services is a configuration to instance a Services implementation.
 	// It is only used if no Nodes dependency is found.
@@ -35,7 +35,7 @@ type Components struct {
 
 	// NetworkPolicies is a configuration to instance a NetworkPolicies implementation.
 	// It is only used if no Nodes dependency is found.
-	NetworkPolicies *factory.Config `yaml:"network_policies"`
+	NetworkPolicies *factory.Config `yaml:"networkPolicies"`
 }
 
 // Config is used to create a Kubernetes cluster component.

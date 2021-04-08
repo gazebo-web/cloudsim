@@ -21,17 +21,17 @@ type machinesStore struct {
 	// KeyNameValue is the name of the SSH key used for a new instance.
 	KeyNameValue string `default:"ignitionFuel" env:"CLOUDSIM_MACHINES_KEY_NAME"`
 
-	// MachineTypeValue is the type of instance that will be created.
+	// MachineTypeValue is the type of instance thGat will be created.
 	MachineTypeValue string `default:"g3.4xlarge" env:"CLOUDSIM_MACHINES_TYPE"`
 
 	// FirewallRulesValue is a set of firewall rules that will be applied to a new instance.
 	FirewallRulesValue []string `default:"[\"sg-0c5c791266694a3ca\"]" env:"CLOUDSIM_MACHINES_FIREWALL_RULES" envSeparator:","`
 
 	// SubnetsValue is a slice of AWS subnet IDs to launch simulations in. (Example: subnet-1270518251)
-	SubnetsValue []string `env:"CLOUDSIM_MACHINES_SUBNETS,required" envSeparator:","`
+	SubnetsValue []string `validate:"required" env:"CLOUDSIM_MACHINES_SUBNETS,required" envSeparator:","`
 
 	// ZonesValue is a slice of AWS availability zones to launch simulations in. (Example: us-east-1a)
-	ZonesValue []string `env:"CLOUDSIM_MACHINES_ZONES,required" envSeparator:","`
+	ZonesValue []string `validate:"required" env:"CLOUDSIM_MACHINES_ZONES,required" envSeparator:","`
 
 	// MachinesLimitValue is the maximum number of machines that Cloudsim can have running at the same time.
 	MachinesLimitValue int `default:"-1" env:"CLOUDSIM_MACHINES_LIMIT"`
@@ -40,10 +40,10 @@ type machinesStore struct {
 	BaseImageValue string `default:"ami-08861f7e7b409ed0c" env:"CLOUDSIM_MACHINES_BASE_IMAGE"`
 
 	// NamePrefixValue is the prefix used when naming a new instance.
-	NamePrefixValue string `default:"cloudsim-subt-node" env:"CLOUDSIM_MACHINES_NAME_PREFIX,required"`
+	NamePrefixValue string `validate:"required" default:"cloudsim-subt-node" env:"CLOUDSIM_MACHINES_NAME_PREFIX,required"`
 
 	// ClusterNameValue contains the name of the cluster EC2 instances will join.
-	ClusterNameValue string `env:"CLOUDSIM_MACHINES_CLUSTER_NAME,required"`
+	ClusterNameValue string `validate:"required" env:"CLOUDSIM_MACHINES_CLUSTER_NAME,required"`
 
 	// NodeReadyTimeout is the total amount of time in seconds that the machine creation process will wait.
 	NodeReadyTimeout uint `default:"300" env:"CLOUDSIM_MACHINES_NODE_READY_TIMEOUT_SECONDS"`

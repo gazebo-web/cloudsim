@@ -392,7 +392,7 @@ func (s *Service) CustomizeSimRequest(ctx context.Context, r *http.Request, tx *
 }
 
 // Start starts this simulation service. It needs to be invoked AFTER 'Applications'
-// were registerd using 'RegisterApplication'.
+// were registered using 'RegisterApplication'.
 func (s *Service) Start(ctx context.Context) error {
 	// Start a routine that will move 'launch' requests from the Waiting Queue into
 	// the WorkerPool. If all the Workers are busy then this goroutine will block.
@@ -461,6 +461,11 @@ func (s *Service) Start(ctx context.Context) error {
 	}
 
 	s.applicationServices = s.initApplicationServices()
+
+	s.logger.Info("Initializing action service")
+
+	// TODO: Make Verbosity depend on env var
+	s.actionService = actions.NewService(ign.NewLoggerNoRollbar("Worker", ign.VerbosityDebug))
 
 	s.simulator = s.initSimulator()
 
