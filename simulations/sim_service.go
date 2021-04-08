@@ -803,28 +803,26 @@ func (s *Service) StopExpiredSimulationsCleaner() {
 func (s *Service) checkForExpiredSimulations(ctx context.Context) error {
 
 	logger(ctx).Debug("Checking for expired simulations...")
-	s.lockRunningSimulations.RLock()
-	defer s.lockRunningSimulations.RUnlock()
 
-	for groupID := range s.runningSimulations {
-		rs := s.runningSimulations[groupID]
+	rss := s.platform.RunningSimulations().ListExpiredSimulations()
+	for _, rs := range rss {
 
 		if rs.IsExpired() || rs.Finished {
-			dep, err := GetSimulationDeployment(s.DB, groupID)
+			dep, err := GetSimulationDeployment(s.DB, rs.GroupID.String())
 			if err != nil {
-				logger(ctx).Error("Error while trying to get Simulation from DB: "+groupID, err)
+				logger(ctx).Error("Error while trying to get Simulation from DB: "+rs.GroupID.String(), err)
 				continue
 			}
 
 			// Add a 'stop simulation' request to the Terminator Jobs-Pool.
 			if err := s.scheduleTermination(ctx, s.DB, dep); err != nil {
-				logger(ctx).Error("Error while trying to schedule automatic termination of Simulation: "+groupID, err)
+				logger(ctx).Error("Error while trying to schedule automatic termination of Simulation: "+rs.GroupID.String(), err)
 			} else {
 				reason := "expired"
 				if rs.Finished {
 					reason = "finished"
 				}
-				logger(ctx).Info(fmt.Sprintf("Scheduled automatic termination of %s simulation: %s", reason, groupID))
+				logger(ctx).Info(fmt.Sprintf("Scheduled automatic termination of %s simulation: %s", reason, rs.GroupID.String()))
 			}
 		}
 	}
