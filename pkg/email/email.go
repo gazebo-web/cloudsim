@@ -5,6 +5,7 @@ import (
 	"regexp"
 )
 
+// CharSet is the default email encoding.
 const CharSet = "UTF-8"
 
 var (
