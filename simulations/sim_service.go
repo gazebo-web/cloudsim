@@ -640,7 +640,7 @@ func (s *Service) rebuildState(ctx context.Context, db *gorm.DB) error {
 	for _, d := range deps {
 		groupID := *d.GroupID
 
-		if simPending.Eq(*d.DeploymentStatus) {
+		if d.HasStatus(simulations.StatusPending) {
 			// If still Pending then re-add it to the scheduler, by adding a 'launch simulation'
 			// request to the Launcher Jobs-Pool
 			s.logger.Info("rebuildState -- about to submit launch task for groupID: " + groupID)
@@ -650,9 +650,8 @@ func (s *Service) rebuildState(ctx context.Context, db *gorm.DB) error {
 			continue
 		}
 
-		if simRunning.Eq(*d.DeploymentStatus) {
-			_, podRunning := s.runningSimulations[groupID]
-			if !podRunning {
+		if d.HasStatus(simulations.StatusRunning) {
+			if s.platform.RunningSimulations().Exists(d.GetGroupID()) {
 				s.logger.Info(fmt.Sprintf("rebuildState -- GroupID [%s] expected to be Running "+
 					"in DB but there is no matching Pod running. Marking with error", groupID))
 				// if the SimulationDeployment DB record has 'running' status but there is no matching
