@@ -393,6 +393,9 @@ func (s *Service) CustomizeSimRequest(ctx context.Context, r *http.Request, tx *
 // Start starts this simulation service. It needs to be invoked AFTER 'Applications'
 // were registerd using 'RegisterApplication'.
 func (s *Service) Start(ctx context.Context) error {
+	// Start logger
+	s.logger = ign.NewLoggerNoRollbar("[Ignition Cloudsim - SubT]", ign.VerbosityDebug)
+
 	// Start a routine that will move 'launch' requests from the Waiting Queue into
 	// the WorkerPool. If all the Workers are busy then this goroutine will block.
 	go func() {
@@ -2361,7 +2364,6 @@ func (s *Service) QueueRemoveElement(ctx context.Context, user *users.User, grou
 
 // TODO: Make initPlatform independent of Service by receiving arguments with the needed config.
 func (s *Service) initPlatform() (platform.Platform, error) {
-	s.logger = ign.NewLoggerNoRollbar("[Ignition Cloudsim - SubT]", ign.VerbosityDebug)
 
 	machines := ec2.NewMachines(globals.EC2Svc, s.logger)
 
