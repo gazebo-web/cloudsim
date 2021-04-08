@@ -7,6 +7,7 @@ import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/simulator/state"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/actions"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/components/pods"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/resource"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulator/jobs"
 )
 
@@ -32,7 +33,7 @@ func rollbackLaunchFieldComputerPods(store actions.Store, tx *gorm.DB, deploymen
 		name := subtapp.GetPodNameFieldComputer(s.GroupID, subtapp.GetRobotID(i))
 		ns := s.Platform().Store().Orchestrator().Namespace()
 
-		_, _ = s.Platform().Orchestrator().Pods().Delete(orchestrator.NewResource(name, ns, nil))
+		_, _ = s.Platform().Orchestrator().Pods().Delete(resource.NewResource(name, ns, nil))
 	}
 
 	return nil, nil
@@ -69,8 +70,8 @@ func prepareFieldComputerPodInput(store actions.Store, tx *gorm.DB, deployment *
 					AllowPrivilegeEscalation: &allowPrivilegesEscalation,
 					EnvVars:                  subtapp.GetEnvVarsFieldComputer(r.GetName(), s.CommsBridgeIPs[i]),
 					EnvVarsFrom:              subtapp.GetEnvVarsFromSourceFieldComputer(),
-					ResourceLimits: map[orchestrator.ResourceName]string{
-						orchestrator.ResourceMemory: "115Gi",
+					ResourceLimits: map[pods.ResourceName]string{
+						pods.ResourceMemory: "115Gi",
 					},
 				},
 			},

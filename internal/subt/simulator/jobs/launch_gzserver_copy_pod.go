@@ -7,6 +7,7 @@ import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/simulator/state"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/actions"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/components/pods"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/resource"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulator/jobs"
 )
 
@@ -26,7 +27,7 @@ func rollbackLaunchGazeboServerCopyPod(store actions.Store, tx *gorm.DB, deploym
 	name := subtapp.GetPodNameGazeboServerCopy(s.GroupID)
 	ns := s.Platform().Store().Orchestrator().Namespace()
 
-	_, _ = s.Platform().Orchestrator().Pods().Delete(orchestrator.NewResource(name, ns, nil))
+	_, _ = s.Platform().Orchestrator().Pods().Delete(resource.NewResource(name, ns, nil))
 
 	return nil, nil
 }

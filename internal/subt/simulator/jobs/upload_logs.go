@@ -109,7 +109,7 @@ func uploadLogs(store actions.Store, tx *gorm.DB, deployment *actions.Deployment
 }
 
 // uploadSingleLogs is a helper function in charge of running a certain script in scriptFilepath with the given scriptParams.
-// It will run this script inside the containerName using the orchestrator.Executor implementation passed as an argument.
+// It will run this script inside the containerName using the pods.Executor implementation passed as an argument.
 // It will return an error if parsing the script template or executing the script returns an error.
 func uploadSingleLogs(exec pods.Executor, containerName string, scriptFilepath string, scriptParams uploadLogsScript) error {
 	script, err := ign.ParseTemplate(scriptFilepath, scriptParams)

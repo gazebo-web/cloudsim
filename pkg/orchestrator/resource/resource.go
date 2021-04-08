@@ -10,7 +10,7 @@ type Resource interface {
 	Namespace() string
 }
 
-// resource is an orchestrator.Resource implementation of Kubernetes resources.
+// resource is a resource.Resource implementation of Kubernetes resources.
 type resource struct {
 	// name represents the name of the service.
 	name string
@@ -35,7 +35,7 @@ func (s *resource) Namespace() string {
 	return s.namespace
 }
 
-// NewResource initializes a new orchestrator.Resource using a kubernetes service implementation.
+// NewResource initializes a new resource.Resource using a kubernetes service implementation.
 func NewResource(name, namespace string, selector Selector) Resource {
 	return &resource{
 		name:      name,

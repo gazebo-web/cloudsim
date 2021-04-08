@@ -20,54 +20,48 @@ func NewFunc(config interface{}, dependencies factory.Dependencies, out interfac
 		return err
 	}
 
-	// Parse dependencies
-	var typeDependencies Dependencies
-	if err := dependencies.ToStruct(&typeDependencies); err != nil {
-		return err
-	}
-
 	// Load components
 	components := platform.Components{}
 	factoryCalls := factory.Calls{
 		// Machines
 		{
 			Factory:      machines.Factory,
-			Config:       typeConfig.Machines,
+			Config:       typeConfig.Components.Machines,
 			Dependencies: dependencies,
 			Out:          &components.Machines,
 		},
 		// Storage
 		{
 			Factory:      storage.Factory,
-			Config:       typeConfig.Storage,
+			Config:       typeConfig.Components.Storage,
 			Dependencies: dependencies,
 			Out:          &components.Storage,
 		},
 		// Orchestrator
 		{
 			Factory:      orchestrator.Factory,
-			Config:       typeConfig.Orchestrator,
+			Config:       typeConfig.Components.Orchestrator,
 			Dependencies: dependencies,
 			Out:          &components.Cluster,
 		},
 		// Store
 		{
 			Factory:      store.Factory,
-			Config:       typeConfig.Store,
+			Config:       typeConfig.Components.Store,
 			Dependencies: dependencies,
 			Out:          &components.Store,
 		},
 		// Secrets
 		{
 			Factory:      secrets.Factory,
-			Config:       typeConfig.Secrets,
+			Config:       typeConfig.Components.Secrets,
 			Dependencies: dependencies,
 			Out:          &components.Secrets,
 		},
 		// Email Sender
 		{
 			Factory:      email.Factory,
-			Config:       typeConfig.EmailSender,
+			Config:       typeConfig.Components.EmailSender,
 			Dependencies: dependencies,
 			Out:          &components.EmailSender,
 		},

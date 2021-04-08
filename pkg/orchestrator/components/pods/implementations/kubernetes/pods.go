@@ -109,7 +109,7 @@ func generateKubernetesContainers(containers []pods.Container) []apiv1.Container
 	return result
 }
 
-// Create creates a new pod with the information given in orchestrator.CreatePodInput.
+// Create creates a new pod with the information given in resource.CreatePodInput.
 func (p *kubernetesPods) Create(input pods.CreatePodInput) (orchestratorResource.Resource, error) {
 	p.Logger.Debug(fmt.Sprintf("Creating new pod. Input: %+v", input))
 
@@ -183,10 +183,10 @@ func (p *kubernetesPods) Create(input pods.CreatePodInput) (orchestratorResource
 // getEnvVarValueFromSource returns an env var source for the given value identified as from where it needs to get the env var.
 func getEnvVarValueFromSource(from string) *apiv1.EnvVarSource {
 	switch from {
-	case orchestrator.EnvVarSourcePodIP:
+	case pods.EnvVarSourcePodIP:
 		return &apiv1.EnvVarSource{
 			FieldRef: &apiv1.ObjectFieldSelector{
-				FieldPath: orchestrator.EnvVarSourcePodIP,
+				FieldPath: pods.EnvVarSourcePodIP,
 			},
 		}
 	}
@@ -306,7 +306,7 @@ func (p *kubernetesPods) podHasIP(pod *apiv1.Pod) bool {
 // GetIP gets the IP for the pod identified with the given name in the current namespace.
 // It will return an error if no IP has been assigned to the pod when calling this method.
 // This job assumes that the pod is ready and can be accessed immediately. A WaitForCondition job must be executed at some point
-// before executing this job to ensure that the pod is ready and has an IP assigned (orchestrator.HasIPStatusCondition).
+// before executing this job to ensure that the pod is ready and has an IP assigned (resource.HasIPStatusCondition).
 func (p *kubernetesPods) GetIP(name, namespace string) (string, error) {
 	p.Logger.Debug(fmt.Sprintf("Getting IP from pod with name [%s] in namespace [%s]", name, namespace))
 

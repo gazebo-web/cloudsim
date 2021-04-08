@@ -1,6 +1,7 @@
 package factory
 
 import (
+	"github.com/mitchellh/copystructure"
 	"github.com/mitchellh/mapstructure"
 	"github.com/pkg/errors"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/validate"
@@ -97,6 +98,24 @@ func (d Dependencies) ToStruct(out interface{}) error {
 	}
 
 	return nil
+}
+
+// DeepCopy returns a deep copy of a Dependencies object.
+// It should be called before modifying dependencies to avoid interfering with dependencies in other factories.
+func (d Dependencies) DeepCopy() (Dependencies, error) {
+	// Copy the value
+	out, err := copystructure.Copy(d)
+	if err != nil {
+		return nil, err
+	}
+
+	// Cast to Dependencies
+	dc, ok := out.(Dependencies)
+	if !ok {
+		return nil, errors.New("deep copied value is not of type Dependencies")
+	}
+
+	return dc, nil
 }
 
 // NewDependencies returns a new Dependencies object.

@@ -5,8 +5,8 @@ import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/validate"
 )
 
-// Config is used to create a platform.
-type Config struct {
+// Components contains configuration information for Platform components.
+type Components struct {
 	// Machines contains configuration to instance a Machines implementation using a factory.
 	Machines *factory.Config `yaml:"machines"`
 	// Storage contains configuration to instance a Storage implementation using a factory.
@@ -21,6 +21,12 @@ type Config struct {
 	EmailSender *factory.Config `yaml:"emailSender"`
 	// RunningSimulations contains configuration to instance a RunningSimulations implementation using a factory.
 	RunningSimulations *factory.Config `yaml:"runningSimulations"`
+}
+
+// Config is used to create a platform.
+type Config struct {
+	// Components contains configuration information for Platform components.
+	Components Components
 }
 
 // Validate validates that the config values are valid.

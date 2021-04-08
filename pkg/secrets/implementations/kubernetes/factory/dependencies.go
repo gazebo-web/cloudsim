@@ -12,7 +12,7 @@ type Dependencies struct {
 	Logger ign.Logger `validate:"required"`
 
 	// API is the Kubernetes clientset.
-	API kubeapi.Interface `validate:"required"`
+	API kubeapi.Interface
 }
 
 // Validate validates that the dependencies values are valid.

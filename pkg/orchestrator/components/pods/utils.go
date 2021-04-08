@@ -1,4 +1,4 @@
-package orchestrator
+package pods
 
 import "fmt"
 

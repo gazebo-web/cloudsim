@@ -20,17 +20,21 @@ func NewFunc(config interface{}, dependencies factory.Dependencies, out interfac
 	}
 
 	// Parse dependencies
+	var err error
+	if dependencies, err = dependencies.DeepCopy(); err != nil {
+		return err
+	}
 	var typeDependencies Dependencies
 	if err := dependencies.ToStruct(&typeDependencies); err != nil {
 		return err
 	}
 
 	// Initialize dependencies
-	dependenciesInitFns := []func(config *Config, dependencies *Dependencies) error{
+	dependenciesInitFns := []func(config *Config, dependencies factory.Dependencies, typeDependencies *Dependencies) error{
 		initializeAPI,
 	}
 	for _, initFn := range dependenciesInitFns {
-		if err := initFn(&typeConfig, &typeDependencies); err != nil {
+		if err := initFn(&typeConfig, dependencies, &typeDependencies); err != nil {
 			return err
 		}
 	}
@@ -95,8 +99,8 @@ func NewFunc(config interface{}, dependencies factory.Dependencies, out interfac
 }
 
 // initializeAPI initializes the API dependency.
-func initializeAPI(config *Config, dependencies *Dependencies) error {
-	if dependencies.API != nil {
+func initializeAPI(config *Config, dependencies factory.Dependencies, typeDependencies *Dependencies) error {
+	if typeDependencies.API != nil {
 		return nil
 	}
 	if config == nil {
@@ -115,9 +119,10 @@ func initializeAPI(config *Config, dependencies *Dependencies) error {
 		return err
 	}
 
-	if err = factory.SetValue(&dependencies.API, api); err != nil {
+	if err = factory.SetValue(&typeDependencies.API, api); err != nil {
 		return err
 	}
+	dependencies.Set("API", api)
 
 	return nil
 }

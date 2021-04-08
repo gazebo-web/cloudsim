@@ -19,7 +19,7 @@ type VirtualServices struct {
 	Logger  ign.Logger
 }
 
-// Get returns an orchestrator.Resource of type VirtualService.
+// Get returns a resource.Resource of type VirtualService.
 func (v *VirtualServices) Get(name string, namespace string) (resource.Resource, error) {
 	v.Logger.Debug(fmt.Sprintf("Getting virtual service with name [%s] in namespace [%s]", name, namespace))
 	vs, err := v.Gateway.VirtualServices(namespace).Get(name, metav1.GetOptions{})

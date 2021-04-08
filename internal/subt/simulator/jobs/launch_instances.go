@@ -32,7 +32,7 @@ func removeLaunchedInstances(store actions.Store, tx *gorm.DB, deployment *actio
 		}
 	}
 
-	_ = s.Platform().Machines().Terminate(cloud.TerminateMachinesInput{
+	_ = s.Platform().Machines().Terminate(machines.TerminateMachinesInput{
 		Filters: filters,
 	})
 
