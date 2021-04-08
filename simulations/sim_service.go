@@ -914,12 +914,7 @@ func (s *Service) workerTerminateSimulation(payload interface{}) {
 	if !ok {
 		return
 	}
-	// bind a specific logger to the worker-
-	workerCtx := context.Background()
-
 	s.logger.Info("Worker about to invoke ShutdownSimulation for groupID: " + groupID)
-	res, em := s.shutdownSimulation(workerCtx, s.DB, groupID)
-	s.notify(PoolShutdownSimulation, groupID, res, em)
 	err := s.simulator.Stop(s.baseCtx, simulations.GroupID(groupID))
 	if err != nil {
 		s.notify(PoolShutdownSimulation, groupID, nil, ign.NewErrorMessageWithBase(ign.ErrorUnexpected, err))
