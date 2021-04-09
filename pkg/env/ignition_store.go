@@ -28,16 +28,16 @@ type ignitionEnvStore struct {
 	VerbosityValue string `env:"CLOUDSIM_IGN_VERBOSITY" envDefault:"2"`
 
 	// LogsCopyEnabledValue is the CLOUDSIM_IGN_LOGS_COPY_ENABLED value that will used to define if logs should be copied.
-	LogsCopyEnabledValue bool `env:"CLOUDSIM_IGN_LOGS_COPY_ENABLED"`
+	LogsCopyEnabledValue bool `env:"CLOUDSIM_IGN_LOGS_COPY_ENABLED" envDefault:"false"`
 
 	// RegionValue is the CLOUDSIM_IGN_REGION value that will determine where to launch simulations.
-	RegionValue string `env:"CLOUDSIM_IGN_REGION"`
+	RegionValue string `env:"CLOUDSIM_IGN_REGION" envDefault:"us-east-1"`
 
 	// SecretsNameValue is the CLOUDSIM_IGN_SECRETS_NAME value that will used to get credentials for cloud providers.
-	SecretsNameValue string `env:"CLOUDSIM_IGN_SECRETS_NAME"`
+	SecretsNameValue string `env:"CLOUDSIM_IGN_SECRETS_NAME" envDefault:"aws-secrets"`
 
 	// LogsBucketValue is the CLOUDSIM_AWS_GZ_LOGS_BUCKET value that will be used to upload logs.
-	LogsBucketValue string `env:"CLOUDSIM_AWS_GZ_LOGS_BUCKET"`
+	LogsBucketValue string `env:"CLOUDSIM_AWS_GZ_LOGS_BUCKET,required"`
 
 	// DefaultRecipientsValue has the list of emails that should always receive summaries.
 	DefaultRecipientsValue []string `env:"CLOUDSIM_IGN_DEFAULT_RECIPIENTS"`

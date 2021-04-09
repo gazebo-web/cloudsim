@@ -1,11 +1,13 @@
 package jobs
 
 import (
+	"context"
 	"github.com/jinzhu/gorm"
 	subt "gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/simulations"
 	"gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/simulator/state"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/actions"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/runsim"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/transport"
 )
 
 // AddRunningSimulation is job in charge of adding a running simulation to the list of running simulations.
@@ -23,7 +25,9 @@ var AddRunningSimulation = &actions.Job{
 func revertAddingRunningSimulation(store actions.Store, tx *gorm.DB, deployment *actions.Deployment, value interface{}, _ error) (interface{}, error) {
 	s := store.State().(*state.StartSimulation)
 
-	s.Platform().RunningSimulations().Free(s.GroupID)
+	if s.Platform().RunningSimulations().GetTransporter(s.GroupID).IsConnected() {
+		s.Platform().RunningSimulations().Free(s.GroupID)
+	}
 
 	err := s.Platform().RunningSimulations().Remove(s.GroupID)
 	if err != nil {
@@ -53,6 +57,20 @@ func addRunningSimulation(store actions.Store, tx *gorm.DB, deployment *actions.
 
 	// Initialize a new RunningSimulation.
 	rs := runsim.NewRunningSimulation(s.GroupID, int64(t.MaxSimSeconds), sim.GetValidFor())
+
+	err = s.WebsocketConnection.Subscribe(t.StatsTopic, func(message transport.Message) {
+		_ = rs.ReadWorldStats(context.Background(), message)
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	err = s.WebsocketConnection.Subscribe(t.WarmupTopic, func(message transport.Message) {
+		_ = rs.ReadWarmup(context.Background(), message)
+	})
+	if err != nil {
+		return nil, err
+	}
 
 	// Add the running simulation and websocket connection to the Running Simulation manager.
 	err = s.Platform().RunningSimulations().Add(s.GroupID, rs, s.WebsocketConnection)

@@ -86,7 +86,7 @@ func sendSummaryEmail(store actions.Store, tx *gorm.DB, deployment *actions.Depl
 		"Circuit": subtSim.GetTrack(),
 		"SimName": subtSim.GetName(),
 		"GroupID": subtSim.GetGroupID(),
-		"Summary": marshaledSummary,
+		"Summary": marshaledSummary.String(),
 		"RunData": s.Summary.RunData,
 	})
 	if err != nil {

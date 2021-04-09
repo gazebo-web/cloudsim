@@ -14,6 +14,8 @@ type CreateTrackInput struct {
 	// Public makes a track available for launching directly.
 	// Tracks that are not public can only be launched as part of a Circuit.
 	Public bool `json:"public" validate:"required"`
+	// World is the world used by gazebo where robots will move around.
+	World string `json:"world" validate:"required"`
 }
 
 // UpdateTrackInput is an input for updating an existent track.
@@ -30,4 +32,6 @@ type UpdateTrackInput struct {
 	// Public makes a track available for launching directly.
 	// Tracks that are not public can only be launched as part of a Circuit.
 	Public bool `json:"public" validate:"required"`
+	// World is the world used by gazebo where robots will move around.
+	World string `json:"world" validate:"required"`
 }
