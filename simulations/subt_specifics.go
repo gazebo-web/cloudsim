@@ -2013,8 +2013,12 @@ func (sa *SubTApplication) createMolePod(config *moleBridgeConfig) *corev1.Pod {
 					},
 					Env: []corev1.EnvVar{
 						{
+							Name:  "PYTHONUNBUFFERED",
+							Value: "0",
+						},
+						{
 							Name:  "CS_PB_PULSAR_IP",
-							Value: "mole-pulsar-broker",
+							Value: "mole-pulsar-proxy",
 						},
 						{
 							Name:  "CS_PB_PULSAR_PORT",
