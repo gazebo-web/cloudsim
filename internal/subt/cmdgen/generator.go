@@ -8,6 +8,13 @@ import (
 	"time"
 )
 
+var (
+	// ErrEmptyWorld is returned when an empty world name is passed when calling CommsBridge.
+	ErrEmptyWorld = errors.New("empty world")
+	// ErrInvalidRobot is returned when an invalid robot is passed when calling CommsBridge.
+	ErrInvalidRobot = errors.New("invalid robot")
+)
+
 const (
 	keyDurationSec           = "durationSec"
 	keyHeadless              = "headless"
@@ -103,12 +110,23 @@ func Gazebo(params GazeboConfig) []string {
 	return cmd
 }
 
-// ErrEmptyWorld is returned when an empty world name is passed when calling CommsBridge.
-var ErrEmptyWorld = errors.New("empty world")
+// CommsBridgeConfig includes the information needed to generate the arguments for the
+// comms bridge container.
+type CommsBridgeConfig struct {
+	// World represents a command to launch a certain world with the needed parameters.
+	World string
+	// RobotNumber is a number from 0 to the max number of robots - 1.
+	// It usually is the index when looping over the list of robots for a certain simulation.
+	RobotNumber int
+	// Robot is the robot launched in the field computer linked to the comms bridge container.
+	Robot simulations.Robot
+	// ChildMarsupial is true if the robot given in this configuration is a marsupial child.
+	ChildMarsupial bool
+}
 
 // CommsBridge generates the arguments needed to run in the comms bridge container.
-func CommsBridge(world string, robotNumber int, robotName string, robotType string, childMarsupial bool) ([]string, error) {
-	params := strings.Split(world, ";")
+func CommsBridge(config CommsBridgeConfig) ([]string, error) {
+	params := strings.Split(config.World, ";")
 	var worldNameParam string
 	for _, param := range params {
 		if strings.Index(param, "worldName:=") != -1 {
@@ -121,11 +139,15 @@ func CommsBridge(world string, robotNumber int, robotName string, robotType stri
 		return nil, ErrEmptyWorld
 	}
 
+	if config.Robot == nil {
+		return nil, ErrInvalidRobot
+	}
+
 	return []string{
 		worldNameParam,
-		fmt.Sprintf("robotName%d:=%s", robotNumber+1, robotName),
-		fmt.Sprintf("robotConfig%d:=%s", robotNumber+1, robotType),
+		fmt.Sprintf("robotName%d:=%s", config.RobotNumber+1, config.Robot.GetName()),
+		fmt.Sprintf("robotConfig%d:=%s", config.RobotNumber+1, config.Robot.GetKind()),
 		"headless:=true",
-		fmt.Sprintf("marsupial:=%t", childMarsupial),
+		fmt.Sprintf("marsupial:=%t", config.ChildMarsupial),
 	}, nil
 }
