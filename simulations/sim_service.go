@@ -811,13 +811,13 @@ func (s *Service) checkForExpiredSimulations(ctx context.Context) error {
 		if rs.IsExpired() || rs.Finished {
 			dep, err := GetSimulationDeployment(s.DB, rs.GroupID.String())
 			if err != nil {
-				s.logger.Error("Error while trying to get Simulation from DB: "+rs.GroupID.String(), err)
+				s.logger.Error(fmt.Sprintf("Error while trying to get Simulation from DB: %s", rs.GroupID.String()), err)
 				continue
 			}
 
 			// Add a 'stop simulation' request to the Terminator Jobs-Pool.
 			if err := s.scheduleTermination(ctx, s.DB, dep); err != nil {
-				s.logger.Error("Error while trying to schedule automatic termination of Simulation: "+rs.GroupID.String(), err)
+				s.logger.Error(fmt.Sprintf("Error while trying to schedule automatic termination of Simulation: %s", rs.GroupID.String()), err)
 			} else {
 				reason := "expired"
 				if rs.Finished {
