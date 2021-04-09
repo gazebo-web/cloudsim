@@ -52,12 +52,12 @@ func (m *manager) Add(groupID simulations.GroupID, rs *RunningSimulation, t ignw
 		return fmt.Errorf("invalid websocket transport for [%s], it should not be nil", groupID)
 	}
 
+	m.lock.Lock()
+	defer m.lock.Unlock()
+
 	if _, exists := m.runningSimulations[groupID]; exists {
 		return fmt.Errorf("running simulation [%s] already exists", groupID)
 	}
-
-	m.lock.Lock()
-	defer m.lock.Unlock()
 
 	rs.Transport = t
 
