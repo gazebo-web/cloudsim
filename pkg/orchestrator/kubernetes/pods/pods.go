@@ -66,6 +66,7 @@ func generateKubernetesContainers(containers []orchestrator.Container) []apiv1.C
 
 		// Setup env vars
 		var envs []apiv1.EnvVar
+
 		for key, from := range c.EnvVarsFrom {
 			envs = append(envs, apiv1.EnvVar{
 				Name:      key,

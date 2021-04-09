@@ -55,19 +55,18 @@ func TestGenerateGazebo(t *testing.T) {
 }
 
 func TestGenerateCommsBridge(t *testing.T) {
-	//	worldNameParam,
-	// 	fmt.Sprintf("robotName%d:=%s", robotNumber, robot.Name),
-	//	fmt.Sprintf("robotConfig%d:=%s", robotNumber, robot.Type),
-	//	"headless:=true",
-	//	fmt.Sprintf("marsupial:=%s", childMarsupial),
-
 	const (
 		firstWorld  = "cloudsim_sim.ign;worldName:=tunnel_circuit_01;circuit:=tunnel"
 		secondWorld = "cloudsim_sim.ign;worldName:=tunnel_circuit_02;circuit:=tunnel"
 		thirdWorld  = "cloudsim_sim.ign;worldName:=tunnel_circuit_03;circuit:=tunnel"
 	)
 
-	cmd, err := CommsBridge(firstWorld, 0, "X1", "X1_CONFIG_A", true)
+	cmd, err := CommsBridge(CommsBridgeConfig{
+		World:          firstWorld,
+		RobotNumber:    0,
+		Robot:          fake.NewRobot("X1", "X1_CONFIG_A"),
+		ChildMarsupial: true,
+	})
 	assert.IsType(t, []string{}, cmd)
 	assert.NotNil(t, cmd)
 	assert.Nil(t, err)
@@ -78,13 +77,21 @@ func TestGenerateCommsBridge(t *testing.T) {
 	assert.Equal(t, "headless:=true", cmd[3])
 	assert.Equal(t, "marsupial:=true", cmd[4])
 
-	cmd, err = CommsBridge(secondWorld, 0, "X1", "X1_CONFIG_A", true)
+	cmd, err = CommsBridge(CommsBridgeConfig{
+		World: secondWorld,
+		Robot: fake.NewRobot("X1", "X1_CONFIG_A"),
+	})
 	assert.Equal(t, "worldName:=tunnel_circuit_02", cmd[0])
 
-	cmd, err = CommsBridge(thirdWorld, 0, "X1", "X1_CONFIG_A", true)
+	cmd, err = CommsBridge(CommsBridgeConfig{
+		World: thirdWorld,
+		Robot: fake.NewRobot("X1", "X1_CONFIG_A"),
+	})
 	assert.Equal(t, "worldName:=tunnel_circuit_03", cmd[0])
 
-	cmd, err = CommsBridge("", 0, "X1", "X1_CONFIG_A", true)
+	cmd, err = CommsBridge(CommsBridgeConfig{
+		World: "",
+	})
 	assert.Equal(t, ErrEmptyWorld, err)
 
 }
