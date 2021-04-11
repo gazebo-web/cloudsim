@@ -55,11 +55,6 @@ func checkWaitError(store actions.Store, tx *gorm.DB, deployment *actions.Deploy
 // returned by the job that launches pods returns an error.
 func checkLaunchPodsError(store actions.Store, tx *gorm.DB, deployment *actions.Deployment, value interface{}) (interface{}, error) {
 	output := value.(jobs.LaunchPodsOutput)
-	if len(output.Resources) > 0 {
-		if err := deployment.SetJobData(tx, nil, actions.DeploymentJobData, output); err != nil {
-			return nil, err
-		}
-	}
 	if output.Error == nil {
 		return value, nil
 	}
