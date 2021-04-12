@@ -393,6 +393,9 @@ func (s *Service) CustomizeSimRequest(ctx context.Context, r *http.Request, tx *
 // Start starts this simulation service. It needs to be invoked AFTER 'Applications'
 // were registerd using 'RegisterApplication'.
 func (s *Service) Start(ctx context.Context) error {
+	// Start logger
+	s.logger = ign.NewLoggerNoRollbar("[Ignition Cloudsim - SubT]", ign.VerbosityDebug)
+
 	// Start a routine that will move 'launch' requests from the Waiting Queue into
 	// the WorkerPool. If all the Workers are busy then this goroutine will block.
 	go func() {
@@ -454,13 +457,22 @@ func (s *Service) Start(ctx context.Context) error {
 	RegisterSchedulableTasks(s, ctx, s.DB)
 
 	var err error
+
+	s.logger.Info("Initializing Cloudsim platform")
 	s.platform, err = s.initPlatform()
 	if err != nil {
 		return err
 	}
 
+	s.logger.Info("Initializing application services")
 	s.applicationServices = s.initApplicationServices()
 
+	s.logger.Info("Initializing action service")
+
+	// TODO: Make Verbosity depend on env var
+	s.actionService = actions.NewService(ign.NewLoggerNoRollbar("Worker", ign.VerbosityDebug))
+
+	s.logger.Info("Initializing Simulator using Kubernetes and AWS")
 	s.simulator = s.initSimulator()
 
 	return nil
@@ -761,8 +773,6 @@ func (s *Service) updateMultiSimStatuses(ctx context.Context, tx *gorm.DB) {
 // simulations.
 func (s *Service) StartExpiredSimulationsCleaner() {
 	// bind a specific logger to the cleaner
-	newLogger := logger(s.baseCtx).Clone("expired-simulations-cleaner")
-	cleanerCtx := ign.NewContextWithLogger(s.baseCtx, newLogger)
 
 	// We check for expired simulations each minute
 	s.expiredSimulationsTicker = time.NewTicker(time.Minute)
@@ -772,10 +782,10 @@ func (s *Service) StartExpiredSimulationsCleaner() {
 		for {
 			select {
 			case <-s.expiredSimulationsDone:
-				newLogger.Info("Expired Simulations Cleaner is done.")
+				s.logger.Info("Expired Simulations Cleaner is done.")
 				return
 			case <-s.expiredSimulationsTicker.C:
-				_ = s.checkForExpiredSimulations(cleanerCtx)
+				_ = s.checkForExpiredSimulations(s.baseCtx)
 			}
 		}
 	}()
@@ -791,29 +801,27 @@ func (s *Service) StopExpiredSimulationsCleaner() {
 // to check if they were alive more than expected, and in that case, schedules their termination.
 func (s *Service) checkForExpiredSimulations(ctx context.Context) error {
 
-	logger(ctx).Debug("Checking for expired simulations...")
-	s.lockRunningSimulations.RLock()
-	defer s.lockRunningSimulations.RUnlock()
+	s.logger.Debug("Checking for expired simulations...")
 
-	for groupID := range s.runningSimulations {
-		rs := s.runningSimulations[groupID]
+	rss := s.platform.RunningSimulations().ListExpiredSimulations()
+	for _, rs := range rss {
 
 		if rs.IsExpired() || rs.Finished {
-			dep, err := GetSimulationDeployment(s.DB, groupID)
+			dep, err := GetSimulationDeployment(s.DB, rs.GroupID.String())
 			if err != nil {
-				logger(ctx).Error("Error while trying to get Simulation from DB: "+groupID, err)
+				s.logger.Error(fmt.Sprintf("Error while trying to get Simulation from DB: %s", rs.GroupID.String()), err)
 				continue
 			}
 
 			// Add a 'stop simulation' request to the Terminator Jobs-Pool.
 			if err := s.scheduleTermination(ctx, s.DB, dep); err != nil {
-				logger(ctx).Error("Error while trying to schedule automatic termination of Simulation: "+groupID, err)
+				s.logger.Error(fmt.Sprintf("Error while trying to schedule automatic termination of Simulation: %s", rs.GroupID.String()), err)
 			} else {
 				reason := "expired"
 				if rs.Finished {
 					reason = "finished"
 				}
-				logger(ctx).Info(fmt.Sprintf("Scheduled automatic termination of %s simulation: %s", reason, groupID))
+				s.logger.Info(fmt.Sprintf("Scheduled automatic termination of %s simulation: %s", reason, rs.GroupID.String()))
 			}
 		}
 	}
@@ -878,24 +886,23 @@ func (s *Service) workerStartSimulation(payload interface{}) {
 		return
 	}
 
-	// bind a specific logger to the worker
-	reqID := fmt.Sprintf("worker-start-sim-%s", groupID)
-	newLogger := logger(s.baseCtx).Clone(reqID)
-	workerCtx := ign.NewContextWithLogger(s.baseCtx, newLogger)
-
-	newLogger.Info("Worker about to invoke StartSimulation for groupID: " + groupID)
+	s.logger.Info("Worker about to invoke StartSimulation for groupID: " + groupID)
 
 	simDep, err := GetSimulationDeployment(s.DB, groupID)
 	if err != nil {
-		logger(workerCtx).Error(fmt.Sprintf("startSimulation - %v", err))
+		s.logger.Error(fmt.Sprintf("startSimulation - %v", err))
 		return
 	}
 
-	res, em := s.startSimulation(workerCtx, s.DB, simDep)
-	if res == launcherRelaunchNeeded {
-		s.requeueSimulation(simDep)
+	err = s.simulator.Start(s.baseCtx, simulations.GroupID(groupID))
+	// TODO Only respond to retryable errors
+	if err != nil {
+		// s.requeueSimulation(simDep)
+		s.notify(PoolStartSimulation, groupID, nil, ign.NewErrorMessageWithBase(ign.ErrorUnexpected, err))
+		return
 	}
-	s.notify(PoolStartSimulation, groupID, res, em)
+
+	s.notify(PoolStartSimulation, groupID, simDep, nil)
 }
 
 // ///////////////////////////////////////////////////////////////////////
@@ -907,14 +914,19 @@ func (s *Service) workerTerminateSimulation(payload interface{}) {
 	if !ok {
 		return
 	}
-	// bind a specific logger to the worker-
-	reqID := fmt.Sprintf("worker-finish-sim-%s", groupID)
-	newLogger := logger(s.baseCtx).Clone(reqID)
-	workerCtx := ign.NewContextWithLogger(s.baseCtx, newLogger)
 
-	newLogger.Info("Worker about to invoke ShutdownSimulation for groupID: " + groupID)
-	res, em := s.shutdownSimulation(workerCtx, s.DB, groupID)
-	s.notify(PoolShutdownSimulation, groupID, res, em)
+	err := s.simulator.Stop(s.baseCtx, simulations.GroupID(groupID))
+	if err != nil {
+		s.notify(PoolShutdownSimulation, groupID, nil, ign.NewErrorMessageWithBase(ign.ErrorUnexpected, err))
+		return
+	}
+
+	simDep, err := GetSimulationDeployment(s.DB, groupID)
+	if err != nil {
+		s.logger.Error(fmt.Sprintf("stopSimulation - %v", err))
+		return
+	}
+	s.notify(PoolShutdownSimulation, groupID, simDep, nil)
 }
 
 // ///////////////////////////////////////////////////////////////////////
@@ -1711,7 +1723,7 @@ func (s *Service) scheduleTermination(ctx context.Context, tx *gorm.DB, dep *Sim
 	// Do not continue if the simulation has already started termination
 	if *dep.DeploymentStatus >= int(simTerminateRequested) {
 		depStatus := DeploymentStatus(*dep.DeploymentStatus)
-		logger(ctx).Warning(fmt.Sprintf(
+		s.logger.Warning(fmt.Sprintf(
 			"Attempted to terminate simulation [%s] with status %s.", *dep.GroupID, depStatus.String(),
 		))
 		return nil
@@ -2365,7 +2377,6 @@ func (s *Service) QueueRemoveElement(ctx context.Context, user *users.User, grou
 
 // TODO: Make initPlatform independent of Service by receiving arguments with the needed config.
 func (s *Service) initPlatform() (platform.Platform, error) {
-	s.logger = ign.NewLoggerNoRollbar("[Ignition Cloudsim - SubT]", ign.VerbosityDebug)
 
 	machines := ec2.NewMachines(globals.EC2Svc, s.logger)
 
