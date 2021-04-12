@@ -265,6 +265,10 @@ func (m *machines) terminateByFilters(filters map[string][]string) error {
 		return err
 	}
 
+	if len(out.Reservations) == 0 {
+		return nil
+	}
+
 	var instanceIds []string
 	for _, r := range out.Reservations {
 		for _, instance := range r.Instances {
