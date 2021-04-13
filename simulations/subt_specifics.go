@@ -2025,6 +2025,10 @@ func (sa *SubTApplication) createMolePod(config *moleBridgeConfig) *corev1.Pod {
 							Value: "6650",
 						},
 						{
+							Name:  "CS_PB_PULSAR_HTTP_PORT",
+							Value: "8080",
+						},
+						{
 							Name:  "CS_PB_TOPIC_REGEX",
 							Value: "^subt/",
 						},
