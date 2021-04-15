@@ -37,9 +37,10 @@ func connectWebsocket(store actions.Store, tx *gorm.DB, deployment *actions.Depl
 	for i := 0; i < 10; i++ {
 		t, err = ignws.NewIgnWebsocketTransporter(host, path, transport.WebsocketSecureScheme, token)
 		if err != nil {
+			time.Sleep(time.Duration(i*10) * time.Second)
 			continue
 		}
-		time.Sleep(time.Duration(i*10) * time.Second)
+		break
 	}
 
 	if err != nil {
