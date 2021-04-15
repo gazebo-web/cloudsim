@@ -2380,6 +2380,29 @@ func (s *Service) QueueRemoveElement(ctx context.Context, user *users.User, grou
 
 // TODO: Make initPlatforms independent of Service by receiving arguments with the needed config.
 func (s *Service) initPlatforms() (platformManager.Manager, error) {
+	if s.cfg.IsTest {
+		machines := machines.NewMachines(globals.EC2Svc, s.logger)
+		storage := storage.(globals.S3Svc, s.logger)
+		cluster := kubernetes.NewFakeKubernetes(s.logger)
+		store, err := envVars.NewStore()
+		sesAPI := ses.New(s.session)
+		emailSender := email.NewEmailSender(sesAPI)
+		runningSimulations := runsim.NewManager()
+		if err != nil {
+			return nil, err
+		}
+		secretManager = secrets.NewFakeSecrets()
+		p := platform.NewPlatform(platform.Components{
+			Machines:           machines,
+			Storage:            storage,
+			Cluster:            cluster,
+			Store:              store,
+			Secrets:            secretManager,
+			EmailSender:        emailSender,
+			RunningSimulations: runningSimulations,
+		})
+	}
+
 	input := &platformManager.NewInput{
 		ConfigPath: s.cfg.PlatformConfigPath,
 		Loader:     loader.NewYAMLLoader(s.logger),

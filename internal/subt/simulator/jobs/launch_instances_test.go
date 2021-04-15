@@ -80,6 +80,7 @@ func TestLaunchInstances(t *testing.T) {
 
 	machineConfigStore.On("SubnetAndZone").Return("subnet-test", "zone-test")
 	machineConfigStore.On("InitScript").Return("bash")
+	machineConfigStore.On("Limit").Return(-1)
 
 	// Configure mocked machines interface
 	machines := &instancesLauncher{}
@@ -108,6 +109,99 @@ func TestLaunchInstances(t *testing.T) {
 	assert.Equal(t, 1, machines.TimesCalled)
 }
 
+func TestLaunchInstancesFailsWhenLimitIsSet(t *testing.T) {
+	// Initialize database
+	db, err := gorm.GetDBFromEnvVars()
+	defer db.Close()
+
+	// If the database fails to connect, fail instantly.
+	require.NoError(t, err)
+
+	// Migrate db for actions
+	actions.CleanAndMigrateDB(db)
+
+	// Initialize simulation
+	gid := simulations.GroupID("aaaa-bbbb-cccc-dddd")
+	sim := simfake.NewSimulation(gid, simulations.StatusPending, simulations.SimSingle, nil, "test", 1*time.Minute)
+
+	// Initialize fake simulation service
+	svc := simfake.NewService()
+	app := application.NewServices(svc, nil)
+
+	svc.On("Get", gid).Return(sim, error(nil)).Once()
+
+	svc.On("GetRobots", gid).Return(
+		[]simulations.Robot{
+			simfake.NewRobot("TEST-X1", "X1"),
+		},
+		error(nil),
+	).Once()
+
+	// Configure machine config fake env store
+	machineConfigStore := envfake.NewFakeMachines()
+
+	configStore := envfake.NewFakeStore(machineConfigStore, nil, nil)
+
+	machineConfigStore.On("InstanceProfile").Return("arn::test::1234")
+	machineConfigStore.On("KeyName").Return("testKey")
+	machineConfigStore.On("Type").Return("g3.4xlarge")
+	machineConfigStore.On("BaseImage").Return("osrf/test-image")
+	machineConfigStore.On("FirewallRules").Return([]string{"sg-12345"})
+	machineConfigStore.On("NamePrefix").Return("sim")
+	machineConfigStore.On("ClusterName").Return("cloudsim-cluster")
+
+	machineConfigStore.On("Tags", sim, "gzserver", "gzserver").Return([]cloud.Tag{
+		{
+			Resource: "instance",
+			Map: map[string]string{
+				"app": "test",
+			},
+		},
+	})
+
+	machineConfigStore.On("Tags", sim, "field-computer", "fc-TEST-X1").Return([]cloud.Tag{
+		{
+			Resource: "instance",
+			Map: map[string]string{
+				"app": "test",
+			},
+		},
+	})
+
+	machineConfigStore.On("SubnetAndZone").Return("subnet-test", "zone-test")
+	machineConfigStore.On("InitScript").Return("bash")
+
+	// It should fail when requesting 2 machines.
+	machineConfigStore.On("Limit").Return(1)
+
+	// Configure mocked machines interface
+	machines := &instancesLauncher{}
+
+	// Initialize platform
+	p := platform.NewPlatform(platform.Components{
+		Machines: machines,
+		Store:    configStore,
+	})
+
+	tracksService := tracks.NewService(nil, nil, nil)
+
+	subt := subtapp.NewServices(app, tracksService, nil)
+
+	// Create initial state
+	initialState := state.NewStartSimulation(p, subt, gid)
+
+	// Pass the initial state to the action store
+	s := actions.NewStore(&initialState)
+
+	// Run the job
+	_, err = LaunchInstances.Run(s, db, &actions.Deployment{}, initialState)
+
+	// Check an error is returned and that Create has not been called.
+	assert.Error(t, err)
+	assert.Equal(t, cloud.ErrInsufficientMachines, err)
+	assert.Equal(t, 0, machines.TimesCalled)
+}
+
 type instancesLauncher struct {
 	TimesCalled int
 	machines.Machines
@@ -125,4 +219,8 @@ func (i *instancesLauncher) Create(input []machines.CreateMachinesInput) ([]mach
 		output = append(output, out)
 	}
 	return output, nil
+}
+
+func (i *instancesLauncher) Count(input cloud.CountMachinesInput) int {
+	return 0
 }
