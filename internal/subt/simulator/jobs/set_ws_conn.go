@@ -6,6 +6,7 @@ import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/actions"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/transport"
 	ignws "gitlab.com/ignitionrobotics/web/cloudsim/pkg/transport/ign"
+	"time"
 )
 
 // SetWebsocketConnection is a job in charge of setting a websocket connection to the Ignition Gazebo server.
@@ -32,7 +33,15 @@ func connectWebsocket(store actions.Store, tx *gorm.DB, deployment *actions.Depl
 		return nil, err
 	}
 
-	t, err := ignws.NewIgnWebsocketTransporter(host, path, transport.WebsocketSecureScheme, token)
+	var t ignws.PubSubWebsocketTransporter
+	for i := 0; i < 10; i++ {
+		t, err = ignws.NewIgnWebsocketTransporter(host, path, transport.WebsocketSecureScheme, token)
+		if err != nil {
+			continue
+		}
+		time.Sleep(time.Duration(i*10) * time.Second)
+	}
+
 	if err != nil {
 		return nil, err
 	}
