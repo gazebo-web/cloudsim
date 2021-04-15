@@ -25,6 +25,16 @@ type manager struct {
 	lock               sync.RWMutex
 }
 
+// Lock activates the internal lock.
+func (m *manager) Lock() {
+	m.lock.Lock()
+}
+
+// Unlock releases the internal lock.
+func (m *manager) Unlock() {
+	m.lock.Unlock()
+}
+
 // Exists checks if the given group id is registered as a running simulation.
 func (m *manager) Exists(groupID simulations.GroupID) bool {
 	_, ok := m.runningSimulations[groupID]
