@@ -7,6 +7,7 @@ import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/simulator/state"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/actions"
 	"strconv"
+	"strings"
 )
 
 // ReadScore is a job in charge of reading the score from a gzserver copy pod for the simulation that is being processed.
@@ -36,7 +37,7 @@ func readScore(store actions.Store, tx *gorm.DB, deployment *actions.Deployment,
 	}
 
 	// Parse the score
-	score, err := strconv.ParseFloat(string(body), 64)
+	score, err := strconv.ParseFloat(strings.TrimSpace(string(body)), 64)
 	if err != nil {
 		return nil, err
 	}
