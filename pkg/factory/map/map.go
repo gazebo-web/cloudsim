@@ -15,16 +15,21 @@ var _ factory.Factory = (Map)(nil)
 // `out` should be a pointer to a value able to contain the expected type.
 func (fm Map) New(cfg *factory.Config, dependencies factory.Dependencies, out interface{}) error {
 	if cfg == nil {
-		return factory.ErrNilConfig
+		return factory.ErrorWithContext(factory.ErrNilConfig)
 	}
 
 	var fn factory.NewFunc
 	var ok bool
 	if fn, ok = fm[cfg.Type]; !ok {
-		return factory.ErrFactoryTypeDoesNotExist
+		return factory.ErrorWithContext(factory.ErrFactoryTypeDoesNotExist)
 	}
 
-	return fn(cfg.Config, dependencies, out)
+	// Create the object
+	if err := fn(cfg.Config, dependencies, out); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // Register registers a new object type the factory can create.

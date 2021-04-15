@@ -159,7 +159,7 @@ func TestStopSimulationAction(t *testing.T) {
 	}
 
 	// Initialize platform
-	p := platform.NewPlatform(c)
+	p, _ := platform.NewPlatform("test", c)
 
 	// Simulation should be set to terminate requested.
 	err = simService.UpdateStatus(sim.GetGroupID(), simulations.StatusTerminateRequested)
@@ -304,7 +304,6 @@ func TestStopSimulationAction(t *testing.T) {
 	// Initialize simulator
 	s := simulator.NewSimulator(simulator.Config{
 		DB:                    db,
-		Platform:              p,
 		ApplicationServices:   app,
 		ActionService:         actionService,
 		DisableDefaultActions: true,
@@ -314,6 +313,6 @@ func TestStopSimulationAction(t *testing.T) {
 	actionService.RegisterAction(&appName, simulator.ActionNameStopSimulation, stopAction)
 
 	// Stop the simulation.
-	err = s.Stop(ctx, sim.GetGroupID())
+	err = s.Stop(ctx, p, sim.GetGroupID())
 	assert.NoError(t, err)
 }

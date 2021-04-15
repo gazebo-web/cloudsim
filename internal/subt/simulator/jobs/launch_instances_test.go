@@ -85,7 +85,7 @@ func TestLaunchInstances(t *testing.T) {
 	machines := &instancesLauncher{}
 
 	// Initialize platform
-	p := platform.NewPlatform(platform.Components{
+	p, _ := platform.NewPlatform("test", platform.Components{
 		Machines: machines,
 		Store:    configStore,
 	})

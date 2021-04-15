@@ -10,13 +10,13 @@ func NewFunc(config interface{}, dependencies factory.Dependencies, out interfac
 	// Parse dependencies
 	var typeDependencies Dependencies
 	if err := dependencies.ToStruct(&typeDependencies); err != nil {
-		return err
+		return factory.ErrorWithContext(err)
 	}
 
 	// Create instance
 	nodes := kubernetesNodes.NewNodes(typeDependencies.API, typeDependencies.Logger)
 	if err := factory.SetValue(out, nodes); err != nil {
-		return err
+		return factory.ErrorWithContext(err)
 	}
 
 	return nil

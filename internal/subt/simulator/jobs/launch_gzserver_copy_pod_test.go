@@ -75,7 +75,7 @@ func TestLaunchGazeboServerCopyPod(t *testing.T) {
 	}}, error(nil))
 
 	// Set up platform using fake store and fake kubernetes component
-	p := platform.NewPlatform(platform.Components{
+	p, _ := platform.NewPlatform("test", platform.Components{
 		Cluster: ks,
 		Store:   fakeStore,
 		Secrets: secretsManager,
@@ -131,7 +131,7 @@ func TestLaunchGazeboServerCopyPodsLogsDisabled(t *testing.T) {
 	storeIgnition.On("LogsCopyEnabled").Return(false)
 
 	// Set up platform using fake store and fake kubernetes component
-	p := platform.NewPlatform(platform.Components{
+	p, _ := platform.NewPlatform("test", platform.Components{
 		Store: fakeStore,
 	})
 

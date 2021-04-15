@@ -16,10 +16,11 @@ import (
 // It contains all the information needed by application jobs to launch simulations.
 type machinesStore struct {
 	// InstanceProfileValue is the ARN used to configure EC2 machines.
-	InstanceProfileValue string `default:"arn:aws:iam::200670743174:instance-profile/aws-eks-role-cloudsim-worker" env:"CLOUDSIM_MACHINES_INSTANCE_PROFILE"`
+	InstanceProfileValue string `validate:"required" default:"arn:aws:iam::200670743174:instance-profile/aws-eks-role-cloudsim-worker" env:"CLOUDSIM_MACHINES_INSTANCE_PROFILE"`
 
 	// KeyNameValue is the name of the SSH key used for a new instance.
-	KeyNameValue string `default:"ignitionFuel" env:"CLOUDSIM_MACHINES_KEY_NAME"`
+	// This key must be registered in the machines provider.
+	KeyNameValue string `validate:"required" default:"ignitionFuel" env:"CLOUDSIM_MACHINES_KEY_NAME"`
 
 	// MachineTypeValue is the type of instance thGat will be created.
 	MachineTypeValue string `default:"g3.4xlarge" env:"CLOUDSIM_MACHINES_TYPE"`

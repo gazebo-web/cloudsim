@@ -1,8 +1,9 @@
 package factory
 
 import (
-	"errors"
 	"github.com/mitchellh/mapstructure"
+	"github.com/pkg/errors"
+	errorsutils "gitlab.com/ignitionrobotics/web/cloudsim/pkg/utils/errors"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/utils/reflect"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/validate"
 )
@@ -140,4 +141,10 @@ func SetValueAndValidate(out interface{}, value interface{}) error {
 	}
 
 	return nil
+}
+
+// ErrorWithContext wraps an error with information about the function that generated the error.
+func ErrorWithContext(err error) error {
+	errMsg := "factory function failed to create value"
+	return errorsutils.WithFunctionContext(err, errMsg, 2)
 }

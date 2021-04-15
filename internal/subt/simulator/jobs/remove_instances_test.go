@@ -50,7 +50,7 @@ func (s *removeInstancesTestSuite) SetupTest() {
 
 	s.Machines = fake.NewMachines()
 
-	s.Platform = platform.NewPlatform(platform.Components{
+	s.Platform, _ = platform.NewPlatform("test", platform.Components{
 		Machines: s.Machines,
 	})
 

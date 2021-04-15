@@ -41,7 +41,7 @@ func TestGetGazeboServerIPFailsWhenNotSet(t *testing.T) {
 		Pods: po,
 	})
 
-	p := platform.NewPlatform(platform.Components{
+	p, _ := platform.NewPlatform("test", platform.Components{
 		Cluster: ks,
 		Store:   fakeStore,
 	})
@@ -86,7 +86,7 @@ func TestGetGazeboIP(t *testing.T) {
 		Pods: po,
 	})
 
-	p := platform.NewPlatform(platform.Components{
+	p, _ := platform.NewPlatform("test", platform.Components{
 		Cluster: ks,
 		Store:   fakeStore,
 	})

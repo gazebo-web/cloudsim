@@ -38,6 +38,7 @@ func (s *testPlatformFactorySuite) TestNewFunc() {
 	config := factory.Config{
 		Type: Default,
 		Config: factory.ConfigValues{
+			"Name": "us-east-1",
 			"Components": factory.ConfigValues{
 				"Machines": factory.ConfigValues{
 					"type": machines.EC2,

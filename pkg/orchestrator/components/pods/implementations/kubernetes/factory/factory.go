@@ -12,13 +12,13 @@ func NewFunc(config interface{}, dependencies factory.Dependencies, out interfac
 	// Parse config
 	var typeConfig Config
 	if err := factory.SetValueAndValidate(&typeConfig, config); err != nil {
-		return err
+		return factory.ErrorWithContext(err)
 	}
 
 	// Parse dependencies
 	var typeDependencies Dependencies
 	if err := dependencies.ToStruct(&typeDependencies); err != nil {
-		return err
+		return factory.ErrorWithContext(err)
 	}
 
 	// Initialize dependencies
@@ -34,7 +34,7 @@ func NewFunc(config interface{}, dependencies factory.Dependencies, out interfac
 	// Create instance
 	pods := kubernetesPods.NewPods(typeDependencies.API, typeDependencies.SPDY, typeDependencies.Logger)
 	if err := factory.SetValue(out, pods); err != nil {
-		return err
+		return factory.ErrorWithContext(err)
 	}
 
 	return nil
@@ -50,14 +50,14 @@ func initializeSPDY(config *Config, dependencies *Dependencies) error {
 	// Get the Kubernetes config
 	kubeconfig, err := client.GetConfig(config.API.KubeConfig)
 	if err != nil {
-		return err
+		return factory.ErrorWithContext(err)
 	}
 
 	// Create the SPDY Initializer
 	spdy := spdy.NewSPDYInitializer(kubeconfig)
 
 	if err = factory.SetValue(&dependencies.SPDY, spdy); err != nil {
-		return err
+		return factory.ErrorWithContext(err)
 	}
 
 	return nil

@@ -65,7 +65,7 @@ func TestLaunchCommsBridgePods(t *testing.T) {
 	})
 
 	// Set up platform using fake store and fake kubernetes component
-	p := platform.NewPlatform(platform.Components{
+	p, _ := platform.NewPlatform("test", platform.Components{
 		Cluster: ks,
 		Store:   fakeStore,
 	})

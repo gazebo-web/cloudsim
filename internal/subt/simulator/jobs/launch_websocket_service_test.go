@@ -38,7 +38,7 @@ func TestLaunchWebsocketService(t *testing.T) {
 	ks := kubernetes.NewCustomKubernetes(kubernetes.Config{Services: kss})
 
 	// Initialize a new platform with the orchestrator component and the mocked store.
-	p := platform.NewPlatform(platform.Components{
+	p, _ := platform.NewPlatform("test", platform.Components{
 		Cluster: ks,
 		Store:   fakeStore,
 	})

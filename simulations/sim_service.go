@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/ses"
 	"github.com/caarlos0/env"
 	"github.com/jinzhu/gorm"
 	"github.com/panjf2000/ants"
@@ -16,23 +15,10 @@ import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/summaries"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/actions"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/application"
-	email "gitlab.com/ignitionrobotics/web/cloudsim/pkg/email/implementations/ses"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/machines/implementations/ec2"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/components/ingresses/implementations/gloo"
-	network "gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/components/network/implementations/kubernetes"
-	nodes "gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/components/nodes/implementations/kubernetes"
-	pods "gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/components/pods/implementations/kubernetes"
-	services "gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/components/services/implementations/kubernetes"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/components/spdy"
-	cluster "gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/implementations/kubernetes"
-	kubernetes "gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/implementations/kubernetes/client"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/platform"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/runsim"
-	secrets "gitlab.com/ignitionrobotics/web/cloudsim/pkg/secrets/implementations/kubernetes"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/loader"
+	platformManager "gitlab.com/ignitionrobotics/web/cloudsim/pkg/platform/manager"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulator"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/storage/implementations/s3"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/store/implementations/store"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/transport"
 	ignws "gitlab.com/ignitionrobotics/web/cloudsim/pkg/transport/ign"
 	useracc "gitlab.com/ignitionrobotics/web/cloudsim/pkg/users"
@@ -199,8 +185,8 @@ type Service struct {
 	// your service clients will ensure the configuration is loaded the fewest
 	// number of times possible.
 	session *session.Session
-
-	platform            platform.Platform
+	// platforms contains a set of platforms managed by this service.
+	platforms           platformManager.Manager
 	logger              ign.Logger
 	applicationServices subtapp.Services
 	actionService       actions.Servicer
@@ -212,6 +198,9 @@ type Service struct {
 var SimServImpl SimService
 
 type simServConfig struct {
+	// PlatformConfigPath is the filepath to the platform configuration file.
+	// If not defined, it will use the default config path.
+	PlatformConfigPath string `env:"SIMSVC_PLATFORM_CONFIG_PATH" envDefault:""`
 	// KubernetesNamespace is the Kubernetes namespace for simulation resources.
 	KubernetesNamespace string `env:"SIMSVC_KUBERNETES_NAMESPACE" envDefault:"default"`
 	// KubernetesGlooNamespace is the Gloo namespace in the Kubernetes cluster.
@@ -288,7 +277,9 @@ type PoolFactory func(poolSize int, jobF func(interface{})) (JobPool, error)
 // ///////////////////////////////////////////////////////////////////////
 
 // NewSimulationsService creates a new simulations service
-func NewSimulationsService(ctx context.Context, db *gorm.DB, nm NodeManager, kcli kubecli.Interface, gloo gloocli.Clientset, pf PoolFactory, ua useracc.Service, isTest bool, session *session.Session) (SimService, error) {
+func NewSimulationsService(ctx context.Context, db *gorm.DB, nm NodeManager, kcli kubecli.Interface,
+	gloo gloocli.Clientset, pf PoolFactory, ua useracc.Service, isTest bool,
+	session *session.Session) (SimService, error) {
 
 	var err error
 	s := Service{}
@@ -387,7 +378,9 @@ func defaultPoolFactory(poolSize int, jobF func(interface{})) (JobPool, error) {
 
 // CustomizeSimRequest allows registered Applications to customize the incoming CreateSimulation request.
 // Eg. reading specific SubT fields.
-func (s *Service) CustomizeSimRequest(ctx context.Context, r *http.Request, tx *gorm.DB, createSim *CreateSimulation, username string) *ign.ErrMsg {
+func (s *Service) CustomizeSimRequest(ctx context.Context, r *http.Request, tx *gorm.DB, createSim *CreateSimulation,
+	username string) *ign.ErrMsg {
+
 	return s.applications[createSim.Application].customizeSimulationRequest(ctx, s, r, tx, createSim, username)
 }
 
@@ -459,8 +452,9 @@ func (s *Service) Start(ctx context.Context) error {
 
 	var err error
 
-	s.logger.Info("Initializing Cloudsim platform")
-	s.platform, err = s.initPlatform()
+	s.logger.Info("Initializing Cloudsim platforms")
+
+	s.platforms, err = s.initPlatforms()
 	if err != nil {
 		return err
 	}
@@ -804,28 +798,30 @@ func (s *Service) checkForExpiredSimulations(ctx context.Context) error {
 
 	s.logger.Debug("Checking for expired simulations...")
 
-	rss := s.platform.RunningSimulations().ListExpiredSimulations()
-	for _, rs := range rss {
-
-		if rs.IsExpired() || rs.Finished {
-			dep, err := GetSimulationDeployment(s.DB, rs.GroupID.String())
-			if err != nil {
-				s.logger.Error(fmt.Sprintf("Error while trying to get Simulation from DB: %s", rs.GroupID.String()), err)
-				continue
-			}
-
-			// Add a 'stop simulation' request to the Terminator Jobs-Pool.
-			if err := s.scheduleTermination(ctx, s.DB, dep); err != nil {
-				s.logger.Error(fmt.Sprintf("Error while trying to schedule automatic termination of Simulation: %s", rs.GroupID.String()), err)
-			} else {
-				reason := "expired"
-				if rs.Finished {
-					reason = "finished"
+	for _, p := range s.platforms.Platforms() {
+		rss := p.RunningSimulations().ListExpiredSimulations()
+		for _, rs := range rss {
+			if rs.IsExpired() || rs.Finished {
+				dep, err := GetSimulationDeployment(s.DB, rs.GroupID.String())
+				if err != nil {
+					s.logger.Error(fmt.Sprintf("Error while trying to get Simulation from DB: %s", rs.GroupID.String()), err)
+					continue
 				}
-				s.logger.Info(fmt.Sprintf("Scheduled automatic termination of %s simulation: %s", reason, rs.GroupID.String()))
+
+				// Add a 'stop simulation' request to the Terminator Jobs-Pool.
+				if err := s.scheduleTermination(ctx, s.DB, dep); err != nil {
+					s.logger.Error(fmt.Sprintf("Error while trying to schedule automatic termination of Simulation: %s", rs.GroupID.String()), err)
+				} else {
+					reason := "expired"
+					if rs.Finished {
+						reason = "finished"
+					}
+					s.logger.Info(fmt.Sprintf("Scheduled automatic termination of %s simulation: %s", reason, rs.GroupID.String()))
+				}
 			}
 		}
 	}
+
 	return nil
 }
 
@@ -895,11 +891,14 @@ func (s *Service) workerStartSimulation(payload interface{}) {
 		return
 	}
 
-	err = s.simulator.Start(s.baseCtx, simulations.GroupID(groupID))
+	// TODO Select platform
+	p := s.platforms.Platforms()[0]
+
+	err = s.simulator.Start(s.baseCtx, p, simulations.GroupID(groupID))
 	// TODO Only respond to retryable errors
 	if err != nil {
 		// s.requeueSimulation(simDep)
-		s.notify(PoolStartSimulation, groupID, nil, ign.NewErrorMessageWithBase(ign.ErrorUnexpected, err))
+		s.notify(PoolStartSimulation, groupID, simDep, ign.NewErrorMessageWithBase(ign.ErrorUnexpected, err))
 		return
 	}
 
@@ -916,7 +915,10 @@ func (s *Service) workerTerminateSimulation(payload interface{}) {
 		return
 	}
 
-	err := s.simulator.Stop(s.baseCtx, simulations.GroupID(groupID))
+	// TODO Get platform from RunSim
+	p := s.platforms.Platforms()[0]
+
+	err := s.simulator.Stop(s.baseCtx, p, simulations.GroupID(groupID))
 	if err != nil {
 		s.notify(PoolShutdownSimulation, groupID, nil, ign.NewErrorMessageWithBase(ign.ErrorUnexpected, err))
 		return
@@ -2376,62 +2378,15 @@ func (s *Service) QueueRemoveElement(ctx context.Context, user *users.User, grou
 	return s.launchHandlerQueue.Remove(groupID)
 }
 
-// TODO: Make initPlatform independent of Service by receiving arguments with the needed config.
-func (s *Service) initPlatform() (platform.Platform, error) {
-
-	machines := ec2.NewMachines(globals.EC2Svc, s.logger)
-
-	storage := s3.NewStorage(globals.S3Svc, s.logger)
-
-	restConfig, err := kubernetes.GetConfig("")
-	if err != nil {
-		return nil, err
+// TODO: Make initPlatforms independent of Service by receiving arguments with the needed config.
+func (s *Service) initPlatforms() (platformManager.Manager, error) {
+	input := &platformManager.NewInput{
+		ConfigPath: s.cfg.PlatformConfigPath,
+		Loader:     loader.NewYAMLLoader(s.logger),
+		Logger:     s.logger,
 	}
 
-	kubernetesClient, err := kubernetes.NewAPI(restConfig)
-	if err != nil {
-		return nil, err
-	}
-
-	glooClientset, err := gloocli.NewClientset(context.Background(), &gloocli.ClientsetConfig{
-		KubeConfig:             restConfig,
-		IsGoTest:               s.cfg.IsTest,
-		ConnectToCloudServices: true,
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	cluster := cluster.NewCustomKubernetes(cluster.Config{
-		Nodes:           nodes.NewNodes(kubernetesClient, s.logger),
-		Pods:            pods.NewPods(kubernetesClient, spdy.NewSPDYInitializer(restConfig), s.logger),
-		Ingresses:       gloo.NewVirtualServices(glooClientset.Gateway(), s.logger, glooClientset.Gloo()),
-		IngressRules:    gloo.NewVirtualHosts(glooClientset.Gateway(), s.logger),
-		Services:        services.NewServices(kubernetesClient, s.logger),
-		NetworkPolicies: network.NewNetworkPolicies(kubernetesClient, s.logger),
-	})
-
-	store, err := store.NewStoreFromEnvVars()
-	if err != nil {
-		return nil, err
-	}
-
-	kubernetesSecrets := secrets.NewKubernetesSecrets(kubernetesClient.CoreV1())
-
-	sesAPI := ses.New(s.session)
-	emailSender := email.NewEmailSender(sesAPI, nil)
-
-	runningSimulations := runsim.NewManager()
-
-	return platform.NewPlatform(platform.Components{
-		Machines:           machines,
-		Storage:            storage,
-		Cluster:            cluster,
-		Store:              store,
-		Secrets:            kubernetesSecrets,
-		EmailSender:        emailSender,
-		RunningSimulations: runningSimulations,
-	}), nil
+	return platformManager.NewMapFromConfig(input)
 }
 
 // TODO: Make initApplicationServices independent of Service by receiving arguments with the needed config.
@@ -2447,7 +2402,6 @@ func (s *Service) initApplicationServices() subtapp.Services {
 func (s *Service) initSimulator() simulator.Simulator {
 	return subtSimulator.NewSimulator(subtSimulator.Config{
 		DB:                    s.DB,
-		Platform:              s.platform,
 		ApplicationServices:   s.applicationServices,
 		ActionService:         s.actionService,
 		DisableDefaultActions: false,

@@ -11,13 +11,13 @@ func NewFunc(config interface{}, dependencies factory.Dependencies, out interfac
 	// Parse config
 	var typeConfig Config
 	if err := factory.SetValueAndValidate(&typeConfig, config); err != nil {
-		return err
+		return factory.ErrorWithContext(err)
 	}
 
 	// Parse dependencies
 	var typeDependencies Dependencies
 	if err := dependencies.ToStruct(&typeDependencies); err != nil {
-		return err
+		return factory.ErrorWithContext(err)
 	}
 
 	// Initialize dependencies
@@ -38,7 +38,7 @@ func NewFunc(config interface{}, dependencies factory.Dependencies, out interfac
 
 	// Set output value
 	if err := factory.SetValue(out, api); err != nil {
-		return err
+		return factory.ErrorWithContext(err)
 	}
 
 	return nil
@@ -54,7 +54,7 @@ func initializeAPI(config *Config, dependencies *Dependencies) error {
 	awsConfig := aws.Config{Region: config.Region}
 	cp, err := aws.GetConfigProvider(awsConfig)
 	if err != nil {
-		return err
+		return factory.ErrorWithContext(err)
 	}
 
 	// Create API

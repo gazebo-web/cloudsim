@@ -17,7 +17,7 @@ func NewFunc(config interface{}, dependencies factory.Dependencies, out interfac
 	// Parse config
 	var typeConfig Config
 	if err := factory.SetValueAndValidate(&typeConfig, config); err != nil {
-		return err
+		return factory.ErrorWithContext(err)
 	}
 
 	// Load components
@@ -74,9 +74,12 @@ func NewFunc(config interface{}, dependencies factory.Dependencies, out interfac
 	components.RunningSimulations = runsim.NewManager()
 
 	// Set output value
-	platform := platform.NewPlatform(components)
+	platform, err := platform.NewPlatform(typeConfig.Name, components)
+	if err != nil {
+		return factory.ErrorWithContext(err)
+	}
 	if err := factory.SetValue(out, platform); err != nil {
-		return err
+		return factory.ErrorWithContext(err)
 	}
 
 	return nil

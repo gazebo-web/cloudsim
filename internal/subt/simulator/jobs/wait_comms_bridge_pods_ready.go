@@ -5,7 +5,7 @@ import (
 	subtapp "gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/application"
 	"gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/simulator/state"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/actions"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/resource"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulator/jobs"
 )
 
@@ -24,12 +24,12 @@ func createWaitRequestForCommsBridgePodToBeReady(store actions.Store, tx *gorm.D
 
 	store.SetState(s)
 
-	res := orchestrator.NewResource("", "", subtapp.GetPodLabelsBase(s.GroupID, nil))
+	res := resource.NewResource("", "", subtapp.GetPodLabelsBase(s.GroupID, nil))
 
 	// Create wait for condition request
 	// Since only the gazebo server pod has been created and already has an IP, we only need to wait until
 	// comms bridge pods have an ip.
-	req := s.Platform().Orchestrator().Pods().WaitForCondition(res, orchestrator.ReadyCondition)
+	req := s.Platform().Orchestrator().Pods().WaitForCondition(res, resource.ReadyCondition)
 
 	// Get timeout and poll frequency from store
 	timeout := s.Platform().Store().Machines().Timeout()

@@ -9,6 +9,7 @@ import (
 	servicesImpl "gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/components/services/implementations"
 	kubernetesCluster "gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/implementations/kubernetes"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/implementations/kubernetes/client"
+	"reflect"
 )
 
 // NewFunc is the factory creation function for the Kubernetes orchestrator.Cluster implementation.
@@ -16,17 +17,20 @@ func NewFunc(config interface{}, dependencies factory.Dependencies, out interfac
 	// Parse config
 	var typeConfig Config
 	if err := factory.SetValueAndValidate(&typeConfig, config); err != nil {
-		return err
+		return factory.ErrorWithContext(err)
 	}
+
+	// Initialize orchestrator component configs
+	initializeComponentConfig(&typeConfig)
 
 	// Parse dependencies
 	var err error
 	if dependencies, err = dependencies.DeepCopy(); err != nil {
-		return err
+		return factory.ErrorWithContext(err)
 	}
 	var typeDependencies Dependencies
 	if err := dependencies.ToStruct(&typeDependencies); err != nil {
-		return err
+		return factory.ErrorWithContext(err)
 	}
 
 	// Initialize dependencies
@@ -92,10 +96,27 @@ func NewFunc(config interface{}, dependencies factory.Dependencies, out interfac
 	// Set output value
 	cluster := kubernetesCluster.NewCustomKubernetes(components)
 	if err := factory.SetValue(out, cluster); err != nil {
-		return err
+		return factory.ErrorWithContext(err)
 	}
 
 	return nil
+}
+
+// initializeComponentConfig initializes a component config valies.
+// Orchestrator's API config values will be used to set the component config values if it does not have any component
+// values defined.
+func initializeComponentConfig(typeConfig *Config) {
+	v := reflect.ValueOf(typeConfig.Components)
+
+	// Replace every `nil` component config with the orchestrator API config
+	for i := 0; i < v.NumField(); i++ {
+		config := v.Field(i).Interface().(*factory.Config)
+		if config.Config == nil {
+			config.Config = factory.ConfigValues{
+				"api": typeConfig.API,
+			}
+		}
+	}
 }
 
 // initializeAPI initializes the API dependency.
@@ -104,23 +125,23 @@ func initializeAPI(config *Config, dependencies factory.Dependencies, typeDepend
 		return nil
 	}
 	if config == nil {
-		return factory.ErrNilConfig
+		return factory.ErrorWithContext(factory.ErrNilConfig)
 	}
 
 	// Get the Kubernetes config
 	kubeconfig, err := client.GetConfig(config.API.KubeConfig)
 	if err != nil {
-		return err
+		return factory.ErrorWithContext(err)
 	}
 
 	// Create the API
 	api, err := client.NewAPI(kubeconfig)
 	if err != nil {
-		return err
+		return factory.ErrorWithContext(err)
 	}
 
 	if err = factory.SetValue(&typeDependencies.API, api); err != nil {
-		return err
+		return factory.ErrorWithContext(err)
 	}
 	dependencies.Set("API", api)
 

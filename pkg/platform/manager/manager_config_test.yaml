@@ -1,0 +1,148 @@
+# Values contains shared values used by different platform components.
+values:
+  # Default region for all components
+  - &region "us-east-1"
+  # Default region for the storage component
+  - &storageRegion "us-east-1"
+  ## Default kubeconfig path
+  - &kubeconfig ""
+
+# Base component config used as the platform base config.
+components:
+  ## Machines
+  machines: &aws_machines
+    type: "ec2"
+    config:
+      region: *region
+
+  ## Orchestrator
+  orchestrator: &kubernetes_gloo_orchestrator
+    type: "kubernetes"
+    config:
+      api:
+        kubeconfig: *kubeconfig
+      components: &components
+        nodes:
+          type: "kubernetes"
+        pods:
+          type: "kubernetes"
+        services:
+          type: "kubernetes"
+        ingresses:
+          type: "gloo"
+        ingressRules:
+          type: "gloo"
+        networkPolicies:
+          type: "kubernetes"
+
+  ## Storage
+  storage: &aws_storage
+    type: "s3"
+    config:
+      region: *storageRegion
+
+  ## Store
+  store: &store
+    type: "store"
+    config:
+      machinesStore:
+        keyNameValue: "test"
+        subnetsValue: [ "subnet-0123456789abcdefg" ]
+        firewallRulesValue: [ "sg-0123456789abcdefg" ]
+        zonesValue: [ "us-east-1a" ]
+        namePrefixValue: "test"
+        clusterNameValue: "test"
+      ignitionStore:
+        defaultSenderValue: "test@ignitionrobotics.org"
+        logsBucketValue: "test_bucket"
+      orchestratorStore:
+        ingressNameValue: "test"
+        ingressHostValue: "test.com"
+
+  ## Secrets
+  secrets: &kubernetes_secrets
+    type: "kubernetes"
+    config:
+      api:
+        kubeconfig: *kubeconfig
+
+  ## Email Sender
+  emailSender: &aws_email_sender
+    type: "ses"
+    config:
+      region: *region
+
+# Platforms
+platforms:
+  us-east-1:
+    type: "platform"
+    config:
+      # These values are specific to this platform configuration.
+      # All values must be defined for the configuration to be valid.
+      values:
+        # AWS components target region.
+        - &region "us-east-1"
+        # Path to Kubernetes components kubeconfig file.
+        - &kubeconfig ""
+      components:
+        machines:
+          <<: *aws_machines
+        orchestrator:
+          <<: *kubernetes_gloo_orchestrator
+          config:
+            api:
+              # Override the default kubeconfig path
+              kubeconfig: *kubeconfig
+            components: *components
+        storage:
+          # Storage should always point to the default region
+          <<: *aws_storage
+        store:
+          <<: *store
+        secrets:
+          <<: *kubernetes_secrets
+          config:
+            api:
+              # Override the default kubeconfig path
+              kubeconfig: *kubeconfig
+        emailSender:
+          <<: *aws_email_sender
+  us-east-2:
+    type: "platform"
+    config:
+      # These values are specific to this platform configuration.
+      # All values must be defined for the configuration to be valid.
+      values:
+        # Target region for AWS components.
+        - &region "us-east-2"
+        # Path to Kubernetes components kubeconfig file.
+        - &kubeconfig ""
+      components:
+        machines:
+          <<: *aws_machines
+          config:
+            # Override the default region
+            region: *region
+        orchestrator:
+          <<: *kubernetes_gloo_orchestrator
+          config:
+            api:
+              # Override the default kubeconfig path
+              kubeconfig: *kubeconfig
+            components: *components
+        storage:
+          # Storage should always point to the default region
+          <<: *aws_storage
+        store:
+          <<: *store
+        secrets:
+          <<: *kubernetes_secrets
+          config:
+            api:
+              # Override the default kubeconfig path
+              kubeconfig: *kubeconfig
+        emailSender:
+          <<: *aws_email_sender
+          config:
+            # Override the component's region
+            region: *region

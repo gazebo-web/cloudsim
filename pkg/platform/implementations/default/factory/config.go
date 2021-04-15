@@ -25,6 +25,8 @@ type Components struct {
 
 // Config is used to create a platform.
 type Config struct {
+	// Name is the platform name
+	Name string `validate:"required"`
 	// Components contains configuration information for Platform components.
 	Components Components
 }

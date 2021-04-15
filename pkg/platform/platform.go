@@ -1,8 +1,9 @@
 package platform
 
 import (
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/machines"
+	"github.com/pkg/errors"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/email"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/machines"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/runsim"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/secrets"
@@ -10,11 +11,19 @@ import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/store"
 )
 
+var (
+	// ErrInvalidPlatformName is returned when a platform with an invalid name is created.
+	ErrInvalidPlatformName = errors.New("invalid platform name")
+)
+
 // Platform groups a set of components for managing simulations.
 // Each application will make use of one platform to run their simulations.
 // The cloudsim team provides a default Kubernetes and AWS implementation of this Platform.
 // Other combinations could be implemented after adding their respective subcomponents.
 type Platform interface {
+	// GetName returns the platform name.
+	GetName() string
+
 	// Storage returns a storage.Storage component.
 	Storage() storage.Storage
 
@@ -49,8 +58,13 @@ type Components struct {
 }
 
 // NewPlatform initializes a new platform using the given components.
-func NewPlatform(components Components) Platform {
+func NewPlatform(name string, components Components) (Platform, error) {
+	if name == "" {
+		return nil, ErrInvalidPlatformName
+	}
+
 	return &platform{
+		name:               name,
 		storage:            components.Storage,
 		machines:           components.Machines,
 		orchestrator:       components.Cluster,
@@ -58,11 +72,12 @@ func NewPlatform(components Components) Platform {
 		secrets:            components.Secrets,
 		email:              components.EmailSender,
 		runningSimulations: components.RunningSimulations,
-	}
+	}, nil
 }
 
 // platform is a Platform implementation.
 type platform struct {
+	name               string
 	storage            storage.Storage
 	machines           machines.Machines
 	orchestrator       orchestrator.Cluster
@@ -70,6 +85,10 @@ type platform struct {
 	secrets            secrets.Secrets
 	runningSimulations runsim.Manager
 	email              email.Sender
+}
+
+func (p *platform) GetName() string {
+	return p.name
 }
 
 // EmailSender returns a email.Sender implementation.

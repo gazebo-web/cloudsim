@@ -11,13 +11,13 @@ func NewFunc(config interface{}, dependencies factory.Dependencies, out interfac
 	// Parse config
 	var typeConfig Config
 	if err := factory.SetValueAndValidate(&typeConfig, config); err != nil {
-		return err
+		return factory.ErrorWithContext(err)
 	}
 
 	// Parse dependencies
 	var typeDependencies Dependencies
 	if err := dependencies.ToStruct(&typeDependencies); err != nil {
-		return err
+		return factory.ErrorWithContext(err)
 	}
 
 	// Initialize dependencies
@@ -33,7 +33,7 @@ func NewFunc(config interface{}, dependencies factory.Dependencies, out interfac
 	// Create instance
 	secrets := kubernetesSecrets.NewKubernetesSecrets(typeDependencies.API.CoreV1())
 	if err := factory.SetValue(out, secrets); err != nil {
-		return err
+		return factory.ErrorWithContext(err)
 	}
 
 	return nil
@@ -45,23 +45,23 @@ func initializeAPI(config *Config, dependencies *Dependencies) error {
 		return nil
 	}
 	if config == nil {
-		return factory.ErrNilConfig
+		return factory.ErrorWithContext(factory.ErrNilConfig)
 	}
 
 	// Get the Kubernetes config
 	kubeconfig, err := client.GetConfig(config.API.KubeConfig)
 	if err != nil {
-		return err
+		return factory.ErrorWithContext(err)
 	}
 
 	// Create the API
 	api, err := client.NewAPI(kubeconfig)
 	if err != nil {
-		return err
+		return factory.ErrorWithContext(err)
 	}
 
 	if err = factory.SetValue(&dependencies.API, api); err != nil {
-		return err
+		return factory.ErrorWithContext(err)
 	}
 
 	return nil

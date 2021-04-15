@@ -52,7 +52,7 @@ func TestWaitForGazeboServerPod(t *testing.T) {
 		NetworkPolicies: nil,
 	})
 
-	p := platform.NewPlatform(platform.Components{
+	p, _ := platform.NewPlatform("test", platform.Components{
 		Cluster: ks,
 		Store:   fakeStore,
 	})

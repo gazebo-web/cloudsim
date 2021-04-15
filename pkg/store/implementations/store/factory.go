@@ -10,10 +10,10 @@ func NewFunc(config interface{}, dependencies factory.Dependencies, out interfac
 	// Parse config
 	var typeConfig Config
 	if err := factory.SetValueAndValidate(&typeConfig, config); err != nil {
-		return err
+		return factory.ErrorWithContext(err)
 	}
 	if err := defaults.SetDefaults(&typeConfig); err != nil {
-		return err
+		return factory.ErrorWithContext(err)
 	}
 
 	// Create instance
@@ -23,7 +23,7 @@ func NewFunc(config interface{}, dependencies factory.Dependencies, out interfac
 		ignition:     &typeConfig.IgnitionStore,
 	}
 	if err := factory.SetValue(out, store); err != nil {
-		return err
+		return factory.ErrorWithContext(err)
 	}
 
 	return nil

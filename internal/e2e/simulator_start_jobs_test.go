@@ -103,7 +103,7 @@ func TestStartSimulationAction(t *testing.T) {
 	}
 
 	// Initialize platform
-	p := platform.NewPlatform(c)
+	p, _ := platform.NewPlatform("test", c)
 
 	// Initialize base application services
 	simService := legacy.NewSubTSimulationServiceAdaptor(db)
@@ -217,7 +217,6 @@ func TestStartSimulationAction(t *testing.T) {
 
 		s := simulator.NewSimulator(simulator.Config{
 			DB:                    db,
-			Platform:              p,
 			ApplicationServices:   app,
 			ActionService:         actionService,
 			DisableDefaultActions: true,
@@ -243,7 +242,7 @@ func TestStartSimulationAction(t *testing.T) {
 		actionService.RegisterAction(&appName, simulator.ActionNameStartSimulation, startActions)
 
 		// Start the simulation.
-		err = s.Start(ctx, sim.GetGroupID())
+		err = s.Start(ctx, p, sim.GetGroupID())
 		assert.NoError(t, err)
 	})
 
@@ -252,7 +251,6 @@ func TestStartSimulationAction(t *testing.T) {
 
 		s := simulator.NewSimulator(simulator.Config{
 			DB:                    db,
-			Platform:              p,
 			ApplicationServices:   app,
 			ActionService:         actionService,
 			DisableDefaultActions: true,
@@ -301,7 +299,7 @@ func TestStartSimulationAction(t *testing.T) {
 		actionService.RegisterAction(&appName, simulator.ActionNameStartSimulation, startActions)
 
 		// Start the simulation.
-		err = s.Start(ctx, sim.GetGroupID())
+		err = s.Start(ctx, p, sim.GetGroupID())
 		assert.NoError(t, err)
 	})
 
@@ -310,7 +308,6 @@ func TestStartSimulationAction(t *testing.T) {
 
 		s := simulator.NewSimulator(simulator.Config{
 			DB:                    db,
-			Platform:              p,
 			ApplicationServices:   app,
 			ActionService:         actionService,
 			DisableDefaultActions: true,
@@ -364,7 +361,7 @@ func TestStartSimulationAction(t *testing.T) {
 		actionService.RegisterAction(&appName, simulator.ActionNameStartSimulation, startActions)
 
 		// Start the simulation.
-		err = s.Start(ctx, sim.GetGroupID())
+		err = s.Start(ctx, p, sim.GetGroupID())
 		assert.NoError(t, err)
 	})
 }

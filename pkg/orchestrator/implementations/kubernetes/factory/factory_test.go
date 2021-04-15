@@ -2,6 +2,7 @@ package factory
 
 import (
 	"github.com/stretchr/testify/suite"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/factory"
 	"k8s.io/client-go/kubernetes"
 	"testing"
 )
@@ -21,7 +22,7 @@ func (s *testKubernetesFactorySuite) TestInitializeAPIDependencyIsNil() {
 		},
 	}
 	dependencies := Dependencies{}
-	s.Nil(initializeAPI(&config, &dependencies))
+	s.Nil(initializeAPI(&config, factory.Dependencies{}, &dependencies))
 	s.NotNil(dependencies.API)
 }
 
@@ -34,12 +35,42 @@ func (s *testKubernetesFactorySuite) TestInitializeAPIDependencyIsNotNil() {
 		API: kubernetesAPI,
 	}
 
-	s.Nil(initializeAPI(nil, &dependencies))
+	s.Nil(initializeAPI(nil, factory.Dependencies{}, &dependencies))
 	s.Exactly(kubernetesAPI, dependencies.API)
 }
 
 func (s *testKubernetesFactorySuite) TestInitializeAPIDependencyAndConfigAreNil() {
 	dependencies := Dependencies{}
 
-	s.NotNil(initializeAPI(nil, &dependencies))
+	s.NotNil(initializeAPI(nil, factory.Dependencies{}, &dependencies))
+}
+
+func (s *testKubernetesFactorySuite) TestInitializeComponentConfig() {
+	orchestratorConfig := APIConfig{
+		KubeConfig: "orchestrator",
+	}
+	componentConfig := APIConfig{
+		KubeConfig: "component",
+	}
+	typeConfig := &Config{
+		API: orchestratorConfig,
+		Components: Components{
+			Nodes:           &factory.Config{},
+			Pods:            &factory.Config{},
+			Ingresses:       &factory.Config{Config: factory.ConfigValues{"api": componentConfig}},
+			IngressRules:    &factory.Config{Config: factory.ConfigValues{"api": componentConfig}},
+			Services:        &factory.Config{},
+			NetworkPolicies: &factory.Config{},
+		},
+	}
+
+	initializeComponentConfig(typeConfig)
+	// Verify that the nil configs have been updated
+	s.Require().Equal(orchestratorConfig, typeConfig.Components.Nodes.Config["api"])
+	s.Require().Equal(orchestratorConfig, typeConfig.Components.Pods.Config["api"])
+	s.Require().Equal(orchestratorConfig, typeConfig.Components.Services.Config["api"])
+	s.Require().Equal(orchestratorConfig, typeConfig.Components.NetworkPolicies.Config["api"])
+	// Verify that the pre-existing configs were not updated
+	s.Require().Equal(componentConfig, typeConfig.Components.Ingresses.Config["api"])
+	s.Require().Equal(componentConfig, typeConfig.Components.IngressRules.Config["api"])
 }

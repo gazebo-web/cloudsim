@@ -144,7 +144,7 @@ func (s *removePodsTestSuite) SetupTest() {
 		Pods: po,
 	})
 
-	s.Platform = platform.NewPlatform(platform.Components{
+	s.Platform, _ = platform.NewPlatform("test", platform.Components{
 		Cluster: s.Orchestrator,
 		Store:   s.Store,
 	})
