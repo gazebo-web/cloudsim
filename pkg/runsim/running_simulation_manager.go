@@ -16,6 +16,7 @@ type Manager interface {
 	Free(groupID simulations.GroupID)
 	Remove(groupID simulations.GroupID) error
 	Exists(groupID simulations.GroupID) bool
+	sync.Locker
 }
 
 // manager is a Manager implementation.
