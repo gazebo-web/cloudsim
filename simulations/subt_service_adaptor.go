@@ -90,7 +90,7 @@ func (sa *SimulationServiceAdaptor) Get(groupID simulations.GroupID) (simulation
 // GetParent gets the parent simulation for the given GroupID.
 func (sa *SimulationServiceAdaptor) GetParent(groupID simulations.GroupID) (simulations.Simulation, error) {
 	gid := groupID.String()
-	return GetParentSimulation(sa.db, &SimulationDeployment{GroupID: &gid})
+	return GetParentSimulation(sa.db, &SimulationDeployment{ParentGroupID: &gid})
 }
 
 // UpdateStatus persists the given status that assigns to the given GroupID.
