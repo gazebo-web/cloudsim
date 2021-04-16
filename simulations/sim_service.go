@@ -16,6 +16,7 @@ import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/actions"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/application"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/loader"
+	fakePlatform "gitlab.com/ignitionrobotics/web/cloudsim/pkg/platform/implementations/fake"
 	platformManager "gitlab.com/ignitionrobotics/web/cloudsim/pkg/platform/manager"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulator"
@@ -842,6 +843,12 @@ var LaunchSimulation = func(s *Service, ctx context.Context,
 	tx *gorm.DB, dep *SimulationDeployment) *ign.ErrMsg {
 
 	// Pre-hook
+	fmt.Println("s: ", s)
+	fmt.Println("s.applications: ", s.applications)
+	fmt.Println("dep: ", dep)
+	fmt.Println("dep.Application: ", dep.Application)
+	fmt.Println("*dep.Application: ", *dep.Application)
+	fmt.Println("s.applciations[*dep.Application]: ", s.applications[*dep.Application])
 	if em := s.applications[*dep.Application].ValidateSimulationLaunch(ctx, tx, dep); em != nil {
 		return em
 	}
@@ -2381,26 +2388,14 @@ func (s *Service) QueueRemoveElement(ctx context.Context, user *users.User, grou
 // TODO: Make initPlatforms independent of Service by receiving arguments with the needed config.
 func (s *Service) initPlatforms() (platformManager.Manager, error) {
 	if s.cfg.IsTest {
-		machines := machines.NewMachines(globals.EC2Svc, s.logger)
-		storage := storage.(globals.S3Svc, s.logger)
-		cluster := kubernetes.NewFakeKubernetes(s.logger)
-		store, err := envVars.NewStore()
-		sesAPI := ses.New(s.session)
-		emailSender := email.NewEmailSender(sesAPI)
-		runningSimulations := runsim.NewManager()
+		p, err := fakePlatform.NewFakePlatform(nil)
 		if err != nil {
 			return nil, err
 		}
-		secretManager = secrets.NewFakeSecrets()
-		p := platform.NewPlatform(platform.Components{
-			Machines:           machines,
-			Storage:            storage,
-			Cluster:            cluster,
-			Store:              store,
-			Secrets:            secretManager,
-			EmailSender:        emailSender,
-			RunningSimulations: runningSimulations,
-		})
+
+		return platformManager.Map{
+			"fake": p,
+		}, nil
 	}
 
 	input := &platformManager.NewInput{

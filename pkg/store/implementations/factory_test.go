@@ -33,11 +33,12 @@ func (s *testStoreFactorySuite) TestNewStore() {
 		Type: Store,
 		Config: factory.ConfigValues{
 			"machinesStore": factory.ConfigValues{
-				"keyNameValue":     "test",
-				"subnetsValue":     []string{"sg-123456789"},
-				"zonesValue":       []string{"us-east-1a"},
-				"namePrefixValue":  "test",
-				"clusterNameValue": "test",
+				"instanceProfileValue": "test",
+				"keyNameValue":         "test",
+				"subnetsValue":         []string{"sg-123456789"},
+				"zonesValue":           []string{"us-east-1a"},
+				"namePrefixValue":      "test",
+				"clusterNameValue":     "test",
 			},
 			"ignitionStore": factory.ConfigValues{
 				"defaultSenderValue": "test@ignitionrobotics.org",

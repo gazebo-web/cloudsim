@@ -150,7 +150,7 @@ func TestLaunchInstancesFailsWhenLimitIsSet(t *testing.T) {
 	machineConfigStore.On("NamePrefix").Return("sim")
 	machineConfigStore.On("ClusterName").Return("cloudsim-cluster")
 
-	machineConfigStore.On("Tags", sim, "gzserver", "gzserver").Return([]cloud.Tag{
+	machineConfigStore.On("Tags", sim, "gzserver", "gzserver").Return([]machines.Tag{
 		{
 			Resource: "instance",
 			Map: map[string]string{
@@ -159,7 +159,7 @@ func TestLaunchInstancesFailsWhenLimitIsSet(t *testing.T) {
 		},
 	})
 
-	machineConfigStore.On("Tags", sim, "field-computer", "fc-TEST-X1").Return([]cloud.Tag{
+	machineConfigStore.On("Tags", sim, "field-computer", "fc-TEST-X1").Return([]machines.Tag{
 		{
 			Resource: "instance",
 			Map: map[string]string{
@@ -175,13 +175,14 @@ func TestLaunchInstancesFailsWhenLimitIsSet(t *testing.T) {
 	machineConfigStore.On("Limit").Return(1)
 
 	// Configure mocked machines interface
-	machines := &instancesLauncher{}
+	instanceLauncher := &instancesLauncher{}
 
 	// Initialize platform
-	p := platform.NewPlatform(platform.Components{
-		Machines: machines,
+	p, err := platform.NewPlatform("test", platform.Components{
+		Machines: instanceLauncher,
 		Store:    configStore,
 	})
+	require.NoError(t, err)
 
 	tracksService := tracks.NewService(nil, nil, nil)
 
@@ -198,8 +199,8 @@ func TestLaunchInstancesFailsWhenLimitIsSet(t *testing.T) {
 
 	// Check an error is returned and that Create has not been called.
 	assert.Error(t, err)
-	assert.Equal(t, cloud.ErrInsufficientMachines, err)
-	assert.Equal(t, 0, machines.TimesCalled)
+	assert.Equal(t, machines.ErrInsufficientMachines, err)
+	assert.Equal(t, 0, instanceLauncher.TimesCalled)
 }
 
 type instancesLauncher struct {
@@ -221,6 +222,6 @@ func (i *instancesLauncher) Create(input []machines.CreateMachinesInput) ([]mach
 	return output, nil
 }
 
-func (i *instancesLauncher) Count(input cloud.CountMachinesInput) int {
+func (i *instancesLauncher) Count(input machines.CountMachinesInput) int {
 	return 0
 }

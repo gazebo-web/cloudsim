@@ -40,6 +40,16 @@ func NewFakeStore(machines *Machines, orchestrator *Orchestrator, ignition *Ign)
 	}
 }
 
+// NewDefaultFakeStore initializes a new fake store implementation using default fake configuration providers.
+// This provider uses the mock library
+func NewDefaultFakeStore() *Fake {
+	return &Fake{
+		machines:     NewFakeMachines(),
+		orchestrator: NewFakeOrchestrator(),
+		ignition:     NewFakeIgnition(),
+	}
+}
+
 // Ign is a fake store.Ignition implementation.
 type Ign struct {
 	*mock.Mock

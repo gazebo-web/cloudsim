@@ -46,6 +46,7 @@ components:
     type: "store"
     config:
       machinesStore:
+        instanceProfileValue: "test"
         keyNameValue: "test"
         subnetsValue: [ "subnet-0123456789abcdefg" ]
         firewallRulesValue: [ "sg-0123456789abcdefg" ]
