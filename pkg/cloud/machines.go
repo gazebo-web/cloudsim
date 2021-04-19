@@ -233,4 +233,7 @@ type Machines interface {
 
 	// WaitOK is used to wait for the given machines input to be OK.
 	WaitOK(input []WaitMachinesOKInput) error
+
+	// List returns a list of machines based on the given input.
+	List(input ListMachinesInput) (*ListMachinesOutput, error)
 }
