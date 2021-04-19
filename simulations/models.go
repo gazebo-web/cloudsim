@@ -568,6 +568,7 @@ func (dep *SimulationDeployment) recordStop(tx *gorm.DB) *ign.ErrMsg {
 	return nil
 }
 
+// updateValidFor updates this SimulationDeployment's ValidFor field in the database.
 func (dep *SimulationDeployment) updateValidFor(tx *gorm.DB, validFor time.Duration) *ign.ErrMsg {
 	validForStr := validFor.String()
 	if err := tx.Model(&dep).Update(SimulationDeployment{
@@ -579,7 +580,7 @@ func (dep *SimulationDeployment) updateValidFor(tx *gorm.DB, validFor time.Durat
 	return nil
 }
 
-// updateDepStatus updates the status in DB of a given SimulationDeployment
+// updateSimDepStatus updates this SimulationDeployment's DeploymentStatus in the database.
 func (dep *SimulationDeployment) updateSimDepStatus(tx *gorm.DB, st DeploymentStatus) *ign.ErrMsg {
 	val := st.ToPtr()
 	if err := tx.Model(&dep).Update(SimulationDeployment{
@@ -588,6 +589,18 @@ func (dep *SimulationDeployment) updateSimDepStatus(tx *gorm.DB, st DeploymentSt
 		return ign.NewErrorMessageWithBase(ign.ErrorDbSave, err)
 	}
 	dep.DeploymentStatus = val
+	return nil
+}
+
+// updatePlatform updates this SimulationDeployment's Platform in the database.
+func (dep *SimulationDeployment) updatePlatform(tx *gorm.DB, platform string) *ign.ErrMsg {
+	if err := tx.Model(&dep).Update(SimulationDeployment{
+		Platform: &platform,
+	}).Error; err != nil {
+		return ign.NewErrorMessageWithBase(ign.ErrorDbSave, err)
+	}
+	dep.Platform = &platform
+
 	return nil
 }
 

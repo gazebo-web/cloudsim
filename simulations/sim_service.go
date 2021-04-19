@@ -16,6 +16,7 @@ import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/actions"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/application"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/loader"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/platform"
 	fakePlatform "gitlab.com/ignitionrobotics/web/cloudsim/pkg/platform/implementations/fake"
 	platformManager "gitlab.com/ignitionrobotics/web/cloudsim/pkg/platform/manager"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
@@ -843,12 +844,6 @@ var LaunchSimulation = func(s *Service, ctx context.Context,
 	tx *gorm.DB, dep *SimulationDeployment) *ign.ErrMsg {
 
 	// Pre-hook
-	fmt.Println("s: ", s)
-	fmt.Println("s.applications: ", s.applications)
-	fmt.Println("dep: ", dep)
-	fmt.Println("dep.Application: ", dep.Application)
-	fmt.Println("*dep.Application: ", *dep.Application)
-	fmt.Println("s.applciations[*dep.Application]: ", s.applications[*dep.Application])
 	if em := s.applications[*dep.Application].ValidateSimulationLaunch(ctx, tx, dep); em != nil {
 		return em
 	}
@@ -898,8 +893,20 @@ func (s *Service) workerStartSimulation(payload interface{}) {
 		return
 	}
 
-	// TODO Select platform
-	p := s.platforms.Platforms()[0]
+	// Get platform
+	var p platform.Platform
+	if simDep.Platform != nil {
+		p, err = s.platforms.Platform(platformManager.Selector(*simDep.Platform))
+		if err != nil {
+			return
+		}
+	} else {
+		// TODO Select and cycle platform
+		p = s.platforms.Platforms()[0]
+
+		// Update SimulationDeployment platform
+		simDep.updatePlatform(s.DB, p.GetName())
+	}
 
 	err = s.simulator.Start(s.baseCtx, p, simulations.GroupID(groupID))
 	// TODO Only respond to retryable errors
@@ -922,16 +929,33 @@ func (s *Service) workerTerminateSimulation(payload interface{}) {
 		return
 	}
 
-	// TODO Get platform from RunSim
-	p := s.platforms.Platforms()[0]
+	// Get SimulationDeployment
+	simDep, err := GetSimulationDeployment(s.DB, groupID)
+	if err != nil {
+		s.logger.Error(fmt.Sprintf("stopSimulation - %v", err))
+		return
+	}
+	// Verify that the deployment has a platform
+	if simDep.Platform == nil {
+		s.logger.Error(fmt.Sprintf("stopSimulation - simulation %s does not have a platform defined.", groupID))
+		return
+	}
 
-	err := s.simulator.Stop(s.baseCtx, p, simulations.GroupID(groupID))
+	// Get platform
+	p, err := s.platforms.Platform(platformManager.Selector(*simDep.Platform))
+	if err != nil {
+		errMsg := fmt.Sprintf("stopSimulation - simulation %s platform %s not found.", groupID, *simDep.Platform)
+		s.logger.Error(errMsg)
+		return
+	}
+
+	err = s.simulator.Stop(s.baseCtx, p, simulations.GroupID(groupID))
 	if err != nil {
 		s.notify(PoolShutdownSimulation, groupID, nil, ign.NewErrorMessageWithBase(ign.ErrorUnexpected, err))
 		return
 	}
 
-	simDep, err := GetSimulationDeployment(s.DB, groupID)
+	simDep, err = GetSimulationDeployment(s.DB, groupID)
 	if err != nil {
 		s.logger.Error(fmt.Sprintf("stopSimulation - %v", err))
 		return
