@@ -21,6 +21,26 @@ type pods struct {
 	Logger ign.Logger
 }
 
+// List returns a list of pod resources matching the giving selector in the given namespace.
+func (p *pods) List(namespace string, selector orchestrator.Selector) ([]orchestrator.Resource, error) {
+	res, err := p.API.CoreV1().Pods(namespace).List(metav1.ListOptions{LabelSelector: selector.String()})
+	if err != nil {
+		return nil, err
+	}
+
+	if len(res.Items) == 0 {
+		return nil, nil
+	}
+
+	list := make([]orchestrator.Resource, len(res.Items))
+
+	for i, po := range res.Items {
+		list[i] = orchestrator.NewResource(po.Name, po.Namespace, orchestrator.NewSelector(po.Labels))
+	}
+
+	return list, nil
+}
+
 // Get gets a pod with the certain name and in the given namespace and returns a resource that identifies that pod.
 func (p *pods) Get(name, namespace string) (orchestrator.Resource, error) {
 	p.Logger.Debug(fmt.Sprintf("Getting pod with name [%s] in namespace [%s]", name, namespace))
