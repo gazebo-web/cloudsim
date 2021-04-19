@@ -2,6 +2,7 @@ package pods
 
 import (
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/kubernetes/spdy"
 	"gitlab.com/ignitionrobotics/web/ign-go"
@@ -355,4 +356,58 @@ func TestPods_GetSuccess(t *testing.T) {
 	_, err := p.Get("test", "default")
 
 	assert.NoError(t, err)
+}
+
+func TestPods_List(t *testing.T) {
+	client := fake.NewSimpleClientset(
+		&apiv1.Pod{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "test-1",
+				Namespace: "default",
+				Labels: map[string]string{
+					"app": "test",
+				},
+			},
+		},
+		&apiv1.Pod{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "test-2",
+				Namespace: "default",
+				Labels: map[string]string{
+					"app": "test",
+				},
+			},
+		},
+		&apiv1.Pod{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "test-3",
+				Namespace: "cloudsim",
+				Labels: map[string]string{
+					"app": "test",
+				},
+			},
+		},
+	)
+	f := spdy.NewSPDYFakeInitializer()
+	logger := ign.NewLoggerNoRollbar("TestPods", ign.VerbosityDebug)
+	p := NewPods(client, f, logger)
+
+	list, err := p.List("default", orchestrator.NewSelector(map[string]string{
+		"app": "test",
+	}))
+
+	require.NoError(t, err)
+	assert.Len(t, list, 2)
+
+	list, err = p.List("cloudsim", orchestrator.NewSelector(map[string]string{
+		"app": "test",
+	}))
+	require.NoError(t, err)
+	assert.Len(t, list, 1)
+
+	list, err = p.List("default", orchestrator.NewSelector(map[string]string{
+		"app": "undefined",
+	}))
+	require.NoError(t, err)
+	assert.Len(t, list, 0)
 }
