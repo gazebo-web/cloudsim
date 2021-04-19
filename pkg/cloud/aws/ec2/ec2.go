@@ -392,12 +392,14 @@ func (m *machines) createUserData(input cloud.CreateMachinesInput) (string, erro
 
 // List is used to list all pending, running, shutting-down, stopping, stopped and terminated instances with their respective status.
 func (m *machines) List(input cloud.ListMachinesInput) (*cloud.ListMachinesOutput, error) {
+	m.Logger.Debug(fmt.Sprintf("Listing machines with the following input: %+v", input))
 	res, err := m.API.DescribeInstanceStatus(&ec2.DescribeInstanceStatusInput{
 		Filters:             m.createFilters(input.Filters),
 		IncludeAllInstances: aws.Bool(true),
 		MaxResults:          aws.Int64(1000),
 	})
 	if err != nil {
+		m.Logger.Debug(fmt.Sprintf("Listing machines with the following input: %+v failed, error: %s", input, err))
 		return nil, err
 	}
 
@@ -410,6 +412,8 @@ func (m *machines) List(input cloud.ListMachinesInput) (*cloud.ListMachinesOutpu
 			State:      *instanceStatus.InstanceState.Name,
 		}
 	}
+
+	m.Logger.Debug(fmt.Sprintf("Listing machines with the following input: %+v succeded. Output: %+v", input, output))
 
 	return &output, nil
 }
