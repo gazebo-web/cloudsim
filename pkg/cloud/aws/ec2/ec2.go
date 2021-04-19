@@ -390,6 +390,30 @@ func (m *machines) createUserData(input cloud.CreateMachinesInput) (string, erro
 	return buffer.String(), nil
 }
 
+// List is used to list all pending, running, shutting-down, stopping, stopped and terminated instances with their respective status.
+func (m *machines) List(input cloud.ListMachinesInput) (*cloud.ListMachinesOutput, error) {
+	res, err := m.API.DescribeInstanceStatus(&ec2.DescribeInstanceStatusInput{
+		Filters:             m.createFilters(input.Filters),
+		IncludeAllInstances: aws.Bool(true),
+		MaxResults:          aws.Int64(1000),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	var output cloud.ListMachinesOutput
+	output.Instances = make([]cloud.ListMachinesItem, len(res.InstanceStatuses))
+
+	for i, instanceStatus := range res.InstanceStatuses {
+		output.Instances[i] = cloud.ListMachinesItem{
+			InstanceID: *instanceStatus.InstanceId,
+			State:      *instanceStatus.InstanceState.Name,
+		}
+	}
+
+	return &output, nil
+}
+
 // NewMachines initializes a new cloud.Machines implementation using EC2.
 func NewMachines(api ec2iface.EC2API, logger ign.Logger) cloud.Machines {
 	return &machines{
