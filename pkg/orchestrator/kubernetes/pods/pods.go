@@ -23,12 +23,15 @@ type pods struct {
 
 // List returns a list of pod resources matching the giving selector in the given namespace.
 func (p *pods) List(namespace string, selector orchestrator.Selector) ([]orchestrator.Resource, error) {
+	p.Logger.Debug(fmt.Sprintf("Getting list of pods in namespace [%s] matching the following labels: [%s]", namespace, selector.String()))
 	res, err := p.API.CoreV1().Pods(namespace).List(metav1.ListOptions{LabelSelector: selector.String()})
 	if err != nil {
+		p.Logger.Debug(fmt.Sprintf("Failed to list pods in namespace [%s] matching the following labels: [%s]", namespace, selector.String()))
 		return nil, err
 	}
 
 	if len(res.Items) == 0 {
+		p.Logger.Debug(fmt.Sprintf("No pods available in namespace [%s] matching the following labels: [%s]", namespace, selector.String()))
 		return nil, nil
 	}
 
@@ -38,6 +41,7 @@ func (p *pods) List(namespace string, selector orchestrator.Selector) ([]orchest
 		list[i] = orchestrator.NewResource(po.Name, po.Namespace, orchestrator.NewSelector(po.Labels))
 	}
 
+	p.Logger.Debug(fmt.Sprintf("Getting list of pods in namespace [%s] matching the following labels: [%s] succeeded.", namespace, selector.String()))
 	return list, nil
 }
 
