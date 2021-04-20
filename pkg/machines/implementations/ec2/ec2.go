@@ -236,6 +236,11 @@ func (m *ec2Machines) create(input machines.CreateMachinesInput) (*machines.Crea
 // machines.CreateMachinesInput passed by parameter.
 func (m *ec2Machines) Create(inputs []machines.CreateMachinesInput) (created []machines.CreateMachinesOutput, err error) {
 	m.Logger.Debug(fmt.Sprintf("Creating machines with the following input: %+v", inputs))
+
+	// A lock is used to synchronize multiple worker requests.
+	m.lock.Lock()
+	defer m.lock.Unlock()
+
 	var c *machines.CreateMachinesOutput
 	for _, input := range inputs {
 		c, err = m.create(input)
@@ -406,10 +411,6 @@ func (m *machines) checkAvailableMachines(requested int64) bool {
 	if m.limit < 0 {
 		return true
 	}
-
-	// A lock is used to synchronize multiple worker requests.
-	m.lock.Lock()
-	defer m.lock.Unlock()
 
 	// Get the number of provisioned machines from cloud provider.
 	count := m.Count(cloud.CountMachinesInput{
