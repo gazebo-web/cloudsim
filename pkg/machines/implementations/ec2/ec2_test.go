@@ -183,3 +183,21 @@ func TestParseRunInstanceError(t *testing.T) {
 	err = m.parseRunInstanceError(awserr.New(ErrCodeRequestLimitExceeded, "test", nil))
 	assert.Equal(t, machines.ErrRequestsLimitExceeded, err)
 }
+
+func TestMachines_checkAvailableMachines(t *testing.T) {
+	m := &machines{limit: -1}
+
+	// If limit is set to -1, always return true.
+	assert.True(t, m.checkAvailableMachines(1))
+
+	// If limit is set, should return true if there are enough machines available.
+	mockCounter := &mockEC2Count{
+		ReturnMachines: true, // Returns 1 machines
+	}
+	m = &machines{limit: 2, API: mockCounter, Logger: ign.NewLoggerNoRollbar("TestMachines_checkAvailableMachines", ign.VerbosityDebug)}
+	assert.True(t, m.checkAvailableMachines(1))
+
+	// If limit is set to the total amount of machines created at a certain moment, it should return false.
+	m = &machines{limit: 1, API: mockCounter, Logger: ign.NewLoggerNoRollbar("TestMachines_checkAvailableMachines", ign.VerbosityDebug)}
+	assert.False(t, m.checkAvailableMachines(1))
+}

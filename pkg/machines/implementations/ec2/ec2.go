@@ -14,6 +14,7 @@ import (
 	"gitlab.com/ignitionrobotics/web/ign-go"
 	"regexp"
 	"strings"
+	"sync"
 	"text/template"
 	"time"
 )
@@ -41,8 +42,11 @@ func NewAPI(config client.ConfigProvider) ec2iface.EC2API {
 
 // ec2Machines is a machines.Machines implementation.
 type ec2Machines struct {
-	API    ec2iface.EC2API
-	Logger ign.Logger
+	API             ec2iface.EC2API
+	Logger          ign.Logger
+	workerGroupName string
+	limit           int64
+	lock            sync.Mutex
 }
 
 // isValidKeyName checks that the given keyName is valid.
@@ -183,6 +187,9 @@ func (m *ec2Machines) create(input machines.CreateMachinesInput) (*machines.Crea
 	}
 	if !m.isValidClusterID(input.ClusterID) {
 		return nil, machines.ErrInvalidClusterID
+	}
+	if !m.checkAvailableMachines(input.MaxCount) {
+		return nil, cloud.ErrInsufficientMachines
 	}
 
 	if input.InitScript == nil {
@@ -394,6 +401,76 @@ func (m *ec2Machines) createUserData(input machines.CreateMachinesInput) (string
 	return buffer.String(), nil
 }
 
+func (m *machines) checkAvailableMachines(requested int64) bool {
+	// If limit is set to a number lower than zero, it means that there is no limit for machines.
+	if m.limit < 0 {
+		return true
+	}
+
+	// A lock is used to synchronize multiple worker requests.
+	m.lock.Lock()
+	defer m.lock.Unlock()
+
+	// Get the number of provisioned machines from cloud provider.
+	count := m.Count(cloud.CountMachinesInput{
+		Filters: map[string][]string{
+			"tag:cloudsim-simulation-worker": {
+				m.workerGroupName,
+			},
+			"instance-state-name": {
+				"pending",
+				"running",
+			},
+		},
+	})
+
+	return requested <= m.limit-int64(count)
+}
+
+// Option is used to configure an EC2 cloud.Machines implementation.
+type Option func(*machines) *machines
+
+// WithLogger pass a custom logger when initializing an EC2 cloud.Machines implementation.
+func WithLogger(logger ign.Logger) Option {
+	return func(m *machines) *machines {
+		m.Logger = logger
+		return m
+	}
+}
+
+// WithLimit pass the limit of machines that could be requested when initializing an EC2 cloud.Machines implementation.
+func WithLimit(limit int64) Option {
+	return func(m *machines) *machines {
+		m.limit = limit
+		return m
+	}
+}
+
+// WithWorkerGroupName pass the name of the worker group used to count available machines.
+func WithWorkerGroupName(name string) Option {
+	return func(m *machines) *machines {
+		m.workerGroupName = name
+		return m
+	}
+}
+
+// NewMachinesWithOptions initializes a new cloud.Machines implementation using the EC2 API.
+// This method allows passing options that will change the underlying implementation.
+func NewMachinesWithOptions(api ec2iface.EC2API, options ...Option) cloud.Machines {
+	m := &machines{
+		API:             api,
+		Logger:          ign.NewLoggerNoRollbar("ec2.cloud.Machines", ign.VerbosityDebug),
+		workerGroupName: "cloudsim-simulation-worker",
+		limit:           -1,
+	}
+
+	for _, opt := range options {
+		m = opt(m)
+	}
+
+	return m
+}
+
 // List is used to list all pending, running, shutting-down, stopping, stopped and terminated instances with their respective status.
 func (m *ec2Machines) List(input machines.ListMachinesInput) (*machines.ListMachinesOutput, error) {
 	m.Logger.Debug(fmt.Sprintf("Listing machines with the following input: %+v", input))
@@ -425,7 +502,9 @@ func (m *ec2Machines) List(input machines.ListMachinesInput) (*machines.ListMach
 // NewMachines initializes a new machines.Machines implementation using EC2.
 func NewMachines(api ec2iface.EC2API, logger ign.Logger) machines.Machines {
 	return &ec2Machines{
-		API:    api,
-		Logger: logger,
+		API:             api,
+		Logger:          logger,
+		limit:           -1,
+		workerGroupName: "cloudsim-simulation-worker",
 	}
 }
