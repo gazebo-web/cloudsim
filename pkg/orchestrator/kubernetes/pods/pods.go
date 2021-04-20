@@ -22,7 +22,11 @@ type pods struct {
 }
 
 // List returns a list of pod resources matching the giving selector in the given namespace.
+// If selector is nil or empty (doesn't have any labels specified) it will return all the resources in the given namespace.
 func (p *pods) List(namespace string, selector orchestrator.Selector) ([]orchestrator.Resource, error) {
+	if selector == nil {
+		selector = orchestrator.NewSelector(map[string]string{})
+	}
 	p.Logger.Debug(fmt.Sprintf("Getting list of pods in namespace [%s] matching the following labels: [%s]", namespace, selector.String()))
 	res, err := p.API.CoreV1().Pods(namespace).List(metav1.ListOptions{LabelSelector: selector.String()})
 	if err != nil {
