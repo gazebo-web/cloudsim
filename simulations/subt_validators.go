@@ -729,7 +729,7 @@ func loadSubTRobotTypes(cfg *subTSpecificsConfig) {
 			"CTU_CRAS_NORLAB_SPOT_SENSOR_CONFIG_1",
 			"SPOT",
 			"CTU_CRAS_NORLAB_SPOT_SENSOR_CONFIG_1",
-			300,
+			255,
 		),
 		"CTU_CRAS_NORLAB_SPOT_SENSOR_CONFIG_2": generateSubTRobotType(
 			cfg,
@@ -737,7 +737,7 @@ func loadSubTRobotTypes(cfg *subTSpecificsConfig) {
 			"CTU_CRAS_NORLAB_SPOT_SENSOR_CONFIG_2",
 			"SPOT",
 			"CTU_CRAS_NORLAB_SPOT_SENSOR_CONFIG_2",
-			325,
+			280,
 		),
 	}
 }
