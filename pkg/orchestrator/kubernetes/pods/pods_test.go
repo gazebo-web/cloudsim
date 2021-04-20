@@ -417,4 +417,9 @@ func TestPods_List(t *testing.T) {
 	list, err = p.List("default", orchestrator.NewSelector(nil))
 	require.NoError(t, err)
 	assert.Len(t, list, 2)
+
+	// A nil selector should return all pods in the given namespace.
+	list, err = p.List("default", nil)
+	require.NoError(t, err)
+	assert.Len(t, list, 2)
 }
