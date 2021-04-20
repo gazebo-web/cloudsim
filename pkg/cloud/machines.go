@@ -214,10 +214,10 @@ type ListMachinesItem struct {
 	// State is the state of the instance.
 	//
 	// In AWS, the state will be any the following values:
-	// 	- pending
-	//	- running
-	//	- shutting-down
-	// 	- stopping
+	//  - pending
+	//  - running
+	//  - shutting-down
+	//  - stopping
 	//  - stopped
 	//  - terminated
 	State string
