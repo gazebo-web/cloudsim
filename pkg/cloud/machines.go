@@ -209,12 +209,24 @@ type ListMachinesInput struct {
 
 // ListMachinesItem represents a single instance listed by the output of Machines.List.
 type ListMachinesItem struct {
+	// InstanceID is the unique identifier for a single instance.
 	InstanceID string
-	State      string
+	// State is the state of the instance.
+	//
+	// In AWS, the state will be any the following values:
+	// 	- pending
+	//	- running
+	//	- shutting-down
+	// 	- stopping
+	//  - stopped
+	//  - terminated
+	State string
 }
 
 // ListMachinesOutput is the output value returned by Machines.List. It includes a list of ListMachinesItem.
 type ListMachinesOutput struct {
+	// Instances represents the actual list of instances returned by Machines.List.
+	// Each item has information like the InstanceID and the State.
 	Instances []ListMachinesItem
 }
 
