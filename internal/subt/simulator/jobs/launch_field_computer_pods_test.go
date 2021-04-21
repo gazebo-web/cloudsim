@@ -22,7 +22,7 @@ import (
 )
 
 func TestLaunchFieldComputerPods(t *testing.T) {
-	db, err := gorm.GetDBFromEnvVars()
+	db, err := gorm.GetTestDBFromEnvVars()
 	defer db.Close()
 	require.NoError(t, err)
 
