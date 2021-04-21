@@ -3,8 +3,7 @@ package store
 import (
 	"fmt"
 	"github.com/caarlos0/env"
-	"github.com/creasty/defaults"
-	defaulter "gitlab.com/ignitionrobotics/web/cloudsim/pkg/defaults"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/defaults"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
 	storepkg "gitlab.com/ignitionrobotics/web/cloudsim/pkg/store"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/utils/network"
@@ -51,8 +50,7 @@ type ignitionStore struct {
 
 // SetDefaults sets default values for the store.
 func (i *ignitionStore) SetDefaults() error {
-	defaults.MustSet(i)
-	return nil
+	return defaults.SetStructValues(i)
 }
 
 // LogsBucket returns the bucket to upload simulation logs to.
@@ -141,7 +139,7 @@ func newIgnitionStoreFromEnvVars() (storepkg.Ignition, error) {
 		return nil, err
 	}
 	// Set default values
-	if err := defaulter.SetDefaults(&i); err != nil {
+	if err := defaults.SetValues(&i); err != nil {
 		return nil, err
 	}
 	// Validate values

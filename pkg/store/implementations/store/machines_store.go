@@ -3,8 +3,7 @@ package store
 import (
 	"fmt"
 	"github.com/caarlos0/env"
-	"github.com/creasty/defaults"
-	defaulter "gitlab.com/ignitionrobotics/web/cloudsim/pkg/defaults"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/defaults"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/machines"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
 	storepkg "gitlab.com/ignitionrobotics/web/cloudsim/pkg/store"
@@ -55,8 +54,7 @@ type machinesStore struct {
 
 // SetDefaults sets default values for the store.
 func (m *machinesStore) SetDefaults() error {
-	defaults.MustSet(m)
-	return nil
+	return defaults.SetStructValues(m)
 }
 
 // ClusterName returns the cluster name.
@@ -163,7 +161,7 @@ func newMachinesStoreFromEnvVars() (storepkg.Machines, error) {
 		return nil, err
 	}
 	// Set default values
-	if err := defaulter.SetDefaults(&m); err != nil {
+	if err := defaults.SetValues(&m); err != nil {
 		return nil, err
 	}
 	// Validate values
