@@ -1,6 +1,7 @@
 package waiter
 
 import (
+	"errors"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"time"
 )
@@ -8,6 +9,10 @@ import (
 var (
 	// ErrRequestTimeout is an error returned when the Wait method timeouts.
 	ErrRequestTimeout = wait.ErrWaitTimeout
+	// ErrInvalidTimeout is used when an invalid timeout duration is passed to the Waiter.Wait method..
+	ErrInvalidTimeout = errors.New("invalid timeout duration")
+	// ErrInvalidFrequency is used when an invalid frequency duration is passed to the Waiter.Wait method.
+	ErrInvalidFrequency = errors.New("invalid frequency duration")
 )
 
 // Waiter is used to wait for kubernetes nodes and pods to be in a certain state.
@@ -24,6 +29,15 @@ type request struct {
 // Wait executes a job in regular time intervals given by a certain frequency.
 // If will return an error when the job fails or the request times out.
 func (r request) Wait(timeout time.Duration, frequency time.Duration) error {
+	if timeout < 0 {
+		return ErrInvalidTimeout
+	}
+	if frequency < 0 {
+		return ErrInvalidFrequency
+	}
+	if timeout < frequency {
+		return ErrInvalidFrequency
+	}
 	return wait.PollImmediate(frequency, timeout, r.job)
 }
 

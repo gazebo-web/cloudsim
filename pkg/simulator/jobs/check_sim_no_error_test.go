@@ -33,7 +33,6 @@ func TestCheckSimulationNoErrors_Success(t *testing.T) {
 }
 
 func TestCheckSimulationNoErrors_WithError(t *testing.T) {
-
 	simulationError := simulations.Error("test")
 	input := CheckSimulationNoErrorInput([]simulations.Simulation{
 		fake.NewSimulation(
