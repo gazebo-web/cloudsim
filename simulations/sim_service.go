@@ -20,6 +20,7 @@ import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/cloud/aws/s3"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/email"
 	envVars "gitlab.com/ignitionrobotics/web/cloudsim/pkg/env"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/gloo"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/kubernetes"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/kubernetes/network"
@@ -2393,40 +2394,38 @@ func (s *Service) initPlatform() (platform.Platform, error) {
 
 	storage := s3.NewStorage(globals.S3Svc, s.logger)
 
-	restConfig, err := kubernetes.GetConfig()
-	if err != nil {
-		return nil, err
-	}
+	var cluster orchestrator.Cluster
+	var secretManager secrets.Secrets
+	if !s.cfg.IsTest {
+		restConfig, err := kubernetes.GetConfig()
+		if err != nil {
+			return nil, err
+		}
 
-	kubernetesClient, err := kubernetes.NewAPI(restConfig)
-	if err != nil {
-		return nil, err
-	}
+		kubernetesClient, err := kubernetes.NewAPI(restConfig)
+		if err != nil {
+			return nil, err
+		}
 
-	glooClientset, err := gloocli.NewClientset(context.Background(), &gloocli.ClientsetConfig{
-		KubeConfig:             restConfig,
-		IsGoTest:               s.cfg.IsTest,
-		ConnectToCloudServices: true,
-	})
-	if err != nil {
-		return nil, err
-	}
+		secretManager = secrets.NewKubernetesSecrets(kubernetesClient.CoreV1())
 
-	cluster := kubernetes.NewCustomKubernetes(kubernetes.Config{
-		Nodes:           nodes.NewNodes(kubernetesClient, s.logger),
-		Pods:            pods.NewPods(kubernetesClient, spdy.NewSPDYInitializer(restConfig), s.logger),
-		Ingresses:       gloo.NewVirtualServices(glooClientset.Gateway(), s.logger, glooClientset.Gloo()),
-		IngressRules:    gloo.NewVirtualHosts(glooClientset.Gateway(), s.logger),
-		Services:        services.NewServices(kubernetesClient, s.logger),
-		NetworkPolicies: network.NewNetworkPolicies(kubernetesClient, s.logger),
-	})
+		cluster = kubernetes.NewCustomKubernetes(kubernetes.Config{
+			Nodes:           nodes.NewNodes(kubernetesClient, s.logger),
+			Pods:            pods.NewPods(kubernetesClient, spdy.NewSPDYInitializer(restConfig), s.logger),
+			Ingresses:       gloo.NewVirtualServices(s.glooClientset.Gateway(), s.logger, s.glooClientset.Gloo()),
+			IngressRules:    gloo.NewVirtualHosts(s.glooClientset.Gateway(), s.logger),
+			Services:        services.NewServices(kubernetesClient, s.logger),
+			NetworkPolicies: network.NewNetworkPolicies(kubernetesClient, s.logger),
+		})
+	} else {
+		cluster = kubernetes.NewFakeKubernetes(s.logger)
+		secretManager = secrets.NewFakeSecrets()
+	}
 
 	store, err := envVars.NewStore()
 	if err != nil {
 		return nil, err
 	}
-
-	kubernetesSecrets := secrets.NewKubernetesSecrets(kubernetesClient.CoreV1())
 
 	sesAPI := ses.New(s.session)
 	emailSender := email.NewEmailSender(sesAPI)
@@ -2438,7 +2437,7 @@ func (s *Service) initPlatform() (platform.Platform, error) {
 		Storage:            storage,
 		Cluster:            cluster,
 		Store:              store,
-		Secrets:            kubernetesSecrets,
+		Secrets:            secretManager,
 		EmailSender:        emailSender,
 		RunningSimulations: runningSimulations,
 	}), nil
