@@ -13,16 +13,52 @@ import (
 // LaunchInstances is a job that is used to launch machine instances for simulations.
 var LaunchInstances = jobs.LaunchInstances.Extend(actions.Job{
 	Name:            "launch-instances",
-	PreHooks:        []actions.JobFunc{setStartState, createLaunchInstancesInput},
+	PreHooks:        []actions.JobFunc{setStartState, createLaunchInstancesInput, checkMachinesLimit},
 	PostHooks:       []actions.JobFunc{checkLaunchInstancesOutput, saveLaunchInstancesOutput, returnState},
 	RollbackHandler: removeLaunchedInstances,
 	InputType:       actions.GetJobDataType(&state.StartSimulation{}),
 	OutputType:      actions.GetJobDataType(&state.StartSimulation{}),
 })
 
-func removeLaunchedInstances(store actions.Store, tx *gorm.DB, deployment *actions.Deployment, value interface{}, err error) (interface{}, error) {
+// checkMachinesLimit is used to check if there are enough machines before proceeding with requesting them.
+func checkMachinesLimit(store actions.Store, tx *gorm.DB, deployment *actions.Deployment, value interface{}) (interface{}, error) {
 	s := store.State().(*state.StartSimulation)
 
+	// if no limit is set, skip the pre-hook execution.
+	if s.Platform().Store().Machines().Limit() < 0 {
+		return value, nil
+	}
+
+	input := value.(jobs.LaunchInstancesInput)
+
+	// Count the amount of requested machines.
+	var requested int
+	for _, in := range input {
+		requested += int(in.MaxCount)
+	}
+
+	// Get the number of reserved machines from cloud provider.
+	reserved := s.Platform().Machines().Count(cloud.CountMachinesInput{
+		Filters: map[string][]string{
+			"tag:cloudsim-simulation-worker": {
+				s.Platform().Store().Machines().NamePrefix(),
+			},
+			"instance-state-name": {
+				"pending",
+				"running",
+			},
+		},
+	})
+
+	if requested > s.Platform().Store().Machines().Limit()-reserved {
+		return nil, cloud.ErrInsufficientMachines
+	}
+
+	return value, nil
+}
+
+func removeLaunchedInstances(store actions.Store, tx *gorm.DB, deployment *actions.Deployment, value interface{}, err error) (interface{}, error) {
+	s := store.State().(*state.StartSimulation)
 	tags := subtapp.GetTagsInstanceBase(s.GroupID)
 
 	filters := make(map[string][]string)
@@ -42,7 +78,7 @@ func removeLaunchedInstances(store actions.Store, tx *gorm.DB, deployment *actio
 
 // createLaunchInstancesInput is in charge of populating the data for the generic LaunchInstances job input.
 func createLaunchInstancesInput(store actions.Store, tx *gorm.DB, deployment *actions.Deployment, value interface{}) (interface{}, error) {
-	s := value.(*state.StartSimulation)
+	s := store.State().(*state.StartSimulation)
 	subnet, zone := s.Platform().Store().Machines().SubnetAndZone()
 
 	prefix := s.Platform().Store().Machines().NamePrefix()

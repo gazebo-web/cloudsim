@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
 	ignws "gitlab.com/ignitionrobotics/web/cloudsim/pkg/transport/ign"
+	"sync"
 )
 
 // Manager describes a set of methods to handle a set of RunningSimulation and their connections to different websocket servers.
@@ -20,6 +21,7 @@ type Manager interface {
 // manager is a Manager implementation.
 type manager struct {
 	runningSimulations map[simulations.GroupID]*RunningSimulation
+	lock               sync.RWMutex
 }
 
 // Exists checks if the given group id is registered as a running simulation.
@@ -31,6 +33,9 @@ func (m *manager) Exists(groupID simulations.GroupID) bool {
 // Free disconnects the websocket client for the given GroupID.
 func (m *manager) Free(groupID simulations.GroupID) {
 	t := m.GetTransporter(groupID)
+
+	m.lock.Lock()
+	defer m.lock.Unlock()
 
 	rs, ok := m.runningSimulations[groupID]
 	if !ok {
@@ -53,6 +58,9 @@ func (m *manager) Add(groupID simulations.GroupID, rs *RunningSimulation, t ignw
 	if t == nil {
 		return fmt.Errorf("invalid websocket transport for [%s], it should not be nil", groupID)
 	}
+
+	m.lock.Lock()
+	defer m.lock.Unlock()
 
 	if _, exists := m.runningSimulations[groupID]; exists {
 		return fmt.Errorf("running simulation [%s] already exists", groupID)
@@ -81,6 +89,8 @@ func (m *manager) ListFinishedSimulations() []*RunningSimulation {
 
 // listByCriteria allows you to list running simulations by a given criteria.
 func (m *manager) listByCriteria(criteria func(rs *RunningSimulation) bool) []*RunningSimulation {
+	m.lock.RLock()
+	defer m.lock.RUnlock()
 	rss := make([]*RunningSimulation, 0, len(m.runningSimulations))
 	for _, rs := range m.runningSimulations {
 		if criteria(rs) {
@@ -93,6 +103,8 @@ func (m *manager) listByCriteria(criteria func(rs *RunningSimulation) bool) []*R
 // GetTransporter returns a websocket transporter for the given groupID.
 // It returns nil if there's no connection available for the given groupID.
 func (m *manager) GetTransporter(groupID simulations.GroupID) ignws.PubSubWebsocketTransporter {
+	m.lock.RLock()
+	defer m.lock.RUnlock()
 	r, ok := m.runningSimulations[groupID]
 	if !ok {
 		return nil
@@ -103,6 +115,8 @@ func (m *manager) GetTransporter(groupID simulations.GroupID) ignws.PubSubWebsoc
 // Remove removes a running simulation and its websocket connection.
 // If the websocket connection is still active, it will return an error.
 func (m *manager) Remove(groupID simulations.GroupID) error {
+	m.lock.Lock()
+	defer m.lock.Unlock()
 	if r, exists := m.runningSimulations[groupID]; !exists || r.Transport.IsConnected() {
 		return fmt.Errorf("websocket transport [%s] does not exist or it's still connected to the websocket server", groupID)
 	}

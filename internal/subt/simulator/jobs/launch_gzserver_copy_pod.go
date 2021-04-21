@@ -57,13 +57,11 @@ func prepareGazeboCreateCopyPodInput(store actions.Store, tx *gorm.DB, deploymen
 
 	volumes := []orchestrator.Volume{
 		{
-			Name: "logs",
-
+			Name:         "logs",
 			HostPath:     "/tmp",
 			HostPathType: orchestrator.HostPathDirectoryOrCreate,
-
-			MountPath: s.Platform().Store().Ignition().SidecarContainerLogsPath(),
-			SubPath:   "logs",
+			MountPath:    s.Platform().Store().Ignition().SidecarContainerLogsPath(),
+			SubPath:      "logs",
 		},
 	}
 

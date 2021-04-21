@@ -55,11 +55,6 @@ func checkWaitError(store actions.Store, tx *gorm.DB, deployment *actions.Deploy
 // returned by the job that launches pods returns an error.
 func checkLaunchPodsError(store actions.Store, tx *gorm.DB, deployment *actions.Deployment, value interface{}) (interface{}, error) {
 	output := value.(jobs.LaunchPodsOutput)
-	if len(output.Resources) > 0 {
-		if err := deployment.SetJobData(tx, nil, actions.DeploymentJobData, output); err != nil {
-			return nil, err
-		}
-	}
 	if output.Error == nil {
 		return value, nil
 	}
@@ -83,7 +78,8 @@ func readFileContentFromPod(p orchestrator.Pods, podName, namespace, path string
 		return nil, err
 	}
 
-	buff, err := p.Reader(res).File(path)
+	// TODO: Change container once we add more containers to the different simulation pods.
+	buff, err := p.Reader(res).File("", path)
 	if err != nil {
 		return nil, err
 	}
