@@ -1,0 +1,316 @@
+# This file contains configuration values for Cloudsim.
+# The `SIMSVC_PLATFORM_CONFIG_PATH` environment variable can be defined to specify the configuration file path.
+# If it is not defined, Cloudsim will automatically look for a `config.yaml` file in the directory it is executed from.
+# All value in this configuration file should be strings unless otherwise noted.
+
+# Values contains shared values used by different platform components.
+values:
+  # Default region for all components.
+  - &region "us-east-1"
+  # Default region for the storage component.
+  - &storageRegion "us-east-1"
+  ## Default kubeconfig path.
+  - &kubeconfig ""
+
+# Base component config used as the platform base config.
+# These configurations are used when defining platforms and are entirely optional.
+# Platforms with entirely different set of components and/or configurations can be defined if desired.
+components:
+  ## Machines
+  # Machines are used to provision physical instances on which to run simulations.
+  machines: &aws_machines
+    type: "ec2"
+    config:
+      # Region the component will operate in.
+      region: *region
+
+  ## Orchestrator
+  # Orchestrator provides an abstraction to launch simulations on a set of physical machines.
+  orchestrator: &kubernetes_gloo_orchestrator
+    type: "kubernetes"
+    config:
+      api:
+        # Path to the Kubernetes cluster connection configuration.
+        kubeconfig: *kubeconfig
+      components: &components
+        # Nodes are an abstraction of a physical machine available to the orchestrator that are ultimately used to run
+        # pods on.
+        nodes:
+          type: "kubernetes"
+        # Pods are logical units that contain applications. Pods themselves can be contained of multiple containers.
+        pods:
+          type: "kubernetes"
+        # Services provide mechanisms to expose services running in pods to other pods managed by the orchestrator, or
+        # to allow external access from the Internet.
+        services:
+          type: "kubernetes"
+        # Ingresses allow external access (from outside the cluster, e.g. the Internet) to orchestrator services.
+        ingresses:
+          type: "gloo"
+        # Ingress rules control external access interactions with orchestrator ingresses.
+        ingressRules:
+          type: "gloo"
+        # Network policies define the possible interactions between pods managed by the orchestrator.
+        # They can be thought of as a firewall for pods.
+        networkPolicies:
+          type: "kubernetes"
+
+  ## Storage
+  # Storage is used to store files. This includes logs, summaries, and other simulation artifacts.
+  # It is mainly used to store log files and allow users to download them.
+  # This component normally should use the same configuration across all platforms, unless your application explicitly
+  # requires otherwise.
+  storage: &aws_storage
+    type: "s3"
+    config:
+      # Region the component will operate in.
+      region: *storageRegion
+
+  ## Store
+  # Store contains various Cloudsim configuration options used to configure and launch simulations.
+  # It is composed of a set of sub-stores, each specifying configurations for different Cloudsim aspects.
+  store: &store
+    type: "store"
+    config:
+      # Contains values used to configure machine instances when launching simulations.
+      machinesStore: &machinesStore
+        # (Required) Used to define permissions for the machine within the provider.
+        # For AWS EC2, this value is the instance profile ARN.
+        instanceProfileValue: ""
+
+        # (Required) Name of the SSH key used to access machines. This key must be registered in the platform's
+        # machines provider.
+        keyNameValue: ""
+
+        # MachineTypeValue is the type of instance thGat will be created.
+        # Default: "g3.4xlarge"
+        # machineTypeValue: "g3.4xlarge"
+
+        # FirewallRulesValue is a set of firewall rules that will be applied to a new instance.
+        # Type: []string
+        # Example: ["sg-0123456789abcdefg"]
+        # firewallRulesValue: [ "" ]
+
+        # (Required) Array of subnet IDs to launch simulations in.
+        # Type: []string
+        # Example: ["subnet-0123456789abcdefg"]
+        subnetsValue: [ "subnet-" ]
+
+        # (Required) Array of AWS availability zones to launch simulations in.
+        # Type: []string
+        # Example: ["us-east-1a"]
+        zonesValue: [ "us-east-1a" ]
+
+        # Maximum number of machines that Cloudsim can have running at the same time. -1 is unlimited.
+        # Type: int
+        # Default: -1
+        # machinesLimitValue: -1
+        # (Required) Instance image used to launch machines.
+        # For AWS EC2, this value is the Amazon Machine Image (AMI) ID.
+        baseImageValue: ""
+
+        # (Required) Prefix used when naming a new instance.
+        namePrefixValue: ""
+
+        # (Required) Name of the cluster EC2 instances will join.
+        clusterNameValue: ""
+
+        # Max amount of time in seconds that the machine creation process will wait until marking the simulation as
+        # failed.
+        # Type: uint
+        # Default: 300
+        # nodeReadyTimeout: 300
+
+      # Contains values used to configure simulation pods.
+      # These configurations affect Ignition Gazebo simulation servers, communication bridges and team field computer
+      # pods.
+      ignitionStore: &ignitionStore
+        # Path inside the Ignition Gazebo container where the logs volume will be mounted.
+        # The logs volume can be accessed by the Gazebo container or another pod with the same volume to upload logs
+        # to storage.
+        # Default: "/tmp/ign"
+        # gazeboServerLogsPathValue: ""
+
+        # Path inside ROS master containers (i.e. communication bridges) where the ROS logs volume will be mounted.
+        # Default: "/home/developer/.ros"
+        # rosLogsPathValue: ""
+
+        # Path inside copy pods where the logs volume will be mounted.
+        # Copy pods are pods launched to access logs produced by the simulation server and communication bridges.
+        # They are launched as separate pods to allow accessing logs even in cases where the pod producing the log is
+        # terminated unexpectedly or abruptly.
+        # Default: "/tmp/logs"
+        # sidecarContainerLogsPathValue: ""
+
+        # IGN_VERBOSE value to set as an environment variable in simulation pods.
+        # Type: string
+        # Default: 2 (WARNING)
+        # verbosityValue: 2
+
+        # Enables upload of simulation logs to the platform storage.
+        # Type: bool
+        # Default: false
+        # logsCopyEnabledValue: true
+
+        # Region in which to launch simulations.
+        # Default: "us-east-1"
+        # regionValue: ""
+
+        # Name of the secret-type resource in the orchestrator containing sensitive information required by simulations.
+        # Default: "aws-secrets"
+        # secretsNameValue: ""
+
+        # Array of email addresses to include as recipients in all summary result emails.
+        # Type: []string
+        # defaultRecipientsValue: [""]
+
+        # (Required) Email address to use when sending summary result emails.
+        defaultSenderValue: ""
+
+        # (Required) Name of the storage component bucket to upload logs to.
+        logsBucketValue: ""
+
+      # Contains values used to configure various simulation orchestrator resources.
+      orchestratorStore: &orchestratorStore
+        # Amount of time in seconds to wait for an orchestrator resource to terminate.
+        # Resources that exceed this time will be forcefully terminated.
+        # Type: uint
+        # Default: 120
+        # terminationGracePeriodSecondsValue: 120
+
+        # Array of additional nameservers to add to simulation pods.
+        # Type: []string
+        # Default: ["8.8.8.8", "1.1.1.1"]
+        # nameserverValues: [""]
+
+        # Orchestrator namespace to launch simulations in.
+        # Default: "default"
+        namespaceValue: ""
+
+        # IngressNamespaceValue is the orchestrator namespace where the Cloudsim ingress is defined.
+        # Default: "default"
+        # ingressNamespaceValue: ""
+
+        # (Required) Name of the orchestrator Ingress used to route client requests from the Internet to
+        # different internal services. This configuration is required to enable websocket connections to simulations.
+        # For Gloo Ingress and Ingress Rules components, this should contain the name of the Virtual Service for the
+        # websocket address.
+        ingressNameValue: ""
+
+        # (Required) IngressHostValue contains the domain URL used to route incoming websocket connections.
+        # It is used to select a specific rule to modify in an ingress.
+        # The ingress resource referenced by the `IngressName` configuration must contain at least one rule with a host
+        # value matching this configuration.
+        # For Gloo Ingress and Ingress Rules components, this should contain the domain that users will use to connect
+        # to simulation websocket servers.
+        ingressHostValue: ""
+
+  ## Secrets
+  # Secrets provides access to a secrets manager. It is used to store and pass sensitive information to simulation
+  # resources.
+  secrets: &kubernetes_secrets
+    type: "kubernetes"
+    config:
+      api:
+        # Path to the Kubernetes cluster connection configuration.
+        kubeconfig: *kubeconfig
+
+  ## Email Sender
+  # Used to send emails.
+  emailSender: &aws_email_sender
+    type: "ses"
+    config:
+      # Region the component will operate in.
+      region: *region
+
+# Platforms
+platforms:
+  # This block configures a platform to use the default components defined in this file.
+  us-east-1:
+    type: "platform"
+    config:
+      # These values are specific to this platform configuration.
+      # All values must be defined for the configuration to be valid.
+      values:
+        # AWS components target region.
+        - &region "us-east-1"
+        # Path to Kubernetes components kubeconfig file.
+        - &kubeconfig ""
+      components:
+        machines:
+          <<: *aws_machines
+        orchestrator:
+          <<: *kubernetes_gloo_orchestrator
+          config:
+            api:
+              # Override the default kubeconfig path
+              kubeconfig: *kubeconfig
+            components: *components
+        storage:
+          # Storage should always point to the default region
+          <<: *aws_storage
+        store:
+          <<: *store
+          config:
+            machinesStore:
+              <<: *machinesStore
+            ignitionStore:
+              <<: *ignitionStore
+            orchestratorStore:
+              <<: *orchestratorStore
+        secrets:
+          <<: *kubernetes_secrets
+          config:
+            api:
+              # Override the default kubeconfig path
+              kubeconfig: *kubeconfig
+        emailSender:
+          <<: *aws_email_sender
+
+# Example of a second platform using the same components but pointing to a different region.
+#  us-east-2:
+#    type: "platform"
+#    config:
+#      # These values are specific to this platform configuration.
+#      # All values must be defined for the configuration to be valid.
+#      values:
+#        # Target region for AWS components.
+#        - &region "us-east-2"
+#        # Path to Kubernetes components kubeconfig file.
+#        - &kubeconfig ""
+#      components:
+#        machines:
+#          <<: *aws_machines
+#          config:
+#            # Override the default region
+#            region: *region
+#        orchestrator:
+#          <<: *kubernetes_gloo_orchestrator
+#          config:
+#            api:
+#              # Override the default kubeconfig path
+#              kubeconfig: *kubeconfig
+#            components: *components
+#        storage:
+#          # Storage should always point to the default region
+#          <<: *aws_storage
+#        store:
+#          <<: *store
+#          config:
+#            machinesStore:
+#              <<: *machinesStore
+#            ignitionStore:
+#              <<: *ignitionStore
+#            orchestratorStore:
+#              <<: *orchestratorStore
+#        secrets:
+#          <<: *kubernetes_secrets
+#          config:
+#            api:
+#              # Override the default kubeconfig path
+#              kubeconfig: *kubeconfig
+#        emailSender:
+#          <<: *aws_email_sender
+#          config:
+#            # Override the component's region
+#            region: *region
