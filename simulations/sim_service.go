@@ -816,8 +816,20 @@ func (s *Service) workerStartSimulation(payload interface{}) {
 		return
 	}
 
-	// TODO Select platform
-	p := s.platforms.Platforms()[0]
+	// Get platform
+	var p platform.Platform
+	if simDep.Platform != nil {
+		p, err = s.platforms.Platform(platformManager.Selector(*simDep.Platform))
+		if err != nil {
+			return
+		}
+	} else {
+		// TODO Select and cycle platform
+		p = s.platforms.Platforms()[0]
+
+		// Update SimulationDeployment platform
+		simDep.updatePlatform(s.DB, p.GetName())
+	}
 
 	err = s.simulator.Start(s.baseCtx, p, simulations.GroupID(groupID))
 	// TODO Only respond to retryable errors
@@ -840,17 +852,29 @@ func (s *Service) workerTerminateSimulation(payload interface{}) {
 		return
 	}
 
-	// TODO Get platform from RunSim
-	p := s.platforms.Platforms()[0]
+	// Get SimulationDeployment
+	simDep, err := GetSimulationDeployment(s.DB, groupID)
+	if err != nil {
+		s.logger.Error(fmt.Sprintf("stopSimulation - %v", err))
+		return
+	}
+
+	// Get simulation Platform
+	p, err := platformManager.GetSimulationPlatform(s.platforms, simDep)
+	if err != nil {
+		errMsg := fmt.Sprintf("stopSimulation - failed to get platform for simulation %s.", groupID)
+		s.logger.Error(errMsg)
+		return
+	}
 
 	s.logger.Info("Worker about to invoke ShutdownSimulation for groupID: " + groupID)
-	err := s.simulator.Stop(s.baseCtx, p, simulations.GroupID(groupID))
+	err = s.simulator.Stop(s.baseCtx, p, simulations.GroupID(groupID))
 	if err != nil {
 		s.notify(PoolShutdownSimulation, groupID, nil, ign.NewErrorMessageWithBase(ign.ErrorUnexpected, err))
 		return
 	}
 
-	simDep, err := GetSimulationDeployment(s.DB, groupID)
+	simDep, err = GetSimulationDeployment(s.DB, groupID)
 	if err != nil {
 		s.logger.Error(fmt.Sprintf("stopSimulation - %v", err))
 		return
