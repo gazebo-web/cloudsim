@@ -78,7 +78,8 @@ func readFileContentFromPod(p pods.Pods, podName, namespace, path string) ([]byt
 		return nil, err
 	}
 
-	buff, err := p.Reader(res).File(path)
+	// TODO: Change container once we add more containers to the different simulation pods.
+	buff, err := p.Reader(res).File("", path)
 	if err != nil {
 		return nil, err
 	}

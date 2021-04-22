@@ -5,9 +5,17 @@ import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/machines"
 )
 
+var _ machines.Machines = (*Machines)(nil)
+
 // Machines is a fake implementation of the machines.Machines interface.
 type Machines struct {
 	*mock.Mock
+}
+
+// List mocks the List method.
+func (m *Machines) List(input machines.ListMachinesInput) (*machines.ListMachinesOutput, error) {
+	args := m.Called(input)
+	return args.Get(0).(*machines.ListMachinesOutput), args.Error(1)
 }
 
 // Create mocks the Create method.

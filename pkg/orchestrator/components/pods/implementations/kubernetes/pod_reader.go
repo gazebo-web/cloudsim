@@ -20,9 +20,13 @@ type reader struct {
 	logger   ign.Logger
 }
 
-// File is used to read a file from the given paths.
-func (r *reader) File(paths ...string) (*bytes.Buffer, error) {
-	r.logger.Debug(fmt.Sprintf("Reading file from paths [%+v] on pod [%s]", paths, r.pod.Name()))
+// File is used to read files from inside a container located in the given paths.
+func (r *reader) File(container string, paths ...string) (*bytes.Buffer, error) {
+	if len(container) == 0 {
+		r.logger.Debug(fmt.Sprintf("Reading file from paths [%+v] on pod [%s]", paths, r.pod.Name()))
+	} else {
+		r.logger.Debug(fmt.Sprintf("Reading file from paths [%+v] on pod [%s] inside the container [%s]", paths, r.pod.Name(), container))
+	}
 
 	// Prepare buffers
 	var stdout, stderr bytes.Buffer
@@ -43,6 +47,7 @@ func (r *reader) File(paths ...string) (*bytes.Buffer, error) {
 		command:    append([]string{"cat"}, paths...),
 		options:    options,
 		spdy:       r.spdyInit,
+		container:  container,
 	})
 	if err == nil {
 		r.logger.Debug(fmt.Sprintf("Reading file from paths [%+v] on pod [%s] succeeded. Output: %s", paths, r.pod.Name(), stdout.String()))

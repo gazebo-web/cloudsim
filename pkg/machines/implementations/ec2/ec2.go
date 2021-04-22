@@ -265,6 +265,10 @@ func (m *ec2Machines) terminateByFilters(filters map[string][]string) error {
 		return err
 	}
 
+	if len(out.Reservations) == 0 {
+		return nil
+	}
+
 	var instanceIds []string
 	for _, r := range out.Reservations {
 		for _, instance := range r.Instances {
@@ -388,6 +392,34 @@ func (m *ec2Machines) createUserData(input machines.CreateMachinesInput) (string
 	}
 
 	return buffer.String(), nil
+}
+
+// List is used to list all pending, running, shutting-down, stopping, stopped and terminated instances with their respective status.
+func (m *ec2Machines) List(input machines.ListMachinesInput) (*machines.ListMachinesOutput, error) {
+	m.Logger.Debug(fmt.Sprintf("Listing machines with the following input: %+v", input))
+	res, err := m.API.DescribeInstanceStatus(&ec2.DescribeInstanceStatusInput{
+		Filters:             m.createFilters(input.Filters),
+		IncludeAllInstances: aws.Bool(true),
+		MaxResults:          aws.Int64(1000),
+	})
+	if err != nil {
+		m.Logger.Debug(fmt.Sprintf("Listing machines with the following input: %+v failed, error: %s", input, err))
+		return nil, err
+	}
+
+	var output machines.ListMachinesOutput
+	output.Instances = make([]machines.ListMachinesItem, len(res.InstanceStatuses))
+
+	for i, instanceStatus := range res.InstanceStatuses {
+		output.Instances[i] = machines.ListMachinesItem{
+			InstanceID: *instanceStatus.InstanceId,
+			State:      *instanceStatus.InstanceState.Name,
+		}
+	}
+
+	m.Logger.Debug(fmt.Sprintf("Listing machines with the following input: %+v succeded. Output: %+v", input, output))
+
+	return &output, nil
 }
 
 // NewMachines initializes a new machines.Machines implementation using EC2.

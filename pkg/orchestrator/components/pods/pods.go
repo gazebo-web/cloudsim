@@ -143,6 +143,7 @@ type Pods interface {
 	Delete(resource resource.Resource) (resource.Resource, error)
 	Get(name, namespace string) (resource.Resource, error)
 	GetIP(name, namespace string) (string, error)
+	List(namespace string, selector Selector) ([]Resource, error)
 }
 
 // Executor groups a set of methods to run commands and scripts inside a Pod.
@@ -156,6 +157,6 @@ type Executor interface {
 
 // Reader groups a set of methods to read files and logs from a Pod.
 type Reader interface {
-	File(paths ...string) (*bytes.Buffer, error)
+	File(container string, paths ...string) (*bytes.Buffer, error)
 	Logs(container string, lines int64) (string, error)
 }

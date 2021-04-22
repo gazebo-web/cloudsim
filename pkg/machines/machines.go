@@ -160,6 +160,76 @@ type WaitMachinesOKInput struct {
 	Instances []string
 }
 
+// ListMachinesInput is the input used to list the machines running in a certain cloud provider
+type ListMachinesInput struct {
+	// Filters are used to filter instances by a certain config.
+	//
+	// In AWS:
+	//    * availability-zone - The Availability Zone of the instance.
+	//
+	//    * event.code - The code for the scheduled event (instance-reboot | system-reboot
+	//    | system-maintenance | instance-retirement | instance-stop).
+	//
+	//    * event.description - A description of the event.
+	//
+	//    * event.instance-event-id - The ID of the event whose date and time you
+	//    are modifying.
+	//
+	//    * event.not-after - The latest end time for the scheduled event (for example,
+	//    2014-09-15T17:15:20.000Z).
+	//
+	//    * event.not-before - The earliest start time for the scheduled event (for
+	//    example, 2014-09-15T17:15:20.000Z).
+	//
+	//    * event.not-before-deadline - The deadline for starting the event (for
+	//    example, 2014-09-15T17:15:20.000Z).
+	//
+	//    * instance-state-code - The code for the instance state, as a 16-bit unsigned
+	//    integer. The high byte is used for internal purposes and should be ignored.
+	//    The low byte is set based on the state represented. The valid values are
+	//    0 (pending), 16 (running), 32 (shutting-down), 48 (terminated), 64 (stopping),
+	//    and 80 (stopped).
+	//
+	//    * instance-state-name - The state of the instance (pending | running |
+	//    shutting-down | terminated | stopping | stopped).
+	//
+	//    * instance-status.reachability - Filters on instance status where the
+	//    name is reachability (passed | failed | initializing | insufficient-data).
+	//
+	//    * instance-status.status - The status of the instance (ok | impaired |
+	//    initializing | insufficient-data | not-applicable).
+	//
+	//    * system-status.reachability - Filters on system status where the name
+	//    is reachability (passed | failed | initializing | insufficient-data).
+	//
+	//    * system-status.status - The system status of the instance (ok | impaired
+	//    | initializing | insufficient-data | not-applicable).
+	Filters map[string][]string
+}
+
+// ListMachinesItem represents a single instance listed by the output of Machines.List.
+type ListMachinesItem struct {
+	// InstanceID is the unique identifier for a single instance.
+	InstanceID string
+	// State is the state of the instance.
+	//
+	// In AWS, the state will be any the following values:
+	//  - pending
+	//  - running
+	//  - shutting-down
+	//  - stopping
+	//  - stopped
+	//  - terminated
+	State string
+}
+
+// ListMachinesOutput is the output value returned by Machines.List. It includes a list of ListMachinesItem.
+type ListMachinesOutput struct {
+	// Instances represents the actual list of instances returned by Machines.List.
+	// Each item has information like the InstanceID and the State.
+	Instances []ListMachinesItem
+}
+
 // Machines requests physical instances from a cloud provider on which to deploy applications
 type Machines interface {
 	// Create creates a set of cloud machines with a certain configuration.
@@ -175,4 +245,7 @@ type Machines interface {
 
 	// WaitOK is used to wait for the given machines input to be OK.
 	WaitOK(input []WaitMachinesOKInput) error
+
+	// List returns a list of machines based on the given input.
+	List(input ListMachinesInput) (*ListMachinesOutput, error)
 }

@@ -22,6 +22,34 @@ type kubernetesPods struct {
 	Logger ign.Logger
 }
 
+// List returns a list of pod resources matching the giving selector in the given namespace.
+// If selector is nil or empty (doesn't have any labels specified) it will return all the resources in the given namespace.
+func (p *pods) List(namespace string, selector orchestrator.Selector) ([]orchestrator.Resource, error) {
+	if selector == nil {
+		selector = orchestrator.NewSelector(map[string]string{})
+	}
+	p.Logger.Debug(fmt.Sprintf("Getting list of pods in namespace [%s] matching the following labels: [%s]", namespace, selector.String()))
+	res, err := p.API.CoreV1().Pods(namespace).List(metav1.ListOptions{LabelSelector: selector.String()})
+	if err != nil {
+		p.Logger.Debug(fmt.Sprintf("Failed to list pods in namespace [%s] matching the following labels: [%s]", namespace, selector.String()))
+		return nil, err
+	}
+
+	if len(res.Items) == 0 {
+		p.Logger.Debug(fmt.Sprintf("No pods available in namespace [%s] matching the following labels: [%s]", namespace, selector.String()))
+		return nil, nil
+	}
+
+	list := make([]orchestrator.Resource, len(res.Items))
+
+	for i, po := range res.Items {
+		list[i] = orchestrator.NewResource(po.Name, po.Namespace, orchestrator.NewSelector(po.Labels))
+	}
+
+	p.Logger.Debug(fmt.Sprintf("Getting list of pods in namespace [%s] matching the following labels: [%s] succeeded.", namespace, selector.String()))
+	return list, nil
+}
+
 // Get gets a pod with the certain name and in the given namespace and returns a resource that identifies that pod.
 func (p *kubernetesPods) Get(name, namespace string) (orchestratorResource.Resource, error) {
 	p.Logger.Debug(fmt.Sprintf("Getting pod with name [%s] in namespace [%s]", name, namespace))
