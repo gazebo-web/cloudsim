@@ -430,9 +430,14 @@ func (m *machines) checkAvailableMachines(requested int64) bool {
 
 // MachinesConfig includes a set of field to configure a cloud.Machines implementation using EC2.
 type MachinesConfig struct {
-	API             ec2iface.EC2API
-	Logger          ign.Logger
-	Limit           *int64
+	// API has a reference to the EC2 API.
+	API ec2iface.EC2API
+	// Logger is an instance of ign.Logger for logging messages in the Machines component.
+	Logger ign.Logger
+	// Limit sets the limit of machines that can be created, if this value is nil, no limit will be set.
+	Limit *int64
+	// WorkerGroupName is label set to all machines created by the Machines component and it's used when counting the
+	// amount of machines available.
 	WorkerGroupName string
 }
 
