@@ -389,29 +389,6 @@ func GetCompetitionRobots(user *users.User, tx *gorm.DB, w http.ResponseWriter, 
 	return SimServImpl.GetCompetitionRobots(getDefaultApplicationName())
 }
 
-// CountPods is a helper handler used to test access to the k8 cluster
-// You can request this method with the following cURL request:
-//   curl -k -X GET --url http://localhost:8001/1.0/k8/countpods
-//     --header 'authorization: Bearer <A_VALID_AUTH0_JWT_TOKEN>'
-func CountPods(user *users.User, tx *gorm.DB, w http.ResponseWriter, r *http.Request) (interface{}, *ign.ErrMsg) {
-	return SimServImpl.(*Service).countPods(r.Context(), user)
-}
-
-// DeleteNodesAndHosts starts the shutdown of all the kubernates nodes
-// and associated hosts (instances) of a given Cloudsim Group Id.
-// You can request this method with the following cURL request:
-//   curl -k -X DELETE --url http://localhost:8001/1.0/k8/nodes?group=xxxx
-//     --header 'authorization: Bearer <A_VALID_AUTH0_JWT_TOKEN>'
-func DeleteNodesAndHosts(user *users.User, tx *gorm.DB, w http.ResponseWriter, r *http.Request) (interface{}, *ign.ErrMsg) {
-	// TODO: future. Remove this func. It will not be part of the public api.
-	groupID := r.URL.Query().Get("group")
-	dep, err := GetSimulationDeployment(tx, groupID)
-	if err != nil {
-		return nil, ign.NewErrorMessageWithBase(ign.ErrorSimGroupNotFound, err)
-	}
-	return SimServImpl.DeleteNodesAndHostsForGroup(r.Context(), tx, dep, user)
-}
-
 // CloudMachineList returns a list with cloud machines (eg. ec2 instances).
 // You can request this method with the following cURL request:
 //   curl -k -X GET --url http://localhost:8001/1.0/machines

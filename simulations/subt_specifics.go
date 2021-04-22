@@ -3,41 +3,25 @@ package simulations
 import (
 	"bytes"
 	"context"
-	"encoding/gob"
 	"encoding/json"
 	"fmt"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/aws/aws-sdk-go/service/s3"
-	"github.com/aws/aws-sdk-go/service/s3/s3iface"
 	"github.com/caarlos0/env"
 	"github.com/jinzhu/gorm"
 	"github.com/pkg/errors"
-	gatewayapiv1 "github.com/solo-io/gloo/projects/gateway/pkg/api/v1"
-	gatewayv1 "github.com/solo-io/gloo/projects/gateway/pkg/api/v1/kube/apis/gateway.solo.io/v1"
-	"github.com/solo-io/gloo/projects/gloo/pkg/api/v1/core/matchers"
 	"gitlab.com/ignitionrobotics/web/cloudsim/globals"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/resource"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/platform"
+	platformManager "gitlab.com/ignitionrobotics/web/cloudsim/pkg/platform/manager"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/storage"
 	useracc "gitlab.com/ignitionrobotics/web/cloudsim/pkg/users"
-	"gitlab.com/ignitionrobotics/web/cloudsim/simulations/gloo"
 	"gitlab.com/ignitionrobotics/web/fuelserver/bundles/users"
 	per "gitlab.com/ignitionrobotics/web/fuelserver/permissions"
 	"gitlab.com/ignitionrobotics/web/ign-go"
-	"gopkg.in/yaml.v2"
-	corev1 "k8s.io/api/core/v1"
 	"k8s.io/api/extensions/v1beta1"
-	networkingv1 "k8s.io/api/networking/v1"
-	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/client-go/kubernetes"
-	podutil "k8s.io/kubernetes/pkg/api/v1/pod"
-	"k8s.io/kubernetes/pkg/client/conditions"
 	"net/http"
-	"net/url"
-	"os"
 	"path"
-	"path/filepath"
-	"strconv"
 	"strings"
 	"time"
 )
@@ -143,42 +127,15 @@ const (
 
 // subTSpecificsConfig is an internal type needed by the SubT application definition.
 type subTSpecificsConfig struct {
-	AwsSecretName string `env:"K8_AWS_SECRET_NAME" envDefault:"aws-secrets"`
-	Region        string `env:"AWS_REGION,required"`
-	S3LogsBucket  string `env:"AWS_GZ_LOGS_BUCKET,required"`
-	// Should we backup logs to S3?
-	S3LogsCopyEnabled bool `env:"AWS_GZ_LOGS_ENABLED" envDefault:"true"`
+	Region string `env:"AWS_REGION,required"`
 	// MaxDurationForSimulations is the maximum number of minutes a simulation can run in SubT.
 	MaxDurationForSimulations int `env:"SUBT_SIM_DURATION_MINUTES" envDefault:"60"`
 	// MaxRobotModelCount is the maximum number of robots per model type. E.g. Up to 5 of any model: X1, X2, etc.
 	// Robot models are defined in SubTRobotType. A value of 0 means unlimited robots.
 	MaxRobotModelCount int `env:"SUBT_MAX_ROBOT_MODEL_COUNT" envDefault:"0"`
-	// AllowNotFoundDuringShutdown is a bool flag used to fail if a pod/service is not found
-	// during shut down. If 'true' then this handler will not fail when a pod-to-be-killed is not found.
-	AllowNotFoundDuringShutdown bool `env:"SUBT_ALLOW_NOT_FOUND" envDefault:"true"`
-	// IgnVerbose is the IGN_VERBOSE value that will be passed to Pods launched for SubT.
-	IgnVerbose string `env:"IGN_VERBOSE" envDefault:"1"`
-	// GazeboLogsVolumeMountPath is the path inside the container where the `gz-logs` Volume will be mounted.
-	// eg. '/tmp/ign'.
-	// Important: it is important that gazebo is configured to record its logs to a child folder of the
-	// passed mount location (eg. following the above example, '/var/log/gzserver/logs'), otherwise gazebo
-	// will 'mkdir' and override the mounted folder.
-	// See the "gzserver-container" Container Spec below to see the code.
-	GazeboLogsVolumeMountPath           string `env:"SUBT_GZSERVER_LOGS_VOLUME_MOUNT_PATH" envDefault:"/tmp/ign"`
-	ROSLogsVolumeMountPath              string `env:"SUBT_BRIDGE_LOGS_VOLUME_MOUNT_PATH" envDefault:"/home/developer/.ros"`
-	SidecarContainerLogsVolumeMountPath string `env:"SUBT_SIDECAR_CONTAINER_VOLUME_MOUNT_PATH" envDefault:"/tmp/logs"`
-	TerminationGracePeriodSeconds       int64  `env:"SUBT_GZSERVER_TERMINATE_GRACE_PERIOD_SECONDS" envDefault:"120"`
-	// IgnIP is the Cloudsim server's IP address to use when creating NetworkPolicies.
-	// Note: when run at Elasticbeanstalk this env var will be automatically set.
-	// See 'docker-entrypoint.sh' script located at the root folder of this project.
-	IgnIP string `env:"IGN_IP"`
 	// FuelURL contains the URL to a Fuel environment. This base URL is used to generate
 	// URLs for users to access specific assets within Fuel.
 	FuelURL string `env:"IGN_FUEL_URL" envDefault:"https://fuel.ignitionrobotics.org/1.0"`
-	// IngressName is the name of the Kubernetes Ingress used to route client requests from the Internet to
-	// different internal services.
-	// This configuration is required to enable websocket connections to simulations.
-	IngressName string `env:"SUBT_INGRESS_NAME"`
 	// WebsocketHost contains the address of the host used to route incoming websocket connections.
 	// It is used to select a specific rule to modify in an ingress.
 	// The ingress resource referenced by the `IngressName` configuration must contain at least one rule with a host
@@ -188,9 +145,7 @@ type subTSpecificsConfig struct {
 
 // SubTApplication represents an application used to tailor SubT simulation requests.
 type SubTApplication struct {
-	cfg subTSpecificsConfig
-	// s3 clients are safe to use concurrently.
-	s3Svc            s3iface.S3API
+	cfg              subTSpecificsConfig
 	schedulableTasks []SchedulableTask
 }
 
@@ -203,7 +158,7 @@ type SimulationStatistics struct {
 }
 
 // NewSubTApplication creates a SubT application, used to tailor simulation requests.
-func NewSubTApplication(ctx context.Context, s3Svc s3iface.S3API) (*SubTApplication, error) {
+func NewSubTApplication(ctx context.Context) (*SubTApplication, error) {
 	logger(ctx).Info("Creating new SubT application")
 
 	s := SubTApplication{}
@@ -214,20 +169,6 @@ func NewSubTApplication(ctx context.Context, s3Svc s3iface.S3API) (*SubTApplicat
 	if err := env.Parse(&s.cfg); err != nil {
 		return nil, err
 	}
-
-	var err error
-	// We need to know the IP address of this host in order to create Network Policies.
-	// We allow the user to define the desired IP using the IGN_IP env var. Otherwise,
-	// we use one of the IP addresses of this host.
-	if s.cfg.IgnIP == "" {
-		logger(ctx).Warning(fmt.Print("No IGN_IP config found. Env var value:", os.Getenv("IGN_IP")))
-		if s.cfg.IgnIP, err = getLocalIPAddressString(); err != nil {
-			return nil, err
-		}
-	}
-	logger(ctx).Warning(fmt.Println("Using IGN_IP value", s.cfg.IgnIP))
-
-	s.s3Svc = s3Svc
 
 	// Populate the robot config list
 	loadSubTRobotTypes(&s.cfg)
@@ -746,42 +687,41 @@ func (sa *SubTApplication) getSimulationWebsocketPath(groupID string) string {
 ////////////////////////////////////////////////////////////////////////////
 
 // getSimulationLogsForDownload returns a link to the GZ logs that were saved in S3.
-func (sa *SubTApplication) getSimulationLogsForDownload(ctx context.Context, tx *gorm.DB,
+func (sa *SubTApplication) getSimulationLogsForDownload(ctx context.Context, tx *gorm.DB, storage storage.Storage,
 	dep *SimulationDeployment, robotName *string) (*string, *ign.ErrMsg) {
 
-	if sa.s3Svc == nil {
-		err := errors.New("SubT Application wasn't given an S3Svc implementation but now is requested to fetch logs from S3")
-		return nil, ign.NewErrorMessageWithBase(ign.ErrorUnexpected, err)
-	}
+	// TODO This method has been disabled until the `Storage` interface gets `GetObjectRequest` support.
+	logger(ctx).Warning("Attempted to get simulation logs for download. This is temporarily disabled.")
 
-	// In SubT, we return a summary generated from all children simulations for
-	// multi-sims. For single sims, we should return ROS logs for a specific
-	// robot if a robot name is specified or the complete Gazebo logs otherwise.
-	var fileName string
-	if dep.isMultiSim() {
-		fileName = sa.getSimulationSummaryFilename(*dep.GroupID)
-	} else if robotName != nil {
-		fileName = sa.getRobotROSLogsFilename(*dep.GroupID, *robotName)
-	} else {
-		fileName = sa.getGazeboLogsFilename(*dep.GroupID)
-	}
-
-	bucket := sa.cfg.S3LogsBucket
-	ownerNameEscaped := url.PathEscape(*dep.Owner)
-	folderPath := fmt.Sprintf("/gz-logs/%s/%s/", ownerNameEscaped, *dep.GroupID)
-	filePath := fmt.Sprintf("%s/%s", folderPath, fileName)
-	logger(ctx).Debug(fmt.Sprintf("SubT App - Fetching generating link to fetch logs from S3 bucket [%s] with path [%s]\n", bucket, filePath))
-
-	req, _ := sa.s3Svc.GetObjectRequest(&s3.GetObjectInput{
-		Bucket: aws.String(bucket),
-		Key:    aws.String(filePath),
-	})
-
-	url, err := req.Presign(5 * time.Minute)
-	if err != nil {
-		return nil, ign.NewErrorMessageWithBase(ign.ErrorUnexpected, err)
-	}
-	return &url, nil
+	return nil, nil
+	// // In SubT, we return a summary generated from all children simulations for
+	// // multi-sims. For single sims, we should return ROS logs for a specific
+	// // robot if a robot name is specified or the complete Gazebo logs otherwise.
+	// var fileName string
+	// if dep.isMultiSim() {
+	// 	fileName = sa.getSimulationSummaryFilename(*dep.GroupID)
+	// } else if robotName != nil {
+	// 	fileName = sa.getRobotROSLogsFilename(*dep.GroupID, *robotName)
+	// } else {
+	// 	fileName = sa.getGazeboLogsFilename(*dep.GroupID)
+	// }
+	//
+	// bucket := sa.cfg.S3LogsBucket
+	// ownerNameEscaped := url.PathEscape(*dep.Owner)
+	// folderPath := fmt.Sprintf("/gz-logs/%s/%s/", ownerNameEscaped, *dep.GroupID)
+	// filePath := fmt.Sprintf("%s/%s", folderPath, fileName)
+	// logger(ctx).Debug(fmt.Sprintf("SubT App - Fetching generating link to fetch logs from S3 bucket [%s] with path [%s]\n", bucket, filePath))
+	//
+	// req, _ := sa.s3Svc.GetObjectRequest(&s3.GetObjectInput{
+	// 	Bucket: aws.String(bucket),
+	// 	Key:    aws.String(filePath),
+	// })
+	//
+	// url, err := req.Presign(5 * time.Minute)
+	// if err != nil {
+	// 	return nil, ign.NewErrorMessageWithBase(ign.ErrorUnexpected, err)
+	// }
+	// return &url, nil
 }
 
 // getSimulationsLiveLogs returns logs from a running simulation.
@@ -815,130 +755,27 @@ func (sa *SubTApplication) getSimulationLiveLogs(ctx context.Context, s *Service
 		container = GazeboServerContainerName
 	}
 
-	raw, err := KubernetesPodGetLog(ctx, s.clientset, s.cfg.KubernetesNamespace, podName, container, lines)
-
-	if raw == nil {
-		raw = sptr("No logs to show")
-	}
-
+	// Get platform
+	p, err := platformManager.GetSimulationPlatform(s.platforms, dep)
 	if err != nil {
 		return nil, NewErrorMessageWithBase(ErrorFailedToGetLiveLogs, err)
 	}
 
-	podLog := PodLog{*raw}
+	// Get logs
+	res := resource.NewResource(
+		podName,
+		p.Store().Orchestrator().Namespace(),
+		nil,
+	)
+	reader := p.Orchestrator().Pods().Reader(res)
+	log, err := reader.Logs(container, lines)
+	if err != nil {
+		return nil, NewErrorMessageWithBase(ErrorFailedToGetLiveLogs, err)
+	}
+
+	podLog := PodLog{log}
 
 	return &podLog, nil
-}
-
-func (sa *SubTApplication) copyPodReadFile(ctx context.Context, s *Service,
-	dep *SimulationDeployment, filepath string) (*bytes.Buffer, error) {
-
-	podName := sa.getCopyPodName(
-		sa.getGazeboPodName(getSimulationPodNamePrefix(*dep.GroupID)),
-	)
-	return KubernetesPodReadFile(
-		ctx,
-		s.clientset,
-		s.cfg.KubernetesNamespace,
-		podName,
-		CopyToS3SidecarContainerName,
-		filepath,
-	)
-}
-
-// getSimulationScore returns the simulation score from the pod of a simulation deployment.
-func (sa *SubTApplication) getSimulationScore(ctx context.Context, s *Service,
-	dep *SimulationDeployment) (*float64, *ign.ErrMsg) {
-
-	// HACK This is a temporary fix until we can properly mock the Kubernetes clientset
-	// s.clientset will not be a kubernetes.Clientset if this is a test.
-	// A hardcoded value is returned if a test kubernetes interface is detected
-	// for tests to complete successfully.
-	if _, ok := s.clientset.(*kubernetes.Clientset); ok == false {
-		score := float64(0)
-		return &score, nil
-	}
-
-	out, err := sa.copyPodReadFile(
-		ctx,
-		s,
-		dep,
-		fmt.Sprintf("%s/score.yml", sa.cfg.SidecarContainerLogsVolumeMountPath),
-	)
-	if err != nil {
-		return nil, ign.NewErrorMessageWithBase(int64(ErrorInvalidScore), err)
-	}
-
-	score, err := strconv.ParseFloat(strings.TrimSpace(string(out.String())), 64)
-	if err != nil {
-		return nil, ign.NewErrorMessageWithBase(int64(ErrorInvalidScore), err)
-	}
-
-	return &score, nil
-}
-
-// getSimulationStatistics returns the simulation statistics summary from the pod of a simulation deployment.
-func (sa *SubTApplication) getSimulationStatistics(ctx context.Context, s *Service,
-	dep *SimulationDeployment) (*SimulationStatistics, *ign.ErrMsg) {
-
-	// HACK This is a temporary fix until we can properly mock the Kubernetes clientset
-	// s.clientset will not be a kubernetes.Clientset if this is a test.
-	// A hardcoded value is returned if a test kubernetes interface is detected
-	// for tests to complete successfully.
-	if _, ok := s.clientset.(*kubernetes.Clientset); ok == false {
-		return &SimulationStatistics{
-			WasStarted:          0,
-			SimTimeDurationSec:  0,
-			RealTimeDurationSec: 0,
-			ModelCount:          0,
-		}, nil
-	}
-
-	out, err := sa.copyPodReadFile(
-		ctx,
-		s,
-		dep,
-		fmt.Sprintf("%s/summary.yml", sa.cfg.SidecarContainerLogsVolumeMountPath),
-	)
-	if err != nil {
-		return nil, ign.NewErrorMessageWithBase(int64(ErrorInvalidSummary), err)
-	}
-
-	var statistics SimulationStatistics
-	err = yaml.Unmarshal(out.Bytes(), &statistics)
-	if err != nil {
-		return nil, ign.NewErrorMessageWithBase(int64(ErrorInvalidSummary), err)
-	}
-
-	return &statistics, nil
-}
-
-// getSimulationScore returns the simulation run data containing metrics, information about found artifacts, etc.
-func (sa *SubTApplication) getSimulationRunData(ctx context.Context, s *Service,
-	dep *SimulationDeployment) (*string, *ign.ErrMsg) {
-
-	// HACK This is a temporary fix until we can properly mock the Kubernetes clientset
-	// s.clientset will not be a kubernetes.Clientset if this is a test.
-	// A hardcoded value is returned if a test kubernetes interface is detected
-	// for tests to complete successfully.
-	if _, ok := s.clientset.(*kubernetes.Clientset); ok == false {
-		out := ""
-		return &out, nil
-	}
-
-	out, err := sa.copyPodReadFile(
-		ctx,
-		s,
-		dep,
-		fmt.Sprintf("%s/run.yml", sa.cfg.SidecarContainerLogsVolumeMountPath),
-	)
-	if err != nil {
-		return nil, ign.NewErrorMessageWithBase(int64(ErrorInvalidRunInformation), err)
-	}
-
-	runData := out.String()
-
-	return &runData, nil
 }
 
 ////////////////////////////////////////////////////////////////////////////
@@ -1074,1270 +911,6 @@ func removeIngressRule(ctx context.Context, kc kubernetes.Interface, namespace s
 ////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////
 
-// launchApplication is a SubT specific function responsible of launching all the
-// pods and services needed for a SubT simulation.
-func (sa *SubTApplication) launchApplication(ctx context.Context, s *Service, tx *gorm.DB,
-	dep *SimulationDeployment, podNamePrefix string, baseLabels map[string]string) (interface{}, *ign.ErrMsg) {
-
-	groupID := *dep.GroupID
-
-	// Extend base labels with SubT specific ones
-	baseLabels[subtTagKey] = "true"
-
-	gzserverLabels := cloneStringsMap(baseLabels)
-	gzserverLabels[subtTypeGazebo] = "true"
-
-	bridgeLabels := cloneStringsMap(baseLabels)
-	bridgeLabels[subtTypeCommsBridge] = "true"
-
-	fcLabels := cloneStringsMap(baseLabels)
-	fcLabels[subtTypeFieldComputer] = "true"
-
-	// Parse the SubT extra info required for this Simulation
-	extra, err := ReadExtraInfoSubT(dep)
-	if err != nil {
-		logger(ctx).Error("[launchApplication] Failed to get extra info.", err)
-		return nil, ign.NewErrorMessageWithBase(ign.ErrorK8Create, err)
-	}
-	// Now get the Circuit rules for this simulation
-	rules, err := GetCircuitRules(tx, extra.Circuit)
-	if err != nil {
-		logger(ctx).Error("[launchApplication] Failed to get circuit rules when launching sim.", err)
-		return nil, ign.NewErrorMessageWithBase(ign.ErrorK8Create, err)
-	}
-
-	worlds := ign.StrToSlice(*rules.Worlds)
-
-	// Get the world to launch, in case it's null, use the default world.
-	var worldToLaunch string
-
-	worldToLaunch = worlds[0]
-	if extra.WorldIndex != nil {
-		worldToLaunch = worlds[*extra.WorldIndex]
-	}
-
-	// We split by ";" (semicolon), in case the configured worldToLaunch string has arguments.
-	// eg. 'tunnel_circuit_practice.ign;worldName:=tunnel_circuit_practice_01'
-	gzRunCommand := strings.Split(worldToLaunch, ";")
-
-	// Set the simulation time limit
-	gzRunCommand = append(gzRunCommand, fmt.Sprintf("durationSec:=%s", *rules.WorldMaxSimSeconds))
-
-	// Enable ROS on the simulation instance
-	gzRunCommand = append(gzRunCommand, "ros:=true")
-
-	// Set headless
-	gzRunCommand = append(gzRunCommand, "headless:=true")
-
-	// Set increased update rate. Commented out because simulation was running
-	// too fast for team's control loop.
-	// gzRunCommand = append(gzRunCommand, "updateRate:=1000000")
-
-	// Get the configured Seed for this run
-	if rules.Seeds != nil {
-		seeds, err := StrToIntSlice(*rules.Seeds)
-		if err != nil {
-			return nil, ign.NewErrorMessageWithBase(ign.ErrorK8Create, err)
-		}
-
-		var seed int
-		seed = seeds[0]
-		if extra.RunIndex != nil {
-			seed = seeds[*extra.RunIndex]
-		}
-
-		gzRunCommand = append(gzRunCommand, fmt.Sprintf("seed:=%d", seed))
-	}
-
-	// Get the world name parameter to pass on to the comms bridge
-	var worldNameParam string
-	for _, param := range gzRunCommand {
-		if strings.Index(param, "worldName:=") != -1 {
-			worldNameParam = param
-			break
-		}
-	}
-	// Check that a world was found
-	if worldNameParam == "" {
-		return nil, ign.NewErrorMessageWithBase(ign.ErrorUnexpected, errors.New("World name not found"))
-	}
-
-	// Set the authorization token if it exists
-	// TODO: Confirm parameter name
-	if dep.AuthorizationToken != nil {
-		gzRunCommand = append(gzRunCommand, fmt.Sprintf("websocketAuthKey:=%s", *dep.AuthorizationToken))
-		gzRunCommand = append(gzRunCommand, fmt.Sprintf("websocketAdminAuthKey:=%s", *dep.AuthorizationToken))
-	}
-
-	// Set the maximum number of websocket connections. This can be removed
-	// when websocket scaling across multiple machines is implemented.
-	gzRunCommand = append(gzRunCommand, "websocketMaxConnections:=500")
-
-	// Pass Robot names and types to the gzserver Pod.
-	// robotName1:=xxx robotConfig1:=yyy robotName2:=xxx robotConfig2:=yyy (Note the numbers).
-	for i, robot := range extra.Robots {
-		gzRunCommand = append(gzRunCommand, fmt.Sprintf("robotName%d:=%s", i+1, robot.Name), fmt.Sprintf("robotConfig%d:=%s", i+1, robot.Type))
-	}
-
-	// Pass marsupial names to the gzserver Pod.
-	// marsupialN:=<parent>:<child>
-	for i, marsupial := range extra.Marsupials {
-		gzRunCommand = append(gzRunCommand, fmt.Sprintf("marsupial%d:=%s:%s", i+1, marsupial.Parent, marsupial.Child))
-	}
-	logger(ctx).Info(fmt.Sprintf("gzRunCommand to use: %v", gzRunCommand))
-
-	// Done to log the details into rollbar
-	simStr, err := dep.toJSON()
-	if err != nil {
-		return nil, ign.NewErrorMessageWithBase(ign.ErrorUnexpected, err)
-	}
-	logger(ctx).Warning(fmt.Sprintf("subt launchApplication - Trying to launch SimulationDeployment [%s]. SubT Specifics [%s]. GzRunCommand [%s]. Simulation Image [%s]",
-		*simStr, *dep.Extra, gzRunCommand, *rules.Image))
-
-	// Add NetworkPolicies to control ingress and egress to/from Pods.
-	// Note: we want the gzserver and comms-bridge Pods to freely communicate between each other.
-	// But the field-computers can only talk with the comms-bridge (and not with the gzserver).
-
-	gazeboPodName := sa.getGazeboPodName(podNamePrefix)
-
-	// First, the Network Policy for the gzserver Pod
-	// Note: we add the rules before launching the pods, so they are active when the pod starts.
-	npGz := sa.createNetworkPolicy(ctx, gazeboPodName, baseLabels, gzserverLabels, bridgeLabels)
-	// We update the networkpolicy of the GzServer to also allow outbound connections to internet.
-	npGz.Spec.Egress = append(npGz.Spec.Egress, networkingv1.NetworkPolicyEgressRule{})
-	_, err = s.clientset.NetworkingV1().NetworkPolicies(s.cfg.KubernetesNamespace).Create(npGz)
-	if err != nil {
-		logger(ctx).Error("[launchApplication] Failed to create the gzserver network policy.", err)
-		return nil, ign.NewErrorMessageWithBase(ign.ErrorK8Create, err)
-	}
-
-	// Create the gzserver Pod definition (ie. the simulation server pod)
-	// hostPath contains the path in the node that is mounted as a shared
-	// directory among pods.
-	hostPath := "/tmp"
-	gzPod := &corev1.Pod{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:   gazeboPodName,
-			Labels: gzserverLabels,
-		},
-		Spec: corev1.PodSpec{
-			RestartPolicy:                 corev1.RestartPolicyNever,
-			TerminationGracePeriodSeconds: int64ptr(sa.cfg.TerminationGracePeriodSeconds),
-			NodeSelector: map[string]string{
-				// Force this pod to run on the same node as the target pod
-				nodeLabelKeyGroupID:          *dep.GroupID,
-				nodeLabelKeyCloudsimNodeType: subtTypeGazebo,
-			},
-			Containers: []corev1.Container{
-				{
-					Name:  GazeboServerContainerName,
-					Image: *rules.Image,
-					Args:  gzRunCommand,
-					SecurityContext: &corev1.SecurityContext{
-						Privileged:               boolptr(true),
-						AllowPrivilegeEscalation: boolptr(true),
-					},
-					Ports: []corev1.ContainerPort{
-						{
-							ContainerPort: 11345,
-						},
-						{
-							ContainerPort: 11311,
-						},
-					},
-					VolumeMounts: []corev1.VolumeMount{
-						{
-							Name:      "logs",
-							MountPath: sa.cfg.GazeboLogsVolumeMountPath,
-						},
-						{
-							Name:      "xauth",
-							MountPath: "/tmp/.docker.xauth",
-						},
-						{
-							Name:      "localtime",
-							MountPath: "/etc/localtime",
-						},
-						{
-							Name:      "devinput",
-							MountPath: "/dev/input",
-						},
-						{
-							Name:      "x11",
-							MountPath: "/tmp/.X11-unix",
-						},
-					},
-					Env: []corev1.EnvVar{
-						{
-							Name:  "DISPLAY",
-							Value: ":0",
-						},
-						{
-							Name:  "QT_X11_NO_MITSHM",
-							Value: "1",
-						},
-						{
-							Name:  "XAUTHORITY",
-							Value: "/tmp/.docker.xauth",
-						},
-						{
-							Name:  "USE_XVFB",
-							Value: "1",
-						},
-						{
-							Name:  "IGN_RELAY",
-							Value: sa.cfg.IgnIP,
-						},
-						{
-							Name:  "IGN_PARTITION",
-							Value: groupID,
-						},
-						{
-							Name:  "IGN_VERBOSE",
-							Value: sa.cfg.IgnVerbose,
-						},
-					},
-				},
-			},
-			Volumes: []corev1.Volume{
-				{
-					Name: "logs",
-					VolumeSource: corev1.VolumeSource{
-						HostPath: &corev1.HostPathVolumeSource{
-							Path: hostPath,
-						},
-					},
-				},
-				{
-					Name: "x11",
-					VolumeSource: corev1.VolumeSource{
-						HostPath: &corev1.HostPathVolumeSource{
-							Path: "/tmp/.X11-unix",
-						},
-					},
-				},
-				{
-					Name: "devinput",
-					VolumeSource: corev1.VolumeSource{
-						HostPath: &corev1.HostPathVolumeSource{
-							Path: "/dev/input",
-						},
-					},
-				},
-				{
-					Name: "localtime",
-					VolumeSource: corev1.VolumeSource{
-						HostPath: &corev1.HostPathVolumeSource{
-							Path: "/etc/localtime",
-						},
-					},
-				},
-				{
-					Name: "xauth",
-					VolumeSource: corev1.VolumeSource{
-						HostPath: &corev1.HostPathVolumeSource{
-							Path: "/tmp/.docker.xauth",
-						},
-					},
-				},
-			},
-			// These DNS servers provide alternative DNS server from the internet
-			// in case the cluster DNS service isn't available
-			DNSConfig: &corev1.PodDNSConfig{
-				Nameservers: []string{
-					"8.8.8.8",
-					"1.1.1.1",
-				},
-			},
-		},
-	}
-
-	// Launch the gzserver Pod
-	_, err = s.clientset.CoreV1().Pods(s.cfg.KubernetesNamespace).Create(gzPod)
-	if err != nil {
-		logger(ctx).Error("[launchApplication] Failed to create the gzserver pod.", err)
-		return nil, ign.NewErrorMessageWithBase(ign.ErrorK8Create, err)
-	}
-
-	// Wait until the gazebo server pod has an IP address before continuing.
-	// We need to get its IP address to share it with the other pods.
-	// This call will block.
-	ptrIP, err := waitForPodIPAndGetIP(ctx, s, gzserverLabels)
-	if err != nil {
-		logger(ctx).Error("[launchApplication] Timed out waiting for the gzserver pod to launch.", err)
-		return nil, ign.NewErrorMessageWithBase(ign.ErrorK8Create, err)
-	}
-	gzserverPodIP := (*ptrIP)[gazeboPodName]
-
-	// If S3 log backup is enabled then add an additional copy pod to upload
-	// logs at the end of the simulation.
-	if sa.cfg.S3LogsCopyEnabled {
-		copyPod := sa.createS3CopyPod(ctx, s, dep, gzPod.Spec.NodeSelector, gazeboPodName, hostPath, "logs", sa.cfg.S3LogsBucket, sa.getGazeboLogsFilename(groupID))
-		// Launch the copy pod
-		_, err := s.clientset.CoreV1().Pods(s.cfg.KubernetesNamespace).Create(copyPod)
-		if err != nil {
-			logger(ctx).Error("[launchApplication] Failed to create the gzserver copy pod.", err)
-			return nil, ign.NewErrorMessageWithBase(ign.ErrorK8Create, err)
-		}
-	}
-
-	// Expose the Gazebo websocket server if an auth key is available
-	if dep.AuthorizationToken != nil && len(sa.cfg.IngressName) > 0 {
-		// Create and launch a service to expose the websocket server to the cluster
-		_, err := sa.createWebsocketService(
-			ctx,
-			s.clientset,
-			s.cfg.KubernetesNamespace,
-			dep,
-			podNamePrefix,
-			baseLabels,
-			gzserverLabels,
-		)
-		if err != nil {
-			logger(ctx).Error("[launchApplication] Failed to create websocket Kubernetes service.", err)
-			return nil, ign.NewErrorMessageWithBase(ign.ErrorK8Create, err)
-		}
-		// Add a Gloo route to allow traffic to the websocket service from the Internet
-		_, err = sa.CreateGlooVirtualServiceRoute(
-			ctx,
-			s,
-			dep,
-		)
-		if err != nil {
-			logger(ctx).Error("[launchApplication] Failed to create websocket Kubernetes ingress rule.", err)
-			return nil, ign.NewErrorMessageWithBase(ign.ErrorK8Create, err)
-		}
-	}
-
-	fcPods := map[string]*corev1.Pod{}
-	copyPods := make([]*corev1.Pod, len(extra.Robots))
-	// Now launch the Comms Pods and the needed NetworkPolicies before
-	// launching the field-computer pods (team solutions).
-	for robotNumber, robot := range extra.Robots {
-		// Note: it is assumed the Robot.Name is "alphanum". See its validator at subt_models.go
-		robotNameLower := strings.ToLower(robot.Name)
-		robotIdentifier := fmt.Sprintf("rbt%d", robotNumber+1)
-
-		bridgePodName := sa.getCommsBridgePodName(podNamePrefix, robotIdentifier)
-		fcPodName := sa.getFieldComputerPodName(podNamePrefix, robotIdentifier)
-
-		specificBridgeLabels := cloneStringsMap(bridgeLabels)
-		specificBridgeLabels["comms-for-robot"] = robotNameLower
-
-		specificFcLabels := cloneStringsMap(fcLabels)
-		specificFcLabels["robot-name"] = robotNameLower
-
-		// Network Policy for this robot's comms-bridge Pod
-		npBridge := sa.createNetworkPolicy(ctx, bridgePodName, baseLabels,
-			specificBridgeLabels, gzserverLabels, specificFcLabels)
-		// We update the networkpolicy of the Comms Bridge to also allow outbound connections to internet.
-		npBridge.Spec.Egress = append(npBridge.Spec.Egress, networkingv1.NetworkPolicyEgressRule{})
-		_, err = s.clientset.NetworkingV1().NetworkPolicies(s.cfg.KubernetesNamespace).Create(npBridge)
-		if err != nil {
-			msg := fmt.Sprintf("[launchApplication] Failed to create network policy for robot %s bridge.", robot.Name)
-			logger(ctx).Error(msg, err)
-			return nil, ign.NewErrorMessageWithBase(ign.ErrorK8Create, err)
-		}
-
-		// Network Policy for field-computer Pods (Note: they cannnot connect to internet)
-		npfc := sa.createNetworkPolicy(ctx, fcPodName, baseLabels, specificFcLabels, specificBridgeLabels)
-		_, err = s.clientset.NetworkingV1().NetworkPolicies(s.cfg.KubernetesNamespace).Create(npfc)
-		if err != nil {
-			msg := fmt.Sprintf("[launchApplication] Failed to create network policy for robot %s.", robot.Name)
-			logger(ctx).Error(msg, err)
-			return nil, ign.NewErrorMessageWithBase(ign.ErrorK8Create, err)
-		}
-
-		childMarsupial := "false"
-		for _, marsupial := range extra.Marsupials {
-			if marsupial.Child == robot.Name {
-				childMarsupial = "true"
-				break
-			}
-		}
-
-		// Launch the comms-bridge Pod
-		bridgePod := sa.createCommsBridgePod(
-			ctx,
-			dep,
-			bridgePodName,
-			specificBridgeLabels,
-			gzserverPodIP,
-			hostPath,
-			"robot-logs",
-			robotNumber+1,
-			robot,
-			*rules.BridgeImage,
-			worldNameParam,
-			childMarsupial,
-		)
-
-		// If S3 log backup is enabled then add an additional copy pod to upload
-		// logs at the end of the simulation.
-		if sa.cfg.S3LogsCopyEnabled {
-			// Change the owner of the shared volume to the bridge's user
-			sa.addSharedVolumeConfigurationContainer(bridgePod, 1000, 1000, "logs")
-
-			// Create the copy pod for the current bridge
-			copyPods[robotNumber] = sa.createS3CopyPod(
-				ctx,
-				s,
-				dep,
-				bridgePod.Spec.NodeSelector,
-				bridgePodName,
-				hostPath,
-				"robot-logs",
-				sa.cfg.S3LogsBucket,
-				sa.getRobotROSLogsFilename(groupID, robotNameLower),
-			)
-		}
-
-		// Launch the bridge pods
-		logger(ctx).Info("Launching bridge pod", bridgePod.Spec.InitContainers)
-		_, err = s.clientset.CoreV1().Pods(s.cfg.KubernetesNamespace).Create(bridgePod)
-		if err != nil {
-			msg := fmt.Sprintf("[launchApplication] Failed to create bridge pod for robot %s.", robot.Name)
-			logger(ctx).Error(msg, err)
-			return nil, ign.NewErrorMessageWithBase(ign.ErrorK8Create, err)
-		}
-
-		// Create the FC Pod and save it for launching later
-		fcPod := sa.createFieldComputerPod(
-			ctx,
-			dep,
-			fcPodName,
-			specificFcLabels,
-			groupID,
-			robot,
-		)
-		fcPods[robotIdentifier] = fcPod
-	}
-
-	// Wait for Comms Bridge Pods to be Ready and get their IP addresses
-	bridgeIPs, err := waitForPodReadyAndGetIP(ctx, s, bridgeLabels)
-	if err != nil {
-		logger(ctx).Error("[launchApplication] Timed out waiting for bridge pods to launch.", err)
-		return nil, ign.NewErrorMessageWithBase(ign.ErrorK8Create, err)
-	}
-
-	// Launch the bridge copy pods
-	if sa.cfg.S3LogsCopyEnabled {
-		for _, pod := range copyPods {
-			_, err := s.clientset.CoreV1().Pods(s.cfg.KubernetesNamespace).Create(pod)
-			if err != nil {
-				msg := fmt.Sprintf("[launchApplication] Failed to create copy pod for bridge pod %s.", pod.Name)
-				logger(ctx).Error(msg, err)
-				return nil, ign.NewErrorMessageWithBase(ign.ErrorK8Create, err)
-			}
-		}
-	}
-	// Now launch the previously created Field-Computer Pod(s)
-	for robotIdentifier, fcPod := range fcPods {
-		bridgePodName := sa.getCommsBridgePodName(podNamePrefix, robotIdentifier)
-		bridgeIP := (*bridgeIPs)[bridgePodName]
-		rosIP := fmt.Sprintf("http://%s:11311", bridgeIP)
-
-		// Set the ROS MASTER URI to the FC pod (i.e. the CommsBridge's IP)
-		fcPod.Spec.Containers[0].Env = append(fcPod.Spec.Containers[0].Env, corev1.EnvVar{
-			Name:  "ROS_MASTER_URI",
-			Value: rosIP,
-		})
-
-		// Launch the field-computer Pod
-		_, err = s.clientset.CoreV1().Pods(s.cfg.KubernetesNamespace).Create(fcPod)
-		if err != nil {
-			msg := fmt.Sprintf("[launchApplication] Failed to create field-computer pod %s.", fcPod.Name)
-			logger(ctx).Error(msg, err)
-			return nil, ign.NewErrorMessageWithBase(ign.ErrorK8Create, err)
-		}
-	}
-
-	return nil, nil
-}
-
-// waitForPodIPAndGetIP blocks until the pods identified by matchLabels have an
-// IP address.
-// Returns a map with (podName, IP address).
-// Dev note: This func is used to get the IP of the Gzserver
-func waitForPodIPAndGetIP(ctx context.Context, s *Service, matchLabels map[string]string) (*map[string]string, error) {
-	return waitForPodConditionAndGetIP(ctx, s, matchLabels, "'Has IP status'", podHasIPAddress)
-}
-
-// waitForPodReadyAndGetIP blocks until the pods identified by matchLabels have
-// Ready status.
-// Returns a map with (podName, IP address).
-// Dev note: This func is used to get the IP of the CommsBridge pods.
-func waitForPodReadyAndGetIP(ctx context.Context, s *Service, matchLabels map[string]string) (*map[string]string, error) {
-	return waitForPodConditionAndGetIP(ctx, s, matchLabels, "Ready", subtPodRunningAndReady)
-}
-
-// subtPodRunningAndReady checks if a pod is ready, specifically for SubT. This function is used for Wait polls.
-func subtPodRunningAndReady(ctx context.Context, pod *corev1.Pod) (bool, error) {
-	switch pod.Status.Phase {
-	case corev1.PodFailed:
-		return false, conditions.ErrPodCompleted
-	case corev1.PodRunning:
-		return podutil.IsPodReady(pod), nil
-	case corev1.PodSucceeded:
-		_, isFC := pod.Labels[subtTypeFieldComputer]
-		if isFC {
-			logger(ctx).Warning(fmt.Sprintf("FC pod %s status is Succeeded. Considering it Ready.", pod.Name))
-		}
-		return isFC, nil
-	}
-	return false, nil
-}
-
-// waitForPodConditionAndGetIP blocks until the pods identified by matchLabels
-// meet a condition.
-// Returns a map with (podName, IP address).
-func waitForPodConditionAndGetIP(ctx context.Context, s *Service, matchLabels map[string]string,
-	condStr string, cond PodCondition) (*map[string]string, error) {
-
-	var selectorBuilder strings.Builder
-	for k, v := range matchLabels {
-		fmt.Fprintf(&selectorBuilder, "%s=%s,", k, v)
-	}
-	labelSelector := strings.TrimRight(selectorBuilder.String(), ",")
-
-	timeout := time.Duration(s.cfg.PodReadyTimeoutSeconds) * time.Second
-	opts := metav1.ListOptions{LabelSelector: labelSelector}
-
-	if err := WaitForMatchPodsCondition(ctx, s.clientset, s.cfg.KubernetesNamespace,
-		opts, condStr, timeout, cond); err != nil {
-		return nil, err
-	}
-
-	podsInterface := s.clientset.CoreV1().Pods(s.cfg.KubernetesNamespace)
-	runningPods, err := podsInterface.List(opts)
-	if err != nil || len(runningPods.Items) == 0 {
-		return nil, errors.New("Pods not found for labels: " + labelSelector)
-	}
-
-	ips := map[string]string{}
-	for _, p := range runningPods.Items {
-		name := p.ObjectMeta.Name
-		ip := p.Status.PodIP
-		ips[name] = ip
-	}
-
-	return &ips, nil
-}
-
-// podHasIPAddress checks if a pod by name is running. This function is used
-// for Wait polls.
-func podHasIPAddress(ctx context.Context, pod *corev1.Pod) (bool, error) {
-	if pod.Status.PodIP != "" {
-		return true, nil
-	}
-	return false, nil
-}
-
-// addSharedVolumeConfigurationContainer changes the owner of a pod's shared
-// volume directory to the specified user and group.
-// Logs produced by Gazebo and Bridge pods are uploaded to S3 using an additional
-// copy pod launched in the same node. A Kubernetes volume is used to share
-// a specific directory between these pods. The shared directory is physically
-// stored inside the node where the log and copy pods are scheduled.
-// Gazebo and Bridge pods are configured to create a directory to store logs
-// inside the shared volume because the shared directory may contain other files
-// not related to the simulation.
-// Kubernetes creates the directory, but sets the permissions to root:root 755
-// which does not give write permissions to the bridge container because it runs
-// with `developer` as its user and group. This function adds an InitContainer to
-// the pod spec that changes the owner of the directory from root to developer
-// before the bridge container starts, giving write permissions to the bridge
-// container and allowing it to store logs.
-// `userID` is the linux user id (UID) of the user in the pod producing logs.
-// `groupID` is the linux group id (GID) of the user in the pod producing logs.
-// `volumeName` is the name of the Kubernetes hostPath volume containing the shared directory.
-func (sa *SubTApplication) addSharedVolumeConfigurationContainer(pod *corev1.Pod, userID int, groupID int,
-	volumeName string) {
-	pod.Spec.InitContainers = []corev1.Container{
-		{
-			Name:    "chown-shared-volume",
-			Image:   "infrastructureascode/aws-cli:latest",
-			Command: []string{"/bin/sh"},
-			Args:    []string{"-c", fmt.Sprintf("chown %d:%d /tmp", userID, groupID)},
-			VolumeMounts: []corev1.VolumeMount{
-				{
-					Name:      volumeName,
-					MountPath: "/tmp",
-				},
-			},
-		},
-	}
-}
-
-// createWebsocketService creates a Kubernetes Service that exposes the websocket server to the cluster.
-// This service can be exposed to the Internet via a load balancer.
-func (sa *SubTApplication) createWebsocketService(ctx context.Context, kc kubernetes.Interface, namespace string,
-	dep *SimulationDeployment, podNamePrefix string, serviceLabels map[string]string,
-	targetLabels map[string]string) (*corev1.Service, error) {
-
-	logger := logger(ctx)
-	logger.Info("Creating simulation cluster websocket service.")
-
-	// Prepare the service
-	service := &corev1.Service{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:   sa.getWebsocketServiceName(podNamePrefix),
-			Labels: serviceLabels,
-		},
-		Spec: corev1.ServiceSpec{
-			Type:     "ClusterIP",
-			Selector: targetLabels,
-			Ports: []corev1.ServicePort{
-				{
-					Name: "websockets",
-					Port: 9002,
-				},
-			},
-		},
-	}
-
-	// Launch the service
-	_, err := kc.CoreV1().Services(namespace).Create(service)
-	if err != nil {
-		return nil, err
-	}
-
-	return service, nil
-}
-
-// createWebsocketIngress adds a rule to the environment's cluster ingress resource.
-// If an ingress controller is installed in the cluster, the creation of the ingress rule will trigger an ingress
-// controller to configure a load balancer to redirect simulation websocket requests to the cluster service created
-// for the websocket server.
-func (sa *SubTApplication) createWebsocketIngress(ctx context.Context, kc kubernetes.Interface, namespace string,
-	dep *SimulationDeployment, service *corev1.Service) (*v1beta1.Ingress, error) {
-
-	logger := logger(ctx)
-	logger.Info("Creating simulation websocket ingress rule.")
-
-	// Prepare the rule path
-	rulePath := &v1beta1.HTTPIngressPath{
-		Path: sa.getSimulationIngressPath(*dep.GroupID),
-		Backend: v1beta1.IngressBackend{
-			ServiceName: service.Name,
-			ServicePort: intstr.IntOrString{
-				Type:   intstr.Int,
-				IntVal: service.Spec.Ports[0].Port,
-			},
-		},
-	}
-
-	var host *string
-	if len(sa.cfg.WebsocketHost) > 0 {
-		host = &sa.cfg.WebsocketHost
-	}
-
-	var ingress *v1beta1.Ingress
-	var err error
-	retries := uint(9)
-	for i := uint(1); i < retries; i++ {
-		ingress, err = upsertIngressRule(
-			ctx,
-			kc,
-			namespace,
-			sa.cfg.IngressName,
-			host,
-			rulePath,
-		)
-		if err == nil {
-			break
-		} else if i < retries-1 {
-			logger.Info("Failed to create ingress rule. Retrying. Error:", err)
-		}
-
-		// If an error occurred, retry for up to 10 min with exponential backoff
-		Sleep(time.Duration(1<<i) * time.Second)
-	}
-
-	return ingress, err
-}
-
-// GetGlooServiceUpstreamName gets the name of an upstream for a cluster service.
-// Upstreams are used by Gloo Virtual Service routes to direct traffic to a Kubernetes service.
-// `glooNamespace` is the Kubernetes namespace Gloo is running in.
-// `service` is the Kubernetes service the upstream points to.
-func (*SubTApplication) GetGlooServiceUpstreamName(gloo gloo.Clientset, glooNamespace string,
-	groupID string) (string, error) {
-
-	opts := metav1.ListOptions{
-		LabelSelector: labelAndValue(podLabelKeyGroupID, groupID),
-	}
-
-	upstreams, err := gloo.Gloo().Upstreams(glooNamespace).List(opts)
-	if err != nil {
-		return "", err
-	}
-	// There should only ever be a single upstream for the target service
-	if len(upstreams.Items) < 1 {
-		return "", errors.New("did not find a Gloo upstream for target Kubernetes service")
-	} else if len(upstreams.Items) > 1 {
-		return "", errors.New("found too many Gloo upstreams for target Kubernetes service")
-	}
-
-	return upstreams.Items[0].Name, nil
-}
-
-// CreateGlooVirtualServiceRoute creates a Gloo Route to redirect websocket simulation requests to a Kubernetes service.
-// TODO: Receive a generic application instead of a SubTApplication pointer.
-func (sa *SubTApplication) CreateGlooVirtualServiceRoute(ctx context.Context, s *Service,
-	dep *SimulationDeployment) (*gatewayv1.VirtualService, error) {
-
-	logger := logger(ctx)
-	logger.Info("Creating simulation websocket ingress rule.")
-
-	groupID := *dep.GroupID
-	retries := uint(9)
-	var err error
-
-	// Upstreams are Gloo's representation of services that can be routed to. An upstream can point to different things.
-	// For now we're only using Kubernetes services, so a Gloo upstream is synonymous with a Kubernetes service.
-	var upstream string
-	for i := uint(1); i < retries; i++ {
-		logger.Info(fmt.Sprintf("Getting service upstream in namespace %s with id %s", s.cfg.KubernetesGlooNamespace, groupID))
-		upstream, err = sa.GetGlooServiceUpstreamName(
-			s.glooClientset,
-			s.cfg.KubernetesGlooNamespace,
-			groupID,
-		)
-		if err == nil {
-			logger.Info(fmt.Sprintf("Got upstream! Name: %s", upstream))
-			break
-		} else if i < retries-1 {
-			logger.Info("Failed to get Kubernetes Service Gloo Upstream name. Retrying. Error:", err)
-		}
-
-		// If an error occurred, retry for up to 10 min with exponential backoff
-		Sleep(time.Duration(1<<i) * time.Second)
-	}
-	if err != nil {
-		return nil, err
-	}
-
-	// Matchers define the criteria a request must match to route traffic to upstreams.
-	matcher := gloo.CreateVirtualHostRouteExactMatcher(sa.getSimulationIngressPath(groupID))
-
-	// Actions perform routing operations when executed.
-	// This particular action redirects traffic to a single target upstream.
-	action := gloo.CreateVirtualHostRouteAction(
-		s.cfg.KubernetesGlooNamespace,
-		upstream,
-	)
-
-	// Routes bind an upstream, a set of matchers and an action into an element used to configure the Gloo Envoy proxy.
-	route := gloo.CreateVirtualHostRoute(
-		groupID,
-		[]*matchers.Matcher{matcher},
-		action,
-	)
-
-	// Add the route to the Virtual Service
-	var virtualService *gatewayv1.VirtualService
-	for i := uint(1); i < retries; i++ {
-		virtualService, err = gloo.UpsertVirtualServiceRoute(
-			ctx,
-			s.glooClientset,
-			s.cfg.KubernetesGlooNamespace,
-			sa.cfg.IngressName,
-			route,
-		)
-		if err == nil {
-			break
-		} else if i < retries-1 {
-			logger.Info("Failed to create Gloo Virtual Service route. Retrying. Error:", err)
-		}
-
-		// If an error occurred, retry for up to 10 min with exponential backoff
-		Sleep(time.Duration(1<<i) * time.Second)
-	}
-
-	return virtualService, err
-}
-
-// createCommsBridgePod creates a basic comms-bridge pod. Callers should then
-// change the Pod's Image, Command and Args fields.
-func (sa *SubTApplication) createCommsBridgePod(ctx context.Context, dep *SimulationDeployment,
-	podName string, labels map[string]string, gzserverPodIP string, hostPath string, logDirectory string,
-	robotNumber int, robot SubTRobot, bridgeImage string, worldNameParam string, childMarsupial string) *corev1.Pod {
-
-	logMountPath := path.Join(hostPath, logDirectory)
-	hostPathType := corev1.HostPathDirectoryOrCreate
-	bridgePod := &corev1.Pod{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:   podName,
-			Labels: labels,
-		},
-		Spec: corev1.PodSpec{
-			RestartPolicy:                 corev1.RestartPolicyNever,
-			TerminationGracePeriodSeconds: int64ptr(sa.cfg.TerminationGracePeriodSeconds),
-			NodeSelector: map[string]string{
-				// Needed to force this pod to run on specific nodes
-				nodeLabelKeyGroupID:          *dep.GroupID,
-				nodeLabelKeyCloudsimNodeType: subtTypeFieldComputer,
-				nodeLabelKeySubTRobotName:    strings.ToLower(robot.Name),
-			},
-			Containers: []corev1.Container{
-				{
-					Name:            CommsBridgeContainerName,
-					ImagePullPolicy: corev1.PullIfNotPresent,
-					// Default Image/Command/Args, for testing
-					Image:   "infrastructureascode/aws-cli:latest",
-					Command: []string{"/bin/sh", "-c", "--"},
-					Args:    []string{"while true; do sleep 30; done;"},
-					SecurityContext: &corev1.SecurityContext{
-						Privileged:               boolptr(true),
-						AllowPrivilegeEscalation: boolptr(true),
-					},
-					VolumeMounts: []corev1.VolumeMount{
-						{
-							Name:      "logs",
-							MountPath: sa.cfg.ROSLogsVolumeMountPath,
-						},
-					},
-					Env: []corev1.EnvVar{
-						{
-							Name:  "IGN_PARTITION",
-							Value: *dep.GroupID,
-						},
-						{
-							// IGN_IP contains the IP of the subscriber (this pod)
-							Name: "IGN_IP",
-							ValueFrom: &corev1.EnvVarSource{
-								FieldRef: &corev1.ObjectFieldSelector{
-									FieldPath: "status.podIP",
-								},
-							},
-						},
-						{
-							// IGN_RELAY should contain the IP of the publisher (the gzserver)
-							Name:  "IGN_RELAY",
-							Value: gzserverPodIP,
-						},
-						{
-							Name:  "IGN_VERBOSE",
-							Value: sa.cfg.IgnVerbose,
-						},
-						{
-							Name:  "ROBOT_NAME",
-							Value: robot.Name,
-						},
-						{
-							Name: "ROS_IP",
-							ValueFrom: &corev1.EnvVarSource{
-								FieldRef: &corev1.ObjectFieldSelector{
-									FieldPath: "status.podIP",
-								},
-							},
-						},
-						{
-							Name:  "ROS_MASTER_URI",
-							Value: "http://$(ROS_IP):11311",
-						},
-					},
-				},
-			},
-			Volumes: []corev1.Volume{
-				{
-					Name: "logs",
-					VolumeSource: corev1.VolumeSource{
-						HostPath: &corev1.HostPathVolumeSource{
-							Path: logMountPath,
-							Type: &hostPathType,
-						},
-					},
-				},
-			},
-			// These DNS servers provide alternative DNS server from the internet
-			// in case the cluster DNS service isn't available
-			DNSConfig: &corev1.PodDNSConfig{
-				Nameservers: []string{
-					"8.8.8.8",
-					"1.1.1.1",
-				},
-			},
-		},
-	}
-
-	if bridgeImage != "infrastructureascode/aws-cli:latest" {
-		bridgePod.Spec.Containers[0].Image = bridgeImage
-		bridgePod.Spec.Containers[0].Command = nil
-		bridgePod.Spec.Containers[0].Args = []string{
-			worldNameParam,
-			fmt.Sprintf("robotName%d:=%s", robotNumber, robot.Name),
-			fmt.Sprintf("robotConfig%d:=%s", robotNumber, robot.Type),
-			"headless:=true",
-			fmt.Sprintf("marsupial:=%s", childMarsupial),
-		}
-	}
-
-	return bridgePod
-}
-
-// createFieldComputerPod creates a basic field-computer pod. Callers should then
-// change the Pod's Image, Command and Args fields.
-// The field-computer pod runs the Team Solution container.
-func (sa *SubTApplication) createFieldComputerPod(ctx context.Context, dep *SimulationDeployment,
-	podName string, labels map[string]string, groupID string, robot SubTRobot) *corev1.Pod {
-
-	fcPod := &corev1.Pod{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:   podName,
-			Labels: labels,
-		},
-		Spec: corev1.PodSpec{
-			RestartPolicy:                 corev1.RestartPolicyNever,
-			TerminationGracePeriodSeconds: int64ptr(sa.cfg.TerminationGracePeriodSeconds),
-			NodeSelector: map[string]string{
-				// Needed to force this pod to run on specific nodes
-				nodeLabelKeyGroupID:          groupID,
-				nodeLabelKeyCloudsimNodeType: subtTypeFieldComputer,
-				nodeLabelKeySubTRobotName:    strings.ToLower(robot.Name),
-			},
-			Containers: []corev1.Container{
-				{
-					Name:            FieldComputerContainerName,
-					ImagePullPolicy: corev1.PullIfNotPresent,
-					SecurityContext: &corev1.SecurityContext{
-						AllowPrivilegeEscalation: boolptr(false),
-					},
-					// Default Image/Command/Args, for testing
-					Image:   "infrastructureascode/aws-cli:latest",
-					Command: []string{"/bin/sh", "-c", "--"},
-					Args:    []string{"while true; do sleep 30; done;"},
-					// Limit to 95% of the total memory of a g3.4xlarge instance
-					Resources: corev1.ResourceRequirements{
-						Limits: corev1.ResourceList{
-							corev1.ResourceMemory: resource.MustParse("115Gi"),
-						},
-					},
-					Env: []corev1.EnvVar{
-						{
-							Name:  "ROBOT_NAME",
-							Value: robot.Name,
-						},
-						{
-							Name: "ROS_IP",
-							ValueFrom: &corev1.EnvVarSource{
-								FieldRef: &corev1.ObjectFieldSelector{
-									FieldPath: "status.podIP",
-								},
-							},
-						},
-					},
-				},
-			},
-		},
-	}
-
-	if robot.Image != "infrastructureascode/aws-cli:latest" {
-		fcPod.Spec.Containers[0].Image = robot.Image
-		fcPod.Spec.Containers[0].Command = nil
-		fcPod.Spec.Containers[0].Args = nil
-	}
-
-	return fcPod
-}
-
-type stringsMap map[string]string
-
-// createNetworkPolicy is a helper function to create a Network Policy.
-// @param baseLabels is used to label the new network policy.
-// @param matchingPodLabels is used to define which Pods to apply this policy to.
-// @param allowFromLabels is an array of labels used to define the Ingress and Egress
-// rules allowing communication to and from the matching pods.
-func (sa *SubTApplication) createNetworkPolicy(ctx context.Context, npName string,
-	baseLabels, matchingPodLabels stringsMap, allowFromLabels ...stringsMap) *networkingv1.NetworkPolicy {
-
-	np := &networkingv1.NetworkPolicy{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:   npName,
-			Labels: baseLabels,
-		},
-		Spec: networkingv1.NetworkPolicySpec{
-			PodSelector: metav1.LabelSelector{
-				MatchLabels: matchingPodLabels,
-			},
-			Ingress: []networkingv1.NetworkPolicyIngressRule{
-				// Dev note: Important -- the IP addresses listed here should be the IP of the Cloudsim pod.
-				{
-					From: []networkingv1.NetworkPolicyPeer{
-						{
-							IPBlock: &networkingv1.IPBlock{
-								// We always allow traffic coming from the Cloudsim host.
-								CIDR: sa.cfg.IgnIP + "/32",
-							},
-						},
-					},
-				},
-				// Allow traffic to websocket server
-				{
-					Ports: []networkingv1.NetworkPolicyPort{
-						{
-							Port: &intstr.IntOrString{
-								Type:   intstr.Int,
-								IntVal: 9002,
-							},
-						},
-					},
-				},
-			},
-			Egress: []networkingv1.NetworkPolicyEgressRule{
-				// Dev note: Important -- the IP addresses listed here should be the IP of the Cloudsim pod.
-				{
-					To: []networkingv1.NetworkPolicyPeer{
-						{
-							IPBlock: &networkingv1.IPBlock{
-								// We always allow traffic targetted to the Cloudsim host
-								CIDR: sa.cfg.IgnIP + "/32",
-							},
-						},
-					},
-				},
-			},
-			PolicyTypes: []networkingv1.PolicyType{networkingv1.PolicyTypeIngress, networkingv1.PolicyTypeEgress},
-		},
-	}
-
-	// Allow communication to/from pods from "allowFromLabels" argument
-	for _, allow := range allowFromLabels {
-		np.Spec.Ingress = append(np.Spec.Ingress, networkingv1.NetworkPolicyIngressRule{
-			From: []networkingv1.NetworkPolicyPeer{
-				{
-					PodSelector: &metav1.LabelSelector{
-						MatchLabels: allow,
-					},
-				},
-			},
-		})
-		np.Spec.Egress = append(np.Spec.Egress, networkingv1.NetworkPolicyEgressRule{
-			To: []networkingv1.NetworkPolicyPeer{
-				{
-					PodSelector: &metav1.LabelSelector{
-						MatchLabels: allow,
-					},
-				},
-			},
-		})
-	}
-
-	return np
-}
-
-// createS3CopyPod launches a copy pod in the same node as a target pod.
-// This copy pod is used by Cloudsim during simulation termination to compress
-// and upload the the entire content of a target pod's log volume to the given
-// S3 bucket.
-// `targetPodName` is the name of the pod the copy pod will copy logs from.
-// In order to share a common directory between the target and copy pods, a
-// directory on the node is exposed to both pods. This only works because we
-// know that both the target and copy pods will run on the same node.
-// `logVolumePath` is the path of node directory that is exposed to the target and copy pods.
-// `logVolumePath` is the path to the directory within the node directory that the copy pod should target. This is
-// included to allow multiple pods to share a single common directory on the node. If no specific directory is required,
-// use "".
-// `filename` sets the name of the compressed directory uploaded to S3.
-func (sa *SubTApplication) createS3CopyPod(ctx context.Context, s *Service, dep *SimulationDeployment,
-	targetNodeSelector map[string]string, targetPodName string, logVolumePath string, logVolumeSubPath string,
-	s3Bucket string, filename string) *corev1.Pod {
-
-	podName := sa.getCopyPodName(targetPodName)
-
-	logger(ctx).Debug(fmt.Sprintf(
-		"Creating copy pod for [%s] to upload logs on simulation termination.", podName,
-	))
-
-	// Prepare the copy pod spec
-	hostPathType := corev1.HostPathDirectoryOrCreate
-	copyPod := &corev1.Pod{
-		ObjectMeta: metav1.ObjectMeta{
-			Name: podName,
-			Labels: map[string]string{
-				"copy-to-s3": "true",
-			},
-		},
-		Spec: corev1.PodSpec{
-			RestartPolicy:                 corev1.RestartPolicyNever,
-			TerminationGracePeriodSeconds: int64ptr(sa.cfg.TerminationGracePeriodSeconds),
-			NodeSelector:                  targetNodeSelector,
-			Containers: []corev1.Container{
-				{
-					Name:  "copy-to-s3",
-					Image: "infrastructureascode/aws-cli:latest",
-					// DEV NOTE: This command is a hack to keep the container running. If the container ends its main process,
-					// K8 will consider it finished and will try to restart it.
-					// We need this sidecar container to keep running until the logs of the target container are ready to upload.
-					// Before terminating a pod, Cloudsim will run a command using the sidecar container to upload the logs to S3.
-					Command:         []string{"tail", "-f", "/dev/null"},
-					ImagePullPolicy: corev1.PullIfNotPresent,
-					VolumeMounts: []corev1.VolumeMount{
-						{
-							Name: "logs",
-							// The sidecar container will always mount the logs volume to `/tmp/logs`.
-							// The content of this volume is set by the container generating the logs.
-							MountPath: sa.cfg.SidecarContainerLogsVolumeMountPath,
-							SubPath:   logVolumeSubPath,
-						},
-					},
-					Env: []corev1.EnvVar{
-						{
-							Name:  "AWS_DEFAULT_REGION",
-							Value: sa.cfg.Region,
-						},
-						{
-							Name:  "AWS_REGION",
-							Value: sa.cfg.Region,
-						},
-						{
-							Name: "AWS_ACCESS_KEY_ID",
-							ValueFrom: &corev1.EnvVarSource{
-								SecretKeyRef: &corev1.SecretKeySelector{
-									LocalObjectReference: corev1.LocalObjectReference{Name: sa.cfg.AwsSecretName},
-									Key:                  "aws-access-key-id",
-									Optional:             boolptr(false),
-								},
-							},
-						},
-						{
-							Name: "AWS_SECRET_ACCESS_KEY",
-							ValueFrom: &corev1.EnvVarSource{
-								SecretKeyRef: &corev1.SecretKeySelector{
-									LocalObjectReference: corev1.LocalObjectReference{Name: sa.cfg.AwsSecretName},
-									Key:                  "aws-secret-access-key",
-									Optional:             boolptr(false),
-								},
-							},
-						},
-					},
-				},
-			},
-			Volumes: []corev1.Volume{
-				{
-					Name: "logs",
-					// This volume provides exposes a directory in the node pods are running in, providing a shared
-					// directory between the target and copy pod This only works because we know that pods and their
-					// respective copy pods run on the same node.
-					VolumeSource: corev1.VolumeSource{
-						HostPath: &corev1.HostPathVolumeSource{
-							Path: logVolumePath,
-							Type: &hostPathType,
-						},
-					},
-				},
-			},
-			// These DNS servers provide alternative DNS server from the internet
-			// in case the cluster DNS service isn't available
-			DNSConfig: &corev1.PodDNSConfig{
-				Nameservers: []string{
-					"8.8.8.8",
-					"1.1.1.1",
-				},
-			},
-		},
-	}
-
-	return copyPod
-}
-
-////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////
-
-// processSimulationResults when shutting down a simulation.
-// It registers the score and statistics of the simulation being shutdown.
-func (sa *SubTApplication) processSimulationResults(ctx context.Context, s *Service, tx *gorm.DB,
-	dep *SimulationDeployment) *ign.ErrMsg {
-
-	if dep.Processed {
-		return nil
-	}
-
-	values := SimulationDeploymentsSubTValue{
-		SimulationDeployment: dep,
-		GroupID:              dep.GroupID,
-	}
-
-	// Create and upload logs to S3
-	if sa.cfg.S3LogsCopyEnabled {
-		logger(ctx).Info(
-			fmt.Sprintf("processSimulationResults - Uploading simulation logs to S3 for simulation [%s]", *dep.GroupID),
-		)
-		if em := sa.uploadSimulationLogs(ctx, s, dep); em != nil {
-			logMsg := fmt.Sprintf(
-				"processSimulationResults - Could not upload simulation logs to S3 for simulation [%s].",
-				*dep.GroupID,
-			)
-			logger(ctx).Error(logMsg, em)
-			return em
-		}
-	}
-
-	// Score and summary entries should be generated for single simulations or child simulations of multi-sims,
-	// but not for parent simulations of multi-sims.
-	if dep.isMultiSimParent() {
-		return nil
-	}
-
-	// Get score
-	score, em := sa.getSimulationScore(ctx, s, dep)
-	if em != nil {
-		return em
-	}
-	values.Score = score
-
-	// Get simulation statistics
-	statistics, em := sa.getSimulationStatistics(ctx, s, dep)
-	if em != nil {
-		return em
-	}
-	values.RealTimeDurationSec = statistics.RealTimeDurationSec
-	values.SimTimeDurationSec = statistics.SimTimeDurationSec
-	values.ModelCount = statistics.ModelCount
-	if err := tx.Create(&values).Error; err != nil {
-		return NewErrorMessageWithBase(ign.ErrorDbSave, err)
-	}
-
-	// If this is not a multisim, then we can create the final summary and create the score entry
-	if !dep.isMultiSim() {
-		// Create the score entry
-		if !globals.DisableScoreGeneration {
-			if em := processScore(ctx, s.userAccessor, tx, dep, values.Score); em != nil {
-				return em
-			}
-		}
-
-		// Send an email with the summary to the competitor
-		if !globals.DisableSummaryEmails {
-			summary := AggregatedSubTSimulationValues{
-				Score:                  *values.Score,
-				SimTimeDurationAvg:     float64(values.SimTimeDurationSec),
-				SimTimeDurationStdDev:  0,
-				RealTimeDurationAvg:    float64(values.RealTimeDurationSec),
-				RealTimeDurationStdDev: 0,
-				ModelCountAvg:          float64(values.ModelCount),
-				ModelCountStdDev:       0,
-			}
-
-			// Get simulation run information
-			runData, em := sa.getSimulationRunData(ctx, s, dep)
-			if em != nil {
-				return em
-			}
-
-			SendSimulationSummaryEmail(dep, summary, runData)
-		}
-	}
-
-	if !dep.Processed {
-		dep.UpdateProcessed(tx, true)
-	}
-
-	return nil
-}
-
 // processScore creates the competition_scores entry for a simulation and updates its score.
 func processScore(ctx context.Context, userAccessor useracc.Service, tx *gorm.DB,
 	dep *SimulationDeployment, score *float64) *ign.ErrMsg {
@@ -2364,212 +937,6 @@ func processScore(ctx context.Context, userAccessor useracc.Service, tx *gorm.DB
 	return nil
 }
 
-func isTeamSolutionPod(pod corev1.Pod) bool {
-	// field-computer pods (ie. team solutions) have the "field-computer" label set to "true"
-	flag, ok := pod.Labels[subtTypeFieldComputer]
-	return ok && (flag == "true")
-}
-
-// deleteApplication is a SubT specific function responsible of deleting all the
-// pods and services created by a SubT simulation.
-func (sa *SubTApplication) deleteApplication(ctx context.Context, s *Service, tx *gorm.DB,
-	dep *SimulationDeployment) *ign.ErrMsg {
-
-	groupID := *dep.GroupID
-	groupIDLabel := getPodLabelSelectorForSearches(groupID)
-
-	// Upload logs and process score and summary entries for the simulation
-	if em := sa.processSimulationResults(ctx, s, tx, dep); em != nil {
-		logger(ctx).Error("Could not process simulation results", em)
-		return em
-	}
-
-	// Find and delete all Pods associated to the groupID.
-	podsInterface := s.clientset.CoreV1().Pods(s.cfg.KubernetesNamespace)
-	pods, err := podsInterface.List(metav1.ListOptions{LabelSelector: groupIDLabel})
-	if err != nil || len(pods.Items) == 0 {
-		// Pods for this groupID not found. Continue or fail?
-		logger(ctx).Warning("Pods not found for the groupID: "+groupID, err)
-		if !sa.cfg.AllowNotFoundDuringShutdown {
-			err = errors.Wrap(err, "Pods not found for the groupID: "+groupID)
-			return ign.NewErrorMessageWithBase(ign.ErrorSimGroupNotFound, err)
-		}
-	}
-	for _, p := range pods.Items {
-		err = podsInterface.Delete(p.Name, &metav1.DeleteOptions{})
-		if err != nil {
-			// There was an unexpected error deleting the Pod. If it's Team Solution pod,
-			// the we log the error and continue, as this can sometimes happen if (e.g.)
-			// the teams finish their Pod's main process by itself.
-			// Otherwise, if the failed Pod is the gzserver or the comms-bridge we mark
-			// the simulation as failed, as this is an unexpected scenario.
-			em := ign.NewErrorMessageWithBase(ign.ErrorK8Delete, err)
-			logger(ctx).Error("Error while invoking k8 Delete Pod. Make sure a sysadmin deletes the Pod manually.", em)
-			if !isTeamSolutionPod(p) {
-				return em
-			}
-		}
-	}
-	logger(ctx).Info("Successfully deleted pods for groupID: " + groupID)
-
-	// Delete Gloo route associated to the groupID.
-	if len(sa.cfg.IngressName) > 0 && len(sa.cfg.WebsocketHost) > 0 {
-		retries := uint(9)
-		for i := uint(1); i < retries; i++ {
-			_, err := gloo.RemoveVirtualServiceRoute(
-				ctx,
-				s.glooClientset,
-				s.cfg.KubernetesGlooNamespace,
-				sa.cfg.IngressName,
-				&gatewayapiv1.Route{
-					Name: groupID,
-				},
-			)
-			if err == nil {
-				break
-			} else if i < retries-1 {
-				logger(ctx).Info("Failed to delete Gloo Virtual Service route. Retrying. Error:", err)
-			}
-
-			// If an error occurred, retry for up to 10 min with exponential backoff
-			Sleep(time.Duration(1<<i) * time.Second)
-		}
-
-		if err != nil {
-			// There was an unexpected error deleting the Gloo Virtual Service route and the simulation will be marked
-			// as failed, as this is an unexpected scenario.
-			em := ign.NewErrorMessageWithBase(ign.ErrorK8Delete, err)
-			errMsg := "Error while removing k8 Ingress rule. Make sure a sysadmin deletes the ingress rule manually."
-			logger(ctx).Error(errMsg, em)
-			return em
-		}
-
-		logger(ctx).Info("Successfully deleted ingress rules for groupID: " + groupID)
-	}
-
-	// Find and delete all Services associated to the groupID.
-	serviceInterface := s.clientset.CoreV1().Services(s.cfg.KubernetesNamespace)
-	services, err := serviceInterface.List(metav1.ListOptions{LabelSelector: groupIDLabel})
-	if err != nil || len(services.Items) == 0 {
-		// Services for this groupID not found. Continue or fail?
-		logger(ctx).Warning("Services not found for the groupID: "+groupID, err)
-		if !sa.cfg.AllowNotFoundDuringShutdown {
-			err = errors.Wrap(err, "Services not found for the groupID: "+groupID)
-			return ign.NewErrorMessageWithBase(ign.ErrorSimGroupNotFound, err)
-		}
-	}
-	for _, service := range services.Items {
-		err = serviceInterface.Delete(service.Name, &metav1.DeleteOptions{})
-		if err != nil {
-			// There was an unexpected error deleting the Service and the simulation will be marked as failed, as this
-			// is an unexpected scenario.
-			em := ign.NewErrorMessageWithBase(ign.ErrorK8Delete, err)
-			errMsg := "Error while invoking k8 Delete Service. Make sure a sysadmin deletes the Service manually."
-			logger(ctx).Error(errMsg, em)
-			return em
-		}
-	}
-	logger(ctx).Info("Successfully deleted services for groupID: " + groupID)
-
-	// Find and delete all the network policies associated to the groupID.
-	// Dev note: it is important to remove the network policies AFTER the gzlogs are
-	// copied to S3. Otherwise, if we remove the policies before, the pod will lose
-	// access to outside world and the copy to S3 will not work.
-	npInterface := s.clientset.NetworkingV1().NetworkPolicies(s.cfg.KubernetesNamespace)
-	nps, err := npInterface.List(metav1.ListOptions{LabelSelector: groupIDLabel})
-	if err != nil || len(nps.Items) == 0 {
-		logger(ctx).Warning("Network Policies not found for the groupID: "+groupID, err)
-		// Continue or fail?
-		if !sa.cfg.AllowNotFoundDuringShutdown {
-			err = errors.Wrap(err, "Network Policies not found for the groupID: "+groupID)
-			return ign.NewErrorMessageWithBase(ign.ErrorSimGroupNotFound, err)
-		}
-	}
-	for _, np := range nps.Items {
-		err = npInterface.Delete(np.Name, &metav1.DeleteOptions{})
-		if err != nil {
-			// There was an error deleting the NetworkPolicy. We log the error and continue,
-			// as we want to free the used resources (ec2 instance).
-			em := ign.NewErrorMessageWithBase(ign.ErrorK8Delete, err)
-			logger(ctx).Error("Error while invoking k8 Delete NetworkPolicy. Make sure a sysadmin deletes the NetworkPolicy manually", em)
-		}
-	}
-
-	return nil
-}
-
-////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////
-
-// setupEC2InstanceSpecifics is invoked by the EC2 NodeManager to describe the needed EC2 instance details for SubT.
-func (sa *SubTApplication) setupEC2InstanceSpecifics(ctx context.Context, s *Ec2Client,
-	tx *gorm.DB, dep *SimulationDeployment, template *ec2.RunInstancesInput) ([]*ec2.RunInstancesInput, error) {
-
-	// Create some Tags that all instances will share
-	subTTag := ec2.Tag{Key: aws.String(subtTagKey), Value: aws.String("true")}
-	subTTag2 := ec2.Tag{Key: aws.String("cloudsim-application"), Value: aws.String(subtTagKey)}
-	subTTag3 := ec2.Tag{Key: aws.String("cloudsim-simulation-worker"), Value: aws.String(s.awsCfg.NamePrefix)}
-	subTTag4 := ec2.Tag{Key: aws.String(nodeLabelKeyCloudsimNodeType), Value: aws.String(subtTypeGazebo)}
-	appendTags(template, &subTTag, &subTTag2, &subTTag3, &subTTag4)
-	inputs := make([]*ec2.RunInstancesInput, 0)
-
-	// Configure EC2 instance specifics
-	template.ImageId = aws.String(s.ec2Cfg.AMI)
-	template.InstanceType = aws.String("g3.4xlarge")
-
-	gzInput, err := cloneRunInstancesInput(template)
-	if err != nil {
-		return nil, err
-	}
-
-	// Add the new Input to the result array
-	inputs = append(inputs, gzInput)
-
-	// Create instances for the field computers; one per robot definition.
-	extra, err := ReadExtraInfoSubT(dep)
-	if err != nil {
-		return nil, err
-	}
-
-	for _, r := range extra.Robots {
-		fcInput, err := cloneRunInstancesInput(template)
-		if err != nil {
-			return nil, err
-		}
-
-		// Replace the node type tag
-		replaceTag(fcInput, &ec2.Tag{
-			Key:   sptr(nodeLabelKeyCloudsimNodeType),
-			Value: sptr(subtTypeFieldComputer),
-		})
-		userData, _ := s.buildUserDataString(*dep.GroupID,
-			labelAndValue(nodeLabelKeyCloudsimNodeType, subtTypeFieldComputer),
-			labelAndValue(nodeLabelKeySubTRobotName, strings.ToLower(r.Name)),
-		)
-		fcInput.UserData = aws.String(userData)
-		replaceInstanceNameTag(fcInput, s.getInstanceNameFor(*dep.GroupID, "fc-"+r.Name))
-		inputs = append(inputs, fcInput)
-	}
-
-	return inputs, nil
-}
-
-func cloneRunInstancesInput(src *ec2.RunInstancesInput) (*ec2.RunInstancesInput, error) {
-	var bs bytes.Buffer
-	enc := gob.NewEncoder(&bs)
-	if err := enc.Encode(*src); err != nil {
-		return nil, err
-	}
-	// Create a decoder and receive a value.
-	dec := gob.NewDecoder(&bs)
-	var dst ec2.RunInstancesInput
-	if err := dec.Decode(&dst); err != nil {
-		return nil, err
-	}
-	return &dst, nil
-}
-
 ////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////
@@ -2586,90 +953,18 @@ func (sa *SubTApplication) getMaxDurationForSimulation(ctx context.Context, tx *
 ////////////////////////////////////////////////////////////////////////////
 
 // uploadToS3LogBucket uploads a file to a simulation log folder.
-func (sa *SubTApplication) uploadToS3SimulationLogBucket(dep *SimulationDeployment, filename string,
-	file []byte) *ign.ErrMsg {
-	key := path.Join(GetS3SimulationLogKey(dep), filename)
-	if _, err := UploadToS3Bucket(sa.s3Svc, &sa.cfg.S3LogsBucket, &key, file); err != nil {
+func (sa *SubTApplication) uploadToS3SimulationLogBucket(p platform.Platform, dep *SimulationDeployment,
+	filename string, file []byte) *ign.ErrMsg {
+
+	input := storage.UploadInput{
+		Bucket:        p.Store().Ignition().LogsBucket(),
+		Key:           path.Join(GetS3SimulationLogKey(dep), filename),
+		File:          bytes.NewReader(file),
+		ContentLength: int64(len(file)),
+		ContentType:   http.DetectContentType(file),
+	}
+	if err := p.Storage().Upload(input); err != nil {
 		return ign.NewErrorMessageWithBase(ign.ErrorUnexpected, err)
-	}
-
-	return nil
-}
-
-// uploadSimulationLogs uploads Gazebo/ROS simulation logs to the log bucket of the simulation.
-// Teams can later download this summary through a generated link.
-func (sa *SubTApplication) uploadSimulationLogs(ctx context.Context, s *Service,
-	simDep *SimulationDeployment) *ign.ErrMsg {
-
-	logger := logger(ctx)
-
-	groupID := *simDep.GroupID
-	bucket := filepath.Join(sa.cfg.S3LogsBucket, GetS3SimulationLogKey(simDep))
-	failedPodUploads := make(map[string]error, 0)
-
-	// Upload Gazebo logs
-	opts := MakeListOptions(
-		getPodLabelSelectorForSearches(groupID),
-		labelAndValue(subtTypeGazebo, "true"),
-	)
-	pods, err := s.clientset.CoreV1().Pods(s.cfg.KubernetesNamespace).List(opts)
-	if err != nil {
-		msg := fmt.Sprintf("Could not get the simulation pod while attempting to upload log files.")
-		logger.Error(msg, err)
-	} else {
-		for _, pod := range pods.Items {
-			podName := pod.Name
-			err := KubernetesPodSendS3CopyCommand(
-				ctx,
-				s.clientset,
-				s.cfg.KubernetesNamespace,
-				sa.getCopyPodName(podName),
-				CopyToS3SidecarContainerName,
-				bucket,
-				sa.cfg.SidecarContainerLogsVolumeMountPath,
-				sa.getGazeboLogsFilename(groupID),
-			)
-			if err != nil {
-				failedPodUploads[podName] = err
-			}
-		}
-	}
-
-	//Upload ROS logs
-	opts = MakeListOptions(
-		getPodLabelSelectorForSearches(groupID),
-		labelAndValue(subtTypeCommsBridge, "true"),
-	)
-	pods, err = s.clientset.CoreV1().Pods(s.cfg.KubernetesNamespace).List(opts)
-	if err != nil {
-		msg := fmt.Sprintf("Could not get comms-bridge pods while attempting to upload log files.")
-		logger.Error(msg, err)
-	} else {
-		for _, pod := range pods.Items {
-			podName := pod.Name
-			robotName := pod.Labels["comms-for-robot"]
-			err := KubernetesPodSendS3CopyCommand(
-				ctx,
-				s.clientset,
-				s.cfg.KubernetesNamespace,
-				sa.getCopyPodName(podName),
-				CopyToS3SidecarContainerName,
-				bucket,
-				sa.cfg.SidecarContainerLogsVolumeMountPath,
-				sa.getRobotROSLogsFilename(groupID, robotName),
-			)
-			if err != nil {
-				failedPodUploads[podName] = err
-			}
-		}
-	}
-
-	// Check for errors
-	if len(failedPodUploads) > 0 {
-		for podName, err := range failedPodUploads {
-			logger.Error(fmt.Sprintf("Failed to upload logs for pod %s: %s", podName, err))
-		}
-		return ign.NewErrorMessage(int64(ErrorFailedToUploadLogs))
 	}
 
 	return nil
@@ -2677,14 +972,18 @@ func (sa *SubTApplication) uploadSimulationLogs(ctx context.Context, s *Service,
 
 // uploadSimulationSummary uploads the simulation summary to the log bucket of the simulation.
 // Teams can later download this summary through a generated link.
-func (sa *SubTApplication) uploadSimulationSummary(simDep *SimulationDeployment,
+func (sa *SubTApplication) uploadSimulationSummary(p platform.Platform, simDep *SimulationDeployment,
 	summary *AggregatedSubTSimulationValues) *ign.ErrMsg {
+
+	// Prepare data
 	values, err := json.Marshal(summary)
 	if err != nil {
 		return ign.NewErrorMessageWithBase(ign.ErrorMarshalJSON, err)
 	}
+
+	// Upload file
 	fileName := sa.getSimulationSummaryFilename(*simDep.GroupID)
-	if em := sa.uploadToS3SimulationLogBucket(simDep, fileName, values); em != nil {
+	if em := sa.uploadToS3SimulationLogBucket(p, simDep, fileName, values); em != nil {
 		return em
 	}
 
@@ -2694,15 +993,11 @@ func (sa *SubTApplication) uploadSimulationSummary(simDep *SimulationDeployment,
 // updateMultiSimStatuses updates the status of a Multi-Sim Parent and executes application-specific logic based on the
 // state of its children.
 func (sa *SubTApplication) updateMultiSimStatuses(ctx context.Context, tx *gorm.DB, userAccessor useracc.Service,
-	simDep *SimulationDeployment) *ign.ErrMsg {
+	p platform.Platform, simDep *SimulationDeployment) *ign.ErrMsg {
 	// Note: simDep is a Parent in a multi-sim
 
 	// Only proceed if the simulation terminated successfully. Get the aggregated values from all children
-	if simDep.IsRunning() || simDep.ErrorStatus != nil || simDep.Processed {
-		return nil
-	}
-
-	if simDep.Held {
+	if simDep.IsRunning() || simDep.ErrorStatus != nil || simDep.Processed || simDep.Held {
 		return nil
 	}
 
@@ -2721,11 +1016,11 @@ func (sa *SubTApplication) updateMultiSimStatuses(ctx context.Context, tx *gorm.
 	}
 
 	// Create and upload the parent summary to S3
-	if sa.cfg.S3LogsCopyEnabled {
+	if p.Store().Ignition().LogsCopyEnabled() {
 		logger(ctx).Info(
 			fmt.Sprintf("updateMultiSimStatuses - Uploading simulation summary for simulation [%s]", *simDep.GroupID),
 		)
-		if em := sa.uploadSimulationSummary(simDep, summary); em != nil {
+		if em := sa.uploadSimulationSummary(p, simDep, summary); em != nil {
 			logMsg := fmt.Sprintf(
 				"updateMultiSimStatuses - Could not upload simulation summary to S3 for simulation [%s].",
 				*simDep.GroupID,
@@ -2737,11 +1032,14 @@ func (sa *SubTApplication) updateMultiSimStatuses(ctx context.Context, tx *gorm.
 
 	// Send an email with the summary to the competitor
 	if !globals.DisableSummaryEmails {
-		SendSimulationSummaryEmail(simDep, *summary, nil)
+		// TODO Use the simulation platform for this
+		SendSimulationSummaryEmail(p.EmailSender(), simDep, *summary, nil)
 	}
 
 	if !simDep.Processed {
-		simDep.UpdateProcessed(tx, true)
+		if err := simDep.UpdateProcessed(tx, true); err != nil {
+			return ign.NewErrorMessageWithBase(ign.ErrorUnexpected, err)
+		}
 	}
 
 	return nil

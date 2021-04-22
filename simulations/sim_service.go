@@ -3,7 +3,6 @@ package simulations
 import (
 	"context"
 	"fmt"
-	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/caarlos0/env"
 	"github.com/jinzhu/gorm"
 	"github.com/panjf2000/ants"
@@ -16,23 +15,21 @@ import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/actions"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/application"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/loader"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/platform"
 	fakePlatform "gitlab.com/ignitionrobotics/web/cloudsim/pkg/platform/implementations/fake"
 	platformManager "gitlab.com/ignitionrobotics/web/cloudsim/pkg/platform/manager"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/runsim"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulator"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/storage"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/transport"
 	ignws "gitlab.com/ignitionrobotics/web/cloudsim/pkg/transport/ign"
 	useracc "gitlab.com/ignitionrobotics/web/cloudsim/pkg/users"
 	"gitlab.com/ignitionrobotics/web/cloudsim/queues"
-	gloocli "gitlab.com/ignitionrobotics/web/cloudsim/simulations/gloo"
 	"gitlab.com/ignitionrobotics/web/fuelserver/bundles/users"
 	per "gitlab.com/ignitionrobotics/web/fuelserver/permissions"
 	"gitlab.com/ignitionrobotics/web/ign-go"
 	"gitlab.com/ignitionrobotics/web/ign-go/scheduler"
-	corev1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	kubecli "k8s.io/client-go/kubernetes"
 	"net/http"
 	"strconv"
 	"strings"
@@ -71,8 +68,6 @@ type SimService interface {
 	CustomizeSimRequest(ctx context.Context, r *http.Request, tx *gorm.DB, createSim *CreateSimulation, username string) *ign.ErrMsg
 	GetCloudMachineInstances(ctx context.Context, p *ign.PaginationRequest,
 		tx *gorm.DB, byStatus *MachineStatus, invertStatus bool, groupID *string, user *users.User, application *string) (*MachineInstances, *ign.PaginationResult, *ign.ErrMsg)
-	DeleteNodesAndHostsForGroup(ctx context.Context, tx *gorm.DB,
-		dep *SimulationDeployment, user *users.User) (interface{}, *ign.ErrMsg)
 	GetSimulationDeployment(ctx context.Context, tx *gorm.DB, groupID string,
 		user *users.User) (interface{}, *ign.ErrMsg)
 	GetSimulationWebsocketAddress(ctx context.Context, tx *gorm.DB, user *users.User,
@@ -140,26 +135,16 @@ type Service struct {
 	// Whether this service will automatically requeue instances that failed with
 	// ErrorLaunchingCloudInstanceNotEnoughResources error. True by default.
 	AllowRequeuing bool
-	// A reference to the kubernetes client
-	clientset kubecli.Interface
-	// A reference to the Gloo client
-	glooClientset gloocli.Clientset
-	// A reference to the nodes manager implementation
-	hostsSvc NodeManager
-	DB       *gorm.DB
+	DB             *gorm.DB
 	// Workers (ie. Thread Pools)
-	launcher     JobPool
-	terminator   JobPool
-	errorHandler JobPool
+	launcher   JobPool
+	terminator JobPool
 	// A buffered channel used to buffer requests to create simulations.
 	// Items from this channel will be then used to feed the 'launcher' JobPool.
 	launchHandlerQueue *queues.LaunchQueueRepository
 	// A buffered channel used to buffer requests to shutdown simulations.
 	// Items from this channel will be then used to feed the 'terminator' JobPool.
 	terminationHandlerQueue chan string
-	// A buffered channel used to buffer requests to handle simulation errors.
-	// Items from this channel will be then used to feed the 'error handler' JobPool.
-	errorHandlerQueue chan string
 	// The base Context from the main application
 	baseCtx context.Context
 	// The service config. Read from environment variables
@@ -179,14 +164,6 @@ type Service struct {
 	userAccessor             useracc.Service
 	poolNotificationCallback PoolNotificationCallback
 	scheduler                *scheduler.Scheduler
-
-	// From aws go documentation:
-	// Sessions should be cached when possible, because creating a new Session
-	// will load all configuration values from the environment, and config files
-	// each time the Session is created. Sharing the Session value across all of
-	// your service clients will ensure the configuration is loaded the fewest
-	// number of times possible.
-	session *session.Session
 	// platforms contains a set of platforms managed by this service.
 	platforms           platformManager.Manager
 	logger              ign.Logger
@@ -203,22 +180,12 @@ type simServConfig struct {
 	// PlatformConfigPath is the filepath to the platform configuration file.
 	// If not defined, it will use the default config path.
 	PlatformConfigPath string `env:"SIMSVC_PLATFORM_CONFIG_PATH" envDefault:""`
-	// KubernetesNamespace is the Kubernetes namespace for simulation resources.
-	KubernetesNamespace string `env:"SIMSVC_KUBERNETES_NAMESPACE" envDefault:"default"`
-	// KubernetesGlooNamespace is the Gloo namespace in the Kubernetes cluster.
-	KubernetesGlooNamespace string `env:"SIMSVC_KUBERNETES_GLOO_NAMESPACE" envDefault:"gloo-system"`
 	// PoolSizeLaunchSim is the number of worker threads available to launch simulations.
 	PoolSizeLaunchSim int `env:"SIMSVC_POOL_LAUNCH_SIM" envDefault:"10"`
 	// PoolSizeTerminateSim is the number of worker threads available to terminate simulations.
 	PoolSizeTerminateSim int `env:"SIMSVC_POOL_TERMINATE_SIM" envDefault:"10"`
-	// PoolSizeErrorHandler is the number of worker threads available to handle simulation errors.
-	PoolSizeErrorHandler int `env:"SIMSVC_POOL_ERROR_HANDLER" envDefault:"20"`
-	// Timeout in seconds to wait until a new Pod is ready. Default: 5 minutes.
-	PodReadyTimeoutSeconds int `env:"SIMSVC_POD_READY_TIMEOUT_SECONDS" envDefault:"300"`
-	// Timeout in seconds to wait until a new Node is ready. Default: 5 minutes.
-	NodeReadyTimeoutSeconds int `env:"SIMSVC_NODE_READY_TIMEOUT_SECONDS" envDefault:"300"`
 	// The number of live simulations a team can have running in parallel. Zero value means unlimited.
-	MaxSimultaneousSimsPerOwner int `env:"SIMSVC_SIMULTANEOUS_SIMS_PER_TEAM" envDefault:"1"`
+	MaxSimultaneousSimsPerOwner int `env:"SIMSVC_SIMULTANEOUS_SIMS_PER_TEAM" envDefault:"3"`
 	// MaxDurationForSimulations is the maximum number of minutes a simulation can run in cloudsim.
 	// This is a default value. Specific ApplicationTypes are expected to overwrite this.
 	MaxDurationForSimulations int `env:"SIMSVC_SIM_MAX_DURATION_MINUTES" envDefault:"45"`
@@ -239,7 +206,6 @@ type ApplicationType interface {
 	spawnChildSimulationDeployments(ctx context.Context, tx *gorm.DB, dep *SimulationDeployment) ([]*SimulationDeployment, *ign.ErrMsg)
 	// invoked when a simulation is about to be restarted. The old simulation run should be invalidated.
 	invalidateSimulation(ctx context.Context, tx *gorm.DB, simDep *SimulationDeployment) error
-	deleteApplication(ctx context.Context, s *Service, tx *gorm.DB, dep *SimulationDeployment) *ign.ErrMsg
 	// allow specific applications to define the maximum allowed time for simulations. A value of 0 will
 	// mean that the Cloudsim's default value should be used (defined by env var SIMSVC_SIM_MAX_DURATION_MINUTES).
 	getMaxDurationForSimulation(ctx context.Context, tx *gorm.DB, dep *SimulationDeployment) time.Duration
@@ -249,13 +215,11 @@ type ApplicationType interface {
 		dep *SimulationDeployment) (interface{}, *ign.ErrMsg)
 	getSimulationWebsocketHost() string
 	getSimulationWebsocketPath(groupID string) string
-	getSimulationLogsForDownload(ctx context.Context, tx *gorm.DB, dep *SimulationDeployment,
+	getSimulationLogsForDownload(ctx context.Context, tx *gorm.DB, storage storage.Storage, dep *SimulationDeployment,
 		robotName *string) (*string, *ign.ErrMsg)
 	getSimulationLiveLogs(ctx context.Context, s *Service, tx *gorm.DB, dep *SimulationDeployment,
 		robotName *string, lines int64) (interface{}, *ign.ErrMsg)
-	launchApplication(ctx context.Context, s *Service, tx *gorm.DB, dep *SimulationDeployment,
-		podNamePrefix string, baseLabels map[string]string) (interface{}, *ign.ErrMsg)
-	updateMultiSimStatuses(ctx context.Context, tx *gorm.DB, userAccessor useracc.Service, simDep *SimulationDeployment) *ign.ErrMsg
+	updateMultiSimStatuses(ctx context.Context, tx *gorm.DB, userAccessor useracc.Service, p platform.Platform, simDep *SimulationDeployment) *ign.ErrMsg
 	getCompetitionRobots() (interface{}, *ign.ErrMsg)
 	ValidateSimulationLaunch(ctx context.Context, tx *gorm.DB, dep *SimulationDeployment) *ign.ErrMsg
 	// TODO: Move simulationIsHeld to SubT implementation.
@@ -279,24 +243,19 @@ type PoolFactory func(poolSize int, jobF func(interface{})) (JobPool, error)
 // ///////////////////////////////////////////////////////////////////////
 
 // NewSimulationsService creates a new simulations service
-func NewSimulationsService(ctx context.Context, db *gorm.DB, nm NodeManager, kcli kubecli.Interface,
-	gloo gloocli.Clientset, pf PoolFactory, ua useracc.Service, isTest bool,
-	session *session.Session) (SimService, error) {
+func NewSimulationsService(ctx context.Context, db *gorm.DB, pf PoolFactory, ua useracc.Service,
+	isTest bool) (SimService, error) {
 
 	var err error
 	s := Service{}
 	s.AllowRequeuing = true
 	s.DB = db
 	s.baseCtx = ctx
-	s.clientset = kcli
-	s.glooClientset = gloo
 	s.userAccessor = ua
-	s.hostsSvc = nm
 	s.runningSimulations = map[string]*RunningSimulation{}
 	s.lockRunningSimulations = sync.RWMutex{}
 	s.applications = map[string]ApplicationType{}
 	s.scheduler = scheduler.GetInstance()
-	s.session = session
 
 	// Read configuration from environment
 	s.cfg = simServConfig{
@@ -311,7 +270,6 @@ func NewSimulationsService(ctx context.Context, db *gorm.DB, nm NodeManager, kcl
 	// We use a buffered channel of a big size to avoid blocking callers (i.e. incoming http requests).
 	s.launchHandlerQueue = queues.NewLaunchQueueRepository()
 	s.terminationHandlerQueue = make(chan string, 1000)
-	s.errorHandlerQueue = make(chan string, 1000)
 
 	if pf == nil {
 		pf = defaultPoolFactory
@@ -322,11 +280,6 @@ func NewSimulationsService(ctx context.Context, db *gorm.DB, nm NodeManager, kcl
 	}
 
 	s.terminator, err = pf(s.cfg.PoolSizeTerminateSim, s.workerTerminateSimulation)
-	if err != nil {
-		return nil, err
-	}
-
-	s.errorHandler, err = pf(s.cfg.PoolSizeErrorHandler, s.workerErrorHandler)
 	if err != nil {
 		return nil, err
 	}
@@ -366,10 +319,6 @@ func (s *Service) queueLaunchRequest(groupID string) {
 
 func (s *Service) queueShutdownRequest(groupID string) {
 	s.terminationHandlerQueue <- groupID
-}
-
-func (s *Service) queueErrorHandlerRequest(groupID string) {
-	s.errorHandlerQueue <- groupID
 }
 
 // defaultPoolFactory is the default implementation of the PoolFactory interface.
@@ -428,20 +377,14 @@ func (s *Service) Start(ctx context.Context) error {
 		}
 	}()
 
-	// Start a routine that will move 'error handler' requests from the Waiting Queue into
-	// the WorkerPool. If all the Workers are busy then this goroutine will block.
-	go func() {
-		for groupID := range s.errorHandlerQueue {
-			s.logger.Info("errorHandler queue - about to handle error for groupID: " + groupID)
-			// This call will block if all Workers are busy
-			if err := s.errorHandler.Serve(groupID); err != nil {
-				logMsg := fmt.Sprintf(
-					"errorHandler queue - Error while handling errors for groupID [%s]. Error:[%v]\n", groupID, err,
-				)
-				s.logger.Error(logMsg, err)
-			}
-		}
-	}()
+	// Initialize server state based on data from DB and and from kubernetes cluster Pods.
+	// Important note: it is expected that the kubernetes cluster should be running already.
+	if err := s.rebuildState(ctx, s.DB); err != nil {
+		return err
+	}
+	s.StartExpiredSimulationsCleaner()
+	s.StartMultiSimStatusUpdater()
+	RegisterSchedulableTasks(s, ctx, s.DB)
 
 	var err error
 
@@ -480,7 +423,6 @@ func (s *Service) Stop(ctx context.Context) error {
 	s.StopExpiredSimulationsCleaner()
 	s.StopMultiSimStatusUpdater()
 	close(s.terminationHandlerQueue)
-	close(s.errorHandlerQueue)
 	return nil
 }
 
@@ -488,16 +430,6 @@ func (s *Service) Stop(ctx context.Context) error {
 func (s *Service) RegisterApplication(ctx context.Context, app ApplicationType) {
 	logger(ctx).Info(fmt.Sprintf("Sim Service - Registered new Application [%s]", app.getApplicationName()))
 	s.applications[app.getApplicationName()] = app
-}
-
-// GetNodeManager returns the NodeManager saved on hostsSvc
-func (s *Service) GetNodeManager() NodeManager {
-	return s.hostsSvc
-}
-
-// SetNodeManager sets a different to hostsSvc
-func (s *Service) SetNodeManager(nm NodeManager) {
-	s.hostsSvc = nm
 }
 
 // GetApplications returns a map of application name and application type.
@@ -513,61 +445,63 @@ func (s *Service) GetApplications() map[string]ApplicationType {
 // to act on those.
 func (s *Service) initializeRunningSimulationsFromCluster(ctx context.Context, tx *gorm.DB) error {
 
-	// Find all Pods associated to cloudsim
-	podsInterface := s.clientset.CoreV1().Pods(s.cfg.KubernetesNamespace)
-	pods, err := podsInterface.List(metav1.ListOptions{LabelSelector: cloudsimTagLabel})
-	if err != nil {
-		s.logger.Error("Error getting initial list of Cloudsim Pods from cluster", err)
-		return err
-	}
-
-	// First, filter the simulations that have all its Pods with status PodRunning.
-	// Keep in mind that a simulation could have spawned multiple Pods.
-	runningSims := make(map[string]bool)
-
-	for _, p := range pods.Items {
-		groupID := p.Labels[podLabelKeyGroupID]
-
-		if p.ObjectMeta.DeletionTimestamp != nil {
-			// DeletionTimestamp != nil means the system has requested a deletion of this Pod.
-			// So, we won't consider this as a Running Pod.
-			runningSims[groupID] = false
-			continue
-		}
-
-		running, found := runningSims[groupID]
-		if !found {
-			// First pod processed for this simulation. Mark running with initial value to make the "&&"" work later
-			running = true
-		}
-		// is the current pod running. Update the whole simulation running status based on that.
-		running = running && (p.Status.Phase == corev1.PodRunning)
-		runningSims[groupID] = running
-
-	}
-
-	// Now iterate the simulations marked as 'running' and create RunningSimulations for them.
-	for groupID, running := range runningSims {
-		if !running {
-			continue
-		}
-		// Get the Simulation record from DB
-		simDep, err := GetSimulationDeployment(tx, groupID)
-		if err != nil {
-			return err
-		}
-
-		// Only create a RunningSimulation if the whole simulation status was Running and the DB
-		// deploymentStatus is Running as well.
-		if simRunning.Eq(*simDep.DeploymentStatus) {
-			// Register a new live RunningSimulation
-			if err := s.createRunningSimulation(ctx, tx, simDep); err != nil {
-				return err
-			}
-
-			s.logger.Info(fmt.Sprintf("Init - Added RunningSimulation for groupID: [%s]. Deployment Status in DB: [%d]", groupID, *simDep.DeploymentStatus))
-		}
-	}
+	// TODO This method has been disabled until the `Orchestrator` interface gets `List` support.
+	s.logger.Warning("Attempted to initialize running simulations from the cluster. This is temporarily disabled.")
+	// // Find all Pods associated to cloudsim
+	// podsInterface := s.clientset.CoreV1().Pods(s.cfg.KubernetesNamespace)
+	// pods, err := podsInterface.List(metav1.ListOptions{LabelSelector: cloudsimTagLabel})
+	// if err != nil {
+	// 	s.logger.Error("Error getting initial list of Cloudsim Pods from cluster", err)
+	// 	return err
+	// }
+	//
+	// // First, filter the simulations that have all its Pods with status PodRunning.
+	// // Keep in mind that a simulation could have spawned multiple Pods.
+	// runningSims := make(map[string]bool)
+	//
+	// for _, p := range pods.Items {
+	// 	groupID := p.Labels[podLabelKeyGroupID]
+	//
+	// 	if p.ObjectMeta.DeletionTimestamp != nil {
+	// 		// DeletionTimestamp != nil means the system has requested a deletion of this Pod.
+	// 		// So, we won't consider this as a Running Pod.
+	// 		runningSims[groupID] = false
+	// 		continue
+	// 	}
+	//
+	// 	running, found := runningSims[groupID]
+	// 	if !found {
+	// 		// First pod processed for this simulation. Mark running with initial value to make the "&&"" work later
+	// 		running = true
+	// 	}
+	// 	// is the current pod running. Update the whole simulation running status based on that.
+	// 	running = running && (p.Status.Phase == corev1.PodRunning)
+	// 	runningSims[groupID] = running
+	//
+	// }
+	//
+	// // Now iterate the simulations marked as 'running' and create RunningSimulations for them.
+	// for groupID, running := range runningSims {
+	// 	if !running {
+	// 		continue
+	// 	}
+	// 	// Get the Simulation record from DB
+	// 	simDep, err := GetSimulationDeployment(tx, groupID)
+	// 	if err != nil {
+	// 		return err
+	// 	}
+	//
+	// 	// Only create a RunningSimulation if the whole simulation status was Running and the DB
+	// 	// deploymentStatus is Running as well.
+	// 	if simRunning.Eq(*simDep.DeploymentStatus) {
+	// 		// Register a new live RunningSimulation
+	// 		if err := s.createRunningSimulation(ctx, tx, simDep); err != nil {
+	// 			return err
+	// 		}
+	//
+	// 		s.logger.Info(fmt.Sprintf("Init - Added RunningSimulation for groupID: [%s]. Deployment Status in DB: [%d]", groupID, *simDep.DeploymentStatus))
+	// 	}
+	// }
 
 	return nil
 }
@@ -758,11 +692,20 @@ func (s *Service) updateMultiSimStatuses(ctx context.Context, tx *gorm.DB) {
 	}
 
 	// Compute and set the status of each Parent based on its children
-	for _, p := range *parents {
-		if em := p.updateCompoundStatuses(tx); em != nil {
-			s.logger.Error("Error computing and updating compound status for Parent: "+*p.GroupID, err)
+	for _, dep := range *parents {
+		if em := dep.updateCompoundStatuses(tx); em != nil {
+			errMsg := fmt.Sprintf("Error computing and updating compound status for Parent: %s", *dep.GroupID)
+			s.logger.Error(errMsg, err)
 		}
-		s.applications[*p.Application].updateMultiSimStatuses(ctx, tx, s.userAccessor, &p)
+
+		p, err := platformManager.GetSimulationPlatform(s.platforms, &dep)
+		if err != nil {
+			errMsg := fmt.Sprintf("Failed to get platform for Parent: %s", *dep.GroupID)
+			logger(ctx).Error(errMsg, err)
+			continue
+		}
+
+		s.applications[*dep.Application].updateMultiSimStatuses(ctx, tx, s.userAccessor, p, &dep)
 	}
 }
 
@@ -845,12 +788,6 @@ var LaunchSimulation = func(s *Service, ctx context.Context,
 	tx *gorm.DB, dep *SimulationDeployment) *ign.ErrMsg {
 
 	// Pre-hook
-	fmt.Println("s: ", s)
-	fmt.Println("s.applications: ", s.applications)
-	fmt.Println("dep: ", dep)
-	fmt.Println("dep.Application: ", dep.Application)
-	fmt.Println("*dep.Application: ", *dep.Application)
-	fmt.Println("s.applciations[*dep.Application]: ", s.applications[*dep.Application])
 	if em := s.applications[*dep.Application].ValidateSimulationLaunch(ctx, tx, dep); em != nil {
 		return em
 	}
@@ -864,28 +801,7 @@ var LaunchSimulation = func(s *Service, ctx context.Context,
 // ///////////////////////////////////////////////////////////////////////
 // ///////////////////////////////////////////////////////////////////////
 
-// countPods is a test function connects to k8 master and returns the number of pods. It is a helper
-// used to quickly check a valid connection to the cluster.
-func (s *Service) countPods(ctx context.Context, user *users.User) (interface{}, *ign.ErrMsg) {
-
-	// Only system admins
-	if ok := s.userAccessor.IsSystemAdmin(*user.Username); !ok {
-		return nil, ign.NewErrorMessage(ign.ErrorUnauthorized)
-	}
-
-	pods, err := s.clientset.CoreV1().Pods(s.cfg.KubernetesNamespace).List(metav1.ListOptions{})
-	if err != nil {
-		return nil, ign.NewErrorMessageWithBase(ign.ErrorUnexpected, err)
-	}
-	a := fmt.Sprintf("There are %d pods in the cluster", len(pods.Items))
-	s.logger.Debug(a)
-	return &a, nil
-}
-
-// ///////////////////////////////////////////////////////////////////////
-// ///////////////////////////////////////////////////////////////////////
-
-// workerStartSimulation is a thread pool worker that invokes the startSimulation.
+// workerStartSimulation is a thread pool worker in charge of launching simulations.
 func (s *Service) workerStartSimulation(payload interface{}) {
 	groupID, ok := payload.(string)
 	if !ok {
@@ -917,7 +833,7 @@ func (s *Service) workerStartSimulation(payload interface{}) {
 // ///////////////////////////////////////////////////////////////////////
 // ///////////////////////////////////////////////////////////////////////
 
-// workerTerminateSimulation is a thread pool worker that invokes the shutdownSimulation.
+// workerTerminateSimulation is a thread pool worker in charge of processing and terminating simulations.
 func (s *Service) workerTerminateSimulation(payload interface{}) {
 	groupID, ok := payload.(string)
 	if !ok {
@@ -940,50 +856,6 @@ func (s *Service) workerTerminateSimulation(payload interface{}) {
 		return
 	}
 	s.notify(PoolShutdownSimulation, groupID, simDep, nil)
-}
-
-// ///////////////////////////////////////////////////////////////////////
-// ///////////////////////////////////////////////////////////////////////
-
-// workerErrorHandler is a pool worker responsible of handling errors.
-func (s *Service) workerErrorHandler(payload interface{}) {
-	groupID, ok := payload.(string)
-	if !ok {
-		return
-	}
-	// bind a specific logger to the worker
-	workerCtx := context.Background()
-
-	s.logger.Info("Worker about to (try to) handle error for groupID: " + groupID)
-	dep, err := GetSimulationDeployment(s.DB, groupID)
-	if err != nil {
-		logMsg := fmt.Sprintf("workerErrorHandler - Error getting SimulationDeployment from DB for GroupID [%s]", groupID)
-		s.logger.Error(logMsg, err)
-		return
-	}
-
-	if *dep.ErrorStatus == string(simErrorWhenInitializing) {
-		res, em := s.rollbackFailedLaunch(workerCtx, s.DB, dep)
-		s.notify(PoolRollbackFailedLaunch, groupID, res, em)
-	} else if *dep.ErrorStatus == string(simErrorWhenTerminating) {
-		res, em := s.completeFailedTermination(workerCtx, s.DB, dep)
-		s.notify(PoolCompleteFailedTermination, groupID, res, em)
-	}
-}
-
-// ///////////////////////////////////////////////////////////////////////
-// ///////////////////////////////////////////////////////////////////////
-
-// registerError fires a new request for an async error handling process. When
-// this function is invoked, the involved simulationDeployment will be marked with
-// an error status , and the error handling thread pool will be notified.
-func (s *Service) registerError(ctx context.Context, tx *gorm.DB, simDep *SimulationDeployment, st ErrorStatus) *ign.ErrMsg {
-	if em := simDep.setErrorStatus(tx, st); em != nil {
-		return em
-	}
-	s.queueErrorHandlerRequest(*simDep.GroupID)
-
-	return nil
 }
 
 // ///////////////////////////////////////////////////////////////////////
@@ -1475,132 +1347,6 @@ func (s *Service) getMaxDurationForSimulation(ctx context.Context, tx *gorm.DB,
 	return maxDuration
 }
 
-// StartSimulation is the main func to launch a new simulation.
-// IMPORTANT: This function is invoked in a separate thread, from a Launcher Worker thread.
-// @return: it can return a (launcherRelaunchNeeded) "relaunch" string value as result, which means the
-// pool worker will send the simulation again to the Pending queue.
-func (s *Service) startSimulation(ctx context.Context, tx *gorm.DB,
-	simDep *SimulationDeployment) (interface{}, *ign.ErrMsg) {
-
-	groupID := *simDep.GroupID
-	s.logger.Info("startSimulation running for groupID: " + groupID)
-
-	// Sanity checks
-
-	// Check the simulation has the correct status
-	if em := simDep.assertSimDepStatus(simPending); em != nil {
-		s.logger.Warning(fmt.Sprintf("startSimulation - Invalid simulation status: %d", *simDep.DeploymentStatus))
-		return nil, em
-	}
-
-	// Cannot launch a gz simulation from a MultiSim Parent. Only for child simulations
-	if simDep.isMultiSimParent() {
-		err := errors.New("Cannot launch a gz simulation from a MultiSim Parent. Only for child simulations")
-		s.logger.Error(fmt.Sprintf("startSimulation - %v", err))
-		tx.Model(simDep).Update(SimulationDeployment{
-			DeploymentStatus: simRejected.ToPtr(),
-			ErrorStatus:      simErrorRejected.ToStringPtr(),
-		})
-		return nil, ign.NewErrorMessageWithBase(ign.ErrorK8Create, err)
-	}
-
-	// Sanity check: Check if the Parent simulation doesn't have an error status already.
-	// In that case we stop launching the child simulation.
-	if simDep.isMultiSimChild() {
-		parentSim, err := GetParentSimulation(tx, simDep)
-		if err != nil {
-			s.logger.Error(fmt.Sprintf("startSimulation - %v", err))
-			return nil, ign.NewErrorMessageWithBase(ign.ErrorK8Create, err)
-		}
-		if parentSim.ErrorStatus != nil {
-			err := errors.New("Cannot launch a children simulation when its parent has ErrorStatus already")
-			s.logger.Error(fmt.Sprintf("startSimulation - %v", err))
-			return nil, ign.NewErrorMessageWithBase(ign.ErrorK8Create, err)
-		}
-	}
-
-	// Everything OK. Log the launch details (to Rollbar)
-	str, err := simDep.toJSON()
-	if err != nil {
-		s.logger.Error(fmt.Sprintf("startSimulation - %v", err))
-		return nil, ign.NewErrorMessageWithBase(ign.ErrorUnexpected, err)
-	}
-	s.logger.Warning(fmt.Sprintf("startSimulation - SimulationDeployment to launch: [%s]", *str))
-
-	// Move to 'launching nodes' status
-	if em := simDep.updateSimDepStatus(tx, simLaunchingNodes); em != nil {
-		s.logger.Error(fmt.Sprintf("startSimulation - %v", err))
-		return nil, em
-	}
-
-	tstart := time.Now()
-
-	// Run the following as a block, and in case of an error set the simDep's ErrorStatus field.
-	_, em := func() (interface{}, *ign.ErrMsg) {
-
-		// NOTE: This call will block until nodes are created.
-		nodeSelectorGroupID, em := s.hostsSvc.launchNodes(ctx, tx, simDep)
-		if em != nil {
-			return nil, em
-		}
-		// Wait until Nodes are ready before updating the status.
-		timeout := time.Duration(s.cfg.NodeReadyTimeoutSeconds) * time.Second
-		if err := WaitForNodesReady(ctx, s.clientset, s.cfg.KubernetesNamespace, *nodeSelectorGroupID, timeout); err != nil {
-			return nil, ign.NewErrorMessageWithBase(ign.ErrorK8Create, err)
-		}
-		timeTrack(ctx, tstart, "startSimulation - launchNodes")
-
-		// switch to next status
-		if em := simDep.updateSimDepStatus(tx, simLaunchingPods); em != nil {
-			return nil, em
-		}
-
-		s.logger.Info("startSimulation - about to launch pods for groupID: " + groupID)
-		// After getting the nodes ready we can schedule the Pods.
-		if _, em := s.launchGazeboServerInGroup(ctx, tx, groupID, simDep); em != nil {
-			return nil, em
-		}
-
-		// Wait until Pods are actually running and ready before continuing.
-		// TODO: wait until Gazebo server is actually running and ready to receive data.
-		// Idea, use kubernetes's readinessProbes for that.
-		groupIDLabel := getPodLabelSelectorForSearches(groupID)
-		timeout = time.Duration(s.cfg.PodReadyTimeoutSeconds) * time.Second
-		if err := WaitForPodsReady(ctx, s.clientset, s.cfg.KubernetesNamespace, groupIDLabel, timeout); err != nil {
-			return nil, ign.NewErrorMessageWithBase(ign.ErrorK8Create, err)
-		}
-
-		// Register a new RunningSimulation
-		if err := s.createRunningSimulation(ctx, tx, simDep); err != nil {
-			return nil, NewErrorMessageWithBase(ErrorCreatingRunningSimulationNode, err)
-		}
-
-		timeTrack(ctx, tstart, "startSimulation - launchGazeboServerInGroup")
-
-		// Finally, change the simulation status to Running
-		if em := simDep.updateSimDepStatus(tx, simRunning); em != nil {
-			return nil, em
-		}
-		return simDep, nil
-	}()
-	if em != nil {
-		if em.ErrCode == ign.ErrorLaunchingCloudInstanceNotEnoughResources && s.AllowRequeuing {
-			// If the EC2 instances could not be started due to insufficient
-			// instances available then requeue this simulation
-			return launcherRelaunchNeeded, em
-		}
-		// Otherwise mark the simulation as failed
-		logMsg := fmt.Sprintf("startSimulation - error in startSimulation for groupid [%s]. Error: %v", groupID, em)
-		s.logger.Error(logMsg, em)
-		timeTrack(ctx, tstart, "startSimulation - time tracker until error")
-		s.registerError(ctx, tx, simDep, simErrorWhenInitializing)
-		return nil, em
-	}
-
-	s.logger.Info("startSimulation - successfully launched groupID: " + groupID)
-	return simDep, nil
-}
-
 // createRunningSimulation is a helper func used to create and register a new RunningSimulation.
 func (s *Service) createRunningSimulation(ctx context.Context, tx *gorm.DB, dep *SimulationDeployment) error {
 	worldStatsTopic, maxSimSeconds, err := s.getGazeboWorldStatsTopicAndLimit(ctx, tx, dep)
@@ -1770,211 +1516,6 @@ func (s *Service) scheduleTermination(ctx context.Context, tx *gorm.DB, dep *Sim
 	return nil
 }
 
-// internalShutdownSimulation is an internal helper function used to free
-// resources. It is invoked by the normal shutdown simulation and by the
-// error handlers.
-func (s *Service) internalShutdownSimulation(ctx context.Context, tx *gorm.DB,
-	dep *SimulationDeployment, logPrefix string) (interface{}, *ign.ErrMsg) {
-
-	if dep.isMultiSimParent() {
-		// Parents aren't real simulations. They just spawn child simulations.
-		// So they cannot be shutdown. If a Parent Sim is here then that's an error.
-		err := errors.New("Cannot shutdown a MultiSim Parent. Only child simulations")
-		return nil, ign.NewErrorMessageWithBase(ign.ErrorK8Delete, err)
-	}
-
-	groupID := *dep.GroupID
-
-	rs := s.removeRunningSimulation(groupID)
-	if rs != nil {
-		rs.Free(ctx)
-	}
-
-	// Mark the simulation as stopped
-	if em := dep.recordStop(tx); em != nil {
-		return nil, em
-	}
-
-	if *dep.DeploymentStatus == int(simDeletingPods) {
-		// Delete the pods, services , etc
-		s.logger.Info(fmt.Sprintf("%s - about to delete pods for groupID: %s", logPrefix, groupID))
-		// It is expected that deleteGazeboServerInGroup will block until Pods and Services
-		// were cleanly terminated (including preStop scripts, etc).
-		// Blocking is needed because after this call, the host/node will be killed (or reused).
-		if em := s.deleteGazeboServerInGroup(ctx, tx, dep); em != nil {
-			return nil, em
-		}
-		// Switch to next state to allow the next block to run
-		if em := dep.updateSimDepStatus(tx, simDeletingNodes); em != nil {
-			return nil, em
-		}
-	}
-
-	if *dep.DeploymentStatus == int(simDeletingNodes) {
-		// Delete the kubernetes nodes
-		_, em := s.hostsSvc.deleteK8Nodes(ctx, tx, *dep.GroupID)
-		// We allow for cases where were not used and thus are not found now
-		if em != nil && em.ErrCode != int(ErrorLabeledNodeNotFound) {
-			return nil, em
-		}
-		// Switch to next state to allow the next block to run
-		if em := dep.updateSimDepStatus(tx, simTerminatingInstances); em != nil {
-			return nil, em
-		}
-	}
-
-	if *dep.DeploymentStatus == int(simTerminatingInstances) {
-		// ask the Cloud instances manager to terminate the instances
-		_, em := s.hostsSvc.deleteHosts(ctx, tx, dep)
-		if em != nil {
-			return nil, em
-		}
-		// Switch to next state, marking is as terminated
-		if em := dep.updateSimDepStatus(tx, simTerminated); em != nil {
-			return nil, em
-		}
-	}
-
-	return dep, nil
-}
-
-// ShutdownSimulation finishes all resources associated to a cloudsim simulation.
-// (eg. Nodes, Hosts, Pods)
-// IMPORTANT: this function is invoked in a separate thread, from a Terminator Worker thread.
-func (s *Service) shutdownSimulation(ctx context.Context, tx *gorm.DB, groupID string) (interface{}, *ign.ErrMsg) {
-
-	dep, err := GetSimulationDeployment(tx, groupID)
-	if err != nil {
-		return nil, ign.NewErrorMessageWithBase(ign.ErrorSimGroupNotFound, err)
-	}
-
-	// Check the simulation has the correct status
-	if em := dep.assertSimDepStatus(simTerminateRequested); em != nil {
-		return nil, em
-	}
-
-	if em := dep.updateSimDepStatus(tx, simDeletingPods); em != nil {
-		return nil, em
-	}
-
-	tstart := time.Now()
-
-	// Run the following as a block, and in case of error set the simDep error status field.
-	_, em := func() (interface{}, *ign.ErrMsg) {
-		return s.internalShutdownSimulation(ctx, tx, dep, "shutdownSimulation")
-	}()
-	if em != nil {
-		// If the simulation failed to upload logs, the EC2 instances will be kept alive to allow
-		// admins to manually extract logs.
-		if em.ErrCode == int(ErrorFailedToUploadLogs) {
-			// Set the simulation error status
-			if em := dep.setErrorStatus(tx, simErrorFailedToUploadLogs); em != nil {
-				s.logger.Error(fmt.Sprintf("Could not update error status to %s.", simErrorFailedToUploadLogs))
-			}
-			logMsg := "shutdownSimulation - Errors occurred while uploading log files. Resources will not be terminated."
-			s.logger.Error(logMsg, em)
-			timeTrack(ctx, tstart, "shutdownSimulation - time tracker until error")
-			// Return without calling the error handler to avoid it from terminating this simulation's resources
-			return nil, em
-		}
-		logMsg := fmt.Sprintf("shutdownSimulation - error in shutdownSimulation for groupid [%s]. Error: %v", *dep.GroupID, em)
-		s.logger.Error(logMsg, em)
-		timeTrack(ctx, tstart, "shutdownSimulation - time tracker until error")
-		return nil, em
-	}
-
-	s.logger.Info("shutdownSimulation - successfully removed groupID: " + groupID)
-	timeTrack(ctx, tstart, "shutdownSimulation - Success")
-	return dep, nil
-}
-
-// ///////////////////////////////////////////////////////////////////////
-// ///////////////////////////////////////////////////////////////////////
-// ///////////////////////////////////////////////////////////////////////
-// ///////////////////////////////////////////////////////////////////////
-
-// rollbackFailedLaunch tries to undo a failed launch, to release resources.
-// It is invoked by the ErrorHandler worker.
-func (s *Service) rollbackFailedLaunch(ctx context.Context, tx *gorm.DB,
-	dep *SimulationDeployment) (interface{}, *ign.ErrMsg) {
-
-	// Need to release the resources. Based on the status reached at launch, set the
-	// equivalent status from the shutdown process and start the shutdown.
-	var newSt DeploymentStatus
-	switch st := *dep.DeploymentStatus; st {
-	case int(simLaunchingPods):
-		newSt = simDeletingPods
-	case int(simLaunchingNodes):
-		newSt = simDeletingNodes
-	}
-
-	tstart := time.Now()
-
-	// Run the following as a block, and in case of error set the simDep error status field.
-	_, em := func() (interface{}, *ign.ErrMsg) {
-		if em := dep.updateSimDepStatus(tx, newSt); em != nil {
-			return nil, em
-		}
-		return s.internalShutdownSimulation(ctx, tx, dep, "rollbackFailedLaunch")
-	}()
-	if em != nil {
-		logMsg := fmt.Sprintf("rollbackFailedLaunch - error while doing rollback in groupid [%s]. Marking for Admin review. Error: %v", *dep.GroupID, em)
-		s.logger.Error(logMsg, em)
-		timeTrack(ctx, tstart, "rollbackFailedLaunch - time tracker until error")
-		// There was an error during error handling. Marking for Admin Review
-		dep.setErrorStatus(tx, simErrorAdminReview)
-		return nil, em
-	}
-	timeTrack(ctx, tstart, "rollbackFailedLaunch - Success")
-	return dep, nil
-}
-
-// completeFailedTermination tries to finish a failed termination, to release resources.
-// It is invoked by the ErrorHandler worker.
-func (s *Service) completeFailedTermination(ctx context.Context, tx *gorm.DB,
-	dep *SimulationDeployment) (interface{}, *ign.ErrMsg) {
-
-	tstart := time.Now()
-
-	// Run the following as a block, and in case of error set the simDep error status field.
-	_, em := func() (interface{}, *ign.ErrMsg) {
-		return s.internalShutdownSimulation(ctx, tx, dep, "completeFailedTermination")
-	}()
-	if em != nil {
-		logMsg := fmt.Sprintf("completeFailedTermination - error while completing failed termination for groupid [%s]. Marking for Admin review. Error: %v", *dep.GroupID, em)
-		s.logger.Error(logMsg, em)
-		timeTrack(ctx, tstart, "completeFailedTermination - time tracker until error")
-		// There was an error during error handling. Marking for Admin Review
-		dep.setErrorStatus(tx, simErrorAdminReview)
-		return nil, em
-	}
-	timeTrack(ctx, tstart, "completeFailedTermination - Success")
-	return dep, nil
-}
-
-// ///////////////////////////////////////////////////////////////////////
-// ///////////////////////////////////////////////////////////////////////
-// ///////////////////////////////////////////////////////////////////////
-// ///////////////////////////////////////////////////////////////////////
-
-// DeleteNodesAndHostsForGroup starts the shutdown of all the kubernetes nodes
-// and associated Hosts (instances) of a given Cloudsim Simulation.
-func (s *Service) DeleteNodesAndHostsForGroup(ctx context.Context, tx *gorm.DB,
-	dep *SimulationDeployment, user *users.User) (interface{}, *ign.ErrMsg) {
-
-	// make sure the requesting user has the correct permissions
-	// Only admins of the Application team (eg. subt Org) can do that at the moment.
-	if ok, em := s.userAccessor.CanPerformWithRole(dep.Application, *user.Username, per.Admin); !ok {
-		return nil, em
-	}
-
-	if em := dep.updateSimDepStatus(tx, simDeletingNodes); em != nil {
-		return nil, em
-	}
-
-	return s.internalShutdownSimulation(ctx, tx, dep, "DeleteNodesAndHostsForGroup")
-}
-
 // ///////////////////////////////////////////////////////////////////////
 // ///////////////////////////////////////////////////////////////////////
 
@@ -1983,41 +1524,10 @@ func getSimulationPodNamePrefix(groupID string) string {
 	return fmt.Sprintf("sim-%s", groupID)
 }
 
-// launchGazeboServerInGroup launches a set of gzserver pods and associated services in the
-// given group.
-func (s *Service) launchGazeboServerInGroup(ctx context.Context, tx *gorm.DB, groupID string,
-	dep *SimulationDeployment) (interface{}, *ign.ErrMsg) {
-
-	// It is quite important that application's specific launchers do add the following
-	// labels to the created Pods / Services.
-	podName := getSimulationPodNamePrefix(groupID)
-	labels := map[string]string{
-		cloudsimTagLabelKey: "true",
-		podLabelPodGroup:    podName,
-		podLabelKeyGroupID:  groupID,
-	}
-
-	// Add the parent's groupID to the labels as well.
-	if dep.isMultiSimChild() {
-		labels["parent-group-id"] = *dep.ParentGroupID
-	}
-
-	// Find the specific Application handler and ask it to launch the app, using
-	// the given base labels and groupID.
-	return s.applications[*dep.Application].launchApplication(ctx, s, tx, dep, podName, labels)
-}
-
 // getPodLabelSelectorForSearches is a helper function to return the full groupID label
 // used for searching Pods associated to a groupID.
 func getPodLabelSelectorForSearches(groupID string) string {
 	return podLabelKeyGroupID + "=" + groupID
-}
-
-// deleteGazeboServerInGroup removes an existing gzserver pod and its services from a group.
-func (s *Service) deleteGazeboServerInGroup(ctx context.Context, tx *gorm.DB, dep *SimulationDeployment) *ign.ErrMsg {
-	// Find the specific Application handler and ask it to delete the app, using
-	// the given groupID to find the involved pods/services.
-	return s.applications[*dep.Application].deleteApplication(ctx, s, tx, dep)
 }
 
 // getGazeboWorldStatsTopicAndLimit returns the topic to subscribe to get notifications about the simulation
@@ -2229,8 +1739,13 @@ func (s *Service) GetSimulationLogsForDownload(ctx context.Context, tx *gorm.DB,
 		return nil, em
 	}
 
+	p, err := platformManager.GetSimulationPlatform(s.platforms, dep)
+	if err != nil {
+		return nil, ign.NewErrorMessageWithBase(ign.ErrorUnexpected, err)
+	}
+
 	// Find the specific Application handler and ask it to generate the link to download logs.
-	return s.applications[*dep.Application].getSimulationLogsForDownload(ctx, tx, dep, robotName)
+	return s.applications[*dep.Application].getSimulationLogsForDownload(ctx, tx, p.Storage(), dep, robotName)
 }
 
 // ///////////////////////////////////////////////////////////////////////
@@ -2273,7 +1788,14 @@ func (s *Service) GetCloudMachineInstances(ctx context.Context, p *ign.Paginatio
 		return nil, nil, em
 	}
 
-	return s.hostsSvc.CloudMachinesList(ctx, p, tx, byStatus, invertStatus, groupID, application)
+	// TODO This method has been disabled until the `Machines` interface gets `List` support.
+	// var machines []*MachineInstances
+	// for _, p := range s.platforms.Platforms() {
+	//
+	// }
+	//
+	// return s.hostsSvc.CloudMachinesList(ctx, p, tx, byStatus, invertStatus, groupID, application)
+	return nil, nil, ign.NewErrorMessage(ign.ErrorUnexpected)
 }
 
 // ///////////////////////////////////////////////////////////////////////
