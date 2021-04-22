@@ -2388,13 +2388,15 @@ func (s *Service) QueueRemoveElement(ctx context.Context, user *users.User, grou
 // TODO: Make initPlatforms independent of Service by receiving arguments with the needed config.
 func (s *Service) initPlatforms() (platformManager.Manager, error) {
 	if s.cfg.IsTest {
-		p, err := fakePlatform.NewFakePlatform(nil)
+		p, err := fakePlatform.NewFakePlatform(&fakePlatform.NewInput{
+			Name: "subt",
+		})
 		if err != nil {
 			return nil, err
 		}
 
 		return platformManager.Map{
-			"fake": p,
+			"subt": p,
 		}, nil
 	}
 
