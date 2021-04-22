@@ -14,7 +14,9 @@ import (
 )
 
 // Force SimulationDeployment to implement simulations.Simulation interface.
-var _ subtsim.Simulation = (*SimulationDeployment)(nil)
+var (
+	_ subtsim.Simulation = (*SimulationDeployment)(nil)
+)
 
 // SimulationDeployment represents a cloudsim simulation .
 type SimulationDeployment struct {

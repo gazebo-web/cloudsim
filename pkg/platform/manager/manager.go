@@ -45,7 +45,7 @@ type Manager interface {
 	Selectors() []Selector
 	// Platforms returns a slice with all the available platforms.
 	Platforms() []platform.Platform
-	// Platform returns the platform that matches a specific selector, or an error if it is not found.
+	// GetPlatform returns the platform that matches a specific selector, or an error if it is not found.
 	GetPlatform(selector Selector) (platform.Platform, error)
 }
 

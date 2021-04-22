@@ -1,15 +1,12 @@
 package globals
 
 import (
-	"github.com/aws/aws-sdk-go/service/ec2/ec2iface"
-	"github.com/aws/aws-sdk-go/service/s3/s3iface"
 	"github.com/go-playground/form"
 	ignws "gitlab.com/ignitionrobotics/web/cloudsim/pkg/transport/ign"
 	useracc "gitlab.com/ignitionrobotics/web/cloudsim/pkg/users"
 	"gitlab.com/ignitionrobotics/web/fuelserver/permissions"
 	"gitlab.com/ignitionrobotics/web/ign-go"
 	"gopkg.in/go-playground/validator.v9"
-	"k8s.io/client-go/kubernetes"
 )
 
 // TODO: remove as much as possible from globals
@@ -61,21 +58,6 @@ var UserAccessor useracc.Service
 
 // Permissions manages permissions for users, roles and resources.
 var Permissions *permissions.Permissions
-
-// KClientset holds a reference to the kubernetes clientset.
-// Dev note: code should not use this from globals. Instead configure your logic with arguments
-// in the constructors. This is here to use from tests.
-var KClientset kubernetes.Interface
-
-// S3Svc holds a reference to the AWS S3 client.
-// Dev note: code should not use this from globals. Instead configure your logic with arguments
-// in the constructors. This is here to use from tests.
-var S3Svc s3iface.S3API
-
-// EC2Svc holds a reference to the AWS EC2 client.
-// Dev note: code should not use this from globals. Instead configure your logic with arguments
-// in the constructors. This is here to use from tests.
-var EC2Svc ec2iface.EC2API
 
 // TransportTestMock holds a reference to the mock for the transport layer.
 var TransportTestMock *ignws.PubSubTransporterMock
