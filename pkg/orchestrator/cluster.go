@@ -1,5 +1,7 @@
 package orchestrator
 
+import "time"
+
 // Condition represents a state that should be reached.
 type Condition struct {
 	Type   string
@@ -42,12 +44,21 @@ type Selector interface {
 	Set(key string, value string)
 }
 
+type ResourceMetadata interface {
+}
+
 // Resource groups a set of method to identify a resource in a cluster.
 type Resource interface {
-	// Name returns the name of the resource
+	// Name returns the name of the Resource
 	Name() string
-	// Selector returns the resource's Selector.
+	// Selector returns the Resource's Selector.
 	Selector() Selector
-	// Namespace returns the namespace where the resource lives in.
+	// Namespace returns the namespace where the Resource lives in.
 	Namespace() string
+	// CreationTimestamp is a timestamp representing the server time when this object was created.
+	CreationTimestamp() time.Time
+	// DeletionTimestamp is a timestamp at which this resource will be deleted. This
+	// field is set by the server when a graceful deletion is requested by the user, and is not
+	// directly settable by a client.
+	DeletionTimestamp() *time.Time
 }
