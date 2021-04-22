@@ -16,6 +16,7 @@ type fakeSimulation struct {
 	processed bool
 	owner     *string
 	creator   string
+	platform  *string
 }
 
 // IsProcessed returns if the simulation is processed.
@@ -79,8 +80,15 @@ func (f *fakeSimulation) GetKind() simulations.Kind {
 	return f.kind
 }
 
+// GetKind returns the simulation's kind.
+func (f *fakeSimulation) GetPlatform() *string {
+	return f.platform
+}
+
 // NewSimulation initializes a new fake simulation.
-func NewSimulation(groupID simulations.GroupID, status simulations.Status, kind simulations.Kind, err *simulations.Error, image string, validFor time.Duration) simulations.Simulation {
+func NewSimulation(groupID simulations.GroupID, status simulations.Status, kind simulations.Kind,
+	err *simulations.Error, image string, validFor time.Duration) simulations.Simulation {
+
 	return &fakeSimulation{
 		groupID:  groupID,
 		status:   status,
