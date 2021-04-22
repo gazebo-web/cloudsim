@@ -24,9 +24,11 @@ type kubernetesPods struct {
 
 // List returns a list of pod resources matching the giving selector in the given namespace.
 // If selector is nil or empty (doesn't have any labels specified) it will return all the resources in the given namespace.
-func (p *pods) List(namespace string, selector orchestrator.Selector) ([]orchestrator.Resource, error) {
+func (p *kubernetesPods) List(namespace string,
+	selector orchestratorResource.Selector) ([]orchestratorResource.Resource, error) {
+
 	if selector == nil {
-		selector = orchestrator.NewSelector(map[string]string{})
+		selector = orchestratorResource.NewSelector(map[string]string{})
 	}
 	p.Logger.Debug(fmt.Sprintf("Getting list of pods in namespace [%s] matching the following labels: [%s]", namespace, selector.String()))
 	res, err := p.API.CoreV1().Pods(namespace).List(metav1.ListOptions{LabelSelector: selector.String()})
@@ -40,10 +42,10 @@ func (p *pods) List(namespace string, selector orchestrator.Selector) ([]orchest
 		return nil, nil
 	}
 
-	list := make([]orchestrator.Resource, len(res.Items))
+	list := make([]orchestratorResource.Resource, len(res.Items))
 
 	for i, po := range res.Items {
-		list[i] = orchestrator.NewResource(po.Name, po.Namespace, orchestrator.NewSelector(po.Labels))
+		list[i] = orchestratorResource.NewResource(po.Name, po.Namespace, orchestratorResource.NewSelector(po.Labels))
 	}
 
 	p.Logger.Debug(fmt.Sprintf("Getting list of pods in namespace [%s] matching the following labels: [%s] succeeded.", namespace, selector.String()))

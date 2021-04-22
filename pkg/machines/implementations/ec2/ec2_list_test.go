@@ -6,7 +6,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/aws/aws-sdk-go/service/ec2/ec2iface"
 	"github.com/stretchr/testify/suite"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/cloud"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/machines"
 	"gitlab.com/ignitionrobotics/web/ign-go"
 	"testing"
 )
@@ -18,7 +18,7 @@ func TestListMachines(t *testing.T) {
 type ec2ListMachinesTestSuite struct {
 	suite.Suite
 	ec2API   *mockEC2List
-	machines cloud.Machines
+	machines machines.Machines
 }
 
 type mockEC2List struct {
@@ -57,12 +57,12 @@ func (s *ec2ListMachinesTestSuite) SetupTest() {
 
 func (s *ec2ListMachinesTestSuite) TestList_WithError() {
 	s.ec2API.InternalError = errors.New("test error")
-	_, err := s.machines.List(cloud.ListMachinesInput{})
+	_, err := s.machines.List(machines.ListMachinesInput{})
 	s.Assert().Error(err)
 }
 
 func (s *ec2ListMachinesTestSuite) TestList_Success() {
-	out, err := s.machines.List(cloud.ListMachinesInput{})
+	out, err := s.machines.List(machines.ListMachinesInput{})
 	s.Require().NoError(err)
 
 	s.Assert().Len(out.Instances, 1)

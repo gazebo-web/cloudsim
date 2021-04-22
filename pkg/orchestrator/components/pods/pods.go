@@ -143,7 +143,7 @@ type Pods interface {
 	Delete(resource resource.Resource) (resource.Resource, error)
 	Get(name, namespace string) (resource.Resource, error)
 	GetIP(name, namespace string) (string, error)
-	List(namespace string, selector Selector) ([]Resource, error)
+	List(namespace string, selector resource.Selector) ([]resource.Resource, error)
 }
 
 // Executor groups a set of methods to run commands and scripts inside a Pod.
