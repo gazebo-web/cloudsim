@@ -428,79 +428,32 @@ func (m *machines) checkAvailableMachines(requested int64) bool {
 	return requested <= m.limit-int64(count)
 }
 
-// Option is used to configure an EC2 cloud.Machines implementation.
-type Option func(*machines) *machines
+// MachinesConfig includes a set of field to configure a cloud.Machines implementation using EC2.
+type MachinesConfig struct {
+	API             ec2iface.EC2API
+	Logger          ign.Logger
+	Limit           *int64
+	WorkerGroupName string
+}
 
-// WithLogger pass a custom logger when initializing an EC2 cloud.Machines implementation.
-func WithLogger(logger ign.Logger) Option {
-	return func(m *machines) *machines {
-		m.Logger = logger
-		return m
+// NewMachinesWithConfig initializes a new cloud.Machines implementation configured by the given MachinesConfig.
+func NewMachinesWithConfig(cfg MachinesConfig) machines.Machines {
+	limit := int64(-1)
+	if cfg.Limit != nil && *cfg.Limit >= 0 {
+		limit = *cfg.Limit
+	}
+
+	return &ec2Machines{
+		API:             cfg.API,
+		Logger:          cfg.Logger,
+		limit:           limit,
+		workerGroupName: cfg.WorkerGroupName,
 	}
 }
 
-// WithLimit pass the limit of machines that could be requested when initializing an EC2 cloud.Machines implementation.
-func WithLimit(limit int64) Option {
-	return func(m *machines) *machines {
-		m.limit = limit
-		return m
-	}
-}
-
-// WithWorkerGroupName pass the name of the worker group used to count available machines.
-func WithWorkerGroupName(name string) Option {
-	return func(m *machines) *machines {
-		m.workerGroupName = name
-		return m
-	}
-}
-
-// NewMachinesWithOptions initializes a new cloud.Machines implementation using the EC2 API.
-// This method allows passing options that will change the underlying implementation.
-func NewMachinesWithOptions(api ec2iface.EC2API, options ...Option) cloud.Machines {
-	m := &machines{
-		API:             api,
-		Logger:          ign.NewLoggerNoRollbar("ec2.cloud.Machines", ign.VerbosityDebug),
-		workerGroupName: "cloudsim-simulation-worker",
-		limit:           -1,
-	}
-
-	for _, opt := range options {
-		m = opt(m)
-	}
-
-	return m
-}
-
-// List is used to list all pending, running, shutting-down, stopping, stopped and terminated instances with their respective status.
-func (m *ec2Machines) List(input machines.ListMachinesInput) (*machines.ListMachinesOutput, error) {
-	m.Logger.Debug(fmt.Sprintf("Listing machines with the following input: %+v", input))
-	res, err := m.API.DescribeInstanceStatus(&ec2.DescribeInstanceStatusInput{
-		Filters:             m.createFilters(input.Filters),
-		IncludeAllInstances: aws.Bool(true),
-		MaxResults:          aws.Int64(1000),
-	})
-	if err != nil {
-		m.Logger.Debug(fmt.Sprintf("Listing machines with the following input: %+v failed, error: %s", input, err))
-		return nil, err
-	}
-
-	var output machines.ListMachinesOutput
-	output.Instances = make([]machines.ListMachinesItem, len(res.InstanceStatuses))
-
-	for i, instanceStatus := range res.InstanceStatuses {
-		output.Instances[i] = machines.ListMachinesItem{
-			InstanceID: *instanceStatus.InstanceId,
-			State:      *instanceStatus.InstanceState.Name,
-		}
-	}
-
-	m.Logger.Debug(fmt.Sprintf("Listing machines with the following input: %+v succeded. Output: %+v", input, output))
-
-	return &output, nil
-}
-
-// NewMachines initializes a new machines.Machines implementation using EC2.
+// NewMachines initializes a new cloud.Machines implementation using EC2 with some default configuration:
+//	* Limit: -1
+//	* Worker group name: "cloudsim-simulation-worker"
 func NewMachines(api ec2iface.EC2API, logger ign.Logger) machines.Machines {
 	return &ec2Machines{
 		API:             api,
