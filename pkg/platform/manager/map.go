@@ -35,8 +35,8 @@ func (p Map) Platforms() []platform.Platform {
 	return platforms
 }
 
-// Platform returns receives a selector and returns its matching platform or an error if it is not found.
-func (p Map) Platform(selector Selector) (platform.Platform, error) {
+// GetPlatform receives a selector and returns its matching platform or an error if it is not found.
+func (p Map) GetPlatform(selector Selector) (platform.Platform, error) {
 	platform, ok := p[selector]
 	if !ok {
 		return nil, ErrPlatformNotFound

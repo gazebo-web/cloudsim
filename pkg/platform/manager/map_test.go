@@ -55,12 +55,12 @@ func (s *testMapSuite) TestPlatforms() {
 
 func (s *testMapSuite) TestPlatformValidSelector() {
 	// Get the first platform
-	platform, err := s.platformMap.Platform(s.selector1)
+	platform, err := s.platformMap.GetPlatform(s.selector1)
 	s.NoError(err)
 	s.Equal(s.platform1, platform)
 
 	// Get the third platform
-	platform, err = s.platformMap.Platform(s.selector3)
+	platform, err = s.platformMap.GetPlatform(s.selector3)
 	s.NoError(err)
 	s.Equal(s.platform3, platform)
 }
@@ -68,7 +68,7 @@ func (s *testMapSuite) TestPlatformValidSelector() {
 func (s *testMapSuite) TestPlatformInvalidSelector() {
 	// Provide an invalid selector
 	selector := Selector("invalid")
-	platform, err := s.platformMap.Platform(selector)
+	platform, err := s.platformMap.GetPlatform(selector)
 	s.EqualError(err, ErrPlatformNotFound.Error())
 	s.Nil(platform)
 }

@@ -134,6 +134,11 @@ func (dep *SimulationDeployment) GetCreator() string {
 	return *dep.Creator
 }
 
+// GetPlatform returns the SimulationDeployment's Platform.
+func (dep *SimulationDeployment) GetPlatform() *string {
+	return dep.Platform
+}
+
 // GetName returns the SimulationsDeployment's Name. t returns an empty string if no name has been assigned.
 func (dep *SimulationDeployment) GetName() string {
 	if dep.Name == nil {

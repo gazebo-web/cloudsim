@@ -5,6 +5,7 @@ import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/factory"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/loader"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/platform"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
 	"gitlab.com/ignitionrobotics/web/ign-go"
 	"os"
 	"path"
@@ -45,7 +46,7 @@ type Manager interface {
 	// Platforms returns a slice with all the available platforms.
 	Platforms() []platform.Platform
 	// Platform returns the platform that matches a specific selector, or an error if it is not found.
-	Platform(selector Selector) (platform.Platform, error)
+	GetPlatform(selector Selector) (platform.Platform, error)
 }
 
 // managerConfig defines the platform configuration file structure.
@@ -93,4 +94,14 @@ func loadPlatformConfiguration(input *NewInput) (*managerConfig, error) {
 	}
 
 	return config, err
+}
+
+// GetSimulationPlatform gets the platform.Platform associated with a simulation.
+func GetSimulationPlatform(manager Manager, sim simulations.Simulation) (platform.Platform, error) {
+	platformName := sim.GetPlatform()
+	if platformName == nil {
+		return nil, simulations.ErrSimulationPlatformNotDefined
+	}
+
+	return manager.GetPlatform(Selector(*platformName))
 }

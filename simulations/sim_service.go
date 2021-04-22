@@ -16,9 +16,9 @@ import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/actions"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/application"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/loader"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/platform"
 	fakePlatform "gitlab.com/ignitionrobotics/web/cloudsim/pkg/platform/implementations/fake"
 	platformManager "gitlab.com/ignitionrobotics/web/cloudsim/pkg/platform/manager"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/runsim"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulator"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/transport"
@@ -634,7 +634,10 @@ func (s *Service) rebuildState(ctx context.Context, db *gorm.DB) error {
 
 	for _, d := range deps {
 		groupID := *d.GroupID
-		p := platform.GetSimulationPlatform(s.platforms, d)
+		p, err := platformManager.GetSimulationPlatform(s.platforms, &d)
+		if err != nil {
+			return err
+		}
 
 		if d.HasStatus(simulations.StatusPending) {
 			// If still Pending then re-add it to the scheduler, by adding a 'launch simulation'
@@ -1617,12 +1620,12 @@ func (s *Service) createRunningSimulation(ctx context.Context, tx *gorm.DB, dep 
 		return err
 	}
 
-	p, err := platform.GetSimulationPlatform(s.platforms, dep)
+	p, err := platformManager.GetSimulationPlatform(s.platforms, dep)
 	if err != nil {
 		return err
 	}
 
-	rs := p.RunningSimulations().NewRunningSimulation(dep.GetGroupID(), int64(maxSimSeconds), dep.GetValidFor())
+	rs := runsim.NewRunningSimulation(dep.GetGroupID(), int64(maxSimSeconds), dep.GetValidFor())
 
 	err = t.Subscribe(worldStatsTopic, func(message transport.Message) {
 		_ = rs.ReadWorldStats(context.Background(), message)
@@ -1638,7 +1641,7 @@ func (s *Service) createRunningSimulation(ctx context.Context, tx *gorm.DB, dep 
 		return err
 	}
 
-	err = s.platform.RunningSimulations().Add(dep.GetGroupID(), rs, t)
+	err = p.RunningSimulations().Add(dep.GetGroupID(), rs, t)
 	if err != nil {
 		return err
 	}
