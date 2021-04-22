@@ -12,6 +12,7 @@ import (
 	"k8s.io/client-go/kubernetes"
 	podutil "k8s.io/kubernetes/pkg/api/v1/pod"
 	"k8s.io/kubernetes/pkg/client/conditions"
+	"time"
 )
 
 // pods is a orchestrator.Pods implementation.
@@ -42,7 +43,21 @@ func (p *pods) List(namespace string, selector orchestrator.Selector) ([]orchest
 	list := make([]orchestrator.Resource, len(res.Items))
 
 	for i, po := range res.Items {
-		list[i] = orchestrator.NewResource(po.Name, po.Namespace, orchestrator.NewSelector(po.Labels))
+		var deletion *time.Time
+
+		if po.DeletionTimestamp != nil {
+			deletion = new(time.Time)
+			*deletion = po.DeletionTimestamp.Time
+		}
+
+		list[i] = orchestrator.NewResourceWithOptions(orchestrator.ResourceOptions{
+			Name:              po.Name,
+			Namespace:         po.Namespace,
+			Selector:          orchestrator.NewSelector(po.Labels),
+			Phase:             orchestrator.Phase(po.Status.Phase),
+			CreationTimestamp: po.CreationTimestamp.Time,
+			DeletionTimestamp: deletion,
+		})
 	}
 
 	p.Logger.Debug(fmt.Sprintf("Getting list of pods in namespace [%s] matching the following labels: [%s] succeeded.", namespace, selector.String()))
