@@ -49,7 +49,7 @@ const (
 	PhaseTerminated Phase = "Terminated"
 )
 
-// Selector is used to identify a certain resource.
+// Selector is used to represent the state a certain resource.
 type Selector interface {
 	// String returns the selector represented in string format.
 	String() string
@@ -127,12 +127,19 @@ func (s *resource) Namespace() string {
 	return s.namespace
 }
 
+// ResourceOptions is used to set the different values for a Resource.
 type ResourceOptions struct {
-	Name              string
-	Namespace         string
-	Selector          Selector
-	Phase             Phase
+	// Name is the Resource.Name.
+	Name string
+	// Namespace is the Resource.Namespace.
+	Namespace string
+	// Selector is the Resource.Selector.
+	Selector Selector
+	// Phase is the Resource.Phase.
+	Phase Phase
+	// CreationTimestamp is the Resource.CreationTimestamp.
 	CreationTimestamp time.Time
+	// DeletionTimestamp is the Resource.DeletionTimestamp.
 	DeletionTimestamp *time.Time
 }
 
