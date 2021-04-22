@@ -80,7 +80,7 @@ func newOrchestratorStoreFromEnvVars() (storepkg.Orchestrator, error) {
 		return nil, err
 	}
 	// Set default values
-	if err := defaulter.SetDefaults(&o); err != nil {
+	if err := defaulter.SetValues(&o); err != nil {
 		return nil, err
 	}
 	// Validate values

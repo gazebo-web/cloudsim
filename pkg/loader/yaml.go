@@ -49,7 +49,7 @@ func (l *yamlLoader) Load(path string, out interface{}) error {
 	}
 
 	// Apply default values if available
-	if err := defaults.SetDefaults(out); err != nil {
+	if err := defaults.SetValues(out); err != nil {
 		return err
 	}
 

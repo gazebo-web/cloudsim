@@ -37,7 +37,7 @@ func (s *testDefaultsSuite) TestSetDefaultsImplements() {
 	d := &D{}
 	s.Equal("", d.Value)
 
-	s.NoError(SetDefaults(d))
+	s.NoError(SetValues(d))
 
 	// Struct does not implement Defaulter, it should have been modified
 	s.Equal(defaultValue, d.Value)
@@ -47,7 +47,7 @@ func (s *testDefaultsSuite) TestSetDefaultsDoesNotImplement() {
 	t := &T{}
 	s.Equal("", t.Value)
 
-	s.NoError(SetDefaults(t))
+	s.NoError(SetValues(t))
 
 	// Struct does not implement Defaulter, it should not have been modified
 	s.Equal("", t.Value)

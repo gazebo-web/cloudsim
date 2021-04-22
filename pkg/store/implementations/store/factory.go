@@ -12,7 +12,7 @@ func NewFunc(config interface{}, dependencies factory.Dependencies, out interfac
 	if err := factory.SetValueAndValidate(&typeConfig, config); err != nil {
 		return factory.ErrorWithContext(err)
 	}
-	if err := defaults.SetDefaults(&typeConfig); err != nil {
+	if err := defaults.SetValues(&typeConfig); err != nil {
 		return factory.ErrorWithContext(err)
 	}
 

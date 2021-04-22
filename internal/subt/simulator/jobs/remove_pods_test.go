@@ -59,7 +59,7 @@ func (s *removePodsTestSuite) SetupTest() {
 	s.Store = sfake.NewFakeStore(nil, storeOrchestrator, storeIgnition)
 
 	var err error
-	s.DB, err = gormdb.GetDBFromEnvVars()
+	s.DB, err = gormdb.GetTestDBFromEnvVars()
 
 	s.Require().NoError(err)
 

@@ -1,7 +1,7 @@
 package store
 
 import (
-	"github.com/creasty/defaults"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/defaults"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/validate"
 )
 
@@ -19,6 +19,5 @@ func (c *Config) Validate() error {
 
 // SetDefaults sets defaults values for the config.
 func (c *Config) SetDefaults() error {
-	defaults.MustSet(c)
-	return nil
+	return defaults.SetStructValues(c)
 }

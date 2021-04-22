@@ -110,7 +110,7 @@ func NewFakePlatform(input *NewInput) (platform.Platform, error) {
 		input = &NewInput{}
 	}
 
-	if err := defaults.SetDefaults(input); err != nil {
+	if err := defaults.SetValues(input); err != nil {
 		return nil, err
 	}
 

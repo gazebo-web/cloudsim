@@ -21,7 +21,7 @@ import (
 
 func TestLaunchInstances(t *testing.T) {
 	// Initialize database
-	db, err := gorm.GetDBFromEnvVars()
+	db, err := gorm.GetTestDBFromEnvVars()
 	defer db.Close()
 
 	// If the database fails to connect, fail instantly.
@@ -111,7 +111,7 @@ func TestLaunchInstances(t *testing.T) {
 
 func TestLaunchInstancesFailsWhenLimitIsSet(t *testing.T) {
 	// Initialize database
-	db, err := gorm.GetDBFromEnvVars()
+	db, err := gorm.GetTestDBFromEnvVars()
 	defer db.Close()
 
 	// If the database fails to connect, fail instantly.
