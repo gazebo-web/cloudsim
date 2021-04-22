@@ -143,12 +143,25 @@ type ResourceOptions struct {
 	DeletionTimestamp *time.Time
 }
 
+// NewResourceWithOptions initializes a new Resource with the information passed in ResourceOptions.
+func NewResourceWithOptions(opts ResourceOptions) Resource {
+	return &resource{
+		name:              opts.Name,
+		selector:          opts.Selector,
+		namespace:         opts.Namespace,
+		phase:             opts.Phase,
+		creationTimestamp: opts.CreationTimestamp,
+		deletionTimestamp: opts.DeletionTimestamp,
+	}
+}
+
 // NewResource initializes a new orchestrator.Resource using a kubernetes service implementation.
 func NewResource(name, namespace string, selector Selector) Resource {
 	return &resource{
 		name:      name,
 		namespace: namespace,
 		selector:  selector,
+		phase:     PhaseUnknown,
 	}
 }
 
