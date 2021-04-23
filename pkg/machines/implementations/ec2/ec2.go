@@ -189,7 +189,7 @@ func (m *ec2Machines) create(input machines.CreateMachinesInput) (*machines.Crea
 		return nil, machines.ErrInvalidClusterID
 	}
 	if !m.checkAvailableMachines(input.MaxCount) {
-		return nil, cloud.ErrInsufficientMachines
+		return nil, machines.ErrInsufficientMachines
 	}
 
 	if input.InitScript == nil {
@@ -406,14 +406,14 @@ func (m *ec2Machines) createUserData(input machines.CreateMachinesInput) (string
 	return buffer.String(), nil
 }
 
-func (m *machines) checkAvailableMachines(requested int64) bool {
+func (m *ec2Machines) checkAvailableMachines(requested int64) bool {
 	// If limit is set to a number lower than zero, it means that there is no limit for machines.
 	if m.limit < 0 {
 		return true
 	}
 
 	// Get the number of provisioned machines from cloud provider.
-	count := m.Count(cloud.CountMachinesInput{
+	count := m.Count(machines.CountMachinesInput{
 		Filters: map[string][]string{
 			"tag:cloudsim-simulation-worker": {
 				m.workerGroupName,
@@ -428,7 +428,35 @@ func (m *machines) checkAvailableMachines(requested int64) bool {
 	return requested <= m.limit-int64(count)
 }
 
-// MachinesConfig includes a set of field to configure a cloud.Machines implementation using EC2.
+// List is used to list all pending, running, shutting-down, stopping, stopped and terminated instances with their respective status.
+func (m *ec2Machines) List(input machines.ListMachinesInput) (*machines.ListMachinesOutput, error) {
+	m.Logger.Debug(fmt.Sprintf("Listing machines with the following input: %+v", input))
+	res, err := m.API.DescribeInstanceStatus(&ec2.DescribeInstanceStatusInput{
+		Filters:             m.createFilters(input.Filters),
+		IncludeAllInstances: aws.Bool(true),
+		MaxResults:          aws.Int64(1000),
+	})
+	if err != nil {
+		m.Logger.Debug(fmt.Sprintf("Listing machines with the following input: %+v failed, error: %s", input, err))
+		return nil, err
+	}
+
+	var output machines.ListMachinesOutput
+	output.Instances = make([]machines.ListMachinesItem, len(res.InstanceStatuses))
+
+	for i, instanceStatus := range res.InstanceStatuses {
+		output.Instances[i] = machines.ListMachinesItem{
+			InstanceID: *instanceStatus.InstanceId,
+			State:      *instanceStatus.InstanceState.Name,
+		}
+	}
+
+	m.Logger.Debug(fmt.Sprintf("Listing machines with the following input: %+v succeded. Output: %+v", input, output))
+
+	return &output, nil
+}
+
+// MachinesConfig includes a set of field to configure a machines.Machines implementation using EC2.
 type MachinesConfig struct {
 	// API has a reference to the EC2 API.
 	API ec2iface.EC2API
@@ -441,7 +469,7 @@ type MachinesConfig struct {
 	WorkerGroupName string
 }
 
-// NewMachinesWithConfig initializes a new cloud.Machines implementation configured by the given MachinesConfig.
+// NewMachinesWithConfig initializes a new machines.Machines implementation configured by the given MachinesConfig.
 func NewMachinesWithConfig(cfg MachinesConfig) machines.Machines {
 	limit := int64(-1)
 	if cfg.Limit != nil && *cfg.Limit >= 0 {
@@ -456,7 +484,7 @@ func NewMachinesWithConfig(cfg MachinesConfig) machines.Machines {
 	}
 }
 
-// NewMachines initializes a new cloud.Machines implementation using EC2 with some default configuration:
+// NewMachines initializes a new machines.Machines implementation using EC2 with some default configuration:
 //	* Limit: -1
 //	* Worker group name: "cloudsim-simulation-worker"
 func NewMachines(api ec2iface.EC2API, logger ign.Logger) machines.Machines {

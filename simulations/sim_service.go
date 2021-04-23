@@ -819,7 +819,7 @@ func (s *Service) workerStartSimulation(payload interface{}) {
 	// Get platform
 	var p platform.Platform
 	if simDep.Platform != nil {
-		p, err = s.platforms.Platform(platformManager.Selector(*simDep.Platform))
+		p, err = s.platforms.GetPlatform(platformManager.Selector(*simDep.Platform))
 		if err != nil {
 			return
 		}
