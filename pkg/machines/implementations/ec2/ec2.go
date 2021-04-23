@@ -10,7 +10,9 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/aws/aws-sdk-go/service/ec2/ec2iface"
 	"github.com/pkg/errors"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/defaults"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/machines"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/validate"
 	"gitlab.com/ignitionrobotics/web/ign-go"
 	"regexp"
 	"strings"
@@ -459,29 +461,39 @@ func (m *ec2Machines) List(input machines.ListMachinesInput) (*machines.ListMach
 // MachinesConfig includes a set of field to configure a machines.Machines implementation using EC2.
 type MachinesConfig struct {
 	// API has a reference to the EC2 API.
-	API ec2iface.EC2API
+	API ec2iface.EC2API `validate:"required"`
 	// Logger is an instance of ign.Logger for logging messages in the Machines component.
-	Logger ign.Logger
+	Logger ign.Logger `validate:"required"`
 	// Limit sets the limit of machines that can be created, if this value is nil, no limit will be set.
-	Limit *int64
+	Limit *int64 `default:"-1"`
 	// WorkerGroupName is label set to all machines created by the Machines component and it's used when counting the
 	// amount of machines available.
-	WorkerGroupName string
+	WorkerGroupName string `default:"cloudsim-simulation-worker"`
+}
+
+// SetDefaults sets the default values for MachinesConfig.
+func (m *MachinesConfig) SetDefaults() error {
+	return defaults.SetStructValues(m)
 }
 
 // NewMachinesWithConfig initializes a new machines.Machines implementation configured by the given MachinesConfig.
-func NewMachinesWithConfig(cfg MachinesConfig) machines.Machines {
-	limit := int64(-1)
-	if cfg.Limit != nil && *cfg.Limit >= 0 {
-		limit = *cfg.Limit
+func NewMachinesWithConfig(cfg MachinesConfig) (machines.Machines, error) {
+	err := validate.Validate(cfg)
+	if err != nil {
+		return nil, err
+	}
+
+	err = defaults.SetValues(&cfg)
+	if err != nil {
+		return nil, err
 	}
 
 	return &ec2Machines{
 		API:             cfg.API,
 		Logger:          cfg.Logger,
-		limit:           limit,
+		limit:           *cfg.Limit,
 		workerGroupName: cfg.WorkerGroupName,
-	}
+	}, nil
 }
 
 // NewMachines initializes a new machines.Machines implementation using EC2 with some default configuration:
