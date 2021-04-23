@@ -3,7 +3,6 @@ package orchestrator
 import (
 	"fmt"
 	"strings"
-	"time"
 )
 
 // Condition represents a state that should be reached.
@@ -60,109 +59,6 @@ type Selector interface {
 	Extend(extension Selector) Selector
 	// Set sets the given value to the given key. If the key already exists, it will be overwritten.
 	Set(key string, value string)
-}
-
-// Resource groups a set of method to identify a resource in a cluster.
-type Resource interface {
-	// Name returns the name of the Resource
-	Name() string
-	// Selector returns the Resource's Selector.
-	Selector() Selector
-	// Namespace returns the namespace where the Resource lives in.
-	Namespace() string
-	// CreationTimestamp is a timestamp representing the server time when this object was created.
-	CreationTimestamp() time.Time
-	// DeletionTimestamp is a timestamp at which this resource will be deleted. This field is set by the server when a
-	// graceful deletion is requested.
-	DeletionTimestamp() *time.Time
-	// Phase is a simple, high-level summary of where the Resource is in its lifecycle.
-	Phase() Phase
-}
-
-// resource is an orchestrator.Resource implementation of Kubernetes resources.
-type resource struct {
-	// name represents the name of the service.
-	name string
-	// selector defines a set of key-value pairs that identifies this resource.
-	selector Selector
-	// namespace is the environment where the resource is currently running.
-	namespace string
-	// phase is a simple, high-level summary of where the Resource is in its lifecycle.
-	phase Phase
-	// creationTimestamp is a timestamp representing the server time when this object was created.
-	creationTimestamp time.Time
-	// deletionTimestamp is a timestamp at which this resource will be deleted. This field is set by the server when a
-	// graceful deletion is requested.
-	deletionTimestamp *time.Time
-}
-
-// CreationTimestamp is a timestamp representing the server time when this object was created.
-func (s *resource) CreationTimestamp() time.Time {
-	return s.creationTimestamp
-}
-
-// DeletionTimestamp is a timestamp at which this resource will be deleted. This field is set by the server when a
-// graceful deletion is requested.
-func (s *resource) DeletionTimestamp() *time.Time {
-	return s.deletionTimestamp
-}
-
-// Phase is a simple, high-level summary of where the Resource is in its lifecycle.
-func (s *resource) Phase() Phase {
-	return s.phase
-}
-
-// Name returns the resource's name.
-func (s *resource) Name() string {
-	return s.name
-}
-
-// Selector returns the resource's selector.
-func (s *resource) Selector() Selector {
-	return s.selector
-}
-
-// Namespace returns the resource's namespace.
-func (s *resource) Namespace() string {
-	return s.namespace
-}
-
-// ResourceOptions is used to set the different values for a Resource.
-type ResourceOptions struct {
-	// Name is the Resource.Name.
-	Name string
-	// Namespace is the Resource.Namespace.
-	Namespace string
-	// Selector is the Resource.Selector.
-	Selector Selector
-	// Phase is the Resource.Phase.
-	Phase Phase
-	// CreationTimestamp is the Resource.CreationTimestamp.
-	CreationTimestamp time.Time
-	// DeletionTimestamp is the Resource.DeletionTimestamp.
-	DeletionTimestamp *time.Time
-}
-
-// NewResourceWithOptions initializes a new Resource with the information passed in ResourceOptions.
-func NewResourceWithOptions(opts ResourceOptions) Resource {
-	return &resource{
-		name:              opts.Name,
-		selector:          opts.Selector,
-		namespace:         opts.Namespace,
-		phase:             opts.Phase,
-		creationTimestamp: opts.CreationTimestamp,
-		deletionTimestamp: opts.DeletionTimestamp,
-	}
-}
-
-// NewResource initializes a new orchestrator.Resource using a kubernetes service implementation.
-func NewResource(name, namespace string, selector Selector) Resource {
-	return &resource{
-		name:      name,
-		namespace: namespace,
-		selector:  selector,
-		phase:     PhaseUnknown,
-	}
 }
 
 // selector is a group of key-pair values that identify a resource.

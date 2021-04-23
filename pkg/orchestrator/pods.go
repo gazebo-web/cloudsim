@@ -133,16 +133,23 @@ type CreatePodInput struct {
 	Nameservers []string
 }
 
+// PodResource is a Resource used to represent pods. It's composed by a set of interfaces to expose data about a pod.
+type PodResource struct {
+	Resource
+	ResourcePhase
+	ResourceTimestamp
+}
+
 // Pods groups a set of methods to perform an operation with a Pod.
 type Pods interface {
-	Create(input CreatePodInput) (Resource, error)
+	Create(input CreatePodInput) (*PodResource, error)
 	Exec(resource Resource) Executor
 	Reader(resource Resource) Reader
 	WaitForCondition(resource Resource, condition Condition) waiter.Waiter
 	Delete(resource Resource) (Resource, error)
-	Get(name, namespace string) (Resource, error)
+	Get(name, namespace string) (*PodResource, error)
 	GetIP(name, namespace string) (string, error)
-	List(namespace string, selector Selector) ([]Resource, error)
+	List(namespace string, selector Selector) ([]PodResource, error)
 }
 
 // Executor groups a set of methods to run commands and scripts inside a Pod.
