@@ -6,7 +6,7 @@ import (
 	"time"
 )
 
-// parseKubernetesPod parses the given Kubernetes apiv1.Pod into a orchestrator.PodResource.
+// parseKubernetesPod parses the given Kubernetes apiv1.Pod into an orchestrator.PodResource.
 func parseKubernetesPod(pod apiv1.Pod) orchestrator.PodResource {
 	var deletion *time.Time
 	if pod.DeletionTimestamp != nil {
