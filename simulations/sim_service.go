@@ -377,15 +377,6 @@ func (s *Service) Start(ctx context.Context) error {
 		}
 	}()
 
-	// Initialize server state based on data from DB and and from kubernetes cluster Pods.
-	// Important note: it is expected that the kubernetes cluster should be running already.
-	if err := s.rebuildState(ctx, s.DB); err != nil {
-		return err
-	}
-	s.StartExpiredSimulationsCleaner()
-	s.StartMultiSimStatusUpdater()
-	RegisterSchedulableTasks(s, ctx, s.DB)
-
 	var err error
 
 	s.logger.Info("Initializing Cloudsim platforms")
@@ -818,8 +809,9 @@ func (s *Service) workerStartSimulation(payload interface{}) {
 
 	// Get platform
 	var p platform.Platform
+	// If the simulation deployment already has a platform, then it is likely being restarted
 	if simDep.Platform != nil {
-		p, err = s.platforms.Platform(platformManager.Selector(*simDep.Platform))
+		p, err = s.platforms.GetPlatform(platformManager.Selector(*simDep.Platform))
 		if err != nil {
 			return
 		}
