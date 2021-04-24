@@ -1804,14 +1804,41 @@ func (s *Service) GetCloudMachineInstances(ctx context.Context, p *ign.Paginatio
 		return nil, nil, em
 	}
 
-	// TODO This method has been disabled until the `Machines` interface gets `List` support.
-	// var machines []*MachineInstances
-	// for _, p := range s.platforms.Platforms() {
-	//
-	// }
-	//
-	// return s.hostsSvc.CloudMachinesList(ctx, p, tx, byStatus, invertStatus, groupID, application)
-	return nil, nil, ign.NewErrorMessage(ign.ErrorUnexpected)
+	var machines MachineInstances
+
+	q := tx.Model(&MachineInstance{})
+	if byStatus != nil {
+		if invertStatus {
+			q = q.Where("last_known_status != ?", byStatus.ToStringPtr())
+		} else {
+			q = q.Where("last_known_status = ?", byStatus.ToStringPtr())
+		}
+	}
+
+	if application != nil {
+		q = q.Where("application = ?", *application)
+	}
+
+	if groupID != nil && len(strings.TrimSpace(*groupID)) > 0 {
+		// Replace * with the SQL equivalient
+		pattern := strings.Replace(*groupID, "*", "%", -1)
+		// Replace ? with the SQL equivalient
+		pattern = strings.Replace(pattern, "?", "_", -1)
+		q = q.Where("group_id LIKE ?", pattern)
+	}
+
+	// Return the newest machines first
+	q = q.Order("created_at desc, id", true)
+
+	pagination, err := ign.PaginateQuery(q, machines, *p)
+	if err != nil {
+		return nil, nil, ign.NewErrorMessageWithBase(ign.ErrorInvalidPaginationRequest, err)
+	}
+	if !pagination.PageFound {
+		return nil, nil, ign.NewErrorMessage(ign.ErrorPaginationPageNotFound)
+	}
+
+	return &machines, pagination, ign.NewErrorMessage(ign.ErrorUnexpected)
 }
 
 // ///////////////////////////////////////////////////////////////////////
