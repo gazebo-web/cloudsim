@@ -6,6 +6,13 @@ import "gitlab.com/ignitionrobotics/web/cloudsim/pkg/validate"
 type Config struct {
 	// Region is the region the EC2 component will operate in.
 	Region string `validate:"required"`
+	// Limit is the maximum number of EC2 instances that this component has available.
+	// If set to -1, it will not limit the number of instances. Note that the component will still be subject to EC2
+	// instance availability.
+	Limit *int64
+	// WorkerGroupName is the label value set on all machines created by this component. It is used to identify
+	// machines created by this component.
+	WorkerGroupName string
 }
 
 // Validate validates that the config values are valid.

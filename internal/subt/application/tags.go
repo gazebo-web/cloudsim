@@ -38,7 +38,6 @@ func GetTagsInstanceSpecific(prefix string, gid simulations.GroupID, suffix stri
 				"Cloudsim":                   "True",
 				"SubT":                       "True",
 				"cloudsim-application":       "SubT",
-				"cloudsim-simulation-worker": prefix,
 				"cloudsim_node_type":         nodeType,
 				clusterKey:                   "owned",
 			},

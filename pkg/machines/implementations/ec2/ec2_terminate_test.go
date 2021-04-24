@@ -22,7 +22,12 @@ type ec2TerminateMachinesTestSuite struct {
 func (s *ec2TerminateMachinesTestSuite) SetupTest() {
 	s.ec2API = &mockEC2Terminate{}
 	logger := ign.NewLoggerNoRollbar("ec2TerminateMachinesTestSuite", ign.VerbosityDebug)
-	s.machines = NewMachines(s.ec2API, logger)
+	var err error
+	s.machines, err = NewMachines(&NewInput{
+		API: s.ec2API,
+		Logger: logger,
+	})
+	s.Require().NoError(err)
 }
 
 func (s *ec2TerminateMachinesTestSuite) TestTerminate_ErrorWhenNilMachineNames() {

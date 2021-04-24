@@ -49,7 +49,14 @@ func (input *NewInput) SetDefaults() error {
 
 	// Components
 	if input.Machines == nil {
-		input.Machines = ec2.NewMachines(mock.NewEC2(), input.Logger)
+		var err error
+		newInput := &ec2.NewInput{
+			API: mock.NewEC2(),
+			Logger: input.Logger,
+		}
+		if input.Machines, err = ec2.NewMachines(newInput); err != nil {
+			return err
+		}
 	}
 
 	if input.Storage == nil {

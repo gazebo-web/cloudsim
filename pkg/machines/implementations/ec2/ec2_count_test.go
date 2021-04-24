@@ -22,9 +22,18 @@ type ec2CountMachinesTestSuite struct {
 }
 
 func (s *ec2CountMachinesTestSuite) SetupTest() {
-	s.ec2API = &mockEC2Count{}
+	workerGroupName := "test"
+	s.ec2API = &mockEC2Count{
+		WorkerGroupName: workerGroupName,
+	}
 	logger := ign.NewLoggerNoRollbar("ec2CountMachinesTestSuite", ign.VerbosityDebug)
-	s.machines = NewMachines(s.ec2API, logger)
+	var err error
+	s.machines, err = NewMachines(&NewInput{
+		API: s.ec2API,
+		Logger: logger,
+		WorkerGroupName: workerGroupName,
+	})
+	s.Require().NoError(err)
 }
 
 func (s *ec2CountMachinesTestSuite) TestCount_ReturnZeroWhenThereAreNoMachines() {
@@ -47,9 +56,7 @@ func (s *ec2CountMachinesTestSuite) TestCount_ReturnErrorWhenThereIsAnInternalAW
 func (s *ec2CountMachinesTestSuite) TestCount_GetAllMachines() {
 	s.ec2API.InternalError = nil
 	s.ec2API.ReturnMachines = true
-	result := s.machines.Count(machines.CountMachinesInput{
-		Filters: nil,
-	})
+	result := s.machines.Count(machines.CountMachinesInput{})
 	s.Equal(3, result)
 }
 
@@ -58,9 +65,6 @@ func (s *ec2CountMachinesTestSuite) TestCount_GetMachinesWithFilters() {
 	s.ec2API.ReturnMachines = true
 	result := s.machines.Count(machines.CountMachinesInput{
 		Filters: map[string][]string{
-			"tag:cloudsim-simulation-worker": {
-				"name-prefix",
-			},
 			"instance-state-name": {
 				"pending",
 				"running",
@@ -74,12 +78,28 @@ type mockEC2Count struct {
 	ec2iface.EC2API
 	InternalError  error
 	ReturnMachines bool
+	WorkerGroupName string
 }
 
 func (m *mockEC2Count) DescribeInstances(input *ec2.DescribeInstancesInput) (*ec2.DescribeInstancesOutput, error) {
 	if m.InternalError != nil {
 		return nil, m.InternalError
 	}
+
+	// Verify that the Machines identification tag is included
+	tagFound := false
+	for i, filter := range input.Filters {
+		if filter != nil && filter.Name != nil && *filter.Name == "tag:cloudsim-simulation-worker" {
+			tagFound = true
+			// Remove the tag from the filters to avoid breaking the following mocks
+			input.Filters = append(input.Filters[0:i], input.Filters[i+1:len(input.Filters)]...)
+			break
+		}
+	}
+	if !tagFound {
+		return nil, errors.New("call to DescribeInstances is missing worker-group-name tag")
+	}
+
 	if !m.ReturnMachines {
 		return &ec2.DescribeInstancesOutput{
 			NextToken: aws.String("next-token"),

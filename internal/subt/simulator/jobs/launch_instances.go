@@ -37,12 +37,9 @@ func checkMachinesLimit(store actions.Store, tx *gorm.DB, deployment *actions.De
 		requested += int(in.MaxCount)
 	}
 
-	// Get the number of reserved machines from cloud provider.
+	// Get the number of provisioned machines from cloud provider.
 	reserved := s.Platform().Machines().Count(machines.CountMachinesInput{
 		Filters: map[string][]string{
-			"tag:cloudsim-simulation-worker": {
-				s.Platform().Store().Machines().NamePrefix(),
-			},
 			"instance-state-name": {
 				"pending",
 				"running",
@@ -50,6 +47,7 @@ func checkMachinesLimit(store actions.Store, tx *gorm.DB, deployment *actions.De
 		},
 	})
 
+	// Check that the number of required machines is greater than the current available amount of machines.
 	if requested > s.Platform().Store().Machines().Limit()-reserved {
 		return nil, machines.ErrInsufficientMachines
 	}

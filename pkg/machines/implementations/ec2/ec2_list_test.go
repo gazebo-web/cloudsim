@@ -52,7 +52,12 @@ func (mock *mockEC2List) DescribeInstanceStatus(input *ec2.DescribeInstanceStatu
 func (s *ec2ListMachinesTestSuite) SetupTest() {
 	s.ec2API = &mockEC2List{}
 	logger := ign.NewLoggerNoRollbar("ec2ListMachinesTestSuite", ign.VerbosityDebug)
-	s.machines = NewMachines(s.ec2API, logger)
+	var err error
+	s.machines, err = NewMachines(&NewInput{
+		API: s.ec2API,
+		Logger: logger,
+	})
+	s.Require().NoError(err)
 }
 
 func (s *ec2ListMachinesTestSuite) TestList_WithError() {

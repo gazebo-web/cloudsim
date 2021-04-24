@@ -24,6 +24,17 @@ components:
       # Region the component will operate in.
       region: *region
 
+      # Maximum number of machines that this component is able to launch.
+      # -1 is unlimited. Note that the component will still be limited by EC2 availability.
+      # Default: -1
+      # limit: -1
+
+      # Label set on all machines created by this component. Used to identify machines launched by this component.
+      # If there is more than one Cloudsim environment running in a single EC2 account and region, make sure that each
+      # environment has a unique value.
+      # Default: cloudsim-simulation-worker
+      # workerGroupName: ""
+
   ## Orchestrator
   # Orchestrator provides an abstraction to launch simulations on a set of physical machines.
   orchestrator: &kubernetes_gloo_orchestrator

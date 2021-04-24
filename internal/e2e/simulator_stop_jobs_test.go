@@ -109,6 +109,11 @@ func TestStopSimulationAction(t *testing.T) {
 		mock.NewEC2Instance("test-fc-1", subtapp.GetTagsInstanceSpecific("field-computer", sim.GetGroupID(), "sim", "cloudsim", "field-computer")),
 		mock.NewEC2Instance("test-gz-1", subtapp.GetTagsInstanceSpecific("gzserver", sim.GetGroupID(), "sim", "cloudsim", "gzserver")),
 	)
+	ec2Machines, err := ec2.NewMachines(&ec2.NewInput{
+		API: ec2api,
+		Logger: logger,
+	})
+	require.NoError(t, err)
 
 	// Initialize mock for S3
 	storageBackend := s3mem.New()
@@ -149,7 +154,7 @@ func TestStopSimulationAction(t *testing.T) {
 
 	// Initialize platform components
 	c := platform.Components{
-		Machines:           ec2.NewMachines(ec2api, logger),
+		Machines:           ec2Machines,
 		Storage:            s3.NewStorage(storageAPI, logger),
 		Cluster:            cluster,
 		Store:              configStore,
