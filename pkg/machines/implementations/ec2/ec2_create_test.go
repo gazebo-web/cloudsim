@@ -24,7 +24,12 @@ type ec2CreateMachinesTestSuite struct {
 func (s *ec2CreateMachinesTestSuite) SetupTest() {
 	s.ec2API = &mockEC2Create{}
 	logger := ign.NewLoggerNoRollbar("ec2CreateMachinesTestSuite", ign.VerbosityDebug)
-	s.machines = NewMachines(s.ec2API, logger)
+	var err error
+	s.machines, err = NewMachines(&NewInput{
+		API: s.ec2API,
+		Logger: logger,
+	})
+	s.Require().NoError(err)
 }
 
 func (s *ec2CreateMachinesTestSuite) TestCreate_MissingKeyName() {
@@ -187,7 +192,12 @@ func (s *ec2CreateMachinesTestSuite) TestCreate_ValidWithoutDryRunMode() {
 func (s *ec2CreateMachinesTestSuite) TestCreate_ValidWithDryRunMode() {
 	mock := &mockEC2CreateDryRunMode{}
 	logger := ign.NewLoggerNoRollbar("ec2TerminateMachinesTestSuite", ign.VerbosityDebug)
-	s.machines = NewMachines(mock, logger)
+	var err error
+	s.machines, err = NewMachines(&NewInput{
+		API: mock,
+		Logger: logger,
+	})
+	s.Require().NoError(err)
 	input := []machines.CreateMachinesInput{
 		{
 			KeyName:       "key-name",
@@ -200,7 +210,7 @@ func (s *ec2CreateMachinesTestSuite) TestCreate_ValidWithDryRunMode() {
 			ClusterID:     "cluster-name",
 		},
 	}
-	_, err := s.machines.Create(input)
+	_, err = s.machines.Create(input)
 	s.NoError(err)
 	s.Equal(3, mock.RunInstancesCalls)
 }

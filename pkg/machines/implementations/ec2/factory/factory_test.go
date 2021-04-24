@@ -3,6 +3,9 @@ package factory
 import (
 	"github.com/aws/aws-sdk-go/service/ec2/ec2iface"
 	"github.com/stretchr/testify/suite"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/factory"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/machines"
+	"gitlab.com/ignitionrobotics/web/ign-go"
 	"testing"
 )
 
@@ -34,4 +37,22 @@ func (s *testEC2FactorySuite) TestInitializeAPIDependencyIsNotNil() {
 
 	s.Nil(initializeAPI(nil, &dependencies))
 	s.Exactly(ec2API, dependencies.API)
+}
+
+func (s *testEC2FactorySuite) TestNewFuncDefaultConfig() {
+	config := Config{
+		Region: "test",
+	}
+
+	// Prepare dependencies
+	ec2API := struct {
+		ec2iface.EC2API
+	}{}
+	dependencies := factory.Dependencies{
+		"api": ec2API,
+		"logger": ign.NewLoggerNoRollbar("test", ign.VerbosityWarning),
+	}
+
+	var out machines.Machines
+	s.Require().NoError(NewFunc(config, dependencies, &out))
 }

@@ -31,10 +31,15 @@ func NewFunc(config interface{}, dependencies factory.Dependencies, out interfac
 	}
 
 	// Create instance
-	api := ec2.NewMachines(
-		typeDependencies.API,
-		typeDependencies.Logger,
-	)
+	api, err := ec2.NewMachines(&ec2.NewInput{
+		API: typeDependencies.API,
+		Logger: typeDependencies.Logger,
+		Limit: typeConfig.Limit,
+		WorkerGroupName: typeConfig.WorkerGroupName,
+	})
+	if err != nil {
+		return err
+	}
 
 	// Set output value
 	if err := factory.SetValue(out, api); err != nil {

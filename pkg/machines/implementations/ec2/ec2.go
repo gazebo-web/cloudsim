@@ -10,10 +10,13 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/aws/aws-sdk-go/service/ec2/ec2iface"
 	"github.com/pkg/errors"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/defaults"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/machines"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/validate"
 	"gitlab.com/ignitionrobotics/web/ign-go"
 	"regexp"
 	"strings"
+	"sync"
 	"text/template"
 	"time"
 )
@@ -41,8 +44,11 @@ func NewAPI(config client.ConfigProvider) ec2iface.EC2API {
 
 // ec2Machines is a machines.Machines implementation.
 type ec2Machines struct {
-	API    ec2iface.EC2API
-	Logger ign.Logger
+	API             ec2iface.EC2API
+	Logger          ign.Logger
+	workerGroupName string
+	limit           int64
+	lock            sync.Mutex
 }
 
 // isValidKeyName checks that the given keyName is valid.
@@ -133,7 +139,8 @@ func (m *ec2Machines) runInstanceDryRun(input *ec2.RunInstancesInput) error {
 	_, err := m.API.RunInstances(input)
 	awsErr, ok := err.(awserr.Error)
 	if !ok || awsErr.Code() != ErrCodeDryRunOperation {
-		return errors.Wrap(machines.ErrUnknown, err.Error())
+		m.Logger.Warning("Failed to request EC2 instances in dry run mode: ", err)
+		return machines.ErrUnknown
 	}
 	return nil
 }
@@ -184,6 +191,9 @@ func (m *ec2Machines) create(input machines.CreateMachinesInput) (*machines.Crea
 	if !m.isValidClusterID(input.ClusterID) {
 		return nil, machines.ErrInvalidClusterID
 	}
+	if !m.checkAvailableMachines(input.MaxCount) {
+		return nil, machines.ErrInsufficientMachines
+	}
 
 	if input.InitScript == nil {
 		userData, err := m.createUserData(input)
@@ -229,8 +239,19 @@ func (m *ec2Machines) create(input machines.CreateMachinesInput) (*machines.Crea
 // machines.CreateMachinesInput passed by parameter.
 func (m *ec2Machines) Create(inputs []machines.CreateMachinesInput) (created []machines.CreateMachinesOutput, err error) {
 	m.Logger.Debug(fmt.Sprintf("Creating machines with the following input: %+v", inputs))
+
+	// A lock is used to synchronize multiple worker requests.
+	m.lock.Lock()
+	defer m.lock.Unlock()
+
 	var c *machines.CreateMachinesOutput
 	for _, input := range inputs {
+		// Add component identifier tag
+		if input.Labels == nil {
+			input.Labels = map[string]string{}
+		}
+		input.Labels["tag:cloudsim-simulation-worker"] = m.workerGroupName
+
 		c, err = m.create(input)
 		if err != nil {
 			m.Logger.Debug(fmt.Sprintf("Creating machines failed while creating the following machine: %+v. Output: %+v. Error: %s", input, created, err))
@@ -326,6 +347,13 @@ func (m *ec2Machines) createFilters(input map[string][]string) []*ec2.Filter {
 // Count counts EC2 machines.
 func (m *ec2Machines) Count(input machines.CountMachinesInput) int {
 	m.Logger.Debug(fmt.Sprintf("Counting machines with the following parameters: %+v", input))
+
+	// Only count instances launched by this component
+	if input.Filters == nil {
+		input.Filters = map[string][]string{}
+	}
+	input.Filters["tag:cloudsim-simulation-worker"] = []string{m.workerGroupName}
+
 	filters := m.createFilters(input.Filters)
 	out, err := m.API.DescribeInstances(&ec2.DescribeInstancesInput{
 		MaxResults: aws.Int64(1000),
@@ -394,6 +422,25 @@ func (m *ec2Machines) createUserData(input machines.CreateMachinesInput) (string
 	return buffer.String(), nil
 }
 
+func (m *ec2Machines) checkAvailableMachines(requested int64) bool {
+	// If limit is set to a number lower than zero, it means that there is no limit for machines.
+	if m.limit < 0 {
+		return true
+	}
+
+	// Get the number of provisioned machines from cloud provider.
+	count := m.Count(machines.CountMachinesInput{
+		Filters: map[string][]string{
+			"instance-state-name": {
+				"pending",
+				"running",
+			},
+		},
+	})
+
+	return requested <= m.limit-int64(count)
+}
+
 // List is used to list all pending, running, shutting-down, stopping, stopped and terminated instances with their respective status.
 func (m *ec2Machines) List(input machines.ListMachinesInput) (*machines.ListMachinesOutput, error) {
 	m.Logger.Debug(fmt.Sprintf("Listing machines with the following input: %+v", input))
@@ -422,10 +469,46 @@ func (m *ec2Machines) List(input machines.ListMachinesInput) (*machines.ListMach
 	return &output, nil
 }
 
-// NewMachines initializes a new machines.Machines implementation using EC2.
-func NewMachines(api ec2iface.EC2API, logger ign.Logger) machines.Machines {
-	return &ec2Machines{
-		API:    api,
-		Logger: logger,
+// NewInput includes a set of field to create a new machines.Machines EC2 implementation.
+type NewInput struct {
+	// API has a reference to the EC2 API.
+	API ec2iface.EC2API `validate:"required"`
+	// Logger is an instance of ign.Logger for logging messages in the Machines component.
+	Logger ign.Logger `validate:"required"`
+	// Limit defines the maximum number of machines that this component can have running simultaneously.
+	// -1 is unlimited. Note that the component is still subject to EC2 instance availability.
+	Limit *int64 `default:"-1"`
+	// WorkerGroupName is the label value set on all machines created by this component. It is used to identify
+	// machines created by this component.
+	WorkerGroupName string `default:"cloudsim-simulation-worker"`
+}
+
+// Validate validates that the input values are valid.
+func (ni *NewInput) Validate() error {
+	return validate.DefaultStructValidator(ni)
+}
+
+// SetDefaults sets the default values for NewInput.
+func (ni *NewInput) SetDefaults() error {
+	return defaults.SetStructValues(ni)
+}
+
+// NewMachines initializes a new machines.Machines EC2 implementation.
+func NewMachines(input *NewInput) (machines.Machines, error) {
+	err := validate.Validate(input)
+	if err != nil {
+		return nil, err
 	}
+
+	err = defaults.SetValues(input)
+	if err != nil {
+		return nil, err
+	}
+
+	return &ec2Machines{
+		API:             input.API,
+		Logger:          input.Logger,
+		limit:           *input.Limit,
+		workerGroupName: input.WorkerGroupName,
+	}, nil
 }
