@@ -8,7 +8,7 @@ import (
 )
 
 // GetCommsBridgePodIP is a job in charge of getting the IP from the simulation's comms bridge pods.
-// WaitForCommsBridgePods should be run before running this job.
+// WaitForCommsBridgePodIPs should be run before running this job.
 var GetCommsBridgePodIP = &actions.Job{
 	Name:       "get-comms-bridge-pod-ip",
 	PreHooks:   []actions.JobFunc{setStartState},

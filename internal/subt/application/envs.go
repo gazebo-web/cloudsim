@@ -13,7 +13,6 @@ func GetEnvVarsCommsBridge(groupID simulations.GroupID, robotName, gzServerIP, v
 		"IGN_RELAY":      gzServerIP,
 		"IGN_VERBOSE":    verbosity,
 		"ROBOT_NAME":     robotName,
-		"IGN_IP":         "", // To be removed.
 		"ROS_MASTER_URI": "http://$(ROS_IP):11311",
 	}
 }
@@ -24,6 +23,7 @@ func GetEnvVarsCommsBridge(groupID simulations.GroupID, robotName, gzServerIP, v
 func GetEnvVarsFromSourceCommsBridge() map[string]string {
 	return map[string]string{
 		"ROS_IP": orchestrator.EnvVarSourcePodIP,
+		"IGN_IP": orchestrator.EnvVarSourcePodIP,
 	}
 }
 
@@ -35,7 +35,7 @@ func GetEnvVarsFieldComputer(robotName string, commsBridgeIP string) map[string]
 	}
 }
 
-// GetEnvVarsFromSourceFieldComputer returns the env vars for the field computer container based a on a certain source.
+// GetEnvVarsFromSourceFieldComputer returns the env vars for the field computer container.
 func GetEnvVarsFromSourceFieldComputer() map[string]string {
 	return map[string]string{
 		"ROS_IP": orchestrator.EnvVarSourcePodIP,
