@@ -245,7 +245,7 @@ func (p *pods) Delete(resource orchestrator.Resource) (orchestrator.Resource, er
 
 // Exec creates a new executor.
 func (p *pods) Exec(pod orchestrator.Resource) orchestrator.Executor {
-	p.Logger.Debug(fmt.Sprintf("Creating new executor for pod [%s]", pod.Name()))
+	p.Logger.Debug(fmt.Sprintf("Creating new executor for pod [%s] in namespace [%s]", pod.Name(), pod.Namespace()))
 	return newExecutor(p.API, pod, p.SPDY, p.Logger)
 }
 

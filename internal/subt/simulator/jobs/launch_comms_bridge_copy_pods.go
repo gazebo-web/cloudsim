@@ -60,10 +60,10 @@ func prepareCommsBridgeCreateCopyPodInput(store actions.Store, tx *gorm.DB, depl
 		volumes := []orchestrator.Volume{
 			{
 				Name:         "logs",
-				HostPath:     s.Platform().Store().Ignition().SidecarContainerLogsPath(),
-				SubPath:      "robot-logs",
+				HostPath:     "/tmp",
 				HostPathType: orchestrator.HostPathDirectoryOrCreate,
-				MountPath:    s.Platform().Store().Ignition().ROSLogsPath(),
+				MountPath:    s.Platform().Store().Ignition().SidecarContainerLogsPath(),
+				SubPath:      "robot-logs",
 			},
 		}
 

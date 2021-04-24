@@ -92,19 +92,16 @@ var _ simulations.Marsupial = (*SubTMarsupial)(nil)
 type SubTMarsupial struct {
 	Parent string
 	Child  string
-
-	parentRobot simulations.Robot
-	childRobot  simulations.Robot
 }
 
 // GetParent returns the parent robot.
 func (s *SubTMarsupial) GetParent() simulations.Robot {
-	return s.parentRobot
+	return &SubTRobot{Name: s.Parent}
 }
 
 // GetChild returns the child robot.
 func (s *SubTMarsupial) GetChild() simulations.Robot {
-	return s.childRobot
+	return &SubTRobot{Name: s.Child}
 }
 
 // metadataSubT is a struct use to hold the Metadata information added by SubT to
