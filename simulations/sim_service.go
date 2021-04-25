@@ -466,7 +466,7 @@ func (s *Service) initializeRunningSimulationsFromCluster(ctx context.Context, t
 	// 		running = true
 	// 	}
 	// 	// is the current pod running. Update the whole simulation running status based on that.
-	// 	running = running && (p.Status.Phase == corev1.PodRunning)
+	// 	running = running && (p.Status.ResourcePhase == corev1.PodRunning)
 	// 	runningSims[groupID] = running
 	//
 	// }

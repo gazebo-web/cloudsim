@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"errors"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/resource"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/resource/phase"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/resource/timestamp"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/waiter"
 	corev1 "k8s.io/api/core/v1"
 	"time"
@@ -134,16 +136,23 @@ type CreatePodInput struct {
 	Nameservers []string
 }
 
+// PodResource is a Resource used to represent pods. It's composed by a set of interfaces to expose data about a pod.
+type PodResource struct {
+	resource.Resource
+	phase.ResourcePhase
+	timestamp.ResourceTimestamp
+}
+
 // Pods groups a set of methods to perform an operation with a Pod.
 type Pods interface {
-	Create(input CreatePodInput) (resource.Resource, error)
+	Create(input CreatePodInput) (*PodResource, error)
 	Exec(resource resource.Resource) Executor
 	Reader(resource resource.Resource) Reader
 	WaitForCondition(resource resource.Resource, condition resource.Condition) waiter.Waiter
 	Delete(resource resource.Resource) (resource.Resource, error)
-	Get(name, namespace string) (resource.Resource, error)
+	Get(name, namespace string) (*PodResource, error)
 	GetIP(name, namespace string) (string, error)
-	List(namespace string, selector resource.Selector) ([]resource.Resource, error)
+	List(namespace string, selector resource.Selector) ([]PodResource, error)
 }
 
 // Executor groups a set of methods to run commands and scripts inside a Pod.

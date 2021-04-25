@@ -25,7 +25,7 @@ type kubernetesPods struct {
 // List returns a list of pod resources matching the giving selector in the given namespace.
 // If selector is nil or empty (doesn't have any labels specified) it will return all the resources in the given namespace.
 func (p *kubernetesPods) List(namespace string,
-	selector orchestratorResource.Selector) ([]orchestratorResource.Resource, error) {
+	selector orchestratorResource.Selector) ([]pods.PodResource, error) {
 
 	if selector == nil {
 		selector = orchestratorResource.NewSelector(map[string]string{})
@@ -42,10 +42,10 @@ func (p *kubernetesPods) List(namespace string,
 		return nil, nil
 	}
 
-	list := make([]orchestratorResource.Resource, len(res.Items))
+	list := make([]pods.PodResource, len(res.Items))
 
 	for i, po := range res.Items {
-		list[i] = orchestratorResource.NewResource(po.Name, po.Namespace, orchestratorResource.NewSelector(po.Labels))
+		list[i] = kubernetesPodToPodResource(po)
 	}
 
 	p.Logger.Debug(fmt.Sprintf("Getting list of pods in namespace [%s] matching the following labels: [%s] succeeded.", namespace, selector.String()))
@@ -53,7 +53,7 @@ func (p *kubernetesPods) List(namespace string,
 }
 
 // Get gets a pod with the certain name and in the given namespace and returns a resource that identifies that pod.
-func (p *kubernetesPods) Get(name, namespace string) (orchestratorResource.Resource, error) {
+func (p *kubernetesPods) Get(name, namespace string) (*pods.PodResource, error) {
 	p.Logger.Debug(fmt.Sprintf("Getting pod with name [%s] in namespace [%s]", name, namespace))
 
 	pod, err := p.API.CoreV1().Pods(namespace).Get(name, metav1.GetOptions{})
@@ -65,14 +65,13 @@ func (p *kubernetesPods) Get(name, namespace string) (orchestratorResource.Resou
 		return nil, err
 	}
 
-	selector := orchestratorResource.NewSelector(pod.Labels)
-
 	p.Logger.Debug(fmt.Sprintf(
 		"Getting pod with name [%s] in namespace [%s] succeeded.",
 		name, namespace,
 	))
 
-	return orchestratorResource.NewResource(name, namespace, selector), nil
+	res := kubernetesPodToPodResource(*pod)
+	return &res, nil
 }
 
 // generateKubernetesContainers takes a generic set of cloudsim containers and generate their counterpart for Kubernetes.
@@ -139,7 +138,7 @@ func generateKubernetesContainers(containers []pods.Container) []apiv1.Container
 }
 
 // Create creates a new pod with the information given in resource.CreatePodInput.
-func (p *kubernetesPods) Create(input pods.CreatePodInput) (orchestratorResource.Resource, error) {
+func (p *kubernetesPods) Create(input pods.CreatePodInput) (*pods.PodResource, error) {
 	p.Logger.Debug(fmt.Sprintf("Creating new pod. Input: %+v", input))
 
 	// Set up init containers.
@@ -196,17 +195,17 @@ func (p *kubernetesPods) Create(input pods.CreatePodInput) (orchestratorResource
 	}
 
 	// Create pod in Kubernetes
-	_, err := p.API.CoreV1().Pods(input.Namespace).Create(pod)
+	created, err := p.API.CoreV1().Pods(input.Namespace).Create(pod)
 	if err != nil {
 		p.Logger.Debug(fmt.Sprintf("Creating new pod failed. Input: %+v. Error: %s", input, err))
 		return nil, err
 	}
 
 	// Create new resource
-	res := orchestratorResource.NewResource(input.Name, input.Namespace, orchestratorResource.NewSelector(input.Labels))
+	res := kubernetesPodToPodResource(*created)
 
 	p.Logger.Debug(fmt.Sprintf("Creating new pod succeeded. Name: %s. Namespace: %s", res.Name(), res.Namespace()))
-	return res, nil
+	return &res, nil
 }
 
 // getEnvVarValueFromSource returns an env var source for the given value identified as from where it needs to get the env var.
