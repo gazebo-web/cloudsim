@@ -808,9 +808,6 @@ func (s *Service) checkForExpiredSimulations(ctx context.Context) error {
 
 	rss := s.platform.RunningSimulations().ListExpiredSimulations()
 
-	s.platform.RunningSimulations().Lock()
-	defer s.platform.RunningSimulations().Unlock()
-
 	s.logger.Debug(fmt.Sprintf("Checked for expired simulations, got following running simulations: %+v", rss))
 	err := s.scheduleTerminateRunningSimulations(ctx, rss)
 	if err != nil {
@@ -825,9 +822,6 @@ func (s *Service) checkForFinishedSimulations(ctx context.Context) error {
 	s.logger.Debug("Checking for finished simulations...")
 
 	rss := s.platform.RunningSimulations().ListFinishedSimulations()
-
-	s.platform.RunningSimulations().Lock()
-	defer s.platform.RunningSimulations().Unlock()
 
 	s.logger.Debug(fmt.Sprintf("Checked for finished simulations, got following running simulations: %+v", rss))
 	err := s.scheduleTerminateRunningSimulations(ctx, rss)
