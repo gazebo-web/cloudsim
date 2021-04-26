@@ -34,9 +34,6 @@ type Machines interface {
 	// SubnetAndZone returns the subnet and the zone that the created machine should be configured in.
 	SubnetAndZone() (string, string)
 
-	// Tags returns a set of tags that will be set to the machine.
-	Tags(simulation simulations.Simulation, nodeType string, nameSuffix string) []machines.Tag
-
 	// BaseImage returns the base image that will be used when creating the machine.
 	BaseImage() string
 

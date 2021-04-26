@@ -1,11 +1,8 @@
 package store
 
 import (
-	"fmt"
 	"github.com/caarlos0/env"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/defaults"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/machines"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
 	storepkg "gitlab.com/ignitionrobotics/web/cloudsim/pkg/store"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/validate"
 	"time"
@@ -117,29 +114,6 @@ func (m *machinesStore) SubnetAndZone() (string, string) {
 	subnet, zone := m.subnet(), m.zone()
 	m.subnetZoneIndex++
 	return subnet, zone
-}
-
-// Tags creates a set of tags for a certain machine using the given simulation, nodeType and nameSuffix.
-func (m *machinesStore) Tags(simulation simulations.Simulation, nodeType string, nameSuffix string) []machines.Tag {
-	name := fmt.Sprintf("%s-%s-%s", m.NamePrefixValue, simulation.GetGroupID(), nameSuffix)
-	clusterKey := fmt.Sprintf("kubernetes.io/cluster/%s", m.ClusterNameValue)
-	return []machines.Tag{
-		{
-			Resource: "instance",
-			Map: map[string]string{
-				"Name":                       name,
-				"cloudsim_groupid":           string(simulation.GetGroupID()),
-				"CloudsimGroupID":            string(simulation.GetGroupID()),
-				"project":                    "cloudsim",
-				"Cloudsim":                   "True",
-				"SubT":                       "True",
-				"cloudsim-application":       "SubT",
-				"cloudsim-simulation-worker": m.NamePrefixValue,
-				"cloudsim_node_type":         nodeType,
-				clusterKey:                   "owned",
-			},
-		},
-	}
 }
 
 // NamePrefix returns the name prefix value.
