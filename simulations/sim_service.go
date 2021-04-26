@@ -862,6 +862,16 @@ func (s *Service) workerTerminateSimulation(payload interface{}) {
 	s.logger.Info("Worker about to invoke ShutdownSimulation for groupID: " + groupID)
 	err = s.simulator.Stop(s.baseCtx, p, simulations.GroupID(groupID))
 	if err != nil {
+		simDep, err = GetSimulationDeployment(s.DB, groupID)
+		if err != nil {
+			s.logger.Debug("Failed to get simulation deployment:", err)
+			return
+		}
+		em := simDep.setErrorStatus(s.DB, simErrorWhenTerminating)
+		if em != nil {
+			s.logger.Debug("Failed to set simulation deployment error status:", err)
+			return
+		}
 		s.notify(PoolShutdownSimulation, groupID, nil, ign.NewErrorMessageWithBase(ign.ErrorUnexpected, err))
 		return
 	}
