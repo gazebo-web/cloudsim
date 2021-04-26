@@ -16,23 +16,12 @@ type Manager interface {
 	Free(groupID simulations.GroupID)
 	Remove(groupID simulations.GroupID) error
 	Exists(groupID simulations.GroupID) bool
-	sync.Locker
 }
 
 // manager is a Manager implementation.
 type manager struct {
 	runningSimulations map[simulations.GroupID]*RunningSimulation
 	lock               sync.RWMutex
-}
-
-// Lock activates the internal lock.
-func (m *manager) Lock() {
-	m.lock.Lock()
-}
-
-// Unlock releases the internal lock.
-func (m *manager) Unlock() {
-	m.lock.Unlock()
 }
 
 // Exists checks if the given group id is registered as a running simulation.
