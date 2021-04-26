@@ -8,9 +8,9 @@ import (
 // JobsStartSimulation groups the jobs needed to start a simulation.
 var JobsStartSimulation = actions.Jobs{
 	jobs.CheckSimulationPendingStatus,
+	jobs.SetSimulationStatusToLaunchInstances,
 	jobs.CheckStartSimulationIsNotParent,
 	jobs.CheckSimulationNoErrors,
-	jobs.SetSimulationStatusToLaunchInstances,
 	jobs.LaunchInstances,
 	jobs.SetSimulationStatusToWaitInstances,
 	jobs.WaitForInstances,
