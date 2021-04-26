@@ -77,6 +77,14 @@ type Orchestrator interface {
 
 	// IngressHost returns a FQDN used to route traffic to cloudsim instances.
 	IngressHost() string
+
+	// Timeout returns the maximum amount of time that a job should wait until a pod is created.
+	// Timeout is usually used with PollFrequency.
+	Timeout() time.Duration
+
+	// PollFrequency returns the interval of time that a job should wait until performing another request to wait for pods.
+	// PollFrequency is usually used with Timeout.
+	PollFrequency() time.Duration
 }
 
 // Ignition provides general information about cloudsim and ignition gazebo.
