@@ -247,10 +247,10 @@ func (m *ec2Machines) Create(inputs []machines.CreateMachinesInput) (created []m
 	var c *machines.CreateMachinesOutput
 	for _, input := range inputs {
 		// Add component identifier tag
-		if input.Labels == nil {
-			input.Labels = map[string]string{}
+		if len(input.Tags) == 0 {
+			input.Tags = machines.NewTags("instance")
 		}
-		input.Labels["tag:cloudsim-simulation-worker"] = m.workerGroupName
+		input.Tags[0].Map["cloudsim-simulation-worker"] = m.workerGroupName
 
 		c, err = m.create(input)
 		if err != nil {

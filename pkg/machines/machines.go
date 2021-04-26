@@ -35,6 +35,17 @@ type Tag struct {
 	Map      map[string]string
 }
 
+// NewTags returns a new tag slice with a single tag.
+// resourceType is the Resource of the tag in the slice.
+func NewTags(resourceType string) []Tag {
+	return []Tag{
+		{
+			Resource: resourceType,
+			Map: map[string]string{},
+		},
+	}
+}
+
 // CreateMachinesInput is the input for the Machines.Create operation.
 // It will be used to create a certain number of machines.
 type CreateMachinesInput struct {

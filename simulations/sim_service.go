@@ -123,11 +123,13 @@ type NodeManager interface {
 }
 
 const (
-	podLabelPodGroup       = "pod-group"
-	podLabelKeyGroupID     = "cloudsim-group-id"
-	cloudsimTagLabelKey    = "cloudsim"
-	cloudsimTagLabel       = "cloudsim=true"
-	launcherRelaunchNeeded = "relaunch"
+	podGroupIDLabelKey    = "cloudsim-group-id"
+	cloudsimTagLabelKey   = "cloudsim"
+	cloudsimTagLabelValue = "true"
+)
+
+var (
+	cloudsimTags          = resource.NewSelector(map[string]string{cloudsimTagLabelKey: cloudsimTagLabelValue})
 )
 
 // Service is the main struct exported by this Simulations service.
@@ -1538,12 +1540,6 @@ func (s *Service) scheduleTermination(ctx context.Context, tx *gorm.DB, dep *Sim
 // getSimulationPodNamePrefix returns the pod name prefix for a simulation
 func getSimulationPodNamePrefix(groupID string) string {
 	return fmt.Sprintf("sim-%s", groupID)
-}
-
-// getPodLabelSelectorForSearches is a helper function to return the full groupID label
-// used for searching Pods associated to a groupID.
-func getPodLabelSelectorForSearches(groupID string) string {
-	return podLabelKeyGroupID + "=" + groupID
 }
 
 // getGazeboWorldStatsTopicAndLimit returns the topic to subscribe to get notifications about the simulation
