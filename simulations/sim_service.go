@@ -826,8 +826,19 @@ func (s *Service) workerStartSimulation(payload interface{}) {
 	err = s.simulator.Start(s.baseCtx, p, simulations.GroupID(groupID))
 	// TODO Only respond to retryable errors
 	if err != nil {
-		// s.requeueSimulation(simDep)
 		s.notify(PoolStartSimulation, groupID, simDep, ign.NewErrorMessageWithBase(ign.ErrorUnexpected, err))
+		simDep, err = GetSimulationDeployment(s.DB, groupID)
+		if err != nil {
+			s.logger.Debug("Failed to get simulation deployment:", err)
+			return
+		}
+		em := simDep.setErrorStatus(s.DB, simErrorWhenInitializing)
+		if em != nil {
+			s.logger.Debug("Failed to set simulation deployment error status:", err)
+			return
+		}
+		// s.requeueSimulation(simDep)
+
 		return
 	}
 
