@@ -1004,7 +1004,7 @@ type CreateSimulation struct {
 	Owner string `json:"owner" form:"owner"`
 	// The docker image(s) that will be used for the Field Computer(s)
 	Image       []string `json:"image" form:"image"`
-	Platform    string   `json:"platform" form:"platform"`
+	Platform    *string  `json:"platform" form:"platform"`
 	Application string   `json:"application" form:"application"`
 	Private     *bool    `json:"private" validate:"omitempty" form:"private"`
 	// When shutting down simulations, stop EC2 instances instead of terminating them. Requires admin privileges.

@@ -91,9 +91,6 @@ func CloudsimSimulationCreate(user *users.User, tx *gorm.DB, w http.ResponseWrit
 
 	// HACK until we have more platforms and applications.
 	// TODO: remove this
-	if createSim.Platform == "" {
-		createSim.Platform = getDefaultPlatformName()
-	}
 	if createSim.Application == "" {
 		createSim.Application = getDefaultApplicationName()
 	}

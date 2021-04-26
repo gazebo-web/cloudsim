@@ -938,7 +938,7 @@ func (s *Service) StartSimulationAsync(ctx context.Context,
 	simDep.Creator = &creator
 	simDep.Private = &private
 	simDep.StopOnEnd = &stopOnEnd
-	simDep.Platform = &createSim.Platform
+	simDep.Platform = createSim.Platform
 	simDep.Application = &createSim.Application
 	simDep.Image = &imageStr
 	simDep.GroupID = &groupID
