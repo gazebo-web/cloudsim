@@ -21,7 +21,6 @@ import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/runsim"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulator"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/storage"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/transport"
 	ignws "gitlab.com/ignitionrobotics/web/cloudsim/pkg/transport/ign"
 	useracc "gitlab.com/ignitionrobotics/web/cloudsim/pkg/users"
@@ -217,7 +216,7 @@ type ApplicationType interface {
 		dep *SimulationDeployment) (interface{}, *ign.ErrMsg)
 	getSimulationWebsocketHost() string
 	getSimulationWebsocketPath(groupID string) string
-	getSimulationLogsForDownload(ctx context.Context, tx *gorm.DB, storage storage.Storage, dep *SimulationDeployment,
+	getSimulationLogsForDownload(ctx context.Context, tx *gorm.DB, p platform.Platform, dep *SimulationDeployment,
 		robotName *string) (*string, *ign.ErrMsg)
 	getSimulationLiveLogs(ctx context.Context, s *Service, tx *gorm.DB, dep *SimulationDeployment,
 		robotName *string, lines int64) (interface{}, *ign.ErrMsg)
@@ -1751,13 +1750,14 @@ func (s *Service) GetSimulationLogsForDownload(ctx context.Context, tx *gorm.DB,
 		return nil, em
 	}
 
+	// Get the simulation platform
 	p, err := platformManager.GetSimulationPlatform(s.platforms, dep)
 	if err != nil {
 		return nil, ign.NewErrorMessageWithBase(ign.ErrorUnexpected, err)
 	}
 
 	// Find the specific Application handler and ask it to generate the link to download logs.
-	return s.applications[*dep.Application].getSimulationLogsForDownload(ctx, tx, p.Storage(), dep, robotName)
+	return s.applications[*dep.Application].getSimulationLogsForDownload(ctx, tx, p, dep, robotName)
 }
 
 // ///////////////////////////////////////////////////////////////////////
