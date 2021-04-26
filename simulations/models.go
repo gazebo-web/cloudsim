@@ -149,36 +149,12 @@ func (dep *SimulationDeployment) GetGroupID() simulations.GroupID {
 
 // GetStatus returns the SimulationDeployment's DeploymentStatus.
 func (dep *SimulationDeployment) GetStatus() simulations.Status {
-	switch *dep.DeploymentStatus {
-	case simPending.ToInt():
-		return simulations.StatusPending
-	case simLaunchingNodes.ToInt():
-		return simulations.StatusLaunchingInstances
-	case simLaunchingPods.ToInt():
-		return simulations.StatusLaunchingPods
-	case simParentLaunching.ToInt():
-		return simulations.StatusUnknown
-	case simParentLaunchingWithErrors.ToInt():
-		return simulations.StatusUnknown
-	case simRunning.ToInt():
-		return simulations.StatusRunning
-	case simTerminateRequested.ToInt():
-		return simulations.StatusTerminateRequested
-	case simDeletingPods.ToInt():
-		return simulations.StatusDeletingPods
-	case simDeletingNodes.ToInt():
-		return simulations.StatusDeletingNodes
-	case simTerminatingInstances.ToInt():
-		return simulations.StatusTerminatingInstances
-	case simTerminated.ToInt():
-		return simulations.StatusTerminated
-	case simRejected.ToInt():
-		return simulations.StatusRejected
-	case simSuperseded.ToInt():
-		return simulations.StatusSuperseded
-	default:
-		return simulations.StatusUnknown
+	for k, v := range statuses {
+		if *dep.DeploymentStatus == v.ToInt() {
+			return k
+		}
 	}
+	return simulations.StatusUnknown
 }
 
 // HasStatus checks that the SimulationDeployment's DeploymentStatus is equal to the given status.
@@ -660,33 +636,29 @@ func (dep *SimulationDeployment) setStatus(status simulations.Status) {
 	dep.DeploymentStatus = convertStatus(status).ToPtr()
 }
 
+// statuses is used to map the old DeploymentStatus statuses with the new simulations.Status
+// used by the code refactor.
+var statuses = map[simulations.Status]DeploymentStatus{
+	simulations.StatusPending:              simPending,
+	simulations.StatusLaunchingInstances:   simLaunchingNodes,
+	simulations.StatusLaunchingPods:        simLaunchingPods,
+	simulations.StatusRunning:              simRunning,
+	simulations.StatusTerminateRequested:   simTerminateRequested,
+	simulations.StatusDeletingPods:         simDeletingPods,
+	simulations.StatusDeletingNodes:        simDeletingNodes,
+	simulations.StatusTerminatingInstances: simTerminatingInstances,
+	simulations.StatusTerminated:           simTerminated,
+	simulations.StatusRejected:             simRejected,
+	simulations.StatusSuperseded:           simSuperseded,
+	simulations.StatusProcessingResults:    simRunningWithErrors,
+}
+
 func convertStatus(status simulations.Status) DeploymentStatus {
-	switch status {
-	case simulations.StatusPending:
-		return simPending
-	case simulations.StatusLaunchingInstances:
-		return simLaunchingNodes
-	case simulations.StatusLaunchingPods:
-		return simLaunchingPods
-	case simulations.StatusRunning:
-		return simRunning
-	case simulations.StatusTerminateRequested:
-		return simTerminateRequested
-	case simulations.StatusDeletingPods:
-		return simDeletingPods
-	case simulations.StatusDeletingNodes:
-		return simDeletingNodes
-	case simulations.StatusTerminatingInstances:
-		return simTerminatingInstances
-	case simulations.StatusTerminated:
-		return simTerminated
-	case simulations.StatusRejected:
-		return simRejected
-	case simulations.StatusSuperseded:
-		return simSuperseded
-	default:
+	ds, ok := statuses[status]
+	if !ok {
 		return simPending
 	}
+	return ds
 }
 
 // SimulationDeployments is a slice of SimulationDeployment
@@ -716,9 +688,8 @@ const (
 	// finished with errors and some are still launching/running.
 	simParentLaunchingWithErrors DeploymentStatus = 28
 	simRunning                   DeploymentStatus = 30
-	// simRunningWithErrors is used for Parent simulations when some of their children
+	// Deprecated: simRunningWithErrors is used for Parent simulations when some of their children
 	// finished with errors and some are still running.
-	// @deprecated do not use.
 	simRunningWithErrors    DeploymentStatus = 40
 	simTerminateRequested   DeploymentStatus = 50
 	simDeletingPods         DeploymentStatus = 60
@@ -737,7 +708,6 @@ var depStatusStr = map[DeploymentStatus]string{
 	simParentLaunching:           "Launching",
 	simParentLaunchingWithErrors: "RunningWithErrors",
 	simRunning:                   "Running",
-	simRunningWithErrors:         "RunningWithErrorsDoNotUse",
 	simTerminateRequested:        "ToBeTerminated",
 	simDeletingPods:              "DeletingPods",
 	simDeletingNodes:             "DeletingNodes",
