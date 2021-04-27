@@ -21,6 +21,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"net/http"
+	"net/url"
 	"path"
 	"strings"
 	"time"
@@ -687,41 +688,33 @@ func (sa *SubTApplication) getSimulationWebsocketPath(groupID string) string {
 ////////////////////////////////////////////////////////////////////////////
 
 // getSimulationLogsForDownload returns a link to the GZ logs that were saved in S3.
-func (sa *SubTApplication) getSimulationLogsForDownload(ctx context.Context, tx *gorm.DB, storage storage.Storage,
+func (sa *SubTApplication) getSimulationLogsForDownload(ctx context.Context, tx *gorm.DB, p platform.Platform,
 	dep *SimulationDeployment, robotName *string) (*string, *ign.ErrMsg) {
 
-	// TODO This method has been disabled until the `Storage` interface gets `GetObjectRequest` support.
-	logger(ctx).Warning("Attempted to get simulation logs for download. This is temporarily disabled.")
+	// In SubT, we return a summary generated from all children simulations for
+	// multi-sims. For single sims, we should return ROS logs for a specific
+	// robot if a robot name is specified or the complete Gazebo logs otherwise.
+	var fileName string
+	if dep.isMultiSim() {
+		fileName = sa.getSimulationSummaryFilename(*dep.GroupID)
+	} else if robotName != nil {
+		fileName = sa.getRobotROSLogsFilename(*dep.GroupID, *robotName)
+	} else {
+		fileName = sa.getGazeboLogsFilename(*dep.GroupID)
+	}
 
-	return nil, nil
-	// // In SubT, we return a summary generated from all children simulations for
-	// // multi-sims. For single sims, we should return ROS logs for a specific
-	// // robot if a robot name is specified or the complete Gazebo logs otherwise.
-	// var fileName string
-	// if dep.isMultiSim() {
-	// 	fileName = sa.getSimulationSummaryFilename(*dep.GroupID)
-	// } else if robotName != nil {
-	// 	fileName = sa.getRobotROSLogsFilename(*dep.GroupID, *robotName)
-	// } else {
-	// 	fileName = sa.getGazeboLogsFilename(*dep.GroupID)
-	// }
-	//
-	// bucket := sa.cfg.S3LogsBucket
-	// ownerNameEscaped := url.PathEscape(*dep.Owner)
-	// folderPath := fmt.Sprintf("/gz-logs/%s/%s/", ownerNameEscaped, *dep.GroupID)
-	// filePath := fmt.Sprintf("%s/%s", folderPath, fileName)
-	// logger(ctx).Debug(fmt.Sprintf("SubT App - Fetching generating link to fetch logs from S3 bucket [%s] with path [%s]\n", bucket, filePath))
-	//
-	// req, _ := sa.s3Svc.GetObjectRequest(&s3.GetObjectInput{
-	// 	Bucket: aws.String(bucket),
-	// 	Key:    aws.String(filePath),
-	// })
-	//
-	// url, err := req.Presign(5 * time.Minute)
-	// if err != nil {
-	// 	return nil, ign.NewErrorMessageWithBase(ign.ErrorUnexpected, err)
-	// }
-	// return &url, nil
+	bucket := p.Store().Ignition().LogsBucket()
+	ownerNameEscaped := url.PathEscape(*dep.Owner)
+	folderPath := fmt.Sprintf("/gz-logs/%s/%s/", ownerNameEscaped, *dep.GroupID)
+	filePath := fmt.Sprintf("%s/%s", folderPath, fileName)
+	logger(ctx).Debug(fmt.Sprintf("SubT App - Fetching generating link to fetch logs from S3 bucket [%s] with path [%s]\n", bucket, filePath))
+
+	url, err := p.Storage().GetURL(bucket, filePath, 5 * time.Minute)
+	if err != nil {
+		return nil, ign.NewErrorMessageWithBase(ign.ErrorUnexpected, err)
+	}
+
+	return &url, nil
 }
 
 // getSimulationsLiveLogs returns logs from a running simulation.
