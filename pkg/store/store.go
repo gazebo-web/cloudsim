@@ -1,7 +1,6 @@
 package store
 
 import (
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/machines"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
 	"time"
 )

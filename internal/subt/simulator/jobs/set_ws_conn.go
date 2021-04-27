@@ -25,7 +25,6 @@ func connectWebsocket(store actions.Store, tx *gorm.DB, deployment *actions.Depl
 	s := store.State().(*state.StartSimulation)
 
 	host := s.Platform().Store().Orchestrator().IngressHost()
-
 	path := s.Platform().Store().Ignition().GetWebsocketPath(s.GroupID)
 
 	token, err := s.SubTServices().Simulations().GetWebsocketToken(s.GroupID)

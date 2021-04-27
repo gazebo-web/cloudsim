@@ -23,6 +23,7 @@ import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/runsim"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulator"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/store"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/transport"
 	ignws "gitlab.com/ignitionrobotics/web/cloudsim/pkg/transport/ign"
 	useracc "gitlab.com/ignitionrobotics/web/cloudsim/pkg/users"
@@ -214,10 +215,8 @@ type ApplicationType interface {
 	getMaxDurationForSimulation(ctx context.Context, tx *gorm.DB, dep *SimulationDeployment) time.Duration
 	getGazeboWorldStatsTopicAndLimit(ctx context.Context, tx *gorm.DB, dep *SimulationDeployment) (string, int, error)
 	getGazeboWorldWarmupTopic(ctx context.Context, tx *gorm.DB, dep *SimulationDeployment) (string, error)
-	getSimulationWebsocketAddress(ctx context.Context, s *Service, tx *gorm.DB,
+	getSimulationWebsocketAddress(ctx context.Context, s *Service, tx *gorm.DB, store store.Store,
 		dep *SimulationDeployment) (interface{}, *ign.ErrMsg)
-	getSimulationWebsocketHost() string
-	getSimulationWebsocketPath(groupID string) string
 	getSimulationLogsForDownload(ctx context.Context, tx *gorm.DB, p platform.Platform, dep *SimulationDeployment,
 		robotName *string) (*string, *ign.ErrMsg)
 	getSimulationLiveLogs(ctx context.Context, s *Service, tx *gorm.DB, dep *SimulationDeployment,
@@ -1422,7 +1421,7 @@ func (s *Service) createRunningSimulation(ctx context.Context, tx *gorm.DB, dep 
 	}
 
 	// Setup the transport layer
-	t, err := s.setupRunningSimulationTransportLayer(dep, p)
+	t, err := s.setupRunningSimulationTransportLayer(dep, p.Store())
 	if err != nil {
 		return err
 	}
@@ -1452,9 +1451,11 @@ func (s *Service) createRunningSimulation(ctx context.Context, tx *gorm.DB, dep 
 }
 
 // setupRunningSimulationTransportLayer initializes a new transport layer for the given simulation deployment.
-func (s *Service) setupRunningSimulationTransportLayer(dep *SimulationDeployment) (ignws.PubSubWebsocketTransporter, error) {
-	host := s.applications[*dep.Application].getSimulationWebsocketHost()
-	path := s.applications[*dep.Application].getSimulationWebsocketPath(*dep.GroupID)
+func (s *Service) setupRunningSimulationTransportLayer(dep *SimulationDeployment,
+	store store.Store) (ignws.PubSubWebsocketTransporter, error) {
+
+	host := store.Orchestrator().IngressHost()
+	path := store.Ignition().GetWebsocketPath(simulations.GroupID(*dep.GroupID))
 
 	var t ignws.PubSubWebsocketTransporter
 	var err error
@@ -1768,8 +1769,14 @@ func (s *Service) GetSimulationWebsocketAddress(ctx context.Context, tx *gorm.DB
 		return nil, ign.NewErrorMessage(ign.ErrorUnauthorized)
 	}
 
+	// Get the simulation platform
+	p, err := platformManager.GetSimulationPlatform(s.platforms, dep)
+	if err != nil {
+		return nil, ign.NewErrorMessageWithBase(ign.ErrorUnexpected, err)
+	}
+
 	// Find the specific Application handler and ask for the websocket address
-	return s.applications[*dep.Application].getSimulationWebsocketAddress(ctx, s, tx, dep)
+	return s.applications[*dep.Application].getSimulationWebsocketAddress(ctx, s, tx, p.Store(), dep)
 }
 
 // ///////////////////////////////////////////////////////////////////////
