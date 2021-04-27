@@ -13,6 +13,7 @@ import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/platform"
 	platformManager "gitlab.com/ignitionrobotics/web/cloudsim/pkg/platform/manager"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/storage"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/store"
 	useracc "gitlab.com/ignitionrobotics/web/cloudsim/pkg/users"
 	"gitlab.com/ignitionrobotics/web/fuelserver/bundles/users"
 	per "gitlab.com/ignitionrobotics/web/fuelserver/permissions"
@@ -137,11 +138,6 @@ type subTSpecificsConfig struct {
 	// FuelURL contains the URL to a Fuel environment. This base URL is used to generate
 	// URLs for users to access specific assets within Fuel.
 	FuelURL string `env:"IGN_FUEL_URL" envDefault:"https://fuel.ignitionrobotics.org/1.0"`
-	// WebsocketHost contains the address of the host used to route incoming websocket connections.
-	// It is used to select a specific rule to modify in an ingress.
-	// The ingress resource referenced by the `IngressName` configuration must contain at least one rule with a host
-	// value matching this configuration.
-	WebsocketHost string `env:"SUBT_WEBSOCKET_HOST"`
 }
 
 // SubTApplication represents an application used to tailor SubT simulation requests.
@@ -660,27 +656,20 @@ func (sa *SubTApplication) getGazeboWorldWarmupTopic(ctx context.Context, tx *go
 
 // getSimulationWebsocketAddress returns a simulation's websocket server address as well a the authorization token.
 func (sa *SubTApplication) getSimulationWebsocketAddress(ctx context.Context, s *Service, tx *gorm.DB,
-	dep *SimulationDeployment) (interface{}, *ign.ErrMsg) {
+	store store.Store, dep *SimulationDeployment) (interface{}, *ign.ErrMsg) {
 
 	// The simulation must be running to be able to connect to the websocket server
 	if *dep.DeploymentStatus != int(simRunning) {
 		return nil, ign.NewErrorMessage(ign.ErrorInvalidSimulationStatus)
 	}
 
+	host := store.Orchestrator().IngressHost()
+	path := store.Ignition().GetWebsocketPath(dep.GetGroupID())
+
 	return &WebsocketAddressResponse{
 		Token:   *dep.AuthorizationToken,
-		Address: fmt.Sprintf("%s/%s", sa.getSimulationWebsocketHost(), sa.getSimulationWebsocketPath(*dep.GroupID)),
+		Address: fmt.Sprintf("%s/%s", host, path),
 	}, nil
-}
-
-// getSimulationWebsocketHost returns the host of the websocket address.
-func (sa *SubTApplication) getSimulationWebsocketHost() string {
-	return sa.cfg.WebsocketHost
-}
-
-// getSimulationWebsocketPath returns the websocket address path for the given simulation's group id.
-func (sa *SubTApplication) getSimulationWebsocketPath(groupID string) string {
-	return fmt.Sprintf("simulations/%s", groupID)
 }
 
 ////////////////////////////////////////////////////////////////////////////
