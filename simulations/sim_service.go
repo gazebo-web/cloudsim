@@ -131,7 +131,7 @@ const (
 )
 
 var (
-	cloudsimTags          = resource.NewSelector(map[string]string{cloudsimTagLabelKey: cloudsimTagLabelValue})
+	cloudsimTags = resource.NewSelector(map[string]string{cloudsimTagLabelKey: cloudsimTagLabelValue})
 )
 
 // Service is the main struct exported by this Simulations service.
@@ -396,11 +396,12 @@ func (s *Service) Start(ctx context.Context) error {
 	// TODO: Make Verbosity depend on env var
 	s.actionService = actions.NewService(ign.NewLoggerNoRollbar("Worker", ign.VerbosityDebug))
 
-	s.logger.Info("Initializing Simulator using Kubernetes and AWS")
+	s.logger.Info("Initializing Simulator")
 	s.simulator = s.initSimulator()
 
 	// Initialize server state based on data from DB and and from kubernetes cluster Pods.
 	// Important note: it is expected that the kubernetes cluster should be running already.
+	s.logger.Info("Processing existing simulations")
 	if err = s.rebuildState(ctx, s.DB); err != nil {
 		return err
 	}
@@ -855,8 +856,8 @@ func (s *Service) workerStartSimulation(payload interface{}) {
 		}
 		// s.requeueSimulation(simDep)
 
-		return
-	}
+			return
+		}
 
 	s.notify(PoolStartSimulation, groupID, simDep, nil)
 }

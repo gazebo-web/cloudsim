@@ -22,7 +22,7 @@ type orchestratorStore struct {
 	NamespaceValue string `default:"default" env:"CLOUDSIM_ORCHESTRATOR_NAMESPACE"`
 
 	// IngressNamespaceValue is the namespace where the gloo ingress lives.
-	IngressNamespaceValue string `default:"default" env:"CLOUDSIM_ORCHESTRATOR_INGRESS_NAMESPACE"`
+	IngressNamespaceValue string `default:"gloo-system" env:"CLOUDSIM_ORCHESTRATOR_INGRESS_NAMESPACE"`
 
 	// IngressNameValue is the name of the Kubernetes Ingress used to route client requests from the Internet to
 	// different internal services. This configuration is required to enable websocket connections to simulations.

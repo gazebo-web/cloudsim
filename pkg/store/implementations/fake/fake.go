@@ -55,6 +55,8 @@ type Ign struct {
 	*mock.Mock
 }
 
+var _ store.Ignition = (*Ign)(nil)
+
 // DefaultRecipients mocks the DefaultRecipients method.
 func (f *Ign) DefaultRecipients() []string {
 	args := f.Called()

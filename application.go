@@ -217,6 +217,8 @@ func init() {
 		logger.Critical("Critical error starting SubT Application", err)
 		log.Fatalf("%+v\n", err)
 	}
+
+	logger.Info("Cloudsim is ready.")
 }
 
 /////////////////////////////////////////////////
