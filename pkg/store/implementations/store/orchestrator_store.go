@@ -33,6 +33,19 @@ type orchestratorStore struct {
 	// The ingress resource referenced by the `IngressName` configuration must contain at least one rule with a host
 	// value matching this configuration.
 	IngressHostValue string `validate:"required" env:"CLOUDSIM_ORCHESTRATOR_INGRESS_HOST,required"`
+
+	// PodReadyTimeout is the total amount of time in seconds that the pod creation process will wait for the pod to be ready.
+	PodReadyTimeout uint `default:"300" env:"CLOUDSIM_MACHINES_POD_READY_TIMEOUT_SECONDS"`
+}
+
+// Timeout calculates the time duration in seconds for the current PodReadyTimeout value.
+func (o *orchestratorStore) Timeout() time.Duration {
+	return time.Duration(o.PodReadyTimeout) * time.Second
+}
+
+// PollFrequency returns a time duration of 2 seconds.
+func (o *orchestratorStore) PollFrequency() time.Duration {
+	return 2 * time.Second
 }
 
 // SetDefaults sets default values for the store.
