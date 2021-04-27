@@ -15,6 +15,8 @@ import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/actions"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/application"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/loader"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/resource"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/resource/phase"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/platform"
 	fakePlatform "gitlab.com/ignitionrobotics/web/cloudsim/pkg/platform/implementations/fake"
 	platformManager "gitlab.com/ignitionrobotics/web/cloudsim/pkg/platform/manager"
@@ -436,64 +438,67 @@ func (s *Service) GetApplications() map[string]ApplicationType {
 // TODO: There should be another call for SystemAdmins to list inconsistencies and allow them
 // to act on those.
 func (s *Service) initializeRunningSimulationsFromCluster(ctx context.Context, tx *gorm.DB) error {
+	// First, filter the simulations that have all its Pods with status PodRunning.
+	// Keep in mind that a simulation could have spawned multiple Pods.
+	runningSims := make(map[string]bool)
 
-	// TODO This method has been disabled until the `Orchestrator` interface gets `List` support.
-	s.logger.Warning("Attempted to initialize running simulations from the cluster. This is temporarily disabled.")
-	// // Find all Pods associated to cloudsim
-	// podsInterface := s.clientset.CoreV1().Pods(s.cfg.KubernetesNamespace)
-	// pods, err := podsInterface.List(metav1.ListOptions{LabelSelector: cloudsimTagLabel})
-	// if err != nil {
-	// 	s.logger.Error("Error getting initial list of Cloudsim Pods from cluster", err)
-	// 	return err
-	// }
-	//
-	// // First, filter the simulations that have all its Pods with status PodRunning.
-	// // Keep in mind that a simulation could have spawned multiple Pods.
-	// runningSims := make(map[string]bool)
-	//
-	// for _, p := range pods.Items {
-	// 	groupID := p.Labels[podLabelKeyGroupID]
-	//
-	// 	if p.ObjectMeta.DeletionTimestamp != nil {
-	// 		// DeletionTimestamp != nil means the system has requested a deletion of this Pod.
-	// 		// So, we won't consider this as a Running Pod.
-	// 		runningSims[groupID] = false
-	// 		continue
-	// 	}
-	//
-	// 	running, found := runningSims[groupID]
-	// 	if !found {
-	// 		// First pod processed for this simulation. Mark running with initial value to make the "&&"" work later
-	// 		running = true
-	// 	}
-	// 	// is the current pod running. Update the whole simulation running status based on that.
-	// 	running = running && (p.Status.ResourcePhase == corev1.PodRunning)
-	// 	runningSims[groupID] = running
-	//
-	// }
-	//
-	// // Now iterate the simulations marked as 'running' and create RunningSimulations for them.
-	// for groupID, running := range runningSims {
-	// 	if !running {
-	// 		continue
-	// 	}
-	// 	// Get the Simulation record from DB
-	// 	simDep, err := GetSimulationDeployment(tx, groupID)
-	// 	if err != nil {
-	// 		return err
-	// 	}
-	//
-	// 	// Only create a RunningSimulation if the whole simulation status was Running and the DB
-	// 	// deploymentStatus is Running as well.
-	// 	if simRunning.Eq(*simDep.DeploymentStatus) {
-	// 		// Register a new live RunningSimulation
-	// 		if err := s.createRunningSimulation(ctx, tx, simDep); err != nil {
-	// 			return err
-	// 		}
-	//
-	// 		s.logger.Info(fmt.Sprintf("Init - Added RunningSimulation for groupID: [%s]. Deployment Status in DB: [%d]", groupID, *simDep.DeploymentStatus))
-	// 	}
-	// }
+	for _, p := range s.platforms.Platforms() {
+		// Get pods
+		namespace := p.Store().Orchestrator().Namespace()
+		pods, err := p.Orchestrator().Pods().List(namespace, cloudsimTags)
+		if err != nil {
+			errMsg := fmt.Sprintf(
+				"Failed to get initial list of running pods for Platform %s orchestrator.",
+				p.GetName(),
+			)
+			s.logger.Warning(errMsg, err)
+			return err
+		}
+
+		for _, pod := range pods {
+			groupID := pod.Selector().Map()[podGroupIDLabelKey]
+
+			if pod.DeletionTimestamp() != nil {
+				// DeletionTimestamp != nil means the system has requested a deletion of this Pod.
+				// So, we won't consider this as a Running Pod.
+				runningSims[groupID] = false
+				continue
+			}
+
+			running, found := runningSims[groupID]
+			if !found {
+				// First pod processed for this simulation. Mark running with initial value to make the "&&"" work later
+				running = true
+			}
+			// is the current pod running. Update the whole simulation running status based on that.
+			running = running && (pod.Phase() == phase.Running)
+			runningSims[groupID] = running
+
+		}
+
+		// Now iterate the simulations marked as 'running' and create RunningSimulations for them.
+		for groupID, running := range runningSims {
+			if !running {
+				continue
+			}
+			// Get the Simulation record from DB
+			simDep, err := GetSimulationDeployment(tx, groupID)
+			if err != nil {
+				return err
+			}
+
+			// Only create a RunningSimulation if the whole simulation status was Running and the DB
+			// deploymentStatus is Running as well.
+			if simDep.HasStatus(simulations.StatusRunning) {
+				// Register a new live RunningSimulation
+				if err := s.createRunningSimulation(ctx, tx, simDep); err != nil {
+					return err
+				}
+
+				s.logger.Info(fmt.Sprintf("Init - Added RunningSimulation for groupID: [%s]. Deployment Status in DB: [%d]", groupID, *simDep.DeploymentStatus))
+			}
+		}
+	}
 
 	return nil
 }
@@ -560,10 +565,6 @@ func (s *Service) rebuildState(ctx context.Context, db *gorm.DB) error {
 
 	for _, d := range deps {
 		groupID := *d.GroupID
-		p, err := platformManager.GetSimulationPlatform(s.platforms, &d)
-		if err != nil {
-			return err
-		}
 
 		if d.HasStatus(simulations.StatusPending) {
 			// If still Pending then re-add it to the scheduler, by adding a 'launch simulation'
@@ -576,8 +577,23 @@ func (s *Service) rebuildState(ctx context.Context, db *gorm.DB) error {
 		}
 
 		if d.HasStatus(simulations.StatusRunning) {
+			// Get Platform
+			p, err := platformManager.GetSimulationPlatform(s.platforms, &d)
+			if err != nil {
+				pName := "nil"
+				if d.Platform != nil {
+					pName = *d.Platform
+				}
+				s.logger.Warning(fmt.Sprintf("rebuildState -- Cannot find platform [%s] for simulation with " +
+					"GroupID [%s]. Marking with error", pName, groupID))
+				// if the SimulationDeployment DB record has 'running' status but there is no matching
+				// running Pod in the cluster then we have an inconsistenty. Mark it as error.
+				d.setErrorStatus(db, simErrorServerRestart)
+			}
+
+			// Verify that the simulation exists
 			if !p.RunningSimulations().Exists(d.GetGroupID()) {
-				s.logger.Info(fmt.Sprintf("rebuildState -- GroupID [%s] expected to be Running "+
+				s.logger.Warning(fmt.Sprintf("rebuildState -- GroupID [%s] expected to be Running "+
 					"in DB but there is no matching Pod running. Marking with error", groupID))
 				// if the SimulationDeployment DB record has 'running' status but there is no matching
 				// running Pod in the cluster then we have an inconsistenty. Mark it as error.
@@ -1387,6 +1403,12 @@ func (s *Service) getMaxDurationForSimulation(ctx context.Context, tx *gorm.DB,
 
 // createRunningSimulation is a helper func used to create and register a new RunningSimulation.
 func (s *Service) createRunningSimulation(ctx context.Context, tx *gorm.DB, dep *SimulationDeployment) error {
+	// Get the simulation platform
+	p, err := platformManager.GetSimulationPlatform(s.platforms, dep)
+	if err != nil {
+		return err
+	}
+
 	worldStatsTopic, maxSimSeconds, err := s.getGazeboWorldStatsTopicAndLimit(ctx, tx, dep)
 	if err != nil {
 		return err
@@ -1399,12 +1421,8 @@ func (s *Service) createRunningSimulation(ctx context.Context, tx *gorm.DB, dep 
 		return err
 	}
 
-	t, err := s.setupRunningSimulationTransportLayer(dep)
-	if err != nil {
-		return err
-	}
-
-	p, err := platformManager.GetSimulationPlatform(s.platforms, dep)
+	// Setup the transport layer
+	t, err := s.setupRunningSimulationTransportLayer(dep, p)
 	if err != nil {
 		return err
 	}
