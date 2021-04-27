@@ -12,7 +12,7 @@ import (
 var RemoveInstances = jobs.RemoveInstances.Extend(actions.Job{
 	Name:       "remove-instances",
 	PreHooks:   []actions.JobFunc{prepareRemoveInstancesInput},
-	PostHooks:  []actions.JobFunc{returnState},
+	PostHooks:  []actions.JobFunc{saveState, returnState},
 	InputType:  actions.GetJobDataType(&StopSimulationData{}),
 	OutputType: actions.GetJobDataType(&StopSimulationData{}),
 })
@@ -68,7 +68,7 @@ func prepareRemoveInstancesInput(store actions.Store, tx *gorm.DB, deployment *a
 }
 
 // saveState saves the simulation state.
-func saveStates(store actions.Store, tx *gorm.DB, deployment *actions.Deployment, value interface{}) (interface{}, error) {
+func saveState(store actions.Store, tx *gorm.DB, deployment *actions.Deployment, value interface{}) (interface{}, error) {
 	stopData := store.State().(*StopSimulationData)
 
 	// Update the database entry with the latest status
