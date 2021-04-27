@@ -151,6 +151,18 @@ type Orchestrator struct {
 	*mock.Mock
 }
 
+// Timeout mocks the Timeout method.
+func (f Orchestrator) Timeout() time.Duration {
+	args := f.Called()
+	return args.Get(0).(time.Duration)
+}
+
+// PollFrequency mocks the PollFrequency method.
+func (f Orchestrator) PollFrequency() time.Duration {
+	args := f.Called()
+	return args.Get(0).(time.Duration)
+}
+
 // IngressNamespace mocks the IngressNamespace method.
 func (f Orchestrator) IngressNamespace() string {
 	args := f.Called()
