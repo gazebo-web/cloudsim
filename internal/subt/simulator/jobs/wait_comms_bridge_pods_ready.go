@@ -32,8 +32,8 @@ func createWaitRequestForCommsBridgePodToBeReady(store actions.Store, tx *gorm.D
 	req := s.Platform().Orchestrator().Pods().WaitForCondition(res, resource.ReadyCondition)
 
 	// Get timeout and poll frequency from store
-	timeout := s.Platform().Store().Machines().Timeout()
-	pollFreq := s.Platform().Store().Machines().PollFrequency()
+	timeout := s.Platform().Store().Orchestrator().Timeout()
+	pollFreq := s.Platform().Store().Orchestrator().PollFrequency()
 
 	// Return new wait input
 	return jobs.WaitInput{
