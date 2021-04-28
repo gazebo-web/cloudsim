@@ -35,7 +35,7 @@ type orchestratorStore struct {
 	IngressHostValue string `validate:"required" env:"CLOUDSIM_ORCHESTRATOR_INGRESS_HOST,required"`
 
 	// PodReadyTimeout is the total amount of time in seconds that the pod creation process will wait for the pod to be ready.
-	PodReadyTimeout uint `default:"300" env:"CLOUDSIM_MACHINES_POD_READY_TIMEOUT_SECONDS"`
+	PodReadyTimeout uint `default:"300" env:"CLOUDSIM_ORCHESTRATOR_POD_READY_TIMEOUT_SECONDS"`
 }
 
 // Timeout calculates the time duration in seconds for the current PodReadyTimeout value.
