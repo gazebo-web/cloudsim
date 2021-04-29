@@ -3,7 +3,6 @@ package actions
 import (
 	"errors"
 	"github.com/jinzhu/gorm"
-	uuid "github.com/satori/go.uuid"
 )
 
 // DeploymentStatus is a possible status for a Deployment.
@@ -44,10 +43,10 @@ func (Deployment) TableName() string {
 }
 
 // newDeployment creates a new Deployment entry in persistent storage and returns a pointer to it.
-func newDeployment(tx *gorm.DB, action *Action) (*Deployment, error) {
+func newDeployment(tx *gorm.DB, action *Action, groupID string) (*Deployment, error) {
 	// Create the deployment
 	deployment := Deployment{
-		UUID:       uuid.NewV4().String(),
+		UUID:       groupID,
 		Action:     action.Name,
 		CurrentJob: action.Jobs[0].Name,
 		Status:     deploymentStatusRunning,

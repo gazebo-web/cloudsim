@@ -30,6 +30,8 @@ type ExecuteInputer interface {
 // An action's custom execution input can compose a pointer to this struct (i.e. *ExecuteInput) to automatically
 // implement the required set of fields.
 type ExecuteInput struct {
+	// GroupID is the universal unique identifier of the deployment that will be created.
+	GroupID string
 	// ApplicationName is the name of the application of the action to execute.
 	ApplicationName *string
 	// ActionName is the name of the action to execute.
@@ -43,14 +45,14 @@ type ExecuteInput struct {
 
 // newExecuteInput creates a new ExecuteInput for a specific deployment.
 func newExecuteInput(tx *gorm.DB, action *Action) (*ExecuteInput, error) {
-	input := &ExecuteInput{}
+	var input ExecuteInput
 
 	// Initialize the input
 	if err := input.initialize(tx, action); err != nil {
 		return nil, err
 	}
 
-	return input, nil
+	return &input, nil
 }
 
 // getExecuteInput is the default implementation that makes all structs that compose *ExecuteInput automatically
@@ -80,7 +82,7 @@ func (ei *ExecuteInput) initialize(tx *gorm.DB, action *Action) error {
 
 	// If the input does not contain a previous deployment, create a new one
 	if ei.Deployment == nil {
-		deployment, err := newDeployment(tx, action)
+		deployment, err := newDeployment(tx, action, ei.GroupID)
 		if err != nil {
 			return err
 		}

@@ -3,6 +3,7 @@ package actions
 import (
 	"errors"
 	"github.com/jinzhu/gorm"
+	"github.com/satori/go.uuid"
 	"github.com/stretchr/testify/require"
 	"testing"
 )
@@ -122,7 +123,7 @@ func TestJobRunErrorHandler(t *testing.T) {
 	td := getTestData(t)
 	setd := jobErrorTestData
 
-	deployment, err := newDeployment(tr.db, td.action)
+	deployment, err := newDeployment(tr.db, td.action, uuid.NewV4().String())
 	require.NoError(t, err)
 
 	test := func(job *Job, expectedErr error) {
