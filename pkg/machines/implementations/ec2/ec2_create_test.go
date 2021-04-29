@@ -2,6 +2,7 @@ package ec2
 
 import (
 	"errors"
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/aws/aws-sdk-go/service/ec2/ec2iface"
@@ -26,8 +27,14 @@ func (s *ec2CreateMachinesTestSuite) SetupTest() {
 	logger := ign.NewLoggerNoRollbar("ec2CreateMachinesTestSuite", ign.VerbosityDebug)
 	var err error
 	s.machines, err = NewMachines(&NewInput{
-		API: s.ec2API,
+		API:    s.ec2API,
 		Logger: logger,
+		Zones: []Zone{
+			{
+				Zone:     "test",
+				SubnetID: "test",
+			},
+		},
 	})
 	s.Require().NoError(err)
 }
@@ -39,7 +46,7 @@ func (s *ec2CreateMachinesTestSuite) TestCreate_MissingKeyName() {
 			MinCount:      1,
 			MaxCount:      10,
 			FirewallRules: nil,
-			SubnetID:      "subnet-06fe9fdb790aa78e7",
+			SubnetID:      aws.String("subnet-06fe9fdb790aa78e7"),
 			Tags:          nil,
 		},
 	}
@@ -56,7 +63,7 @@ func (s *ec2CreateMachinesTestSuite) TestCreate_InvalidClusterID() {
 			MinCount:      1,
 			MaxCount:      99,
 			FirewallRules: nil,
-			SubnetID:      "subnet-06fe9fdb790aa78e7",
+			SubnetID:      aws.String("subnet-06fe9fdb790aa78e7"),
 			Tags:          nil,
 			Retries:       0,
 			ClusterID:     "",
@@ -75,7 +82,7 @@ func (s *ec2CreateMachinesTestSuite) TestCreate_InvalidCountBothZero() {
 			MinCount:      0,
 			MaxCount:      0,
 			FirewallRules: nil,
-			SubnetID:      "subnet-06fe9fdb790aa78e7",
+			SubnetID:      aws.String("subnet-06fe9fdb790aa78e7"),
 			Tags:          nil,
 		},
 	}
@@ -92,7 +99,7 @@ func (s *ec2CreateMachinesTestSuite) TestCreate_InvalidCountMinCountZero() {
 			MinCount:      0,
 			MaxCount:      1,
 			FirewallRules: nil,
-			SubnetID:      "subnet-06fe9fdb790aa78e7",
+			SubnetID:      aws.String("subnet-06fe9fdb790aa78e7"),
 			Tags:          nil,
 		},
 	}
@@ -109,7 +116,7 @@ func (s *ec2CreateMachinesTestSuite) TestCreate_InvalidCountMaxCountZero() {
 			MinCount:      1,
 			MaxCount:      0,
 			FirewallRules: nil,
-			SubnetID:      "subnet-06fe9fdb790aa78e7",
+			SubnetID:      aws.String("subnet-06fe9fdb790aa78e7"),
 			Tags:          nil,
 		},
 	}
@@ -126,7 +133,7 @@ func (s *ec2CreateMachinesTestSuite) TestCreate_MinCountGreaterThanMaxCount() {
 			MinCount:      99,
 			MaxCount:      1,
 			FirewallRules: nil,
-			SubnetID:      "subnet-06fe9fdb790aa78e7",
+			SubnetID:      aws.String("subnet-06fe9fdb790aa78e7"),
 			Tags:          nil,
 		},
 	}
@@ -143,7 +150,7 @@ func (s *ec2CreateMachinesTestSuite) TestCreate_NegativeCount() {
 			MinCount:      -100,
 			MaxCount:      -25,
 			FirewallRules: nil,
-			SubnetID:      "subnet-06fe9fdb790aa78e7",
+			SubnetID:      aws.String("subnet-06fe9fdb790aa78e7"),
 			Tags:          nil,
 		},
 	}
@@ -160,7 +167,7 @@ func (s *ec2CreateMachinesTestSuite) TestCreate_InvalidSubnet() {
 			MinCount:      1,
 			MaxCount:      99,
 			FirewallRules: nil,
-			SubnetID:      "subnet-1234",
+			SubnetID:      aws.String("subnet-1234"),
 			Tags:          nil,
 		},
 	}
@@ -178,7 +185,7 @@ func (s *ec2CreateMachinesTestSuite) TestCreate_ValidWithoutDryRunMode() {
 			MinCount:      1,
 			MaxCount:      99,
 			FirewallRules: nil,
-			SubnetID:      "subnet-06fe9fdb790aa78e7",
+			SubnetID:      aws.String("subnet-06fe9fdb790aa78e7"),
 			Tags:          nil,
 			Retries:       0,
 			ClusterID:     "cluster-name",
@@ -194,8 +201,14 @@ func (s *ec2CreateMachinesTestSuite) TestCreate_ValidWithDryRunMode() {
 	logger := ign.NewLoggerNoRollbar("ec2TerminateMachinesTestSuite", ign.VerbosityDebug)
 	var err error
 	s.machines, err = NewMachines(&NewInput{
-		API: mock,
+		API:    mock,
 		Logger: logger,
+		Zones: []Zone{
+			{
+				Zone:     "test",
+				SubnetID: "test",
+			},
+		},
 	})
 	s.Require().NoError(err)
 	input := []machines.CreateMachinesInput{
@@ -204,7 +217,7 @@ func (s *ec2CreateMachinesTestSuite) TestCreate_ValidWithDryRunMode() {
 			MinCount:      1,
 			MaxCount:      99,
 			FirewallRules: nil,
-			SubnetID:      "subnet-06fe9fdb790aa78e7",
+			SubnetID:      aws.String("subnet-06fe9fdb790aa78e7"),
 			Tags:          nil,
 			Retries:       3,
 			ClusterID:     "cluster-name",
@@ -223,7 +236,7 @@ func (s *ec2CreateMachinesTestSuite) TestCreate_ErrorWithDryRunMode() {
 			MinCount:      1,
 			MaxCount:      99,
 			FirewallRules: nil,
-			SubnetID:      "subnet-06fe9fdb790aa78e7",
+			SubnetID:      aws.String("subnet-06fe9fdb790aa78e7"),
 			Tags:          nil,
 			Retries:       3,
 			ClusterID:     "cluster-name",

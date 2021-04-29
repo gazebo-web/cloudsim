@@ -26,6 +26,12 @@ func (s *ec2TerminateMachinesTestSuite) SetupTest() {
 	s.machines, err = NewMachines(&NewInput{
 		API: s.ec2API,
 		Logger: logger,
+		Zones: []Zone{
+			{
+				Zone: "test",
+				SubnetID: "test",
+			},
+		},
 	})
 	s.Require().NoError(err)
 }

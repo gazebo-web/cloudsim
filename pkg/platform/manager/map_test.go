@@ -15,9 +15,9 @@ func TestMapSuite(t *testing.T) {
 
 type testMapSuite struct {
 	suite.Suite
-	selector1   Selector
-	selector2   Selector
-	selector3   Selector
+	selector1   string
+	selector2   string
+	selector3   string
 	platform1   platform.Platform
 	platform2   platform.Platform
 	platform3   platform.Platform
@@ -43,39 +43,53 @@ func (s *testMapSuite) SetupSuite() {
 
 func (s *testMapSuite) TestSelectors() {
 	selectors := s.platformMap.Selectors()
-	expected := []Selector{s.selector1, s.selector2, s.selector3}
-	s.ElementsMatch(expected, selectors)
+	expected := []string{s.selector1, s.selector2, s.selector3}
+	s.Require().ElementsMatch(expected, selectors)
 }
 
-func (s *testMapSuite) TestPlatforms() {
-	platforms := s.platformMap.Platforms()
+func (s *testMapSuite) TestPlatformsNoSelector() {
+	platforms := s.platformMap.Platforms(nil)
 	expected := []platform.Platform{s.platform1, s.platform2, s.platform3}
-	s.ElementsMatch(expected, platforms)
+	s.Require().ElementsMatch(expected, platforms)
+}
+
+func (s *testMapSuite) TestPlatformsValidSelector() {
+	platforms := s.platformMap.Platforms(&s.selector2)
+	s.Require().Equal(s.platform2, platforms[0])
+	expected := []platform.Platform{s.platform1, s.platform2, s.platform3}
+	s.Require().ElementsMatch(expected, platforms)
+}
+
+func (s *testMapSuite) TestPlatformsInvalidSelector() {
+	selector := "invalid"
+	platforms := s.platformMap.Platforms(&selector)
+	expected := []platform.Platform{s.platform1, s.platform2, s.platform3}
+	s.Require().ElementsMatch(expected, platforms)
 }
 
 func (s *testMapSuite) TestPlatformValidSelector() {
 	// Get the first platform
-	platform, err := s.platformMap.GetPlatform(s.selector1)
-	s.NoError(err)
-	s.Equal(s.platform1, platform)
+	platform, err := s.platformMap.Platform(s.selector1)
+	s.Require().NoError(err)
+	s.Require().Equal(s.platform1, platform)
 
 	// Get the third platform
-	platform, err = s.platformMap.GetPlatform(s.selector3)
-	s.NoError(err)
-	s.Equal(s.platform3, platform)
+	platform, err = s.platformMap.Platform(s.selector3)
+	s.Require().NoError(err)
+	s.Require().Equal(s.platform3, platform)
 }
 
 func (s *testMapSuite) TestPlatformInvalidSelector() {
 	// Provide an invalid selector
-	selector := Selector("invalid")
-	platform, err := s.platformMap.GetPlatform(selector)
-	s.EqualError(err, ErrPlatformNotFound.Error())
-	s.Nil(platform)
+	selector := "invalid"
+	platform, err := s.platformMap.Platform(selector)
+	s.Assert().EqualError(err, ErrPlatformNotFound.Error())
+	s.Assert().Nil(platform)
 }
 
-func (s *testMapSuite) TestSet() {
+func (s *testMapSuite) TestSetPlatformExists() {
 	// Provide an invalid selector
-	selector := Selector("test")
+	selector := "test"
 	err := s.platformMap.set(selector, nil)
 	s.Require().NoError(err)
 	err = s.platformMap.set(selector, nil)

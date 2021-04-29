@@ -30,9 +30,6 @@ type Machines interface {
 	// FirewallRules returns the list of rules that should be applied to the created machine.
 	FirewallRules() []string
 
-	// SubnetAndZone returns the subnet and the zone that the created machine should be configured in.
-	SubnetAndZone() (string, string)
-
 	// BaseImage returns the base image that will be used when creating the machine.
 	BaseImage() string
 

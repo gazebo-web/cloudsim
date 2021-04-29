@@ -5,6 +5,7 @@ import (
 	"github.com/stretchr/testify/suite"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/factory"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/machines"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/machines/implementations/ec2"
 	"gitlab.com/ignitionrobotics/web/ign-go"
 	"testing"
 )
@@ -42,6 +43,12 @@ func (s *testEC2FactorySuite) TestInitializeAPIDependencyIsNotNil() {
 func (s *testEC2FactorySuite) TestNewFuncDefaultConfig() {
 	config := Config{
 		Region: "test",
+		Zones: []ec2.Zone{
+			{
+				Zone:     "test",
+				SubnetID: "subnet-0123456789abcdefg",
+			},
+		},
 	}
 
 	// Prepare dependencies

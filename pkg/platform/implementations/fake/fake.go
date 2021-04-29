@@ -53,6 +53,12 @@ func (input *NewInput) SetDefaults() error {
 		newInput := &ec2.NewInput{
 			API: mock.NewEC2(),
 			Logger: input.Logger,
+			Zones:[]ec2.Zone{
+				{
+					Zone: "fake",
+					SubnetID: "subnet-fake",
+				},
+			},
 		}
 		if input.Machines, err = ec2.NewMachines(newInput); err != nil {
 			return err

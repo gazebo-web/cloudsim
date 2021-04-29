@@ -12,13 +12,16 @@ components:
   ## Machines
   machines: &aws_machines
     type: "ec2"
-    config:
+    config: &aws_machines_config
       region: *region
+      zones:
+        - zone: "us-east-1a"
+          subnetID: "subnet-0123456789abcdefg"
 
   ## Orchestrator
   orchestrator: &kubernetes_gloo_orchestrator
     type: "kubernetes"
-    config:
+    config: &kubernetes_gloo_orchestrator_config
       api:
         kubeconfig: *kubeconfig
       components: &components
@@ -38,19 +41,17 @@ components:
   ## Storage
   storage: &aws_storage
     type: "s3"
-    config:
+    config: &aws_storage_config
       region: *storageRegion
 
   ## Store
   store: &store
     type: "store"
-    config:
+    config: &store_config
       machinesStore:
         instanceProfileValue: "test"
         keyNameValue: "test"
-        subnetsValue: [ "subnet-0123456789abcdefg" ]
         firewallRulesValue: [ "sg-0123456789abcdefg" ]
-        zonesValue: [ "us-east-1a" ]
         namePrefixValue: "test"
         clusterNameValue: "test"
       ignitionStore:
@@ -63,14 +64,14 @@ components:
   ## Secrets
   secrets: &kubernetes_secrets
     type: "kubernetes"
-    config:
+    config: &kubernetes_secrets_config
       api:
         kubeconfig: *kubeconfig
 
   ## Email Sender
   emailSender: &aws_email_sender
     type: "ses"
-    config:
+    config: &aws_email_sender_config
       region: *region
 
 # Platforms
@@ -91,6 +92,7 @@ platforms:
         orchestrator:
           <<: *kubernetes_gloo_orchestrator
           config:
+            <<: *kubernetes_gloo_orchestrator_config
             api:
               # Override the default kubeconfig path
               kubeconfig: *kubeconfig
@@ -103,6 +105,7 @@ platforms:
         secrets:
           <<: *kubernetes_secrets
           config:
+            <<: *kubernetes_secrets_config
             api:
               # Override the default kubeconfig path
               kubeconfig: *kubeconfig
@@ -122,11 +125,13 @@ platforms:
         machines:
           <<: *aws_machines
           config:
+            <<: *aws_machines_config
             # Override the default region
             region: *region
         orchestrator:
           <<: *kubernetes_gloo_orchestrator
           config:
+            <<: *kubernetes_gloo_orchestrator_config
             api:
               # Override the default kubeconfig path
               kubeconfig: *kubeconfig
@@ -136,14 +141,18 @@ platforms:
           <<: *aws_storage
         store:
           <<: *store
+          config:
+            <<: *store_config
         secrets:
           <<: *kubernetes_secrets
           config:
+            <<: *kubernetes_secrets_config
             api:
               # Override the default kubeconfig path
               kubeconfig: *kubeconfig
         emailSender:
           <<: *aws_email_sender
           config:
+            <<: *aws_email_sender_config
             # Override the component's region
             region: *region

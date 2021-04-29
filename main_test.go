@@ -83,10 +83,6 @@ func packageTearDown(ctx context.Context) {
 		ctx = ign.NewContextWithLogger(context.Background(), ign.NewLoggerNoRollbar("test", ign.VerbosityDebug))
 	}
 
-	// Restore settings set by tests
-	// TODO This should be restored automatically depending on the test
-	sim.SimServImpl.(*sim.Service).AllowRequeuing = true
-
 	cleanDBTables(ctx)
 }
 

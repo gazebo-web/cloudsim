@@ -32,6 +32,12 @@ func (s *ec2CountMachinesTestSuite) SetupTest() {
 		API: s.ec2API,
 		Logger: logger,
 		WorkerGroupName: workerGroupName,
+		Zones: []Zone{
+			{
+				Zone: "test",
+				SubnetID: "test",
+			},
+		},
 	})
 	s.Require().NoError(err)
 }
