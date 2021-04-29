@@ -3,6 +3,7 @@ package actions
 import (
 	"errors"
 	"github.com/jinzhu/gorm"
+	"github.com/satori/go.uuid"
 	"github.com/stretchr/testify/require"
 	"testing"
 )
@@ -42,7 +43,7 @@ func TestNewDeploymentErrorAndGetDeploymentErrors(t *testing.T) {
 	detd := deploymentErrorTestData
 
 	// Deployment
-	deployment, err := newDeployment(tr.db, td.action)
+	deployment, err := newDeployment(tr.db, td.action, uuid.NewV4().String())
 	require.NoError(t, err)
 
 	// Check that there are no errors
@@ -71,7 +72,7 @@ func TestNewDeploymentErrorAndGetDeploymentErrors(t *testing.T) {
 	require.Equal(t, 3, len(deploymentErrs))
 
 	// Check that there are no errors for a new deployment
-	newDeployment, err := newDeployment(tr.db, td.action)
+	newDeployment, err := newDeployment(tr.db, td.action, uuid.NewV4().String())
 	require.NoError(t, err)
 	newDeploymentErrs, err := getDeploymentErrors(tr.db, newDeployment, &td.jobName1)
 	require.NoError(t, err)

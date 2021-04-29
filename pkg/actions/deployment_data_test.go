@@ -3,6 +3,7 @@ package actions
 import (
 	"encoding/json"
 	"github.com/jinzhu/gorm"
+	"github.com/satori/go.uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"testing"
@@ -122,7 +123,7 @@ func TestSetDeploymentJobDataAndGetDeploymentJobData(t *testing.T) {
 	jobDataTypeRegistry = newDataTypeRegistry()
 	jobDataTypeRegistry.register(GetJobDataType(DeploymentJobDataTestStruct{}))
 
-	deployment, err := newDeployment(tr.db, td.action)
+	deployment, err := newDeployment(tr.db, td.action, uuid.NewV4().String())
 	require.NoError(t, err)
 
 	// Get total count of entries
