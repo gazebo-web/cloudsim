@@ -16,10 +16,17 @@ type Selector interface {
 	Extend(extension Selector) Selector
 	// Set sets the given value to the given key. If the key already exists, it will be overwritten.
 	Set(key string, value string)
+	// Get gets the value at the given key. If the key doesn't exist, an empty value will be returned.
+	Get(key string) string
 }
 
 // selector is a group of key-pair values that identify a resource.
 type selector map[string]string
+
+// Get gets the value at the given key. If the key doesn't exist, an empty value will be returned.
+func (s selector) Get(key string) string {
+	return s[key]
+}
 
 // Set sets the given value to the given key. If the key already exists, it will be overwritten.
 func (s selector) Set(key string, value string) {
