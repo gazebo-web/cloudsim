@@ -15,12 +15,19 @@ type Manager interface {
 	GetTransporter(groupID simulations.GroupID) ignws.PubSubWebsocketTransporter
 	Free(groupID simulations.GroupID)
 	Remove(groupID simulations.GroupID) error
+	Exists(groupID simulations.GroupID) bool
 }
 
 // manager is a Manager implementation.
 type manager struct {
 	runningSimulations map[simulations.GroupID]*RunningSimulation
 	lock               sync.RWMutex
+}
+
+// Exists checks if the given group id is registered as a running simulation.
+func (m *manager) Exists(groupID simulations.GroupID) bool {
+	_, ok := m.runningSimulations[groupID]
+	return ok
 }
 
 // Free disconnects the websocket client for the given GroupID.

@@ -276,6 +276,7 @@ func init() {
 		logger.Critical("Critical error trying to create Simulations services", err)
 		log.Fatalf("%+v\n", err)
 	}
+
 	sim.SimServImpl.RegisterApplication(logCtx, subT)
 
 	err = sim.SimServImpl.Start(logCtx)
