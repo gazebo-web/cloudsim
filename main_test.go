@@ -4,16 +4,14 @@ import (
 	"context"
 	"github.com/stretchr/testify/mock"
 	"gitlab.com/ignitionrobotics/web/cloudsim/globals"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/migrations"
 	ignws "gitlab.com/ignitionrobotics/web/cloudsim/pkg/transport/ign"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/users"
 	sim "gitlab.com/ignitionrobotics/web/cloudsim/simulations"
 	"gitlab.com/ignitionrobotics/web/ign-go"
 	"gitlab.com/ignitionrobotics/web/ign-go/testhelpers"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/client-go/kubernetes"
 	"log"
 	"os"
-	"reflect"
 	"testing"
 	"time"
 )
@@ -50,20 +48,9 @@ func setupWithCustomInitializer(customFn customInitializer) {
 	createDBTablesAndData(logCtx, worldStatsTopic, worldWarmupTopic)
 
 	// Mocking
-	// Use the K8Mock as default K8 test mock
-	// Individual tests can change this.
-	kcli := NewK8Mock(logCtx)
-	sim.AssertMockedClientset(globals.KClientset).SetImpl(kcli)
 	//  Mock the Sleep function so that it returns instantly
 	sim.Sleep = func(d time.Duration) {
 		return
-	}
-	// Mock WaitForMatchPodsCondition so that the calls return instantly and no
-	// wait is needed
-	sim.WaitForMatchPodsCondition = func(ctx context.Context, c kubernetes.Interface,
-		namespace string, opts metav1.ListOptions, condStr string, timeout time.Duration,
-		condition sim.PodCondition) error {
-		return nil
 	}
 
 	if customFn != nil {
@@ -90,59 +77,27 @@ func setupWithCustomInitializer(customFn customInitializer) {
 	globals.TransportTestMock.On("IsConnected").Return(true)
 }
 
-// useEC2NodeManager forces the application to use an Ec2Client object as the
-// node manager, meant for testing. A function is returned to restore the node
-// manager to its original value. The returned function should be deferred right
-// after calling this function.
-func useEC2NodeManager() func() {
-	service := sim.SimServImpl.(*sim.Service)
-	nm := service.GetNodeManager()
-
-	// Only replace the node manager if it's not an Ec2Client
-	nmType := reflect.TypeOf(nm).String()
-	if nmType != "*simulations.Ec2Client" {
-		logCtx := context.Background()
-		ec2nm, err := sim.NewEC2Client(logCtx, globals.KClientset, globals.EC2Svc)
-		if err != nil {
-			log.Fatal("Could not create EC2 client. Error:", err)
-		}
-		for _, application := range service.GetApplications() {
-			ec2nm.RegisterPlatform(logCtx, application.(sim.PlatformType))
-		}
-		service.SetNodeManager(ec2nm)
-	}
-
-	return func() {
-		service.SetNodeManager(nm)
-	}
-}
-
 // Clean up our mess
 func packageTearDown(ctx context.Context) {
 	if ctx == nil {
 		ctx = ign.NewContextWithLogger(context.Background(), ign.NewLoggerNoRollbar("test", ign.VerbosityDebug))
 	}
 
-	// Restore settings set by tests
-	// TODO This should be restored automatically depending on the test
-	sim.MaxAWSRetries = 8
-	sim.SimServImpl.(*sim.Service).AllowRequeuing = true
-
 	cleanDBTables(ctx)
 }
 
 func cleanDBTables(ctx context.Context) {
-	DBDropModels(ctx, globals.Server.Db)
+	migrations.DBDropModels(ctx, globals.Server.Db)
 }
 
 func createDBTablesAndData(ctx context.Context, worldStatsTopic, worldWarmupTopic string) {
-	DBMigrate(ctx, globals.Server.Db)
+	migrations.DBMigrate(ctx, globals.Server.Db)
 	// After removing tables we can ask casbin to re initialize
 	if err := globals.Permissions.Reload(sysAdminForTest); err != nil {
 		log.Fatal("Error reloading casbin policies", err)
 	}
 	// Apply custom indexes. Eg: fulltext indexes
-	DBAddCustomIndexes(ctx, globals.Server.Db)
+	migrations.DBAddCustomIndexes(ctx, globals.Server.Db)
 
 	// Insert SubT Circuit Rules
 	circuits := []*sim.SubTCircuitRules{
@@ -273,5 +228,5 @@ func createDBTablesAndData(ctx context.Context, worldStatsTopic, worldWarmupTopi
 	// HACK application "subt" shouldn't be hardcoded here.
 	mockUsers := users.NewUserAccessorDataMock(ctx, globals.UserAccessor, sysAdminIdentityForTest, "subt")
 	mockUsers.ReloadEverything(ctx)
-	DBAddDefaultData(ctx, globals.Server.Db)
+	migrations.DBAddDefaultData(ctx, globals.Server.Db)
 }

@@ -64,7 +64,7 @@ func (suite *WebsocketAddressTestSuite) requestSimulation(circuit string, ownerJ
 	}
 
 	// Use the notify signal to mark the worker as done
-	cb := func(poolEvent sim.PoolEvent, groupID string, result interface{}, em *ign.ErrMsg) {
+	cb := func(poolEvent sim.PoolEvent, groupID string, result interface{}, err error) {
 		if poolEvent == sim.PoolStartSimulation {
 			wg.Done()
 		}

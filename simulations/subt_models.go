@@ -6,8 +6,19 @@ import (
 	"fmt"
 	"github.com/jinzhu/gorm"
 	"gitlab.com/ignitionrobotics/web/cloudsim/globals"
+	"gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/tracks"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
+	"gitlab.com/ignitionrobotics/web/ign-go"
+	"strconv"
 	"strings"
 	"time"
+)
+
+var (
+	// ErrInvalidSeedID is returned when an invalid seed id is provided
+	ErrInvalidSeedID = errors.New("invalid seed id")
+	// ErrInvalidWorldID is returned when an invalid world id is provided
+	ErrInvalidWorldID = errors.New("invalid world id")
 )
 
 // SubTCreateSimulation is a CreateSimulation request extension that adds specfic
@@ -45,6 +56,8 @@ func (cs *SubTCreateSimulation) robotImagesBelongToECROwner() bool {
 	return true
 }
 
+var _ simulations.Robot = (*SubTRobot)(nil)
+
 // SubTRobot is an internal type used to describe a single SubT robot (field-computer) request.
 type SubTRobot struct {
 	Name    string
@@ -53,10 +66,42 @@ type SubTRobot struct {
 	Credits int
 }
 
+// GetImage returns the robot image.
+func (s *SubTRobot) GetImage() string {
+	return s.Image
+}
+
+// GetName returns the robot name.
+func (s *SubTRobot) GetName() string {
+	return s.Name
+}
+
+// GetKind returns the robot type.
+func (s *SubTRobot) GetKind() string {
+	return s.Type
+}
+
+// IsEqual asserts the given robot equals the current robot.
+func (s *SubTRobot) IsEqual(robot simulations.Robot) bool {
+	return s.Name == robot.GetName()
+}
+
+var _ simulations.Marsupial = (*SubTMarsupial)(nil)
+
 // SubTMarsupial is an internal type used to describe marsupial vehicles in SubT.
 type SubTMarsupial struct {
 	Parent string
 	Child  string
+}
+
+// GetParent returns the parent robot.
+func (s *SubTMarsupial) GetParent() simulations.Robot {
+	return &SubTRobot{Name: s.Parent}
+}
+
+// GetChild returns the child robot.
+func (s *SubTMarsupial) GetChild() simulations.Robot {
+	return &SubTRobot{Name: s.Child}
 }
 
 // metadataSubT is a struct use to hold the Metadata information added by SubT to
@@ -114,6 +159,60 @@ func countSimulationsByCircuit(tx *gorm.DB, owner, circuit string) (*int, error)
 	return &count, nil
 }
 
+// NewTracksService initializes a new tracks.Service implementation using subTCircuitService.
+func NewTracksService(db *gorm.DB, logger ign.Logger) tracks.Service {
+	return &subTCircuitService{
+		db:     db,
+		logger: logger,
+	}
+}
+
+// subTCircuitService implements the tracks.Service interface for the SubTCircuitRules.
+type subTCircuitService struct {
+	db     *gorm.DB
+	logger ign.Logger
+}
+
+// Create creates a new SubTCircuitRules based on the tracks.CreateTrackInput input.
+func (s *subTCircuitService) Create(input tracks.CreateTrackInput) (*tracks.Track, error) {
+	panic("not implemented")
+}
+
+// Get returns the tracks.Track representation of the SubTCircuitRules identified by the given circuit name.
+// The worldID and runID arguments are used to identify a specific world and seed configuration from a SubTCircuitRules.
+// This was put in place as a temporary solution before refactoring the SubT API where a Circuit will represent a group of Tracks.
+func (s *subTCircuitService) Get(name string, worldID int, runID int) (*tracks.Track, error) {
+	s.logger.Debug(fmt.Sprintf("Getting circuit rule with name [%s] and WorldID [%d]", name, worldID))
+	c, err := GetCircuitRules(s.db, name)
+	if err != nil {
+		s.logger.Debug(fmt.Sprintf("Failed to get circuit rule with name [%s] and WorldID [%d] with error: %s", name, worldID, err))
+		return nil, err
+	}
+	track, err := c.ToTrack(worldID, runID)
+	if err != nil {
+		s.logger.Debug(fmt.Sprintf("Failed to create track representation for circuit rule with name [%s] and WorldID [%d] with error: %s", name, worldID, err))
+		return nil, err
+	}
+	s.logger.Debug(fmt.Sprintf("Returning circuit rule represented as a Track: %+v", track))
+	return track, nil
+}
+
+// GetAll returns a slice with all the SubTCircuitRules represented as tracks.Track.
+func (s *subTCircuitService) GetAll() ([]tracks.Track, error) {
+	panic("not implemented")
+}
+
+// Update updates a SubTCircuitRules identified by the given circuit name.
+// Information from the tracks.UpdateTrackInput input will be used to update the SubTCircuitRules fields.
+func (s *subTCircuitService) Update(name string, input tracks.UpdateTrackInput) (*tracks.Track, error) {
+	panic("not implemented")
+}
+
+// Delete deletes a SubTCircuitRules with the given circuit name.
+func (s *subTCircuitService) Delete(name string) (*tracks.Track, error) {
+	panic("not implemented")
+}
+
 // SubTCircuitRules holds the rules associated to a given circuit. Eg which worlds
 // to run and how many times.
 type SubTCircuitRules struct {
@@ -143,6 +242,49 @@ type SubTCircuitRules struct {
 	// All the participants that were not added to the qualified participants table will be rejected when submitting
 	// a new simulation for this circuit.
 	RequiresQualification *bool `json:"-"`
+}
+
+// ToTrack generates a representation of a tracks.Track from the current SubTCircuitRules.
+// It receives a worldID and runID to generate the track based on the worlds and seeds from SubTCircuitRules.
+func (r *SubTCircuitRules) ToTrack(worldID int, runID int) (*tracks.Track, error) {
+	maxSimSeconds, err := strconv.Atoi(*r.WorldMaxSimSeconds)
+	if err != nil {
+		return nil, err
+	}
+
+	var seed *int
+	if r.Seeds != nil {
+		seeds := strings.Split(*r.Seeds, ",")
+		if runID >= len(seeds) {
+			return nil, ErrInvalidSeedID
+		}
+
+		s, err := strconv.Atoi(seeds[runID])
+		if err != nil {
+			return nil, err
+		}
+
+		seed = &s
+	}
+
+	worlds := strings.Split(*r.Worlds, ",")
+	if worldID >= len(worlds) {
+		return nil, ErrInvalidWorldID
+	}
+
+	world := worlds[worldID]
+
+	return &tracks.Track{
+		Name:          *r.Circuit,
+		Image:         *r.Image,
+		BridgeImage:   *r.BridgeImage,
+		StatsTopic:    *r.WorldStatsTopics,
+		WarmupTopic:   *r.WorldWarmupTopics,
+		MaxSimSeconds: maxSimSeconds,
+		Public:        false,
+		Seed:          seed,
+		World:         world,
+	}, nil
 }
 
 // GetPendingCircuitRules gets a list of circuits that are scheduled for competition

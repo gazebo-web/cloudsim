@@ -5,12 +5,32 @@ import (
 	gormUtils "gitlab.com/ignitionrobotics/web/cloudsim/pkg/utils/db/gorm"
 )
 
-// MigrateDB migrates application models, indexes and keys to the database.
-func migrateDB(tx *gorm.DB) error {
+// CleanAndMigrateDB cleans and migrates action database models, indexes and keys.
+func CleanAndMigrateDB(tx *gorm.DB) error {
 	return gormUtils.CleanAndMigrateModels(
 		tx,
 		&Deployment{},
 		&deploymentData{},
 		&DeploymentError{},
+	)
+}
+
+// MigrateDB migrates action database models, indexes and keys.
+func MigrateDB(tx *gorm.DB) error {
+	return gormUtils.MigrateModels(
+		tx,
+		&Deployment{},
+		&deploymentData{},
+		&DeploymentError{},
+	)
+}
+
+// DropDB drops action database models, indexes and keys.
+func DropDB(tx *gorm.DB) error {
+	return gormUtils.DropModels(
+		tx,
+		&DeploymentError{},
+		&deploymentData{},
+		&Deployment{},
 	)
 }

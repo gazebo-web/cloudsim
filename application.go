@@ -24,15 +24,13 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/pkg/errors"
 	"gitlab.com/ignitionrobotics/web/cloudsim/globals"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/migrations"
 	useracc "gitlab.com/ignitionrobotics/web/cloudsim/pkg/users"
 	sim "gitlab.com/ignitionrobotics/web/cloudsim/simulations"
-	"gitlab.com/ignitionrobotics/web/cloudsim/simulations/gloo"
 	"gitlab.com/ignitionrobotics/web/fuelserver/permissions"
 	"gitlab.com/ignitionrobotics/web/ign-go"
 	"gitlab.com/ignitionrobotics/web/ign-go/monitoring/prometheus"
 	"gopkg.in/go-playground/validator.v9"
-	"k8s.io/client-go/kubernetes"
-	restclient "k8s.io/client-go/rest"
 	"log"
 	"os"
 	"strconv"
@@ -69,9 +67,6 @@ type appConfig struct {
 	// Are we using S3 for logs?
 	S3LogsCopyEnabled bool `env:"AWS_GZ_LOGS_ENABLED" envDefault:"true"`
 }
-
-// defined here to be able to Stop it during Server shutdown
-var ecNm *sim.Ec2Client
 
 /////////////////////////////////////////////////
 /// Initialize this package
@@ -132,7 +127,7 @@ func init() {
 	logger.Info(fmt.Sprintf("Using HTTP port [%s] and SSL port [%s]", globals.Server.HTTPPort, globals.Server.SSLport))
 
 	// Create the main Router and set it to the server.
-	// Note: here it is the place to define multiple APIs
+	// Note: this is the place you can define multiple APIs
 	s := globals.Server
 	mainRouter := ign.NewRouter()
 	apiPrefix := "/" + globals.APIVersion
@@ -171,7 +166,7 @@ func init() {
 	userAccessor, err := initUserAccessor(logCtx, cfg)
 	if err != nil {
 		// Log and shutdown the app , if there is an error during startup
-		logger.Critical("Critical error trying to create UserAccessor", err)
+		logger.Critical("Critical error trying to create Service", err)
 		log.Fatalf("%+v\n", err)
 	}
 	globals.UserAccessor = userAccessor
@@ -179,10 +174,10 @@ func init() {
 	logger.Info("[application.go] Started using database: " + globals.Server.DbConfig.Name)
 
 	// Migrate database tables
-	DBMigrate(logCtx, globals.Server.Db)
-	DBAddDefaultData(logCtx, globals.Server.Db)
+	migrations.DBMigrate(logCtx, globals.Server.Db)
+	migrations.DBAddDefaultData(logCtx, globals.Server.Db)
 	// After loading initial data, apply custom indexes. Eg: fulltext indexes
-	DBAddCustomIndexes(logCtx, globals.Server.Db)
+	migrations.DBAddCustomIndexes(logCtx, globals.Server.Db)
 
 	sim.HTTPHandlerInstance, err = sim.NewHTTPHandler(logCtx, globals.UserAccessor)
 	if err != nil {
@@ -190,76 +185,14 @@ func init() {
 		log.Fatalf("%+v\n", err)
 	}
 
-	// Create the default instance of the simulations service
-	connectToCloudServices := !cfg.isGoTest && cfg.ConnectToCloud
-
-	// Configure access to kubernetes cluster
-	var kcli kubernetes.Interface
-	kcli = sim.NewK8Factory(cfg.isGoTest, connectToCloudServices).NewK8(logCtx)
-	globals.KClientset = kcli
-
-	// Configure the Gloo client
-	var kubeconfig *restclient.Config
-	if !cfg.isGoTest {
-		kubeconfig, err = sim.GetKubernetesConfig(nil)
-		if err != nil {
-			logger.Critical("Critical error trying to get Kubernetes config from %s", err)
-			log.Fatalf("%+v\n", err)
-		}
-	}
-
-	glooConfig := &gloo.ClientsetConfig{
-		KubeConfig:             kubeconfig,
-		IsGoTest:               cfg.isGoTest,
-		ConnectToCloudServices: connectToCloudServices,
-	}
-
-	glooClientset, err := gloo.NewClientset(logCtx, glooConfig)
-	if err != nil {
-		logger.Critical("Critical error trying to create Gloo client", err)
-		log.Fatalf("%+v\n", err)
-	}
-
 	// Note: we were always creating the AWS session. And our logic relies on it.
 	// TODO: we need to change this to avoid creating the AWS session if using minikube.
 	cfg.awsSession = session.Must(session.NewSession())
-	awsFactory := sim.NewAWSFactory(cfg.isGoTest)
-	ec2Svc := awsFactory.NewEC2Svc(cfg.awsSession)
-	globals.EC2Svc = ec2Svc
-	s3Svc := awsFactory.NewS3Svc(cfg.awsSession)
-	globals.S3Svc = s3Svc
 
-	subT, err := sim.NewSubTApplication(logCtx, s3Svc)
+	subT, err := sim.NewSubTApplication(logCtx)
 	if err != nil {
 		// Log and shutdown the app , if there is an error during startup
 		logger.Critical("Critical error trying to create SubT Application", err)
-		log.Fatalf("%+v\n", err)
-	}
-
-	// Create Node Manager instance
-	var nm sim.NodeManager
-	if cfg.NodesManagerImpl == "minikube" {
-		nm, err = sim.NewLocalNodesClient(cfg.logCtx, kcli)
-	} else if cfg.NodesManagerImpl == "ec2" {
-		ecNm, err = sim.NewEC2Client(logCtx, kcli, ec2Svc)
-		if err != nil {
-			cfg.logger.Critical("Critical error while creating a new EC2 client", err)
-			log.Fatalf("%+v\n", err)
-		}
-
-		ecNm.RegisterPlatform(logCtx, subT)
-		nm = ecNm
-	} else {
-		err = errors.New("Invalid .env value for NodeManager impl")
-	}
-	if cfg.isGoTest {
-		// We switch the underlying implementation to nil to avoid unexpectedly creating
-		// resources.
-		sim.AssertMockedEC2(ec2Svc).SetImpl(nil)
-	}
-
-	if err != nil {
-		cfg.logger.Critical("Critical error trying to create the nodeManager", err)
 		log.Fatalf("%+v\n", err)
 	}
 
@@ -269,23 +202,23 @@ func init() {
 	if cfg.isGoTest {
 		pFactory = sim.SynchronicPoolFactory
 	}
-	sim.SimServImpl, err = sim.NewSimulationsService(
-		logCtx,
-		globals.Server.Db,
-		nm,
-		kcli,
-		glooClientset,
-		pFactory,
-		userAccessor,
-		cfg.isGoTest,
-	)
+	sim.SimServImpl, err = sim.NewSimulationsService(logCtx, globals.Server.Db, pFactory, userAccessor, cfg.isGoTest)
 	if err != nil {
 		// Log and shutdown the app , if there is an error during startup
 		logger.Critical("Critical error trying to create Simulations services", err)
 		log.Fatalf("%+v\n", err)
 	}
+
 	sim.SimServImpl.RegisterApplication(logCtx, subT)
-	sim.SimServImpl.Start(logCtx)
+
+	err = sim.SimServImpl.Start(logCtx)
+	if err != nil {
+		// Log and shutdown the app , if there is an error during startup
+		logger.Critical("Critical error starting SubT Application", err)
+		log.Fatalf("%+v\n", err)
+	}
+
+	logger.Info("Cloudsim is ready.")
 }
 
 /////////////////////////////////////////////////
@@ -295,9 +228,6 @@ func main() {
 	globals.Server.Run()
 	// Destroy Sim Service
 	sim.SimServImpl.Stop(context.Background())
-	if ecNm != nil {
-		ecNm.Stop()
-	}
 }
 
 func initValidator(cfg appConfig) *validator.Validate {
@@ -340,7 +270,7 @@ func initPermissions(cfg appConfig) *permissions.Permissions {
 }
 
 // initUserAccessor initializes access to Users (from ign-fuel db)
-func initUserAccessor(ctx context.Context, cfg appConfig) (useracc.UserAccessor, error) {
+func initUserAccessor(ctx context.Context, cfg appConfig) (useracc.Service, error) {
 
 	// Dev notes:
 	// Users live in the ign-fuel DB and not in the cloudsim DB. That's why we need
@@ -401,7 +331,7 @@ func initUserAccessor(ctx context.Context, cfg appConfig) (useracc.UserAccessor,
 	// service.
 	globals.Server.UsersDb = usersDb
 
-	ua, err := useracc.NewUserAccessor(ctx, globals.Permissions, usersDb, cfg.SysAdmin)
+	ua, err := useracc.NewService(ctx, globals.Permissions, usersDb, cfg.SysAdmin)
 	if err != nil {
 		return nil, err
 	}

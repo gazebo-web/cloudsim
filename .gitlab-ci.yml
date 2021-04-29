@@ -140,7 +140,9 @@ test:
     - *setup_db
     - go install github.com/jstemmer/go-junit-report
   script:
-    - go test -v $(go list ./...) 2>&1 | $GOPATH/bin/go-junit-report -set-exit-code > report.xml
+    - go test -p 1 -v $(go list ./...) 2>&1 | tee test_output
+  after_script:
+    - $GOPATH/bin/go-junit-report -set-exit-code < test_output > report.xml
   services:
     - mysql:5.7
   environment:
@@ -162,7 +164,7 @@ race:
     - *setup_git_credentials
     - *setup_db
   script:
-    - go test -v -failfast -race $(go list ./...)
+    - go test -p 1 -v -failfast -race $(go list ./...)
   services:
     - mysql:5.7
   environment:
@@ -181,7 +183,7 @@ coverage:
     - *setup_git_credentials
     - *setup_db
   script:
-    - go test -v -failfast -covermode=atomic -coverprofile=coverage.tx  $(go list ./...)
+    - go test -p 1 -v -failfast -covermode=atomic -coverprofile=coverage.tx  $(go list ./...)
     - go tool cover -func=coverage.tx
     - bash <(curl -s https://codecov.io/bash)
   services:

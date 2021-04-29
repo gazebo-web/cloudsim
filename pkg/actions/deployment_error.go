@@ -10,7 +10,7 @@ type DeploymentError struct {
 	DeploymentID int
 	Deployment   *Deployment
 	Job          *string
-	Error        *string
+	Error        *string `gorm:"type:text"`
 }
 
 // TableName sets the database table name for DeploymentError.
