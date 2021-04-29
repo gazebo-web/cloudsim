@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/jinzhu/gorm"
+	"github.com/satori/go.uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"gitlab.com/ignitionrobotics/web/ign-go"
@@ -373,7 +374,7 @@ func TestProcessJobs(t *testing.T) {
 
 	// Process jobs resuming from the second job
 	t.Run("Process jobs resuming from second job", func(t *testing.T) {
-		deployment, err := newDeployment(tr.db, &Action{Jobs: jobs})
+		deployment, err := newDeployment(tr.db, &Action{Jobs: jobs}, uuid.NewV4().String())
 		require.NoError(t, err)
 		require.NoError(t, deployment.setJob(tr.db, td.jobName2, nil))
 

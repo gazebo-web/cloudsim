@@ -5,10 +5,17 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/jinzhu/gorm"
+	subtsim "gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/simulations"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
 	"gitlab.com/ignitionrobotics/web/ign-go"
 	"strconv"
 	"strings"
 	"time"
+)
+
+// Force SimulationDeployment to implement simulations.Simulation interface.
+var (
+	_ subtsim.Simulation = (*SimulationDeployment)(nil)
 )
 
 // SimulationDeployment represents a cloudsim simulation .
@@ -81,6 +88,197 @@ type SimulationDeployment struct {
 	AuthorizationToken *string `json:"-"`
 	// Score has the simulation's score. It's updated when the simulations finishes and gets processed.
 	Score *float64 `json:"score,omitempty"`
+}
+
+// GetRunIndex returns the simulation's run index.
+func (dep *SimulationDeployment) GetRunIndex() int {
+	extra, err := ReadExtraInfoSubT(dep)
+	if err != nil {
+		return 0
+	}
+
+	if extra.RunIndex == nil {
+		return 0
+	}
+
+	return *extra.RunIndex
+}
+
+// GetWorldIndex returns the simulation's world index.
+func (dep *SimulationDeployment) GetWorldIndex() int {
+	extra, err := ReadExtraInfoSubT(dep)
+	if err != nil {
+		return 0
+	}
+
+	if extra.WorldIndex == nil {
+		return 0
+	}
+
+	return *extra.WorldIndex
+}
+
+// IsProcessed returns true if the SimulationDeployment has been processed.
+func (dep *SimulationDeployment) IsProcessed() bool {
+	return dep.Processed
+}
+
+// GetOwner returns the SimulationDeployment's Owner.
+func (dep *SimulationDeployment) GetOwner() *string {
+	return dep.Owner
+}
+
+// GetCreator returns the SimulationDeployment's Creator. It returns an empty string if no creator has been assigned.
+func (dep *SimulationDeployment) GetCreator() string {
+	if dep.Creator == nil {
+		return ""
+	}
+	return *dep.Creator
+}
+
+// GetPlatform returns the SimulationDeployment's Platform.
+func (dep *SimulationDeployment) GetPlatform() *string {
+	return dep.Platform
+}
+
+// GetName returns the SimulationsDeployment's Name. t returns an empty string if no name has been assigned.
+func (dep *SimulationDeployment) GetName() string {
+	if dep.Name == nil {
+		return ""
+	}
+	return *dep.Name
+}
+
+// GetGroupID returns the SimulationDeployment's GroupID.
+func (dep *SimulationDeployment) GetGroupID() simulations.GroupID {
+	return simulations.GroupID(*dep.GroupID)
+}
+
+// GetStatus returns the SimulationDeployment's DeploymentStatus.
+func (dep *SimulationDeployment) GetStatus() simulations.Status {
+	switch *dep.DeploymentStatus {
+	case simPending.ToInt():
+		return simulations.StatusPending
+	case simLaunchingNodes.ToInt():
+		return simulations.StatusLaunchingInstances
+	case simLaunchingPods.ToInt():
+		return simulations.StatusLaunchingPods
+	case simParentLaunching.ToInt():
+		return simulations.StatusUnknown
+	case simParentLaunchingWithErrors.ToInt():
+		return simulations.StatusUnknown
+	case simRunning.ToInt():
+		return simulations.StatusRunning
+	case simTerminateRequested.ToInt():
+		return simulations.StatusTerminateRequested
+	case simDeletingPods.ToInt():
+		return simulations.StatusDeletingPods
+	case simDeletingNodes.ToInt():
+		return simulations.StatusDeletingNodes
+	case simTerminatingInstances.ToInt():
+		return simulations.StatusTerminatingInstances
+	case simTerminated.ToInt():
+		return simulations.StatusTerminated
+	case simRejected.ToInt():
+		return simulations.StatusRejected
+	case simSuperseded.ToInt():
+		return simulations.StatusSuperseded
+	default:
+		return simulations.StatusUnknown
+	}
+}
+
+// HasStatus checks that the SimulationDeployment's DeploymentStatus is equal to the given status.
+func (dep *SimulationDeployment) HasStatus(status simulations.Status) bool {
+	return dep.GetStatus() == status
+}
+
+// SetStatus sets the SimulationDeployment's DeploymentStatus to the given status.
+func (dep *SimulationDeployment) SetStatus(status simulations.Status) {
+	dep.setStatus(status)
+}
+
+// GetKind returns the SimulationDeployment's Kind. It parses the MultiSim field into a Kind.
+func (dep *SimulationDeployment) GetKind() simulations.Kind {
+	return simulations.Kind(dep.MultiSim)
+}
+
+// IsKind checks that the SimulationDeployment
+func (dep *SimulationDeployment) IsKind(kind simulations.Kind) bool {
+	return dep.GetKind() == kind
+}
+
+// GetError returns the SimulationDeployment's ErrorStatus
+func (dep *SimulationDeployment) GetError() *simulations.Error {
+	if dep.ErrorStatus == nil {
+		return nil
+	}
+	err := simulations.Error(*dep.ErrorStatus)
+	return &err
+}
+
+// GetImage returns the SimulationDeployment's image.
+func (dep *SimulationDeployment) GetImage() string {
+	if dep.Image == nil {
+		return ""
+	}
+	return *dep.Image
+}
+
+// GetValidFor returns the SimulationDeployment's ValidFor parsed as time.Duration.
+func (dep *SimulationDeployment) GetValidFor() time.Duration {
+	if dep.ValidFor == nil {
+		return 0
+	}
+	d, err := time.ParseDuration(*dep.ValidFor)
+	if err != nil {
+		return 0
+	}
+	return d
+}
+
+// GetTrack returns the SimulationDeployment's circuit name.
+func (dep *SimulationDeployment) GetTrack() string {
+	info, err := ReadExtraInfoSubT(dep)
+	if err != nil {
+		return ""
+	}
+	return info.Circuit
+}
+
+// GetToken returns the SimulationDeployment's websocket authorization token.
+func (dep *SimulationDeployment) GetToken() *string {
+	return dep.AuthorizationToken
+}
+
+// GetRobots parses the robots from the extra field and returns them as a slice of robots.
+func (dep *SimulationDeployment) GetRobots() []simulations.Robot {
+	info, err := ReadExtraInfoSubT(dep)
+	if err != nil {
+		return nil
+	}
+	result := make([]simulations.Robot, len(info.Robots))
+	for i, robot := range info.Robots {
+		r := new(SubTRobot)
+		*r = robot
+		result[i] = r
+	}
+	return result
+}
+
+// GetMarsupials parses the extra field and returns the marsupials.
+func (dep *SimulationDeployment) GetMarsupials() []simulations.Marsupial {
+	info, err := ReadExtraInfoSubT(dep)
+	if err != nil {
+		return nil
+	}
+	result := make([]simulations.Marsupial, len(info.Marsupials))
+	for i, marsupial := range info.Marsupials {
+		m := new(SubTMarsupial)
+		*m = marsupial
+		result[i] = m
+	}
+	return result
 }
 
 // NewSimulationDeployment creates and initializes a simulation deployment struct.
@@ -377,6 +575,7 @@ func (dep *SimulationDeployment) recordStop(tx *gorm.DB) *ign.ErrMsg {
 	return nil
 }
 
+// updateValidFor updates this SimulationDeployment's ValidFor field in the database.
 func (dep *SimulationDeployment) updateValidFor(tx *gorm.DB, validFor time.Duration) *ign.ErrMsg {
 	validForStr := validFor.String()
 	if err := tx.Model(&dep).Update(SimulationDeployment{
@@ -388,7 +587,7 @@ func (dep *SimulationDeployment) updateValidFor(tx *gorm.DB, validFor time.Durat
 	return nil
 }
 
-// updateDepStatus updates the status in DB of a given SimulationDeployment
+// updateSimDepStatus updates this SimulationDeployment's DeploymentStatus in the database.
 func (dep *SimulationDeployment) updateSimDepStatus(tx *gorm.DB, st DeploymentStatus) *ign.ErrMsg {
 	val := st.ToPtr()
 	if err := tx.Model(&dep).Update(SimulationDeployment{
@@ -397,6 +596,18 @@ func (dep *SimulationDeployment) updateSimDepStatus(tx *gorm.DB, st DeploymentSt
 		return ign.NewErrorMessageWithBase(ign.ErrorDbSave, err)
 	}
 	dep.DeploymentStatus = val
+	return nil
+}
+
+// updatePlatform updates this SimulationDeployment's Platform in the database.
+func (dep *SimulationDeployment) updatePlatform(tx *gorm.DB, platform string) *ign.ErrMsg {
+	if err := tx.Model(&dep).Update(SimulationDeployment{
+		Platform: &platform,
+	}).Error; err != nil {
+		return ign.NewErrorMessageWithBase(ign.ErrorDbSave, err)
+	}
+	dep.Platform = &platform
+
 	return nil
 }
 
@@ -463,6 +674,39 @@ func (dep *SimulationDeployment) MarkAsMultiSimChild(tx *gorm.DB, parent *Simula
 		return ign.NewErrorMessageWithBase(ign.ErrorDbSave, err)
 	}
 	return nil
+}
+
+func (dep *SimulationDeployment) setStatus(status simulations.Status) {
+	dep.DeploymentStatus = convertStatus(status).ToPtr()
+}
+
+func convertStatus(status simulations.Status) DeploymentStatus {
+	switch status {
+	case simulations.StatusPending:
+		return simPending
+	case simulations.StatusLaunchingInstances, simulations.StatusWaitingInstances, simulations.StatusWaitingNodes:
+		return simLaunchingNodes
+	case simulations.StatusLaunchingPods, simulations.StatusWaitingPods:
+		return simLaunchingPods
+	case simulations.StatusRunning:
+		return simRunning
+	case simulations.StatusProcessingResults, simulations.StatusTerminateRequested:
+		return simTerminateRequested
+	case simulations.StatusDeletingPods:
+		return simDeletingPods
+	case simulations.StatusDeletingNodes:
+		return simDeletingNodes
+	case simulations.StatusTerminatingInstances:
+		return simTerminatingInstances
+	case simulations.StatusTerminated:
+		return simTerminated
+	case simulations.StatusRejected:
+		return simRejected
+	case simulations.StatusSuperseded:
+		return simSuperseded
+	default:
+		return simPending
+	}
 }
 
 // SimulationDeployments is a slice of SimulationDeployment
@@ -760,7 +1004,7 @@ type CreateSimulation struct {
 	Owner string `json:"owner" form:"owner"`
 	// The docker image(s) that will be used for the Field Computer(s)
 	Image       []string `json:"image" form:"image"`
-	Platform    string   `json:"platform" form:"platform"`
+	Platform    *string  `json:"platform" form:"platform"`
 	Application string   `json:"application" form:"application"`
 	Private     *bool    `json:"private" validate:"omitempty" form:"private"`
 	// When shutting down simulations, stop EC2 instances instead of terminating them. Requires admin privileges.

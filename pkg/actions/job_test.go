@@ -2,6 +2,7 @@ package actions
 
 import (
 	"github.com/jinzhu/gorm"
+	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"reflect"
@@ -295,6 +296,64 @@ func TestJobsRegisterTypes(t *testing.T) {
 }
 
 func TestJobsValidate(t *testing.T) {
+	// Check that an empty Job fails
+	emptyJob := &Job{}
+	require.Error(t, emptyJob.validate())
+
+	// Check that all required fields are filled
+	data := "test"
+	job := &Job{
+		Name: "test",
+		Execute: func(store Store, tx *gorm.DB, deployment *Deployment, value interface{}) (interface{}, error) {
+			return nil, nil
+		},
+		// Nil type input
+		InputType:  GetJobDataType(NilJobDataType),
+		OutputType: GetJobDataType(data),
+	}
+	require.NoError(t, job.validate())
+}
+
+func TestJobsValidateFailNoJobs(t *testing.T) {
+	// Check that an empty Job fails
+	emptyJob := &Job{}
+	require.Error(t, emptyJob.validate())
+
+	jobs := &Jobs{}
+	require.Equal(t, ErrJobsEmptySequence, jobs.notEmpty())
+}
+
+func TestJobsValidateFailInvalidSingleJob(t *testing.T) {
+	// Check that an empty Job fails
+	emptyJob := &Job{}
+	require.Error(t, emptyJob.validate())
+
+	jobs := &Jobs{emptyJob}
+	require.NotNil(t, jobs.jobsAreValid())
+}
+
+func TestJobsNoRepeatedJobNames(t *testing.T) {
+	// Check that an empty Job fails
+	emptyJob := &Job{}
+	require.Error(t, emptyJob.validate())
+
+	// Prepare a valid job
+	job := &Job{
+		Name: "test",
+		Execute: func(store Store, tx *gorm.DB, deployment *Deployment, value interface{}) (interface{}, error) {
+			return nil, nil
+		},
+		// Nil type input
+		InputType:  GetJobDataType(NilJobDataType),
+		OutputType: GetJobDataType("test"),
+	}
+	assert.Nil(t, job.validate())
+
+	jobs := &Jobs{job, job}
+	require.True(t, errors.Is(jobs.jobNamesAreUnique(), ErrJobsNamesNotUnique))
+}
+
+func TestJobValidate(t *testing.T) {
 	// Check that an empty Job fails
 	emptyJob := &Job{}
 	require.Error(t, emptyJob.validate())
