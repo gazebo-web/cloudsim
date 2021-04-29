@@ -406,13 +406,13 @@ func (s *Service) Start(ctx context.Context) error {
 			result, err := s.launchHandlerQueue.DequeueOrWait()
 			groupID, ok = result.(string)
 			if ok && err == nil {
-				logger(ctx).Info("launchHandler queue - about to process launch task for groupID: " + groupID)
+				s.logger.Info("launchHandler queue - about to process launch task for groupID: " + groupID)
 				// This call will block if all Workers are busy
 				if err := s.launcher.Serve(groupID); err != nil {
 					logMsg := fmt.Sprintf(
 						"launchHandler queue - Error in launch task for groupID [%s]. Error:[%v]\n", groupID, err,
 					)
-					logger(ctx).Error(logMsg, err)
+					s.logger.Error(logMsg, err)
 				}
 			}
 		}
@@ -422,13 +422,13 @@ func (s *Service) Start(ctx context.Context) error {
 	// the WorkerPool. If all the Workers are busy then this goroutine will block.
 	go func() {
 		for groupID := range s.terminationHandlerQueue {
-			logger(ctx).Info("shutdownHandler queue - about to submit shutdown task for groupID: " + groupID)
+			s.logger.Info("shutdownHandler queue - about to submit shutdown task for groupID: " + groupID)
 			// This call will block if all Workers are busy
 			if err := s.terminator.Serve(groupID); err != nil {
 				logMsg := fmt.Sprintf(
 					"shutdownHandler queue - Error in shutdown task for groupID [%s]. Error:[%v]\n", groupID, err,
 				)
-				logger(ctx).Error(logMsg, err)
+				s.logger.Error(logMsg, err)
 			}
 		}
 	}()
@@ -437,25 +437,16 @@ func (s *Service) Start(ctx context.Context) error {
 	// the WorkerPool. If all the Workers are busy then this goroutine will block.
 	go func() {
 		for groupID := range s.errorHandlerQueue {
-			logger(ctx).Info("errorHandler queue - about to handle error for groupID: " + groupID)
+			s.logger.Info("errorHandler queue - about to handle error for groupID: " + groupID)
 			// This call will block if all Workers are busy
 			if err := s.errorHandler.Serve(groupID); err != nil {
 				logMsg := fmt.Sprintf(
 					"errorHandler queue - Error while handling errors for groupID [%s]. Error:[%v]\n", groupID, err,
 				)
-				logger(ctx).Error(logMsg, err)
+				s.logger.Error(logMsg, err)
 			}
 		}
 	}()
-
-	// Initialize server state based on data from DB and and from kubernetes cluster Pods.
-	// Important note: it is expected that the kubernetes cluster should be running already.
-	if err := s.rebuildState(ctx, s.DB); err != nil {
-		return err
-	}
-	s.StartExpiredSimulationsCleaner()
-	s.StartMultiSimStatusUpdater()
-	RegisterSchedulableTasks(s, ctx, s.DB)
 
 	var err error
 
@@ -475,6 +466,15 @@ func (s *Service) Start(ctx context.Context) error {
 
 	s.logger.Info("Initializing Simulator using Kubernetes and AWS")
 	s.simulator = s.initSimulator()
+
+	// Initialize server state based on data from DB and and from kubernetes cluster Pods.
+	// Important note: it is expected that the kubernetes cluster should be running already.
+	if err = s.rebuildState(ctx, s.DB); err != nil {
+		return err
+	}
+	s.StartExpiredSimulationsCleaner()
+	s.StartMultiSimStatusUpdater()
+	RegisterSchedulableTasks(s, ctx, s.DB)
 
 	return nil
 }
@@ -521,7 +521,7 @@ func (s *Service) initializeRunningSimulationsFromCluster(ctx context.Context, t
 	podsInterface := s.clientset.CoreV1().Pods(s.cfg.KubernetesNamespace)
 	pods, err := podsInterface.List(metav1.ListOptions{LabelSelector: cloudsimTagLabel})
 	if err != nil {
-		logger(ctx).Error("Error getting initial list of Cloudsim Pods from cluster", err)
+		s.logger.Error("Error getting initial list of Cloudsim Pods from cluster", err)
 		return err
 	}
 
@@ -569,7 +569,7 @@ func (s *Service) initializeRunningSimulationsFromCluster(ctx context.Context, t
 				return err
 			}
 
-			logger(ctx).Info(fmt.Sprintf("Init - Added RunningSimulation for groupID: [%s]. Deployment Status in DB: [%d]", groupID, *simDep.DeploymentStatus))
+			s.logger.Info(fmt.Sprintf("Init - Added RunningSimulation for groupID: [%s]. Deployment Status in DB: [%d]", groupID, *simDep.DeploymentStatus))
 		}
 	}
 
@@ -583,7 +583,7 @@ func (s *Service) DeployHeldCircuitSimulations(ctx context.Context, tx *gorm.DB,
 		return err
 	}
 	for _, dep := range *deps {
-		logger(ctx).Info(fmt.Sprintf("Deploying simulations -- Circuit: %s | Group ID: %s", circuit, *dep.GroupID))
+		s.logger.Info(fmt.Sprintf("Deploying simulations -- Circuit: %s | Group ID: %s", circuit, *dep.GroupID))
 		s.DeployHeldSimulation(ctx, tx, &dep)
 	}
 	return nil
@@ -605,9 +605,9 @@ func (s *Service) DeployHeldSimulation(ctx context.Context, tx *gorm.DB, dep *Si
 			return NewErrorMessageWithBase(ErrorLaunchHeldSimulation, err)
 		}
 
-		logger(ctx).Info(fmt.Sprintf("DeployHeldSimulation about to submit launch task for groupID: %s", *sim.GroupID))
+		s.logger.Info(fmt.Sprintf("DeployHeldSimulation about to submit launch task for groupID: %s", *sim.GroupID))
 		if err := LaunchSimulation(s, ctx, tx, &sim); err != nil {
-			logger(ctx).Error(fmt.Sprintf("DeployHeldSimulation -- Cannot launch simulation: %s", err.Msg))
+			s.logger.Error(fmt.Sprintf("DeployHeldSimulation -- Cannot launch simulation: %s", err.Msg))
 		}
 	}
 	return nil
@@ -639,20 +639,19 @@ func (s *Service) rebuildState(ctx context.Context, db *gorm.DB) error {
 	for _, d := range deps {
 		groupID := *d.GroupID
 
-		if simPending.Eq(*d.DeploymentStatus) {
+		if d.HasStatus(simulations.StatusPending) {
 			// If still Pending then re-add it to the scheduler, by adding a 'launch simulation'
 			// request to the Launcher Jobs-Pool
-			logger(ctx).Info("rebuildState -- about to submit launch task for groupID: " + groupID)
+			s.logger.Info("rebuildState -- about to submit launch task for groupID: " + groupID)
 			if err := LaunchSimulation(s, ctx, db, &d); err != nil {
-				logger(ctx).Error(fmt.Sprintf("rebuildState -- Cannot launch simulation: %s", err.Msg))
+				s.logger.Error(fmt.Sprintf("rebuildState -- Cannot launch simulation: %s", err.Msg))
 			}
 			continue
 		}
 
-		if simRunning.Eq(*d.DeploymentStatus) {
-			_, podRunning := s.runningSimulations[groupID]
-			if !podRunning {
-				logger(ctx).Info(fmt.Sprintf("rebuildState -- GroupID [%s] expected to be Running "+
+		if d.HasStatus(simulations.StatusRunning) {
+			if !s.platform.RunningSimulations().Exists(d.GetGroupID()) {
+				s.logger.Info(fmt.Sprintf("rebuildState -- GroupID [%s] expected to be Running "+
 					"in DB but there is no matching Pod running. Marking with error", groupID))
 				// if the SimulationDeployment DB record has 'running' status but there is no matching
 				// running Pod in the cluster then we have an inconsistenty. Mark it as error.
@@ -665,7 +664,7 @@ func (s *Service) rebuildState(ctx context.Context, db *gorm.DB) error {
 		// Error, as we cannot confirm a successful completion of the ongoing operation
 		// after a server restart.
 		statusStr := DeploymentStatus(*d.DeploymentStatus).String()
-		logger(ctx).Info(fmt.Sprintf("rebuildState -- GroupID [%s] found with intermediate "+
+		s.logger.Info(fmt.Sprintf("rebuildState -- GroupID [%s] found with intermediate "+
 			"DeploymentStatus [%s]. Marking with error", groupID, statusStr))
 		d.setErrorStatus(db, simErrorServerRestart)
 	}
@@ -724,7 +723,7 @@ func (s *Service) getLaunchableSimulations(ctx context.Context, tx *gorm.DB, dep
 // will be updated based on the status of their children.
 func (s *Service) StartMultiSimStatusUpdater() {
 	// bind a specific logger to the routing
-	newLogger := logger(s.baseCtx).Clone("multisim-status-updater")
+	newLogger := s.logger.Clone("multisim-status-updater")
 	ctx := ign.NewContextWithLogger(s.baseCtx, newLogger)
 
 	s.multisimStatusUpdater = time.NewTicker(20 * time.Second)
@@ -750,18 +749,18 @@ func (s *Service) StopMultiSimStatusUpdater() {
 }
 
 func (s *Service) updateMultiSimStatuses(ctx context.Context, tx *gorm.DB) {
-	logger(ctx).Debug("Updating the Statuses of MultiSim Parents...")
+	s.logger.Debug("Updating the Statuses of MultiSim Parents...")
 	parents, err := GetParentSimulationDeployments(tx, simPending, simTerminatingInstances,
 		[]ErrorStatus{simErrorWhenInitializing, simErrorWhenTerminating})
 	if err != nil {
-		logger(ctx).Error("Error while trying to get Simulation Parents from DB", err)
+		s.logger.Error("Error while trying to get Simulation Parents from DB", err)
 		return
 	}
 
 	// Compute and set the status of each Parent based on its children
 	for _, p := range *parents {
 		if em := p.updateCompoundStatuses(tx); em != nil {
-			logger(ctx).Error("Error computing and updating compound status for Parent: "+*p.GroupID, err)
+			s.logger.Error("Error computing and updating compound status for Parent: "+*p.GroupID, err)
 		}
 		s.applications[*p.Application].updateMultiSimStatuses(ctx, tx, s.userAccessor, &p)
 	}
@@ -773,8 +772,6 @@ func (s *Service) updateMultiSimStatuses(ctx context.Context, tx *gorm.DB) {
 // StartExpiredSimulationsCleaner initialize the routine that will check for expired
 // simulations.
 func (s *Service) StartExpiredSimulationsCleaner() {
-	// bind a specific logger to the cleaner
-
 	// We check for expired simulations each minute
 	s.expiredSimulationsTicker = time.NewTicker(time.Minute)
 	s.expiredSimulationsDone = make(chan bool, 1)
@@ -873,7 +870,7 @@ func (s *Service) countPods(ctx context.Context, user *users.User) (interface{},
 		return nil, ign.NewErrorMessageWithBase(ign.ErrorUnexpected, err)
 	}
 	a := fmt.Sprintf("There are %d pods in the cluster", len(pods.Items))
-	logger(ctx).Debug(a)
+	s.logger.Debug(a)
 	return &a, nil
 }
 
@@ -915,7 +912,7 @@ func (s *Service) workerTerminateSimulation(payload interface{}) {
 	if !ok {
 		return
 	}
-
+	s.logger.Info("Worker about to invoke ShutdownSimulation for groupID: " + groupID)
 	err := s.simulator.Stop(s.baseCtx, simulations.GroupID(groupID))
 	if err != nil {
 		s.notify(PoolShutdownSimulation, groupID, nil, ign.NewErrorMessageWithBase(ign.ErrorUnexpected, err))
@@ -940,15 +937,13 @@ func (s *Service) workerErrorHandler(payload interface{}) {
 		return
 	}
 	// bind a specific logger to the worker
-	reqID := fmt.Sprintf("worker-error-handler-%s", groupID)
-	newLogger := logger(s.baseCtx).Clone(reqID)
-	workerCtx := ign.NewContextWithLogger(s.baseCtx, newLogger)
+	workerCtx := context.Background()
 
-	newLogger.Info("Worker about to (try to) handle error for groupID: " + groupID)
+	s.logger.Info("Worker about to (try to) handle error for groupID: " + groupID)
 	dep, err := GetSimulationDeployment(s.DB, groupID)
 	if err != nil {
 		logMsg := fmt.Sprintf("workerErrorHandler - Error getting SimulationDeployment from DB for GroupID [%s]", groupID)
-		newLogger.Error(logMsg, err)
+		s.logger.Error(logMsg, err)
 		return
 	}
 
@@ -1108,9 +1103,9 @@ func (s *Service) StartSimulationAsync(ctx context.Context,
 	// Add a 'launch simulation' request to the Launcher Jobs-Pool
 	for _, sim := range simsToLaunch {
 		groupID := *sim.GroupID
-		logger(ctx).Info("StartSimulationAsync about to submit launch task for groupID: " + groupID)
+		s.logger.Info("StartSimulationAsync about to submit launch task for groupID: " + groupID)
 		if err := LaunchSimulation(s, ctx, tx, sim); err != nil {
-			logger(ctx).Error(fmt.Sprintf("StartSimulationAsync -- Cannot launch simulation: %s", err.Msg))
+			s.logger.Error(fmt.Sprintf("StartSimulationAsync -- Cannot launch simulation: %s", err.Msg))
 		}
 	}
 
@@ -1157,7 +1152,7 @@ func (s *Service) LaunchSimulationAsync(ctx context.Context, tx *gorm.DB,
 func (s *Service) RestartSimulationAsync(ctx context.Context, tx *gorm.DB,
 	groupID string, user *users.User) (interface{}, *ign.ErrMsg) {
 
-	logger(ctx).Info("RestartSimulationAsync requested for groupID: " + groupID)
+	s.logger.Info("RestartSimulationAsync requested for groupID: " + groupID)
 
 	mainDep, err := GetSimulationDeployment(tx, groupID)
 	if err != nil {
@@ -1256,9 +1251,9 @@ func (s *Service) RestartSimulationAsync(ctx context.Context, tx *gorm.DB,
 	}
 
 	// Add a new 'launch simulation' request to the Launcher Jobs-Pool
-	logger(ctx).Info("RestartSimulationAsync about to submit task to re-launch groupID: " + *clone.GroupID)
+	s.logger.Info("RestartSimulationAsync about to submit task to re-launch groupID: " + *clone.GroupID)
 	if err := LaunchSimulation(s, ctx, tx, clone); err != nil {
-		logger(ctx).Error(fmt.Sprintf("rebuildState -- Cannot launch simulation: %s", err.Msg))
+		s.logger.Error(fmt.Sprintf("rebuildState -- Cannot launch simulation: %s", err.Msg))
 	}
 
 	return clone, nil
@@ -1291,14 +1286,14 @@ func (s *Service) checkValidNumberOfSimulations(ctx context.Context, tx *gorm.DB
 	if limit != 0 {
 		runningSims, err := s.getRunningSimulationDeploymentsByOwner(tx, owner)
 		if err != nil {
-			logger(ctx).Info("Failed to get running simulations by owner")
+			s.logger.Info("Failed to get running simulations by owner")
 			return NewErrorMessageWithBase(
 				ign.ErrorUnexpected,
 				fmt.Errorf("failed to get running simulations by owner %w", err),
 			)
 		}
 		if len(*runningSims) > limit {
-			logger(ctx).Info(fmt.Sprintf(
+			s.logger.Info(fmt.Sprintf(
 				"Owner [%s] has reached the simultaneous simulations limit [%d]. Running simulations [%v]",
 				owner, limit, *runningSims))
 
@@ -1444,7 +1439,7 @@ func (s *Service) DeleteCustomRule(ctx context.Context, tx *gorm.DB, user *users
 		Delete(CircuitCustomRule{}).
 		Error; err != nil {
 		errMsg := fmt.Sprintf("Attempted to delete nonexistent rule [%s] entry for Owner [%s].", string(*ruleType), *owner)
-		logger(ctx).Debug(errMsg)
+		s.logger.Debug(errMsg)
 		return nil, NewErrorMessageWithBase(ErrorRuleForOwnerNotFound, errors.Errorf(errMsg))
 	}
 
@@ -1473,20 +1468,20 @@ func (s *Service) startSimulation(ctx context.Context, tx *gorm.DB,
 	simDep *SimulationDeployment) (interface{}, *ign.ErrMsg) {
 
 	groupID := *simDep.GroupID
-	logger(ctx).Info("startSimulation running for groupID: " + groupID)
+	s.logger.Info("startSimulation running for groupID: " + groupID)
 
 	// Sanity checks
 
 	// Check the simulation has the correct status
 	if em := simDep.assertSimDepStatus(simPending); em != nil {
-		logger(ctx).Warning(fmt.Sprintf("startSimulation - Invalid simulation status: %d", *simDep.DeploymentStatus))
+		s.logger.Warning(fmt.Sprintf("startSimulation - Invalid simulation status: %d", *simDep.DeploymentStatus))
 		return nil, em
 	}
 
 	// Cannot launch a gz simulation from a MultiSim Parent. Only for child simulations
 	if simDep.isMultiSimParent() {
 		err := errors.New("Cannot launch a gz simulation from a MultiSim Parent. Only for child simulations")
-		logger(ctx).Error(fmt.Sprintf("startSimulation - %v", err))
+		s.logger.Error(fmt.Sprintf("startSimulation - %v", err))
 		tx.Model(simDep).Update(SimulationDeployment{
 			DeploymentStatus: simRejected.ToPtr(),
 			ErrorStatus:      simErrorRejected.ToStringPtr(),
@@ -1499,12 +1494,12 @@ func (s *Service) startSimulation(ctx context.Context, tx *gorm.DB,
 	if simDep.isMultiSimChild() {
 		parentSim, err := GetParentSimulation(tx, simDep)
 		if err != nil {
-			logger(ctx).Error(fmt.Sprintf("startSimulation - %v", err))
+			s.logger.Error(fmt.Sprintf("startSimulation - %v", err))
 			return nil, ign.NewErrorMessageWithBase(ign.ErrorK8Create, err)
 		}
 		if parentSim.ErrorStatus != nil {
 			err := errors.New("Cannot launch a children simulation when its parent has ErrorStatus already")
-			logger(ctx).Error(fmt.Sprintf("startSimulation - %v", err))
+			s.logger.Error(fmt.Sprintf("startSimulation - %v", err))
 			return nil, ign.NewErrorMessageWithBase(ign.ErrorK8Create, err)
 		}
 	}
@@ -1512,14 +1507,14 @@ func (s *Service) startSimulation(ctx context.Context, tx *gorm.DB,
 	// Everything OK. Log the launch details (to Rollbar)
 	str, err := simDep.toJSON()
 	if err != nil {
-		logger(ctx).Error(fmt.Sprintf("startSimulation - %v", err))
+		s.logger.Error(fmt.Sprintf("startSimulation - %v", err))
 		return nil, ign.NewErrorMessageWithBase(ign.ErrorUnexpected, err)
 	}
-	logger(ctx).Warning(fmt.Sprintf("startSimulation - SimulationDeployment to launch: [%s]", *str))
+	s.logger.Warning(fmt.Sprintf("startSimulation - SimulationDeployment to launch: [%s]", *str))
 
 	// Move to 'launching nodes' status
 	if em := simDep.updateSimDepStatus(tx, simLaunchingNodes); em != nil {
-		logger(ctx).Error(fmt.Sprintf("startSimulation - %v", err))
+		s.logger.Error(fmt.Sprintf("startSimulation - %v", err))
 		return nil, em
 	}
 
@@ -1545,7 +1540,7 @@ func (s *Service) startSimulation(ctx context.Context, tx *gorm.DB,
 			return nil, em
 		}
 
-		logger(ctx).Info("startSimulation - about to launch pods for groupID: " + groupID)
+		s.logger.Info("startSimulation - about to launch pods for groupID: " + groupID)
 		// After getting the nodes ready we can schedule the Pods.
 		if _, em := s.launchGazeboServerInGroup(ctx, tx, groupID, simDep); em != nil {
 			return nil, em
@@ -1581,13 +1576,13 @@ func (s *Service) startSimulation(ctx context.Context, tx *gorm.DB,
 		}
 		// Otherwise mark the simulation as failed
 		logMsg := fmt.Sprintf("startSimulation - error in startSimulation for groupid [%s]. Error: %v", groupID, em)
-		logger(ctx).Error(logMsg, em)
+		s.logger.Error(logMsg, em)
 		timeTrack(ctx, tstart, "startSimulation - time tracker until error")
 		s.registerError(ctx, tx, simDep, simErrorWhenInitializing)
 		return nil, em
 	}
 
-	logger(ctx).Info("startSimulation - successfully launched groupID: " + groupID)
+	s.logger.Info("startSimulation - successfully launched groupID: " + groupID)
 	return simDep, nil
 }
 
@@ -1610,11 +1605,27 @@ func (s *Service) createRunningSimulation(ctx context.Context, tx *gorm.DB, dep 
 		return err
 	}
 
-	rs, err := NewRunningSimulation(ctx, dep, t, worldStatsTopic, worldWarmupTopic, maxSimSeconds)
+	rs := runsim.NewRunningSimulation(dep.GetGroupID(), int64(maxSimSeconds), dep.GetValidFor())
+
+	err = t.Subscribe(worldStatsTopic, func(message transport.Message) {
+		_ = rs.ReadWorldStats(context.Background(), message)
+	})
 	if err != nil {
 		return err
 	}
-	s.addRunningSimulation(rs)
+
+	err = t.Subscribe(worldWarmupTopic, func(message transport.Message) {
+		_ = rs.ReadWarmup(context.Background(), message)
+	})
+	if err != nil {
+		return err
+	}
+
+	err = s.platform.RunningSimulations().Add(dep.GetGroupID(), rs, t)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -1673,7 +1684,7 @@ func (s *Service) requeueSimulation(simDep *SimulationDeployment) *ign.ErrMsg {
 func (s *Service) ShutdownSimulationAsync(ctx context.Context, tx *gorm.DB,
 	groupID string, user *users.User) (interface{}, *ign.ErrMsg) {
 
-	logger(ctx).Info("ShutdownSimulationAsync requested for groupID: " + groupID)
+	s.logger.Info("ShutdownSimulationAsync requested for groupID: " + groupID)
 
 	// Is the user authorized to shutdown the simulation? First we check generic
 	// permissions. Then we allow specific Applications to reject requests as well.
@@ -1766,7 +1777,7 @@ func (s *Service) internalShutdownSimulation(ctx context.Context, tx *gorm.DB,
 
 	if *dep.DeploymentStatus == int(simDeletingPods) {
 		// Delete the pods, services , etc
-		logger(ctx).Info(fmt.Sprintf("%s - about to delete pods for groupID: %s", logPrefix, groupID))
+		s.logger.Info(fmt.Sprintf("%s - about to delete pods for groupID: %s", logPrefix, groupID))
 		// It is expected that deleteGazeboServerInGroup will block until Pods and Services
 		// were cleanly terminated (including preStop scripts, etc).
 		// Blocking is needed because after this call, the host/node will be killed (or reused).
@@ -1838,21 +1849,21 @@ func (s *Service) shutdownSimulation(ctx context.Context, tx *gorm.DB, groupID s
 		if em.ErrCode == int(ErrorFailedToUploadLogs) {
 			// Set the simulation error status
 			if em := dep.setErrorStatus(tx, simErrorFailedToUploadLogs); em != nil {
-				logger(ctx).Error(fmt.Sprintf("Could not update error status to %s.", simErrorFailedToUploadLogs))
+				s.logger.Error(fmt.Sprintf("Could not update error status to %s.", simErrorFailedToUploadLogs))
 			}
 			logMsg := "shutdownSimulation - Errors occurred while uploading log files. Resources will not be terminated."
-			logger(ctx).Error(logMsg, em)
+			s.logger.Error(logMsg, em)
 			timeTrack(ctx, tstart, "shutdownSimulation - time tracker until error")
 			// Return without calling the error handler to avoid it from terminating this simulation's resources
 			return nil, em
 		}
 		logMsg := fmt.Sprintf("shutdownSimulation - error in shutdownSimulation for groupid [%s]. Error: %v", *dep.GroupID, em)
-		logger(ctx).Error(logMsg, em)
+		s.logger.Error(logMsg, em)
 		timeTrack(ctx, tstart, "shutdownSimulation - time tracker until error")
 		return nil, em
 	}
 
-	logger(ctx).Info("shutdownSimulation - successfully removed groupID: " + groupID)
+	s.logger.Info("shutdownSimulation - successfully removed groupID: " + groupID)
 	timeTrack(ctx, tstart, "shutdownSimulation - Success")
 	return dep, nil
 }
@@ -1888,7 +1899,7 @@ func (s *Service) rollbackFailedLaunch(ctx context.Context, tx *gorm.DB,
 	}()
 	if em != nil {
 		logMsg := fmt.Sprintf("rollbackFailedLaunch - error while doing rollback in groupid [%s]. Marking for Admin review. Error: %v", *dep.GroupID, em)
-		logger(ctx).Error(logMsg, em)
+		s.logger.Error(logMsg, em)
 		timeTrack(ctx, tstart, "rollbackFailedLaunch - time tracker until error")
 		// There was an error during error handling. Marking for Admin Review
 		dep.setErrorStatus(tx, simErrorAdminReview)
@@ -1911,7 +1922,7 @@ func (s *Service) completeFailedTermination(ctx context.Context, tx *gorm.DB,
 	}()
 	if em != nil {
 		logMsg := fmt.Sprintf("completeFailedTermination - error while completing failed termination for groupid [%s]. Marking for Admin review. Error: %v", *dep.GroupID, em)
-		logger(ctx).Error(logMsg, em)
+		s.logger.Error(logMsg, em)
 		timeTrack(ctx, tstart, "completeFailedTermination - time tracker until error")
 		// There was an error during error handling. Marking for Admin Review
 		dep.setErrorStatus(tx, simErrorAdminReview)
