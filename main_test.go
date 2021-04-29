@@ -201,6 +201,7 @@ func createDBTablesAndData(ctx context.Context, worldStatsTopic, worldWarmupTopi
 	sim.SubTCompetitionCircuits = []string{
 		sim.CircuitUrbanCircuit,
 		sim.CircuitCaveCircuit,
+		sim.CircuitVirtualStixCircuit,
 	}
 
 	for _, circuit := range availableCircuits {
