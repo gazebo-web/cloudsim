@@ -3,6 +3,7 @@ package actions
 import (
 	"errors"
 	"github.com/jinzhu/gorm"
+	"github.com/satori/go.uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"testing"
@@ -64,7 +65,7 @@ func TestNewDeploymentAndGetDeployment(t *testing.T) {
 	defer tr.db.Close()
 
 	// New Deployment
-	deployment, err := newDeployment(tr.db, deploymentTestData.action)
+	deployment, err := newDeployment(tr.db, deploymentTestData.action, uuid.NewV4().String())
 	require.NoError(t, err)
 	require.NotNil(t, deployment)
 	require.NotNil(t, deployment.UUID)
@@ -118,7 +119,7 @@ func TestSetJob(t *testing.T) {
 	// Reset the job data type registry
 	jobDataTypeRegistry = newDataTypeRegistry()
 
-	deployment, err := newDeployment(tr.db, td.action)
+	deployment, err := newDeployment(tr.db, td.action, uuid.NewV4().String())
 	require.NoError(t, err)
 	require.Equal(t, td.jobName1, deployment.CurrentJob)
 
@@ -154,7 +155,7 @@ func TestSetAndGetJobData(t *testing.T) {
 	// Reset the job data type registry
 	jobDataTypeRegistry = newDataTypeRegistry()
 
-	deployment, err := newDeployment(tr.db, td.action)
+	deployment, err := newDeployment(tr.db, td.action, uuid.NewV4().String())
 	require.NoError(t, err)
 
 	// Prepare the job data
@@ -187,7 +188,7 @@ func TestAddAndGetErrors(t *testing.T) {
 
 	td := getTestData(t)
 
-	deployment, err := newDeployment(tr.db, td.action)
+	deployment, err := newDeployment(tr.db, td.action, uuid.NewV4().String())
 	require.NoError(t, err)
 
 	// Add the errors to the deployment
@@ -221,7 +222,7 @@ func TestSetStatusAndIsStatusAndGetRollbackError(t *testing.T) {
 	td := getTestData(t)
 
 	// The default status should be Running
-	deployment, err := newDeployment(tr.db, td.action)
+	deployment, err := newDeployment(tr.db, td.action, uuid.NewV4().String())
 	require.NoError(t, err)
 	require.Equal(t, deploymentStatusRunning, deployment.Status)
 
