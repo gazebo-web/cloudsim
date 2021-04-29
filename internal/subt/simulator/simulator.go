@@ -38,6 +38,7 @@ func (s *subTSimulator) Start(ctx context.Context, platform platform.Platform, g
 	execInput := &actions.ExecuteInput{
 		ApplicationName: &s.applicationName,
 		ActionName:      ActionNameStartSimulation,
+		GroupID:         groupID.String(),
 	}
 
 	err := s.actions.Execute(store, s.db, execInput, state)
@@ -56,6 +57,7 @@ func (s *subTSimulator) Stop(ctx context.Context, platform platform.Platform, gr
 	execInput := &actions.ExecuteInput{
 		ApplicationName: &s.applicationName,
 		ActionName:      ActionNameStopSimulation,
+		GroupID:         groupID.String(),
 	}
 
 	err := s.actions.Execute(store, s.db, execInput, state)
