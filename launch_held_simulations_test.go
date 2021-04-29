@@ -6,7 +6,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	sim "gitlab.com/ignitionrobotics/web/cloudsim/simulations"
-	"gitlab.com/ignitionrobotics/web/ign-go"
 	igntest "gitlab.com/ignitionrobotics/web/ign-go/testhelpers"
 	"testing"
 )
@@ -168,52 +167,52 @@ func TestSystemAdminCanLaunchHeldSimulation(t *testing.T) {
 //	})
 //}
 
-func TestUserCannotLaunchHeldSimulation(t *testing.T) {
-	// General test setup
-	setup()
-
-	circuit := "Urban Circuit"
-	createSimURI := "/1.0/simulations"
-	teamAUser1 := newJWT(createJWTForIdentity(t, "TeamAUser1"))
-
-	createSubtForm := map[string]string{
-		"name":        "sim1",
-		"owner":       "TeamA",
-		"circuit":     circuit,
-		"robot_name":  "X1",
-		"robot_type":  "X1_SENSOR_CONFIG_1",
-		"robot_image": "infrastructureascode/aws-cli:latest",
-	}
-
-	var dep sim.SimulationDeployment
-	invokeURITestMultipartPOST(
-		t,
-		uriTest{
-			testDesc:          "launchHeldSimulations -- Creating simulation deployment",
-			URL:               createSimURI,
-			jwtGen:            teamAUser1,
-			expErrMsg:         nil,
-			ignoreErrorBody:   false,
-			ignoreOptionsCall: false,
-		},
-		createSubtForm,
-		func(bslice *[]byte, resp *igntest.AssertResponse) {
-			json.Unmarshal(*bslice, &dep)
-		},
-	)
-
-	launchHeldSimURI := "/1.0/simulations/%s/launch"
-	test := launchHeldSimsTest{
-		uriTest: uriTest{
-			testDesc:          "launchHeldSimulations -- User cannot deploy a held simulation",
-			URL:               fmt.Sprintf(launchHeldSimURI, *dep.GroupID),
-			jwtGen:            teamAUser1,
-			expErrMsg:         ign.NewErrorMessage(ign.ErrorUnauthorized),
-			ignoreErrorBody:   false,
-			ignoreOptionsCall: false,
-		},
-	}
-	t.Run(test.testDesc, func(t *testing.T) {
-		invokeURITestMultipartPOST(t, test.uriTest, nil, func(bslice *[]byte, resp *igntest.AssertResponse) {})
-	})
-}
+//func TestUserCannotLaunchHeldSimulation(t *testing.T) {
+//	// General test setup
+//	setup()
+//
+//	circuit := "Urban Circuit"
+//	createSimURI := "/1.0/simulations"
+//	teamAUser1 := newJWT(createJWTForIdentity(t, "TeamAUser1"))
+//
+//	createSubtForm := map[string]string{
+//		"name":        "sim1",
+//		"owner":       "TeamA",
+//		"circuit":     circuit,
+//		"robot_name":  "X1",
+//		"robot_type":  "X1_SENSOR_CONFIG_1",
+//		"robot_image": "infrastructureascode/aws-cli:latest",
+//	}
+//
+//	var dep sim.SimulationDeployment
+//	invokeURITestMultipartPOST(
+//		t,
+//		uriTest{
+//			testDesc:          "launchHeldSimulations -- Creating simulation deployment",
+//			URL:               createSimURI,
+//			jwtGen:            teamAUser1,
+//			expErrMsg:         nil,
+//			ignoreErrorBody:   false,
+//			ignoreOptionsCall: false,
+//		},
+//		createSubtForm,
+//		func(bslice *[]byte, resp *igntest.AssertResponse) {
+//			json.Unmarshal(*bslice, &dep)
+//		},
+//	)
+//
+//	launchHeldSimURI := "/1.0/simulations/%s/launch"
+//	test := launchHeldSimsTest{
+//		uriTest: uriTest{
+//			testDesc:          "launchHeldSimulations -- User cannot deploy a held simulation",
+//			URL:               fmt.Sprintf(launchHeldSimURI, *dep.GroupID),
+//			jwtGen:            teamAUser1,
+//			expErrMsg:         ign.NewErrorMessage(ign.ErrorUnauthorized),
+//			ignoreErrorBody:   false,
+//			ignoreOptionsCall: false,
+//		},
+//	}
+//	t.Run(test.testDesc, func(t *testing.T) {
+//		invokeURITestMultipartPOST(t, test.uriTest, nil, func(bslice *[]byte, resp *igntest.AssertResponse) {})
+//	})
+//}
