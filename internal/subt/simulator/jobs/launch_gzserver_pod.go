@@ -57,7 +57,7 @@ func prepareGazeboCreatePodInput(store actions.Store, tx *gorm.DB, deployment *a
 	// Generate gazebo command args
 	runCommand := cmdgen.Gazebo(cmdgen.GazeboConfig{
 		World:              track.World,
-		WorldMaxSimSeconds: time.Duration(track.MaxSimSeconds),
+		WorldMaxSimSeconds: time.Duration(track.MaxSimSeconds) * time.Second,
 		Seed:               track.Seed,
 		AuthorizationToken: subtSim.GetToken(),
 		// TODO: Get max connections from store.
