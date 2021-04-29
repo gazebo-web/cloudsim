@@ -859,6 +859,7 @@ var SubTCircuits = []string{
 	CircuitFinalsPractice1,
 	CircuitFinalsPractice2,
 	CircuitFinalsPractice3,
+	CircuitVirtualStixCircuit,
 }
 
 // SubTCompetitionCircuits is the list of circuits that are used for competitions.
@@ -866,6 +867,7 @@ var SubTCompetitionCircuits = []string{
 	CircuitTunnelCircuit,
 	CircuitUrbanCircuit,
 	CircuitCaveCircuit,
+	CircuitVirtualStixCircuit,
 }
 
 // isValidRobotType checks if the field value is a valid Robot Type.

@@ -119,6 +119,7 @@ const (
 	CircuitFinalsPractice1     string = "Finals Practice 1"
 	CircuitFinalsPractice2     string = "Finals Practice 2"
 	CircuitFinalsPractice3     string = "Finals Practice 3"
+	CircuitVirtualStixCircuit  string = "Virtual Stix Circuit"
 
 	// Container names
 	GazeboServerContainerName    string = "gzserver-container"
@@ -698,7 +699,7 @@ func (sa *SubTApplication) getSimulationLogsForDownload(ctx context.Context, tx 
 	filePath := fmt.Sprintf("%s/%s", folderPath, fileName)
 	logger(ctx).Debug(fmt.Sprintf("SubT App - Fetching generating link to fetch logs from S3 bucket [%s] with path [%s]\n", bucket, filePath))
 
-	url, err := p.Storage().GetURL(bucket, filePath, 5 * time.Minute)
+	url, err := p.Storage().GetURL(bucket, filePath, 5*time.Minute)
 	if err != nil {
 		return nil, ign.NewErrorMessageWithBase(ign.ErrorUnexpected, err)
 	}
