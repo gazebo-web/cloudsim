@@ -15,6 +15,7 @@ import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/actions"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/application"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/loader"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/machines"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/resource"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/resource/phase"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/platform"
@@ -136,9 +137,6 @@ var (
 
 // Service is the main struct exported by this Simulations service.
 type Service struct {
-	// Whether this service will automatically requeue instances that failed with
-	// ErrorLaunchingCloudInstanceNotEnoughResources error. True by default.
-	AllowRequeuing bool
 	DB             *gorm.DB
 	// Workers (ie. Thread Pools)
 	launcher   JobPool
@@ -250,7 +248,6 @@ func NewSimulationsService(ctx context.Context, db *gorm.DB, pf PoolFactory, ua 
 
 	var err error
 	s := Service{}
-	s.AllowRequeuing = true
 	s.DB = db
 	s.baseCtx = ctx
 	s.userAccessor = ua
@@ -290,7 +287,7 @@ func NewSimulationsService(ctx context.Context, db *gorm.DB, pf PoolFactory, ua 
 }
 
 // PoolNotificationCallback type of the listeners
-type PoolNotificationCallback func(poolEvent PoolEvent, groupID string, result interface{}, em *ign.ErrMsg)
+type PoolNotificationCallback func(poolEvent PoolEvent, groupID string, result interface{}, err error)
 
 // PoolEvent registers a single pool event listener that will receive
 // notifications any time a pool worker "finishes" its job (either with result or error).
@@ -309,9 +306,9 @@ func (s *Service) SetPoolEventsListener(cb PoolNotificationCallback) {
 	s.poolNotificationCallback = cb
 }
 
-func (s *Service) notify(poolEvent PoolEvent, groupID string, result interface{}, em *ign.ErrMsg) {
+func (s *Service) notify(poolEvent PoolEvent, groupID string, result interface{}, err error) {
 	if s.poolNotificationCallback != nil {
-		s.poolNotificationCallback(poolEvent, groupID, result, em)
+		s.poolNotificationCallback(poolEvent, groupID, result, err)
 	}
 }
 
@@ -442,7 +439,7 @@ func (s *Service) initializeRunningSimulationsFromCluster(ctx context.Context, t
 	// Keep in mind that a simulation could have spawned multiple Pods.
 	runningSims := make(map[string]bool)
 
-	for _, p := range s.platforms.Platforms() {
+	for _, p := range s.platforms.Platforms(nil) {
 		// Get pods
 		namespace := p.Store().Orchestrator().Namespace()
 		pods, err := p.Orchestrator().Pods().List(namespace, cloudsimTags)
@@ -484,7 +481,9 @@ func (s *Service) initializeRunningSimulationsFromCluster(ctx context.Context, t
 			// Get the Simulation record from DB
 			simDep, err := GetSimulationDeployment(tx, groupID)
 			if err != nil {
-				return err
+				errMsg := fmt.Sprintf("%s simulation deployment not found: %s", groupID, err.Error())
+				s.logger.Warning(errMsg)
+				continue
 			}
 
 			// Only create a RunningSimulation if the whole simulation status was Running and the DB
@@ -706,7 +705,8 @@ func (s *Service) updateMultiSimStatuses(ctx context.Context, tx *gorm.DB) {
 			s.logger.Error(errMsg, err)
 		}
 
-		p, err := platformManager.GetSimulationPlatform(s.platforms, &dep)
+		// Parents don't require a specific platform as they only need to upload files and send emails
+		p := s.platforms.Platforms(nil)[0]
 		if err != nil {
 			errMsg := fmt.Sprintf("Failed to get platform for Parent: %s", *dep.GroupID)
 			logger(ctx).Error(errMsg, err)
@@ -752,7 +752,7 @@ func (s *Service) checkForExpiredSimulations(ctx context.Context) error {
 
 	s.logger.Debug("Checking for expired simulations...")
 
-	for _, p := range s.platforms.Platforms() {
+	for _, p := range s.platforms.Platforms(nil) {
 		rss := p.RunningSimulations().ListExpiredSimulations()
 		for _, rs := range rss {
 			if rs.IsExpired() || rs.Finished {
@@ -824,42 +824,43 @@ func (s *Service) workerStartSimulation(payload interface{}) {
 		return
 	}
 
-	// Get platform
-	var p platform.Platform
-	// If the simulation deployment already has a platform, then it is likely being restarted
-	if simDep.Platform != nil {
-		p, err = s.platforms.GetPlatform(platformManager.Selector(*simDep.Platform))
-		if err != nil {
-			return
-		}
-	} else {
-		// TODO Select and cycle platform
-		p = s.platforms.Platforms()[0]
-
+	// Cycle through platforms and launch simulations
+	platforms := s.getPlatforms(simDep)
+	for _, p := range platforms {
 		// Update SimulationDeployment platform
 		simDep.updatePlatform(s.DB, p.GetName())
+
+		err = s.simulator.Start(s.baseCtx, p, simulations.GroupID(groupID))
+		if err == nil {
+			break
+		} else if machines.ErrorIsRetryable(err) {
+			em := simDep.updateSimDepStatus(s.DB, simPending)
+			if em != nil {
+				err = em.BaseError
+				s.logger.Debug("Failed update simulation deployment status:", err)
+				break
+			}
+
+			continue
+		} else {
+			s.logger.Debug("Worker StartSimulation failed: ", err)
+			em := simDep.setErrorStatus(s.DB, simErrorWhenInitializing)
+			if em != nil {
+				err = em.BaseError
+				s.logger.Debug("Failed to set simulation deployment error status:", err)
+				break
+			}
+
+			break
+		}
 	}
 
-	err = s.simulator.Start(s.baseCtx, p, simulations.GroupID(groupID))
-	// TODO Only respond to retryable errors
-	if err != nil {
-		s.notify(PoolStartSimulation, groupID, simDep, ign.NewErrorMessageWithBase(ign.ErrorUnexpected, err))
-		simDep, err = GetSimulationDeployment(s.DB, groupID)
-		if err != nil {
-			s.logger.Debug("Failed to get simulation deployment:", err)
-			return
-		}
-		em := simDep.setErrorStatus(s.DB, simErrorWhenInitializing)
-		if em != nil {
-			s.logger.Debug("Failed to set simulation deployment error status:", err)
-			return
-		}
-		// s.requeueSimulation(simDep)
+	// If all platforms were tried and a retryable error was returned, requeue the simulation
+	if err != nil && machines.ErrorIsRetryable(err) {
+		s.requeueSimulation(simDep)
+	}
 
-			return
-		}
-
-	s.notify(PoolStartSimulation, groupID, simDep, nil)
+	s.notify(PoolStartSimulation, groupID, simDep, err)
 }
 
 // ///////////////////////////////////////////////////////////////////////
@@ -900,7 +901,7 @@ func (s *Service) workerTerminateSimulation(payload interface{}) {
 			s.logger.Debug("Failed to set simulation deployment error status:", err)
 			return
 		}
-		s.notify(PoolShutdownSimulation, groupID, nil, ign.NewErrorMessageWithBase(ign.ErrorUnexpected, err))
+		s.notify(PoolShutdownSimulation, groupID, nil, err)
 		return
 	}
 
@@ -2013,6 +2014,17 @@ func (s *Service) QueueRemoveElement(ctx context.Context, user *users.User, grou
 		return nil, ign.NewErrorMessage(ign.ErrorUnauthorized)
 	}
 	return s.launchHandlerQueue.Remove(groupID)
+}
+
+func (s *Service) getPlatforms(simDep *SimulationDeployment) []platform.Platform {
+	// Get the platforms
+	platforms := s.platforms.Platforms(simDep.Platform)
+	if simDep.Platform != nil && platforms[0].(platform.Platform).GetName() != *simDep.Platform {
+		msg := "Failed to find platform %s for groupID: %s. Proceeding with random platform."
+		s.logger.Warning(fmt.Sprintf(msg, *simDep.Platform, *simDep.GroupID))
+	}
+
+	return platforms
 }
 
 // TODO: Make initPlatforms independent of Service by receiving arguments with the needed config.

@@ -2,7 +2,6 @@ package fake
 
 import (
 	"github.com/stretchr/testify/mock"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/machines"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/store"
 	"time"
@@ -239,18 +238,6 @@ func (f Machines) Type() string {
 func (f Machines) FirewallRules() []string {
 	args := f.Called()
 	return args.Get(0).([]string)
-}
-
-// SubnetAndZone mocks the SubnetAndZone method.
-func (f Machines) SubnetAndZone() (string, string) {
-	args := f.Called()
-	return args.String(0), args.String(1)
-}
-
-// Tags mocks the Tags method.
-func (f Machines) Tags(simulation simulations.Simulation, nodeType string, nameSuffix string) []machines.Tag {
-	args := f.Called(simulation, nodeType, nameSuffix)
-	return args.Get(0).([]machines.Tag)
 }
 
 // BaseImage mocks the BaseImage method.

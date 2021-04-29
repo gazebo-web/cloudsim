@@ -1,6 +1,6 @@
 package machines
 
-import "errors"
+import "github.com/pkg/errors"
 
 var (
 	// ErrMissingKeyName is returned when the key name is missing.
@@ -17,6 +17,9 @@ var (
 	ErrInsufficientMachines = errors.New("insufficient machines")
 	// ErrRequestsLimitExceeded is returned if the request limit has been reached.
 	ErrRequestsLimitExceeded = errors.New("requests limit exceeded")
+	// ErrExternalServiceError is returned when the external service returns an internal error out of this component's
+	// control.
+	ErrExternalServiceError = errors.New("external service error")
 	// ErrMachineCreationFailed is returned when creating machines fails.
 	ErrMachineCreationFailed = errors.New("machine creation failed")
 	// ErrMissingMachineNames is returned when no machines ids are provided to be terminated.
@@ -27,7 +30,20 @@ var (
 	ErrInvalidTerminateRequest = errors.New("invalid terminate machines request")
 	// ErrInvalidClusterID is returned when an invalid cluster id is passed when creating machines.
 	ErrInvalidClusterID = errors.New("invalid cluster id")
+	// ErrRetryable is used to wrap errors returned by cloud providers to signal that the operations are retryable.
+	ErrRetryable = errors.New("retryable error")
 )
+
+// WrapRetryableError wraps an error with the ErrRetryable error.
+// This is typically done to signal that an API call is retryable.
+func WrapRetryableError(err error) error {
+	return errors.Wrap(ErrRetryable, err.Error())
+}
+
+// ErrorIsRetryable checks that an error is wrapped with the ErrRetryable error.
+func ErrorIsRetryable(err error) bool {
+	return errors.Is(err, ErrRetryable)
+}
 
 // Tag is a group of key-value pairs for a certain resource.
 type Tag struct {
@@ -76,11 +92,13 @@ type CreateMachinesInput struct {
 	FirewallRules []string
 
 	// SubnetID is the ID of the subnet that defines a range of IP addresses.
-	SubnetID string
+	// If not provided, the machines component will provide a subnet automatically.
+	SubnetID *string
 
 	// Zone is a location inside a datacenter that is isolated from other zones.
+	// If not provided, the machines components will select a zone automatically.
 	// In AWS: Availability zones.
-	Zone string
+	Zone *string
 
 	// Tags is a group of Tag that is being used to identify a machine.
 	Tags []Tag

@@ -35,8 +35,6 @@ func (s *testStoreFactorySuite) TestNewStore() {
 			"machinesStore": factory.ConfigValues{
 				"instanceProfileValue": "test",
 				"keyNameValue":         "test",
-				"subnetsValue":         []string{"sg-123456789"},
-				"zonesValue":           []string{"us-east-1a"},
 				"namePrefixValue":      "test",
 				"clusterNameValue":     "test",
 			},

@@ -24,12 +24,6 @@ type machinesStore struct {
 	// FirewallRulesValue is a set of firewall rules that will be applied to a new instance.
 	FirewallRulesValue []string `default:"[\"sg-0c5c791266694a3ca\"]" env:"CLOUDSIM_MACHINES_FIREWALL_RULES" envSeparator:","`
 
-	// SubnetsValue is a slice of AWS subnet IDs to launch simulations in. (Example: subnet-1270518251)
-	SubnetsValue []string `validate:"required" env:"CLOUDSIM_MACHINES_SUBNETS,required" envSeparator:","`
-
-	// ZonesValue is a slice of AWS availability zones to launch simulations in. (Example: us-east-1a)
-	ZonesValue []string `validate:"required" env:"CLOUDSIM_MACHINES_ZONES,required" envSeparator:","`
-
 	// MachinesLimitValue is the maximum number of machines that Cloudsim can have running at the same time.
 	MachinesLimitValue int `default:"-1" env:"CLOUDSIM_MACHINES_LIMIT"`
 
@@ -86,18 +80,6 @@ func (m *machinesStore) FirewallRules() []string {
 	return m.FirewallRulesValue
 }
 
-// subnet calculates and returns the subnet id for the current subnetZoneIndex.
-func (m *machinesStore) subnet() string {
-	i := m.subnetZoneIndex % len(m.SubnetsValue)
-	return m.SubnetsValue[i]
-}
-
-// zone calculates and returns the zone id for the current subnetZoneIndex.
-func (m *machinesStore) zone() string {
-	i := m.subnetZoneIndex % len(m.ZonesValue)
-	return m.ZonesValue[i]
-}
-
 // Timeout calculates the time duration in seconds for the current NodeReadyTimeout value.
 func (m *machinesStore) Timeout() time.Duration {
 	return time.Duration(m.NodeReadyTimeout) * time.Second
@@ -106,14 +88,6 @@ func (m *machinesStore) Timeout() time.Duration {
 // PollFrequency returns a time duration of 2 seconds.
 func (m *machinesStore) PollFrequency() time.Duration {
 	return 2 * time.Second
-}
-
-// SubnetAndZone returns the subnet and zone.
-// It performs a round robin operation incrementing the subnetZoneIndex.
-func (m *machinesStore) SubnetAndZone() (string, string) {
-	subnet, zone := m.subnet(), m.zone()
-	m.subnetZoneIndex++
-	return subnet, zone
 }
 
 // NamePrefix returns the name prefix value.

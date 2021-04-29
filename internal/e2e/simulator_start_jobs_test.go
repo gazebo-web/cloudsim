@@ -63,6 +63,16 @@ func TestStartSimulationAction(t *testing.T) {
 	ec2Machines, err := ec2.NewMachines(&ec2.NewInput{
 		API: ec2api,
 		Logger: logger,
+		Zones:[]ec2.Zone{
+			{
+				Zone: "zone-0",
+				SubnetID: "subnet-0",
+			},
+			{
+				Zone: "zone-1",
+				SubnetID: "subnet-1",
+			},
+		},
 	})
 	require.NoError(t, err)
 

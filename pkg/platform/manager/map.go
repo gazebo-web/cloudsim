@@ -9,13 +9,13 @@ import (
 )
 
 // Map is the default Manager implementation.
-type Map map[Selector]platform.Platform
+type Map map[string]platform.Platform
 
 // Selectors returns a slice with all the available platform selectors.
-func (p Map) Selectors() []Selector {
-	selectors := make([]Selector, len(p))
+func (m Map) Selectors() []string {
+	selectors := make([]string, len(m))
 	i := 0
-	for selector := range p {
+	for selector := range m {
 		selectors[i] = selector
 		i++
 	}
@@ -24,20 +24,23 @@ func (p Map) Selectors() []Selector {
 }
 
 // Platforms returns a slice with all the available platforms.
-func (p Map) Platforms() []platform.Platform {
-	platforms := make([]platform.Platform, len(p))
-	i := 0
-	for _, platform := range p {
-		platforms[i] = platform
-		i++
+func (m Map) Platforms(selector *string) []platform.Platform {
+	var platforms []platform.Platform
+	for key, p := range m {
+		// If a selector was provided and is matched, place at the front of the slice
+		if selector != nil && *selector == key {
+			platforms = append([]platform.Platform{p}, platforms...)
+		} else {
+			platforms = append(platforms, p)
+		}
 	}
 
 	return platforms
 }
 
-// GetPlatform receives a selector and returns its matching platform or an error if it is not found.
-func (p Map) GetPlatform(selector Selector) (platform.Platform, error) {
-	platform, ok := p[selector]
+// Platform receives a selector and returns its matching platform or an error if it is not found.
+func (m Map) Platform(selector string) (platform.Platform, error) {
+	platform, ok := m[selector]
 	if !ok {
 		return nil, ErrPlatformNotFound
 	}
@@ -46,14 +49,14 @@ func (p Map) GetPlatform(selector Selector) (platform.Platform, error) {
 }
 
 // Platform returns receives a selector and returns its matching platform or an error if it is not found.
-func (p Map) set(selector Selector, platform platform.Platform) error {
+func (m Map) set(selector string, platform platform.Platform) error {
 	// Fail if the platform has already been defined
-	_, ok := p[selector]
+	_, ok := m[selector]
 	if ok {
 		return errors.Wrap(ErrPlatformExists, fmt.Sprintf("failed to set platform %s", selector))
 	}
 	// Register the platform
-	p[selector] = platform
+	m[selector] = platform
 
 	return nil
 }
@@ -86,7 +89,7 @@ func NewMapFromConfig(input *NewInput) (Manager, error) {
 		}
 
 		// Add platform to map
-		if err := m.set(Selector(name), out); err != nil {
+		if err := m.set(name, out); err != nil {
 			return nil, err
 		}
 	}

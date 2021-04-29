@@ -36,6 +36,7 @@ func NewFunc(config interface{}, dependencies factory.Dependencies, out interfac
 		Logger: typeDependencies.Logger,
 		Limit: typeConfig.Limit,
 		WorkerGroupName: typeConfig.WorkerGroupName,
+		Zones: typeConfig.Zones,
 	})
 	if err != nil {
 		return err

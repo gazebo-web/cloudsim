@@ -22,9 +22,6 @@ var (
 	ErrInvalidNewInput = errors.New("invalid NewMap input")
 )
 
-// Selector is used to uniquely identify a Platform.
-type Selector string
-
 // Manager manages a platformMap of platforms that can be used by Cloudsim.
 // Implementations must be simple platform containers and must not be aware of the feature sets, differences (if any) or
 // implementation details of the available platforms they contain. This is by design, in order to give applications the
@@ -42,11 +39,14 @@ type Selector string
 //   * azure_swarm - Platform containing Azure and Docker Swarm components.
 type Manager interface {
 	// Selectors returns a slice with all the available platform selectors.
-	Selectors() []Selector
+	Selectors() []string
 	// Platforms returns a slice with all the available platforms.
-	Platforms() []platform.Platform
+	// The `selector` parameter can be passed to define a target platform. If `selector` is defined and a platform is
+	// matched, the matched platform will be the first element in the returned list. If `target` is `nil` or is not
+	// found, the elements in the list will be returned in random order.
+	Platforms(selector *string) []platform.Platform
 	// GetPlatform returns the platform that matches a specific selector, or an error if it is not found.
-	GetPlatform(selector Selector) (platform.Platform, error)
+	Platform(selector string) (platform.Platform, error)
 }
 
 // managerConfig defines the platform configuration file structure.
@@ -103,5 +103,5 @@ func GetSimulationPlatform(manager Manager, sim simulations.Simulation) (platfor
 		return nil, simulations.ErrSimulationPlatformNotDefined
 	}
 
-	return manager.GetPlatform(Selector(*platformName))
+	return manager.Platform(*platformName)
 }

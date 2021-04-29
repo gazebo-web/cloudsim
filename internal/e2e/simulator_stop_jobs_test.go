@@ -112,6 +112,12 @@ func TestStopSimulationAction(t *testing.T) {
 	ec2Machines, err := ec2.NewMachines(&ec2.NewInput{
 		API: ec2api,
 		Logger: logger,
+		Zones:[]ec2.Zone{
+			{
+				Zone: "test",
+				SubnetID: "test",
+			},
+		},
 	})
 	require.NoError(t, err)
 
