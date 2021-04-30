@@ -106,7 +106,7 @@ type SimService interface {
 	QueueSwapElements(ctx context.Context, user *users.User, groupIDA, groupIDB string) (interface{}, *ign.ErrMsg)
 	QueueRemoveElement(ctx context.Context, user *users.User, groupID string) (interface{}, *ign.ErrMsg)
 	QueueCount(ctx context.Context, user *users.User) (interface{}, *ign.ErrMsg)
-	Debug(groupID simulations.GroupID) (interface{}, *ign.ErrMsg)
+	Debug(user *users.User, groupID simulations.GroupID) (interface{}, *ign.ErrMsg)
 }
 
 // NodeManager is responsible of creating and removing cloud instances, and
@@ -303,7 +303,10 @@ const (
 )
 
 // Debug acts as a helper to debug specific code in cloudsim.
-func (s *Service) Debug(groupID simulations.GroupID) (interface{}, *ign.ErrMsg) {
+func (s *Service) Debug(user *users.User, groupID simulations.GroupID) (interface{}, *ign.ErrMsg) {
+	if !s.userAccessor.IsSystemAdmin(*user.Username) {
+		return nil, ign.NewErrorMessage(ign.ErrorUnauthorized)
+	}
 	sim, err := s.applicationServices.Simulations().Get(groupID)
 	if err != nil {
 		return nil, ign.NewErrorMessageWithBase(ign.ErrorSimGroupNotFound, err)

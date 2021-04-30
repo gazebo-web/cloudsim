@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/gorilla/mux"
 	"github.com/jinzhu/gorm"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
 	useracc "gitlab.com/ignitionrobotics/web/cloudsim/pkg/users"
 	"gitlab.com/ignitionrobotics/web/fuelserver/bundles/users"
 	"gitlab.com/ignitionrobotics/web/ign-go"
@@ -645,12 +644,6 @@ func QueueRemove(user *users.User, tx *gorm.DB, w http.ResponseWriter, r *http.R
 		return nil, ign.NewErrorMessage(ign.ErrorIDNotInRequest)
 	}
 	return SimServImpl.QueueRemoveElement(r.Context(), user, groupID)
-}
-
-// DebugWebsocket is a debug endpoint to test websocket connections.
-func DebugWebsocket(tx *gorm.DB, w http.ResponseWriter, r *http.Request) (interface{}, *ign.ErrMsg) {
-	gid := mux.Vars(r)["groupID"]
-	return SimServImpl.Debug(simulations.GroupID(gid))
 }
 
 // Healthz returns a string to confirm that cloudsim is running.
