@@ -640,6 +640,27 @@ var Routes = ign.Routes{
 			},
 		},
 	},
+
+	/////////////////////
+	ign.Route{
+		Name:        "Debug",
+		Description: "Debug multi region support",
+		URI:         "/debug/{groupID}",
+		Headers:     ign.AuthHeadersRequired,
+		Methods:     ign.Methods{},
+		SecureMethods: ign.SecureMethods{
+			ign.Method{
+				Type:        "GET",
+				Description: "Debug websocket messages",
+				Handlers: ign.FormatHandlers{
+					ign.FormatHandler{
+						Extension: "",
+						Handler:   ign.JSONResult(DebugWebsocket),
+					},
+				},
+			},
+		},
+	},
 }
 
 // MonitoringRoutes contains the different routes used for service monitoring.

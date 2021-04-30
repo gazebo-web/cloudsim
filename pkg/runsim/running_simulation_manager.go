@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
 	ignws "gitlab.com/ignitionrobotics/web/cloudsim/pkg/transport/ign"
+	"gitlab.com/ignitionrobotics/web/ign-go"
 	"sync"
 )
 
@@ -16,12 +17,45 @@ type Manager interface {
 	Free(groupID simulations.GroupID)
 	Remove(groupID simulations.GroupID) error
 	Exists(groupID simulations.GroupID) bool
+	Debug(gid simulations.GroupID) (interface{}, *ign.ErrMsg)
 }
 
 // manager is a Manager implementation.
 type manager struct {
 	runningSimulations map[simulations.GroupID]*RunningSimulation
 	lock               sync.RWMutex
+}
+
+type debugResponse struct {
+	Exists      bool   `json:"exists"`
+	IsConnected bool   `json:"is_connected"`
+	Message     string `json:"message"`
+}
+
+// Debug returns information about a certain websocket connection.
+func (m *manager) Debug(gid simulations.GroupID) (interface{}, *ign.ErrMsg) {
+	exists := m.Exists(gid)
+
+	var isConnected bool
+	var msg string
+	if exists {
+		t := m.GetTransporter(gid)
+		isConnected = t.IsConnected()
+		_, bmsg, err := t.Connection().ReadMessage()
+		if err != nil {
+			msg = "error"
+		} else {
+			msg = string(bmsg)
+		}
+	}
+
+	res := debugResponse{
+		Exists:      exists,
+		IsConnected: isConnected,
+		Message:     msg,
+	}
+
+	return res, nil
 }
 
 // Exists checks if the given group id is registered as a running simulation.

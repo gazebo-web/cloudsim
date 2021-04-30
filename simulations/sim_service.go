@@ -106,6 +106,7 @@ type SimService interface {
 	QueueSwapElements(ctx context.Context, user *users.User, groupIDA, groupIDB string) (interface{}, *ign.ErrMsg)
 	QueueRemoveElement(ctx context.Context, user *users.User, groupID string) (interface{}, *ign.ErrMsg)
 	QueueCount(ctx context.Context, user *users.User) (interface{}, *ign.ErrMsg)
+	Debug(groupID simulations.GroupID) (interface{}, *ign.ErrMsg)
 }
 
 // NodeManager is responsible of creating and removing cloud instances, and
@@ -137,7 +138,7 @@ var (
 
 // Service is the main struct exported by this Simulations service.
 type Service struct {
-	DB             *gorm.DB
+	DB *gorm.DB
 	// Workers (ie. Thread Pools)
 	launcher   JobPool
 	terminator JobPool
@@ -300,6 +301,23 @@ const (
 	PoolRollbackFailedLaunch
 	PoolCompleteFailedTermination
 )
+
+// Debug acts as a helper to debug specific code in cloudsim.
+func (s *Service) Debug(groupID simulations.GroupID) (interface{}, *ign.ErrMsg) {
+	sim, err := s.applicationServices.Simulations().Get(groupID)
+	if err != nil {
+		return nil, ign.NewErrorMessageWithBase(ign.ErrorSimGroupNotFound, err)
+	}
+	sel := sim.GetPlatform()
+	if sel == nil {
+		return nil, ign.NewErrorMessage(ign.ErrorIDNotFound)
+	}
+	p, err := s.platforms.Platform(*sel)
+	if err != nil {
+		return nil, ign.NewErrorMessageWithBase(ign.ErrorSimGroupNotFound, err)
+	}
+	return p.RunningSimulations().Debug(groupID)
+}
 
 // SetPoolEventsListener sets a new PoolNotificationCallback to the poolNotificationCallback field.
 func (s *Service) SetPoolEventsListener(cb PoolNotificationCallback) {
@@ -583,7 +601,7 @@ func (s *Service) rebuildState(ctx context.Context, db *gorm.DB) error {
 				if d.Platform != nil {
 					pName = *d.Platform
 				}
-				s.logger.Warning(fmt.Sprintf("rebuildState -- Cannot find platform [%s] for simulation with " +
+				s.logger.Warning(fmt.Sprintf("rebuildState -- Cannot find platform [%s] for simulation with "+
 					"GroupID [%s]. Marking with error", pName, groupID))
 				// if the SimulationDeployment DB record has 'running' status but there is no matching
 				// running Pod in the cluster then we have an inconsistenty. Mark it as error.
