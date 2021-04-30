@@ -137,7 +137,7 @@ var (
 
 // Service is the main struct exported by this Simulations service.
 type Service struct {
-	DB             *gorm.DB
+	DB *gorm.DB
 	// Workers (ie. Thread Pools)
 	launcher   JobPool
 	terminator JobPool
@@ -156,8 +156,9 @@ type Service struct {
 	// A mutex to protect access to read/write operations over the map
 	lockRunningSimulations sync.RWMutex
 	// Expired simulations cleaning process
-	expiredSimulationsTicker *time.Ticker
-	expiredSimulationsDone   chan bool
+	expiredSimulationsTicker    *time.Ticker
+	terminatedSimulationsTicker *time.Ticker
+	expiredSimulationsDone      chan bool
 	// MultiSim Parent status updater routine
 	multisimStatusUpdater     *time.Ticker
 	multisimStatusUpdaterDone chan bool
@@ -583,7 +584,7 @@ func (s *Service) rebuildState(ctx context.Context, db *gorm.DB) error {
 				if d.Platform != nil {
 					pName = *d.Platform
 				}
-				s.logger.Warning(fmt.Sprintf("rebuildState -- Cannot find platform [%s] for simulation with " +
+				s.logger.Warning(fmt.Sprintf("rebuildState -- Cannot find platform [%s] for simulation with "+
 					"GroupID [%s]. Marking with error", pName, groupID))
 				// if the SimulationDeployment DB record has 'running' status but there is no matching
 				// running Pod in the cluster then we have an inconsistenty. Mark it as error.
@@ -725,6 +726,7 @@ func (s *Service) updateMultiSimStatuses(ctx context.Context, tx *gorm.DB) {
 func (s *Service) StartExpiredSimulationsCleaner() {
 	// We check for expired simulations each minute
 	s.expiredSimulationsTicker = time.NewTicker(time.Minute)
+	s.terminatedSimulationsTicker = time.NewTicker(time.Minute)
 	s.expiredSimulationsDone = make(chan bool, 1)
 
 	go func() {
@@ -735,6 +737,8 @@ func (s *Service) StartExpiredSimulationsCleaner() {
 				return
 			case <-s.expiredSimulationsTicker.C:
 				_ = s.checkForExpiredSimulations(s.baseCtx)
+			case <-s.terminatedSimulationsTicker.C:
+				_ = s.checkForTerminatedSimulations(s.baseCtx)
 			}
 		}
 	}()
@@ -743,35 +747,53 @@ func (s *Service) StartExpiredSimulationsCleaner() {
 // StopExpiredSimulationsCleaner stops the cleaner process
 func (s *Service) StopExpiredSimulationsCleaner() {
 	s.expiredSimulationsTicker.Stop()
+	s.terminatedSimulationsTicker.Stop()
 	s.expiredSimulationsDone <- true
 }
 
 // checkForExpiredSimulations is an internal helper that tests all the runningSimulations
 // to check if they were alive more than expected, and in that case, schedules their termination.
 func (s *Service) checkForExpiredSimulations(ctx context.Context) error {
-
 	s.logger.Debug("Checking for expired simulations...")
-
 	for _, p := range s.platforms.Platforms(nil) {
 		rss := p.RunningSimulations().ListExpiredSimulations()
 		for _, rs := range rss {
-			if rs.IsExpired() || rs.Finished {
-				dep, err := GetSimulationDeployment(s.DB, rs.GroupID.String())
-				if err != nil {
-					s.logger.Error(fmt.Sprintf("Error while trying to get Simulation from DB: %s", rs.GroupID.String()), err)
-					continue
-				}
+			dep, err := GetSimulationDeployment(s.DB, rs.GroupID.String())
+			if err != nil {
+				s.logger.Error(fmt.Sprintf("Error while trying to get Simulation from DB: %s", rs.GroupID.String()), err)
+				continue
+			}
 
-				// Add a 'stop simulation' request to the Terminator Jobs-Pool.
-				if err := s.scheduleTermination(ctx, s.DB, dep); err != nil {
-					s.logger.Error(fmt.Sprintf("Error while trying to schedule automatic termination of Simulation: %s", rs.GroupID.String()), err)
-				} else {
-					reason := "expired"
-					if rs.Finished {
-						reason = "finished"
-					}
-					s.logger.Info(fmt.Sprintf("Scheduled automatic termination of %s simulation: %s", reason, rs.GroupID.String()))
-				}
+			// Add a 'stop simulation' request to the Terminator Jobs-Pool.
+			if err := s.scheduleTermination(ctx, s.DB, dep); err != nil {
+				s.logger.Error(fmt.Sprintf("Error while trying to schedule automatic termination of Simulation: %s", rs.GroupID.String()), err)
+			} else {
+				s.logger.Info(fmt.Sprintf("Scheduled automatic termination of expired simulation: %s", rs.GroupID.String()))
+			}
+		}
+	}
+
+	return nil
+}
+
+// checkForTerminatedSimulations is an internal helper that tests all the runningSimulations
+// to check if they were marked with a finished status, and in that case, schedules their termination.
+func (s *Service) checkForTerminatedSimulations(ctx context.Context) error {
+	s.logger.Debug("Checking for terminated simulations...")
+	for _, p := range s.platforms.Platforms(nil) {
+		rss := p.RunningSimulations().ListFinishedSimulations()
+		for _, rs := range rss {
+			dep, err := GetSimulationDeployment(s.DB, rs.GroupID.String())
+			if err != nil {
+				s.logger.Error(fmt.Sprintf("Error while trying to get Simulation from DB: %s", rs.GroupID.String()), err)
+				continue
+			}
+
+			// Add a 'stop simulation' request to the Terminator Jobs-Pool.
+			if err := s.scheduleTermination(ctx, s.DB, dep); err != nil {
+				s.logger.Error(fmt.Sprintf("Error while trying to schedule automatic termination of Simulation: %s", rs.GroupID.String()), err)
+			} else {
+				s.logger.Info(fmt.Sprintf("Scheduled automatic termination of finished simulation: %s", rs.GroupID.String()))
 			}
 		}
 	}
