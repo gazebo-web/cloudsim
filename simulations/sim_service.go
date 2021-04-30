@@ -156,7 +156,8 @@ type Service struct {
 	// A mutex to protect access to read/write operations over the map
 	lockRunningSimulations sync.RWMutex
 	// Expired simulations cleaning process
-	expiredSimulationsTicker  *time.Ticker
+	expiredSimulationsTicker *time.Ticker
+	// Finished simulations cleaning process
 	finishedSimulationsTicker *time.Ticker
 	expiredSimulationsDone    chan bool
 	// MultiSim Parent status updater routine
