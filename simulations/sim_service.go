@@ -157,9 +157,7 @@ type Service struct {
 	lockRunningSimulations sync.RWMutex
 	// Expired simulations cleaning process
 	expiredSimulationsTicker *time.Ticker
-	// Finished simulations cleaning process
-	finishedSimulationsTicker *time.Ticker
-	expiredSimulationsDone    chan bool
+	expiredSimulationsDone   chan bool
 	// MultiSim Parent status updater routine
 	multisimStatusUpdater     *time.Ticker
 	multisimStatusUpdaterDone chan bool
@@ -727,7 +725,6 @@ func (s *Service) updateMultiSimStatuses(ctx context.Context, tx *gorm.DB) {
 func (s *Service) StartExpiredSimulationsCleaner() {
 	// We check for expired simulations each minute
 	s.expiredSimulationsTicker = time.NewTicker(time.Minute)
-	s.finishedSimulationsTicker = time.NewTicker(time.Minute)
 	s.expiredSimulationsDone = make(chan bool, 1)
 
 	go func() {
@@ -738,8 +735,6 @@ func (s *Service) StartExpiredSimulationsCleaner() {
 				return
 			case <-s.expiredSimulationsTicker.C:
 				_ = s.checkForExpiredSimulations(s.baseCtx)
-			case <-s.finishedSimulationsTicker.C:
-				_ = s.checkForFinishedSimulations(s.baseCtx)
 			}
 		}
 	}()
@@ -748,7 +743,6 @@ func (s *Service) StartExpiredSimulationsCleaner() {
 // StopExpiredSimulationsCleaner stops the cleaner process
 func (s *Service) StopExpiredSimulationsCleaner() {
 	s.expiredSimulationsTicker.Stop()
-	s.finishedSimulationsTicker.Stop()
 	s.expiredSimulationsDone <- true
 }
 
@@ -757,7 +751,7 @@ func (s *Service) StopExpiredSimulationsCleaner() {
 func (s *Service) checkForExpiredSimulations(ctx context.Context) error {
 	s.logger.Debug("Checking for expired simulations...")
 	for _, p := range s.platforms.Platforms(nil) {
-		rss := p.RunningSimulations().ListExpiredSimulations()
+		rss := p.RunningSimulations().ListExpiredAndFinishedSimulations()
 		for _, rs := range rss {
 			dep, err := GetSimulationDeployment(s.DB, rs.GroupID.String())
 			if err != nil {
