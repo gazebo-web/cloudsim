@@ -771,31 +771,6 @@ func (s *Service) checkForExpiredSimulations(ctx context.Context) error {
 	return nil
 }
 
-// checkForFinishedSimulations is an internal helper that tests all the runningSimulations
-// to check if they were marked with a finished status, and in that case, schedules their termination.
-func (s *Service) checkForFinishedSimulations(ctx context.Context) error {
-	s.logger.Debug("Checking for finished simulations...")
-	for _, p := range s.platforms.Platforms(nil) {
-		rss := p.RunningSimulations().ListFinishedSimulations()
-		for _, rs := range rss {
-			dep, err := GetSimulationDeployment(s.DB, rs.GroupID.String())
-			if err != nil {
-				s.logger.Error(fmt.Sprintf("Error while trying to get Simulation from DB: %s", rs.GroupID.String()), err)
-				continue
-			}
-
-			// Add a 'stop simulation' request to the Terminator Jobs-Pool.
-			if err := s.scheduleTermination(ctx, s.DB, dep); err != nil {
-				s.logger.Error(fmt.Sprintf("Error while trying to schedule automatic termination of Simulation: %s", rs.GroupID.String()), err)
-			} else {
-				s.logger.Info(fmt.Sprintf("Scheduled automatic termination of finished simulation: %s", rs.GroupID.String()))
-			}
-		}
-	}
-
-	return nil
-}
-
 // ///////////////////////////////////////////////////////////////////////
 // ///////////////////////////////////////////////////////////////////////
 
