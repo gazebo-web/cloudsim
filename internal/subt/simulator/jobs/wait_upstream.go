@@ -29,17 +29,23 @@ func createWaitRequestForUpstream(store actions.Store, tx *gorm.DB, deployment *
 	ns := s.Platform().Store().Orchestrator().IngressNamespace()
 
 	req := waiter.NewWaitRequest(func() (bool, error) {
+		// The upstream sometimes takes a while to be ready. If this fails to get the upstream, return false and NOT
+		// an error as that would terminate the waiter. This waiter will only fail if it times out.
 		res, err := vs.GetUpstream(ns, application.GetWebsocketServiceLabels(s.GroupID))
 		if err != nil {
-			return false, err
+			return false, nil
 		}
 		s.UpstreamName = res.Name()
+
+		// Update the state
+		store.SetState(s)
+
 		return true, nil
 	})
 
 	return jobs.WaitInput{
 		Request:       req,
-		PollFrequency: time.Second,
-		Timeout:       time.Minute,
+		PollFrequency: 10 * time.Second,
+		Timeout:       10 * time.Minute,
 	}, nil
 }
