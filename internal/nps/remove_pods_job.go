@@ -47,7 +47,7 @@ func prepareRemovePodsInput(store actions.Store, tx *gorm.DB, deployment *action
 	if err := tx.Where("group_id = ?", stopData.GroupID.String()).First(&sim).Error; err != nil {
 		return nil, err
 	}
-	sim.Status = "Removing docker image (pod)."
+	sim.Status = "removing-pod"
 	tx.Save(&sim)
 
 	// Namespace is the orchestrator namespace where simulations should be

@@ -46,7 +46,7 @@ func getIP(store actions.Store, tx *gorm.DB, deployment *actions.Deployment, val
 		return nil, errors.New("Unable to get node address")
 	}
 
-	simEntry.Status = "Address has been acquired."
+	simEntry.Status = "running"
 	simEntry.URI = "http://" + address[0] + ":8080/vnc.html"
 	tx.Save(&simEntry)
 

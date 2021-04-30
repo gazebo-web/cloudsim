@@ -27,7 +27,7 @@ func createWaitForInstancesInput(store actions.Store, tx *gorm.DB, deployment *a
 	if err := tx.Where("group_id = ?", startData.GroupID.String()).First(&simEntry).Error; err != nil {
 		return nil, err
 	}
-	simEntry.Status = "Waiting for cloud instances to launch."
+	simEntry.Status = "wait-instance"
 	tx.Save(&simEntry)
 
 	store.SetState(startData)

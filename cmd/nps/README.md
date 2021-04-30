@@ -25,7 +25,7 @@ curl -X POST -H "Private-Token: YOUR_TOKEN" https://staging-cloudsim-nps.ignitio
    the groupid in subsequent REST calls in order to refer to a specific
    simulation instance.
 
-6. Wait for the "Address has been acquired" status by periodically calling
+6. Wait for the "running" status by periodically calling
 
 ```
 curl -X GET -H "Private-Token: YOUR_TOKEN" https://staging-cloudsim-nps.ignitionrobotics.org/1.0/simulations/GROUP_ID
@@ -39,3 +39,39 @@ curl -X GET -H "Private-Token: YOUR_TOKEN" https://staging-cloudsim-nps.ignition
 ```
 curl -X POST -H "Private-Token: YOUR_TOKEN" https://staging-cloudsim-nps.ignitionrobotics.org/1.0/stop/GROUP_ID`
 ```
+
+
+## Filtering simulations
+
+Query parameters can be passed to the `/simulations` route in order to
+filter results. Each query parameter must be specified using
+`q=**QUALIFIER**`, and can be combined with `&`.
+
+When using `curl` it's important to put the URL with search parameters in
+quotes. See the following example
+
+```
+curl -X GET -H "Private-Token: *TOKEN*" "https://staging-cloudsim-nps.ignitionrobotics.org/1.0/simulations?q=status:stopped&q=name:npstest"
+```
+
+### Filter by status
+
+| Qualifier | Description|
+|-----------|------------|
+|`status:launching`| Return simulations that are in the process of launching.|
+|`status:running`| Return running simulations.|
+|`status:stopping`| Return simulations that are in the process of stopping.|
+|`status:stopped`| Return stopped simulations.|
+
+
+### Filter by name
+
+| Qualifier | Description|
+|-----------|------------|
+|`name:*NAME*`| Return simulations with the given name.|
+
+### Filter by group id
+
+| Qualifier | Description|
+|-----------|------------|
+|`groupid:*GROUPID*`| Return simulations with the given group id.|

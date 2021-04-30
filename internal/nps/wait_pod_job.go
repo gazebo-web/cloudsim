@@ -28,7 +28,7 @@ func createWaitRequestForPod(store actions.Store, tx *gorm.DB, deployment *actio
 	if err := tx.Where("group_id = ?", startData.GroupID.String()).First(&simEntry).Error; err != nil {
 		return nil, err
 	}
-	simEntry.Status = "Waiting for docker image."
+	simEntry.Status = "wait-pod"
 	tx.Save(&simEntry)
 
 	store.SetState(startData)

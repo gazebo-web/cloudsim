@@ -28,7 +28,7 @@ func prepareRemoveInstancesInput(store actions.Store, tx *gorm.DB, deployment *a
 	if err := tx.Where("group_id = ?", stopData.GroupID.String()).First(&sim).Error; err != nil {
 		return nil, err
 	}
-	sim.Status = "Removing instance."
+	sim.Status = "removing-instance"
 	tx.Save(&sim)
 
 	filters := make(map[string][]string)
@@ -78,7 +78,7 @@ func saveState(store actions.Store, tx *gorm.DB, deployment *actions.Deployment,
 	if err := tx.Where("group_id = ?", stopData.GroupID.String()).First(&sim).Error; err != nil {
 		return nil, err
 	}
-	sim.Status = "Stopped."
+	sim.Status = "stopped"
 	tx.Save(&sim)
 
 	store.SetState(stopData)

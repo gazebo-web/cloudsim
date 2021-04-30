@@ -34,7 +34,7 @@ func createLaunchInstancesInput(store actions.Store, tx *gorm.DB, deployment *ac
 	if err := tx.Where("group_id = ?", startData.GroupID.String()).First(&simEntry).Error; err != nil {
 		return nil, err
 	}
-	simEntry.Status = "Launching cloud instances."
+	simEntry.Status = "launching"
 	tx.Save(&simEntry)
 
 	// Get the subtnet and zone to use. This will return bad values unless

@@ -287,7 +287,7 @@ func (s *service) Stop(user *users.User, tx *gorm.DB, ctx context.Context, reque
 	if simEntry.Owner != *user.Username {
 		return nil, errors.New("Authorization failed")
 	}
-	simEntry.Status = "Stopping."
+	simEntry.Status = "stopping"
 	tx.Save(&simEntry)
 
 	// Send the group id to the queue

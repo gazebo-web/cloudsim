@@ -180,12 +180,29 @@ func (ctrl *controller) ListSimulations(user *users.User, tx *gorm.DB, w http.Re
 
 	var simulations Simulations
 
-	// Return all the simulation if the user is a system admin
-	if ok := HTTPHandlerInstance.UserAccessor.IsSystemAdmin(*user.Username); ok {
-		tx.Find(&simulations)
-	} else {
-		tx.Where("owner = ?", user.Username).Find(&simulations)
+	var simQuery Simulation
+
+	// Get and parse the filter parameters
+	if query, ok := r.URL.Query()["q"]; ok {
+		for _, q := range query {
+			parts := strings.Split(q, ":")
+			if len(parts) == 2 {
+				if strings.ToLower(parts[0]) == "status" {
+					simQuery.Status = strings.ToLower(parts[1])
+				} else if strings.ToLower(parts[0]) == "name" {
+					simQuery.Name = strings.ToLower(parts[1])
+				} else if strings.ToLower(parts[0]) == "groupid" {
+					simQuery.GroupID = strings.ToLower(parts[1])
+				}
+			}
+		}
 	}
+
+	// Return only owner simulations if the user is not a system admin
+	if ok := HTTPHandlerInstance.UserAccessor.IsSystemAdmin(*user.Username); !ok {
+		simQuery.Owner = *user.Username
+	}
+	tx.Where(&simQuery).Find(&simulations)
 
 	var response ListResponse
 	for _, sim := range simulations {

@@ -32,7 +32,7 @@ func prepareCreatePodInput(store actions.Store, tx *gorm.DB, deployment *actions
 	if err := tx.Where("group_id = ?", startData.GroupID.String()).First(&sim).Error; err != nil {
 		return nil, err
 	}
-	sim.Status = "Creating docker image (pod)."
+	sim.Status = "creating-pod"
 	tx.Save(&sim)
 
 	// Namespace is the orchestrator namespace where simulations should be

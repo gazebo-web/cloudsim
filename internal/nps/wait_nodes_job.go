@@ -28,7 +28,7 @@ func createWaitForNodesInput(store actions.Store, tx *gorm.DB, deployment *actio
 	if err := tx.Where("group_id = ?", startData.GroupID.String()).First(&simEntry).Error; err != nil {
 		return nil, err
 	}
-	simEntry.Status = "Waiting for instance to join the K8 cluster."
+	simEntry.Status = "wait-node"
 	tx.Save(&simEntry)
 
 	store.SetState(startData)
