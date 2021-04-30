@@ -156,9 +156,9 @@ type Service struct {
 	// A mutex to protect access to read/write operations over the map
 	lockRunningSimulations sync.RWMutex
 	// Expired simulations cleaning process
-	expiredSimulationsTicker    *time.Ticker
-	terminatedSimulationsTicker *time.Ticker
-	expiredSimulationsDone      chan bool
+	expiredSimulationsTicker  *time.Ticker
+	finishedSimulationsTicker *time.Ticker
+	expiredSimulationsDone    chan bool
 	// MultiSim Parent status updater routine
 	multisimStatusUpdater     *time.Ticker
 	multisimStatusUpdaterDone chan bool
@@ -726,7 +726,7 @@ func (s *Service) updateMultiSimStatuses(ctx context.Context, tx *gorm.DB) {
 func (s *Service) StartExpiredSimulationsCleaner() {
 	// We check for expired simulations each minute
 	s.expiredSimulationsTicker = time.NewTicker(time.Minute)
-	s.terminatedSimulationsTicker = time.NewTicker(time.Minute)
+	s.finishedSimulationsTicker = time.NewTicker(time.Minute)
 	s.expiredSimulationsDone = make(chan bool, 1)
 
 	go func() {
@@ -737,8 +737,8 @@ func (s *Service) StartExpiredSimulationsCleaner() {
 				return
 			case <-s.expiredSimulationsTicker.C:
 				_ = s.checkForExpiredSimulations(s.baseCtx)
-			case <-s.terminatedSimulationsTicker.C:
-				_ = s.checkForTerminatedSimulations(s.baseCtx)
+			case <-s.finishedSimulationsTicker.C:
+				_ = s.checkForFinishedSimulations(s.baseCtx)
 			}
 		}
 	}()
@@ -747,7 +747,7 @@ func (s *Service) StartExpiredSimulationsCleaner() {
 // StopExpiredSimulationsCleaner stops the cleaner process
 func (s *Service) StopExpiredSimulationsCleaner() {
 	s.expiredSimulationsTicker.Stop()
-	s.terminatedSimulationsTicker.Stop()
+	s.finishedSimulationsTicker.Stop()
 	s.expiredSimulationsDone <- true
 }
 
@@ -776,10 +776,10 @@ func (s *Service) checkForExpiredSimulations(ctx context.Context) error {
 	return nil
 }
 
-// checkForTerminatedSimulations is an internal helper that tests all the runningSimulations
+// checkForFinishedSimulations is an internal helper that tests all the runningSimulations
 // to check if they were marked with a finished status, and in that case, schedules their termination.
-func (s *Service) checkForTerminatedSimulations(ctx context.Context) error {
-	s.logger.Debug("Checking for terminated simulations...")
+func (s *Service) checkForFinishedSimulations(ctx context.Context) error {
+	s.logger.Debug("Checking for finished simulations...")
 	for _, p := range s.platforms.Platforms(nil) {
 		rss := p.RunningSimulations().ListFinishedSimulations()
 		for _, rs := range rss {
