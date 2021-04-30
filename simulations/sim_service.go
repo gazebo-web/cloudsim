@@ -472,30 +472,30 @@ func (s *Service) initializeRunningSimulationsFromCluster(ctx context.Context, t
 			runningSims[groupID] = running
 
 		}
+	}
 
-		// Now iterate the simulations marked as 'running' and create RunningSimulations for them.
-		for groupID, running := range runningSims {
-			if !running {
-				continue
-			}
-			// Get the Simulation record from DB
-			simDep, err := GetSimulationDeployment(tx, groupID)
-			if err != nil {
-				errMsg := fmt.Sprintf("%s simulation deployment not found: %s", groupID, err.Error())
-				s.logger.Warning(errMsg)
-				continue
+	// Now iterate the simulations marked as 'running' and create RunningSimulations for them.
+	for groupID, running := range runningSims {
+		if !running {
+			continue
+		}
+		// Get the Simulation record from DB
+		simDep, err := GetSimulationDeployment(tx, groupID)
+		if err != nil {
+			errMsg := fmt.Sprintf("%s simulation deployment not found: %s", groupID, err.Error())
+			s.logger.Warning(errMsg)
+			continue
+		}
+
+		// Only create a RunningSimulation if the whole simulation status was Running and the DB
+		// deploymentStatus is Running as well.
+		if simDep.HasStatus(simulations.StatusRunning) {
+			// Register a new live RunningSimulation
+			if err := s.createRunningSimulation(ctx, tx, simDep); err != nil {
+				return err
 			}
 
-			// Only create a RunningSimulation if the whole simulation status was Running and the DB
-			// deploymentStatus is Running as well.
-			if simDep.HasStatus(simulations.StatusRunning) {
-				// Register a new live RunningSimulation
-				if err := s.createRunningSimulation(ctx, tx, simDep); err != nil {
-					return err
-				}
-
-				s.logger.Info(fmt.Sprintf("Init - Added RunningSimulation for groupID: [%s]. Deployment Status in DB: [%d]", groupID, *simDep.DeploymentStatus))
-			}
+			s.logger.Info(fmt.Sprintf("Init - Added RunningSimulation for groupID: [%s]. Deployment Status in DB: [%d]", groupID, *simDep.DeploymentStatus))
 		}
 	}
 
