@@ -32,7 +32,7 @@ type debugResponse struct {
 	Message     string `json:"message"`
 }
 
-// Debug returns information about a certain websocket connection.
+// Debug returns information about a running simulation.
 func (m *manager) Debug(gid simulations.GroupID) (interface{}, *ign.ErrMsg) {
 	exists := m.Exists(gid)
 

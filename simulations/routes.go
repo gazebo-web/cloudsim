@@ -660,7 +660,7 @@ var Routes = ign.Routes{
 				Handlers: ign.FormatHandlers{
 					ign.FormatHandler{
 						Extension: "",
-						Handler:   ign.JSONResult(WithUser(DebugWebsocket)),
+						Handler:   ign.JSONResult(WithUser(Debug)),
 					},
 				},
 			},
@@ -668,9 +668,8 @@ var Routes = ign.Routes{
 	},
 }
 
-// DebugWebsocket is a debug endpoint to test websocket connections.
-
-func DebugWebsocket(user *users.User, tx *gorm.DB, w http.ResponseWriter, r *http.Request) (interface{}, *ign.ErrMsg) {
+// Debug is a debug endpoint to get internal state information about a simulation.
+func Debug(user *users.User, tx *gorm.DB, w http.ResponseWriter, r *http.Request) (interface{}, *ign.ErrMsg) {
 	gid := mux.Vars(r)["groupID"]
 	return SimServImpl.Debug(user, simulations.GroupID(gid))
 }
