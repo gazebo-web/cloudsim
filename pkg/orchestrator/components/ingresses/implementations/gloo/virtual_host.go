@@ -10,12 +10,14 @@ import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/resource"
 	"gitlab.com/ignitionrobotics/web/ign-go"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"sync"
 )
 
 // virtualHosts is a ingresses.IngressRules implementation to manage Gloo Virtual Hosts.
 type virtualHosts struct {
 	Gateway gateway.GatewayV1Interface
 	Logger  ign.Logger
+	lock    sync.RWMutex
 }
 
 // Get returns a representation of a virtual host using an ingresses.Rule.
@@ -64,6 +66,9 @@ func (v *virtualHosts) Upsert(rule ingresses.Rule, paths ...ingresses.Path) erro
 
 	vs.Spec.VirtualHost = rule.ToOutput().(*gatewayapiv1.VirtualHost)
 
+	v.lock.Lock()
+	defer v.lock.Unlock()
+
 	_, err = v.Gateway.VirtualServices(rule.Resource().Namespace()).Update(vs)
 	if err != nil {
 		v.Logger.Debug(fmt.Sprintf("Error while updating routes from virtual host [%s]. Error: %s.",
@@ -91,6 +96,9 @@ func (v *virtualHosts) Remove(rule ingresses.Rule, paths ...ingresses.Path) erro
 			rule.Host(), ingresses.ErrRuleEmpty))
 		return ingresses.ErrRuleEmpty
 	}
+
+	v.lock.Lock()
+	defer v.lock.Unlock()
 
 	// Remove paths from rule
 	rule.RemovePaths(paths)
