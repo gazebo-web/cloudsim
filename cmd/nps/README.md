@@ -56,13 +56,35 @@ curl -X GET -H "Private-Token: YOUR_TOKEN" "https://staging-cloudsim-nps.ignitio
 
 ### Filter by status
 
+A simulation instance transitions between states during it lifecycle. The
+order of these states are:
+
+**POST command to start a simulation**
+1. `launching`
+1. `wait-instance`
+1. `wait-node`
+1. `creating-pod`
+1. `wait-pod`
+1. `running`
+
+**POST command to stop a simulation**
+1. `stopping`
+1. `removing-pod`
+1. `removing-instance`
+1. `stopped`
+
 | Qualifier | Description|
 |-----------|------------|
-|`status:launching`| Return simulations that are in the process of launching.|
+|`status:launching`| Return simulations that are in the process of launching a cloud machine.|
+|`status:wait-instance`| Return simulations that are waiting for the cloud machine to launch.|
+|`status:wait-node`| Return simulations that are waiting for the cloud machine to join the kubernetes cluster.|
+|`status:creating-pod`| Return simulations that are creating the kubernetes pod.|
+|`status:wait-pod`| Return simulations that are waiting for the kubernetes podto launch.|
 |`status:running`| Return running simulations.|
 |`status:stopping`| Return simulations that are in the process of stopping.|
+|`status:removing-pod`| Return simulations that are deleting their kubernetes pod.|
+|`status:removing-instance`| Return simulations that are deleting their cloud machine.|
 |`status:stopped`| Return stopped simulations.|
-
 
 ### Filter by name
 
