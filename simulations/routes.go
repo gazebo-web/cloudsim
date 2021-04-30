@@ -1,7 +1,12 @@
 package simulations
 
 import (
+	"github.com/gorilla/mux"
+	"github.com/jinzhu/gorm"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
+	"gitlab.com/ignitionrobotics/web/fuelserver/bundles/users"
 	"gitlab.com/ignitionrobotics/web/ign-go"
+	"net/http"
 )
 
 // Routes declares the routes related to simulations. See also IGN's router.go
@@ -640,6 +645,33 @@ var Routes = ign.Routes{
 			},
 		},
 	},
+
+	/////////////////////
+	ign.Route{
+		Name:        "Debug",
+		Description: "Debug multi region support",
+		URI:         "/debug/{groupID}",
+		Headers:     ign.AuthHeadersRequired,
+		Methods:     ign.Methods{},
+		SecureMethods: ign.SecureMethods{
+			ign.Method{
+				Type:        "GET",
+				Description: "Debug websocket messages",
+				Handlers: ign.FormatHandlers{
+					ign.FormatHandler{
+						Extension: "",
+						Handler:   ign.JSONResult(WithUser(Debug)),
+					},
+				},
+			},
+		},
+	},
+}
+
+// Debug is a debug endpoint to get internal state information about a simulation.
+func Debug(user *users.User, tx *gorm.DB, w http.ResponseWriter, r *http.Request) (interface{}, *ign.ErrMsg) {
+	gid := mux.Vars(r)["groupID"]
+	return SimServImpl.Debug(user, simulations.GroupID(gid))
 }
 
 // MonitoringRoutes contains the different routes used for service monitoring.
