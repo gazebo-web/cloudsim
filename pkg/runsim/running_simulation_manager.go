@@ -12,6 +12,7 @@ type Manager interface {
 	Add(groupID simulations.GroupID, rs *RunningSimulation, t ignws.PubSubWebsocketTransporter) error
 	ListExpiredSimulations() []*RunningSimulation
 	ListFinishedSimulations() []*RunningSimulation
+	ListExpiredAndFinishedSimulations() []*RunningSimulation
 	GetTransporter(groupID simulations.GroupID) ignws.PubSubWebsocketTransporter
 	Free(groupID simulations.GroupID)
 	Remove(groupID simulations.GroupID) error
@@ -22,6 +23,13 @@ type Manager interface {
 type manager struct {
 	runningSimulations map[simulations.GroupID]*RunningSimulation
 	lock               sync.RWMutex
+}
+
+// ListExpiredAndFinishedSimulations returns all simulation that have been mark as expired or finished.
+func (m *manager) ListExpiredAndFinishedSimulations() []*RunningSimulation {
+	return m.listByCriteria(func(rs *RunningSimulation) bool {
+		return rs.IsExpired() || rs.Finished
+	})
 }
 
 // Exists checks if the given group id is registered as a running simulation.
