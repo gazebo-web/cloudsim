@@ -763,7 +763,11 @@ func (s *Service) checkForExpiredSimulations(ctx context.Context) error {
 			if err := s.scheduleTermination(ctx, s.DB, dep); err != nil {
 				s.logger.Error(fmt.Sprintf("Error while trying to schedule automatic termination of Simulation: %s", rs.GroupID.String()), err)
 			} else {
-				s.logger.Info(fmt.Sprintf("Scheduled automatic termination of expired simulation: %s", rs.GroupID.String()))
+				reason := "expired"
+				if rs.Finished {
+					reason = "finished"
+				}
+				s.logger.Info(fmt.Sprintf("Scheduled automatic termination of %s simulation: %s", reason, rs.GroupID.String()))
 			}
 		}
 	}
