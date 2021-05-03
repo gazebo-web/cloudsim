@@ -49,3 +49,15 @@ type ListRequest struct {
 type ListResponse struct {
 	Simulations []GetSimulationResponse
 }
+
+// AddUserRequest is the request used to add a registerd user.
+type AddModifyUserRequest struct {
+	Username        string `form:"username"`
+	SimulationLimit int    `form:"simulation_limit"`
+}
+
+// AddUserResponse is the response used to add a registerd user.
+type AddModifyUserResponse struct {
+	Username        string `json:"username"`
+	SimulationLimit int    `json:"simulation_limit"`
+}

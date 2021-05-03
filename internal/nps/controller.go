@@ -15,6 +15,7 @@ import (
 	"gitlab.com/ignitionrobotics/web/ign-go"
 	"net/http"
 	"strings"
+	"time"
 )
 
 // Controller is an interface designed to handle route requests.
@@ -23,6 +24,9 @@ type Controller interface {
 	Stop(user *users.User, tx *gorm.DB, w http.ResponseWriter, r *http.Request) (interface{}, *ign.ErrMsg)
 	ListSimulations(user *users.User, tx *gorm.DB, w http.ResponseWriter, r *http.Request) (interface{}, *ign.ErrMsg)
 	GetSimulation(user *users.User, tx *gorm.DB, w http.ResponseWriter, r *http.Request) (interface{}, *ign.ErrMsg)
+	AddUser(user *users.User, tx *gorm.DB, w http.ResponseWriter, r *http.Request) (interface{}, *ign.ErrMsg)
+	ModifyUser(user *users.User, tx *gorm.DB, w http.ResponseWriter, r *http.Request) (interface{}, *ign.ErrMsg)
+	ListUsers(user *users.User, tx *gorm.DB, w http.ResponseWriter, r *http.Request) (interface{}, *ign.ErrMsg)
 }
 
 type controller struct {
@@ -67,6 +71,15 @@ func (ctrl *controller) Start(user *users.User, tx *gorm.DB, w http.ResponseWrit
 		var registeredUser RegisteredUser
 		if err := tx.Where("username = ?", *user.Username).Find(&registeredUser).Error; err != nil {
 			return nil, ign.NewErrorMessage(ign.ErrorUnauthorized)
+		}
+
+		// Check simulation limits.
+		if registeredUser.SimulationLimit >= 0 {
+			var simulations Simulations
+			tx.Where("owner = ? and status != ?", registeredUser.Username, "stopped").Find(&simulations)
+			if len(simulations) >= registeredUser.SimulationLimit {
+				return nil, ign.NewErrorMessageWithBase(ign.ErrorUnauthorized, errors.New("Simulation limit reached"))
+			}
 		}
 	}
 
@@ -293,3 +306,137 @@ func WithUser(handler handlerWithUser) ign.HandlerWithResult {
 }
 
 ////////////////////////////////////////////////
+// ModifyUser handles the PATCH `/user/{USERNAME}` route.
+//
+// Origin: user --> PATCH /user/{USERNAME} --> controller.ModifyUser()
+// Next:
+//     * On success --> return User
+//     * On fail --> return error
+func (ctrl *controller) ModifyUser(user *users.User, tx *gorm.DB, w http.ResponseWriter, r *http.Request) (interface{}, *ign.ErrMsg) {
+
+	// Fail if not system admin
+	if ok := HTTPHandlerInstance.UserAccessor.IsSystemAdmin(*user.Username); !ok {
+		return nil, ign.NewErrorMessage(ign.ErrorUnauthorized)
+	}
+
+	// Get the username from the route
+	userName, ok := mux.Vars(r)["username"]
+	if !ok {
+		return nil, ign.NewErrorMessage(ign.ErrorUserNotInRequest)
+	}
+
+	// Check that the user already exists
+	var existing RegisteredUser
+	if err := tx.Where("username = ?", userName).Find(&existing).Error; err != nil {
+		return nil, ign.NewErrorMessage(ign.ErrorNonExistentResource)
+	}
+
+	// Parse form's values and files.
+	if err := r.ParseMultipartForm(0); err != nil {
+		return nil, ign.NewErrorMessageWithBase(ign.ErrorForm, err)
+	}
+	defer r.MultipartForm.RemoveAll()
+
+	var req AddModifyUserRequest
+	if errs := ctrl.formDecoder.Decode(&req, r.Form); errs != nil {
+		return nil, ign.NewErrorMessageWithArgs(ign.ErrorFormInvalidValue, errs,
+			getDecodeErrorsExtraInfo(errs))
+	}
+
+	// If modifying the username, first check that the new username doesn't exists
+	if *existing.Username != req.Username {
+		var userCheck RegisteredUser
+		if err := tx.Where("username = ?", req.Username).Find(&userCheck).Error; err != nil {
+			existing.Username = &req.Username
+		}
+	}
+
+	// Update the simulation limit.
+	existing.SimulationLimit = req.SimulationLimit
+
+	if err := tx.Save(&existing).Error; err != nil {
+		return nil, ign.NewErrorMessageWithBase(ign.ErrorDbSave, err)
+	}
+
+	return AddModifyUserResponse{
+		Username:        *existing.Username,
+		SimulationLimit: existing.SimulationLimit,
+	}, nil
+}
+
+////////////////////////////////////////////////
+// AddUser handles the POST `/users` route.
+//
+// Origin: user --> POST /users --> controller.AddUser()
+// Next:
+//     * On success --> return User
+//     * On fail --> return error
+func (ctrl *controller) AddUser(user *users.User, tx *gorm.DB, w http.ResponseWriter, r *http.Request) (interface{}, *ign.ErrMsg) {
+
+	// Fail if not system admin
+	if ok := HTTPHandlerInstance.UserAccessor.IsSystemAdmin(*user.Username); !ok {
+		return nil, ign.NewErrorMessage(ign.ErrorUnauthorized)
+	}
+
+	// Parse form's values and files.
+	if err := r.ParseMultipartForm(0); err != nil {
+		return nil, ign.NewErrorMessageWithBase(ign.ErrorForm, err)
+	}
+	defer r.MultipartForm.RemoveAll()
+
+	var req AddModifyUserRequest
+
+	if errs := ctrl.formDecoder.Decode(&req, r.Form); errs != nil {
+		return nil, ign.NewErrorMessageWithArgs(ign.ErrorFormInvalidValue, errs,
+			getDecodeErrorsExtraInfo(errs))
+	}
+
+	// Check that the user doesn't already exist
+	var existing RegisteredUser
+	if err := tx.Where("username = ?", req.Username).Find(&existing).Error; err == nil {
+		return nil, ign.NewErrorMessage(ign.ErrorResourceExists)
+	}
+
+	// If the simulation_limit form value is not present, then assume unlimited
+	// simulations
+	if _, ok := r.Form["simulation_limit"]; !ok {
+		req.SimulationLimit = -1
+	}
+
+	newUser := RegisteredUser{
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
+
+		Username:        &req.Username,
+		SimulationLimit: req.SimulationLimit,
+	}
+
+	if err := tx.Create(&newUser).Error; err != nil {
+		return nil, ign.NewErrorMessageWithBase(ign.ErrorDbSave, err)
+	}
+
+	return AddModifyUserResponse{
+		Username:        req.Username,
+		SimulationLimit: req.SimulationLimit,
+	}, nil
+}
+
+////////////////////////////////////////////////
+// ListUsers handles the GET `/users` route.
+//
+// Origin: user --> GET /users --> controller.ListUsers()
+// Next:
+//     * On success --> return ListResponse
+//     * On fail --> return error
+func (ctrl *controller) ListUsers(user *users.User, tx *gorm.DB, w http.ResponseWriter, r *http.Request) (interface{}, *ign.ErrMsg) {
+
+	// Return only owner simulations if the user is not a system admin
+	if ok := HTTPHandlerInstance.UserAccessor.IsSystemAdmin(*user.Username); !ok {
+		return nil, ign.NewErrorMessage(ign.ErrorUnauthorized)
+	}
+
+	var users RegisteredUsers
+	tx.Find(&users)
+
+	return users, nil
+}

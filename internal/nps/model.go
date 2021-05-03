@@ -105,6 +105,10 @@ type RegisteredUser struct {
 	DeletedAt *time.Time `gorm:"type:timestamp(2) NULL" sql:"index" json:"-"`
 
 	Username *string `gorm:"not null;unique" json:"username,omitempty" validate:"required,min=3,alphanum,notinblacklist"`
+
+	// SimulationLimit is the number of allowed simultaneous simulations.
+	// A negative number indicates unilimited simulations.
+	SimulationLimit int `json:"simulation_limit"`
 }
 type RegisteredUsers []RegisteredUser
 

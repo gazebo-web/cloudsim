@@ -97,5 +97,57 @@ func (app *application) GetAPIRoutes() ign.Routes {
 				},
 			},
 		},
+		// Example usage:
+		//     curl -X POST -H "Private-Token: TOKEN" http://localhost:8001/1.0/users -F "username=USERNAME" -F "simulation_limt=SIMULTION_LIMIT"
+		ign.Route{
+			Name:        "Add a registered users",
+			Description: "This is a route for adding a registered user",
+			URI:         "/users",
+			Methods:     ign.Methods{},
+			SecureMethods: ign.SecureMethods{
+				ign.Method{
+					Type:        "POST",
+					Description: "Add registered user",
+					Handlers: ign.FormatHandlers{
+						ign.FormatHandler{Handler: ign.JSONResult(WithUser(ctrl.AddUser))},
+					},
+				},
+			},
+		},
+		// Example usage:
+		//     curl -X PATCH -H "Private-Token: TOKEN" http://localhost:8001/1.0/user/{USERNAME} -F "username=USERNAME" -F "simulation_limt=SIMULTION_LIMIT"
+		ign.Route{
+			Name:        "Modifies a registered users",
+			Description: "This is a route for modifying a registered user",
+			URI:         "/user/{username}",
+			Methods:     ign.Methods{},
+			SecureMethods: ign.SecureMethods{
+				ign.Method{
+					Type:        "PATCH",
+					Description: "MODIFY registered user",
+					Handlers: ign.FormatHandlers{
+						ign.FormatHandler{Handler: ign.JSONResult(WithUser(ctrl.ModifyUser))},
+					},
+				},
+			},
+		},
+
+		// Example usage:
+		//     curl -X GET -H "Private-Token: TOKEN" http://localhost:8001/1.0/users
+		ign.Route{
+			Name:        "List registered users",
+			Description: "This is a route for listing registered users",
+			URI:         "/users",
+			Methods:     ign.Methods{},
+			SecureMethods: ign.SecureMethods{
+				ign.Method{
+					Type:        "GET",
+					Description: "List registered users",
+					Handlers: ign.FormatHandlers{
+						ign.FormatHandler{Handler: ign.JSONResult(WithUser(ctrl.ListUsers))},
+					},
+				},
+			},
+		},
 	}
 }
