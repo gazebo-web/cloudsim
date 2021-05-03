@@ -60,6 +60,7 @@ A simulation instance transitions between states during it lifecycle. The
 order of these states are:
 
 **POST command to start a simulation**
+1. `starting`
 1. `launching`
 1. `wait-instance`
 1. `wait-node`
@@ -75,6 +76,7 @@ order of these states are:
 
 | Qualifier | Description|
 |-----------|------------|
+|`status:starting`| Return simulations that are starting.|
 |`status:launching`| Return simulations that are in the process of launching a cloud machine.|
 |`status:wait-instance`| Return simulations that are waiting for the cloud machine to launch.|
 |`status:wait-node`| Return simulations that are waiting for the cloud machine to join the kubernetes cluster.|
