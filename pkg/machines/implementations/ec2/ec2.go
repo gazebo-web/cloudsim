@@ -219,7 +219,7 @@ func (m *ec2Machines) sleepNSecondsBeforeMaxRetries(n, max int) {
 func (m *ec2Machines) parseRunInstanceError(err error) error {
 	awsErr, ok := err.(awserr.Error)
 	if !ok {
-		return errors.Wrap(machines.ErrUnknown, "invalid AWS error")
+		return errors.Wrap(machines.ErrUnknown, err.Error())
 	}
 
 	switch awsErr.Code() {
