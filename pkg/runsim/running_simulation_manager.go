@@ -87,7 +87,7 @@ func (m *manager) Free(groupID simulations.GroupID) {
 	rs.publishing = false
 	m.runningSimulations[groupID] = rs
 
-	if t != nil && t.IsConnected() {
+	if t != nil {
 		t.Disconnect()
 	}
 }
