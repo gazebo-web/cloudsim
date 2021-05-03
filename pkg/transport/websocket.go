@@ -57,7 +57,10 @@ func (w *websocketTransport) IsConnected() bool {
 
 // Disconnect closes the connection.
 func (w *websocketTransport) Disconnect() {
-	w.connection.Close()
+	if w.connection == nil {
+		return
+	}
+	_ = w.connection.Close()
 	w.connection = nil
 }
 
