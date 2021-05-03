@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/client"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/aws/aws-sdk-go/service/ec2/ec2iface"
+	"github.com/pkg/errors"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/cycler"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/defaults"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/machines"
@@ -218,7 +219,7 @@ func (m *ec2Machines) sleepNSecondsBeforeMaxRetries(n, max int) {
 func (m *ec2Machines) parseRunInstanceError(err error) error {
 	awsErr, ok := err.(awserr.Error)
 	if !ok {
-		return machines.ErrUnknown
+		return errors.Wrap(machines.ErrUnknown, "invalid AWS error")
 	}
 
 	switch awsErr.Code() {
@@ -236,7 +237,7 @@ func (m *ec2Machines) parseRunInstanceError(err error) error {
 	case ErrCodeRequestLimitExceeded:
 		return machines.ErrRequestsLimitExceeded
 	default:
-		return machines.ErrUnknown
+		return errors.Wrap(machines.ErrUnknown, awsErr.Message())
 	}
 }
 
