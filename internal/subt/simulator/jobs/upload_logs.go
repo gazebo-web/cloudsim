@@ -5,7 +5,7 @@ import (
 	subtapp "gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/application"
 	"gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/simulator/state"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/actions"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/components/pods"
 	"gitlab.com/ignitionrobotics/web/ign-go"
 	"path/filepath"
 )
@@ -109,9 +109,9 @@ func uploadLogs(store actions.Store, tx *gorm.DB, deployment *actions.Deployment
 }
 
 // uploadSingleLogs is a helper function in charge of running a certain script in scriptFilepath with the given scriptParams.
-// It will run this script inside the containerName using the orchestrator.Executor implementation passed as an argument.
+// It will run this script inside the containerName using the pods.Executor implementation passed as an argument.
 // It will return an error if parsing the script template or executing the script returns an error.
-func uploadSingleLogs(exec orchestrator.Executor, containerName string, scriptFilepath string, scriptParams uploadLogsScript) error {
+func uploadSingleLogs(exec pods.Executor, containerName string, scriptFilepath string, scriptParams uploadLogsScript) error {
 	script, err := ign.ParseTemplate(scriptFilepath, scriptParams)
 	if err != nil {
 		return err

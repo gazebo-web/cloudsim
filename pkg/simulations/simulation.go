@@ -20,6 +20,9 @@ var (
 
 	// ErrSimulationProcessed is returned when simulation is trying to be processed twice.
 	ErrSimulationProcessed = errors.New("simulation has been processed")
+
+	// ErrSimulationPlatformNotDefined is returned when a Simulation does not have a Platform defined.
+	ErrSimulationPlatformNotDefined = errors.New("simulation has no platform defined")
 )
 
 // GroupID is an universally unique identifier that identifies a Simulation.
@@ -137,4 +140,7 @@ type Simulation interface {
 
 	// GetCreator returns the Simulation's creator.
 	GetCreator() string
+
+	// GetPlatform returns the Simulation's platform.
+	GetPlatform() *string
 }

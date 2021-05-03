@@ -14,7 +14,9 @@ import (
 )
 
 // Force SimulationDeployment to implement simulations.Simulation interface.
-var _ subtsim.Simulation = (*SimulationDeployment)(nil)
+var (
+	_ subtsim.Simulation = (*SimulationDeployment)(nil)
+)
 
 // SimulationDeployment represents a cloudsim simulation .
 type SimulationDeployment struct {
@@ -134,6 +136,11 @@ func (dep *SimulationDeployment) GetCreator() string {
 	return *dep.Creator
 }
 
+// GetPlatform returns the SimulationDeployment's Platform.
+func (dep *SimulationDeployment) GetPlatform() *string {
+	return dep.Platform
+}
+
 // GetName returns the SimulationsDeployment's Name. t returns an empty string if no name has been assigned.
 func (dep *SimulationDeployment) GetName() string {
 	if dep.Name == nil {
@@ -149,12 +156,36 @@ func (dep *SimulationDeployment) GetGroupID() simulations.GroupID {
 
 // GetStatus returns the SimulationDeployment's DeploymentStatus.
 func (dep *SimulationDeployment) GetStatus() simulations.Status {
-	for k, v := range statuses {
-		if *dep.DeploymentStatus == v.ToInt() {
-			return k
-		}
+	switch *dep.DeploymentStatus {
+	case simPending.ToInt():
+		return simulations.StatusPending
+	case simLaunchingNodes.ToInt():
+		return simulations.StatusLaunchingInstances
+	case simLaunchingPods.ToInt():
+		return simulations.StatusLaunchingPods
+	case simParentLaunching.ToInt():
+		return simulations.StatusUnknown
+	case simParentLaunchingWithErrors.ToInt():
+		return simulations.StatusUnknown
+	case simRunning.ToInt():
+		return simulations.StatusRunning
+	case simTerminateRequested.ToInt():
+		return simulations.StatusTerminateRequested
+	case simDeletingPods.ToInt():
+		return simulations.StatusDeletingPods
+	case simDeletingNodes.ToInt():
+		return simulations.StatusDeletingNodes
+	case simTerminatingInstances.ToInt():
+		return simulations.StatusTerminatingInstances
+	case simTerminated.ToInt():
+		return simulations.StatusTerminated
+	case simRejected.ToInt():
+		return simulations.StatusRejected
+	case simSuperseded.ToInt():
+		return simulations.StatusSuperseded
+	default:
+		return simulations.StatusUnknown
 	}
-	return simulations.StatusUnknown
 }
 
 // HasStatus checks that the SimulationDeployment's DeploymentStatus is equal to the given status.
@@ -544,6 +575,7 @@ func (dep *SimulationDeployment) recordStop(tx *gorm.DB) *ign.ErrMsg {
 	return nil
 }
 
+// updateValidFor updates this SimulationDeployment's ValidFor field in the database.
 func (dep *SimulationDeployment) updateValidFor(tx *gorm.DB, validFor time.Duration) *ign.ErrMsg {
 	validForStr := validFor.String()
 	if err := tx.Model(&dep).Update(SimulationDeployment{
@@ -555,7 +587,7 @@ func (dep *SimulationDeployment) updateValidFor(tx *gorm.DB, validFor time.Durat
 	return nil
 }
 
-// updateDepStatus updates the status in DB of a given SimulationDeployment
+// updateSimDepStatus updates this SimulationDeployment's DeploymentStatus in the database.
 func (dep *SimulationDeployment) updateSimDepStatus(tx *gorm.DB, st DeploymentStatus) *ign.ErrMsg {
 	val := st.ToPtr()
 	if err := tx.Model(&dep).Update(SimulationDeployment{
@@ -564,6 +596,18 @@ func (dep *SimulationDeployment) updateSimDepStatus(tx *gorm.DB, st DeploymentSt
 		return ign.NewErrorMessageWithBase(ign.ErrorDbSave, err)
 	}
 	dep.DeploymentStatus = val
+	return nil
+}
+
+// updatePlatform updates this SimulationDeployment's Platform in the database.
+func (dep *SimulationDeployment) updatePlatform(tx *gorm.DB, platform string) *ign.ErrMsg {
+	if err := tx.Model(&dep).Update(SimulationDeployment{
+		Platform: &platform,
+	}).Error; err != nil {
+		return ign.NewErrorMessageWithBase(ign.ErrorDbSave, err)
+	}
+	dep.Platform = &platform
+
 	return nil
 }
 
@@ -636,29 +680,33 @@ func (dep *SimulationDeployment) setStatus(status simulations.Status) {
 	dep.DeploymentStatus = convertStatus(status).ToPtr()
 }
 
-// statuses is used to map the old DeploymentStatus statuses with the new simulations.Status
-// used by the code refactor.
-var statuses = map[simulations.Status]DeploymentStatus{
-	simulations.StatusPending:              simPending,
-	simulations.StatusLaunchingInstances:   simLaunchingNodes,
-	simulations.StatusLaunchingPods:        simLaunchingPods,
-	simulations.StatusRunning:              simRunning,
-	simulations.StatusTerminateRequested:   simTerminateRequested,
-	simulations.StatusDeletingPods:         simDeletingPods,
-	simulations.StatusDeletingNodes:        simDeletingNodes,
-	simulations.StatusTerminatingInstances: simTerminatingInstances,
-	simulations.StatusTerminated:           simTerminated,
-	simulations.StatusRejected:             simRejected,
-	simulations.StatusSuperseded:           simSuperseded,
-	simulations.StatusProcessingResults:    simRunningWithErrors,
-}
-
 func convertStatus(status simulations.Status) DeploymentStatus {
-	ds, ok := statuses[status]
-	if !ok {
+	switch status {
+	case simulations.StatusPending:
+		return simPending
+	case simulations.StatusLaunchingInstances, simulations.StatusWaitingInstances, simulations.StatusWaitingNodes:
+		return simLaunchingNodes
+	case simulations.StatusLaunchingPods, simulations.StatusWaitingPods:
+		return simLaunchingPods
+	case simulations.StatusRunning:
+		return simRunning
+	case simulations.StatusProcessingResults, simulations.StatusTerminateRequested:
+		return simTerminateRequested
+	case simulations.StatusDeletingPods:
+		return simDeletingPods
+	case simulations.StatusDeletingNodes:
+		return simDeletingNodes
+	case simulations.StatusTerminatingInstances:
+		return simTerminatingInstances
+	case simulations.StatusTerminated:
+		return simTerminated
+	case simulations.StatusRejected:
+		return simRejected
+	case simulations.StatusSuperseded:
+		return simSuperseded
+	default:
 		return simPending
 	}
-	return ds
 }
 
 // SimulationDeployments is a slice of SimulationDeployment
@@ -688,8 +736,9 @@ const (
 	// finished with errors and some are still launching/running.
 	simParentLaunchingWithErrors DeploymentStatus = 28
 	simRunning                   DeploymentStatus = 30
-	// Deprecated: simRunningWithErrors is used for Parent simulations when some of their children
+	// simRunningWithErrors is used for Parent simulations when some of their children
 	// finished with errors and some are still running.
+	// @deprecated do not use.
 	simRunningWithErrors    DeploymentStatus = 40
 	simTerminateRequested   DeploymentStatus = 50
 	simDeletingPods         DeploymentStatus = 60
@@ -708,6 +757,7 @@ var depStatusStr = map[DeploymentStatus]string{
 	simParentLaunching:           "Launching",
 	simParentLaunchingWithErrors: "RunningWithErrors",
 	simRunning:                   "Running",
+	simRunningWithErrors:         "RunningWithErrorsDoNotUse",
 	simTerminateRequested:        "ToBeTerminated",
 	simDeletingPods:              "DeletingPods",
 	simDeletingNodes:             "DeletingNodes",
@@ -954,7 +1004,7 @@ type CreateSimulation struct {
 	Owner string `json:"owner" form:"owner"`
 	// The docker image(s) that will be used for the Field Computer(s)
 	Image       []string `json:"image" form:"image"`
-	Platform    string   `json:"platform" form:"platform"`
+	Platform    *string  `json:"platform" form:"platform"`
 	Application string   `json:"application" form:"application"`
 	Private     *bool    `json:"private" validate:"omitempty" form:"private"`
 	// When shutting down simulations, stop EC2 instances instead of terminating them. Requires admin privileges.

@@ -16,16 +16,16 @@ import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/tracks"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/actions"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/application"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/cloud/aws/ec2"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/cloud/aws/s3"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/env"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/machines/implementations/ec2"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/migrations"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/mock"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/kubernetes"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/kubernetes/spdy"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/components/spdy"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/implementations/kubernetes"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/platform"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/secrets"
+	secrets "gitlab.com/ignitionrobotics/web/cloudsim/pkg/secrets/implementations/kubernetes"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/storage/implementations/s3"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/store/implementations/store"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/users"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/utils/db/gorm"
 	legacy "gitlab.com/ignitionrobotics/web/cloudsim/simulations"
@@ -60,6 +60,21 @@ func TestStartSimulationAction(t *testing.T) {
 
 	// Initialize mock for EC2
 	ec2api := mock.NewEC2()
+	ec2Machines, err := ec2.NewMachines(&ec2.NewInput{
+		API: ec2api,
+		Logger: logger,
+		Zones:[]ec2.Zone{
+			{
+				Zone: "zone-0",
+				SubnetID: "subnet-0",
+			},
+			{
+				Zone: "zone-1",
+				SubnetID: "subnet-1",
+			},
+		},
+	})
+	require.NoError(t, err)
 
 	// Initialize mock for S3
 	storageBackend := s3mem.New()
@@ -87,7 +102,7 @@ func TestStartSimulationAction(t *testing.T) {
 	cluster := kubernetes.NewDefaultKubernetes(kubernetesClientset, fakeSPDY, logger)
 
 	// Initialize env vars
-	configStore, err := env.NewStore()
+	configStore, err := store.NewStoreFromEnvVars()
 	require.NoError(t, err)
 
 	// Initialize secrets
@@ -95,7 +110,7 @@ func TestStartSimulationAction(t *testing.T) {
 
 	// Initialize platform components
 	c := platform.Components{
-		Machines: ec2.NewMachines(ec2api, logger),
+		Machines: ec2Machines,
 		Storage:  s3.NewStorage(storageAPI, logger),
 		Cluster:  cluster,
 		Store:    configStore,
@@ -103,7 +118,7 @@ func TestStartSimulationAction(t *testing.T) {
 	}
 
 	// Initialize platform
-	p := platform.NewPlatform(c)
+	p, _ := platform.NewPlatform("test", c)
 
 	// Initialize base application services
 	simService := legacy.NewSubTSimulationServiceAdaptor(db)
@@ -217,7 +232,6 @@ func TestStartSimulationAction(t *testing.T) {
 
 		s := simulator.NewSimulator(simulator.Config{
 			DB:                    db,
-			Platform:              p,
 			ApplicationServices:   app,
 			ActionService:         actionService,
 			DisableDefaultActions: true,
@@ -243,7 +257,7 @@ func TestStartSimulationAction(t *testing.T) {
 		actionService.RegisterAction(&appName, simulator.ActionNameStartSimulation, startActions)
 
 		// Start the simulation.
-		err = s.Start(ctx, sim.GetGroupID())
+		err = s.Start(ctx, p, sim.GetGroupID())
 		assert.NoError(t, err)
 	})
 
@@ -252,7 +266,6 @@ func TestStartSimulationAction(t *testing.T) {
 
 		s := simulator.NewSimulator(simulator.Config{
 			DB:                    db,
-			Platform:              p,
 			ApplicationServices:   app,
 			ActionService:         actionService,
 			DisableDefaultActions: true,
@@ -301,7 +314,7 @@ func TestStartSimulationAction(t *testing.T) {
 		actionService.RegisterAction(&appName, simulator.ActionNameStartSimulation, startActions)
 
 		// Start the simulation.
-		err = s.Start(ctx, sim.GetGroupID())
+		err = s.Start(ctx, p, sim.GetGroupID())
 		assert.NoError(t, err)
 	})
 
@@ -310,7 +323,6 @@ func TestStartSimulationAction(t *testing.T) {
 
 		s := simulator.NewSimulator(simulator.Config{
 			DB:                    db,
-			Platform:              p,
 			ApplicationServices:   app,
 			ActionService:         actionService,
 			DisableDefaultActions: true,
@@ -364,7 +376,7 @@ func TestStartSimulationAction(t *testing.T) {
 		actionService.RegisterAction(&appName, simulator.ActionNameStartSimulation, startActions)
 
 		// Start the simulation.
-		err = s.Start(ctx, sim.GetGroupID())
+		err = s.Start(ctx, p, sim.GetGroupID())
 		assert.NoError(t, err)
 	})
 }

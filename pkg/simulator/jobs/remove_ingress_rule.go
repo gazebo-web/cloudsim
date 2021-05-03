@@ -3,7 +3,7 @@ package jobs
 import (
 	"github.com/jinzhu/gorm"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/actions"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/components/ingresses"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulator/state"
 )
 
@@ -12,7 +12,7 @@ type RemoveIngressRulesInput struct {
 	Name      string
 	Namespace string
 	Host      string
-	Paths     []orchestrator.Path
+	Paths     []ingresses.Path
 }
 
 // RemoveIngressRulesOutput is the output of the ConfigureIngress job.

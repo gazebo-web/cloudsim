@@ -4,7 +4,7 @@ import (
 	"github.com/jinzhu/gorm"
 	"gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/simulator/state"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/actions"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/components/pods"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulator/jobs"
 )
 
@@ -72,7 +72,7 @@ func checkLaunchServiceError(store actions.Store, tx *gorm.DB, deployment *actio
 
 // readFileContentFromCopyPod reads the file content located in the given path
 // of a certain pod in the given namespace.
-func readFileContentFromPod(p orchestrator.Pods, podName, namespace, path string) ([]byte, error) {
+func readFileContentFromPod(p pods.Pods, podName, namespace, path string) ([]byte, error) {
 	res, err := p.Get(podName, namespace)
 	if err != nil {
 		return nil, err

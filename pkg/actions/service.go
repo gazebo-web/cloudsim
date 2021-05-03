@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/jinzhu/gorm"
 	"gitlab.com/ignitionrobotics/web/ign-go"
+	"runtime/debug"
 )
 
 var (
@@ -134,7 +135,7 @@ func (s *service) Execute(store Store, tx *gorm.DB, executeInput ExecuteInputer,
 	defer func() {
 		// Recover from panics
 		if r := recover(); r != nil {
-			s.logger.Debug("Panic:", r)
+			s.logger.Debug("Panic:", r, "\nStack:", string(debug.Stack()))
 			panicErr := fmt.Errorf("panic: %s", r)
 			if err == nil {
 				err = panicErr
@@ -192,7 +193,6 @@ func (s *service) processJobs(store Store, tx *gorm.DB, action *Action, executeI
 
 	// Process jobs
 	for ; input.index < len(action.Jobs); input.index++ {
-
 		job := action.Jobs[input.index]
 
 		// Update the deployment job

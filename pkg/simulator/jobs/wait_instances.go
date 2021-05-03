@@ -3,15 +3,15 @@ package jobs
 import (
 	"github.com/jinzhu/gorm"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/actions"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/cloud"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/machines"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulator/state"
 )
 
 // WaitForInstancesInput is the input of the WaitForInstances job.
-type WaitForInstancesInput []cloud.CreateMachinesOutput
+type WaitForInstancesInput []machines.CreateMachinesOutput
 
 // WaitForInstancesOutput is the output of the WaitForInstances job.
-type WaitForInstancesOutput []cloud.CreateMachinesOutput
+type WaitForInstancesOutput []machines.CreateMachinesOutput
 
 // WaitForInstances is used to wait until all required instances are ready.
 var WaitForInstances = &actions.Job{
@@ -27,7 +27,7 @@ func waitForInstances(store actions.Store, tx *gorm.DB, deployment *actions.Depl
 	machineList := value.(WaitForInstancesInput)
 
 	// Create input
-	var waitMachinesOkInputs []cloud.WaitMachinesOKInput
+	var waitMachinesOkInputs []machines.WaitMachinesOKInput
 	for _, c := range machineList {
 		waitMachinesOkInputs = append(waitMachinesOkInputs, c.ToWaitMachinesOKInput())
 	}

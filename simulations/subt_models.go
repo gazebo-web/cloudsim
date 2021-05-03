@@ -231,7 +231,7 @@ type SubTCircuitRules struct {
 	// Seeds is comma separated list of seed numbers. Each seed will be used with each world run.
 	// As an example, if field "Worlds" contains 3 worlds and "times" contains "1,2,2", then
 	// there should be 5 seeds.
-	Seeds      *string `json:"-"`
+	Seeds      *string `gorm:"size:2048" json:"-"`
 	MaxCredits *int    `json:"-"`
 	// CompetitionDate is the date when all held simulations for this circuit will be launched.
 	CompetitionDate *time.Time `json:"-"`

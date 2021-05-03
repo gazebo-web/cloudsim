@@ -3,17 +3,17 @@ package jobs
 import (
 	"github.com/jinzhu/gorm"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/actions"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/cloud"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/machines"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulator/state"
 )
 
 // LaunchInstancesInput is the input of the LaunchInstances job.
 // It's used to pass the list of instances to create.
-type LaunchInstancesInput []cloud.CreateMachinesInput
+type LaunchInstancesInput []machines.CreateMachinesInput
 
 // LaunchInstancesOutput is the output of the LaunchInstances job.
 // It's used to pass the list of instances created.
-type LaunchInstancesOutput []cloud.CreateMachinesOutput
+type LaunchInstancesOutput []machines.CreateMachinesOutput
 
 // LaunchInstances is a generic job to launch instances.
 // It includes a rollback handler to terminate the instances that were created in this job.

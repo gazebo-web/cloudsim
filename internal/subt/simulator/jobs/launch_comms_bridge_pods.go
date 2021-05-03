@@ -7,7 +7,8 @@ import (
 	subt "gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/simulations"
 	"gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/simulator/state"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/actions"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/components/pods"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/resource"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulator/jobs"
 )
 
@@ -33,7 +34,7 @@ func rollbackLaunchCommsBridgePods(store actions.Store, tx *gorm.DB, deployment 
 		name := subtapp.GetPodNameCommsBridge(s.GroupID, subtapp.GetRobotID(i))
 		ns := s.Platform().Store().Orchestrator().Namespace()
 
-		_, _ = s.Platform().Orchestrator().Pods().Delete(orchestrator.NewResource(name, ns, nil))
+		_, _ = s.Platform().Orchestrator().Pods().Delete(resource.NewResource(name, ns, nil))
 	}
 
 	return nil, nil
@@ -55,7 +56,7 @@ func prepareCommsBridgePodInput(store actions.Store, tx *gorm.DB, deployment *ac
 		return nil, err
 	}
 
-	var pods []orchestrator.CreatePodInput
+	var podInputs []pods.CreatePodInput
 
 	marsupials := subtSim.GetMarsupials()
 
@@ -64,7 +65,7 @@ func prepareCommsBridgePodInput(store actions.Store, tx *gorm.DB, deployment *ac
 		privileged := true
 		allowPrivilegesEscalation := true
 
-		initVolumes := []orchestrator.Volume{
+		initVolumes := []pods.Volume{
 			{
 				Name:      "logs",
 				HostPath:  "/tmp",
@@ -72,11 +73,11 @@ func prepareCommsBridgePodInput(store actions.Store, tx *gorm.DB, deployment *ac
 			},
 		}
 
-		volumes := []orchestrator.Volume{
+		volumes := []pods.Volume{
 			{
 				Name:         "logs",
 				HostPath:     "/tmp/robot-logs",
-				HostPathType: orchestrator.HostPathDirectoryOrCreate,
+				HostPathType: pods.HostPathDirectoryOrCreate,
 				MountPath:    s.Platform().Store().Ignition().ROSLogsPath(),
 			},
 		}
@@ -87,21 +88,22 @@ func prepareCommsBridgePodInput(store actions.Store, tx *gorm.DB, deployment *ac
 			Robot:          r,
 			ChildMarsupial: subt.IsRobotChildMarsupial(marsupials, r),
 		})
+
 		if err != nil {
 			return nil, err
 		}
 
-		pods = append(pods, orchestrator.CreatePodInput{
+		podInputs = append(podInputs, pods.CreatePodInput{
 			Name:                          subtapp.GetPodNameCommsBridge(s.GroupID, subtapp.GetRobotID(i)),
 			Namespace:                     s.Platform().Store().Orchestrator().Namespace(),
 			Labels:                        subtapp.GetPodLabelsCommsBridge(s.GroupID, s.ParentGroupID, r).Map(),
-			RestartPolicy:                 orchestrator.RestartPolicyNever,
+			RestartPolicy:                 pods.RestartPolicyNever,
 			TerminationGracePeriodSeconds: s.Platform().Store().Orchestrator().TerminationGracePeriod(),
 			NodeSelector:                  subtapp.GetNodeLabelsFieldComputer(s.GroupID, r),
-			InitContainers: []orchestrator.Container{
-				orchestrator.NewChownContainer(initVolumes),
+			InitContainers: []pods.Container{
+				pods.NewChownContainer(initVolumes),
 			},
-			Containers: []orchestrator.Container{
+			Containers: []pods.Container{
 				{
 					Name:                     subtapp.GetContainerNameCommsBridge(),
 					Image:                    track.BridgeImage,
@@ -124,5 +126,5 @@ func prepareCommsBridgePodInput(store actions.Store, tx *gorm.DB, deployment *ac
 
 	}
 
-	return jobs.LaunchPodsInput(pods), nil
+	return jobs.LaunchPodsInput(podInputs), nil
 }

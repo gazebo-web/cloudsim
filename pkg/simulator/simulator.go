@@ -3,6 +3,7 @@ package simulator
 import (
 	"context"
 	"errors"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/platform"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
 )
 
@@ -15,8 +16,8 @@ var (
 // Simulator should be implemented by the applications.
 type Simulator interface {
 	// Start triggers an action to start simulations.
-	Start(ctx context.Context, groupID simulations.GroupID) error
+	Start(ctx context.Context, platform platform.Platform, groupID simulations.GroupID) error
 
 	// Stop triggers an action to stop a simulation.
-	Stop(ctx context.Context, groupID simulations.GroupID) error
+	Stop(ctx context.Context, platform platform.Platform, groupID simulations.GroupID) error
 }

@@ -7,7 +7,8 @@ import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/simulations"
 	"gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/simulator/state"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/actions"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/components/pods"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/resource"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulator/jobs"
 	"time"
 )
@@ -28,7 +29,7 @@ func rollbackLaunchGazeboServerPod(store actions.Store, tx *gorm.DB, deployment 
 	name := subtapp.GetPodNameGazeboServer(s.GroupID)
 	ns := s.Platform().Store().Orchestrator().Namespace()
 
-	_, _ = s.Platform().Orchestrator().Pods().Delete(orchestrator.NewResource(name, ns, nil))
+	_, _ = s.Platform().Orchestrator().Pods().Delete(resource.NewResource(name, ns, nil))
 
 	return nil, nil
 }
@@ -56,7 +57,7 @@ func prepareGazeboCreatePodInput(store actions.Store, tx *gorm.DB, deployment *a
 	// Generate gazebo command args
 	runCommand := cmdgen.Gazebo(cmdgen.GazeboConfig{
 		World:              track.World,
-		WorldMaxSimSeconds: time.Duration(track.MaxSimSeconds),
+		WorldMaxSimSeconds: time.Duration(track.MaxSimSeconds) * time.Second,
 		Seed:               track.Seed,
 		AuthorizationToken: subtSim.GetToken(),
 		// TODO: Get max connections from store.
@@ -72,7 +73,7 @@ func prepareGazeboCreatePodInput(store actions.Store, tx *gorm.DB, deployment *a
 	// TODO: Get ports from Ignition Store
 	ports := []int32{11345, 11311}
 
-	volumes := []orchestrator.Volume{
+	volumes := []pods.Volume{
 		{
 			Name:      "logs",
 			MountPath: s.Platform().Store().Ignition().GazeboServerLogsPath(),
@@ -117,10 +118,10 @@ func prepareGazeboCreatePodInput(store actions.Store, tx *gorm.DB, deployment *a
 			Name:                          subtapp.GetPodNameGazeboServer(s.GroupID),
 			Namespace:                     namespace,
 			Labels:                        subtapp.GetPodLabelsGazeboServer(s.GroupID, s.ParentGroupID).Map(),
-			RestartPolicy:                 orchestrator.RestartPolicyNever,
+			RestartPolicy:                 pods.RestartPolicyNever,
 			TerminationGracePeriodSeconds: s.Platform().Store().Orchestrator().TerminationGracePeriod(),
 			NodeSelector:                  subtapp.GetNodeLabelsGazeboServer(s.GroupID),
-			Containers: []orchestrator.Container{
+			Containers: []pods.Container{
 				{
 					Name:                     subtapp.GetContainerNameGazeboServer(),
 					Image:                    track.Image,

@@ -3,18 +3,18 @@ package jobs
 import (
 	"github.com/jinzhu/gorm"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/actions"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/resource"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulator"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulator/state"
 )
 
 // RemovePodsInput is the input of the RemovePods job.
-type RemovePodsInput []orchestrator.Resource
+type RemovePodsInput []resource.Resource
 
 // RemovePodsOutput is the output of the RemovePods job.
 // This struct was set in place to let the post-hook handle errors.
 type RemovePodsOutput struct {
-	Resources []orchestrator.Resource
+	Resources []resource.Resource
 	Error     error
 }
 
@@ -35,16 +35,16 @@ func removePods(store actions.Store, tx *gorm.DB, deployment *actions.Deployment
 
 	if len(input) == 0 {
 		return LaunchPodsOutput{
-			Resources: []orchestrator.Resource{},
+			Resources: []resource.Resource{},
 			Error:     nil,
 		}, nil
 	}
 
-	var deleted []orchestrator.Resource
+	var deleted []resource.Resource
 	var err error
 
 	for _, in := range input {
-		var res orchestrator.Resource
+		var res resource.Resource
 		res, err = s.Platform().Orchestrator().Pods().Delete(in)
 		if err != nil {
 			return nil, err

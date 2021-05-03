@@ -6,12 +6,12 @@ import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/application"
 	"gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/simulator/state"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/actions"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/kubernetes"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/kubernetes/pods"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/kubernetes/spdy"
+	kubernetesPods "gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/components/pods/implementations/kubernetes"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/components/spdy"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/implementations/kubernetes"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/platform"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
-	sfake "gitlab.com/ignitionrobotics/web/cloudsim/pkg/store/fake"
+	sfake "gitlab.com/ignitionrobotics/web/cloudsim/pkg/store/implementations/fake"
 	"gitlab.com/ignitionrobotics/web/ign-go"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -35,13 +35,13 @@ func TestGetGazeboServerIPFailsWhenNotSet(t *testing.T) {
 	}
 
 	client := kfake.NewSimpleClientset(pod)
-	po := pods.NewPods(client, spdyInit, logger)
+	po := kubernetesPods.NewPods(client, spdyInit, logger)
 
 	ks := kubernetes.NewCustomKubernetes(kubernetes.Config{
 		Pods: po,
 	})
 
-	p := platform.NewPlatform(platform.Components{
+	p, _ := platform.NewPlatform("test", platform.Components{
 		Cluster: ks,
 		Store:   fakeStore,
 	})
@@ -80,13 +80,13 @@ func TestGetGazeboIP(t *testing.T) {
 	}
 
 	client := kfake.NewSimpleClientset(pod)
-	po := pods.NewPods(client, spdyInit, logger)
+	po := kubernetesPods.NewPods(client, spdyInit, logger)
 
 	ks := kubernetes.NewCustomKubernetes(kubernetes.Config{
 		Pods: po,
 	})
 
-	p := platform.NewPlatform(platform.Components{
+	p, _ := platform.NewPlatform("test", platform.Components{
 		Cluster: ks,
 		Store:   fakeStore,
 	})

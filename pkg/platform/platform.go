@@ -1,12 +1,19 @@
 package platform
 
 import (
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/cloud"
+	"github.com/pkg/errors"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/email"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/machines"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/runsim"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/secrets"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/storage"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/store"
+)
+
+var (
+	// ErrInvalidPlatformName is returned when a platform with an invalid name is created.
+	ErrInvalidPlatformName = errors.New("invalid platform name")
 )
 
 // Platform groups a set of components for managing simulations.
@@ -14,11 +21,14 @@ import (
 // The cloudsim team provides a default Kubernetes and AWS implementation of this Platform.
 // Other combinations could be implemented after adding their respective subcomponents.
 type Platform interface {
-	// Storage returns a cloud.Storage component.
-	Storage() cloud.Storage
+	// GetName returns the platform name.
+	GetName() string
 
-	// Machines returns a cloud.Machines component.
-	Machines() cloud.Machines
+	// Storage returns a storage.Storage component.
+	Storage() storage.Storage
+
+	// Machines returns a machines.Machines component.
+	Machines() machines.Machines
 
 	// Orchestrator returns a orchestrator.Cluster component.
 	Orchestrator() orchestrator.Cluster
@@ -38,8 +48,8 @@ type Platform interface {
 
 // Components lists the components used to initialize a Platform.
 type Components struct {
-	Machines           cloud.Machines
-	Storage            cloud.Storage
+	Machines           machines.Machines
+	Storage            storage.Storage
 	Cluster            orchestrator.Cluster
 	Store              store.Store
 	Secrets            secrets.Secrets
@@ -48,8 +58,13 @@ type Components struct {
 }
 
 // NewPlatform initializes a new platform using the given components.
-func NewPlatform(components Components) Platform {
+func NewPlatform(name string, components Components) (Platform, error) {
+	if name == "" {
+		return nil, ErrInvalidPlatformName
+	}
+
 	return &platform{
+		name:               name,
 		storage:            components.Storage,
 		machines:           components.Machines,
 		orchestrator:       components.Cluster,
@@ -57,18 +72,23 @@ func NewPlatform(components Components) Platform {
 		secrets:            components.Secrets,
 		email:              components.EmailSender,
 		runningSimulations: components.RunningSimulations,
-	}
+	}, nil
 }
 
 // platform is a Platform implementation.
 type platform struct {
-	storage            cloud.Storage
-	machines           cloud.Machines
+	name               string
+	storage            storage.Storage
+	machines           machines.Machines
 	orchestrator       orchestrator.Cluster
 	store              store.Store
 	secrets            secrets.Secrets
 	runningSimulations runsim.Manager
 	email              email.Sender
+}
+
+func (p *platform) GetName() string {
+	return p.name
 }
 
 // EmailSender returns a email.Sender implementation.
@@ -86,13 +106,13 @@ func (p *platform) Store() store.Store {
 	return p.store
 }
 
-// Storage returns a cloud.Storage implementation.
-func (p *platform) Storage() cloud.Storage {
+// Storage returns a storage.Storage implementation.
+func (p *platform) Storage() storage.Storage {
 	return p.storage
 }
 
-// Machines returns a cloud.Machines implementation.
-func (p *platform) Machines() cloud.Machines {
+// Machines returns a machines.Machines implementation.
+func (p *platform) Machines() machines.Machines {
 	return p.machines
 }
 

@@ -6,7 +6,8 @@ import (
 	subt "gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/simulations"
 	"gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/simulator/state"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/actions"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/components/pods"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/resource"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulator/jobs"
 )
 
@@ -32,7 +33,7 @@ func rollbackLaunchFieldComputerPods(store actions.Store, tx *gorm.DB, deploymen
 		name := subtapp.GetPodNameFieldComputer(s.GroupID, subtapp.GetRobotID(i))
 		ns := s.Platform().Store().Orchestrator().Namespace()
 
-		_, _ = s.Platform().Orchestrator().Pods().Delete(orchestrator.NewResource(name, ns, nil))
+		_, _ = s.Platform().Orchestrator().Pods().Delete(resource.NewResource(name, ns, nil))
 	}
 
 	return nil, nil
@@ -49,33 +50,33 @@ func prepareFieldComputerPodInput(store actions.Store, tx *gorm.DB, deployment *
 
 	subtSim := sim.(subt.Simulation)
 
-	pods := make([]orchestrator.CreatePodInput, len(subtSim.GetRobots()))
+	podInputs := make([]pods.CreatePodInput, len(subtSim.GetRobots()))
 
 	for i, r := range subtSim.GetRobots() {
 		robotID := subtapp.GetRobotID(i)
 		// Create field computer input
 		allowPrivilegesEscalation := false
-		pods[i] = orchestrator.CreatePodInput{
+		podInputs[i] = pods.CreatePodInput{
 			Name:                          subtapp.GetPodNameFieldComputer(s.GroupID, robotID),
 			Namespace:                     s.Platform().Store().Orchestrator().Namespace(),
 			Labels:                        subtapp.GetPodLabelsFieldComputer(s.GroupID, s.ParentGroupID).Map(),
-			RestartPolicy:                 orchestrator.RestartPolicyNever,
+			RestartPolicy:                 pods.RestartPolicyNever,
 			TerminationGracePeriodSeconds: s.Platform().Store().Orchestrator().TerminationGracePeriod(),
 			NodeSelector:                  subtapp.GetNodeLabelsFieldComputer(s.GroupID, r),
-			Containers: []orchestrator.Container{
+			Containers: []pods.Container{
 				{
 					Name:                     subtapp.GetContainerNameFieldComputer(),
 					Image:                    r.GetImage(),
 					AllowPrivilegeEscalation: &allowPrivilegesEscalation,
 					EnvVars:                  subtapp.GetEnvVarsFieldComputer(r.GetName(), s.CommsBridgeIPs[i]),
 					EnvVarsFrom:              subtapp.GetEnvVarsFromSourceFieldComputer(),
-					ResourceLimits: map[orchestrator.ResourceName]string{
-						orchestrator.ResourceMemory: "115Gi",
+					ResourceLimits: map[pods.ResourceName]string{
+						pods.ResourceMemory: "115Gi",
 					},
 				},
 			},
 		}
 	}
 
-	return jobs.LaunchPodsInput(pods), nil
+	return jobs.LaunchPodsInput(podInputs), nil
 }

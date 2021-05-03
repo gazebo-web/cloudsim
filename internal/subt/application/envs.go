@@ -2,7 +2,7 @@ package application
 
 import (
 	"fmt"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/components/pods"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
 )
 
@@ -22,8 +22,8 @@ func GetEnvVarsCommsBridge(groupID simulations.GroupID, robotName, gzServerIP, v
 // "ENV_VAR_NAME": "SOURCE"
 func GetEnvVarsFromSourceCommsBridge() map[string]string {
 	return map[string]string{
-		"ROS_IP": orchestrator.EnvVarSourcePodIP,
-		"IGN_IP": orchestrator.EnvVarSourcePodIP,
+		"ROS_IP": pods.EnvVarSourcePodIP,
+		"IGN_IP": pods.EnvVarSourcePodIP,
 	}
 }
 
@@ -38,7 +38,7 @@ func GetEnvVarsFieldComputer(robotName string, commsBridgeIP string) map[string]
 // GetEnvVarsFromSourceFieldComputer returns the env vars for the field computer container.
 func GetEnvVarsFromSourceFieldComputer() map[string]string {
 	return map[string]string{
-		"ROS_IP": orchestrator.EnvVarSourcePodIP,
+		"ROS_IP": pods.EnvVarSourcePodIP,
 	}
 }
 

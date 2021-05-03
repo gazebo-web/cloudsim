@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
 	ignws "gitlab.com/ignitionrobotics/web/cloudsim/pkg/transport/ign"
+	"gitlab.com/ignitionrobotics/web/ign-go"
 	"sync"
 )
 
@@ -12,15 +13,63 @@ type Manager interface {
 	Add(groupID simulations.GroupID, rs *RunningSimulation, t ignws.PubSubWebsocketTransporter) error
 	ListExpiredSimulations() []*RunningSimulation
 	ListFinishedSimulations() []*RunningSimulation
+	ListExpiredAndFinishedSimulations() []*RunningSimulation
 	GetTransporter(groupID simulations.GroupID) ignws.PubSubWebsocketTransporter
 	Free(groupID simulations.GroupID)
 	Remove(groupID simulations.GroupID) error
+	Exists(groupID simulations.GroupID) bool
+	Debug(gid simulations.GroupID) (interface{}, *ign.ErrMsg)
 }
 
 // manager is a Manager implementation.
 type manager struct {
 	runningSimulations map[simulations.GroupID]*RunningSimulation
 	lock               sync.RWMutex
+}
+
+type debugResponse struct {
+	Exists      bool   `json:"exists"`
+	IsConnected bool   `json:"is_connected"`
+	Message     string `json:"message"`
+}
+
+// Debug returns information about a running simulation.
+func (m *manager) Debug(gid simulations.GroupID) (interface{}, *ign.ErrMsg) {
+	exists := m.Exists(gid)
+
+	var isConnected bool
+	var msg string
+	if exists {
+		t := m.GetTransporter(gid)
+		isConnected = t.IsConnected()
+		_, bmsg, err := t.Connection().ReadMessage()
+		if err != nil {
+			msg = "error"
+		} else {
+			msg = string(bmsg)
+		}
+	}
+
+	res := debugResponse{
+		Exists:      exists,
+		IsConnected: isConnected,
+		Message:     msg,
+	}
+
+	return res, nil
+}
+
+// ListExpiredAndFinishedSimulations returns all simulation that have been mark as expired or finished.
+func (m *manager) ListExpiredAndFinishedSimulations() []*RunningSimulation {
+	return m.listByCriteria(func(rs *RunningSimulation) bool {
+		return rs.IsExpired() || rs.Finished
+	})
+}
+
+// Exists checks if the given group id is registered as a running simulation.
+func (m *manager) Exists(groupID simulations.GroupID) bool {
+	_, ok := m.runningSimulations[groupID]
+	return ok
 }
 
 // Free disconnects the websocket client for the given GroupID.

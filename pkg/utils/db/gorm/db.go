@@ -34,25 +34,6 @@ func getDBConfigFromEnvVars() (*ign.DatabaseConfig, error) {
 	return &dbConfig, nil
 }
 
-// GetDBFromEnvVars reads environment variables to return a Gorm database connection.
-func GetDBFromEnvVars() (*gorm.DB, error) {
-	// Get the db config
-	dbConfig, err := getDBConfigFromEnvVars()
-	if err != nil {
-		return nil, err
-	}
-	// Use the test database
-	dbConfig.Name += "_test"
-
-	// Connect to the db
-	db, err := ign.InitDbWithCfg(dbConfig)
-	if err != nil {
-		return nil, err
-	}
-
-	return db, nil
-}
-
 // GetTestDBFromEnvVars reads environment variables to return a Gorm database connection.
 func GetTestDBFromEnvVars() (*gorm.DB, error) {
 	// Get the db config
@@ -60,6 +41,8 @@ func GetTestDBFromEnvVars() (*gorm.DB, error) {
 	if err != nil {
 		return nil, err
 	}
+	// Use the test database
+	dbConfig.Name += "_test"
 
 	// Add the test name suffix
 	dbConfig.Name += "_test"
@@ -71,6 +54,21 @@ func GetTestDBFromEnvVars() (*gorm.DB, error) {
 	}
 
 	return db, nil
+}
+
+// DropModels drops database models.
+func DropModels(tx *gorm.DB, models ...interface{}) error {
+	if tx == nil {
+		return errors.New("attempted to migrate with an invalid tx")
+	}
+
+	log.Printf("DropModels: Dropping models: %v\n", models)
+	if err := tx.DropTableIfExists(models...).Error; err != nil {
+		log.Println("DropModels: Error while running DropTableIfExists, error:", err)
+		return err
+	}
+
+	return nil
 }
 
 // DropModels drops database models.

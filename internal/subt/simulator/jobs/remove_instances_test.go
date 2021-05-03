@@ -8,8 +8,8 @@ import (
 	subtapp "gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/application"
 	"gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/simulator/state"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/actions"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/cloud"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/cloud/fake"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/machines"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/platform"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
 	"gitlab.com/ignitionrobotics/web/ign-go"
@@ -50,7 +50,7 @@ func (s *removeInstancesTestSuite) SetupTest() {
 
 	s.Machines = fake.NewMachines()
 
-	s.Platform = platform.NewPlatform(platform.Components{
+	s.Platform, _ = platform.NewPlatform("test", platform.Components{
 		Machines: s.Machines,
 	})
 
@@ -60,7 +60,7 @@ func (s *removeInstancesTestSuite) SetupTest() {
 }
 
 func (s *removeInstancesTestSuite) TestRemoveInstancesFails() {
-	s.Machines.On("Terminate", cloud.TerminateMachinesInput{
+	s.Machines.On("Terminate", machines.TerminateMachinesInput{
 		Filters: s.Filters,
 	}).Return(errors.New("some test error"))
 
@@ -73,7 +73,7 @@ func (s *removeInstancesTestSuite) TestRemoveInstancesFails() {
 }
 
 func (s *removeInstancesTestSuite) TestRemoveInstancesSuccess() {
-	s.Machines.On("Terminate", cloud.TerminateMachinesInput{
+	s.Machines.On("Terminate", machines.TerminateMachinesInput{
 		Filters: s.Filters,
 	}).Return(error(nil))
 

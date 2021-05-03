@@ -7,7 +7,8 @@ import (
 	subt "gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/simulations"
 	"gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/simulator/state"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/actions"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/components/pods"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/resource"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulator/jobs"
 )
 
@@ -33,7 +34,7 @@ func rollbackLaunchCommsBridgeCopyPods(store actions.Store, tx *gorm.DB, deploym
 		name := subtapp.GetPodNameCommsBridgeCopy(s.GroupID, subtapp.GetRobotID(i))
 		ns := s.Platform().Store().Orchestrator().Namespace()
 
-		_, _ = s.Platform().Orchestrator().Pods().Delete(orchestrator.NewResource(name, ns, nil))
+		_, _ = s.Platform().Orchestrator().Pods().Delete(resource.NewResource(name, ns, nil))
 	}
 
 	return nil, nil
@@ -54,14 +55,14 @@ func prepareCommsBridgeCreateCopyPodInput(store actions.Store, tx *gorm.DB, depl
 
 	subtSim := sim.(subt.Simulation)
 
-	var pods []orchestrator.CreatePodInput
+	var podInputs []pods.CreatePodInput
 
 	for i, r := range subtSim.GetRobots() {
-		volumes := []orchestrator.Volume{
+		volumes := []pods.Volume{
 			{
 				Name:         "logs",
 				HostPath:     "/tmp",
-				HostPathType: orchestrator.HostPathDirectoryOrCreate,
+				HostPathType: pods.HostPathDirectoryOrCreate,
 				MountPath:    s.Platform().Store().Ignition().SidecarContainerLogsPath(),
 				SubPath:      "robot-logs",
 			},
@@ -78,14 +79,14 @@ func prepareCommsBridgeCreateCopyPodInput(store actions.Store, tx *gorm.DB, depl
 		accessKey := string(secret.Data[s.Platform().Store().Ignition().AccessKeyLabel()])
 		secretAccessKey := string(secret.Data[s.Platform().Store().Ignition().SecretAccessKeyLabel()])
 
-		pods = append(pods, orchestrator.CreatePodInput{
+		podInputs = append(podInputs, pods.CreatePodInput{
 			Name:                          subtapp.GetPodNameCommsBridgeCopy(s.GroupID, subtapp.GetRobotID(i)),
 			Namespace:                     ns,
 			Labels:                        subtapp.GetPodLabelsCommsBridgeCopy(s.GroupID, s.ParentGroupID, r).Map(),
-			RestartPolicy:                 orchestrator.RestartPolicyNever,
+			RestartPolicy:                 pods.RestartPolicyNever,
 			TerminationGracePeriodSeconds: s.Platform().Store().Orchestrator().TerminationGracePeriod(),
 			NodeSelector:                  subtapp.GetNodeLabelsFieldComputer(s.GroupID, r),
-			Containers: []orchestrator.Container{
+			Containers: []pods.Container{
 				{
 					Name:    subtapp.GetContainerNameCommsBridgeCopy(),
 					Image:   "infrastructureascode/aws-cli:latest",
@@ -103,5 +104,5 @@ func prepareCommsBridgeCreateCopyPodInput(store actions.Store, tx *gorm.DB, depl
 		})
 	}
 
-	return jobs.LaunchPodsInput(pods), nil
+	return jobs.LaunchPodsInput(podInputs), nil
 }

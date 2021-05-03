@@ -6,7 +6,8 @@ import (
 	subtapp "gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/application"
 	"gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/simulator/state"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/actions"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/components/network"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/resource"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulator/jobs"
 )
 
@@ -52,7 +53,7 @@ func prepareNetworkPolicyGazeboServerInput(store actions.Store, tx *gorm.DB, dep
 		return nil, err
 	}
 
-	selectors := make([]orchestrator.Selector, len(robots))
+	selectors := make([]resource.Selector, len(robots))
 
 	// Each robot's comms bridge will be granted with permissions to communicate to the gazebo server
 	for i, r := range robots {
@@ -69,7 +70,7 @@ func prepareNetworkPolicyGazeboServerInput(store actions.Store, tx *gorm.DB, dep
 			PeersFrom: selectors,
 			// Allow traffic to comms bridges
 			PeersTo: selectors,
-			Ingresses: orchestrator.NetworkIngressRule{
+			Ingresses: network.IngressRule{
 				IPBlocks: []string{
 					// Allow traffic from cloudsim
 					fmt.Sprintf("%s/32", s.Platform().Store().Ignition().IP()),
@@ -79,7 +80,7 @@ func prepareNetworkPolicyGazeboServerInput(store actions.Store, tx *gorm.DB, dep
 					9002,
 				},
 			},
-			Egresses: orchestrator.NetworkEgressRule{
+			Egresses: network.EgressRule{
 				IPBlocks: []string{
 					// Allow traffic to cloudsim
 					fmt.Sprintf("%s/32", s.Platform().Store().Ignition().IP()),
@@ -137,20 +138,20 @@ func prepareNetworkPolicyFieldComputersInput(store actions.Store, tx *gorm.DB, d
 	// Each robot's field computer should communicate to its respective comms bridge.
 	for i, r := range robots {
 		robotID := subtapp.GetRobotID(i)
-		input[i] = orchestrator.CreateNetworkPolicyInput{
+		input[i] = network.CreateNetworkPolicyInput{
 			Name:        subtapp.GetPodNameFieldComputer(s.GroupID, robotID),
 			Namespace:   s.Platform().Store().Orchestrator().Namespace(),
 			Labels:      subtapp.GetPodLabelsBase(s.GroupID, s.ParentGroupID).Map(),
 			PodSelector: subtapp.GetPodLabelsFieldComputer(s.GroupID, s.ParentGroupID),
-			PeersFrom: []orchestrator.Selector{
+			PeersFrom: []resource.Selector{
 				// Allow traffic from comms bridges
 				subtapp.GetPodLabelsCommsBridge(s.GroupID, s.ParentGroupID, r),
 			},
-			PeersTo: []orchestrator.Selector{
+			PeersTo: []resource.Selector{
 				// Allow traffic to comms bridges
 				subtapp.GetPodLabelsCommsBridge(s.GroupID, s.ParentGroupID, r),
 			},
-			Ingresses: orchestrator.NetworkIngressRule{
+			Ingresses: network.IngressRule{
 				IPBlocks: []string{
 					// Allow traffic from cloudsim
 					fmt.Sprintf("%s/32", s.Platform().Store().Ignition().IP()),
@@ -160,7 +161,7 @@ func prepareNetworkPolicyFieldComputersInput(store actions.Store, tx *gorm.DB, d
 					9002,
 				},
 			},
-			Egresses: orchestrator.NetworkEgressRule{
+			Egresses: network.EgressRule{
 				IPBlocks: []string{
 					// Allow traffic to cloudsim
 					fmt.Sprintf("%s/32", s.Platform().Store().Ignition().IP()),
@@ -219,24 +220,24 @@ func prepareNetworkPolicyCommsBridgesInput(store actions.Store, tx *gorm.DB, dep
 
 	for i, r := range robots {
 		robotID := subtapp.GetRobotID(i)
-		input[i] = orchestrator.CreateNetworkPolicyInput{
+		input[i] = network.CreateNetworkPolicyInput{
 			Name:        subtapp.GetPodNameCommsBridge(s.GroupID, robotID),
 			Namespace:   s.Platform().Store().Orchestrator().Namespace(),
 			Labels:      subtapp.GetPodLabelsBase(s.GroupID, s.ParentGroupID).Map(),
 			PodSelector: subtapp.GetPodLabelsCommsBridge(s.GroupID, s.ParentGroupID, r),
-			PeersFrom: []orchestrator.Selector{
+			PeersFrom: []resource.Selector{
 				// Allow traffic from gazebo server
 				subtapp.GetPodLabelsGazeboServer(s.GroupID, s.ParentGroupID),
 				// Allow traffic from field computer
 				subtapp.GetPodLabelsFieldComputer(s.GroupID, s.ParentGroupID),
 			},
-			PeersTo: []orchestrator.Selector{
+			PeersTo: []resource.Selector{
 				// Allow traffic to gazebo server
 				subtapp.GetPodLabelsGazeboServer(s.GroupID, s.ParentGroupID),
 				// Allow traffic to field computer
 				subtapp.GetPodLabelsFieldComputer(s.GroupID, s.ParentGroupID),
 			},
-			Ingresses: orchestrator.NetworkIngressRule{
+			Ingresses: network.IngressRule{
 				IPBlocks: []string{
 					// Allow traffic from cloudsim
 					fmt.Sprintf("%s/32", s.Platform().Store().Ignition().IP()),
@@ -246,7 +247,7 @@ func prepareNetworkPolicyCommsBridgesInput(store actions.Store, tx *gorm.DB, dep
 					9002,
 				},
 			},
-			Egresses: orchestrator.NetworkEgressRule{
+			Egresses: network.EgressRule{
 				IPBlocks: []string{
 					// Allow traffic to cloudsim
 					fmt.Sprintf("%s/32", s.Platform().Store().Ignition().IP()),

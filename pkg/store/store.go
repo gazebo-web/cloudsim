@@ -1,7 +1,6 @@
 package store
 
 import (
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/cloud"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
 	"time"
 )
@@ -30,12 +29,6 @@ type Machines interface {
 
 	// FirewallRules returns the list of rules that should be applied to the created machine.
 	FirewallRules() []string
-
-	// SubnetAndZone returns the subnet and the zone that the created machine should be configured in.
-	SubnetAndZone() (string, string)
-
-	// Tags returns a set of tags that will be set to the machine.
-	Tags(simulation simulations.Simulation, nodeType string, nameSuffix string) []cloud.Tag
 
 	// BaseImage returns the base image that will be used when creating the machine.
 	BaseImage() string
@@ -77,6 +70,14 @@ type Orchestrator interface {
 
 	// IngressHost returns a FQDN used to route traffic to cloudsim instances.
 	IngressHost() string
+
+	// Timeout returns the maximum amount of time that a job should wait until a pod is created.
+	// Timeout is usually used with PollFrequency.
+	Timeout() time.Duration
+
+	// PollFrequency returns the interval of time that a job should wait until performing another request to wait for pods.
+	// PollFrequency is usually used with Timeout.
+	PollFrequency() time.Duration
 }
 
 // Ignition provides general information about cloudsim and ignition gazebo.

@@ -5,7 +5,7 @@ import (
 	subtapp "gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/application"
 	"gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/simulator/state"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/actions"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/resource"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulator/jobs"
 )
 
@@ -26,7 +26,7 @@ func rollbackLaunchWebsocketService(store actions.Store, tx *gorm.DB, deployment
 	name := subtapp.GetServiceNameWebsocket(s.GroupID)
 	ns := s.Platform().Store().Orchestrator().Namespace()
 
-	_ = s.Platform().Orchestrator().Services().Remove(orchestrator.NewResource(name, ns, nil))
+	_ = s.Platform().Orchestrator().Services().Remove(resource.NewResource(name, ns, nil))
 
 	return nil, nil
 }

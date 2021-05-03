@@ -25,6 +25,7 @@ type simulation struct {
 	simulations.Simulation
 	name       string
 	track      string
+	platform   *string
 	token      *string
 	robots     []simulations.Robot
 	marsupials []simulations.Marsupial
@@ -63,6 +64,11 @@ func (s *simulation) GetMarsupials() []simulations.Marsupial {
 // GetTrack returns the track of a simulation.
 func (s *simulation) GetTrack() string {
 	return s.track
+}
+
+// GetPlatform returns the simulation platform.
+func (s *simulation) GetPlatform() *string {
+	return s.platform
 }
 
 // NewSimulation initializes a new Simulation interface using a fake implementation.

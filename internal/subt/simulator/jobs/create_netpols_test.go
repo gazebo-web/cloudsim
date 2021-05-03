@@ -6,12 +6,12 @@ import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/simulator/state"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/actions"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/application"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/kubernetes"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/kubernetes/network"
+	kubernetesNetwork "gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/components/network/implementations/kubernetes"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/implementations/kubernetes"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/platform"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
 	simfake "gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations/fake"
-	sfake "gitlab.com/ignitionrobotics/web/cloudsim/pkg/store/fake"
+	sfake "gitlab.com/ignitionrobotics/web/cloudsim/pkg/store/implementations/fake"
 	"gitlab.com/ignitionrobotics/web/ign-go"
 	kfake "k8s.io/client-go/kubernetes/fake"
 	"testing"
@@ -33,13 +33,13 @@ func TestCreateNetPolsGazeboServer(t *testing.T) {
 
 	client := kfake.NewSimpleClientset()
 
-	nm := network.NewNetworkPolicies(client, logger)
+	nm := kubernetesNetwork.NewNetworkPolicies(client, logger)
 	ks := kubernetes.NewCustomKubernetes(kubernetes.Config{
 		NetworkPolicies: nm,
 	})
 
 	// Set up platform using fake store and fake kubernetes component
-	p := platform.NewPlatform(platform.Components{
+	p, _ := platform.NewPlatform("test", platform.Components{
 		Cluster: ks,
 		Store:   fakeStore,
 	})
@@ -89,13 +89,13 @@ func TestCreateNetPolsCommsBridge(t *testing.T) {
 
 	client := kfake.NewSimpleClientset()
 
-	nm := network.NewNetworkPolicies(client, logger)
+	nm := kubernetesNetwork.NewNetworkPolicies(client, logger)
 	ks := kubernetes.NewCustomKubernetes(kubernetes.Config{
 		NetworkPolicies: nm,
 	})
 
 	// Set up platform using fake store and fake kubernetes component
-	p := platform.NewPlatform(platform.Components{
+	p, _ := platform.NewPlatform("test", platform.Components{
 		Cluster: ks,
 		Store:   fakeStore,
 	})
@@ -145,13 +145,13 @@ func TestCreateNetPolsFieldComputer(t *testing.T) {
 
 	client := kfake.NewSimpleClientset()
 
-	nm := network.NewNetworkPolicies(client, logger)
+	nm := kubernetesNetwork.NewNetworkPolicies(client, logger)
 	ks := kubernetes.NewCustomKubernetes(kubernetes.Config{
 		NetworkPolicies: nm,
 	})
 
 	// Set up platform using fake store and fake kubernetes component
-	p := platform.NewPlatform(platform.Components{
+	p, _ := platform.NewPlatform("test", platform.Components{
 		Cluster: ks,
 		Store:   fakeStore,
 	})

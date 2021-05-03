@@ -5,7 +5,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/ses/sesiface"
 )
 
-// ec2api is an ec2iface.EC2API implementation.
+// sesAPI is an sesiface.EC2API implementation.
 type sesAPI struct {
 	sesiface.SESAPI
 }

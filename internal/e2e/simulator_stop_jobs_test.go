@@ -16,18 +16,18 @@ import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/tracks"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/actions"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/application"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/cloud/aws/ec2"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/cloud/aws/s3"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/email"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/env"
+	email "gitlab.com/ignitionrobotics/web/cloudsim/pkg/email/implementations/ses"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/machines/implementations/ec2"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/migrations"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/mock"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/kubernetes"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/kubernetes/spdy"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/components/spdy"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/implementations/kubernetes"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/platform"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/runsim"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/secrets"
+	secrets "gitlab.com/ignitionrobotics/web/cloudsim/pkg/secrets/implementations/kubernetes"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/storage/implementations/s3"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/store/implementations/store"
 	ignws "gitlab.com/ignitionrobotics/web/cloudsim/pkg/transport/ign"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/users"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/utils/db/gorm"
@@ -109,6 +109,17 @@ func TestStopSimulationAction(t *testing.T) {
 		mock.NewEC2Instance("test-fc-1", subtapp.GetTagsInstanceSpecific("field-computer", sim.GetGroupID(), "sim", "cloudsim", "field-computer")),
 		mock.NewEC2Instance("test-gz-1", subtapp.GetTagsInstanceSpecific("gzserver", sim.GetGroupID(), "sim", "cloudsim", "gzserver")),
 	)
+	ec2Machines, err := ec2.NewMachines(&ec2.NewInput{
+		API: ec2api,
+		Logger: logger,
+		Zones:[]ec2.Zone{
+			{
+				Zone: "test",
+				SubnetID: "test",
+			},
+		},
+	})
+	require.NoError(t, err)
 
 	// Initialize mock for S3
 	storageBackend := s3mem.New()
@@ -136,7 +147,7 @@ func TestStopSimulationAction(t *testing.T) {
 	cluster := kubernetes.NewDefaultKubernetes(kubernetesClientset, fakeSPDY, logger)
 
 	// Initialize env vars
-	configStore, err := env.NewStore()
+	configStore, err := store.NewStoreFromEnvVars()
 	require.NoError(t, err)
 
 	// Initialize secrets
@@ -149,17 +160,17 @@ func TestStopSimulationAction(t *testing.T) {
 
 	// Initialize platform components
 	c := platform.Components{
-		Machines:           ec2.NewMachines(ec2api, logger),
+		Machines:           ec2Machines,
 		Storage:            s3.NewStorage(storageAPI, logger),
 		Cluster:            cluster,
 		Store:              configStore,
 		Secrets:            secrets,
 		RunningSimulations: runsimManager,
-		EmailSender:        email.NewEmailSender(emailAPI),
+		EmailSender:        email.NewEmailSender(emailAPI, logger),
 	}
 
 	// Initialize platform
-	p := platform.NewPlatform(c)
+	p, _ := platform.NewPlatform("test", c)
 
 	// Simulation should be set to terminate requested.
 	err = simService.UpdateStatus(sim.GetGroupID(), simulations.StatusTerminateRequested)
@@ -304,7 +315,6 @@ func TestStopSimulationAction(t *testing.T) {
 	// Initialize simulator
 	s := simulator.NewSimulator(simulator.Config{
 		DB:                    db,
-		Platform:              p,
 		ApplicationServices:   app,
 		ActionService:         actionService,
 		DisableDefaultActions: true,
@@ -314,6 +324,6 @@ func TestStopSimulationAction(t *testing.T) {
 	actionService.RegisterAction(&appName, simulator.ActionNameStopSimulation, stopAction)
 
 	// Stop the simulation.
-	err = s.Stop(ctx, sim.GetGroupID())
+	err = s.Stop(ctx, p, sim.GetGroupID())
 	assert.NoError(t, err)
 }

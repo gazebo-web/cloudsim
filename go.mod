@@ -9,9 +9,11 @@ require (
 	github.com/caarlos0/env v3.5.0+incompatible
 	github.com/casbin/casbin/v2 v2.6.11
 	github.com/casbin/gorm-adapter/v2 v2.1.0
+	github.com/creasty/defaults v1.5.1
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/elastic/go-elasticsearch/v8 v8.0.0-20200916133832-96c1726edbaa // indirect
 	github.com/fatih/color v1.10.0 // indirect
+	github.com/fatih/structtag v1.2.0
 	github.com/go-playground/form v3.1.4+incompatible
 	github.com/go-sql-driver/mysql v1.5.0
 	github.com/golang/protobuf v1.4.2
@@ -24,6 +26,8 @@ require (
 	github.com/joho/godotenv v1.3.0
 	github.com/lib/pq v1.8.0 // indirect
 	github.com/mattn/go-pointer v0.0.0-20180825124634-49522c3f3791
+	github.com/mitchellh/copystructure v1.0.0
+	github.com/mitchellh/mapstructure v1.1.2
 	github.com/onsi/ginkgo v1.14.1 // indirect
 	github.com/onsi/gomega v1.10.2 // indirect
 	github.com/panjf2000/ants v0.0.0-20190122063359-2ba69cd1384d
@@ -42,7 +46,7 @@ require (
 	golang.org/x/sys v0.0.0-20201009025420-dfb3f7c4e634 // indirect
 	golang.org/x/text v0.3.4 // indirect
 	golang.org/x/tools v0.0.0-20210105210202-9ed45478a130 // indirect
-	google.golang.org/protobuf v1.25.0 // indirect
+	google.golang.org/protobuf v1.25.0
 	gopkg.in/go-playground/assert.v1 v1.2.1 // indirect
 	gopkg.in/go-playground/validator.v9 v9.31.0
 	gopkg.in/yaml.v2 v2.4.0
