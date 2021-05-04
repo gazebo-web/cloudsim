@@ -24,7 +24,9 @@ type Controller interface {
 	Stop(user *users.User, tx *gorm.DB, w http.ResponseWriter, r *http.Request) (interface{}, *ign.ErrMsg)
 	ListSimulations(user *users.User, tx *gorm.DB, w http.ResponseWriter, r *http.Request) (interface{}, *ign.ErrMsg)
 	GetSimulation(user *users.User, tx *gorm.DB, w http.ResponseWriter, r *http.Request) (interface{}, *ign.ErrMsg)
+	GetUser(user *users.User, tx *gorm.DB, w http.ResponseWriter, r *http.Request) (interface{}, *ign.ErrMsg)
 	AddUser(user *users.User, tx *gorm.DB, w http.ResponseWriter, r *http.Request) (interface{}, *ign.ErrMsg)
+	DeleteUser(user *users.User, tx *gorm.DB, w http.ResponseWriter, r *http.Request) (interface{}, *ign.ErrMsg)
 	ModifyUser(user *users.User, tx *gorm.DB, w http.ResponseWriter, r *http.Request) (interface{}, *ign.ErrMsg)
 	ListUsers(user *users.User, tx *gorm.DB, w http.ResponseWriter, r *http.Request) (interface{}, *ign.ErrMsg)
 }
@@ -344,7 +346,8 @@ func (ctrl *controller) ModifyUser(user *users.User, tx *gorm.DB, w http.Respons
 	}
 
 	// If modifying the username, first check that the new username doesn't exists
-	if *existing.Username != req.Username {
+	// and is not empty.
+	if req.Username != "" && *existing.Username != req.Username {
 		var userCheck RegisteredUser
 		if err := tx.Where("username = ?", req.Username).Find(&userCheck).Error; err != nil {
 			existing.Username = &req.Username
@@ -422,6 +425,76 @@ func (ctrl *controller) AddUser(user *users.User, tx *gorm.DB, w http.ResponseWr
 }
 
 ////////////////////////////////////////////////
+// GetUser handles the GET `/user/{username}` route.
+//
+// Origin: user --> GET /user/{username} --> controller.GetUser()
+// Next:
+//     * On success --> return UserResponse
+//     * On fail --> return error
+func (ctrl *controller) GetUser(user *users.User, tx *gorm.DB, w http.ResponseWriter, r *http.Request) (interface{}, *ign.ErrMsg) {
+
+	// Get the username from the route
+	userName, ok := mux.Vars(r)["username"]
+	if !ok {
+		return nil, ign.NewErrorMessage(ign.ErrorUserNotInRequest)
+	}
+
+	// Return if not an admin and not the user.
+	if ok := HTTPHandlerInstance.UserAccessor.IsSystemAdmin(*user.Username); !ok {
+		if *user.Username != userName {
+			return nil, ign.NewErrorMessage(ign.ErrorUnauthorized)
+		}
+	}
+
+	var userEntry RegisteredUser
+	if err := tx.Where("username=?", userName).Find(&userEntry).Error; err != nil {
+		return nil, ign.NewErrorMessageWithBase(ign.ErrorIDNotFound, err)
+	}
+
+	return AddModifyUserResponse{
+		Username:        *userEntry.Username,
+		SimulationLimit: userEntry.SimulationLimit,
+	}, nil
+}
+
+////////////////////////////////////////////////
+// DeleteUser handles the DELETE `/user/{username}` route.
+//
+// Origin: user --> DELETE /user/{username} --> controller.DeleteUser()
+// Next:
+//     * On success --> return UserResponse
+//     * On fail --> return error
+func (ctrl *controller) DeleteUser(user *users.User, tx *gorm.DB, w http.ResponseWriter, r *http.Request) (interface{}, *ign.ErrMsg) {
+
+	// Get the username from the route
+	userName, ok := mux.Vars(r)["username"]
+	if !ok {
+		return nil, ign.NewErrorMessage(ign.ErrorUserNotInRequest)
+	}
+
+	// Return if not an admin.
+	if ok := HTTPHandlerInstance.UserAccessor.IsSystemAdmin(*user.Username); !ok {
+		return nil, ign.NewErrorMessage(ign.ErrorUnauthorized)
+	}
+
+	var userEntry RegisteredUser
+	if err := tx.Where("username=?", userName).Find(&userEntry).Error; err != nil {
+		return nil, ign.NewErrorMessageWithBase(ign.ErrorIDNotFound, err)
+	}
+
+	result := AddModifyUserResponse{
+		Username:        *userEntry.Username,
+		SimulationLimit: userEntry.SimulationLimit,
+	}
+
+	if err := tx.Delete(&userEntry).Error; err != nil {
+		return nil, ign.NewErrorMessageWithBase(ign.ErrorDbDelete, err)
+	}
+
+	return result, nil
+}
+
+////////////////////////////////////////////////
 // ListUsers handles the GET `/users` route.
 //
 // Origin: user --> GET /users --> controller.ListUsers()
@@ -432,6 +505,7 @@ func (ctrl *controller) ListUsers(user *users.User, tx *gorm.DB, w http.Response
 
 	// Return only owner simulations if the user is not a system admin
 	if ok := HTTPHandlerInstance.UserAccessor.IsSystemAdmin(*user.Username); !ok {
+		fmt.Printf("Not admin[%s]\n", *user.Username)
 		return nil, ign.NewErrorMessage(ign.ErrorUnauthorized)
 	}
 

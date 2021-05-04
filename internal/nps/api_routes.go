@@ -115,6 +115,41 @@ func (app *application) GetAPIRoutes() ign.Routes {
 			},
 		},
 		// Example usage:
+		//     curl -X GET -H "Private-Token: TOKEN" http://localhost:8001/1.0/user/{USERNAME}
+		ign.Route{
+			Name:        "Get information about a user",
+			Description: "This is a route for accessing information about a registered user",
+			URI:         "/user/{username}",
+			Methods:     ign.Methods{},
+			SecureMethods: ign.SecureMethods{
+				ign.Method{
+					Type:        "GET",
+					Description: "Get information about a registered user",
+					Handlers: ign.FormatHandlers{
+						ign.FormatHandler{Handler: ign.JSONResult(WithUser(ctrl.GetUser))},
+					},
+				},
+			},
+		},
+		// Example usage:
+		//     curl -X DELETE -H "Private-Token: TOKEN" http://localhost:8001/1.0/user/{USERNAME}
+		ign.Route{
+			Name:        "Delete a user",
+			Description: "This is a route for deleting  a registered user",
+			URI:         "/user/{username}",
+			Methods:     ign.Methods{},
+			SecureMethods: ign.SecureMethods{
+				ign.Method{
+					Type:        "DELETE",
+					Description: "Delete a registered user",
+					Handlers: ign.FormatHandlers{
+						ign.FormatHandler{Handler: ign.JSONResult(WithUser(ctrl.DeleteUser))},
+					},
+				},
+			},
+		},
+
+		// Example usage:
 		//     curl -X PATCH -H "Private-Token: TOKEN" http://localhost:8001/1.0/user/{USERNAME} -F "username=USERNAME" -F "simulation_limt=SIMULTION_LIMIT"
 		ign.Route{
 			Name:        "Modifies a registered users",
@@ -131,7 +166,6 @@ func (app *application) GetAPIRoutes() ign.Routes {
 				},
 			},
 		},
-
 		// Example usage:
 		//     curl -X GET -H "Private-Token: TOKEN" http://localhost:8001/1.0/users
 		ign.Route{
