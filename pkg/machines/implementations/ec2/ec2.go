@@ -62,6 +62,7 @@ var (
 		machines.ErrInsufficientMachines,
 		machines.ErrRequestsLimitExceeded,
 		machines.ErrExternalServiceError,
+		machines.ErrUnknown,
 	}
 )
 
