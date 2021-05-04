@@ -34,7 +34,7 @@ func (m *kubernetesNodes) WaitForCondition(resource resource.Resource, condition
 		var nodesNotReady []*apiv1.Node
 		nodeList, err := m.API.CoreV1().Nodes().List(opts)
 		if err != nil {
-			return false, err
+			return false, nil
 		}
 		if len(nodeList.Items) == 0 {
 			return false, nodes.ErrMissingNodes
