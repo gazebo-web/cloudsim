@@ -48,9 +48,9 @@ func (m *PubSubTransporterMock) IsConnected() bool {
 }
 
 // Disconnect is a mock for the Disconnect method.
-func (m *PubSubTransporterMock) Disconnect() {
-	m.Called()
-	return
+func (m *PubSubTransporterMock) Disconnect() error {
+	args := m.Called()
+	return args.Error(0)
 }
 
 // Connection is a mock for the Connection method.

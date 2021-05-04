@@ -110,11 +110,11 @@ func TestStopSimulationAction(t *testing.T) {
 		mock.NewEC2Instance("test-gz-1", subtapp.GetTagsInstanceSpecific("gzserver", sim.GetGroupID(), "sim", "cloudsim", "gzserver")),
 	)
 	ec2Machines, err := ec2.NewMachines(&ec2.NewInput{
-		API: ec2api,
+		API:    ec2api,
 		Logger: logger,
-		Zones:[]ec2.Zone{
+		Zones: []ec2.Zone{
 			{
-				Zone: "test",
+				Zone:     "test",
 				SubnetID: "test",
 			},
 		},
@@ -220,7 +220,7 @@ func TestStopSimulationAction(t *testing.T) {
 	rs := runsim.NewRunningSimulation(sim.GetGroupID(), int64(maxSimSeconds), sim.GetValidFor())
 	ws := ignws.NewPubSubTransporterMock()
 
-	ws.On("Disconnect").Return()
+	ws.On("Disconnect").Return(error(nil))
 	ws.On("IsConnected").Return(false)
 
 	err = runsimManager.Add(sim.GetGroupID(), rs, ws)

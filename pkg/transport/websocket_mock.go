@@ -24,9 +24,9 @@ func (m *WebsocketTransportMock) IsConnected() bool {
 }
 
 // Disconnect is a mock for the Disconnect method.
-func (m *WebsocketTransportMock) Disconnect() {
-	m.Called()
-	return
+func (m *WebsocketTransportMock) Disconnect() error {
+	args := m.Called()
+	return args.Error(0)
 }
 
 // Connection is a mock for the Connection method.

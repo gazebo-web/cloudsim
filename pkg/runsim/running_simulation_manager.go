@@ -87,9 +87,7 @@ func (m *manager) Free(groupID simulations.GroupID) {
 	rs.publishing = false
 	m.runningSimulations[groupID] = rs
 
-	if t != nil {
-		t.Disconnect()
-	}
+	_ = t.Disconnect()
 }
 
 // Add adds a running simulation and a websocket transport to the given groupID.
