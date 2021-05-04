@@ -277,7 +277,7 @@ func (p *kubernetesPods) WaitForCondition(resource orchestratorResource.Resource
 		// Get list of pods
 		po, err := p.API.CoreV1().Pods(resource.Namespace()).List(opts)
 		if err != nil {
-			return false, err
+			return false, nil
 		}
 
 		if len(po.Items) == 0 {
@@ -293,7 +293,7 @@ func (p *kubernetesPods) WaitForCondition(resource orchestratorResource.Resource
 			case orchestratorResource.ReadyCondition:
 				ready, err = p.isPodReady(&i)
 				if err != nil {
-					return false, err
+					return false, nil
 				}
 				break
 			case orchestratorResource.HasIPStatusCondition:
