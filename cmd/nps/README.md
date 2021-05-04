@@ -108,22 +108,22 @@ system.
 1. Get user information. This route will return information about a user if
    the private token correlates to the provided username in the route, or
    the private token is associated with and admin.
-```
-curl -X GET -H "Private-Token: TOKEN" https://staging-cloudsim-nps.ignitionrobotics.org/1.0/user/{username}
-```
+    ```
+    curl -X GET -H "Private-Token: TOKEN" https://staging-cloudsim-nps.ignitionrobotics.org/1.0/user/{username}
+    ```
 1. **ADMIN ONLY** Add user
-```
-curl -X POST -H "Private-Token: TOKEN" https://staging-cloudsim-nps.ignitionrobotics.org/1.0/users -F "username=USERNAME" -F "simulation_limt=SIMULTION_LIMIT"
-```
+    ```
+    curl -X POST -H "Private-Token: TOKEN" https://staging-cloudsim-nps.ignitionrobotics.org/1.0/users -F "username=USERNAME" -F "simulation_limt=SIMULTION_LIMIT"
+    ```
 1. **ADMIN ONLY**  List users
-```
-curl -X GET -H "Private-Token: TOKEN" https://staging-cloudsim-nps.ignitionrobotics.org/1.0/users
-```
+    ```
+    curl -X GET -H "Private-Token: TOKEN" https://staging-cloudsim-nps.ignitionrobotics.org/1.0/users
+    ```
 1. **ADMIN ONLY**  Modify user
-```
-curl -X PATCH -H "Private-Token: TOKEN" https://staging-cloudsim-nps.ignitionrobotics.org/1.0/user/{username} -F "username=NEW_USERNAME" -F "simulation_limt=NEW_SIMULTION_LIMIT"
-```
+    ```
+    curl -X PATCH -H "Private-Token: TOKEN" https://staging-cloudsim-nps.ignitionrobotics.org/1.0/user/{username} -F "username=NEW_USERNAME" -F "simulation_limt=NEW_SIMULTION_LIMIT"
+    ```
 1. **ADMIN ONLY**  Delete user
-```
-curl -X DELETE -H "Private-Token: TOKEN" https://staging-cloudsim-nps.ignitionrobotics.org/1.0/user/{username}
-```
+    ```
+    curl -X DELETE -H "Private-Token: TOKEN" https://staging-cloudsim-nps.ignitionrobotics.org/1.0/user/{username}
+    ```
