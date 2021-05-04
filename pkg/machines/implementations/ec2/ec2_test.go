@@ -201,7 +201,7 @@ func (s *EC2MachinesTestSuite) TestCreateFilters() {
 
 func (s *EC2MachinesTestSuite) TestParseRunInstanceError() {
 	err := s.m.parseRunInstanceError(errors.New("internal error"))
-	s.Assert().Equal(machines.ErrUnknown, err)
+	s.Assert().True(errors.Is(err, machines.ErrUnknown))
 
 	err = s.m.parseRunInstanceError(awserr.New(ErrCodeInsufficientInstanceCapacity, "test", nil))
 	s.Assert().Equal(machines.ErrInsufficientMachines, err)
