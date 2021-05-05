@@ -34,7 +34,7 @@ func (m *kubernetesNodes) WaitForCondition(resource resource.Resource, condition
 		var nodesNotReady []*apiv1.Node
 		nodeList, err := m.API.CoreV1().Nodes().List(opts)
 		if err != nil {
-			p.Logger.Debug("[WaitForCondition] Failed to get nodes from orchestrator: ", err)
+			m.Logger.Debug("[WaitForCondition] Failed to get nodes from orchestrator: ", err)
 			return false, nil
 		}
 		if len(nodeList.Items) == 0 {
