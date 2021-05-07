@@ -103,6 +103,9 @@ func (rs *RunningSimulation) ReadWarmup(ctx context.Context, msg transport.Messa
 		return err
 	}
 
+	rs.lockCurrentState.Lock()
+	defer rs.lockCurrentState.Unlock()
+
 	if m.GetData() == "started" {
 		if rs.SimWarmupSeconds == 0 {
 			rs.SimWarmupSeconds = rs.SimTimeSeconds
@@ -112,9 +115,6 @@ func (rs *RunningSimulation) ReadWarmup(ctx context.Context, msg transport.Messa
 	if !rs.Finished && m.GetData() == "recording_complete" {
 		rs.Finished = true
 	}
-
-	rs.lockCurrentState.Lock()
-	defer rs.lockCurrentState.Unlock()
 
 	rs.SimTimeSeconds = m.GetHeader().Stamp.GetSec()
 
