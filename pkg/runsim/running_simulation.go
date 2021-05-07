@@ -95,7 +95,7 @@ func (rs *RunningSimulation) hasReachedMaxSimSeconds() bool {
 }
 
 // ReadWarmup is the callback passed to the websocket client that will be invoked each time
-// a message is received at the /warmup/ready topic.
+// a message is received at the /subt/start topic.
 func (rs *RunningSimulation) ReadWarmup(ctx context.Context, msg transport.Message) error {
 	var m msgs.StringMsg
 	err := msg.GetPayload(&m)
@@ -103,15 +103,17 @@ func (rs *RunningSimulation) ReadWarmup(ctx context.Context, msg transport.Messa
 		return err
 	}
 
-	if m.Data == "started" {
+	if m.GetData() == "started" {
 		if rs.SimWarmupSeconds == 0 {
 			rs.SimWarmupSeconds = rs.SimTimeSeconds
 		}
 	}
 
-	if !rs.Finished && m.Data == "recording_complete" {
+	if !rs.Finished && m.GetData() == "recording_complete" {
 		rs.Finished = true
 	}
+
+	rs.SimTimeSeconds = m.GetHeader().Stamp.GetSec()
 
 	return nil
 }
