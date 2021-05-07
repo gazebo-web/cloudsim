@@ -1427,7 +1427,7 @@ func (s *Service) createRunningSimulation(ctx context.Context, tx *gorm.DB, dep 
 		return err
 	}
 
-	worldStatsTopic, maxSimSeconds, err := s.getGazeboWorldStatsTopicAndLimit(ctx, tx, dep)
+	_, maxSimSeconds, err := s.getGazeboWorldStatsTopicAndLimit(ctx, tx, dep)
 	if err != nil {
 		return err
 	}
@@ -1446,13 +1446,6 @@ func (s *Service) createRunningSimulation(ctx context.Context, tx *gorm.DB, dep 
 	}
 
 	rs := runsim.NewRunningSimulation(dep.GetGroupID(), int64(maxSimSeconds), dep.GetValidFor())
-
-	err = t.Subscribe(worldStatsTopic, func(message transport.Message) {
-		_ = rs.ReadWorldStats(context.Background(), message)
-	})
-	if err != nil {
-		return err
-	}
 
 	err = t.Subscribe(worldWarmupTopic, func(message transport.Message) {
 		_ = rs.ReadWarmup(context.Background(), message)

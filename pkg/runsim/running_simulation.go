@@ -60,7 +60,7 @@ func (rs *RunningSimulation) IsExpired() bool {
 	return secondsExpired || time.Now().After(rs.MaxValidUntil)
 }
 
-// ReadWorldStats is the callback passed to the websocket client. It will be invoked
+// Deprecated: ReadWorldStats is the callback passed to the websocket client. It will be invoked
 // each time a message is received in the topic associated to this node's groupID.
 func (rs *RunningSimulation) ReadWorldStats(ctx context.Context, msg transport.Message) error {
 	var m msgs.WorldStatistics
@@ -112,6 +112,9 @@ func (rs *RunningSimulation) ReadWarmup(ctx context.Context, msg transport.Messa
 	if !rs.Finished && m.GetData() == "recording_complete" {
 		rs.Finished = true
 	}
+
+	rs.lockCurrentState.Lock()
+	defer rs.lockCurrentState.Unlock()
 
 	rs.SimTimeSeconds = m.GetHeader().Stamp.GetSec()
 
