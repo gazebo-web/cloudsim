@@ -80,7 +80,7 @@ func (ctrl *controller) Start(user *users.User, tx *gorm.DB, w http.ResponseWrit
 			var simulations Simulations
 			tx.Where("owner = ? and status != ?", registeredUser.Username, "stopped").Find(&simulations)
 			if len(simulations) >= registeredUser.SimulationLimit {
-				return nil, ign.NewErrorMessageWithBase(ign.ErrorUnauthorized, errors.New("Simulation limit reached"))
+				return nil, ign.NewErrorMessageWithArgs(ign.ErrorUnauthorized, errors.New("Simulation limit reached"), []string{"Simulation limit reached"})
 			}
 		}
 	}
@@ -146,7 +146,7 @@ func (ctrl *controller) Stop(user *users.User, tx *gorm.DB, w http.ResponseWrite
 		} else {
 
 			// Get all the simulations owned by the user
-			if err := tx.Where("owner=?", user.Username).Find(&simulations).Error; err != nil {
+			if err := tx.Where("owner=? and status = ?", user.Username, "running").Find(&simulations).Error; err != nil {
 				return nil, ign.NewErrorMessageWithBase(ign.ErrorIDNotFound, err)
 			}
 		}
@@ -165,7 +165,7 @@ func (ctrl *controller) Stop(user *users.User, tx *gorm.DB, w http.ResponseWrite
 	} else {
 		// Get the matching simulation
 		var simulation Simulation
-		if err := tx.Where("group_id=?", groupID).First(&simulation).Error; err != nil {
+		if err := tx.Where("group_id=? and status = ?", groupID, "running").First(&simulation).Error; err != nil {
 			return nil, ign.NewErrorMessageWithBase(ign.ErrorIDNotFound, err)
 		}
 

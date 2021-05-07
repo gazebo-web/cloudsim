@@ -4,6 +4,7 @@ package nps
 
 import (
 	"errors"
+	"github.com/caarlos0/env"
 	"github.com/jinzhu/gorm"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/actions"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator"
@@ -75,10 +76,26 @@ func prepareCreatePodInput(store actions.Store, tx *gorm.DB, deployment *actions
 			HostPath:  "/dev/input",
 		},
 		{
+			Name:      "devfuse",
+			MountPath: "/dev/fuse",
+			HostPath:  "/dev/fuse",
+		},
+		{
 			Name:      "x11",
 			MountPath: "/tmp/.X11-unix",
 			HostPath:  "/tmp/.X11-unix",
 		},
+	}
+
+	// Parse AWS specific environment variables.
+	type awsEnvStore struct {
+		AccessKeyID     string `env:"AWS_ACCESS_KEY_ID" envDefault:""`
+		SecretAccessKey string `env:"AWS_SECRET_ACCESS_KEY" envDefault:""`
+	}
+	var aws awsEnvStore
+
+	if err := env.Parse(&aws); err != nil {
+		startData.logger.Info("Unable to parse AWS environment variables.")
 	}
 
 	envVars := map[string]string{
@@ -86,6 +103,12 @@ func prepareCreatePodInput(store actions.Store, tx *gorm.DB, deployment *actions
 		"QT_X11_NO_MITSHM": "1",
 		"XAUTHORITY":       "/tmp/.docker.xauth",
 		"USE_XVFB":         "1",
+
+		// TODO: these are very specific to NPS. It would be nice to have a
+		// generic mechansim for injecting environment variables into a pod.
+		"AWS_ACCESS_KEY_ID":     aws.AccessKeyID,
+		"AWS_SECRET_ACCESS_KEY": aws.SecretAccessKey,
+		"CLOUDSIM_USERNAME":     sim.Owner,
 	}
 
 	// \todo Help needed: Are the regular nameservers? Are they manadatory?
@@ -154,6 +177,9 @@ func prepareCreatePodInput(store actions.Store, tx *gorm.DB, deployment *actions
 					Volumes: volumes,
 					// EnvVars is the list of env vars that should be passed into the container.
 					EnvVars: envVars,
+					Capabilities: &orchestrator.Capabilities{
+						Add: []string{"SYS_ADMIN"},
+					},
 				},
 			},
 			Volumes: volumes,

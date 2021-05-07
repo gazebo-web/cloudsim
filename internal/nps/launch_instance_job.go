@@ -77,7 +77,7 @@ EOF
 		{
 			Resource: "instance",
 			Map: map[string]string{
-				"Name":                 simEntry.Name,
+				"Name":                 simEntry.Name + "-" + string(startData.GroupID),
 				"cloudsim_groupid":     string(startData.GroupID),
 				"project":              "nps",
 				"Cloudsim":             "true",

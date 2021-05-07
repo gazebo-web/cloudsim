@@ -41,7 +41,7 @@ func prepareRemoveInstancesInput(store actions.Store, tx *gorm.DB, deployment *a
 		{
 			Resource: "instance",
 			Map: map[string]string{
-				"Name":                 sim.Name,
+				"Name":                 sim.Name + "-" + string(stopData.GroupID),
 				"cloudsim_groupid":     string(stopData.GroupID),
 				"project":              "nps",
 				"Cloudsim":             "true",
