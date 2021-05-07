@@ -87,9 +87,7 @@ func (m *manager) Free(groupID simulations.GroupID) {
 	rs.publishing = false
 	m.runningSimulations[groupID] = rs
 
-	if t != nil && t.IsConnected() {
-		t.Disconnect()
-	}
+	_ = t.Disconnect()
 }
 
 // Add adds a running simulation and a websocket transport to the given groupID.
@@ -155,15 +153,17 @@ func (m *manager) GetTransporter(groupID simulations.GroupID) ignws.PubSubWebsoc
 }
 
 // Remove removes a running simulation and its websocket connection.
-// If the websocket connection is still active, it will return an error.
+// If the websocket connection is still active, it will force disconnecting from the websocket server.
 func (m *manager) Remove(groupID simulations.GroupID) error {
 	m.lock.Lock()
 	defer m.lock.Unlock()
-	if r, exists := m.runningSimulations[groupID]; !exists || r.Transport.IsConnected() {
-		return fmt.Errorf("websocket transport [%s] does not exist or it's still connected to the websocket server", groupID)
+	var r *RunningSimulation
+	var exists bool
+	if r, exists = m.runningSimulations[groupID]; !exists {
+		return fmt.Errorf("websocket transport [%s] does not exist", groupID)
 	}
+	_ = r.Transport.Disconnect()
 	delete(m.runningSimulations, groupID)
-
 	return nil
 }
 

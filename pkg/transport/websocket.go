@@ -48,7 +48,7 @@ func createConnection(addr url.URL) (*websocket.Conn, error) {
 
 // IsConnected checks if the connection has been established
 func (w *websocketTransport) IsConnected() bool {
-	if w.connection == nil {
+	if w == nil || w.connection == nil {
 		return false
 	}
 	err := w.connection.WriteMessage(websocket.PingMessage, []byte{})
@@ -56,9 +56,16 @@ func (w *websocketTransport) IsConnected() bool {
 }
 
 // Disconnect closes the connection.
-func (w *websocketTransport) Disconnect() {
-	w.connection.Close()
+func (w *websocketTransport) Disconnect() error {
+	if w == nil || w.connection == nil {
+		return nil
+	}
+	err := w.connection.Close()
+	if err != nil {
+		return err
+	}
 	w.connection = nil
+	return nil
 }
 
 // Connection returns the active websocket connection.

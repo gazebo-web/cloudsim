@@ -73,7 +73,7 @@ func setupWithCustomInitializer(customFn customInitializer) {
 	expectedFn := mock.AnythingOfType("ign.Callback")
 	globals.TransportTestMock.On("Subscribe", worldStatsTopic, expectedFn).Return(nil)
 	globals.TransportTestMock.On("Subscribe", worldWarmupTopic, expectedFn).Return(nil)
-	globals.TransportTestMock.On("Disconnect").Return()
+	globals.TransportTestMock.On("Disconnect").Return(error(nil))
 	globals.TransportTestMock.On("IsConnected").Return(true)
 }
 
