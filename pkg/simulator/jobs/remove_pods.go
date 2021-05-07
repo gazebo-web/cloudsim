@@ -46,9 +46,10 @@ func removePods(store actions.Store, tx *gorm.DB, deployment *actions.Deployment
 	for _, in := range input {
 		var res orchestrator.Resource
 		res, err = s.Platform().Orchestrator().Pods().Delete(in)
-		if err != nil {
+    // \todo: Don't return an error here. Just continue so that I can remove the instance. if this returns an error, then the next job (which is removing the instance) is never run. This is bad because it can leave instances hanging.
+		/*if err != nil {
 			return nil, err
-		}
+		}*/
 		deleted = append(deleted, res)
 	}
 

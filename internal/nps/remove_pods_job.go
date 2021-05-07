@@ -20,8 +20,9 @@ var RemovePods = jobs.RemovePods.Extend(actions.Job{
 // checkRemovePodsNoError is a post-hook in charge of checking that no errors were thrown while removing pods.
 // \todo Improvement: I blindly copy this from SubT and it seems to work. Move to a generic place so that apps don't have to keep copying the code.
 func checkRemovePodsNoError(store actions.Store, tx *gorm.DB, deployment *actions.Deployment, value interface{}) (interface{}, error) {
-	stopData := store.State().(*StopSimulationData)
+	// stopData := store.State().(*StopSimulationData)
 
+	/* Todo: this code can return an error, which in turn will prevent the RemoveInstance job from running, which is very bad.
 	out := value.(jobs.RemovePodsOutput)
 	if out.Error != nil || len(out.Resources) != len(stopData.PodList) {
 		err := deployment.SetJobData(tx, nil, actions.DeploymentJobData, out)
@@ -30,6 +31,7 @@ func checkRemovePodsNoError(store actions.Store, tx *gorm.DB, deployment *action
 		}
 		return nil, out.Error
 	}
+	*/
 	return nil, nil
 }
 
@@ -45,11 +47,6 @@ func prepareRemovePodsInput(store actions.Store, tx *gorm.DB, deployment *action
 	var sim Simulation
 	if err := tx.Where("group_id = ?", stopData.GroupID.String()).First(&sim).Error; err != nil {
 		return nil, err
-	}
-
-	// Make sure the instance is running before continuing
-	if sim.Status != "running" {
-		return nil, errors.New("Simulation is already stopping or stopped")
 	}
 
 	sim.Status = "removing-pod"

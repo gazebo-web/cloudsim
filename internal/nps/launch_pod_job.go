@@ -89,8 +89,8 @@ func prepareCreatePodInput(store actions.Store, tx *gorm.DB, deployment *actions
 
 	// Parse AWS specific environment variables.
 	type awsEnvStore struct {
-		AccessKeyID     string `env:"AWS_ACCESS_KEY_ID" envDefault:""`
-		SecretAccessKey string `env:"AWS_SECRET_ACCESS_KEY" envDefault:""`
+		AccessKeyID     string `env:"AWSACCESSKEYID" envDefault:""`
+		SecretAccessKey string `env:"AWSSECRETACCESSKEY" envDefault:""`
 	}
 	var aws awsEnvStore
 
@@ -106,9 +106,9 @@ func prepareCreatePodInput(store actions.Store, tx *gorm.DB, deployment *actions
 
 		// TODO: these are very specific to NPS. It would be nice to have a
 		// generic mechansim for injecting environment variables into a pod.
-		"AWS_ACCESS_KEY_ID":     aws.AccessKeyID,
-		"AWS_SECRET_ACCESS_KEY": aws.SecretAccessKey,
-		"CLOUDSIM_USERNAME":     sim.Owner,
+		"AWSACCESSKEYID":     aws.AccessKeyID,
+		"AWSSECRETACCESSKEY": aws.SecretAccessKey,
+		"CLOUDSIM_USERNAME":  sim.Owner,
 	}
 
 	// \todo Help needed: Are the regular nameservers? Are they manadatory?
