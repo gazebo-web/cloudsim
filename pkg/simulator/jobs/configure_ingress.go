@@ -41,23 +41,24 @@ func configureIngress(store actions.Store, tx *gorm.DB, deployment *actions.Depl
 	}
 
 	now := time.Now()
-	f := s.Platform().Store().Orchestrator().PollFrequency()
+	timeout := s.Platform().Store().Orchestrator().Timeout()
+	freq := s.Platform().Store().Orchestrator().PollFrequency()
 
-	for t := now.Add(s.Platform().Store().Orchestrator().Timeout()); t.After(time.Now()); time.Sleep(f) {
+	for t := now.Add(timeout); t.After(time.Now()); time.Sleep(freq) {
 		var rule ingresses.Rule
 		rule, err = s.Platform().Orchestrator().IngressRules().Get(res, input.Host)
 		if err != nil {
-			return ConfigureIngressOutput{
-				Error: err,
-			}, nil
+			continue
 		}
 
 		err = s.Platform().Orchestrator().IngressRules().Upsert(rule, input.Paths...)
 		if err != nil {
-			return ConfigureIngressOutput{
-				Error: err,
-			}, nil
+			continue
 		}
+
+		return ConfigureIngressOutput{
+			Error: nil,
+		}, nil
 	}
 
 	return ConfigureIngressOutput{
