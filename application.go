@@ -21,7 +21,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/caarlos0/env"
 	"github.com/go-playground/form"
-	"github.com/gorilla/mux"
 	"github.com/joho/godotenv"
 	"github.com/pkg/errors"
 	"gitlab.com/ignitionrobotics/web/cloudsim/globals"
@@ -33,7 +32,6 @@ import (
 	"gitlab.com/ignitionrobotics/web/ign-go/monitoring/prometheus"
 	"gopkg.in/go-playground/validator.v9"
 	"log"
-	"net/http/pprof"
 	"os"
 	"strconv"
 	"strings"
@@ -140,7 +138,9 @@ func init() {
 	m := mainRouter.PathPrefix("/").Subrouter()
 	s.ConfigureRouterWithRoutes("/", m, sim.MonitoringRoutes)
 
-	AttachProfiler(mainRouter)
+	// Profile
+	profileRouter := mainRouter.PathPrefix("/").Subrouter()
+	s.ConfigureRouterWithRoutes("/", profileRouter, sim.ProfileRoutes)
 
 	// Set router.
 	// Because a monitoring provider was set, this call will add monitoring routes as well as setting the router
@@ -224,15 +224,6 @@ func init() {
 	}
 
 	logger.Info("Cloudsim is ready.")
-}
-
-// AttachProfiler attaches profile routes to a given router.
-func AttachProfiler(router *mux.Router) {
-	router.HandleFunc("/pprof/", pprof.Index)
-	router.HandleFunc("/pprof/cmdline", pprof.Cmdline)
-	router.HandleFunc("/pprof/profile", pprof.Profile)
-	router.HandleFunc("/pprof/symbol", pprof.Symbol)
-	router.HandleFunc("/pprof/trace", pprof.Trace)
 }
 
 /////////////////////////////////////////////////

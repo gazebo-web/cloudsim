@@ -7,6 +7,7 @@ import (
 	"gitlab.com/ignitionrobotics/web/fuelserver/bundles/users"
 	"gitlab.com/ignitionrobotics/web/ign-go"
 	"net/http"
+	"net/http/pprof"
 )
 
 // Routes declares the routes related to simulations. See also IGN's router.go
@@ -699,5 +700,26 @@ var MonitoringRoutes = ign.Routes{
 			},
 		},
 		SecureMethods: ign.SecureMethods{},
+	},
+}
+
+// ProfileRoutes contains the different routes to perform CPU profiling.
+var ProfileRoutes = ign.Routes{
+	ign.Route{
+		Name:        "CPU Profile",
+		Description: "Get cloudsim CPU profile data",
+		URI:         "/profile",
+		Methods: ign.Methods{
+			ign.Method{
+				Type:        "GET",
+				Description: "Get cloudsim CPU profile data",
+				Handlers: ign.FormatHandlers{
+					ign.FormatHandler{
+						Extension: "",
+						Handler:   http.HandlerFunc(pprof.Profile),
+					},
+				},
+			},
+		},
 	},
 }
