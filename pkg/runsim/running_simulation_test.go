@@ -83,7 +83,8 @@ func (s *runningSimulationTestSuite) TestReadWarmupWhenStarted() {
 	}
 
 	m := msgs.StringMsg{
-		Data: "started",
+		Header: &msgs.Header{Stamp: &msgs.Time{Sec: int64(time.Now().Second())}},
+		Data:   "started",
 	}
 	b, err := proto.Marshal(&m)
 	s.Require().NoError(err)
@@ -116,9 +117,9 @@ func (s *runningSimulationTestSuite) TestReadWarmupWhenFinished() {
 		CreatedAt:            time.Now(),
 		MaxValidUntil:        time.Now().Add(time.Minute),
 	}
-
 	m := msgs.StringMsg{
-		Data: "recording_complete",
+		Header: &msgs.Header{Stamp: &msgs.Time{Sec: int64(time.Now().Second())}},
+		Data:   "recording_complete",
 	}
 	b, err := proto.Marshal(&m)
 	s.Require().NoError(err)
