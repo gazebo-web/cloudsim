@@ -87,7 +87,7 @@ func (rs *RunningSimulation) ReadWarmup(ctx context.Context, msg transport.Messa
 		rs.Finished = true
 	}
 
-	rs.SimTimeSeconds = m.GetHeader().Stamp.GetSec()
+	rs.SimTimeSeconds = m.GetHeader().GetStamp().GetSec()
 
 	return nil
 }
