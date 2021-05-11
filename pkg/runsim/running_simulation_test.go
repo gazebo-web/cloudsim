@@ -70,70 +70,6 @@ func (s *runningSimulationTestSuite) TestIsExpired() {
 	s.Assert().True(rs.IsExpired())
 }
 
-func (s *runningSimulationTestSuite) TestReadWorldStatsWhenPaused() {
-	rs := RunningSimulation{
-		GroupID:              "aaaa-bbbb-cccc-dddd",
-		currentState:         stateUnknown,
-		publishing:           true,
-		SimTimeSeconds:       100,
-		SimWarmupSeconds:     5,
-		SimMaxAllowedSeconds: 500,
-		CreatedAt:            time.Now(),
-		MaxValidUntil:        time.Now().Add(time.Minute),
-	}
-
-	m := msgs.WorldStatistics{
-		Paused: true,
-		SimTime: &msgs.Time{
-			Sec: 110,
-		},
-	}
-	b, err := proto.Marshal(&m)
-	s.Require().NoError(err)
-
-	msg := ign.Message{
-		Payload: string(b),
-	}
-
-	err = rs.ReadWorldStats(context.Background(), &msg)
-	s.Require().NoError(err)
-
-	s.Assert().Equal(statePause, rs.currentState)
-	s.Assert().Equal(int64(110), rs.SimTimeSeconds)
-}
-
-func (s *runningSimulationTestSuite) TestReadWorldStatsWhenRunning() {
-	rs := RunningSimulation{
-		GroupID:              "aaaa-bbbb-cccc-dddd",
-		currentState:         stateUnknown,
-		publishing:           true,
-		SimTimeSeconds:       100,
-		SimWarmupSeconds:     5,
-		SimMaxAllowedSeconds: 500,
-		CreatedAt:            time.Now(),
-		MaxValidUntil:        time.Now().Add(time.Minute),
-	}
-
-	m := msgs.WorldStatistics{
-		Paused: false,
-		SimTime: &msgs.Time{
-			Sec: 110,
-		},
-	}
-	b, err := proto.Marshal(&m)
-	s.Require().NoError(err)
-
-	msg := ign.Message{
-		Payload: string(b),
-	}
-
-	err = rs.ReadWorldStats(context.Background(), &msg)
-	s.Require().NoError(err)
-
-	s.Assert().Equal(stateRun, rs.currentState)
-	s.Assert().Equal(int64(110), rs.SimTimeSeconds)
-}
-
 func (s *runningSimulationTestSuite) TestReadWarmupWhenStarted() {
 	rs := RunningSimulation{
 		GroupID:              "aaaa-bbbb-cccc-dddd",
@@ -147,7 +83,8 @@ func (s *runningSimulationTestSuite) TestReadWarmupWhenStarted() {
 	}
 
 	m := msgs.StringMsg{
-		Data: "started",
+		Header: &msgs.Header{Stamp: &msgs.Time{Sec: int64(time.Now().Second())}},
+		Data:   "started",
 	}
 	b, err := proto.Marshal(&m)
 	s.Require().NoError(err)
@@ -180,9 +117,9 @@ func (s *runningSimulationTestSuite) TestReadWarmupWhenFinished() {
 		CreatedAt:            time.Now(),
 		MaxValidUntil:        time.Now().Add(time.Minute),
 	}
-
 	m := msgs.StringMsg{
-		Data: "recording_complete",
+		Header: &msgs.Header{Stamp: &msgs.Time{Sec: int64(time.Now().Second())}},
+		Data:   "recording_complete",
 	}
 	b, err := proto.Marshal(&m)
 	s.Require().NoError(err)
