@@ -45,12 +45,17 @@ func configureIngress(store actions.Store, tx *gorm.DB, deployment *actions.Depl
 	freq := s.Platform().Store().Orchestrator().PollFrequency()
 
 	for t := now.Add(timeout); t.After(time.Now()); time.Sleep(freq) {
+		// Exponential backoff
+		freq *= 2
+
+		// Get the rule for the given host
 		var rule ingresses.Rule
 		rule, err = s.Platform().Orchestrator().IngressRules().Get(res, input.Host)
 		if err != nil {
 			continue
 		}
 
+		// Update paths.
 		err = s.Platform().Orchestrator().IngressRules().Upsert(rule, input.Paths...)
 		if err != nil {
 			continue
