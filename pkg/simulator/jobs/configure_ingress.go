@@ -5,6 +5,7 @@ import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/actions"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/components/ingresses"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulator/state"
+	"time"
 )
 
 // ConfigureIngressInput is the input for the ConfigureIngress job.
@@ -39,17 +40,29 @@ func configureIngress(store actions.Store, tx *gorm.DB, deployment *actions.Depl
 		}, nil
 	}
 
-	rule, err := s.Platform().Orchestrator().IngressRules().Get(res, input.Host)
-	if err != nil {
-		return ConfigureIngressOutput{
-			Error: err,
-		}, nil
-	}
+	now := time.Now()
+	timeout := s.Platform().Store().Orchestrator().Timeout()
+	freq := s.Platform().Store().Orchestrator().PollFrequency()
 
-	err = s.Platform().Orchestrator().IngressRules().Upsert(rule, input.Paths...)
-	if err != nil {
+	for t := now.Add(timeout); t.After(time.Now()); time.Sleep(freq) {
+		// Exponential backoff
+		freq *= 2
+
+		// Get the rule for the given host
+		var rule ingresses.Rule
+		rule, err = s.Platform().Orchestrator().IngressRules().Get(res, input.Host)
+		if err != nil {
+			continue
+		}
+
+		// Update paths.
+		err = s.Platform().Orchestrator().IngressRules().Upsert(rule, input.Paths...)
+		if err != nil {
+			continue
+		}
+
 		return ConfigureIngressOutput{
-			Error: err,
+			Error: nil,
 		}, nil
 	}
 
