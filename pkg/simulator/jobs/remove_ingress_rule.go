@@ -5,6 +5,7 @@ import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/actions"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/components/ingresses"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulator/state"
+	"time"
 )
 
 // RemoveIngressRulesInput is the input for the RemoveIngressRule job.
@@ -39,21 +40,29 @@ func removeIngressRules(store actions.Store, tx *gorm.DB, deployment *actions.De
 		}, nil
 	}
 
-	rule, err := s.Platform().Orchestrator().IngressRules().Get(res, input.Host)
-	if err != nil {
-		return RemoveIngressRulesOutput{
-			Error: err,
-		}, nil
-	}
+	now := time.Now()
+	timeout := s.Platform().Store().Orchestrator().Timeout()
+	freq := s.Platform().Store().Orchestrator().PollFrequency()
 
-	err = s.Platform().Orchestrator().IngressRules().Remove(rule, input.Paths...)
-	if err != nil {
-		return RemoveIngressRulesOutput{
-			Error: err,
-		}, nil
+	for t := now.Add(timeout); t.After(time.Now()); time.Sleep(freq) {
+		// Exponential backoff
+		freq *= 2
+
+		var rule ingresses.Rule
+		rule, err = s.Platform().Orchestrator().IngressRules().Get(res, input.Host)
+		if err != nil {
+			continue
+		}
+
+		err = s.Platform().Orchestrator().IngressRules().Remove(rule, input.Paths...)
+		if err != nil {
+			continue
+		}
+
+		break
 	}
 
 	return RemoveIngressRulesOutput{
-		Error: nil,
+		Error: err,
 	}, nil
 }
