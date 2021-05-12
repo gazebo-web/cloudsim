@@ -30,13 +30,6 @@ type RunningSimulation struct {
 	lockCurrentState sync.RWMutex
 	// publishing is an internal flag to show if we are sending ign-transport messages
 	publishing bool
-	// SimTimeSeconds tracks the current "sim seconds" reported by the simulation /stats topic.
-	SimTimeSeconds int64
-	// SimWarmupSeconds holds the "sim seconds" value when the simulation notified
-	// the warmup was finished.
-	SimWarmupSeconds int64
-	// SimMaxAllowedSeconds allows to configure an Expiration time based on the simulation time.
-	SimMaxAllowedSeconds int64
 	// CreatedAt keeps track of the entire simulation group launch time.
 	CreatedAt time.Time
 	// MaxValidUntil keeps track of the Max time this simulation should be automatically
@@ -49,20 +42,14 @@ type RunningSimulation struct {
 	stdoutSkipStatsMsgsCount int
 	// Transport has a reference to a publisher/subscriber transporting mechanism using websockets.
 	Transport ignws.PubSubWebsocketTransporter
+	// Started indicates if the simulations has started. A "started" message in the warmup topic will mark the simulation as
+	// started.
+	Started bool
 }
 
 // IsExpired returns true if the RunningSimulation has expired.
 func (rs *RunningSimulation) IsExpired() bool {
-	var secondsExpired bool
-	if rs.SimMaxAllowedSeconds > 0 {
-		secondsExpired = rs.hasReachedMaxSimSeconds()
-	}
-	return secondsExpired || time.Now().After(rs.MaxValidUntil)
-}
-
-// hasReachedMaxSimSeconds defines if a simulation has reached the max allowed amount of simulation seconds.
-func (rs *RunningSimulation) hasReachedMaxSimSeconds() bool {
-	return (rs.SimTimeSeconds - rs.SimWarmupSeconds) > rs.SimMaxAllowedSeconds
+	return rs.Started && time.Now().After(rs.MaxValidUntil)
 }
 
 // ReadWarmup is the callback passed to the websocket client that will be invoked each time
@@ -77,17 +64,13 @@ func (rs *RunningSimulation) ReadWarmup(ctx context.Context, msg transport.Messa
 	rs.lockCurrentState.Lock()
 	defer rs.lockCurrentState.Unlock()
 
-	if m.GetData() == "started" {
-		if rs.SimWarmupSeconds == 0 {
-			rs.SimWarmupSeconds = rs.SimTimeSeconds
-		}
+	if !rs.Started && m.GetData() == "started" {
+		rs.Started = true
 	}
 
 	if !rs.Finished && m.GetData() == "recording_complete" {
 		rs.Finished = true
 	}
-
-	rs.SimTimeSeconds = m.GetHeader().GetStamp().GetSec()
 
 	return nil
 }
@@ -96,12 +79,11 @@ func (rs *RunningSimulation) ReadWarmup(ctx context.Context, msg transport.Messa
 // amount of maxSimSeconds seconds and will be valid for the duration given in validFor.
 func NewRunningSimulation(groupID simulations.GroupID, maxSimSeconds int64, validFor time.Duration) *RunningSimulation {
 	return &RunningSimulation{
-		GroupID:              groupID,
-		currentState:         stateUnknown,
-		publishing:           false,
-		SimMaxAllowedSeconds: maxSimSeconds,
-		CreatedAt:            time.Now(),
-		MaxValidUntil:        time.Now().Add(validFor),
-		Finished:             false,
+		GroupID:       groupID,
+		currentState:  stateUnknown,
+		publishing:    false,
+		CreatedAt:     time.Now(),
+		MaxValidUntil: time.Now().Add(validFor),
+		Finished:      false,
 	}
 }
