@@ -54,33 +54,31 @@ func (s *managerTestSuite) TestAdd() {
 }
 
 func (s *managerTestSuite) TestListExpiredSimulations() {
-	// We add a running simulation before running tests.
-	rs := RunningSimulation{
-		SimTimeSeconds:       0,
-		SimWarmupSeconds:     5,
-		SimMaxAllowedSeconds: 90,
-		MaxValidUntil:        time.Now().Add(1 * time.Hour),
+	notExpired := RunningSimulation{
+		MaxValidUntil: time.Now().Add(1 * time.Hour),
 	}
-	s.manager.runningSimulations["test"] = &rs
+	expired := RunningSimulation{
+		MaxValidUntil: time.Now().Add(-1 * time.Hour),
+	}
 
-	// The running simulation isn't not expired yet
+	// No running simulations have expired yet
+	s.manager.runningSimulations["a"] = &notExpired
+	s.manager.runningSimulations["b"] = &notExpired
+	s.manager.runningSimulations["c"] = &notExpired
 	s.Assert().Len(s.manager.ListExpiredSimulations(), 0)
 
-	// We force the running simulation to be expired
-	rs.SimTimeSeconds += 100
-
-	// Now listing expired simulations returns an entry.
-	s.Assert().Len(s.manager.ListExpiredSimulations(), 1)
+	// Some running simulations have expired
+	s.manager.runningSimulations["a"] = &notExpired
+	s.manager.runningSimulations["b"] = &expired
+	s.manager.runningSimulations["c"] = &expired
+	s.Assert().Len(s.manager.ListExpiredSimulations(), 2)
 }
 
 func (s *managerTestSuite) TestListFinishedSimulations() {
 	// We add a running simulation before running tests.
 	rs := RunningSimulation{
-		SimTimeSeconds:       0,
-		SimWarmupSeconds:     5,
-		SimMaxAllowedSeconds: 90,
-		Finished:             false,
-		MaxValidUntil:        time.Now().Add(1 * time.Hour),
+		Finished:      false,
+		MaxValidUntil: time.Now().Add(1 * time.Hour),
 	}
 	s.manager.runningSimulations["test"] = &rs
 
