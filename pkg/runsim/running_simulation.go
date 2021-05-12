@@ -42,14 +42,11 @@ type RunningSimulation struct {
 	stdoutSkipStatsMsgsCount int
 	// Transport has a reference to a publisher/subscriber transporting mechanism using websockets.
 	Transport ignws.PubSubWebsocketTransporter
-	// Started indicates if the simulations has started. A "started" message in the warmup topic will mark the simulation as
-	// started.
-	Started bool
 }
 
 // IsExpired returns true if the RunningSimulation has expired.
 func (rs *RunningSimulation) IsExpired() bool {
-	return rs.Started && time.Now().After(rs.MaxValidUntil)
+	return time.Now().After(rs.MaxValidUntil)
 }
 
 // ReadWarmup is the callback passed to the websocket client that will be invoked each time
@@ -63,10 +60,6 @@ func (rs *RunningSimulation) ReadWarmup(ctx context.Context, msg transport.Messa
 
 	rs.lockCurrentState.Lock()
 	defer rs.lockCurrentState.Unlock()
-
-	if !rs.Started && m.GetData() == "started" {
-		rs.Started = true
-	}
 
 	if !rs.Finished && m.GetData() == "recording_complete" {
 		rs.Finished = true
