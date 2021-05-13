@@ -126,6 +126,7 @@ vet:
     - mysql:5.7
   environment:
     name: testing
+  allow_failure: true
   tags:
     - gitlab-org
 
@@ -147,6 +148,7 @@ test:
     - mysql:5.7
   environment:
     name: testing
+  allow_failure: true
   tags:
     - gitlab-org
   artifacts:
@@ -190,6 +192,7 @@ coverage:
     - mysql:5.7
   environment:
     name: testing
+  allow_failure: true
   tags:
     - gitlab-org
 
