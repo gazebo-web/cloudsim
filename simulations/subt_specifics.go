@@ -237,7 +237,7 @@ func (sa *SubTApplication) getGazeboLogsFilename(groupID string) string {
 // getRobotROSLogsFilename returns the filename of the ROS logs for a specific
 // robot in a simulation.
 func (sa *SubTApplication) getRobotROSLogsFilename(groupID string, robotName string) string {
-	return fmt.Sprintf("%s-fc-%s-commsbridge.tar.gz", groupID, robotName)
+	return fmt.Sprintf("%s-fc-%s-commsbridge.tar.gz", groupID, strings.ToLower(robotName))
 }
 
 ////////////////////////////////////////////////////////////////////////////
@@ -695,7 +695,7 @@ func (sa *SubTApplication) getSimulationLogsForDownload(ctx context.Context, tx 
 
 	bucket := p.Store().Ignition().LogsBucket()
 	ownerNameEscaped := url.PathEscape(*dep.Owner)
-	folderPath := fmt.Sprintf("/gz-logs/%s/%s", ownerNameEscaped, *dep.GroupID)
+	folderPath := fmt.Sprintf("/gz-logs/%s/%s/", ownerNameEscaped, *dep.GroupID)
 	filePath := fmt.Sprintf("%s/%s", folderPath, fileName)
 	logger(ctx).Debug(fmt.Sprintf("SubT App - Fetching generating link to fetch logs from S3 bucket [%s] with path [%s]\n", bucket, filePath))
 
