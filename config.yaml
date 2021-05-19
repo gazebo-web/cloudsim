@@ -181,6 +181,25 @@ components:
         # (Required) Name of the storage component bucket to upload logs to.
         logsBucketValue: ""
 
+      moleStore: &moleStore
+        # (Required) Address of the Pulsar service the Mole bridge should connect to.
+        # If the Mole deployment is running on the same cluster this should be in the form of <SERVICE>.<NAMESPACE>.
+        bridgePulsarAddressValue: ""
+
+        # Port on which the Pulsar service is running.
+        # Type: uint
+        # Default: 6650
+        # bridgePulsarPortValue: 6650
+
+        # BridgePulsarHTTPPort returns the port on which the Mole Pulsar HTTP service is running.
+        # Type: uint
+        # Default: 8080
+        # bridgePulsarHTTPPortValue: 8080
+
+        # Regex used by the Mole bridge to filter topics.
+        # Default: "^subt/"
+        # bridgeTopicRegexValue: ""
+
       # Contains values used to configure various simulation orchestrator resources.
       orchestratorStore: &orchestratorStore
         # Amount of time in seconds to wait for an orchestrator resource to terminate.

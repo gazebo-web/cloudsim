@@ -12,30 +12,37 @@ type Fake struct {
 	machines     store.Machines
 	orchestrator store.Orchestrator
 	ignition     store.Ignition
+	mole		 store.Mole
 }
 
-// Machines mocks the Machine namespace.
+// Machines mocks the Machine store.
 func (f *Fake) Machines() store.Machines {
 	return f.machines
 }
 
-// Orchestrator mocks the Orchestrator namespace.
+// Orchestrator mocks the Orchestrator store.
 func (f *Fake) Orchestrator() store.Orchestrator {
 	return f.orchestrator
 }
 
-// Ignition mocks the Ignition namespace.
+// Ignition mocks the Ignition store.
 func (f *Fake) Ignition() store.Ignition {
 	return f.ignition
 }
 
+// Mole mocks the Mole store.
+func (f *Fake) Mole() store.Mole {
+	return f.mole
+}
+
 // NewFakeStore initializes a new fake store implementation using fake configuration providers.
 // This provider uses the mock library
-func NewFakeStore(machines *Machines, orchestrator *Orchestrator, ignition *Ign) *Fake {
+func NewFakeStore(machines *Machines, orchestrator *Orchestrator, ignition *Ign, mole *Mole) *Fake {
 	return &Fake{
 		machines:     machines,
 		orchestrator: orchestrator,
 		ignition:     ignition,
+		mole:         mole,
 	}
 }
 
@@ -46,6 +53,7 @@ func NewDefaultFakeStore() *Fake {
 		machines:     NewFakeMachines(),
 		orchestrator: NewFakeOrchestrator(),
 		ignition:     NewFakeIgnition(),
+		mole:         NewFakeMole(),
 	}
 }
 
@@ -143,6 +151,44 @@ func (f *Ign) Verbosity() string {
 // NewFakeIgnition initializes a fake store.Ignition implementation.
 func NewFakeIgnition() *Ign {
 	return &Ign{
+		Mock: new(mock.Mock),
+	}
+}
+
+// Mole is a fake store.Mole implementation.
+type Mole struct {
+	*mock.Mock
+}
+
+var _ store.Mole = (*Mole)(nil)
+
+// PulsarAddress
+func (m *Mole) BridgePulsarAddress() string {
+	args := m.Called()
+	return args.String(0)
+}
+
+// MoleBridgePulsarPort returns the port on which the Pulsar service the mole bridge should connect to is running.
+func (m *Mole) BridgePulsarPort() int {
+	args := m.Called()
+	return args.Int(0)
+}
+
+// MoleBridgePulsarPort returns the port on which the HTTP service the mole bridge should connect to is running.
+func (m *Mole) BridgePulsarHTTPPort() int {
+	args := m.Called()
+	return args.Int(0)
+}
+
+// MoleBridgeTopicRegex returns the regex used by the Mole bridge to filter topics.
+func (m *Mole) BridgeTopicRegex() string {
+	args := m.Called()
+	return args.String(0)
+}
+
+// NewFakeIgnition initializes a fake store.Ignition implementation.
+func NewFakeMole() *Mole {
+	return &Mole{
 		Mock: new(mock.Mock),
 	}
 }

@@ -50,7 +50,7 @@ func TestLaunchInstances(t *testing.T) {
 	// Configure machine config fake env store
 	machineConfigStore := envfake.NewFakeMachines()
 
-	configStore := envfake.NewFakeStore(machineConfigStore, nil, nil)
+	configStore := envfake.NewFakeStore(machineConfigStore, nil, nil, nil)
 
 	machineConfigStore.On("InstanceProfile").Return("arn::test::1234")
 	machineConfigStore.On("KeyName").Return("testKey")

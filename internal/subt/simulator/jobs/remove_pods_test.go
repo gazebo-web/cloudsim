@@ -56,7 +56,7 @@ func (s *removePodsTestSuite) SetupTest() {
 	storeOrchestrator := sfake.NewFakeOrchestrator()
 	storeOrchestrator.On("Namespace").Return(s.Namespace)
 
-	s.Store = sfake.NewFakeStore(nil, storeOrchestrator, storeIgnition)
+	s.Store = sfake.NewFakeStore(nil, storeOrchestrator, storeIgnition, nil)
 
 	var err error
 	s.DB, err = gormdb.GetTestDBFromEnvVars()

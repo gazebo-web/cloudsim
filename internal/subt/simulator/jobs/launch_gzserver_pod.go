@@ -101,6 +101,10 @@ func prepareGazeboCreatePodInput(store actions.Store, tx *gorm.DB, deployment *a
 		},
 	}
 
+	envVarsFrom := map[string]string {
+		"ROS_IP": pods.EnvVarSourcePodIP,
+	}
+
 	envVars := map[string]string{
 		"DISPLAY":          ":0",
 		"QT_X11_NO_MITSHM": "1",
@@ -109,6 +113,7 @@ func prepareGazeboCreatePodInput(store actions.Store, tx *gorm.DB, deployment *a
 		"IGN_RELAY":        s.Platform().Store().Ignition().IP(), // IP Cloudsim
 		"IGN_PARTITION":    string(s.GroupID),
 		"IGN_VERBOSE":      s.Platform().Store().Ignition().Verbosity(),
+		"ROS_MASTER_URI": "http://$(ROS_IP):11311",
 	}
 
 	nameservers := s.Platform().Store().Orchestrator().Nameservers()
@@ -130,6 +135,7 @@ func prepareGazeboCreatePodInput(store actions.Store, tx *gorm.DB, deployment *a
 					AllowPrivilegeEscalation: &allowPrivilegeEscalation,
 					Ports:                    ports,
 					Volumes:                  volumes,
+					EnvVarsFrom:			  envVarsFrom,
 					EnvVars:                  envVars,
 				},
 			},

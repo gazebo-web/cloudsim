@@ -11,6 +11,8 @@ type Store interface {
 	Machines() Machines
 	// Orchestrator provides access to a set of configurations for cluster management.
 	Orchestrator() Orchestrator
+	// Mole provides access to a set of configurations for Mole integration.
+	Mole() Mole
 	// Ignition provides access to a set of common cloudsim configurations.
 	Ignition() Ignition
 }
@@ -125,4 +127,18 @@ type Ignition interface {
 
 	// GetWebsocketPath returns the path of the websocket URL for the given simulations.GroupID.
 	GetWebsocketPath(groupID simulations.GroupID) string
+}
+
+type Mole interface {
+	// BridgePulsarAddress returns the address of the Pulsar service the Mole bridge should connect to.
+	BridgePulsarAddress() string
+
+	// BridgePulsarPort returns the port on which the Pulsar service the mole bridge should connect to is running.
+	BridgePulsarPort() int
+
+	// BridgePulsarHTTPPort returns the port on which the HTTP service the mole bridge should connect to is running.
+	BridgePulsarHTTPPort() int
+
+	// BridgeTopicRegex returns the regex used by the Mole bridge to filter topics.
+	BridgeTopicRegex() string
 }
