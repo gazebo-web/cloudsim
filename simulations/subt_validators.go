@@ -803,6 +803,54 @@ func loadSubTRobotTypes(cfg *subTSpecificsConfig) {
 			"CORO_ROCKY_SENSOR_CONFIG_3",
 			115,
 		),
+		"CTU_CRAS_NORLAB_HUSKY_SENSOR_CONFIG_1": generateSubTRobotType(
+			cfg,
+			"openrobotics",
+			"CTU_CRAS_NORLAB_HUSKY_SENSOR_CONFIG_1",
+			"HUSKY",
+			"CTU_CRAS_NORLAB_HUSKY_SENSOR_CONFIG_1",
+			225,
+		),
+		"CTU_CRAS_NORLAB_HUSKY_SENSOR_CONFIG_2": generateSubTRobotType(
+			cfg,
+			"openrobotics",
+			"CTU_CRAS_NORLAB_HUSKY_SENSOR_CONFIG_2",
+			"HUSKY",
+			"CTU_CRAS_NORLAB_HUSKY_SENSOR_CONFIG_2",
+			250,
+		),
+		"CTU_CRAS_NORLAB_MARMOTTE_SENSOR_CONFIG_1": generateSubTRobotType(
+			cfg,
+			"openrobotics",
+			"CTU_CRAS_NORLAB_MARMOTTE_SENSOR_CONFIG_1",
+			"HD2",
+			"CTU_CRAS_NORLAB_MARMOTTE_SENSOR_CONFIG_1",
+			160,
+		),
+		"CTU_CRAS_NORLAB_MARMOTTE_SENSOR_CONFIG_2": generateSubTRobotType(
+			cfg,
+			"openrobotics",
+			"CTU_CRAS_NORLAB_MARMOTTE_SENSOR_CONFIG_2",
+			"HD2",
+			"CTU_CRAS_NORLAB_MARMOTTE_SENSOR_CONFIG_2",
+			185,
+		),
+		"MARBLE_SPOT_SENSOR_CONFIG_1": generateSubTRobotType(
+			cfg,
+			"openrobotics",
+			"MARBLE_SPOT_SENSOR_CONFIG_1",
+			"SPOT",
+			"MARBLE_SPOT_SENSOR_CONFIG_1",
+			240,
+		),
+		"MARBLE_SPOT_SENSOR_CONFIG_2": generateSubTRobotType(
+			cfg,
+			"openrobotics",
+			"MARBLE_SPOT_SENSOR_CONFIG_2",
+			"SPOT",
+			"MARBLE_SPOT_SENSOR_CONFIG_2",
+			265,
+		),
 	}
 }
 
@@ -859,6 +907,7 @@ var SubTCircuits = []string{
 	CircuitFinalsPractice1,
 	CircuitFinalsPractice2,
 	CircuitFinalsPractice3,
+	CircuitVirtualStixCircuit,
 }
 
 // SubTCompetitionCircuits is the list of circuits that are used for competitions.
@@ -866,6 +915,7 @@ var SubTCompetitionCircuits = []string{
 	CircuitTunnelCircuit,
 	CircuitUrbanCircuit,
 	CircuitCaveCircuit,
+	CircuitVirtualStixCircuit,
 }
 
 // isValidRobotType checks if the field value is a valid Robot Type.

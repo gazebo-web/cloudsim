@@ -56,7 +56,7 @@ func (s *MockService) StartSimulationAsync(ctx context.Context,
 	simDep.Owner = &createSim.Owner
 	simDep.Creator = user.Username
 	simDep.Private = &private
-	simDep.Platform = &createSim.Platform
+	simDep.Platform = createSim.Platform
 	simDep.Application = &createSim.Application
 	simDep.GroupID = &groupID
 	simDep.DeploymentStatus = simPending.ToPtr()

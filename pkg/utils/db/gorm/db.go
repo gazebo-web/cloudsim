@@ -34,23 +34,6 @@ func getDBConfigFromEnvVars() (*ign.DatabaseConfig, error) {
 	return &dbConfig, nil
 }
 
-// GetDBFromEnvVars reads environment variables to return a Gorm database connection.
-func GetDBFromEnvVars() (*gorm.DB, error) {
-	// Get the db config
-	dbConfig, err := getDBConfigFromEnvVars()
-	if err != nil {
-		return nil, err
-	}
-
-	// Connect to the db
-	db, err := ign.InitDbWithCfg(dbConfig)
-	if err != nil {
-		return nil, err
-	}
-
-	return db, nil
-}
-
 // GetTestDBFromEnvVars reads environment variables to return a Gorm database connection.
 func GetTestDBFromEnvVars() (*gorm.DB, error) {
 	// Get the db config
@@ -71,6 +54,21 @@ func GetTestDBFromEnvVars() (*gorm.DB, error) {
 	return db, nil
 }
 
+// DropModels drops database models.
+func DropModels(tx *gorm.DB, models ...interface{}) error {
+	if tx == nil {
+		return errors.New("attempted to migrate with an invalid tx")
+	}
+
+	log.Printf("DropModels: Dropping models: %v\n", models)
+	if err := tx.DropTableIfExists(models...).Error; err != nil {
+		log.Println("DropModels: Error while running DropTableIfExists, error:", err)
+		return err
+	}
+
+	return nil
+}
+
 // MigrateModels migrates database models.
 // If the model table already exists, it will be updated to reflect the model structure. The table will only have
 // columns added or updated but not dropped.
@@ -79,6 +77,7 @@ func MigrateModels(tx *gorm.DB, models ...interface{}) error {
 		return errors.New("attempted to migrate with an invalid tx")
 	}
 
+	log.Printf("MigrateModels: Migrating tables: %v\n", models)
 	if err := tx.AutoMigrate(models...).Error; err != nil {
 		log.Println("MigrateModels: Error while running AutoMigrate, error:", err)
 		return err
@@ -93,13 +92,11 @@ func CleanAndMigrateModels(tx *gorm.DB, models ...interface{}) error {
 		return errors.New("attempted to clean database with an invalid tx")
 	}
 
-	log.Printf("CleanAndMigrateModels: Dropping tables: %v\n", models)
-	if err := tx.DropTableIfExists(models...).Error; err != nil {
-		log.Println("CleanAndMigrateModels: Error while running DropTableIfExists, error:", err)
+	if err := DropModels(tx, models...); err != nil {
+		log.Println("CleanAndMigrateModels: Error while running DropModels, error:", err)
 		return err
 	}
 
-	log.Printf("CleanAndMigrateModels: Migrating tables: %v\n", models)
 	if err := MigrateModels(tx, models...); err != nil {
 		log.Println("CleanAndMigrateModels: Error while running MigrateModels, error:", err)
 		return err

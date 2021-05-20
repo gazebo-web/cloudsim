@@ -1,11 +1,16 @@
 package simulations
 
 import (
+	"github.com/gorilla/mux"
+	"github.com/jinzhu/gorm"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
+	"gitlab.com/ignitionrobotics/web/fuelserver/bundles/users"
 	"gitlab.com/ignitionrobotics/web/ign-go"
+	"net/http"
 )
 
 // Routes declares the routes related to simulations. See also IGN's router.go
-var Routes ign.Routes = ign.Routes{
+var Routes = ign.Routes{
 
 	/////////////////
 	// Simulations //
@@ -17,7 +22,7 @@ var Routes ign.Routes = ign.Routes{
 		Description: "Information about all simulations",
 		URI:         "/simulations",
 		Headers:     ign.AuthHeadersRequired,
-		Methods:     ign.Methods{
+		Methods: ign.Methods{
 			// swagger:route GET /simulations simulations listSimulations
 			//
 			// Get list of simulations.
@@ -96,7 +101,7 @@ var Routes ign.Routes = ign.Routes{
 		Description: "Single simulation based on its groupID",
 		URI:         "/simulations/{group}",
 		Headers:     ign.AuthHeadersRequired,
-		Methods:     ign.Methods{
+		Methods: ign.Methods{
 			// swagger:route GET /simulations/{group} simulations getSimulation
 			//
 			// Get a single simulation based on its groupID
@@ -287,7 +292,7 @@ var Routes ign.Routes = ign.Routes{
 		Description: "Gets a simulation's websocket server address",
 		URI:         "/simulations/{group}/websocket",
 		Headers:     ign.AuthHeadersRequired,
-		Methods:     ign.Methods{
+		Methods: ign.Methods{
 			// swagger:route GET /simulations/{group}/websocket simulations websocket
 			//
 			// Gets a simulation's websocket server address and authorization token
@@ -516,68 +521,6 @@ var Routes ign.Routes = ign.Routes{
 		},
 	},
 
-	// Extra route to access nodes and their associated hosts
-	ign.Route{
-		Name:        "Remove Nodes and Hosts associated to a group",
-		Description: "Deletes cluster nodes and terminates the instances associated to a given Cloudsim GroupID",
-		URI:         "/k8/nodes",
-		Headers:     ign.AuthHeadersRequired,
-		Methods:     ign.Methods{},
-		SecureMethods: ign.SecureMethods{
-			// swagger:route DELETE /k8/nodes k8 deleteNodesAndHosts
-			//
-			// Deletes a set of nodes and hosts (instances) associated to a GroupID
-			//
-			//   Produces:
-			//   - application/json
-			//
-			//   Schemes: https
-			//
-			//   Responses:
-			//     default: Error
-			//     200: string
-			ign.Method{
-				Type:        "DELETE",
-				Description: "terminates nodes and instances associated to a given groupid",
-				Handlers: ign.FormatHandlers{
-					ign.FormatHandler{Handler: ign.JSONResultNoTx(WithUser(DeleteNodesAndHosts))},
-				},
-			},
-		},
-	},
-
-	// Extra route to count the pods in a k8 cluster
-	ign.Route{
-		Name:        "Checks the access to k8 cluster and return the count of running pods",
-		Description: "Checks the access to k8 cluster and return the count of running pods",
-		URI:         "/k8/countpods",
-		Headers:     ign.AuthHeadersRequired,
-		Methods:     ign.Methods{},
-		SecureMethods: ign.SecureMethods{
-			// swagger:route GET /k8/countpods k8 countPods
-			//
-			// Checks the access to k8 cluster and return the count of running pods.
-			// It is used mainly as a test route to ensure the server has correct configuration
-			// to access the k8 cluster.
-			//
-			//   Produces:
-			//   - application/json
-			//
-			//   Schemes: https
-			//
-			//   Responses:
-			//     default: Error
-			//     200: string
-			ign.Method{
-				Type:        "GET",
-				Description: "Checks the access to k8 cluster and return the count of running pods",
-				Handlers: ign.FormatHandlers{
-					ign.FormatHandler{Handler: ign.JSONResult(WithUser(CountPods))},
-				},
-			},
-		},
-	},
-
 	//////////////
 	//	Queue	//
 	//////////////
@@ -702,6 +645,33 @@ var Routes ign.Routes = ign.Routes{
 			},
 		},
 	},
+
+	/////////////////////
+	ign.Route{
+		Name:        "Debug",
+		Description: "Debug multi region support",
+		URI:         "/debug/{groupID}",
+		Headers:     ign.AuthHeadersRequired,
+		Methods:     ign.Methods{},
+		SecureMethods: ign.SecureMethods{
+			ign.Method{
+				Type:        "GET",
+				Description: "Debug websocket messages",
+				Handlers: ign.FormatHandlers{
+					ign.FormatHandler{
+						Extension: "",
+						Handler:   ign.JSONResult(WithUser(Debug)),
+					},
+				},
+			},
+		},
+	},
+}
+
+// Debug is a debug endpoint to get internal state information about a simulation.
+func Debug(user *users.User, tx *gorm.DB, w http.ResponseWriter, r *http.Request) (interface{}, *ign.ErrMsg) {
+	gid := mux.Vars(r)["groupID"]
+	return SimServImpl.Debug(user, simulations.GroupID(gid))
 }
 
 // MonitoringRoutes contains the different routes used for service monitoring.

@@ -5,46 +5,14 @@ import (
 	"encoding/json"
 	"errors"
 	"gitlab.com/ignitionrobotics/web/cloudsim/globals"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/email"
 	"gitlab.com/ignitionrobotics/web/ign-go"
 )
-
-// SendEmail sends an email to a specific recipient. If the recipient is nil,
-// then the default recipient defined in the IGN_FLAGS_EMAIL_TO env var will be
-// used.
-func SendEmail(recipient *[]string, sender *string, subject string, templateFilename string,
-	templateData interface{}) *ign.ErrMsg {
-	if recipient == nil {
-		recipient = &globals.DefaultEmailRecipients
-	}
-	if sender == nil {
-		sender = &globals.DefaultEmailSender
-	}
-	// If the sender or recipient are not defined, then don't send the email
-	if (recipient != nil && len(*recipient) == 0) || (sender != nil && *sender == "") {
-		return nil
-	}
-
-	// Prepare the template
-	content, err := ign.ParseHTMLTemplate(templateFilename, templateData)
-	if err != nil {
-		return ign.NewErrorMessageWithBase(ign.ErrorUnexpected, err)
-	}
-
-	// Send the email
-	for _, r := range *recipient {
-		err = ign.SendEmail(*sender, r, subject, content)
-		if err != nil {
-			return ign.NewErrorMessageWithBase(ign.ErrorUnexpected, err)
-		}
-	}
-
-	return nil
-}
 
 // SendSimulationSummaryEmail sends a summary email to the user that created the simulation
 // `summary` contains summary information for the run. It should be passed for all types of simulation.
 // `runData` contains specific simulation run information. It should only be passed for single sims.
-func SendSimulationSummaryEmail(dep *SimulationDeployment, summary AggregatedSubTSimulationValues,
+func SendSimulationSummaryEmail(e email.Sender, dep *SimulationDeployment, summary AggregatedSubTSimulationValues,
 	runData *string) *ign.ErrMsg {
 
 	// Do not send emails for simulations that have already been processed
@@ -102,8 +70,9 @@ func SendSimulationSummaryEmail(dep *SimulationDeployment, summary AggregatedSub
 		}
 	}
 
-	if em := SendEmail(&recipients, nil, "Simulation summary", templateFilename, templateData); em != nil {
-		return em
+	err = e.Send(recipients, globals.DefaultEmailSender, "Simulation summary", templateFilename, templateData)
+	if err != nil {
+		return ign.NewErrorMessageWithBase(ign.ErrorUnexpected, err)
 	}
 
 	return nil

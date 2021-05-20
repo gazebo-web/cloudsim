@@ -33,6 +33,13 @@ spec:
                   fieldPath: status.podIP
           envFrom:
             - configMapRef:
-                name: cloudsim-config
+                name: env-vars
+          volumeMounts:
+            - name: config
+              mountPath: /etc/cloudsim/
+      volumes:
+        - name: config
+          configMap:
+            name: config
       nodeSelector:
         server: "true"
