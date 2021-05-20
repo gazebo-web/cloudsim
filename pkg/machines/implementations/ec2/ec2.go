@@ -58,10 +58,14 @@ const (
 
 var (
 	// retryableErrors contains a list of errors that this component will wrap with RetryableErr if returned.
+	// Currently, all errors are considered retryable as it is assumed that any error returned by the EC2 instance
+	// provided is a temporary issue on their side (out of capacity, temporary outage, etc.) and simply retrying will
+	// eventually return a valid set of machines.
 	retryableErrors = []error{
 		machines.ErrInsufficientMachines,
 		machines.ErrRequestsLimitExceeded,
 		machines.ErrExternalServiceError,
+		machines.ErrUnknown,
 	}
 )
 

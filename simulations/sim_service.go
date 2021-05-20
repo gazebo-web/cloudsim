@@ -16,6 +16,7 @@ import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/application"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/loader"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/machines"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/components/pods"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/resource"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/resource/phase"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/platform"
@@ -449,12 +450,23 @@ func (s *Service) GetApplications() map[string]ApplicationType {
 	return s.applications
 }
 
+// validateRunningSimulationPod verifies that a pod is in a state that allows a running simulation to be considered
+// valid.
+// TODO: This logic is SubT-specific and should be delegated to each application.
+func (s *Service) validateRunningSimulationPod(pod *pods.PodResource) bool {
+	podName := pod.Name()
+	// isCritical determines if the pod failing is a showstopper
+	isCritical := strings.Contains(podName, subtTypeGazebo) || strings.Contains(podName, "-copy")
+
+	return pod.Phase() == phase.Running || !isCritical
+}
+
 // initializeRunningSimulationsFromCluster finds the existing Pods in the Kubernetes
 // cluster and initializes the internal set of runningSimulations.
 // Note: after a server restart there can be inconsistencies between DB data and
 // live kubecli. This function is not responsible for sanitizing such inconsistencies.
-// TODO: There should be another call for SystemAdmins to list inconsistencies and allow them
-// to act on those.
+// TODO: This logic should be initiated from the application specific and have ways of receiving application validation
+// logic.
 func (s *Service) initializeRunningSimulationsFromCluster(ctx context.Context, tx *gorm.DB) error {
 	// First, filter the simulations that have all its Pods with status PodRunning.
 	// Keep in mind that a simulation could have spawned multiple Pods.
@@ -489,9 +501,7 @@ func (s *Service) initializeRunningSimulationsFromCluster(ctx context.Context, t
 				running = true
 			}
 			// is the current pod running. Update the whole simulation running status based on that.
-			running = running && (pod.Phase() == phase.Running)
-			runningSims[groupID] = running
-
+			runningSims[groupID] = running && s.validateRunningSimulationPod(&pod)
 		}
 	}
 
@@ -1427,7 +1437,7 @@ func (s *Service) createRunningSimulation(ctx context.Context, tx *gorm.DB, dep 
 		return err
 	}
 
-	worldStatsTopic, maxSimSeconds, err := s.getGazeboWorldStatsTopicAndLimit(ctx, tx, dep)
+	_, maxSimSeconds, err := s.getGazeboWorldStatsTopicAndLimit(ctx, tx, dep)
 	if err != nil {
 		return err
 	}
@@ -1446,13 +1456,6 @@ func (s *Service) createRunningSimulation(ctx context.Context, tx *gorm.DB, dep 
 	}
 
 	rs := runsim.NewRunningSimulation(dep.GetGroupID(), int64(maxSimSeconds), dep.GetValidFor())
-
-	err = t.Subscribe(worldStatsTopic, func(message transport.Message) {
-		_ = rs.ReadWorldStats(context.Background(), message)
-	})
-	if err != nil {
-		return err
-	}
 
 	err = t.Subscribe(worldWarmupTopic, func(message transport.Message) {
 		_ = rs.ReadWarmup(context.Background(), message)

@@ -4,6 +4,10 @@ import (
 	"fmt"
 	"github.com/jinzhu/gorm"
 	"github.com/stretchr/testify/assert"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/components/pods"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/resource"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/resource/phase"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/resource/timestamp"
 	useracc "gitlab.com/ignitionrobotics/web/cloudsim/pkg/users"
 	gormUtils "gitlab.com/ignitionrobotics/web/cloudsim/pkg/utils/db/gorm"
 	"gitlab.com/ignitionrobotics/web/fuelserver/bundles/users"
@@ -167,4 +171,46 @@ func (f *fakeUserAccessorPrivateSimulations) IsAuthorizedForResource(user string
 		return true, nil
 	}
 	return false, ign.NewErrorMessage(ign.ErrorUnauthorized)
+}
+
+func TestService_validateRunningSimulationPod(t *testing.T) {
+	s := &Service{}
+
+	createPodResource := func(podName string, podPhase phase.Phase) *pods.PodResource {
+		return &pods.PodResource{
+			Resource:          resource.NewResource(podName, "test", resource.NewSelector(nil)),
+			ResourcePhase:     phase.NewResourcePhase(podPhase),
+			ResourceTimestamp: timestamp.NewResourceTimestamp(time.Now(), nil),
+		}
+	}
+
+	// Gazebo pod
+	result := s.validateRunningSimulationPod(createPodResource("sim-abcd-gzserver", phase.Running))
+	assert.Equal(t, true, result)
+	result = s.validateRunningSimulationPod(createPodResource("sim-abcd-gzserver", phase.Error))
+	assert.Equal(t, false, result)
+
+	// Gazebo copy pod
+	result = s.validateRunningSimulationPod(createPodResource("sim-abcd-gzserver-copy", phase.Running))
+	assert.Equal(t, true, result)
+	result = s.validateRunningSimulationPod(createPodResource("sim-abcd-gzserver-copy", phase.Evicted))
+	assert.Equal(t, false, result)
+
+	// Comms-bridge pod
+	result = s.validateRunningSimulationPod(createPodResource("sim-abcd-comms-rbt1", phase.Running))
+	assert.Equal(t, true, result)
+	result = s.validateRunningSimulationPod(createPodResource("sim-abcd-comms-rbt1", phase.Evicted))
+	assert.Equal(t, true, result)
+
+	// Comms-bridge copy pod
+	result = s.validateRunningSimulationPod(createPodResource("sim-abcd-comms-rbt1-copy", phase.Running))
+	assert.Equal(t, true, result)
+	result = s.validateRunningSimulationPod(createPodResource("sim-abcd-comms-rbt1-copy", phase.Evicted))
+	assert.Equal(t, false, result)
+
+	// FC pod
+	result = s.validateRunningSimulationPod(createPodResource("sim-abcd-fc-rbt1", phase.Running))
+	assert.Equal(t, true, result)
+	result = s.validateRunningSimulationPod(createPodResource("sim-abcd-fc-rbt1", phase.Evicted))
+	assert.Equal(t, true, result)
 }

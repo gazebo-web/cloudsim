@@ -20,10 +20,7 @@ var RemoveRunningSimulation = &actions.Job{
 func removeRunningSimulation(store actions.Store, tx *gorm.DB, deployment *actions.Deployment, value interface{}) (interface{}, error) {
 	s := store.State().(*state.StopSimulation)
 
-	err := s.Platform().RunningSimulations().Remove(s.GroupID)
-	if err != nil {
-		return nil, err
-	}
+	_ = s.Platform().RunningSimulations().Remove(s.GroupID)
 
 	return s, nil
 }

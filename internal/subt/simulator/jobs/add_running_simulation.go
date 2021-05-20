@@ -58,13 +58,6 @@ func addRunningSimulation(store actions.Store, tx *gorm.DB, deployment *actions.
 	// Initialize a new RunningSimulation.
 	rs := runsim.NewRunningSimulation(s.GroupID, int64(t.MaxSimSeconds), sim.GetValidFor())
 
-	err = s.WebsocketConnection.Subscribe(t.StatsTopic, func(message transport.Message) {
-		_ = rs.ReadWorldStats(context.Background(), message)
-	})
-	if err != nil {
-		return nil, err
-	}
-
 	err = s.WebsocketConnection.Subscribe(t.WarmupTopic, func(message transport.Message) {
 		_ = rs.ReadWarmup(context.Background(), message)
 	})

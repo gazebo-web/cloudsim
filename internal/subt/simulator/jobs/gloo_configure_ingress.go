@@ -63,12 +63,12 @@ func rollbackGlooIngress(store actions.Store, tx *gorm.DB, dep *actions.Deployme
 
 	resource, err := s.Platform().Orchestrator().Ingresses().Get(name, ns)
 	if err != nil {
-		return nil, err
+		return nil, nil
 	}
 
 	rule, err := s.Platform().Orchestrator().IngressRules().Get(resource, host)
 	if err != nil {
-		return nil, err
+		return nil, nil
 	}
 
 	matcher := gloo.GenerateRegexMatcher(application.GetSimulationIngressPath(s.GroupID))
