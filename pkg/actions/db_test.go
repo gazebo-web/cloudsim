@@ -23,14 +23,14 @@ type storeTestData struct {
 func setupTest(t *testing.T) *TestResource {
 	ctx := context.Background()
 	logger := ign.LoggerFromContext(ctx)
-	db, err := gormUtils.GetDBFromEnvVars()
+	db, err := gormUtils.GetTestDBFromEnvVars()
 
 	if err != nil {
 		t.Fatalf("Could not connect to database: %s", err)
 	}
 
 	// Migrate the action models
-	err = migrateDB(db)
+	err = CleanAndMigrateDB(db)
 	if err != nil {
 		t.Fatalf("Could not migrate actions database models: %s", err)
 	}

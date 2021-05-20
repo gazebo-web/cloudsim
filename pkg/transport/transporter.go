@@ -4,5 +4,5 @@ package transport
 type Transporter interface {
 	Connect() error
 	IsConnected() bool
-	Disconnect()
+	Disconnect() error
 }
