@@ -24,6 +24,9 @@ spec:
         - name: $APPLICATION_NAME
           image: $CONTAINER_IMAGE
           imagePullPolicy: Always
+          resources:
+            limits:
+              cpu: "3.725"
           ports:
             - containerPort: 8001
           env:
