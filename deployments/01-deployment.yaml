@@ -42,4 +42,4 @@ spec:
           configMap:
             name: config
       nodeSelector:
-        server: "true"
+        cloudsim: "true"
