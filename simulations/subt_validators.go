@@ -899,12 +899,12 @@ func loadSubTRobotTypes(cfg *subTSpecificsConfig) {
 			"CTU_CRAS_NORLAB_ABSOLEM_SENSOR_CONFIG_8",
 			180,
 		),
-		"MARBLE_HUSKY_SENSOR_CONFIG_6": generateSubTRobotType(
+		"MARBLE_HUSKY_SENSOR_CONFIG_5": generateSubTRobotType(
 			cfg,
 			"openrobotics",
-			"MARBLE_HUSKY_SENSOR_CONFIG_6",
+			"MARBLE_HUSKY_SENSOR_CONFIG_5",
 			"HUSKY",
-			"MARBLE_HUSKY_SENSOR_CONFIG_6",
+			"MARBLE_HUSKY_SENSOR_CONFIG_5",
 			255,
 		),
 		"ROBOTIKA_KLOUBAK_SENSOR_CONFIG_3": generateSubTRobotType(
