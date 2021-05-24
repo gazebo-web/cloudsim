@@ -151,3 +151,40 @@ func CommsBridge(config CommsBridgeConfig) ([]string, error) {
 		fmt.Sprintf("marsupial:=%t", config.ChildMarsupial),
 	}, nil
 }
+
+// MapAnalysisConfig has the fields needed to configure a Mapping server container.
+type MapAnalysisConfig struct {
+	// World is a gazebo world with parameters.
+	// Example:
+	// 	"tunnel_circuit_practice.ign;worldName:=tunnel_circuit_practice_01"
+	World string
+
+	// Robots includes the information about all simulation robots.
+	Robots []simulations.Robot
+}
+
+// MapAnalysis generates a set of arguments to configure the Mapping server container.
+func MapAnalysis(config MapAnalysisConfig) ([]string, error) {
+	params := strings.Split(config.World, ";")
+	var worldNameParam string
+	for _, param := range params {
+		if strings.Index(param, "worldName:=") != -1 {
+			worldNameParam = param
+			break
+		}
+	}
+
+	if worldNameParam == "" {
+		return nil, ErrEmptyWorld
+	}
+
+	pdc := fmt.Sprintf("pdc:=%s.pdc", worldNameParam)
+	gt := fmt.Sprintf("gt:=%s.csv", worldNameParam)
+
+	robots := make([]string, len(config.Robots))
+	for i, r := range config.Robots {
+		robots[i] = fmt.Sprintf("robot:=%s", r.GetName())
+	}
+
+	return append([]string{pdc, gt}, robots...), nil
+}
