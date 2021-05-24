@@ -42,6 +42,21 @@ func GetEnvVarsFromSourceFieldComputer() map[string]string {
 	}
 }
 
+// GetEnvVarsMappingServer returns the env vars for the mapping server container.
+func GetEnvVarsMappingServer(groupID simulations.GroupID) map[string]string {
+	return map[string]string{
+		"IGN_PARTITION":  groupID.String(),
+		"ROS_MASTER_URI": "http://$(ROS_IP):11311",
+	}
+}
+
+// GetEnvVarsFromSourceMappingServer returns the env vars for the mapping server container from a certain source.
+func GetEnvVarsFromSourceMappingServer() map[string]string {
+	return map[string]string{
+		"ROS_IP": pods.EnvVarSourcePodIP,
+	}
+}
+
 // GetEnvVarsCommsBridgeCopy returns the env vars for the comms-bridge-copy container.
 func GetEnvVarsCommsBridgeCopy(region, accessKey, secret string) map[string]string {
 	return map[string]string{
