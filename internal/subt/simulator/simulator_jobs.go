@@ -22,6 +22,7 @@ var JobsStartSimulation = actions.Jobs{
 	jobs.WaitForGazeboServerPod,
 	jobs.GetGazeboIP,
 	jobs.LaunchGazeboServerCopyPod,
+	jobs.LaunchMappingServerPod,
 	jobs.LaunchWebsocketService,
 	jobs.WaitUpstream,
 	jobs.ConfigureIngressGloo,
