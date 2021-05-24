@@ -75,6 +75,11 @@ func GetContainerNameGazeboServerCopy() string {
 	return "copy-to-s3"
 }
 
+// GetContainerNameMappingServer returns the mapping server container name.
+func GetContainerNameMappingServer() string {
+	return "mapping-server"
+}
+
 // GetSimulationIngressPath gets the path to the gzserver websocket server for a certain simulation.
 func GetSimulationIngressPath(groupID simulations.GroupID) string {
 	return fmt.Sprintf("/simulations/%s", groupID.String())
