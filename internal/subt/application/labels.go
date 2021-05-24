@@ -14,6 +14,7 @@ const (
 	labelRobotName           = "robot_name"
 	labelGazeboServer        = "gzserver"
 	labelCommsBridge         = "comms-bridge"
+	labelMappingServer       = "mapping-server"
 	labelCommsBridgeForRobot = "comms-for-robot"
 	labelCopyS3              = "copy-to-s3"
 	labelCopyForRobot        = "copy-for-robot"
@@ -114,4 +115,13 @@ func GetWebsocketServiceLabels(groupID simulations.GroupID) resource.Selector {
 	return resource.NewSelector(map[string]string{
 		labelPodGroupID: groupID.String(),
 	})
+}
+
+// GetPodLabelsMappingServer returns a selector that identifies a mapping server pod pod.
+func GetPodLabelsMappingServer(groupID simulations.GroupID, parent *simulations.GroupID) resource.Selector {
+	base := GetPodLabelsBase(groupID, parent)
+	ext := resource.NewSelector(map[string]string{
+		labelMappingServer: "true",
+	})
+	return base.Extend(ext)
 }
