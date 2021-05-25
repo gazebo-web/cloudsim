@@ -6,6 +6,28 @@ import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
 )
 
+// GetEnvVarsGazeboServer returns the env vars for the gazebo server container.
+func GetEnvVarsGazeboServer(groupID simulations.GroupID, ip string, verbosity string) map[string]string {
+	return map[string]string{
+		"DISPLAY":          ":0",
+		"QT_X11_NO_MITSHM": "1",
+		"XAUTHORITY":       "/tmp/.docker.xauth",
+		"USE_XVFB":         "1",
+		"IGN_RELAY":        ip, // IP Cloudsim
+		"IGN_PARTITION":    groupID.String(),
+		"IGN_VERBOSE":      verbosity,
+		"ROS_MASTER_URI":   "http://$(ROS_IP):11311",
+	}
+}
+
+// GetEnvVarsFromSourceGazeboServer returns the env vars that need to be configured from a certain source for the gazebo
+// server container.
+func GetEnvVarsFromSourceGazeboServer() map[string]string {
+	return map[string]string{
+		"IGN_IP": pods.EnvVarSourcePodIP,
+	}
+}
+
 // GetEnvVarsCommsBridge returns the env vars for the comms-bridge container.
 func GetEnvVarsCommsBridge(groupID simulations.GroupID, robotName, gzServerIP, verbosity string) map[string]string {
 	return map[string]string{

@@ -101,16 +101,6 @@ func prepareGazeboCreatePodInput(store actions.Store, tx *gorm.DB, deployment *a
 		},
 	}
 
-	envVars := map[string]string{
-		"DISPLAY":          ":0",
-		"QT_X11_NO_MITSHM": "1",
-		"XAUTHORITY":       "/tmp/.docker.xauth",
-		"USE_XVFB":         "1",
-		"IGN_RELAY":        s.Platform().Store().Ignition().IP(), // IP Cloudsim
-		"IGN_PARTITION":    string(s.GroupID),
-		"IGN_VERBOSE":      s.Platform().Store().Ignition().Verbosity(),
-	}
-
 	nameservers := s.Platform().Store().Orchestrator().Nameservers()
 
 	return jobs.LaunchPodsInput{
@@ -130,7 +120,12 @@ func prepareGazeboCreatePodInput(store actions.Store, tx *gorm.DB, deployment *a
 					AllowPrivilegeEscalation: &allowPrivilegeEscalation,
 					Ports:                    ports,
 					Volumes:                  volumes,
-					EnvVars:                  envVars,
+					EnvVarsFrom:              subtapp.GetEnvVarsFromSourceGazeboServer(),
+					EnvVars: subtapp.GetEnvVarsGazeboServer(
+						s.GroupID,
+						s.Platform().Store().Ignition().IP(),
+						s.Platform().Store().Ignition().Verbosity(),
+					),
 				},
 			},
 			Volumes:     volumes,
