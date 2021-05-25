@@ -24,6 +24,7 @@ func GetEnvVarsGazeboServer(groupID simulations.GroupID, ip string, verbosity st
 // server container.
 func GetEnvVarsFromSourceGazeboServer() map[string]string {
 	return map[string]string{
+		"ROS_IP": pods.EnvVarSourcePodIP,
 		"IGN_IP": pods.EnvVarSourcePodIP,
 	}
 }
@@ -67,7 +68,6 @@ func GetEnvVarsFromSourceFieldComputer() map[string]string {
 // GetEnvVarsMappingServer returns the env vars for the mapping server container.
 func GetEnvVarsMappingServer(groupID simulations.GroupID, gzServerIP string) map[string]string {
 	return map[string]string{
-		"IGN_PARTITION":  groupID.String(),
 		"ROS_MASTER_URI": fmt.Sprintf("http://%s:11311", gzServerIP),
 	}
 }

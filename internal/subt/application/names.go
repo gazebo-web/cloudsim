@@ -40,7 +40,7 @@ func GetPodNameGazeboServer(groupID simulations.GroupID) string {
 
 // GetPodNameMappingServer is used to generate the name for the mapping server pod.
 func GetPodNameMappingServer(groupID simulations.GroupID) string {
-	return fmt.Sprintf("%s-%s-mapping", simPrefix, groupID)
+	return fmt.Sprintf("%s-%s-map-server", simPrefix, groupID)
 }
 
 // GetRobotID returns a robot identification name in the following form:
