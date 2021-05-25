@@ -55,6 +55,11 @@ func prepareMappingCreatePodInput(store actions.Store, tx *gorm.DB, deployment *
 		return nil, err
 	}
 
+	// By-pass job if mapping image is not defined.
+	if track.MappingImage == nil {
+		return nil, nil
+	}
+
 	// Generate mapping server command args
 	runCommand, err := cmdgen.MapAnalysis(cmdgen.MapAnalysisConfig{
 		World:  track.World,
@@ -82,7 +87,7 @@ func prepareMappingCreatePodInput(store actions.Store, tx *gorm.DB, deployment *
 			Containers: []pods.Container{
 				{
 					Name:                     subtapp.GetContainerNameMappingServer(),
-					Image:                    "subt/map_analysis:latest",
+					Image:                    *track.MappingImage,
 					Args:                     runCommand,
 					Privileged:               &privileged,
 					AllowPrivilegeEscalation: &allowPrivilegeEscalation,
