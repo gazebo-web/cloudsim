@@ -54,33 +54,31 @@ func (s *managerTestSuite) TestAdd() {
 }
 
 func (s *managerTestSuite) TestListExpiredSimulations() {
-	// We add a running simulation before running tests.
-	rs := RunningSimulation{
-		SimTimeSeconds:       0,
-		SimWarmupSeconds:     5,
-		SimMaxAllowedSeconds: 90,
-		MaxValidUntil:        time.Now().Add(1 * time.Hour),
+	notExpired := RunningSimulation{
+		MaxValidUntil: time.Now().Add(1 * time.Hour),
 	}
-	s.manager.runningSimulations["test"] = &rs
+	expired := RunningSimulation{
+		MaxValidUntil: time.Now().Add(-1 * time.Hour),
+	}
 
-	// The running simulation isn't not expired yet
+	// No running simulations have expired yet
+	s.manager.runningSimulations["a"] = &notExpired
+	s.manager.runningSimulations["b"] = &notExpired
+	s.manager.runningSimulations["c"] = &notExpired
 	s.Assert().Len(s.manager.ListExpiredSimulations(), 0)
 
-	// We force the running simulation to be expired
-	rs.SimTimeSeconds += 100
-
-	// Now listing expired simulations returns an entry.
-	s.Assert().Len(s.manager.ListExpiredSimulations(), 1)
+	// Some running simulations have expired
+	s.manager.runningSimulations["a"] = &notExpired
+	s.manager.runningSimulations["b"] = &expired
+	s.manager.runningSimulations["c"] = &expired
+	s.Assert().Len(s.manager.ListExpiredSimulations(), 2)
 }
 
 func (s *managerTestSuite) TestListFinishedSimulations() {
 	// We add a running simulation before running tests.
 	rs := RunningSimulation{
-		SimTimeSeconds:       0,
-		SimWarmupSeconds:     5,
-		SimMaxAllowedSeconds: 90,
-		Finished:             false,
-		MaxValidUntil:        time.Now().Add(1 * time.Hour),
+		Finished:      false,
+		MaxValidUntil: time.Now().Add(1 * time.Hour),
 	}
 	s.manager.runningSimulations["test"] = &rs
 
@@ -110,14 +108,7 @@ func (s *managerTestSuite) TestFree() {
 	t := ignws.NewPubSubTransporterMock()
 	rs := RunningSimulation{publishing: true, Transport: t}
 
-	// First returns true
-	t.On("IsConnected").Once().Return(true)
-
-	// After the transporter gets disconnected, return false.
-	t.On("IsConnected").Once().Return(false)
-
-	// Disconnect should be called only once.
-	t.On("Disconnect").Once()
+	t.On("Disconnect").Return(error(nil))
 
 	s.manager.runningSimulations["test"] = &rs
 
@@ -138,16 +129,11 @@ func (s *managerTestSuite) TestRemove() {
 
 	s.manager.runningSimulations["test"] = &rs
 
-	// We should not be able to remove a simulation that has a connection.
-	t.On("IsConnected").Once().Return(true)
+	// If the simulation needs to be removed, Disconnect should be called to ensure it's disconnected first.
+	t.On("Disconnect").Return(error(nil))
+
+	// Removing a running simulation should not return errors.
 	err := s.manager.Remove("test")
-	s.Assert().Error(err)
-
-	// But if the simulation is not longer connected
-	t.On("IsConnected").Once().Return(false)
-
-	// We can safely remove it from the list of running simulations
-	err = s.manager.Remove("test")
 	s.Assert().NoError(err)
 
 	// Although removing again or if the entry does not exist should return an error.

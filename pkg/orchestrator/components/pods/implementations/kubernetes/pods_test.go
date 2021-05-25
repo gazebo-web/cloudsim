@@ -10,7 +10,6 @@ import (
 	apiv1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes/fake"
-	"k8s.io/kubernetes/pkg/client/conditions"
 	"sync"
 	"testing"
 	"time"
@@ -143,7 +142,6 @@ func TestPods_WaitForPodsErrWhenPodStateSucceeded(t *testing.T) {
 
 	wg.Wait()
 	assert.Error(t, err)
-	assert.Equal(t, conditions.ErrPodCompleted, err)
 }
 
 func TestPods_WaitForPodsErrWhenPodStateFailed(t *testing.T) {
@@ -182,7 +180,6 @@ func TestPods_WaitForPodsErrWhenPodStateFailed(t *testing.T) {
 
 	wg.Wait()
 	assert.Error(t, err)
-	assert.Equal(t, conditions.ErrPodCompleted, err)
 }
 
 func TestPods_CreateSuccess(t *testing.T) {
