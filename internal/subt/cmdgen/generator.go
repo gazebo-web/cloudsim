@@ -166,20 +166,22 @@ type MapAnalysisConfig struct {
 // MapAnalysis generates a set of arguments to configure the Mapping server container.
 func MapAnalysis(config MapAnalysisConfig) ([]string, error) {
 	params := strings.Split(config.World, ";")
-	var worldNameParam string
+	var worldName string
 	for _, param := range params {
 		if strings.Index(param, "worldName:=") != -1 {
-			worldNameParam = param
+			if _, err := fmt.Sscanf(param, "worldName:=%s", worldName); err != nil {
+				return nil, err
+			}
 			break
 		}
 	}
 
-	if worldNameParam == "" {
+	if worldName == "" {
 		return nil, ErrEmptyWorld
 	}
 
-	pdc := fmt.Sprintf("pdc:=%s.pdc", worldNameParam)
-	gt := fmt.Sprintf("gt:=%s.csv", worldNameParam)
+	pdc := fmt.Sprintf("pdc:=%s.pdc", worldName)
+	gt := fmt.Sprintf("gt:=%s.csv", worldName)
 
 	robots := make([]string, len(config.Robots))
 	for i, r := range config.Robots {
