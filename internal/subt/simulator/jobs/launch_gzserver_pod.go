@@ -49,7 +49,7 @@ func prepareGazeboCreatePodInput(store actions.Store, tx *gorm.DB, deployment *a
 	subtSim := sim.(simulations.Simulation)
 
 	// Get track
-	track, err := s.SubTServices().Tracks().Get(subtSim.GetTrack(), subtSim.GetWorldIndex(), 0)
+	track, err := s.SubTServices().Tracks().Get(subtSim.GetTrack(), subtSim.GetWorldIndex(), subtSim.GetRunIndex())
 
 	if err != nil {
 		return nil, err
