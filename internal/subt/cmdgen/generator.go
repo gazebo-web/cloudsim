@@ -169,7 +169,7 @@ func MapAnalysis(config MapAnalysisConfig) ([]string, error) {
 	var worldName string
 	for _, param := range params {
 		if strings.Index(param, "worldName:=") != -1 {
-			if _, err := fmt.Sscanf(param, "worldName:=%s", worldName); err != nil {
+			if _, err := fmt.Sscanf(param, "worldName:=%s", &worldName); err != nil {
 				return nil, err
 			}
 			break
