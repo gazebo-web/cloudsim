@@ -67,7 +67,7 @@ func prepareMoleBridgePodInput(store actions.Store, tx *gorm.DB, deployment *act
 	teamID := 0
 	owner := subtSim.GetOwner()
 	if owner != nil {
-		org, em := s.ServicesGetter.Services().Users().GetOrganization(*owner)
+		org, em := s.Services().Users().GetOrganization(*owner)
 		if em != nil {
 			return nil, em.BaseError
 		}
@@ -100,8 +100,8 @@ func prepareMoleBridgePodInput(store actions.Store, tx *gorm.DB, deployment *act
 					Image:                    track.MoleBridgeImage,
 					Privileged:               &privileged,
 					AllowPrivilegeEscalation: &allowPrivilegesEscalation,
-					EnvVars: envVars,
-					EnvVarsFrom: subtapp.GetEnvVarsFromSourceCommsBridge(),
+					EnvVars:                  envVars,
+					EnvVarsFrom:              subtapp.GetEnvVarsFromSourceCommsBridge(),
 				},
 			},
 			Nameservers: s.Platform().Store().Orchestrator().Nameservers(),
