@@ -4,6 +4,7 @@ import (
 	"github.com/jinzhu/gorm"
 	"github.com/stretchr/testify/suite"
 	subtapp "gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/application"
+	"gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/simulations/fake"
 	"gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/simulator/state"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/actions"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/application"
@@ -11,7 +12,7 @@ import (
 	pods "gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/components/pods/implementations/kubernetes"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/implementations/kubernetes"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/platform"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
+	simpkg "gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
 	simfake "gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations/fake"
 	sfake "gitlab.com/ignitionrobotics/web/cloudsim/pkg/store/implementations/fake"
 	gormdb "gitlab.com/ignitionrobotics/web/cloudsim/pkg/utils/db/gorm"
@@ -35,14 +36,13 @@ type removePodsTestSuite struct {
 	Platform            platform.Platform
 	Namespace           string
 	Store               *sfake.Fake
-	GroupID             simulations.GroupID
+	GroupID             simpkg.GroupID
 	StopSimulationState *state.StopSimulation
 	ActionStore         actions.Store
 	SimulationService   *simfake.Service
 	ApplicationServices subtapp.Services
-	Robots              []simulations.Robot
 	Pods                []corev1.Pod
-	AnotherGroupID      simulations.GroupID
+	AnotherGroupID      simpkg.GroupID
 }
 
 func (s *removePodsTestSuite) SetupTest() {
@@ -151,11 +151,10 @@ func (s *removePodsTestSuite) SetupTest() {
 
 	s.SimulationService = simfake.NewService()
 
-	s.Robots = []simulations.Robot{
-		robot,
-	}
-
-	s.SimulationService.On("GetRobots", s.GroupID).Return(s.Robots, error(nil))
+	sim := fake.NewSimulation(fake.SimulationConfig{
+		GroupID: s.GroupID,
+	})
+	s.SimulationService.On("Get", s.GroupID).Return(sim, nil)
 
 	services := application.NewServices(s.SimulationService, nil)
 
