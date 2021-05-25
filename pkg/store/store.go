@@ -129,14 +129,15 @@ type Ignition interface {
 	GetWebsocketPath(groupID simulations.GroupID) string
 }
 
+// Mole provides configuration values for Mole integration resources.
 type Mole interface {
 	// BridgePulsarAddress returns the address of the Pulsar service the Mole bridge should connect to.
 	BridgePulsarAddress() string
 
-	// BridgePulsarPort returns the port on which the Pulsar service the mole bridge should connect to is running.
+	// BridgePulsarPort returns the port the mole bridge should connect to for the Pulsar service.
 	BridgePulsarPort() int
 
-	// BridgePulsarHTTPPort returns the port on which the HTTP service the mole bridge should connect to is running.
+	// BridgePulsarHTTPPort returns the port the mole bridge should connect to for the Pulsar HTTP service.
 	BridgePulsarHTTPPort() int
 
 	// BridgeTopicRegex returns the regex used by the Mole bridge to filter topics.

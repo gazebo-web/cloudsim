@@ -162,31 +162,31 @@ type Mole struct {
 
 var _ store.Mole = (*Mole)(nil)
 
-// PulsarAddress
+// BridgePulsarAddress returns the address of the Pulsar service the Mole bridge should connect to.
 func (m *Mole) BridgePulsarAddress() string {
 	args := m.Called()
 	return args.String(0)
 }
 
-// MoleBridgePulsarPort returns the port on which the Pulsar service the mole bridge should connect to is running.
+// BridgePulsarPort returns the port on which the Pulsar service the mole bridge should connect to is running.
 func (m *Mole) BridgePulsarPort() int {
 	args := m.Called()
 	return args.Int(0)
 }
 
-// MoleBridgePulsarPort returns the port on which the HTTP service the mole bridge should connect to is running.
+// BridgePulsarHTTPPort returns the port on which the HTTP service the mole bridge should connect to is running.
 func (m *Mole) BridgePulsarHTTPPort() int {
 	args := m.Called()
 	return args.Int(0)
 }
 
-// MoleBridgeTopicRegex returns the regex used by the Mole bridge to filter topics.
+// BridgeTopicRegex returns the regex used by the Mole bridge to filter topics.
 func (m *Mole) BridgeTopicRegex() string {
 	args := m.Called()
 	return args.String(0)
 }
 
-// NewFakeIgnition initializes a fake store.Ignition implementation.
+// NewFakeMole initializes a fake store.Mole implementation.
 func NewFakeMole() *Mole {
 	return &Mole{
 		Mock: new(mock.Mock),

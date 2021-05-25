@@ -74,6 +74,18 @@ func prepareMoleBridgePodInput(store actions.Store, tx *gorm.DB, deployment *act
 		teamID = int(org.ID)
 	}
 
+	envVars := map[string]string{
+		"PYTHONUNBUFFERED":       "0",
+		"CS_PB_PULSAR_IP":        s.Platform().Store().Mole().BridgePulsarAddress(),
+		"CS_PB_PULSAR_PORT":      strconv.Itoa(s.Platform().Store().Mole().BridgePulsarPort()),
+		"CS_PB_PULSAR_HTTP_PORT": strconv.Itoa(s.Platform().Store().Mole().BridgePulsarHTTPPort()),
+		"CS_PB_TOPIC_REGEX":      s.Platform().Store().Mole().BridgeTopicRegex(),
+		"ROS_MASTER_URI":         fmt.Sprintf("http://%s:11311", s.GazeboServerIP),
+		"WORLD_ID":               strconv.Itoa(worldIndex + 1),
+		"TEAM_ID":                strconv.Itoa(teamID),
+		"REPLICATION_ID":         string(s.GroupID),
+	}
+
 	podInputs := []pods.CreatePodInput{
 		{
 			Name:                          subtapp.GetPodNameMoleBridge(s.GroupID),
@@ -88,17 +100,7 @@ func prepareMoleBridgePodInput(store actions.Store, tx *gorm.DB, deployment *act
 					Image:                    track.MoleBridgeImage,
 					Privileged:               &privileged,
 					AllowPrivilegeEscalation: &allowPrivilegesEscalation,
-					EnvVars: map[string]string{
-						"PYTHONUNBUFFERED":       "0",
-						"CS_PB_PULSAR_IP":        s.Platform().Store().Mole().BridgePulsarAddress(),
-						"CS_PB_PULSAR_PORT":      strconv.Itoa(s.Platform().Store().Mole().BridgePulsarPort()),
-						"CS_PB_PULSAR_HTTP_PORT": strconv.Itoa(s.Platform().Store().Mole().BridgePulsarHTTPPort()),
-						"CS_PB_TOPIC_REGEX":      s.Platform().Store().Mole().BridgeTopicRegex(),
-						"ROS_MASTER_URI":         fmt.Sprintf("http://%s:11311", s.GazeboServerIP),
-						"WORLD_ID":               strconv.Itoa(worldIndex + 1),
-						"TEAM_ID":                strconv.Itoa(teamID),
-						"REPLICATION_ID":         string(s.GroupID),
-					},
+					EnvVars: envVars,
 					EnvVarsFrom: subtapp.GetEnvVarsFromSourceCommsBridge(),
 				},
 			},

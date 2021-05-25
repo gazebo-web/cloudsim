@@ -9,16 +9,16 @@ import (
 
 // moleStore is a store.Mole implementation.
 type moleStore struct {
-	// PulsarAddress returns the address of the Pulsar service the Mole bridge should connect to.
+	// BridgePulsarAddressValue returns the address of the Pulsar service the Mole bridge should connect to.
 	BridgePulsarAddressValue string `validate:"required"`
 
-	// MoleBridgePulsarPort returns the port on which the Pulsar service the mole bridge should connect to is running.
+	// BridgePulsarPortValue returns the port on which the Pulsar service the mole bridge should connect to is running.
 	BridgePulsarPortValue int `default:"6650"`
 
-	// MoleBridgePulsarPort returns the port on which the HTTP service the mole bridge should connect to is running.
+	// BridgePulsarHTTPPortValue returns the port on which the HTTP service the mole bridge should connect to is running.
 	BridgePulsarHTTPPortValue int `default:"8080"`
 
-	// MoleBridgeTopicRegex returns the regex used by the Mole bridge to filter topics.
+	// BridgeTopicRegexValue returns the regex used by the Mole bridge to filter topics.
 	BridgeTopicRegexValue string `default:"^subt/"`
 }
 
@@ -42,7 +42,7 @@ func (m *moleStore) BridgePulsarHTTPPort() int {
 	return m.BridgePulsarHTTPPortValue
 }
 
-// LogsBucket returns the bucket to upload simulation logs to.
+// BridgeTopicRegex returns the regex used by the Mole bridge to filter topics.
 func (m *moleStore) BridgeTopicRegex() string {
 	return m.BridgeTopicRegexValue
 }
