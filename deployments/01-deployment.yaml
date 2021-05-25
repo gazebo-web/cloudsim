@@ -24,6 +24,11 @@ spec:
         - name: $APPLICATION_NAME
           image: $CONTAINER_IMAGE
           imagePullPolicy: Always
+          resources:
+            limits:
+              cpu: "3.725"
+            requests:
+              cpu: "0.5"
           ports:
             - containerPort: 8001
           env:
@@ -42,4 +47,4 @@ spec:
           configMap:
             name: config
       nodeSelector:
-        server: "true"
+        cloudsim: "true"
