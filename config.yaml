@@ -286,6 +286,8 @@ platforms:
               <<: *machinesStore
             ignitionStore:
               <<: *ignitionStore
+            moleStore:
+              <<: *moleStore
             orchestratorStore:
               <<: *orchestratorStore
         secrets:
@@ -331,6 +333,8 @@ platforms:
 #              <<: *machinesStore
 #            ignitionStore:
 #              <<: *ignitionStore
+#            moleStore:
+#              <<: *moleStore
 #            orchestratorStore:
 #              <<: *orchestratorStore
 #        secrets:
