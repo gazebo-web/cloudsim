@@ -68,7 +68,9 @@ func GetEnvVarsFromSourceFieldComputer() map[string]string {
 // GetEnvVarsMappingServer returns the env vars for the mapping server container.
 func GetEnvVarsMappingServer(groupID simulations.GroupID, gzServerIP string) map[string]string {
 	return map[string]string{
-		"ROS_MASTER_URI": fmt.Sprintf("http://%s:11311", gzServerIP),
+		"IGN_PARTITION":  groupID.String(),
+		"IGN_RELAY":      gzServerIP,
+		"ROS_MASTER_URI": "http://$(ROS_IP):11311",
 	}
 }
 
@@ -76,6 +78,7 @@ func GetEnvVarsMappingServer(groupID simulations.GroupID, gzServerIP string) map
 func GetEnvVarsFromSourceMappingServer() map[string]string {
 	return map[string]string{
 		"ROS_IP": pods.EnvVarSourcePodIP,
+		"IGN_IP": pods.EnvVarSourcePodIP,
 	}
 }
 

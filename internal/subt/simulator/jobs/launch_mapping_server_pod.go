@@ -93,7 +93,7 @@ func prepareMappingCreatePodInput(store actions.Store, tx *gorm.DB, deployment *
 					AllowPrivilegeEscalation: &allowPrivilegeEscalation,
 					Ports:                    ports,
 					EnvVarsFrom:              subtapp.GetEnvVarsFromSourceMappingServer(),
-					EnvVars:                  subtapp.GetEnvVarsMappingServer(s.GroupID, s.GazeboServerIP),
+					EnvVars:                  subtapp.GetEnvVarsMappingServer(s.GroupID),
 				},
 			},
 		},
