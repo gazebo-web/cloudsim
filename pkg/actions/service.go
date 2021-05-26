@@ -141,39 +141,11 @@ func (s *service) Execute(store Store, tx *gorm.DB, executeInput ExecuteInputer,
 
 	// Process the sequence of jobs
 	if deployment.isRunning() {
-		defer func() {
-			// Recover from panics when processing jobs
-			if r := recover(); r != nil {
-				s.logger.Debug("Running job panic:", r, "\nStack:", string(debug.Stack()))
-				panicErr := fmt.Errorf("running job panic: %s", r)
-				if err == nil {
-					err = panicErr
-				}
-				if errJobError := deployment.addJobError(tx, nil, panicErr); errJobError != nil {
-					err = errJobError
-				}
-			}
-		}()
-
 		err = s.processJobs(store, tx, action, executeInput, jobInput)
 	}
 
 	// Rollback if the deployment has been marked for rollback
 	if deployment.isRollingBack() {
-		defer func() {
-			// Recover from panics when rolling back
-			if r := recover(); r != nil {
-				s.logger.Debug("Rollback panic:", r, "\nStack:", string(debug.Stack()))
-				panicErr := fmt.Errorf("rolling back job panic: %s", r)
-				if err == nil {
-					err = panicErr
-				}
-				if errJobError := deployment.addJobError(tx, nil, panicErr); errJobError != nil {
-					err = errJobError
-				}
-			}
-		}()
-
 		return s.rollback(store, tx, action, executeInput, err)
 	}
 
@@ -190,6 +162,20 @@ func (s *service) processJobs(store Store, tx *gorm.DB, action *Action, executeI
 	// input contains generic execution information necessary such as the action, the deployment and current job index
 	input := executeInput.getExecuteInput()
 	deployment := executeInput.getDeployment()
+
+	// Recover from panics when processing jobs
+	defer func() {
+		if r := recover(); r != nil {
+			s.logger.Debug("Running job panic:", r, "\nStack:", string(debug.Stack()))
+			panicErr := fmt.Errorf("running job panic: %s", r)
+			if err == nil {
+				err = panicErr
+			}
+			if errJobError := deployment.addJobError(tx, nil, panicErr); errJobError != nil {
+				err = errJobError
+			}
+		}
+	}()
 
 	// Mark the deployment for rollback if an error was returned
 	defer func() {
@@ -240,6 +226,20 @@ func (s *service) rollback(store Store, tx *gorm.DB, action *Action, executeInpu
 	// input contains generic execution information necessary such as the action, the deployment and current job index
 	input := executeInput.getExecuteInput()
 	deployment := executeInput.getDeployment()
+
+	// Recover from panics when rolling back
+	defer func() {
+		if r := recover(); r != nil {
+			s.logger.Debug("Rollback panic:", r, "\nStack:", string(debug.Stack()))
+			panicErr := fmt.Errorf("rolling back job panic: %s", r)
+			if err == nil {
+				err = panicErr
+			}
+			if errJobError := deployment.addJobError(tx, nil, panicErr); errJobError != nil {
+				err = errJobError
+			}
+		}
+	}()
 
 	// If err is nil then this rollback is being resumed and the rollback error has to be restored
 	if err == nil {
