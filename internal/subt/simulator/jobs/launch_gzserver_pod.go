@@ -64,6 +64,7 @@ func prepareGazeboCreatePodInput(store actions.Store, tx *gorm.DB, deployment *a
 		MaxWebsocketConnections: 500,
 		Robots:                  subtSim.GetRobots(),
 		Marsupials:              subtSim.GetMarsupials(),
+		RosEnabled:              true,
 	})
 
 	// Set up container configuration
