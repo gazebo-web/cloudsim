@@ -133,18 +133,6 @@ func (s *service) Execute(store Store, tx *gorm.DB, executeInput ExecuteInputer,
 
 	// Change the deployment status to Finished after returning
 	defer func() {
-		// Recover from panics
-		if r := recover(); r != nil {
-			s.logger.Debug("Panic:", r, "\nStack:", string(debug.Stack()))
-			panicErr := fmt.Errorf("panic: %s", r)
-			if err == nil {
-				err = panicErr
-			}
-			if errJobError := deployment.addJobError(tx, nil, panicErr); errJobError != nil {
-				err = errJobError
-			}
-		}
-
 		// Only override the returned error if the Status field fails to update
 		if errSetStatus := deployment.setFinishedStatus(tx); errSetStatus != nil {
 			err = errSetStatus
@@ -153,11 +141,39 @@ func (s *service) Execute(store Store, tx *gorm.DB, executeInput ExecuteInputer,
 
 	// Process the sequence of jobs
 	if deployment.isRunning() {
+		defer func() {
+			// Recover from panics when processing jobs
+			if r := recover(); r != nil {
+				s.logger.Debug("Running job panic:", r, "\nStack:", string(debug.Stack()))
+				panicErr := fmt.Errorf("running job panic: %s", r)
+				if err == nil {
+					err = panicErr
+				}
+				if errJobError := deployment.addJobError(tx, nil, panicErr); errJobError != nil {
+					err = errJobError
+				}
+			}
+		}()
+
 		err = s.processJobs(store, tx, action, executeInput, jobInput)
 	}
 
 	// Rollback if the deployment has been marked for rollback
 	if deployment.isRollingBack() {
+		defer func() {
+			// Recover from panics when rolling back
+			if r := recover(); r != nil {
+				s.logger.Debug("Rollback panic:", r, "\nStack:", string(debug.Stack()))
+				panicErr := fmt.Errorf("rolling back job panic: %s", r)
+				if err == nil {
+					err = panicErr
+				}
+				if errJobError := deployment.addJobError(tx, nil, panicErr); errJobError != nil {
+					err = errJobError
+				}
+			}
+		}()
+
 		return s.rollback(store, tx, action, executeInput, err)
 	}
 
