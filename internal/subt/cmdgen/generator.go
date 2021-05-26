@@ -26,6 +26,7 @@ const (
 	keyRobotConfig           = "robotConfig"
 	keyMarsupial             = "marsupial"
 	keyRos                   = "ros"
+	keyLogPath               = "logPath"
 )
 
 // GazeboConfig includes the information to create the launch command arguments needed to launch gazebo server.
@@ -106,6 +107,8 @@ func Gazebo(params GazeboConfig) []string {
 	}
 
 	cmd = append(cmd, fmt.Sprintf("%s:=%t", keyRos, params.RosEnabled))
+
+	cmd = append(cmd, fmt.Sprintf("%s:=%s", keyLogPath, "/tmp/ign/logs/gazebo"))
 
 	return cmd
 }
