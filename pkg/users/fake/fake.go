@@ -90,6 +90,7 @@ func (f *Service) GetOrganization(username string) (*users.Organization, *ign.Er
 	return args.Get(0).(*users.Organization), args.Get(1).(*ign.ErrMsg)
 }
 
+// StartAutoLoadPolicy starts the auto load remote policy
 func (f *Service) StartAutoLoadPolicy() {
 	f.Called()
 }
