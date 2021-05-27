@@ -183,7 +183,7 @@ func MapAnalysis(config MapAnalysisConfig) ([]string, error) {
 		return nil, ErrEmptyWorld
 	}
 
-	pdc := fmt.Sprintf("pdc:=%s.pdc", worldName)
+	pdc := fmt.Sprintf("pcd:=%s.pcd", worldName)
 	gt := fmt.Sprintf("gt:=%s.csv", worldName)
 
 	robots := make([]string, len(config.Robots))
