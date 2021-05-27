@@ -280,18 +280,10 @@ var CreateNetworkPolicyMappingServer = jobs.CreateNetworkPolicies.Extend(actions
 func removeCreatedNetworkPoliciesMappingServer(store actions.Store, tx *gorm.DB, deployment *actions.Deployment, value interface{}, err error) (interface{}, error) {
 	s := store.State().(*state.StartSimulation)
 
-	robots, err := s.Services().Simulations().GetRobots(s.GroupID)
-	if err != nil {
-		return nil, err
-	}
+	name := subtapp.GetPodNameMappingServer(s.GroupID)
+	ns := s.Platform().Store().Orchestrator().Namespace()
 
-	for i := range robots {
-		robotID := subtapp.GetRobotID(i)
-		name := subtapp.GetPodNameCommsBridge(s.GroupID, robotID)
-		ns := s.Platform().Store().Orchestrator().Namespace()
-
-		_ = s.Platform().Orchestrator().NetworkPolicies().Remove(name, ns)
-	}
+	_ = s.Platform().Orchestrator().NetworkPolicies().Remove(name, ns)
 
 	return nil, nil
 }
