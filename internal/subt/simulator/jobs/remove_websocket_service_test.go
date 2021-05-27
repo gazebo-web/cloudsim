@@ -25,7 +25,7 @@ func TestRemoveWebsocketService(t *testing.T) {
 	storeOrchestrator.On("Namespace").Return("default")
 
 	// Initialize the store with the mocked store
-	fakeStore := sfake.NewFakeStore(nil, storeOrchestrator, nil)
+	fakeStore := sfake.NewFakeStore(nil, storeOrchestrator, nil, nil)
 
 	// Define the simulation group ID used  by the job.
 	gid := simulations.GroupID("aaaa-bbbb-cccc-dddd")

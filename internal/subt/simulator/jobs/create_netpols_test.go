@@ -23,7 +23,7 @@ func TestCreateNetPolsGazeboServer(t *testing.T) {
 	// Set up store
 	storeIgnition := sfake.NewFakeIgnition()
 	storeOrchestrator := sfake.NewFakeOrchestrator()
-	fakeStore := sfake.NewFakeStore(nil, storeOrchestrator, storeIgnition)
+	fakeStore := sfake.NewFakeStore(nil, storeOrchestrator, storeIgnition, nil)
 
 	// Mock ignition store methods for this test
 	storeIgnition.On("IP").Return("127.0.0.1")
@@ -79,7 +79,7 @@ func TestCreateNetPolsCommsBridge(t *testing.T) {
 	// Set up store
 	storeIgnition := sfake.NewFakeIgnition()
 	storeOrchestrator := sfake.NewFakeOrchestrator()
-	fakeStore := sfake.NewFakeStore(nil, storeOrchestrator, storeIgnition)
+	fakeStore := sfake.NewFakeStore(nil, storeOrchestrator, storeIgnition, nil)
 
 	// Mock ignition store methods for this test
 	storeIgnition.On("IP").Return("127.0.0.1")
@@ -135,7 +135,7 @@ func TestCreateNetPolsFieldComputer(t *testing.T) {
 	// Set up store
 	storeIgnition := sfake.NewFakeIgnition()
 	storeOrchestrator := sfake.NewFakeOrchestrator()
-	fakeStore := sfake.NewFakeStore(nil, storeOrchestrator, storeIgnition)
+	fakeStore := sfake.NewFakeStore(nil, storeOrchestrator, storeIgnition, nil)
 
 	// Mock ignition store methods for this test
 	storeIgnition.On("IP").Return("127.0.0.1")

@@ -60,6 +60,9 @@ func prepareNetworkPolicyGazeboServerInput(store actions.Store, tx *gorm.DB, dep
 		selectors[i] = subtapp.GetPodLabelsCommsBridge(s.GroupID, s.ParentGroupID, r)
 	}
 
+	// Allow traffic to and from the Mole bridge
+	selectors = append(selectors, subtapp.GetPodLabelsMoleBridge(s.GroupID, s.ParentGroupID))
+
 	return jobs.CreateNetworkPoliciesInput{
 		{
 			Name:        subtapp.GetPodNameGazeboServer(s.GroupID),

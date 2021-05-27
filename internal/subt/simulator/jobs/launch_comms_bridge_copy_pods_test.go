@@ -39,7 +39,7 @@ func TestLaunchCommsBridgeCopyPods(t *testing.T) {
 	storeIgnition := sfake.NewFakeIgnition()
 	storeOrchestrator := sfake.NewFakeOrchestrator()
 	secretsManager := fakeSecrets.NewFakeSecrets()
-	fakeStore := sfake.NewFakeStore(nil, storeOrchestrator, storeIgnition)
+	fakeStore := sfake.NewFakeStore(nil, storeOrchestrator, storeIgnition, nil)
 
 	// Mock ignition store methods for this test
 	storeIgnition.On("LogsCopyEnabled").Return(true)
@@ -124,7 +124,7 @@ func TestLaunchCommsBridgeCopyPods(t *testing.T) {
 func TestLaunchCommsBridgeCopyPodsLogsDisabled(t *testing.T) {
 	// Set up store
 	storeIgnition := sfake.NewFakeIgnition()
-	fakeStore := sfake.NewFakeStore(nil, nil, storeIgnition)
+	fakeStore := sfake.NewFakeStore(nil, nil, storeIgnition, nil)
 
 	// Mock ignition store methods for this test
 	storeIgnition.On("LogsCopyEnabled").Return(false)
