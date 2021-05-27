@@ -27,6 +27,7 @@ var JobsStartSimulation = actions.Jobs{
 	jobs.ConfigureIngressGloo,
 	jobs.CreateNetworkPolicyCommsBridges,
 	jobs.CreateNetworkPolicyFieldComputers,
+	jobs.CreateNetworkPolicyMappingServer,
 	jobs.LaunchCommsBridgePods,
 	jobs.LaunchCommsBridgeCopyPods,
 	jobs.WaitForCommsBridgePodIPs,

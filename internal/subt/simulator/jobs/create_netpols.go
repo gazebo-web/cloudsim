@@ -264,3 +264,67 @@ func prepareNetworkPolicyCommsBridgesInput(store actions.Store, tx *gorm.DB, dep
 
 	return input, nil
 }
+
+// CreateNetworkPolicyMappingServer extends the generic jobs.CreateNetworkPolicies to create a network policy for the
+// mapping server.
+var CreateNetworkPolicyMappingServer = jobs.CreateNetworkPolicies.Extend(actions.Job{
+	Name:            "create-netpol-comms-bridges",
+	PreHooks:        []actions.JobFunc{setStartState, prepareNetworkPolicyMappingServerInput},
+	PostHooks:       []actions.JobFunc{checkCreateNetworkPoliciesError, returnState},
+	RollbackHandler: removeCreatedNetworkPoliciesMappingServer,
+	InputType:       actions.GetJobDataType(&state.StartSimulation{}),
+	OutputType:      actions.GetJobDataType(&state.StartSimulation{}),
+})
+
+// removeCreatedNetworkPoliciesMappingServer removes the created network policies for the mapping server in case an error is thrown.
+func removeCreatedNetworkPoliciesMappingServer(store actions.Store, tx *gorm.DB, deployment *actions.Deployment, value interface{}, err error) (interface{}, error) {
+	s := store.State().(*state.StartSimulation)
+
+	robots, err := s.Services().Simulations().GetRobots(s.GroupID)
+	if err != nil {
+		return nil, err
+	}
+
+	for i := range robots {
+		robotID := subtapp.GetRobotID(i)
+		name := subtapp.GetPodNameCommsBridge(s.GroupID, robotID)
+		ns := s.Platform().Store().Orchestrator().Namespace()
+
+		_ = s.Platform().Orchestrator().NetworkPolicies().Remove(name, ns)
+	}
+
+	return nil, nil
+}
+
+// prepareNetworkPolicyMappingServerInput is a pre-hook of the CreateNetworkPolicyMappingServer job that prepares the input
+// for the generic jobs.CreateNetworkPolicies job.
+func prepareNetworkPolicyMappingServerInput(store actions.Store, tx *gorm.DB, deployment *actions.Deployment, value interface{}) (interface{}, error) {
+	s := store.State().(*state.StartSimulation)
+
+	return jobs.CreateNetworkPoliciesInput{
+		network.CreateNetworkPolicyInput{
+			Name:        subtapp.GetPodNameMappingServer(s.GroupID),
+			Namespace:   s.Platform().Store().Orchestrator().Namespace(),
+			Labels:      subtapp.GetPodLabelsBase(s.GroupID, s.ParentGroupID).Map(),
+			PodSelector: subtapp.GetPodLabelsMappingServer(s.GroupID, s.ParentGroupID),
+			PeersFrom: []resource.Selector{
+				// Allow traffic from gazebo server
+				subtapp.GetPodLabelsGazeboServer(s.GroupID, s.ParentGroupID),
+			},
+			PeersTo: []resource.Selector{
+				// Allow traffic to gazebo server
+				subtapp.GetPodLabelsGazeboServer(s.GroupID, s.ParentGroupID),
+			},
+			Ingresses: network.IngressRule{
+				Ports: []int32{
+					// Allow traffic from websocket server
+					// TBD: [ign port],
+				},
+			},
+			Egresses: network.EgressRule{
+				// Allow traffic to the internet
+				AllowOutbound: true,
+			},
+		},
+	}, nil
+}
