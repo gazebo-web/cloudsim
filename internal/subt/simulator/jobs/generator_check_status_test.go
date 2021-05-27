@@ -17,7 +17,7 @@ import (
 func TestCheckSimulationStatus_Success(t *testing.T) {
 	// Initialize simulation
 	gid := simulations.GroupID("aaaa-bbbb-cccc-dddd")
-	sim := fake.NewSimulation(gid, simulations.StatusPending, simulations.SimSingle, nil, "test", 1*time.Minute)
+	sim := fake.NewSimulation(gid, simulations.StatusPending, simulations.SimSingle, nil, "test", 1*time.Minute, nil)
 
 	// Initialize fake simulation service
 	svc := fake.NewService()
@@ -53,7 +53,7 @@ func TestCheckSimulationStatus_Success(t *testing.T) {
 func TestCheckSimulationStatus_ErrSimInvaludStatus(t *testing.T) {
 	// Initialize simulation
 	gid := simulations.GroupID("aaaa-bbbb-cccc-dddd")
-	sim := fake.NewSimulation(gid, simulations.StatusRunning, simulations.SimSingle, nil, "test", 1*time.Minute)
+	sim := fake.NewSimulation(gid, simulations.StatusRunning, simulations.SimSingle, nil, "test", 1*time.Minute, nil)
 
 	// Initialize fake simulation service
 	svc := fake.NewService()

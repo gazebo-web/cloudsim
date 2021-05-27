@@ -13,6 +13,7 @@ const (
 	labelFieldComputer       = "field-computer"
 	labelRobotName           = "robot_name"
 	labelGazeboServer        = "gzserver"
+	labelMoleBridge          = "mole-bridge"
 	labelCommsBridge         = "comms-bridge"
 	labelMappingServer       = "mapping-server"
 	labelCommsBridgeForRobot = "comms-for-robot"
@@ -53,6 +54,15 @@ func GetPodLabelsFieldComputer(groupID simulations.GroupID, parent *simulations.
 	base := GetPodLabelsBase(groupID, parent)
 	ext := resource.NewSelector(map[string]string{
 		labelFieldComputer: "true",
+	})
+	return base.Extend(ext)
+}
+
+// GetPodLabelsMoleBridge returns a selector that identifies a mole bridge pod.
+func GetPodLabelsMoleBridge(groupID simulations.GroupID, parent *simulations.GroupID) resource.Selector {
+	base := GetPodLabelsBase(groupID, parent)
+	ext := resource.NewSelector(map[string]string{
+		labelMoleBridge: "true",
 	})
 	return base.Extend(ext)
 }

@@ -42,6 +42,10 @@ func (s *testStoreFactorySuite) TestNewStore() {
 				"defaultSenderValue": "test@ignitionrobotics.org",
 				"logsBucketValue":    "test_bucket",
 			},
+			"moleStore": factory.ConfigValues{
+				"bridgePulsarAddressValue":  "mole-proxy-test",
+				"bridgePulsarHTTPPortValue": 1234,
+			},
 			"orchestratorStore": factory.ConfigValues{
 				"ingressNameValue": "test",
 				"ingressHostValue": "test.com",
@@ -57,6 +61,7 @@ func (s *testStoreFactorySuite) TestNewStore() {
 	s.Require().NotNil(store)
 	s.Require().NotNil(store.Machines())
 	s.Require().NotNil(store.Ignition())
+	s.Require().NotNil(store.Mole())
 	s.Require().NotNil(store.Orchestrator())
 
 	// Validate the type of the returned object

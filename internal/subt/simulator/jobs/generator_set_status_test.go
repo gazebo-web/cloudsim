@@ -27,7 +27,7 @@ func TestGenerateSetSimulationStatusJob(t *testing.T) {
 
 	// Initialize simulation
 	gid := simulations.GroupID("aaaa-bbbb-cccc-dddd")
-	sim := fake.NewSimulation(gid, simulations.StatusPending, simulations.SimSingle, nil, "test", 1*time.Minute)
+	sim := fake.NewSimulation(gid, simulations.StatusPending, simulations.SimSingle, nil, "test", 1*time.Minute, nil)
 
 	// Initialize fake simulation service
 	svc := fake.NewService()

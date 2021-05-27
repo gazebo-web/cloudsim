@@ -221,8 +221,11 @@ type SubTCircuitRules struct {
 	Image        *string `json:"-"`
 	BridgeImage  *string `json:"-"`
 	MappingImage *string `json:"-"`
-	Worlds       *string `gorm:"size:2048" json:"-"`
-	Times        *string `json:"-"`
+	// MoleBridgeImage contains an optional Mole ROS/Pulsar bridge image URI. If not defined, the bridge will not be
+	// launched.
+	MoleBridgeImage *string `json:"-"`
+	Worlds          *string `gorm:"size:2048" json:"-"`
+	Times           *string `json:"-"`
 	// WorldStatsTopics is the topic used to track general stats of the simulation (runtime, sim runtime, etc.)
 	WorldStatsTopics *string `gorm:"size:2048" json:"-"`
 	// WorldWarmupTopics is the topic used to track when the simulation officially starts and ends
@@ -276,16 +279,17 @@ func (r *SubTCircuitRules) ToTrack(worldID int, runID int) (*tracks.Track, error
 	world := worlds[worldID]
 
 	return &tracks.Track{
-		Name:          *r.Circuit,
-		Image:         *r.Image,
-		MappingImage:  r.MappingImage,
-		BridgeImage:   *r.BridgeImage,
-		StatsTopic:    *r.WorldStatsTopics,
-		WarmupTopic:   *r.WorldWarmupTopics,
-		MaxSimSeconds: maxSimSeconds,
-		Public:        false,
-		Seed:          seed,
-		World:         world,
+		Name:            *r.Circuit,
+		Image:           *r.Image,
+		BridgeImage:     *r.BridgeImage,
+		MappingImage:    r.MappingImage,
+		MoleBridgeImage: *r.MoleBridgeImage,
+		StatsTopic:      *r.WorldStatsTopics,
+		WarmupTopic:     *r.WorldWarmupTopics,
+		MaxSimSeconds:   maxSimSeconds,
+		Public:          false,
+		Seed:            seed,
+		World:           world,
 	}, nil
 }
 
