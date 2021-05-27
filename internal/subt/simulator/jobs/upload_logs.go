@@ -1,6 +1,7 @@
 package jobs
 
 import (
+	"fmt"
 	"github.com/jinzhu/gorm"
 	subtapp "gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/application"
 	"gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/simulator/state"
@@ -100,6 +101,30 @@ func uploadLogs(store actions.Store, tx *gorm.DB, deployment *actions.Deployment
 
 	exec := s.Platform().Orchestrator().Pods().Exec(res)
 	containerName := subtapp.GetContainerNameGazeboServerCopy()
+	err = uploadSingleLogs(exec, containerName, "simulations/scripts/copy_to_s3.sh", scriptParams)
+	if err != nil {
+		return nil, err
+	}
+
+	// Get mapping server copy pod name
+	name = subtapp.GetPodNameMappingServerCopy(s.GroupID)
+
+	res, err = s.Platform().Orchestrator().Pods().Get(name, ns)
+	if err != nil {
+		return nil, err
+	}
+
+	filename = fmt.Sprintf("%s-map.tar.gz", s.GroupID.String())
+	bucket = filepath.Join(fmt.Sprintf("%s-map", logsBucket), subtapp.GetSimulationLogKey(s.GroupID, *sim.GetOwner()))
+
+	scriptParams = uploadLogsScript{
+		Target:   "/tmp/mapping",
+		Filename: filename,
+		Bucket:   s.Platform().Storage().PrepareAddress(bucket, filename),
+	}
+
+	exec = s.Platform().Orchestrator().Pods().Exec(res)
+	containerName = subtapp.GetContainerNameMappingServerCopy()
 	err = uploadSingleLogs(exec, containerName, "simulations/scripts/copy_to_s3.sh", scriptParams)
 	if err != nil {
 		return nil, err
