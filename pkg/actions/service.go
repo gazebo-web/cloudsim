@@ -163,7 +163,7 @@ func (s *service) processJobs(store Store, tx *gorm.DB, action *Action, executeI
 	input := executeInput.getExecuteInput()
 	deployment := executeInput.getDeployment()
 
-	// Recover from panics when processing jobs
+	// Mark the deployment for rollback if an error was returned or a panic was triggered.
 	defer func() {
 		if r := recover(); r != nil {
 			s.logger.Debug("Running job panic:", r, "\nStack:", string(debug.Stack()))
@@ -175,10 +175,6 @@ func (s *service) processJobs(store Store, tx *gorm.DB, action *Action, executeI
 				err = errJobError
 			}
 		}
-	}()
-
-	// Mark the deployment for rollback if an error was returned
-	defer func() {
 		if err != nil {
 			if errSetStatus := deployment.setRollbackStatus(tx, err); errSetStatus != nil {
 				err = errSetStatus
