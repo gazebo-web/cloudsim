@@ -268,7 +268,7 @@ func prepareNetworkPolicyCommsBridgesInput(store actions.Store, tx *gorm.DB, dep
 // CreateNetworkPolicyMappingServer extends the generic jobs.CreateNetworkPolicies to create a network policy for the
 // mapping server.
 var CreateNetworkPolicyMappingServer = jobs.CreateNetworkPolicies.Extend(actions.Job{
-	Name:            "create-netpol-comms-bridges",
+	Name:            "create-netpol-mapping-server",
 	PreHooks:        []actions.JobFunc{setStartState, prepareNetworkPolicyMappingServerInput},
 	PostHooks:       []actions.JobFunc{checkCreateNetworkPoliciesError, returnState},
 	RollbackHandler: removeCreatedNetworkPoliciesMappingServer,
