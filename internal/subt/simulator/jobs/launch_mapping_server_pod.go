@@ -78,7 +78,7 @@ func prepareMappingCreatePodInput(store actions.Store, tx *gorm.DB, deployment *
 
 	volumes := []pods.Volume{
 		{
-			Name:      "mapping",
+			Name:      "logs",
 			MountPath: "/tmp/ign/logs",
 			HostPath:  "/tmp/mapping",
 		},
