@@ -57,6 +57,8 @@ components:
       ignitionStore:
         defaultSenderValue: "test@ignitionrobotics.org"
         logsBucketValue: "test_bucket"
+      moleStore:
+        bridgePulsarAddressValue: "mole-proxy-test"
       orchestratorStore:
         ingressNameValue: "test"
         ingressHostValue: "test.com"

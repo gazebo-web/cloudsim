@@ -8,6 +8,9 @@ type Track struct {
 	Name        string `json:"name" gorm:"unique"`
 	Image       string `json:"image"`
 	BridgeImage string `json:"bridge_image"`
+	// MoleBridgeImage is the bridge image that sends simulation data to a Mole deployment.
+	// If this field is not defined, the mole bridge should not be launched.
+	MoleBridgeImage string `json:"mole_bridge_image"`
 	// Topic used to track general stats of the simulation (runtime, sim runtime, etc.)
 	StatsTopic string `json:"stats_topic"`
 	// Topic used to track when the simulation officially starts and ends
@@ -30,27 +33,30 @@ func (Track) TableName() string {
 // CreateTrackFromInput receives an input and returns a new Track with the input values.
 func CreateTrackFromInput(input CreateTrackInput) Track {
 	return Track{
-		Name:          input.Name,
-		Image:         input.Image,
-		BridgeImage:   input.BridgeImage,
-		StatsTopic:    input.StatsTopic,
-		WarmupTopic:   input.WarmupTopic,
-		MaxSimSeconds: input.MaxSimSeconds,
-		Public:        input.Public,
-		World:         input.World,
+		Name:            input.Name,
+		Image:           input.Image,
+		BridgeImage:     input.BridgeImage,
+		MoleBridgeImage: input.MoleBridgeImage,
+		StatsTopic:      input.StatsTopic,
+		WarmupTopic:     input.WarmupTopic,
+		MaxSimSeconds:   input.MaxSimSeconds,
+		Public:          input.Public,
+		World:           input.World,
 	}
 }
 
 // UpdateTrackFromInput receives a model and an updated input.
 // It returns the model updated with the input values.
-func UpdateTrackFromInput(model Track, input UpdateTrackInput) Track {
+func UpdateTrackFromInput(model Track, input UpdateTrackInput) *Track {
 	model.Name = input.Name
 	model.Image = input.Image
 	model.BridgeImage = input.BridgeImage
+	model.MoleBridgeImage = input.MoleBridgeImage
 	model.StatsTopic = input.StatsTopic
 	model.WarmupTopic = input.WarmupTopic
 	model.MaxSimSeconds = input.MaxSimSeconds
 	model.Public = input.Public
 	model.World = input.World
-	return model
+
+	return &model
 }

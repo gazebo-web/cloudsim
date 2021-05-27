@@ -85,6 +85,10 @@ func (s *testPlatformFactorySuite) TestNewFunc() {
                             "defaultSenderValue": "test@ignitionrobotics.org",
                             "logsBucketValue":    "test_bucket",
                         },
+                        "moleStore": factory.ConfigValues{
+                            "bridgePulsarAddressValue": "mole-proxy-test",
+                            "bridgePulsarHTTPPortValue": 1234,
+                        },
                         "orchestratorStore": factory.ConfigValues{
                             "ingressNameValue": "test",
                             "ingressHostValue": "test.com",
