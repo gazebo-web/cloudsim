@@ -125,3 +125,12 @@ func GetPodLabelsMappingServer(groupID simulations.GroupID, parent *simulations.
 	})
 	return base.Extend(ext)
 }
+
+// GetPodLabelsMappingServerCopy returns a selector that identifies a mapping server copy pod.
+func GetPodLabelsMappingServerCopy(groupID simulations.GroupID, parent *simulations.GroupID) resource.Selector {
+	base := GetPodLabelsBase(groupID, parent)
+	ext := resource.NewSelector(map[string]string{
+		labelCopyS3: "true",
+	})
+	return base.Extend(ext)
+}

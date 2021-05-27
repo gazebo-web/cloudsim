@@ -101,3 +101,13 @@ func GetEnvVarsGazeboServerCopy(region, accessKey, secret string) map[string]str
 		"AWS_SECRET_ACCESS_KEY": secret,
 	}
 }
+
+// GetEnvVarsMappingServerCopy returns the env vars for the mapping server copy container.
+func GetEnvVarsMappingServerCopy(region, accessKey, secret string) map[string]string {
+	return map[string]string{
+		"AWS_DEFAULT_REGION":    region,
+		"AWS_REGION":            region,
+		"AWS_ACCESS_KEY_ID":     accessKey,
+		"AWS_SECRET_ACCESS_KEY": secret,
+	}
+}

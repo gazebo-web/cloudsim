@@ -43,6 +43,11 @@ func GetPodNameMappingServer(groupID simulations.GroupID) string {
 	return fmt.Sprintf("%s-%s-map-server", simPrefix, groupID)
 }
 
+// GetPodNameMappingServerCopy is used to generate the name for the mapping server copy pod.
+func GetPodNameMappingServerCopy(groupID simulations.GroupID) string {
+	return fmt.Sprintf("%s-copy", GetPodNameMappingServer(groupID))
+}
+
 // GetRobotID returns a robot identification name in the following form:
 // rbtN with N being the given id.
 // id requires that zero-indexes are used when calling GetRobotID.
@@ -78,6 +83,11 @@ func GetContainerNameGazeboServerCopy() string {
 // GetContainerNameMappingServer returns the mapping server container name.
 func GetContainerNameMappingServer() string {
 	return "mapping-server"
+}
+
+// GetContainerNameMappingServerCopy returns the mapping server copy container name.
+func GetContainerNameMappingServerCopy() string {
+	return "copy-to-s3"
 }
 
 // GetSimulationIngressPath gets the path to the gzserver websocket server for a certain simulation.
