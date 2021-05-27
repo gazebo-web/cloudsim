@@ -64,6 +64,7 @@ func prepareGazeboCreatePodInput(store actions.Store, tx *gorm.DB, deployment *a
 		MaxWebsocketConnections: 500,
 		Robots:                  subtSim.GetRobots(),
 		Marsupials:              subtSim.GetMarsupials(),
+		RosEnabled:              true,
 	})
 
 	// Set up container configuration
@@ -102,7 +103,8 @@ func prepareGazeboCreatePodInput(store actions.Store, tx *gorm.DB, deployment *a
 	}
 
 	envVarsFrom := map[string]string{
-		"ROS_IP": pods.EnvVarSourcePodIP,
+		"IGN_RELAY": pods.EnvVarSourcePodIP,
+		"ROS_IP":    pods.EnvVarSourcePodIP,
 	}
 
 	envVars := map[string]string{
@@ -110,7 +112,6 @@ func prepareGazeboCreatePodInput(store actions.Store, tx *gorm.DB, deployment *a
 		"QT_X11_NO_MITSHM": "1",
 		"XAUTHORITY":       "/tmp/.docker.xauth",
 		"USE_XVFB":         "1",
-		"IGN_RELAY":        s.Platform().Store().Ignition().IP(), // IP Cloudsim
 		"IGN_PARTITION":    string(s.GroupID),
 		"IGN_VERBOSE":      s.Platform().Store().Ignition().Verbosity(),
 		"ROS_MASTER_URI":   "http://$(ROS_IP):11311",

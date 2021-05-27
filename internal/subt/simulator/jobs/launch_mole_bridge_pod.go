@@ -101,7 +101,6 @@ func prepareMoleBridgePodInput(store actions.Store, tx *gorm.DB, deployment *act
 					Privileged:               &privileged,
 					AllowPrivilegeEscalation: &allowPrivilegesEscalation,
 					EnvVars:                  envVars,
-					EnvVarsFrom:              subtapp.GetEnvVarsFromSourceCommsBridge(),
 				},
 			},
 			Nameservers: s.Platform().Store().Orchestrator().Nameservers(),

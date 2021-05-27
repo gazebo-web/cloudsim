@@ -34,7 +34,7 @@ func removePods(store actions.Store, tx *gorm.DB, deployment *actions.Deployment
 	}
 
 	if len(input) == 0 {
-		return LaunchPodsOutput{
+		return RemovePodsOutput{
 			Resources: []resource.Resource{},
 			Error:     nil,
 		}, nil
