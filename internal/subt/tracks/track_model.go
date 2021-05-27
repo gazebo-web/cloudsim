@@ -5,9 +5,9 @@ import "github.com/jinzhu/gorm"
 // Track is a world that will be used to run a simulation.
 type Track struct {
 	gorm.Model
-	Name            string `json:"name" gorm:"unique"`
-	Image           string `json:"image"`
-	BridgeImage     string `json:"bridge_image"`
+	Name        string `json:"name" gorm:"unique"`
+	Image       string `json:"image"`
+	BridgeImage string `json:"bridge_image"`
 	// MoleBridgeImage is the bridge image that sends simulation data to a Mole deployment.
 	// If this field is not defined, the mole bridge should not be launched.
 	MoleBridgeImage string `json:"mole_bridge_image"`
@@ -47,7 +47,7 @@ func CreateTrackFromInput(input CreateTrackInput) Track {
 
 // UpdateTrackFromInput receives a model and an updated input.
 // It returns the model updated with the input values.
-func UpdateTrackFromInput(model *Track, input UpdateTrackInput) *Track {
+func UpdateTrackFromInput(model Track, input UpdateTrackInput) *Track {
 	model.Name = input.Name
 	model.Image = input.Image
 	model.BridgeImage = input.BridgeImage
@@ -58,5 +58,5 @@ func UpdateTrackFromInput(model *Track, input UpdateTrackInput) *Track {
 	model.Public = input.Public
 	model.World = input.World
 
-	return model
+	return &model
 }

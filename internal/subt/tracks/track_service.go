@@ -94,7 +94,7 @@ func (s service) Update(name string, input UpdateTrackInput) (*Track, error) {
 	if err != nil {
 		return nil, err
 	}
-	_ = UpdateTrackFromInput(track, input)
+	track = UpdateTrackFromInput(*track, input)
 	track, err = s.repository.Update(name, *track)
 	if err != nil {
 		s.logger.Debug(fmt.Sprintf(" [Track.Service] Updating track with name: %s failed. Error: %+v", name, err))
