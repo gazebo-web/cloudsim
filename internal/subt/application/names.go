@@ -120,12 +120,13 @@ func GetGazeboLogsFilename(groupID simulations.GroupID) string {
 	return fmt.Sprintf("%s.tar.gz", groupID.String())
 }
 
-// GetSimulationLogKey returns the path for logs inside a copy pod.
+// GetSimulationLogKey returns the path used as key when uploading simulation logs into a bucket.
 func GetSimulationLogKey(groupID simulations.GroupID, owner string) string {
 	escaped := url.PathEscape(owner)
 	return fmt.Sprintf("/gz-logs/%s/%s/", escaped, groupID)
 }
 
+// GetMappingServerLogKey returns the path used as key when uploading mapping server logs into a bucket.
 func GetMappingServerLogKey(groupID simulations.GroupID, owner string) string {
 	escaped := url.PathEscape(owner)
 	return fmt.Sprintf("/map-logs/%s/%s/", escaped, groupID)
