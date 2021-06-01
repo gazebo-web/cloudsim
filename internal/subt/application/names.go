@@ -125,3 +125,8 @@ func GetSimulationLogKey(groupID simulations.GroupID, owner string) string {
 	escaped := url.PathEscape(owner)
 	return fmt.Sprintf("/gz-logs/%s/%s/", escaped, groupID)
 }
+
+func GetMappingServerLogKey(groupID simulations.GroupID, owner string) string {
+	escaped := url.PathEscape(owner)
+	return fmt.Sprintf("/map-logs/%s/%s/", escaped, groupID)
+}

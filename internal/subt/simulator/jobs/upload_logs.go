@@ -115,7 +115,7 @@ func uploadLogs(store actions.Store, tx *gorm.DB, deployment *actions.Deployment
 	}
 
 	filename = fmt.Sprintf("%s-map.tar.gz", s.GroupID.String())
-	bucket = filepath.Join(fmt.Sprintf("%s-mapping-server", logsBucket), subtapp.GetSimulationLogKey(s.GroupID, *sim.GetOwner()))
+	bucket = filepath.Join(logsBucket, subtapp.GetMappingServerLogKey(s.GroupID, *sim.GetOwner()))
 
 	scriptParams = uploadLogsScript{
 		Target:   "/tmp",
