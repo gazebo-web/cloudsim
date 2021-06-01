@@ -60,7 +60,7 @@ func prepareMappingCopyPodInput(store actions.Store, tx *gorm.DB, deployment *ac
 			Name:         "logs",
 			HostPath:     "/tmp/mapping",
 			HostPathType: pods.HostPathDirectoryOrCreate,
-			MountPath:    "/tmp/ign/logs",
+			MountPath:    "/tmp/mapping",
 		},
 	}
 

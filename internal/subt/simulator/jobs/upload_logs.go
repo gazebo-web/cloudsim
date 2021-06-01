@@ -118,7 +118,7 @@ func uploadLogs(store actions.Store, tx *gorm.DB, deployment *actions.Deployment
 	bucket = filepath.Join(logsBucket, subtapp.GetMappingServerLogKey(s.GroupID, *sim.GetOwner()))
 
 	scriptParams = uploadLogsScript{
-		Target:   "/tmp",
+		Target:   "/tmp/mapping",
 		Filename: filename,
 		Bucket:   s.Platform().Storage().PrepareAddress(bucket, filename),
 	}
