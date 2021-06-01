@@ -76,6 +76,14 @@ func prepareMappingCreatePodInput(store actions.Store, tx *gorm.DB, deployment *
 	// TODO: Get ports from Ignition Store
 	ports := []int32{11311}
 
+	initVolumes := []pods.Volume{
+		{
+			Name:      "logs",
+			HostPath:  "/tmp",
+			MountPath: "/tmp",
+		},
+	}
+
 	volumes := []pods.Volume{
 		{
 			Name:      "logs",
@@ -93,6 +101,9 @@ func prepareMappingCreatePodInput(store actions.Store, tx *gorm.DB, deployment *
 			TerminationGracePeriodSeconds: s.Platform().Store().Orchestrator().TerminationGracePeriod(),
 			NodeSelector:                  subtapp.GetNodeLabelsGazeboServer(s.GroupID),
 			Volumes:                       volumes,
+			InitContainers: []pods.Container{
+				pods.NewChownContainer(initVolumes),
+			},
 			Containers: []pods.Container{
 				{
 					Name:                     subtapp.GetContainerNameMappingServer(),
