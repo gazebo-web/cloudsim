@@ -52,6 +52,12 @@ func TestRemoveNetPols(t *testing.T) {
 				Namespace: "default",
 			},
 		},
+		&networkingv1.NetworkPolicy{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      subtapp.GetPodNameMappingServer(gid),
+				Namespace: "default",
+			},
+		},
 	)
 
 	nm := network.NewNetworkPolicies(client, logger)
