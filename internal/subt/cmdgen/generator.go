@@ -13,6 +13,8 @@ var (
 	ErrEmptyWorld = errors.New("empty world")
 	// ErrInvalidRobot is returned when an invalid robot is passed when calling CommsBridge.
 	ErrInvalidRobot = errors.New("invalid robot")
+	// ErrEmptyRobotList is returned when an empty robot list is passed when calling MapAnalysis.
+	ErrEmptyRobotList = errors.New("empty robot list")
 )
 
 const (
@@ -181,6 +183,10 @@ func MapAnalysis(config MapAnalysisConfig) ([]string, error) {
 
 	if worldName == "" {
 		return nil, ErrEmptyWorld
+	}
+
+	if len(config.Robots) == 0 {
+		return nil, ErrEmptyRobotList
 	}
 
 	pdc := fmt.Sprintf("pcd:=%s.pcd", worldName)

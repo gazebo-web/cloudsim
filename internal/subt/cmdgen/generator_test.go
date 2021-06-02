@@ -3,6 +3,7 @@ package cmdgen
 import (
 	"fmt"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations/fake"
 	"testing"
@@ -94,4 +95,38 @@ func TestGenerateCommsBridge(t *testing.T) {
 	})
 	assert.Equal(t, ErrEmptyWorld, err)
 
+}
+
+func TestGenerateMapAnalysis(t *testing.T) {
+	const (
+		world = "cloudsim_sim.ign;worldName:=tunnel_circuit_01;circuit:=tunnel"
+	)
+
+	// It should return error if the world is empty
+	_, err := MapAnalysis(MapAnalysisConfig{
+		World: "",
+	})
+	assert.Error(t, err)
+
+	// It should return error if the robot slice is empty.
+	_, err = MapAnalysis(MapAnalysisConfig{
+		World:  world,
+		Robots: nil,
+	})
+	assert.Error(t, err)
+
+	cmd, err := MapAnalysis(MapAnalysisConfig{
+		World: world,
+		Robots: []simulations.Robot{
+			fake.NewRobot("X1", "X1_CONFIG_A"),
+			fake.NewRobot("X2", "X2_CONFIG_A"),
+		},
+	})
+	require.NoError(t, err)
+
+	assert.Len(t, cmd, 4)
+	assert.Equal(t, "pcd:=tunnel_circuit_01.pcd", cmd[0])
+	assert.Equal(t, "gt:=tunnel_circuit_01.csv", cmd[1])
+	assert.Equal(t, "robot:=X1", cmd[2])
+	assert.Equal(t, "robot:=X2", cmd[3])
 }
