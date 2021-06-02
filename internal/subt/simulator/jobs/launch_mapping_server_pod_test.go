@@ -43,8 +43,6 @@ func TestLaunchMappingServerPod(t *testing.T) {
 	fakeStore := sfake.NewFakeStore(nil, storeOrchestrator, storeIgnition, nil)
 
 	// Mock ignition store methods for this test
-	storeIgnition.On("GazeboServerLogsPath").Return("/tmp/test")
-	storeIgnition.On("IP").Return("127.0.0.1")
 	storeIgnition.On("LogsCopyEnabled").Return(true)
 	storeIgnition.On("SecretsName").Return("aws-secrets")
 	storeIgnition.On("Region").Return("us-west-1")
@@ -88,7 +86,7 @@ func TestLaunchMappingServerPod(t *testing.T) {
 	gid := simulations.GroupID("aaaa-bbbb-cccc-dddd")
 
 	// Define track name
-	trackName := "Cave Circuit World 1"
+	trackName := "Cave Circuit World 4"
 
 	// Create a simulation for the given track
 	sim := fake.NewSimulation(fake.SimulationConfig{
