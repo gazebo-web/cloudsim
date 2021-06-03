@@ -852,10 +852,12 @@ func (s *Service) workerStartSimulation(payload interface{}) {
 		return
 	}
 
-	// Cycle through platforms and launch simulations
+	// Get the list of available platforms
 	platforms := s.getPlatforms(simDep)
 	for {
+		// Get the next available platform using round-robin technique.
 		p := platforms.Next().(platform.Platform)
+
 		// Update SimulationDeployment platform
 		simDep.updatePlatform(s.DB, p.GetName())
 
