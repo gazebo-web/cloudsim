@@ -41,7 +41,6 @@ func TestLaunchMappingServerCopyPod(t *testing.T) {
 	fakeStore := sfake.NewFakeStore(nil, storeOrchestrator, storeIgnition, nil)
 
 	// Mock ignition store methods for this test
-	storeIgnition.On("GazeboServerLogsPath").Return("/tmp/test")
 	storeIgnition.On("SidecarContainerLogsPath").Return("/tmp/logs")
 	storeIgnition.On("IP").Return("127.0.0.1")
 	storeIgnition.On("Verbosity").Return("0")
@@ -50,7 +49,6 @@ func TestLaunchMappingServerCopyPod(t *testing.T) {
 	storeIgnition.On("Region").Return("us-west-1")
 	storeIgnition.On("AccessKeyLabel").Return("aws-access-key-id")
 	storeIgnition.On("SecretAccessKeyLabel").Return("aws-secret-access-key")
-	storeIgnition.On("GazeboBucket").Return("gz-logs")
 
 	// Mock orchestrator store methods for this test
 	storeOrchestrator.On("Namespace").Return("default")
