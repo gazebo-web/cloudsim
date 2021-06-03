@@ -84,6 +84,7 @@ func NewSimulation(config SimulationConfig) subt.Simulation {
 			1*time.Minute,
 			config.Owner,
 		),
-		track: config.Track,
+		track:  config.Track,
+		robots: config.Robots,
 	}
 }

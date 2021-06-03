@@ -88,14 +88,19 @@ func TestLaunchMappingServerPod(t *testing.T) {
 	// Define track name
 	trackName := "Cave Circuit World 4"
 
-	// Create a simulation for the given track
+	// Create a simulation
 	sim := fake.NewSimulation(fake.SimulationConfig{
 		GroupID: gid,
-		Status:  simulations.StatusRunning,
+		Status:  simulations.StatusLaunchingPods,
 		Kind:    simulations.SimSingle,
 		Error:   nil,
 		Image:   "test.org",
 		Track:   trackName,
+		Robots: []simulations.Robot{
+			simfake.NewRobot("testA", "X1"),
+			simfake.NewRobot("testB", "X2"),
+			simfake.NewRobot("testC", "X3"),
+		},
 	})
 
 	// Make the get method return the fake simulation when using
