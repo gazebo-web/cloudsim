@@ -114,10 +114,12 @@ func uploadLogs(store actions.Store, tx *gorm.DB, deployment *actions.Deployment
 		return nil, err
 	}
 
+	// TODO Move to function
 	filename = fmt.Sprintf("%s-map.tar.gz", s.GroupID.String())
 	bucket = filepath.Join(logsBucket, subtapp.GetMappingServerLogKey(s.GroupID, *sim.GetOwner()))
 
 	scriptParams = uploadLogsScript{
+		// TODO Move to store
 		Target:   "/tmp/mapping",
 		Filename: filename,
 		Bucket:   s.Platform().Storage().PrepareAddress(bucket, filename),
