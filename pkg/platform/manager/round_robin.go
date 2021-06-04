@@ -5,40 +5,40 @@ import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/platform"
 )
 
-// NewRoundRobin initializes a new Manager using a base platform Map but iterates over the inner platforms using round robin.
-func NewRoundRobin(platforms Map) (Manager, error) {
+// NewRoundRobin initializes a new Manager using a base platform Map but iterates over the inner manager using round robin.
+func NewRoundRobin(platforms Manager) (Manager, error) {
 	c, err := cycler.NewCycler(platforms.Selectors())
 	if err != nil {
 		return nil, err
 	}
 	return &RoundRobin{
-		cycler:    c,
-		platforms: platforms,
+		iterator: c,
+		manager:  platforms,
 	}, nil
 }
 
 // RoundRobin is a Manager implementation using round robin technique.
 type RoundRobin struct {
-	cycler    cycler.Cycler
-	platforms Map
+	iterator cycler.Cycler
+	manager  Manager
 }
 
 // Selectors returns a slice with all the available platform selectors.
 func (c *RoundRobin) Selectors() []string {
-	return c.platforms.Selectors()
+	return c.manager.Selectors()
 }
 
-// Platforms returns a slice with all the available platforms, but compared to Map.Platforms, it will try to
+// Platforms returns a slice with all the available manager, but compared to Map.Platforms, it will try to
 // return a different platform every time at the index 0 if no selector is passed using round robin.
 func (c *RoundRobin) Platforms(selector *string) []platform.Platform {
 	if selector == nil {
-		next := c.cycler.Next().(string)
-		return c.platforms.Platforms(&next)
+		next := c.iterator.Next().(string)
+		return c.manager.Platforms(&next)
 	}
-	return c.platforms.Platforms(selector)
+	return c.manager.Platforms(selector)
 }
 
 // Platform receives a selector and returns its matching platform or an error if it is not found.
 func (c *RoundRobin) Platform(selector string) (platform.Platform, error) {
-	return c.platforms.Platform(selector)
+	return c.manager.Platform(selector)
 }
