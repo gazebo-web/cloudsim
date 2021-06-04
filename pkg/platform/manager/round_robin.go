@@ -5,15 +5,15 @@ import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/platform"
 )
 
-// NewRoundRobin initializes a new Manager using a base platform Map but iterates over the inner manager using round robin.
-func NewRoundRobin(platforms Manager) (Manager, error) {
-	c, err := cycler.NewCycler(platforms.Selectors())
+// NewRoundRobin initializes a new Manager using a base platform Manager but iterates over the inner manager using round robin.
+func NewRoundRobin(base Manager) (Manager, error) {
+	c, err := cycler.NewCycler(base.Selectors())
 	if err != nil {
 		return nil, err
 	}
 	return &RoundRobin{
 		iterator: c,
-		manager:  platforms,
+		manager:  base,
 	}, nil
 }
 
