@@ -15,33 +15,23 @@ func WithRoundRobin(base Manager, err error) (Manager, error) {
 		return nil, err
 	}
 	return &roundRobin{
-		iterator: c,
-		manager:  base,
+		Cycler:  c,
+		Manager: base,
 	}, nil
 }
 
 // roundRobin is a Manager implementation using round robin technique.
 type roundRobin struct {
-	iterator cycler.Cycler
-	manager  Manager
-}
-
-// Selectors returns a slice with all the available platform selectors.
-func (c *roundRobin) Selectors() []string {
-	return c.manager.Selectors()
+	cycler.Cycler
+	Manager
 }
 
 // Platforms returns a slice with all the available manager, but compared to Map.Platforms, it will try to
 // return a different platform every time at the index 0 if no selector is passed using round robin.
 func (c *roundRobin) Platforms(selector *string) []platform.Platform {
 	if selector == nil {
-		next := c.iterator.Next().(string)
-		return c.manager.Platforms(&next)
+		next := c.Next().(string)
+		return c.Platforms(&next)
 	}
-	return c.manager.Platforms(selector)
-}
-
-// Platform receives a selector and returns its matching platform or an error if it is not found.
-func (c *roundRobin) Platform(selector string) (platform.Platform, error) {
-	return c.manager.Platform(selector)
+	return c.Platforms(selector)
 }
