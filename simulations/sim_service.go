@@ -2067,13 +2067,7 @@ func (s *Service) initPlatforms() (platformManager.Manager, error) {
 		Loader:     loader.NewYAMLLoader(s.logger),
 		Logger:     s.logger,
 	}
-
-	m, err := platformManager.NewMapFromConfig(input)
-	if err != nil {
-		return nil, err
-	}
-
-	return platformManager.NewRoundRobin(m)
+	return platformManager.WithRoundRobin(platformManager.NewMapFromConfig(input))
 }
 
 // TODO: Make initApplicationServices independent of Service by receiving arguments with the needed config.

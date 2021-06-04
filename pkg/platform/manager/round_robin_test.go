@@ -32,11 +32,11 @@ func (s *testRoundRobinSuite) SetupSuite() {
 	s.platform3, _ = platform.NewPlatform("p3", platform.Components{})
 
 	var err error
-	s.platformRoundRobin, err = NewRoundRobin(Map{
+	s.platformRoundRobin, err = WithRoundRobin(Map{
 		s.selector1: s.platform1,
 		s.selector2: s.platform2,
 		s.selector3: s.platform3,
-	})
+	}, nil)
 	s.Require().NoError(err)
 }
 
