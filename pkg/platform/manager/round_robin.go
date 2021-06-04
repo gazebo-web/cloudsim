@@ -31,7 +31,7 @@ type roundRobin struct {
 func (c *roundRobin) Platforms(selector *string) []platform.Platform {
 	if selector == nil {
 		next := c.Next().(string)
-		return c.Platforms(&next)
+		return c.Manager.Platforms(&next)
 	}
-	return c.Platforms(selector)
+	return c.Manager.Platforms(selector)
 }
