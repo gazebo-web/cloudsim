@@ -7,7 +7,7 @@ import (
 
 // NewRoundRobin initializes a new Manager using a base platform Manager but iterates over the inner manager using round robin.
 func NewRoundRobin(base Manager) (Manager, error) {
-	c, err := cycler.NewCycler(base.Selectors())
+	c, err := cycler.NewCyclerFromSlice(base.Selectors())
 	if err != nil {
 		return nil, err
 	}
