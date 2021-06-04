@@ -5,7 +5,7 @@ import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/platform"
 )
 
-// NewRoundRobin initializes a new manager using a base platform map but iterates over the map using round robin.
+// NewRoundRobin initializes a new Manager using a base platform Map but iterates over the inner platforms using round robin.
 func NewRoundRobin(platforms Map) (Manager, error) {
 	c, err := cycler.NewCycler(platforms.Selectors())
 	if err != nil {
@@ -29,7 +29,7 @@ func (c *RoundRobin) Selectors() []string {
 }
 
 // Platforms returns a slice with all the available platforms, but compared to Map.Platforms, it will try to
-// return a different platform every time if no selector is passed using round robin.
+// return a different platform every time at the index 0 if no selector is passed using round robin.
 func (c *RoundRobin) Platforms(selector *string) []platform.Platform {
 	if selector == nil {
 		next := c.cycler.Next().(string)
