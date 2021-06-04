@@ -14,7 +14,6 @@ import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/summaries"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/actions"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/application"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/cycler"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/loader"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/machines"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/components/pods"
@@ -854,8 +853,7 @@ func (s *Service) workerStartSimulation(payload interface{}) {
 
 	// Cycle through platforms and launch simulations
 	platforms := s.getPlatforms(simDep)
-	for {
-		p := platforms.Next().(platform.Platform)
+	for _, p := range platforms {
 		// Update SimulationDeployment platform
 		simDep.updatePlatform(s.DB, p.GetName())
 
@@ -2038,7 +2036,7 @@ func (s *Service) QueueRemoveElement(ctx context.Context, user *users.User, grou
 	return s.launchHandlerQueue.Remove(groupID)
 }
 
-func (s *Service) getPlatforms(simDep *SimulationDeployment) cycler.Cycler {
+func (s *Service) getPlatforms(simDep *SimulationDeployment) []platform.Platform {
 	// Get the platforms
 	platforms := s.platforms.Platforms(simDep.Platform)
 	if simDep.Platform != nil && platforms[0].(platform.Platform).GetName() != *simDep.Platform {
@@ -2046,12 +2044,7 @@ func (s *Service) getPlatforms(simDep *SimulationDeployment) cycler.Cycler {
 		s.logger.Warning(fmt.Sprintf(msg, *simDep.Platform, *simDep.GroupID))
 	}
 
-	c, err := cycler.NewCycler(platforms)
-	if err != nil {
-		panic("failed to create platform cycler")
-	}
-
-	return c
+	return platforms
 }
 
 // TODO: Make initPlatforms independent of Service by receiving arguments with the needed config.
