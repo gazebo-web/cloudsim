@@ -23,8 +23,9 @@ type roundRobin struct {
 	Manager
 }
 
-// Platforms returns a slice with all the available manager, but compared to Map.Platforms, it will try to
-// return a different platform every time at the index 0 if no selector is passed using round robin.
+// Platforms returns a slice with a set of platforms.
+// If a selector is passed, the underlying Manager will be in charge of returning the platform slice.
+// If no selector is passed, this implementation will try to return a platform based on a round robin algorithm.
 func (c *roundRobin) Platforms(selector *string) []platform.Platform {
 	if selector == nil {
 		next := c.Next().(string)
