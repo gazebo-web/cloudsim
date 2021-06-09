@@ -1173,6 +1173,7 @@ github.com/soheilhy/cmux v0.1.4/go.mod h1:IM3LyeVVIOuxMH7sFAkER9+bJ4dT7Ms6E4xg4k
 github.com/solo-io/anyvendor v0.0.1/go.mod h1:SLucIeU8qBOYI82BveNVn2LzZFcMWJSCf8Kd1S4Jcr4=
 github.com/solo-io/autopilot v0.1.1-0.20200211163026-f295a102fd94/go.mod h1:ChONxgEh+B2WxCOiX79u+gd2+5sABOwD3EG4cKtR6KA=
 github.com/solo-io/envoy-operator v0.1.1/go.mod h1:ZP5hB+khljAFCROj/yDjVPXCPHntdewy6mqYybcCneQ=
+github.com/solo-io/gloo v1.1.0/go.mod h1:dNnxchbq5F4ITJhX/0fy5brfbsj6vlW+AwgnTlqZN0A=
 github.com/solo-io/gloo v1.3.1/go.mod h1:08u6J9vpfFGRDsZybTQ65UX7UuJr+EBsZz++J1wtKkQ=
 github.com/solo-io/gloo v1.4.12 h1:TDsQV9tq//zMGmM6ma2bQvKdvL65IC2ypZcc5UUMOLU=
 github.com/solo-io/gloo v1.4.12/go.mod h1:lK4Kfx5tEh0lxYa5XgMRQFB8YbirX+ocENxLzQThjcE=
@@ -1191,6 +1192,7 @@ github.com/solo-io/solo-kit v0.12.2/go.mod h1:oNDT3CNTgdjNh5tgkr4Wj8tj+h0VtJjfT/
 github.com/solo-io/solo-kit v0.13.8-patch4 h1:9/nWCqqA7Mr1MScZTcjAmjwUvWrxqR0N42WEfuGxakA=
 github.com/solo-io/solo-kit v0.13.8-patch4/go.mod h1:1cSoxO1Cgzn++03nnp5V1iGf0S45OLDTUmj70rD/+hY=
 github.com/solo-io/wasme v0.0.1/go.mod h1:Zb85GQMTyx7NEyEINCUiofKE9KZLjQVF6obvHOHBQE8=
+github.com/solo-io/wasme v0.0.8/go.mod h1:vZ0qq7Zn885jZAc6tH7K1NLdggW3X5Iw8ijK9E35P9g=
 github.com/solo-io/wasme v0.0.13-rc1/go.mod h1:JwS6dxyZcWO9P7z0NmmD2pAl5PVaxJ2ASN06Owbgpd4=
 github.com/sony/gobreaker v0.4.1/go.mod h1:ZKptC7FHNvhBz7dN2LGjPVBz2sZJmc0/PkyDJOjmxWY=
 github.com/sourcegraph/go-diff v0.5.1/go.mod h1:j2dHj3m8aZgQO8lMTcTnBcXkRRRqi34cd2MNlA9u1mE=
