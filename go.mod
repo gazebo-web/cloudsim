@@ -103,9 +103,10 @@ require (
 	honnef.co/go/tools v0.0.1-2020.1.6 // indirect
 	istio.io/client-go v0.0.0-20191206191348-5c576a7ecef0 // indirect
 	istio.io/tools v0.0.0-20200128155652-36eceb1fcb9d // indirect
-	k8s.io/api v0.17.2
+	k8s.io/api v0.20.4
 	k8s.io/apimachinery v0.20.4
 	k8s.io/client-go v0.20.4
+	k8s.io/component-helpers v0.20.4 // indirect
 	k8s.io/gengo v0.0.0-20191010091904-7fa3014cb28f // indirect
 	k8s.io/helm v2.16.1+incompatible // indirect
 	k8s.io/kubernetes v1.17.1

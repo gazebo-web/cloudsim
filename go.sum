@@ -393,6 +393,7 @@ github.com/go-logfmt/logfmt v0.3.0/go.mod h1:Qt1PoO58o5twSAckw1HlFXLmHsOX5/0LbT9
 github.com/go-logfmt/logfmt v0.4.0/go.mod h1:3RMwSq7FuexP4Kalkev3ejPJsZTpXXBr9+V4qmtdjCk=
 github.com/go-logfmt/logfmt v0.5.0/go.mod h1:wCYkCAKZfumFQihp8CzCvQ3paCTfi41vtzG1KdI/P7A=
 github.com/go-logr/logr v0.1.0/go.mod h1:ixOQHD9gLJUVQQ2ZOR7zLEifBX6tGkNJF4QyIY7sIas=
+github.com/go-logr/logr v0.2.0/go.mod h1:z6/tIYblkpsD+a4lm/fGIIU9mZ+XfAiaFtq7xTgseGU=
 github.com/go-logr/zapr v0.1.0/go.mod h1:tabnROwaDl0UNxkVeFRbY8bwB37GwRv0P8lg6aAiEnk=
 github.com/go-logr/zapr v0.1.1/go.mod h1:tabnROwaDl0UNxkVeFRbY8bwB37GwRv0P8lg6aAiEnk=
 github.com/go-martini/martini v0.0.0-20170121215854-22fa46961aab/go.mod h1:/P9AEU963A2AYjv4d1V5eVL1CQbEJq6aCNHDDjibzu8=
@@ -1791,12 +1792,15 @@ k8s.io/cluster-bootstrap v0.17.1/go.mod h1:bp4yDMvUBdGyYJoT2mLAb+WGgkouUanvrEyWE
 k8s.io/code-generator v0.17.1/go.mod h1:DVmfPQgxQENqDIzVR2ddLXMH34qeszkKSdH/N+s+38s=
 k8s.io/component-base v0.17.1 h1:lK/lUzZZQK+DlH0XD+gq610OUEmjWOyDuUYOTGetw10=
 k8s.io/component-base v0.17.1/go.mod h1:LrBPZkXtlvGjBzDJa0+b7E5Ij4VoAAKrOGudRC5z2eY=
+k8s.io/component-helpers v0.20.4 h1:3XJi6w+AcLd5f3ZwSRfgWuHFnUCmMAaRsUt2+NGDyQ0=
+k8s.io/component-helpers v0.20.4/go.mod h1:S7jGg8zQp3kwvSzfuGtNaQAMVmvzomXDioTm5vABn9g=
 k8s.io/cri-api v0.17.1/go.mod h1:BzAkbBHHp81d+aXzbiIcUbilLkbXa40B8mUHOk6EX3s=
 k8s.io/csi-translation-lib v0.17.1/go.mod h1:EWeHQJcexqar6avuUocMwEJOYkboteNM9ODXa3qoamc=
 k8s.io/gengo v0.0.0-20190822140433-26a664648505/go.mod h1:ezvh/TsK7cY6rbqRK0oQQ8IAqLxYwwyPxAX1Pzy0ii0=
 k8s.io/heapster v1.2.0-beta.1/go.mod h1:h1uhptVXMwC8xtZBYsPXKVi8fpdlYkTs6k949KozGrM=
 k8s.io/helm v2.12.0+incompatible/go.mod h1:LZzlS4LQBHfciFOurYBFkCMTaZ0D1l+p0teMg7TSULI=
 k8s.io/helm v2.16.1+incompatible/go.mod h1:LZzlS4LQBHfciFOurYBFkCMTaZ0D1l+p0teMg7TSULI=
+k8s.io/klog/v2 v2.4.0/go.mod h1:Od+F08eJP+W3HUb4pSrPpgp9DGU4GzlpG/TmITuYh/Y=
 k8s.io/kube-aggregator v0.17.1/go.mod h1:H5LcB3fx+P1gpowuZpzDu5B1XfABdO7JBKyB9J9bt34=
 k8s.io/kube-controller-manager v0.17.1/go.mod h1:+jsQDMuaZzr0e2m5TMuSIz7jR0JlYCqfsCOiOr5h3ck=
 k8s.io/kube-openapi v0.0.0-20190816220812-743ec37842bf h1:EYm5AW/UUDbnmnI+gK0TJDVK9qPLhM+sRHYanNKw0EQ=
