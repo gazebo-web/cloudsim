@@ -109,6 +109,7 @@ require (
 	k8s.io/component-helpers v0.20.4 // indirect
 	k8s.io/gengo v0.0.0-20191010091904-7fa3014cb28f // indirect
 	k8s.io/helm v2.16.1+incompatible // indirect
+	k8s.io/kubectl v0.20.4 // indirect
 	k8s.io/kubernetes v1.17.1
 	k8s.io/utils v0.20.4 // indirect
 	knative.dev/pkg v0.0.0-20191203174735-3444316bdeef // indirect
