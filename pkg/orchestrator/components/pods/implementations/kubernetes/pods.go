@@ -12,8 +12,11 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	podutil "k8s.io/kubectl/pkg/util/podutils"
-	"k8s.io/kubernetes/pkg/client/conditions"
 )
+
+// ErrPodCompleted is returned by PodRunning or PodContainerRunning to indicate that
+// the pod has already reached completed state.
+var ErrPodCompleted = fmt.Errorf("pod ran to completion")
 
 // kubernetesPods is a pods.Pods implementation.
 type kubernetesPods struct {
@@ -323,7 +326,7 @@ func (p *kubernetesPods) WaitForCondition(resource orchestratorResource.Resource
 // isPodReady checks if the given Kubernetes Pod matches the ready condition.
 func (p *kubernetesPods) isPodReady(pod *apiv1.Pod) (bool, error) {
 	if pod.Status.Phase == apiv1.PodFailed || pod.Status.Phase == apiv1.PodSucceeded {
-		return false, conditions.ErrPodCompleted
+		return false, ErrPodCompleted
 	}
 	return podutil.IsPodReady(pod), nil
 }
