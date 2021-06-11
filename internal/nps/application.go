@@ -97,7 +97,14 @@ func NewApplication(apiVersion string, logger ign.Logger) (Application, error) {
 	// server automatically add middleware required to track metrics.
 	monitoring := prometheus.NewPrometheusProvider("")
 
-	app.server, err = ign.Init("", "", monitoring)
+	var auth0RsaPublickey string
+
+	// Get the auth0 credentials.
+	if auth0RsaPublickey, err = ign.ReadEnvVar("AUTH0_RSA256_PUBLIC_KEY"); err != nil {
+		logger.Info("Missing AUTH0_RSA256_PUBLIC_KEY env variable. Authentication will not work.")
+	}
+
+	app.server, err = ign.Init(auth0RsaPublickey, "", monitoring)
 
 	if err := setupUsers(app, logger); err != nil {
 		return nil, err

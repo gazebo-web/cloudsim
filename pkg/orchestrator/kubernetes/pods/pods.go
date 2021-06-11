@@ -80,15 +80,15 @@ func (p *pods) Create(input orchestrator.CreatePodInput) (orchestrator.Resource,
 			})
 		}
 
-    var capabilities apiv1.Capabilities
-    if c.Capabilities != nil {
-      for _, capability := range c.Capabilities.Add {
-        capabilities.Add = append(capabilities.Add, apiv1.Capability(capability))
-      }
-      for _, capability := range c.Capabilities.Drop {
-        capabilities.Drop = append(capabilities.Drop, apiv1.Capability(capability))
-      }
-    }
+		var capabilities apiv1.Capabilities
+		if c.Capabilities != nil {
+			for _, capability := range c.Capabilities.Add {
+				capabilities.Add = append(capabilities.Add, apiv1.Capability(capability))
+			}
+			for _, capability := range c.Capabilities.Drop {
+				capabilities.Drop = append(capabilities.Drop, apiv1.Capability(capability))
+			}
+		}
 
 		// Add new container to list of containers
 		containers = append(containers, apiv1.Container{
@@ -99,14 +99,13 @@ func (p *pods) Create(input orchestrator.CreatePodInput) (orchestrator.Resource,
 			SecurityContext: &apiv1.SecurityContext{
 				Privileged:               c.Privileged,
 				AllowPrivilegeEscalation: c.AllowPrivilegeEscalation,
-        Capabilities:  &capabilities,
+				Capabilities:             &capabilities,
 			},
 			Ports:        ports,
 			VolumeMounts: volumeMounts,
 			Env:          envs,
 		})
 	}
-
 
 	p.Logger.Debug(fmt.Sprintf("List of containers: %+v", containers))
 
