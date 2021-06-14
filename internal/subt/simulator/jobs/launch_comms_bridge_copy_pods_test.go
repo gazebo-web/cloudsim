@@ -47,6 +47,7 @@ func TestLaunchCommsBridgeCopyPods(t *testing.T) {
 	storeIgnition.On("Region").Return("us-west-1")
 	storeIgnition.On("AccessKeyLabel").Return("aws-access-key-id")
 	storeIgnition.On("SecretAccessKeyLabel").Return("aws-secret-access-key")
+	storeIgnition.On("SidecarContainerLogsPath").Return("/tmp/logs")
 
 	// Mock orchestrator store methods for this test
 	storeOrchestrator.On("Namespace").Return("default")
