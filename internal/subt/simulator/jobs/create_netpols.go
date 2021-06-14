@@ -237,12 +237,16 @@ func prepareNetworkPolicyCommsBridgesInput(store actions.Store, tx *gorm.DB, dep
 				subtapp.GetPodLabelsGazeboServer(s.GroupID, s.ParentGroupID),
 				// Allow traffic from field computer
 				subtapp.GetPodLabelsFieldComputer(s.GroupID, s.ParentGroupID),
+				// Allow traffic from mapping server
+				subtapp.GetPodLabelsMappingServer(s.GroupID, s.ParentGroupID),
 			},
 			PeersTo: []resource.Selector{
 				// Allow traffic to gazebo server
 				subtapp.GetPodLabelsGazeboServer(s.GroupID, s.ParentGroupID),
 				// Allow traffic to field computer
 				subtapp.GetPodLabelsFieldComputer(s.GroupID, s.ParentGroupID),
+				// Allow traffic to mapping server
+				subtapp.GetPodLabelsMappingServer(s.GroupID, s.ParentGroupID),
 			},
 			Ingresses: network.IngressRule{
 				IPBlocks: []string{
