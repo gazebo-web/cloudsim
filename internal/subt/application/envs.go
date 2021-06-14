@@ -30,10 +30,10 @@ func GetEnvVarsFromSourceGazeboServer() map[string]string {
 }
 
 // GetEnvVarsCommsBridge returns the env vars for the comms-bridge container.
-func GetEnvVarsCommsBridge(groupID simulations.GroupID, robotName, gzServerIP, verbosity string) map[string]string {
+func GetEnvVarsCommsBridge(groupID simulations.GroupID, robotName, gzServerIP, mappingServerIP, verbosity string) map[string]string {
 	return map[string]string{
 		"IGN_PARTITION":  groupID.String(),
-		"IGN_RELAY":      gzServerIP,
+		"IGN_RELAY":      fmt.Sprintf("%s:%s", gzServerIP, mappingServerIP),
 		"IGN_VERBOSE":    verbosity,
 		"ROBOT_NAME":     robotName,
 		"ROS_MASTER_URI": "http://$(ROS_IP):11311",
