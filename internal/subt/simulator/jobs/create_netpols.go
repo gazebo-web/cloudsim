@@ -300,26 +300,30 @@ func removeCreatedNetworkPoliciesMappingServer(store actions.Store, tx *gorm.DB,
 func prepareNetworkPolicyMappingServerInput(store actions.Store, tx *gorm.DB, deployment *actions.Deployment, value interface{}) (interface{}, error) {
 	s := store.State().(*state.StartSimulation)
 
+	robots, err := s.Services().Simulations().GetRobots(s.GroupID)
+	if err != nil {
+		return nil, err
+	}
+
+	// All robots
+	selectors := make([]resource.Selector, len(robots))
+
+	// Each robot's comms bridge will be granted with permissions to communicate to the mapping server
+	for i, r := range robots {
+		selectors[i] = subtapp.GetPodLabelsCommsBridge(s.GroupID, s.ParentGroupID, r)
+	}
+
+	// Allow traffic to and from gzserver
+	selectors = append(selectors, subtapp.GetPodLabelsGazeboServer(s.GroupID, s.ParentGroupID))
+
 	return jobs.CreateNetworkPoliciesInput{
 		network.CreateNetworkPolicyInput{
 			Name:        subtapp.GetPodNameMappingServer(s.GroupID),
 			Namespace:   s.Platform().Store().Orchestrator().Namespace(),
 			Labels:      subtapp.GetPodLabelsBase(s.GroupID, s.ParentGroupID).Map(),
 			PodSelector: subtapp.GetPodLabelsMappingServer(s.GroupID, s.ParentGroupID),
-			PeersFrom: []resource.Selector{
-				// Allow traffic from gazebo server
-				subtapp.GetPodLabelsGazeboServer(s.GroupID, s.ParentGroupID),
-			},
-			PeersTo: []resource.Selector{
-				// Allow traffic to gazebo server
-				subtapp.GetPodLabelsGazeboServer(s.GroupID, s.ParentGroupID),
-			},
-			Ingresses: network.IngressRule{
-				Ports: []int32{
-					// Allow traffic from websocket server
-					// TBD: [ign port],
-				},
-			},
+			PeersFrom:   selectors,
+			PeersTo:     selectors,
 			Egresses: network.EgressRule{
 				// Allow traffic to the internet
 				AllowOutbound: true,
