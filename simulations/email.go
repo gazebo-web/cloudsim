@@ -59,13 +59,10 @@ func SendSimulationSummaryEmail(e email.Sender, dep *SimulationDeployment, summa
 	if user.Email != nil {
 		recipients = append(recipients, *user.Email)
 	}
-	// Add the organization email to the list if it differs from the user's
+	// Add the organization email to the list if the organization exists and it differs from the user's
 	if dep.Owner != nil {
 		org, em := globals.UserAccessor.GetOrganization(*dep.Owner)
-		if em != nil {
-			return em
-		}
-		if org.Email != nil && (user.Email == nil || *org.Email != *user.Email) {
+		if em == nil && org.Email != nil && (user.Email == nil || *org.Email != *user.Email) {
 			recipients = append(recipients, *org.Email)
 		}
 	}
