@@ -496,8 +496,7 @@ var Routes = ign.Routes{
 		Description: "Gets the list of robots from the competition",
 		URI:         "/competition/robots",
 		Headers:     ign.AuthHeadersRequired,
-		Methods:     ign.Methods{},
-		SecureMethods: ign.SecureMethods{
+		Methods:     ign.Methods{
 			// swagger:route GET /competition/robots competition robots
 			//
 			// Gets the list of all competition robots.
@@ -514,11 +513,12 @@ var Routes = ign.Routes{
 				Type:        "GET",
 				Description: "Gets the list of robots from the competition",
 				Handlers: ign.FormatHandlers{
-					ign.FormatHandler{Handler: ign.JSONResult(WithUser(GetCompetitionRobots))},
-					ign.FormatHandler{Extension: ".json", Handler: ign.JSONResult(WithUser(GetCompetitionRobots))},
+					ign.FormatHandler{Handler: ign.JSONResult(WithUserOrAnonymous(GetCompetitionRobots))},
+					ign.FormatHandler{Extension: ".json", Handler: ign.JSONResult(WithUserOrAnonymous(GetCompetitionRobots))},
 				},
 			},
 		},
+		SecureMethods: ign.SecureMethods{},
 	},
 
 	//////////////
