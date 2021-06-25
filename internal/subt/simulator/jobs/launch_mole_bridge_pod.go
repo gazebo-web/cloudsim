@@ -56,7 +56,7 @@ func prepareMoleBridgePodInput(store actions.Store, tx *gorm.DB, deployment *act
 	}
 
 	// Only launch the Mole bridge if the image was defined
-	if track.MoleBridgeImage == "" {
+	if track.MoleBridgeImage == nil {
 		return jobs.LaunchPodsInput([]pods.CreatePodInput{}), nil
 	}
 
@@ -97,7 +97,7 @@ func prepareMoleBridgePodInput(store actions.Store, tx *gorm.DB, deployment *act
 			Containers: []pods.Container{
 				{
 					Name:                     subtapp.GetContainerNameMoleBridge(),
-					Image:                    track.MoleBridgeImage,
+					Image:                    *track.MoleBridgeImage,
 					Privileged:               &privileged,
 					AllowPrivilegeEscalation: &allowPrivilegesEscalation,
 					EnvVars:                  envVars,

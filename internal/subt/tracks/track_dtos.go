@@ -8,7 +8,7 @@ type TrackInput struct {
 	BridgeImage string `json:"bridge_image" validate:"required"`
 	// MoleBridgeImage is the bridge image that sends simulation data to a Mole deployment.
 	// If this field is not defined, the mole bridge should not be launched.
-	MoleBridgeImage string `json:"mole_bridge_image"`
+	MoleBridgeImage *string `json:"mole_bridge_image"`
 	// StatsTopic is a topic used to track general stats of the simulation (runtime, sim runtime, etc.)
 	StatsTopic string `json:"stats_topic" validate:"required"`
 	// WarmupTopic is a topic used to track when the simulation officially starts and ends

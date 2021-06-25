@@ -281,7 +281,7 @@ func (r *SubTCircuitRules) ToTrack(worldID int, runID int) (*tracks.Track, error
 		Name:            *r.Circuit,
 		Image:           *r.Image,
 		BridgeImage:     *r.BridgeImage,
-		MoleBridgeImage: *r.MoleBridgeImage,
+		MoleBridgeImage: r.MoleBridgeImage,
 		StatsTopic:      *r.WorldStatsTopics,
 		WarmupTopic:     *r.WorldWarmupTopics,
 		MaxSimSeconds:   maxSimSeconds,
