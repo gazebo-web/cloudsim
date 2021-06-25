@@ -120,6 +120,7 @@ const (
 	CircuitFinalsPractice2     string = "Finals Practice 2"
 	CircuitFinalsPractice3     string = "Finals Practice 3"
 	CircuitVirtualStixCircuit  string = "Virtual Stix Circuit"
+	CircuitVirtualStixCircuit2 string = "Virtual Stix Circuit 2"
 
 	// Container names
 	GazeboServerContainerName    string = "gzserver-container"
