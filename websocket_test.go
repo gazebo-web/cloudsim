@@ -135,6 +135,16 @@ func (suite *WebsocketAddressTestSuite) getChildSimGroupID(groupID string) strin
 	return fmt.Sprintf("%s-c-1", groupID)
 }
 
+func (suite *WebsocketAddressTestSuite) setSimulationToRunning(groupID string) string {
+	// Update status to running
+	suite.Require().NoError(sim.SimServImpl.(*sim.Service).ServiceAdaptor.UpdateStatus(
+		simulations.GroupID(groupID),
+		simulations.StatusRunning),
+	)
+
+	return groupID
+}
+
 func (suite *WebsocketAddressTestSuite) TestWebsocketAddressUser() {
 
 	suite.testWebsocketAddress(
@@ -177,14 +187,4 @@ func (suite *WebsocketAddressTestSuite) TestWebsocketAddressChildSimulations() {
 		suite.jwtSysAdmin,
 		nil,
 	)
-}
-
-func (suite *WebsocketAddressTestSuite) setSimulationToRunning(groupID string) string {
-	// Update status to running
-	suite.Require().NoError(sim.SimServImpl.(*sim.Service).ServiceAdaptor.UpdateStatus(
-		simulations.GroupID(groupID),
-		simulations.StatusRunning),
-	)
-
-	return groupID
 }
