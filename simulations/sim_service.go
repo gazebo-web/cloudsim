@@ -174,7 +174,7 @@ type Service struct {
 	applicationServices subtapp.Services
 	actionService       actions.Servicer
 	simulator           simulator.Simulator
-	serviceAdaptor      simulations.Service
+	ServiceAdaptor      simulations.Service
 }
 
 // SimServImpl holds the instance of the Simulations Service. It is set at initialization.
@@ -2078,8 +2078,8 @@ func (s *Service) initPlatforms() (platformManager.Manager, error) {
 
 // TODO: Make initApplicationServices independent of Service by receiving arguments with the needed config.
 func (s *Service) initApplicationServices() subtapp.Services {
-	s.serviceAdaptor = NewSubTSimulationServiceAdaptor(s.DB)
-	base := application.NewServices(s.serviceAdaptor, s.userAccessor)
+	s.ServiceAdaptor = NewSubTSimulationServiceAdaptor(s.DB)
+	base := application.NewServices(s.ServiceAdaptor, s.userAccessor)
 	trackService := NewTracksService(s.DB, s.logger)
 	summaryService := summaries.NewService(s.DB)
 	return subtapp.NewServices(base, trackService, summaryService)
