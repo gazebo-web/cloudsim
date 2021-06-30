@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
 	sim "gitlab.com/ignitionrobotics/web/cloudsim/simulations"
 	"gitlab.com/ignitionrobotics/web/ign-go"
 	igntest "gitlab.com/ignitionrobotics/web/ign-go/testhelpers"
@@ -43,10 +44,10 @@ func (suite *WebsocketAddressTestSuite) SetupSuite() {
 	setup()
 
 	// Create simulations.
-	suite.singleSimGroupID = suite.requestSimulation(suite.singleSimCircuit, suite.jwtTeamAUser1)
-	suite.multiSimGroupID = suite.getChildSimGroupID(
-		suite.requestSimulation(suite.multiSimCircuit, suite.jwtTeamAUser1),
-	)
+	suite.singleSimGroupID = suite.setSimulationToRunning(suite.requestSimulation(suite.singleSimCircuit, suite.jwtTeamAUser1))
+	suite.multiSimGroupID = suite.setSimulationToRunning(suite.getChildSimGroupID(
+		suite.setSimulationToRunning(suite.requestSimulation(suite.multiSimCircuit, suite.jwtTeamAUser1)),
+	))
 }
 
 // requestSimulation requests a simulation launch
@@ -132,6 +133,16 @@ func (suite *WebsocketAddressTestSuite) testWebsocketAddress(testDesc string, gr
 
 func (suite *WebsocketAddressTestSuite) getChildSimGroupID(groupID string) string {
 	return fmt.Sprintf("%s-c-1", groupID)
+}
+
+func (suite *WebsocketAddressTestSuite) setSimulationToRunning(groupID string) string {
+	// Update status to running
+	suite.Require().NoError(sim.SimServImpl.(*sim.Service).ServiceAdaptor.UpdateStatus(
+		simulations.GroupID(groupID),
+		simulations.StatusRunning),
+	)
+
+	return groupID
 }
 
 func (suite *WebsocketAddressTestSuite) TestWebsocketAddressUser() {
