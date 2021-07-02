@@ -9,6 +9,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"gitlab.com/ignitionrobotics/web/cloudsim/globals"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
 	sim "gitlab.com/ignitionrobotics/web/cloudsim/simulations"
 	"gitlab.com/ignitionrobotics/web/ign-go"
 	"gitlab.com/ignitionrobotics/web/ign-go/testhelpers"
@@ -226,6 +227,11 @@ func TestSimulationsRoute(t *testing.T) {
 			})
 		})
 	}
+
+	require.NoError(t, sim.SimServImpl.(*sim.Service).ServiceAdaptor.UpdateStatus(
+		simulations.GroupID(teamBSimGroupID),
+		simulations.StatusRunning,
+	))
 
 	teamASim := uri + "/" + teamASimGroupID
 	stopSimTestsData := []getSimulationsTest{
