@@ -11,6 +11,7 @@ import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/resource"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulator/jobs"
 	"strconv"
+	"strings"
 )
 
 // LaunchMoleBridgePod launches a mole bridge pod.
@@ -74,6 +75,12 @@ func prepareMoleBridgePodInput(store actions.Store, tx *gorm.DB, deployment *act
 		teamID = int(org.ID)
 	}
 
+	robots := subtSim.GetRobots()
+	robotNames := make([]string, len(robots))
+	for i, robot := range robots {
+		robotNames[i] = robot.GetName()
+	}
+
 	envVars := map[string]string{
 		"PYTHONUNBUFFERED":       "0",
 		"CS_PB_PULSAR_IP":        s.Platform().Store().Mole().BridgePulsarAddress(),
@@ -84,6 +91,7 @@ func prepareMoleBridgePodInput(store actions.Store, tx *gorm.DB, deployment *act
 		"WORLD_ID":               strconv.Itoa(worldIndex + 1),
 		"TEAM_ID":                strconv.Itoa(teamID),
 		"REPLICATION_ID":         string(s.GroupID),
+		"ROBOT_CLASSES":          strings.Join(robotNames, ","),
 	}
 
 	podInputs := []pods.CreatePodInput{

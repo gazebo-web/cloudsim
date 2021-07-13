@@ -110,11 +110,12 @@ func TestLaunchMoleBridgePods(t *testing.T) {
 	trackService := tfake.NewService()
 
 	// Mock Get method from tracks service
+	moleBridgeImage := "mole-bridge-image.org/image"
 	trackService.On("Get", trackName, 0, 0).Return(&tracks.Track{
 		Name:            trackName,
 		Image:           "world-image.org/image",
 		BridgeImage:     "bridge-image.org/image",
-		MoleBridgeImage: "mole-bridge-image.org/image",
+		MoleBridgeImage: &moleBridgeImage,
 		StatsTopic:      "test",
 		WarmupTopic:     "test",
 		MaxSimSeconds:   500,
