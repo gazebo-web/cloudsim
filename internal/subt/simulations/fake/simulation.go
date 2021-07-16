@@ -16,6 +16,7 @@ type SimulationConfig struct {
 	Image      string
 	Track      string
 	Token      *string
+	Owner      *string
 	Robots     []simulations.Robot
 	Marsupials []simulations.Robot
 }
@@ -74,7 +75,16 @@ func (s *simulation) GetPlatform() *string {
 // NewSimulation initializes a new Simulation interface using a fake implementation.
 func NewSimulation(config SimulationConfig) subt.Simulation {
 	return &simulation{
-		Simulation: fake.NewSimulation(config.GroupID, config.Status, config.Kind, config.Error, config.Image, 1*time.Minute),
-		track:      config.Track,
+		Simulation: fake.NewSimulation(
+			config.GroupID,
+			config.Status,
+			config.Kind,
+			config.Error,
+			config.Image,
+			1*time.Minute,
+			config.Owner,
+		),
+		track:  config.Track,
+		robots: config.Robots,
 	}
 }

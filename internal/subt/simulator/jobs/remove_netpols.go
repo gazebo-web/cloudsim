@@ -45,7 +45,7 @@ func prepareRemoveNetworkPoliciesInput(store actions.Store, tx *gorm.DB, deploym
 	}
 
 	resources = append(resources, resource.NewResource(subtapp.GetPodNameGazeboServer(s.GroupID), ns, nil))
-
+	resources = append(resources, resource.NewResource(subtapp.GetPodNameMappingServer(s.GroupID), ns, nil))
 	return jobs.RemoveNetworkPoliciesInput(resources), nil
 }
 

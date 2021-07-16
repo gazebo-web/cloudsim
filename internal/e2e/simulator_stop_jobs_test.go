@@ -260,6 +260,12 @@ func TestStopSimulationAction(t *testing.T) {
 				Namespace: "default",
 			},
 		},
+		&networkingv1.NetworkPolicy{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      subtapp.GetPodNameMappingServer(sim.GetGroupID()),
+				Namespace: "default",
+			},
+		},
 		&apiv1.Pod{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      subtapp.GetPodNameGazeboServer(sim.GetGroupID()),

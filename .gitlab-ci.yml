@@ -23,8 +23,10 @@ variables:
 .setup_db: &setup_db
   - mysql -u root -proot -h mysql -e "CREATE DATABASE usersdb_test"
 
+# Deploys to a Kubernetes cluster.
+# $IMAGE_TAG must be set before calling this.
 .deploy_kubernetes: &deploy_kubernetes
-  - export CONTAINER_IMAGE="$CI_REGISTRY_IMAGE:$CI_COMMIT_SHA"
+  - export CONTAINER_IMAGE="$CI_REGISTRY_IMAGE:$IMAGE_TAG"
   - export APP_SELECTOR="$APPLICATION_NAME-primary"
   - export HEY_CMD="hey -z 15s -q 5 -c 2 http://$APPLICATION_NAME-canary.$APPLICATION_ENVIRONMENT.svc.cluster.local/healthz"
   - envsubst < "./deployments/00-namespace.yaml"
@@ -33,6 +35,17 @@ variables:
   - envsubst < "./deployments/01-deployment.yaml" | kubectl apply -f -
   - envsubst < "./deployments/02-blue-green.yaml"
   - envsubst < "./deployments/02-blue-green.yaml" | kubectl apply -f -
+
+.set_image_tag_to_branch_name: &set_image_tag_to_branch_name
+  - IMAGE_TAG=$(echo $CI_COMMIT_REF_NAME | sed s@/@-@)
+
+# Builds a docker image for the current version.
+# $IMAGE_CACHE and $IMAGE_TAG must be set before calling this.
+.build_docker: &build_docker
+  - echo "Creating docker image with tag $IMAGE_TAG."
+  - docker pull $CI_REGISTRY_IMAGE:$IMAGE_CACHE || true
+  - docker build --cache-from $CI_REGISTRY_IMAGE:$IMAGE_CACHE --tag $CI_REGISTRY_IMAGE:$IMAGE_TAG .
+  - docker push $CI_REGISTRY_IMAGE:$IMAGE_TAG
 
 ##########################################################
 # Cache configuration
@@ -218,27 +231,19 @@ coverage:
   tags:
     - docker
 
-docker:
+# Tag docker images with the ref name for feature branches.
+# Ref names will have any forward slashes '/' converted to dashes '-'.
+docker:branch:
   stage: package
   extends: .docker
-  except:
-    - develop
-    - master
   script:
-    - "docker pull $CI_REGISTRY_IMAGE:next || true"
-    - "docker build --cache-from $CI_REGISTRY_IMAGE:next --tag $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA ."
-    - "docker push $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA"
-
-docker:next:
-  stage: package
-  extends: .docker
+    - IMAGE_CACHE=latest
+    - *set_image_tag_to_branch_name
+    - *build_docker
   only:
-    - develop
-  script:
-    - "docker pull $CI_REGISTRY_IMAGE || true"
-    - "docker build --cache-from $CI_REGISTRY_IMAGE --tag $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA --tag $CI_REGISTRY_IMAGE:next ."
-    - "docker push $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA"
-    - "docker push $CI_REGISTRY_IMAGE:next"
+    - branches
+  except:
+    - /^master$/
 
 docker:latest:
   stage: package
@@ -246,10 +251,19 @@ docker:latest:
   only:
     - master
   script:
-    - "docker pull $CI_REGISTRY_IMAGE || true"
-    - "docker build --cache-from $CI_REGISTRY_IMAGE --tag $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA --tag $CI_REGISTRY_IMAGE:latest ."
-    - "docker push $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA"
-    - "docker push $CI_REGISTRY_IMAGE:latest"
+    - IMAGE_CACHE=develop
+    - IMAGE_TAG=latest
+    - *build_docker
+
+docker:release:
+  stage: package
+  extends: .docker
+  only:
+    - tags
+  script:
+    - IMAGE_CACHE=develop
+    - IMAGE_TAG=$CI_COMMIT_TAG
+    - *build_docker
 
 ###########################################################
 ## Deploying stage
@@ -258,8 +272,9 @@ integration:
   image: registry.gitlab.com/ignitionrobotics/web/images/kubectl:latest
   stage: deploy
   dependencies:
-    - docker
+    - docker:branch
   script:
+    - *set_image_tag_to_branch_name
     - *deploy_kubernetes
   tags:
     - testing
@@ -275,8 +290,9 @@ integration_1:
   image: registry.gitlab.com/ignitionrobotics/web/images/kubectl:latest
   stage: deploy
   dependencies:
-    - docker
+    - docker:branch
   script:
+    - *set_image_tag_to_branch_name
     - *deploy_kubernetes
   tags:
     - testing
@@ -292,8 +308,9 @@ staging:
   image: registry.gitlab.com/ignitionrobotics/web/images/kubectl:latest
   stage: deploy
   dependencies:
-    - docker:next
+    - docker:branch
   script:
+    - IMAGE_TAG=develop
     - *deploy_kubernetes
   tags:
     - testing
@@ -308,8 +325,9 @@ subt-staging:
   image: registry.gitlab.com/ignitionrobotics/web/images/kubectl:latest
   stage: deploy
   dependencies:
-    - docker:next
+    - docker:branch
   script:
+    - IMAGE_TAG=develop
     - *deploy_kubernetes
   tags:
     - testing
@@ -324,8 +342,9 @@ subt:
   image: registry.gitlab.com/ignitionrobotics/web/images/kubectl:latest
   stage: deploy
   dependencies:
-    - docker:latest
+    - docker:release
   script:
+    - IMAGE_TAG=$CI_COMMIT_TAG
     - *deploy_kubernetes
   tags:
     - kubernetes
@@ -333,5 +352,5 @@ subt:
   environment:
     name: production
   only:
-    - master
+    - tags
   when: manual
