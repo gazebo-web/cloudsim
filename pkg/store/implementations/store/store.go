@@ -6,6 +6,7 @@ import storepkg "gitlab.com/ignitionrobotics/web/cloudsim/pkg/store"
 type store struct {
 	machines     storepkg.Machines
 	orchestrator storepkg.Orchestrator
+	mole         storepkg.Mole
 	ignition     storepkg.Ignition
 }
 
@@ -17,6 +18,11 @@ func (e *store) Orchestrator() storepkg.Orchestrator {
 // Ignition returns a store.Ignition implementation that reads configuration from env vars.
 func (e *store) Ignition() storepkg.Ignition {
 	return e.ignition
+}
+
+// Mole returns a store.Mole implementation that reads configuration from env vars.
+func (e *store) Mole() storepkg.Mole {
+	return e.mole
 }
 
 // Machines returns a store.Machines implementation that reads configuration from env vars.
@@ -36,13 +42,20 @@ func NewStoreFromEnvVars() (storepkg.Store, error) {
 		return nil, err
 	}
 
+	mole, err := newMoleStoreFromEnvVars()
+	if err != nil {
+		return nil, err
+	}
+
 	orchestrator, err := newOrchestratorStoreFromEnvVars()
 	if err != nil {
 		return nil, err
 	}
+
 	return &store{
 		machines:     machines,
 		ignition:     ignition,
+		mole:         mole,
 		orchestrator: orchestrator,
 	}, nil
 }

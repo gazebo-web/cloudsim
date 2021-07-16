@@ -10,7 +10,7 @@ import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/validate"
 )
 
-// ignitionStore is the implementation of store.Ignition using env vars.
+// ignitionStore is a store.Ignition implementation.
 type ignitionStore struct {
 	// GazeboServerLogsPathValue is the path inside the container where the `gz-logs` Volume will be mounted.
 	// eg. '/tmp/ign'.
