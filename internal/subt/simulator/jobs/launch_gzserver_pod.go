@@ -61,7 +61,7 @@ func prepareGazeboCreatePodInput(store actions.Store, tx *gorm.DB, deployment *a
 		Seed:               track.Seed,
 		AuthorizationToken: subtSim.GetToken(),
 		// TODO: Get max connections from store.
-		MaxWebsocketConnections: 500,
+		MaxWebsocketConnections: 100,
 		Robots:                  subtSim.GetRobots(),
 		Marsupials:              subtSim.GetMarsupials(),
 		RosEnabled:              true,
