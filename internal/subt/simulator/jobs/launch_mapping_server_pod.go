@@ -10,23 +10,22 @@ import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/components/pods"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/resource"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulator/jobs"
-	"time"
 )
 
-// LaunchGazeboServerPod launches a gazebo server pod.
-var LaunchGazeboServerPod = jobs.LaunchPods.Extend(actions.Job{
-	Name:            "launch-gzserver-pod",
-	PreHooks:        []actions.JobFunc{setStartState, prepareGazeboCreatePodInput},
+// LaunchMappingServerPod launches a mapping server pod.
+var LaunchMappingServerPod = jobs.LaunchPods.Extend(actions.Job{
+	Name:            "launch-mapping-server-pod",
+	PreHooks:        []actions.JobFunc{setStartState, prepareMappingCreatePodInput},
 	PostHooks:       []actions.JobFunc{checkLaunchPodsError, returnState},
-	RollbackHandler: rollbackLaunchGazeboServerPod,
+	RollbackHandler: rollbackLaunchMappingServerPod,
 	InputType:       actions.GetJobDataType(&state.StartSimulation{}),
 	OutputType:      actions.GetJobDataType(&state.StartSimulation{}),
 })
 
-func rollbackLaunchGazeboServerPod(store actions.Store, tx *gorm.DB, deployment *actions.Deployment, value interface{}, err error) (interface{}, error) {
+func rollbackLaunchMappingServerPod(store actions.Store, tx *gorm.DB, deployment *actions.Deployment, value interface{}, err error) (interface{}, error) {
 	s := store.State().(*state.StartSimulation)
 
-	name := subtapp.GetPodNameGazeboServer(s.GroupID)
+	name := subtapp.GetPodNameMappingServer(s.GroupID)
 	ns := s.Platform().Store().Orchestrator().Namespace()
 
 	_, _ = s.Platform().Orchestrator().Pods().Delete(resource.NewResource(name, ns, nil))
@@ -34,7 +33,9 @@ func rollbackLaunchGazeboServerPod(store actions.Store, tx *gorm.DB, deployment 
 	return nil, nil
 }
 
-func prepareGazeboCreatePodInput(store actions.Store, tx *gorm.DB, deployment *actions.Deployment, value interface{}) (interface{}, error) {
+// prepareMappingCreatePodInput is in charge of preparing the input of jobs.LaunchPods with specific config for launching
+// a mapping server pod.
+func prepareMappingCreatePodInput(store actions.Store, tx *gorm.DB, deployment *actions.Deployment, value interface{}) (interface{}, error) {
 	s := store.State().(*state.StartSimulation)
 	// Set up namespace
 	namespace := s.Platform().Store().Orchestrator().Namespace()
@@ -50,87 +51,72 @@ func prepareGazeboCreatePodInput(store actions.Store, tx *gorm.DB, deployment *a
 
 	// Get track
 	track, err := s.SubTServices().Tracks().Get(subtSim.GetTrack(), subtSim.GetWorldIndex(), subtSim.GetRunIndex())
-
 	if err != nil {
 		return nil, err
 	}
-	// Generate gazebo command args
-	runCommand := cmdgen.Gazebo(cmdgen.GazeboConfig{
-		World:              track.World,
-		WorldMaxSimSeconds: time.Duration(track.MaxSimSeconds) * time.Second,
-		Seed:               track.Seed,
-		AuthorizationToken: subtSim.GetToken(),
-		// TODO: Get max connections from store.
-		MaxWebsocketConnections: 500,
-		Robots:                  subtSim.GetRobots(),
-		Marsupials:              subtSim.GetMarsupials(),
-		RosEnabled:              true,
+
+	// By-pass job if mapping image is not defined.
+	if track.MappingImage == nil {
+		return nil, nil
+	}
+
+	// Generate mapping server command args
+	runCommand, err := cmdgen.MapAnalysis(cmdgen.MapAnalysisConfig{
+		World:  track.World,
+		Robots: subtSim.GetRobots(),
 	})
+	if err != nil {
+		return nil, err
+	}
 
 	// Set up container configuration
 	privileged := true
 	allowPrivilegeEscalation := true
 
 	// TODO: Get ports from Ignition Store
-	ports := []int32{11345, 11311}
+	ports := []int32{11311}
+
+	initVolumes := []pods.Volume{
+		{
+			Name:      "logs",
+			HostPath:  "/tmp",
+			MountPath: "/tmp",
+		},
+	}
 
 	volumes := []pods.Volume{
 		{
 			Name:      "logs",
-			MountPath: s.Platform().Store().Ignition().GazeboServerLogsPath(),
-			HostPath:  "/tmp",
-		},
-		{
-			Name:      "xauth",
-			MountPath: "/tmp/.docker.xauth",
-			HostPath:  "/tmp/.docker.xauth",
-		},
-		{
-			Name:      "localtime",
-			MountPath: "/etc/localtime",
-			HostPath:  "/etc/localtime",
-		},
-		{
-			Name:      "devinput",
-			MountPath: "/dev/input",
-			HostPath:  "/dev/input",
-		},
-		{
-			Name:      "x11",
-			MountPath: "/tmp/.X11-unix",
-			HostPath:  "/tmp/.X11-unix",
+			MountPath: "/tmp/ign/logs",
+			HostPath:  "/tmp/mapping",
 		},
 	}
 
-	nameservers := s.Platform().Store().Orchestrator().Nameservers()
-
 	return jobs.LaunchPodsInput{
 		{
-			Name:                          subtapp.GetPodNameGazeboServer(s.GroupID),
+			Name:                          subtapp.GetPodNameMappingServer(s.GroupID),
 			Namespace:                     namespace,
-			Labels:                        subtapp.GetPodLabelsGazeboServer(s.GroupID, s.ParentGroupID).Map(),
+			Labels:                        subtapp.GetPodLabelsMappingServer(s.GroupID, s.ParentGroupID).Map(),
 			RestartPolicy:                 pods.RestartPolicyNever,
 			TerminationGracePeriodSeconds: s.Platform().Store().Orchestrator().TerminationGracePeriod(),
 			NodeSelector:                  subtapp.GetNodeLabelsGazeboServer(s.GroupID),
+			Volumes:                       volumes,
+			InitContainers: []pods.Container{
+				pods.NewChownContainer(initVolumes),
+			},
 			Containers: []pods.Container{
 				{
-					Name:                     subtapp.GetContainerNameGazeboServer(),
-					Image:                    track.Image,
+					Name:                     subtapp.GetContainerNameMappingServer(),
+					Image:                    *track.MappingImage,
 					Args:                     runCommand,
 					Privileged:               &privileged,
 					AllowPrivilegeEscalation: &allowPrivilegeEscalation,
 					Ports:                    ports,
+					EnvVarsFrom:              subtapp.GetEnvVarsFromSourceMappingServer(),
+					EnvVars:                  subtapp.GetEnvVarsMappingServer(s.GroupID, s.GazeboServerIP),
 					Volumes:                  volumes,
-					EnvVarsFrom:              subtapp.GetEnvVarsFromSourceGazeboServer(),
-					EnvVars: subtapp.GetEnvVarsGazeboServer(
-						s.GroupID,
-						s.Platform().Store().Ignition().IP(),
-						s.Platform().Store().Ignition().Verbosity(),
-					),
 				},
 			},
-			Volumes:     volumes,
-			Nameservers: nameservers,
 		},
 	}, nil
 }

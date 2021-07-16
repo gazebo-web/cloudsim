@@ -24,7 +24,7 @@ func TestGetGazeboServerIPFailsWhenNotSet(t *testing.T) {
 
 	storeOrchestrator := sfake.NewFakeOrchestrator()
 	storeOrchestrator.On("Namespace").Return("default")
-	fakeStore := sfake.NewFakeStore(nil, storeOrchestrator, nil)
+	fakeStore := sfake.NewFakeStore(nil, storeOrchestrator, nil, nil)
 
 	spdyInit := spdy.NewSPDYFakeInitializer()
 
@@ -62,7 +62,7 @@ func TestGetGazeboIP(t *testing.T) {
 
 	storeOrchestrator := sfake.NewFakeOrchestrator()
 	storeOrchestrator.On("Namespace").Return("default")
-	fakeStore := sfake.NewFakeStore(nil, storeOrchestrator, nil)
+	fakeStore := sfake.NewFakeStore(nil, storeOrchestrator, nil, nil)
 
 	spdyInit := spdy.NewSPDYFakeInitializer()
 

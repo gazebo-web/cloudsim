@@ -18,6 +18,11 @@ func GetPodNameFieldComputer(groupID simulations.GroupID, robotID string) string
 	return fmt.Sprintf("%s-%s-fc-%s", simPrefix, groupID, robotID)
 }
 
+// GetPodNameMoleBridge is used to generate the name for a mole bridge pod.
+func GetPodNameMoleBridge(groupID simulations.GroupID) string {
+	return fmt.Sprintf("%s-%s-mole-bridge", simPrefix, groupID)
+}
+
 // GetPodNameCommsBridge is used to generate the name for a comms bridge pod for the given robot.
 func GetPodNameCommsBridge(groupID simulations.GroupID, robotID string) string {
 	return fmt.Sprintf("%s-%s-comms-%s", simPrefix, groupID, robotID)
@@ -38,6 +43,16 @@ func GetPodNameGazeboServer(groupID simulations.GroupID) string {
 	return fmt.Sprintf("%s-%s-gzserver", simPrefix, groupID)
 }
 
+// GetPodNameMappingServer is used to generate the name for the mapping server pod.
+func GetPodNameMappingServer(groupID simulations.GroupID) string {
+	return fmt.Sprintf("%s-%s-map-server", simPrefix, groupID)
+}
+
+// GetPodNameMappingServerCopy is used to generate the name for the mapping server copy pod.
+func GetPodNameMappingServerCopy(groupID simulations.GroupID) string {
+	return fmt.Sprintf("%s-copy", GetPodNameMappingServer(groupID))
+}
+
 // GetRobotID returns a robot identification name in the following form:
 // rbtN with N being the given id.
 // id requires that zero-indexes are used when calling GetRobotID.
@@ -48,6 +63,11 @@ func GetRobotID(id int) string {
 // GetContainerNameGazeboServer returns the gzserver container name.
 func GetContainerNameGazeboServer() string {
 	return "gzserver-container"
+}
+
+// GetContainerNameMoleBridge returns the Mole ROS/Pulsar bridge container name.
+func GetContainerNameMoleBridge() string {
+	return "mole-ros-pulsar-bridge"
 }
 
 // GetContainerNameCommsBridge returns the comms bridge container name.
@@ -67,6 +87,16 @@ func GetContainerNameFieldComputer() string {
 
 // GetContainerNameGazeboServerCopy returns the gzserver copy container name.
 func GetContainerNameGazeboServerCopy() string {
+	return "copy-to-s3"
+}
+
+// GetContainerNameMappingServer returns the mapping server container name.
+func GetContainerNameMappingServer() string {
+	return "mapping-server"
+}
+
+// GetContainerNameMappingServerCopy returns the mapping server copy container name.
+func GetContainerNameMappingServerCopy() string {
 	return "copy-to-s3"
 }
 
@@ -90,8 +120,14 @@ func GetGazeboLogsFilename(groupID simulations.GroupID) string {
 	return fmt.Sprintf("%s.tar.gz", groupID.String())
 }
 
-// GetSimulationLogKey returns the path for logs inside a copy pod.
+// GetSimulationLogKey returns the path used as key when uploading simulation logs into a bucket.
 func GetSimulationLogKey(groupID simulations.GroupID, owner string) string {
 	escaped := url.PathEscape(owner)
 	return fmt.Sprintf("/gz-logs/%s/%s/", escaped, groupID)
+}
+
+// GetMappingServerLogKey returns the path used as key when uploading mapping server logs into a bucket.
+func GetMappingServerLogKey(groupID simulations.GroupID, owner string) string {
+	escaped := url.PathEscape(owner)
+	return fmt.Sprintf("/map-logs/%s/%s/", escaped, groupID)
 }

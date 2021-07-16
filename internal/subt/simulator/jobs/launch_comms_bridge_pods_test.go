@@ -32,12 +32,12 @@ func TestLaunchCommsBridgePods(t *testing.T) {
 	require.NoError(t, err)
 
 	// Set up logger
-	logger := ign.NewLoggerNoRollbar("TestLaunchCommsBridgePods", ign.VerbosityDebug)
+	logger := ign.NewLoggerNoRollbar("TestLaunchMoleBridgePods", ign.VerbosityDebug)
 
 	// Set up store
 	storeIgnition := sfake.NewFakeIgnition()
 	storeOrchestrator := sfake.NewFakeOrchestrator()
-	fakeStore := sfake.NewFakeStore(nil, storeOrchestrator, storeIgnition)
+	fakeStore := sfake.NewFakeStore(nil, storeOrchestrator, storeIgnition, nil)
 
 	// Mock ignition store methods for this test
 	storeIgnition.On("ROSLogsPath").Return("/tmp/test")

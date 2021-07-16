@@ -1,6 +1,7 @@
 package jobs
 
 import (
+	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 	subtapp "gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/application"
 	"gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/simulations/fake"
@@ -11,6 +12,8 @@ import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/components/spdy"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/implementations/kubernetes"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/platform"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/secrets"
+	fakeSecrets "gitlab.com/ignitionrobotics/web/cloudsim/pkg/secrets/implementations/fake"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
 	simfake "gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations/fake"
 	sfake "gitlab.com/ignitionrobotics/web/cloudsim/pkg/store/implementations/fake"
@@ -21,7 +24,7 @@ import (
 	"time"
 )
 
-func TestLaunchFieldComputerPods(t *testing.T) {
+func TestLaunchMappingServerCopyPod(t *testing.T) {
 	db, err := gorm.GetTestDBFromEnvVars()
 	defer db.Close()
 	require.NoError(t, err)
@@ -30,15 +33,27 @@ func TestLaunchFieldComputerPods(t *testing.T) {
 	require.NoError(t, err)
 
 	// Set up logger
-	logger := ign.NewLoggerNoRollbar("TestLaunchFieldComputerPods", ign.VerbosityDebug)
+	logger := ign.NewLoggerNoRollbar("TestLaunchMappingServerCopyPod", ign.VerbosityDebug)
 
 	// Set up store
+	storeIgnition := sfake.NewFakeIgnition()
 	storeOrchestrator := sfake.NewFakeOrchestrator()
-	fakeStore := sfake.NewFakeStore(nil, storeOrchestrator, nil, nil)
+	fakeStore := sfake.NewFakeStore(nil, storeOrchestrator, storeIgnition, nil)
+
+	// Mock ignition store methods for this test
+	storeIgnition.On("SidecarContainerLogsPath").Return("/tmp/logs")
+	storeIgnition.On("IP").Return("127.0.0.1")
+	storeIgnition.On("Verbosity").Return("0")
+	storeIgnition.On("LogsCopyEnabled").Return(true)
+	storeIgnition.On("SecretsName").Return("aws-secrets")
+	storeIgnition.On("Region").Return("us-west-1")
+	storeIgnition.On("AccessKeyLabel").Return("aws-access-key-id")
+	storeIgnition.On("SecretAccessKeyLabel").Return("aws-secret-access-key")
 
 	// Mock orchestrator store methods for this test
 	storeOrchestrator.On("Namespace").Return("default")
 	storeOrchestrator.On("TerminationGracePeriod").Return(time.Second)
+	storeOrchestrator.On("Nameservers").Return([]string{"8.8.8.8", "8.8.4.4"})
 
 	// Set up SPDY initializer with fake implementation
 	spdyInit := spdy.NewSPDYFakeInitializer()
@@ -50,10 +65,18 @@ func TestLaunchFieldComputerPods(t *testing.T) {
 		Pods: po,
 	})
 
+	ctx := mock.AnythingOfType("*context.emptyCtx")
+	secretsManager := fakeSecrets.NewFakeSecrets()
+	secretsManager.On("Get", ctx, "aws-secrets", "default").Return(&secrets.Secret{Data: map[string][]byte{
+		"aws-access-key-id":     []byte("12345678910"),
+		"aws-secret-access-key": []byte("secret"),
+	}}, error(nil))
+
 	// Set up platform using fake store and fake kubernetes component
 	p, _ := platform.NewPlatform("test", platform.Components{
 		Cluster: ks,
 		Store:   fakeStore,
+		Secrets: secretsManager,
 	})
 
 	// Initialize generic simulation service
@@ -91,7 +114,7 @@ func TestLaunchFieldComputerPods(t *testing.T) {
 	store := actions.NewStore(s)
 
 	// Run job
-	_, err = LaunchFieldComputerPods.Run(store, db, &actions.Deployment{CurrentJob: "test"}, s)
+	_, err = LaunchMappingServerCopyPod.Run(store, db, &actions.Deployment{CurrentJob: "test"}, s)
 
 	// Check if there are any errors.
 	require.NoError(t, err)

@@ -6,6 +6,7 @@ import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/simulator/state"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/actions"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/resource"
+	simulationspkg "gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulator/jobs"
 )
 
@@ -36,42 +37,35 @@ func checkRemovePodsNoError(store actions.Store, tx *gorm.DB, deployment *action
 func prepareRemovePodsInput(store actions.Store, tx *gorm.DB, deployment *actions.Deployment, value interface{}) (interface{}, error) {
 	s := store.State().(*state.StopSimulation)
 
-	robots, err := s.SubTServices().Simulations().GetRobots(s.GroupID)
+	sim, err := s.SubTServices().Simulations().Get(s.GroupID)
 	if err != nil {
 		return nil, err
 	}
 
+	var parentGroupID *simulationspkg.GroupID
+	if sim.IsKind(simulationspkg.SimParent) {
+		parentSim, err := s.SubTServices().Simulations().GetParent(s.GroupID)
+		if err != nil {
+			return nil, err
+		}
+		groupID := parentSim.GetGroupID()
+		parentGroupID = &groupID
+	}
+
 	ns := s.Platform().Store().Orchestrator().Namespace()
 
-	// The max amount of pods is given by 3 pods per robot (fc, comms, copy) + gzserver + gzserver copy pod
-	list := make([]resource.Resource, 0, 3*len(robots)+2)
-
-	// Add robot-related pods
-	for i := range robots {
-		robotID := subtapp.GetRobotID(i)
-
-		// Field computer
-		list = append(list, resource.NewResource(subtapp.GetPodNameFieldComputer(s.GroupID, robotID), ns, nil))
-
-		// Comms bridge
-		list = append(list, resource.NewResource(subtapp.GetPodNameCommsBridge(s.GroupID, robotID), ns, nil))
-
-		// And if logs are enabled, copy pod for comms bridge.
-		if s.Platform().Store().Ignition().LogsCopyEnabled() {
-			list = append(list, resource.NewResource(subtapp.GetPodNameCommsBridgeCopy(s.GroupID, robotID), ns, nil))
-		}
+	pods, err := s.Platform().Orchestrator().Pods().List(ns, subtapp.GetPodLabelsBase(sim.GetGroupID(), parentGroupID))
+	if err != nil {
+		return nil, err
 	}
 
-	// Gazebo server
-	list = append(list, resource.NewResource(subtapp.GetPodNameGazeboServer(s.GroupID), ns, nil))
-
-	// And if logs are enabled, gazebo server copy pod.
-	if s.Platform().Store().Ignition().LogsCopyEnabled() {
-		list = append(list, resource.NewResource(subtapp.GetPodNameGazeboServerCopy(s.GroupID), ns, nil))
+	podList := make([]resource.Resource, len(pods))
+	for i, pod := range pods {
+		podList[i] = pod
 	}
 
-	s.PodList = list
+	s.PodList = podList
 	store.SetState(s)
 
-	return jobs.RemovePodsInput(list), nil
+	return jobs.RemovePodsInput(podList), nil
 }
