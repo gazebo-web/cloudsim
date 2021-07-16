@@ -22,7 +22,7 @@ import (
 func TestWaitForGazeboServerPod(t *testing.T) {
 	logger := ign.NewLoggerNoRollbar("TestWaitForGazeboServerPod", ign.VerbosityDebug)
 	orchestratorStore := sfake.NewFakeOrchestrator()
-	fakeStore := sfake.NewFakeStore(nil, orchestratorStore, nil)
+	fakeStore := sfake.NewFakeStore(nil, orchestratorStore, nil, nil)
 	spdyInit := spdy.NewSPDYFakeInitializer()
 
 	gid := simulations.GroupID("aaaa-bbbb-cccc-dddd")

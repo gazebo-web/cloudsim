@@ -26,6 +26,7 @@ type StartSimulation struct {
 	GazeboServerIP       string
 	WebsocketConnection  ignws.PubSubWebsocketTransporter
 	CommsBridgeIPs       []string
+	MappingServerIP      string
 }
 
 // Platform returns the underlying platform.
