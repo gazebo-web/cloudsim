@@ -523,7 +523,9 @@ func (s *Service) initializeRunningSimulationsFromCluster(ctx context.Context, t
 		if simDep.HasStatus(simulations.StatusRunning) {
 			// Register a new live RunningSimulation
 			if err := s.createRunningSimulation(ctx, tx, simDep); err != nil {
-				return err
+				errMsg := fmt.Sprintf("Failed to create running simulation for %s: %s", groupID, err.Error())
+				s.logger.Warning(errMsg)
+				continue
 			}
 
 			s.logger.Info(fmt.Sprintf("Init - Added RunningSimulation for groupID: [%s]. Deployment Status in DB: [%d]", groupID, *simDep.DeploymentStatus))
