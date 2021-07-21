@@ -71,7 +71,7 @@ func prepareMappingCopyPodInput(store actions.Store, tx *gorm.DB, deployment *ac
 			Labels:                        subtapp.GetPodLabelsMappingServerCopy(s.GroupID, s.ParentGroupID).Map(),
 			RestartPolicy:                 pods.RestartPolicyNever,
 			TerminationGracePeriodSeconds: s.Platform().Store().Orchestrator().TerminationGracePeriod(),
-			NodeSelector:                  subtapp.GetNodeLabelsGazeboServer(s.GroupID),
+			NodeSelector:                  subtapp.GetNodeLabelsMappingServer(s.GroupID),
 			Containers: []pods.Container{
 				{
 					Name:    subtapp.GetContainerNameMappingServerCopy(),

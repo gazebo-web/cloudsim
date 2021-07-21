@@ -99,7 +99,7 @@ func prepareMappingCreatePodInput(store actions.Store, tx *gorm.DB, deployment *
 			Labels:                        subtapp.GetPodLabelsMappingServer(s.GroupID, s.ParentGroupID).Map(),
 			RestartPolicy:                 pods.RestartPolicyNever,
 			TerminationGracePeriodSeconds: s.Platform().Store().Orchestrator().TerminationGracePeriod(),
-			NodeSelector:                  subtapp.GetNodeLabelsGazeboServer(s.GroupID),
+			NodeSelector:                  subtapp.GetNodeLabelsMappingServer(s.GroupID),
 			Volumes:                       volumes,
 			InitContainers: []pods.Container{
 				pods.NewChownContainer(initVolumes),
