@@ -60,6 +60,20 @@ func createLaunchInstancesInput(store actions.Store, tx *gorm.DB, deployment *ac
 			Labels:          subtapp.GetNodeLabelsGazeboServer(s.GroupID).Map(),
 			ClusterID:       clusterName,
 		},
+		{
+			InstanceProfile: s.Platform().Store().Machines().InstanceProfile(),
+			KeyName:         s.Platform().Store().Machines().KeyName(),
+			// TODO: Move to config store
+			Type:          "t3.medium",
+			Image:         s.Platform().Store().Machines().BaseImage(),
+			MinCount:      1,
+			MaxCount:      1,
+			FirewallRules: s.Platform().Store().Machines().FirewallRules(),
+			Tags:          subtapp.GetTagsInstanceSpecific(prefix, s.GroupID, "map-server", clusterName, "map-server"),
+			Retries:       10,
+			Labels:        subtapp.GetNodeLabelsMappingServer(s.GroupID).Map(),
+			ClusterID:     clusterName,
+		},
 	}
 
 	robots, err := s.Services().Simulations().GetRobots(s.GroupID)
