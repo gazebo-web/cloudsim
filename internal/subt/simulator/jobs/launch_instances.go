@@ -114,7 +114,6 @@ func createLaunchInstancesInput(store actions.Store, tx *gorm.DB, deployment *ac
 			Labels:        subtapp.GetNodeLabelsMappingServer(s.GroupID).Map(),
 			ClusterID:     clusterName,
 		})
-		return nil, nil
 	}
 
 	s.CreateMachinesInput = input
