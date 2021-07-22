@@ -103,7 +103,7 @@ func createLaunchInstancesInput(store actions.Store, tx *gorm.DB, deployment *ac
 		input = append(input, machines.CreateMachinesInput{
 			InstanceProfile: s.Platform().Store().Machines().InstanceProfile(),
 			KeyName:         s.Platform().Store().Machines().KeyName(),
-			Type:            s.Platform().Store().Machines().Type(),
+			Type:            s.Platform().Store().Machines().SidecarType(),
 			Image:           s.Platform().Store().Machines().BaseImage(),
 			MinCount:        1,
 			MaxCount:        1,
