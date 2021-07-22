@@ -26,8 +26,11 @@ type Machines interface {
 	// KeyName returns the name of the SSH private key that should be used when creating a machine.
 	KeyName() string
 
-	// Type returns the machine type that should be used when creating a machine.
+	// Type returns the machine type that should be used when requesting a simulation machine.
 	Type() string
+
+	// SidecarType returns the machine type that should be used when requesting a sidecar machine.
+	SidecarType() string
 
 	// FirewallRules returns the list of rules that should be applied to the created machine.
 	FirewallRules() []string
