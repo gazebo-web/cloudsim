@@ -104,7 +104,7 @@ func createLaunchInstancesInput(store actions.Store, tx *gorm.DB, deployment *ac
 			InstanceProfile: s.Platform().Store().Machines().InstanceProfile(),
 			KeyName:         s.Platform().Store().Machines().KeyName(),
 			Type:            s.Platform().Store().Machines().Type(),
-			Image:           s.Platform().Store().Machines().BaseImageGPU(),
+			Image:           s.Platform().Store().Machines().BaseImage(),
 			MinCount:        1,
 			MaxCount:        1,
 			FirewallRules:   s.Platform().Store().Machines().FirewallRules(),
