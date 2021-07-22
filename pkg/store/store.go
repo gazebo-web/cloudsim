@@ -32,8 +32,8 @@ type Machines interface {
 	// FirewallRules returns the list of rules that should be applied to the created machine.
 	FirewallRules() []string
 
-	// BaseImage returns the base image that will be used when creating the machine.
-	BaseImage() string
+	// BaseImageGPU returns the base image with GPU support that will be used when creating simulation machines.
+	BaseImageGPU() string
 
 	// Timeout returns the maximum amount of time that a job should wait until a machine is created.
 	// Timeout is usually used with PollFrequency.

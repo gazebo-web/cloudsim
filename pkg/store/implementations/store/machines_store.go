@@ -56,7 +56,7 @@ func (m *machinesStore) ClusterName() string {
 
 // BaseImage returns the base image value read from env vars.
 // In AWS, the base image is the Amazon Machine Image (AMI).
-func (m *machinesStore) BaseImage() string {
+func (m *machinesStore) BaseImageGPU() string {
 	return m.BaseImageValue
 }
 
