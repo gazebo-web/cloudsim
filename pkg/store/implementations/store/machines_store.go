@@ -18,8 +18,11 @@ type machinesStore struct {
 	// This key must be registered in the machines provider.
 	KeyNameValue string `validate:"required" default:"ignitionFuel" env:"CLOUDSIM_MACHINES_KEY_NAME"`
 
-	// MachineTypeValue is the type of instance thGat will be created.
+	// MachineTypeValue is the type of instance that will be used to request simulation instances.
 	MachineTypeValue string `default:"g3.4xlarge" env:"CLOUDSIM_MACHINES_TYPE"`
+
+	// MachineSidecarTypeValue is the type of instance that will be used to request sidecar instances .
+	MachineSidecarTypeValue string `default:"c6g.4xlarge" env:"CLOUDSIM_MACHINES_SIDECAR_TYPE"`
 
 	// FirewallRulesValue is a set of firewall rules that will be applied to a new instance.
 	FirewallRulesValue []string `default:"[\"sg-0c5c791266694a3ca\"]" env:"CLOUDSIM_MACHINES_FIREWALL_RULES" envSeparator:","`
