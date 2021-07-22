@@ -203,6 +203,7 @@ func createDBTablesAndData(ctx context.Context, worldStatsTopic, worldWarmupTopi
 		sim.CircuitCaveCircuit,
 		sim.CircuitVirtualStixCircuit,
 		sim.CircuitVirtualStixCircuit2,
+		sim.CircuitFinalsPreliminaryRound,
 	}
 
 	for _, circuit := range availableCircuits {
