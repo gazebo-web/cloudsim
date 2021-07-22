@@ -27,8 +27,13 @@ type machinesStore struct {
 	// MachinesLimitValue is the maximum number of machines that Cloudsim can have running at the same time.
 	MachinesLimitValue int `default:"-1" env:"CLOUDSIM_MACHINES_LIMIT"`
 
-	// BaseImageValue is the Amazon Machine Image name that is used as base image for the a new instance.
+	// BaseImageValue is the Amazon Machine Image name that is used as base image for a new instance.
+	// This is usually used by machines that need to be launched alongside simulation nodes.
 	BaseImageValue string `default:"ami-08861f7e7b409ed0c" env:"CLOUDSIM_MACHINES_BASE_IMAGE"`
+
+	// BaseImageGPUValue is the Amazon Machine Image name that is used as base image for a new simulation instance.
+	// This image has support for GPU and X Server.
+	BaseImageGPUValue string `default:"ami-08861f7e7b409ed0c" env:"CLOUDSIM_MACHINES_BASE_GPU_IMAGE"`
 
 	// NamePrefixValue is the prefix used when naming a new instance.
 	NamePrefixValue string `validate:"required" default:"cloudsim-subt-node" env:"CLOUDSIM_MACHINES_NAME_PREFIX,required"`
@@ -56,8 +61,14 @@ func (m *machinesStore) ClusterName() string {
 
 // BaseImage returns the base image value read from env vars.
 // In AWS, the base image is the Amazon Machine Image (AMI).
-func (m *machinesStore) BaseImageGPU() string {
+func (m *machinesStore) BaseImage() string {
 	return m.BaseImageValue
+}
+
+// BaseImageGPU returns the base gpu image value read from env vars.
+// In AWS, the base image is the Amazon Machine Image (AMI).
+func (m *machinesStore) BaseImageGPU() string {
+	return m.BaseImageGPUValue
 }
 
 // InstanceProfile returns the instance profile value read from env vars.

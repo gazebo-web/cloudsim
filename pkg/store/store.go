@@ -32,6 +32,9 @@ type Machines interface {
 	// FirewallRules returns the list of rules that should be applied to the created machine.
 	FirewallRules() []string
 
+	// BaseImage returns the base image that will be used when creating machines.
+	BaseImage() string
+
 	// BaseImageGPU returns the base image with GPU support that will be used when creating simulation machines.
 	BaseImageGPU() string
 

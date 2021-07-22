@@ -287,6 +287,12 @@ func (f Machines) FirewallRules() []string {
 }
 
 // BaseImage mocks the BaseImage method.
+func (f Machines) BaseImage() string {
+	args := f.Called()
+	return args.String(0)
+}
+
+// BaseImageGPU mocks the BaseImageGPU method.
 func (f Machines) BaseImageGPU() string {
 	args := f.Called()
 	return args.String(0)
