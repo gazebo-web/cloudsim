@@ -84,9 +84,14 @@ func (m *machinesStore) KeyName() string {
 	return m.KeyNameValue
 }
 
-// Type returns the type value read from env vars.
+// Type returns the machine type value read from env vars.
 func (m *machinesStore) Type() string {
 	return m.MachineTypeValue
+}
+
+// SidecarType returns the sidecar machine type value read from env vars.
+func (m *machinesStore) SidecarType() string {
+	return m.MachineSidecarTypeValue
 }
 
 // FirewallRules returns the firewall rules value read from env vars.
