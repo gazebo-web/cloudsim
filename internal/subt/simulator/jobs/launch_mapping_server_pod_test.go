@@ -109,7 +109,7 @@ func TestLaunchMappingServerPod(t *testing.T) {
 	// Initialize tracks service
 	trackService := tfake.NewService()
 
-	image := "mapping-image.org/image"
+	// image := "mapping-image.org/image"
 
 	// Mock Get method from tracks service
 	trackService.On("Get", trackName, 0, 0).Return(&tracks.Track{
@@ -117,7 +117,7 @@ func TestLaunchMappingServerPod(t *testing.T) {
 		Image:         "world-image.org/image",
 		BridgeImage:   "bridge-image.org/image",
 		World:         "cloudsim_sim.ign;worldName:=cave_circuit_04;circuit:=cave",
-		MappingImage:  &image,
+		MappingImage:  nil,
 		StatsTopic:    "test",
 		WarmupTopic:   "test",
 		MaxSimSeconds: 500,
