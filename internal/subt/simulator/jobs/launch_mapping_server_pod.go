@@ -57,7 +57,7 @@ func prepareMappingCreatePodInput(store actions.Store, tx *gorm.DB, deployment *
 
 	// By-pass job if mapping image is not defined.
 	if track.MappingImage == nil {
-		return nil, nil
+		return jobs.LaunchPodsInput{}, nil
 	}
 
 	// Generate mapping server command args
