@@ -130,6 +130,25 @@ func (sa *SimulationServiceAdaptor) GetRobots(groupID simulations.GroupID) ([]si
 	return result, nil
 }
 
+// GetBulk returns a set of simulations based on their group id.
+func (sa *SimulationServiceAdaptor) GetBulk(list []simulations.GroupID) ([]simulations.Simulation, error) {
+	var found []SimulationDeployment
+
+	err := sa.db.Model(&SimulationDeployment{}).Where("group_id IN (?)", list).Find(&found).Error
+	if err != nil {
+		return nil, err
+	}
+
+	result := make([]simulations.Simulation, len(found))
+	for i, sim := range found {
+		copy := new(SimulationDeployment)
+		*copy = sim
+		result[i] = copy
+	}
+
+	return result, nil
+}
+
 // NewSubTSimulationServiceAdaptor initializes a new simulations.Service implementation using the SimulationServiceAdaptor.
 func NewSubTSimulationServiceAdaptor(db *gorm.DB) simulations.Service {
 	return &SimulationServiceAdaptor{db: db}
