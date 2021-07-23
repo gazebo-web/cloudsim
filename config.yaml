@@ -93,9 +93,13 @@ components:
         # machines provider.
         keyNameValue: ""
 
-        # MachineTypeValue is the type of instance thGat will be created.
+        # MachineTypeValue is the simulation instance type that will be created.
         # Default: "g3.4xlarge"
         # machineTypeValue: "g3.4xlarge"
+
+        # MachineSidecarTypeValue is the simulation instance type that will be created.
+        # Default: "c6g.4xlarge"
+        # machineSidecarTypeValue: "c6g.4xlarge"
 
         # FirewallRulesValue is a set of firewall rules that will be applied to a new instance.
         # Type: []string
@@ -116,9 +120,14 @@ components:
         # Type: int
         # Default: -1
         # machinesLimitValue: -1
-        # (Required) Instance image used to launch machines.
+
+        # (Required) Instance image used to launch sidecar machines.
         # For AWS EC2, this value is the Amazon Machine Image (AMI) ID.
         baseImageValue: ""
+
+        # (Required) Instance image used to launch simulation machines (with GPU support).
+        # For AWS EC2, this value is the Amazon Machine Image (AMI) ID.
+        baseImageGPUValue: ""
 
         # (Required) Prefix used when naming a new instance.
         namePrefixValue: ""
