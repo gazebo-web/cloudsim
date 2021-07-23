@@ -1,12 +1,7 @@
 package simulations
 
 import (
-	"github.com/gorilla/mux"
-	"github.com/jinzhu/gorm"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
-	"gitlab.com/ignitionrobotics/web/fuelserver/bundles/users"
 	"gitlab.com/ignitionrobotics/web/ign-go"
-	"net/http"
 )
 
 // Routes declares the routes related to simulations. See also IGN's router.go
@@ -496,7 +491,7 @@ var Routes = ign.Routes{
 		Description: "Gets the list of robots from the competition",
 		URI:         "/competition/robots",
 		Headers:     ign.AuthHeadersRequired,
-		Methods:     ign.Methods{
+		Methods: ign.Methods{
 			// swagger:route GET /competition/robots competition robots
 			//
 			// Gets the list of all competition robots.
@@ -666,12 +661,26 @@ var Routes = ign.Routes{
 			},
 		},
 	},
-}
 
-// Debug is a debug endpoint to get internal state information about a simulation.
-func Debug(user *users.User, tx *gorm.DB, w http.ResponseWriter, r *http.Request) (interface{}, *ign.ErrMsg) {
-	gid := mux.Vars(r)["groupID"]
-	return SimServImpl.Debug(user, simulations.GroupID(gid))
+	ign.Route{
+		Name:        "Reconnect websocket",
+		Description: "Allow admins to reconnect a batch of running simulations to their respective websocket server",
+		URI:         "/websocket/reconnect",
+		Headers:     ign.AuthHeadersRequired,
+		Methods:     ign.Methods{},
+		SecureMethods: ign.SecureMethods{
+			ign.Method{
+				Type:        "POST",
+				Description: "Reconnect websocket",
+				Handlers: ign.FormatHandlers{
+					ign.FormatHandler{
+						Extension: "",
+						Handler:   ign.JSONResult(WithUser(ReconnectWebsocket)),
+					},
+				},
+			},
+		},
+	},
 }
 
 // MonitoringRoutes contains the different routes used for service monitoring.
