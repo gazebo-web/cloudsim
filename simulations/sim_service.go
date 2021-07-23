@@ -108,6 +108,7 @@ type SimService interface {
 	QueueRemoveElement(ctx context.Context, user *users.User, groupID string) (interface{}, *ign.ErrMsg)
 	QueueCount(ctx context.Context, user *users.User) (interface{}, *ign.ErrMsg)
 	Debug(user *users.User, groupID simulations.GroupID) (interface{}, *ign.ErrMsg)
+	ReconnectWebsocket(user *users.User, input ReconnectSimulationList) (interface{}, *ign.ErrMsg)
 }
 
 // NodeManager is responsible of creating and removing cloud instances, and
@@ -321,6 +322,44 @@ func (s *Service) Debug(user *users.User, groupID simulations.GroupID) (interfac
 		return nil, ign.NewErrorMessageWithBase(ign.ErrorSimGroupNotFound, err)
 	}
 	return p.RunningSimulations().Debug(groupID)
+}
+
+// ReconnectSimulationList contains the list of simulations that should try to be reconnect with the websocket server.
+type ReconnectSimulationList struct {
+	// List is the list of GroupIDs that should be reconnected to their respective websocket server.
+	List []simulations.GroupID `json:"list"`
+}
+
+// ReconnectWebsocket reconnects a list of simulation to their respective websocket server
+func (s *Service) ReconnectWebsocket(user *users.User, input ReconnectSimulationList) (interface{}, *ign.ErrMsg) {
+	if !s.userAccessor.IsSystemAdmin(*user.Username) {
+		return nil, ign.NewErrorMessage(ign.ErrorUnauthorized)
+	}
+
+	list, err := s.applicationServices.Simulations().GetBulk(input.List)
+	if err != nil {
+		return nil, ign.NewErrorMessage(ign.ErrorUnexpected)
+	}
+
+	for _, sim := range list {
+		sel := sim.GetPlatform()
+		if sel == nil {
+			continue
+		}
+		p, err := s.platforms.Platform(*sel)
+		if err != nil {
+			continue
+		}
+		if !p.RunningSimulations().Exists(sim.GetGroupID()) {
+			continue
+		}
+
+		if err = p.RunningSimulations().Reconnect(sim.GetGroupID()); err != nil {
+			continue
+		}
+	}
+
+	return nil, nil
 }
 
 // SetPoolEventsListener sets a new PoolNotificationCallback to the poolNotificationCallback field.
