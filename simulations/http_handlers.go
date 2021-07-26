@@ -659,18 +659,8 @@ func Debug(user *users.User, tx *gorm.DB, w http.ResponseWriter, r *http.Request
 	return SimServImpl.Debug(user, simulations.GroupID(gid))
 }
 
-// ReconnectWebsocket is the endpoint that reconnects simulations to their respective websocket server
+// ReconnectWebsocket is the endpoint that reconnects a simulation to its respective websocket server
 func ReconnectWebsocket(user *users.User, tx *gorm.DB, w http.ResponseWriter, r *http.Request) (interface{}, *ign.ErrMsg) {
-	if err := r.ParseMultipartForm(0); err != nil {
-		return nil, ign.NewErrorMessageWithBase(ign.ErrorForm, err)
-	}
-	defer r.MultipartForm.RemoveAll()
-
-	// CreateSimulation is the input form
-	var input ReconnectSimulationList
-	if em := ParseStruct(&input, r, true); em != nil {
-		return nil, em
-	}
-
-	return SimServImpl.ReconnectWebsocket(user, input)
+	gid := mux.Vars(r)["group"]
+	return SimServImpl.ReconnectWebsocket(user, simulations.GroupID(gid))
 }

@@ -40,7 +40,4 @@ type Service interface {
 
 	// GetWebsocketToken returns a websocket token for a certain simulation with the given GroupID.
 	GetWebsocketToken(groupID GroupID) (string, error)
-
-	// GetBulk returns a set of simulations based on a list of group ids.
-	GetBulk(list []GroupID) ([]Simulation, error)
 }

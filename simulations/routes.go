@@ -310,6 +310,26 @@ var Routes = ign.Routes{
 		SecureMethods: ign.SecureMethods{},
 	},
 
+	ign.Route{
+		Name:        "Reconnect websocket",
+		Description: "Allow admins to reconnect a specific simulation to its respective websocket server",
+		URI:         "/simulations/{group}/reconnect",
+		Headers:     ign.AuthHeadersRequired,
+		Methods:     ign.Methods{},
+		SecureMethods: ign.SecureMethods{
+			ign.Method{
+				Type:        "POST",
+				Description: "Reconnect websocket",
+				Handlers: ign.FormatHandlers{
+					ign.FormatHandler{
+						Extension: "",
+						Handler:   ign.JSONResult(WithUser(ReconnectWebsocket)),
+					},
+				},
+			},
+		},
+	},
+
 	// Route to get machine information
 	ign.Route{
 		Name:        "Machines",
@@ -656,26 +676,6 @@ var Routes = ign.Routes{
 					ign.FormatHandler{
 						Extension: "",
 						Handler:   ign.JSONResult(WithUser(Debug)),
-					},
-				},
-			},
-		},
-	},
-
-	ign.Route{
-		Name:        "Reconnect websocket",
-		Description: "Allow admins to reconnect a batch of running simulations to their respective websocket server",
-		URI:         "/websocket/reconnect",
-		Headers:     ign.AuthHeadersRequired,
-		Methods:     ign.Methods{},
-		SecureMethods: ign.SecureMethods{
-			ign.Method{
-				Type:        "POST",
-				Description: "Reconnect websocket",
-				Handlers: ign.FormatHandlers{
-					ign.FormatHandler{
-						Extension: "",
-						Handler:   ign.JSONResult(WithUser(ReconnectWebsocket)),
 					},
 				},
 			},

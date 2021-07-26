@@ -10,13 +10,6 @@ type Service struct {
 	*mock.Mock
 }
 
-// GetBulk mocks the GetBulk method.
-func (s *Service) GetBulk(list []simulations.GroupID) ([]simulations.Simulation, error) {
-	args := s.Called(list)
-	sims := args.Get(0).([]simulations.Simulation)
-	return sims, args.Error(1)
-}
-
 // Create mocks the Create method.
 func (s *Service) Create(input simulations.CreateSimulationInput) (simulations.Simulation, error) {
 	args := s.Called(input)
