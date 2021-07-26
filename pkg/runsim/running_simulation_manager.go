@@ -31,7 +31,7 @@ type manager struct {
 // Reconnect reconnects the given groupID to their respective websocket server.
 func (m *manager) Reconnect(groupID simulations.GroupID) error {
 	t := m.GetTransporter(groupID)
-	if t == nil || t.IsConnected() {
+	if t == nil {
 		return nil
 	}
 
