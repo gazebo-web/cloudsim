@@ -22,7 +22,7 @@ type machinesStore struct {
 	MachineTypeValue string `default:"g3.4xlarge" env:"CLOUDSIM_MACHINES_TYPE"`
 
 	// MachineSidecarTypeValue is the type of instance that will be used to request sidecar instances .
-	MachineSidecarTypeValue string `default:"c6g.4xlarge" env:"CLOUDSIM_MACHINES_SIDECAR_TYPE"`
+	MachineSidecarTypeValue string `default:"c5.4xlarge" env:"CLOUDSIM_MACHINES_SIDECAR_TYPE"`
 
 	// FirewallRulesValue is a set of firewall rules that will be applied to a new instance.
 	FirewallRulesValue []string `default:"[\"sg-0c5c791266694a3ca\"]" env:"CLOUDSIM_MACHINES_FIREWALL_RULES" envSeparator:","`

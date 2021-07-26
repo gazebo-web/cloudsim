@@ -98,8 +98,8 @@ components:
         # machineTypeValue: "g3.4xlarge"
 
         # MachineSidecarTypeValue is the simulation instance type that will be created.
-        # Default: "c6g.4xlarge"
-        # machineSidecarTypeValue: "c6g.4xlarge"
+        # Default: "c5.4xlarge"
+        # machineSidecarTypeValue: "c5.4xlarge"
 
         # FirewallRulesValue is a set of firewall rules that will be applied to a new instance.
         # Type: []string

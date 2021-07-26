@@ -55,7 +55,7 @@ func TestLaunchInstances(t *testing.T) {
 	machineConfigStore.On("InstanceProfile").Return("arn::test::1234")
 	machineConfigStore.On("KeyName").Return("testKey")
 	machineConfigStore.On("Type").Return("g3.4xlarge")
-	machineConfigStore.On("SidecarType").Return("c6g.4xlarge")
+	machineConfigStore.On("SidecarType").Return("c5.4xlarge")
 	machineConfigStore.On("BaseImage").Return("osrf/test-image")
 	machineConfigStore.On("BaseImageGPU").Return("osrf/test-image")
 	machineConfigStore.On("FirewallRules").Return([]string{"sg-12345"})
