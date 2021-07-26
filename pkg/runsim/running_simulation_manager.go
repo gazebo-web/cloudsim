@@ -35,6 +35,8 @@ func (m *manager) Reconnect(groupID simulations.GroupID) error {
 		return nil
 	}
 
+	m.lock.Lock()
+	defer m.lock.Unlock()
 	_ = t.Disconnect()
 	if err := t.Connect(); err != nil {
 		return err
