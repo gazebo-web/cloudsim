@@ -511,7 +511,7 @@ var Routes = ign.Routes{
 		Description: "Gets the list of robots from the competition",
 		URI:         "/competition/robots",
 		Headers:     ign.AuthHeadersRequired,
-		Methods: ign.Methods{
+		Methods:     ign.Methods{
 			// swagger:route GET /competition/robots competition robots
 			//
 			// Gets the list of all competition robots.
