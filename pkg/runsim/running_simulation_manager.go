@@ -19,12 +19,30 @@ type Manager interface {
 	Remove(groupID simulations.GroupID) error
 	Exists(groupID simulations.GroupID) bool
 	Debug(gid simulations.GroupID) (interface{}, *ign.ErrMsg)
+	Reconnect(groupID simulations.GroupID) error
 }
 
 // manager is a Manager implementation.
 type manager struct {
 	runningSimulations map[simulations.GroupID]*RunningSimulation
 	lock               sync.RWMutex
+}
+
+// Reconnect reconnects the given groupID to their respective websocket server.
+func (m *manager) Reconnect(groupID simulations.GroupID) error {
+	t := m.GetTransporter(groupID)
+	if t == nil {
+		return nil
+	}
+
+	m.lock.Lock()
+	defer m.lock.Unlock()
+	_ = t.Disconnect()
+	if err := t.Connect(); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 type debugResponse struct {
