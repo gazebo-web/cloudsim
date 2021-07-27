@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/gorilla/mux"
 	"github.com/jinzhu/gorm"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
 	useracc "gitlab.com/ignitionrobotics/web/cloudsim/pkg/users"
 	"gitlab.com/ignitionrobotics/web/fuelserver/bundles/users"
 	"gitlab.com/ignitionrobotics/web/ign-go"
@@ -650,4 +651,16 @@ func QueueRemove(user *users.User, tx *gorm.DB, w http.ResponseWriter, r *http.R
 //   curl -k -X GET --url http://localhost:8001/1.0/healthz
 func Healthz(tx *gorm.DB, w http.ResponseWriter, r *http.Request) (interface{}, *ign.ErrMsg) {
 	return "Cloudsim is up", nil
+}
+
+// Debug is a debug endpoint to get internal state information about a simulation.
+func Debug(user *users.User, tx *gorm.DB, w http.ResponseWriter, r *http.Request) (interface{}, *ign.ErrMsg) {
+	gid := mux.Vars(r)["groupID"]
+	return SimServImpl.Debug(user, simulations.GroupID(gid))
+}
+
+// ReconnectWebsocket is the endpoint that reconnects a simulation to its respective websocket server
+func ReconnectWebsocket(user *users.User, tx *gorm.DB, w http.ResponseWriter, r *http.Request) (interface{}, *ign.ErrMsg) {
+	gid := mux.Vars(r)["group"]
+	return SimServImpl.ReconnectWebsocket(user, simulations.GroupID(gid))
 }

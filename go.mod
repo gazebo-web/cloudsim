@@ -15,7 +15,6 @@ require (
 	github.com/fatih/color v1.10.0 // indirect
 	github.com/fatih/structtag v1.2.0
 	github.com/go-playground/form v3.1.4+incompatible
-	github.com/go-sql-driver/mysql v1.5.0
 	github.com/golang/protobuf v1.4.2
 	github.com/google/go-cmp v0.5.4 // indirect
 	github.com/gorilla/mux v1.8.0
@@ -46,7 +45,7 @@ require (
 	golang.org/x/sys v0.0.0-20201009025420-dfb3f7c4e634 // indirect
 	golang.org/x/text v0.3.4 // indirect
 	golang.org/x/tools v0.0.0-20210105210202-9ed45478a130 // indirect
-	google.golang.org/protobuf v1.25.0
+	google.golang.org/protobuf v1.25.0 // indirect
 	gopkg.in/go-playground/assert.v1 v1.2.1 // indirect
 	gopkg.in/go-playground/validator.v9 v9.31.0
 	gopkg.in/yaml.v2 v2.4.0
@@ -55,6 +54,7 @@ require (
 	k8s.io/apimachinery v0.17.2
 	k8s.io/client-go v11.0.0+incompatible
 	k8s.io/kubernetes v1.17.1
+	knative.dev/pkg v0.0.0-20191203174735-3444316bdeef
 )
 
 replace (
