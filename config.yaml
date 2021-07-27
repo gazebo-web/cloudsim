@@ -93,11 +93,11 @@ components:
         # machines provider.
         keyNameValue: ""
 
-        # MachineTypeValue is the simulation instance type that will be created.
+        # MachineTypeValue is the type of instance used for simulation machines.
         # Default: "g3.4xlarge"
         # machineTypeValue: "g3.4xlarge"
 
-        # MachineSidecarTypeValue is the simulation instance type that will be created.
+        # MachineSidecarTypeValue is the type of instance used for non-simulation machines.
         # Default: "c5.4xlarge"
         # machineSidecarTypeValue: "c5.4xlarge"
 
