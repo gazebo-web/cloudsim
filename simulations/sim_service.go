@@ -324,12 +324,6 @@ func (s *Service) Debug(user *users.User, groupID simulations.GroupID) (interfac
 	return p.RunningSimulations().Debug(groupID)
 }
 
-// ReconnectSimulationList contains the list of simulations that should try to be reconnect with the websocket server.
-type ReconnectSimulationList struct {
-	// List is the list of GroupIDs that should be reconnected to their respective websocket server.
-	List []simulations.GroupID `json:"list"`
-}
-
 // ReconnectWebsocket reconnects a list of simulation to their respective websocket server
 func (s *Service) ReconnectWebsocket(user *users.User, groupID simulations.GroupID) (interface{}, *ign.ErrMsg) {
 	if !s.userAccessor.IsSystemAdmin(*user.Username) {
