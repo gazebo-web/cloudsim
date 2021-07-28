@@ -58,11 +58,7 @@ func sendSummaryEmail(store actions.Store, tx *gorm.DB, deployment *actions.Depl
 	// If there's an owner assigned, add the organization email
 	if sim.GetOwner() != nil {
 		org, em := s.Services().Users().GetOrganization(*sim.GetOwner())
-		if em != nil {
-			return nil, em.BaseError
-		}
-
-		if org.Email != nil {
+		if em == nil && org.Email != nil {
 			recipients = append(recipients, *org.Email)
 		}
 	}
