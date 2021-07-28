@@ -121,11 +121,11 @@ components:
         # Default: -1
         # machinesLimitValue: -1
 
-        # (Required) Instance image used to launch sidecar machines.
+        # Instance image used to launch sidecar machines.
         # For AWS EC2, this value is the Amazon Machine Image (AMI) ID.
         baseImageValue: ""
 
-        # (Required) Instance image used to launch simulation machines (with GPU support).
+        # Instance image used to launch simulation machines (with GPU support).
         # For AWS EC2, this value is the Amazon Machine Image (AMI) ID.
         baseImageGPUValue: ""
 
