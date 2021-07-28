@@ -32,7 +32,7 @@ type machinesStore struct {
 
 	// BaseImageValue is the Amazon Machine Image name that is used as base image for a new instance.
 	// This is usually used by machines that need to be launched alongside simulation nodes.
-	BaseImageValue string `default:"ami-08861f7e7b409ed0c" env:"CLOUDSIM_MACHINES_BASE_IMAGE"`
+	BaseImageValue string `default:"ami-04964fec7bb3978c2" env:"CLOUDSIM_MACHINES_BASE_IMAGE"`
 
 	// BaseImageGPUValue is the Amazon Machine Image name that is used as base image for a new simulation instance.
 	// This image has support for GPU and X Server.
