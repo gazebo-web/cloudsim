@@ -13,7 +13,7 @@ We use Elastic Kubernetes Service to deploy our Kubernetes clusters. We will des
 #### Configuration
 **Name**: `web-cloudsim-[environment]`
 
-**Kubernetes version**: `1.15`
+**Kubernetes version**: `1.18`
 
 **Cluster Service Role**: `aws-eks-role-cloudsim`
 
@@ -89,9 +89,10 @@ After creating the cluster, we need to add a node group in order to have a place
 **Allow remote access from**: `All`
 
 #### Node compute configuration
+
 **AMI type**: Amazon Linux 2 (AL2_x86_64)
 
-**Instance type**: `t3.small`
+**Instance type**: `t3.xlarge`
 
 **Disk size**: `20GiB`
 
@@ -289,12 +290,15 @@ aws ec2 authorize-security-group-egress --group-id sg-023c19380b48dcabb --protoc
 
 - Note: This was done to create the cloudsim K8 Node AMI (ie. The Worker Nodes with GPU).
 - Using instance type `g3.4xlarge` (with 1 GPU Tesla M60).
-  - Used the Kubernetes Security Group (sg-0c5c791266694a3ca)
-  - Used 128 GB disk (General Purpose SSD -- gp2)
-- Using AWS EKS Amazon Linux 2 GPU-optimized AMI: [`ami-08dc081250e6c9d58`](https://console.aws.amazon.com/systems-manager/parameters/%252Faws%252Fservice%252Feks%252Foptimized-ami%252F1.14%252Famazon-linux-2-gpu%252Frecommended%252Fimage_id/description?region=us-east-1#). 
-  It comes with Kubernetes 1.14, CUDA 10, nvidia-docker 2, and Nvidia as docker runtime by default.
+    - Used the Kubernetes Security Group (sg-0c5c791266694a3ca)
+    - Used 128 GB disk (General Purpose SSD -- gp2)
+- Using AWS EKS Amazon Linux 2 GPU-optimized
+  AMI: [`ami-0a6c8a2c130861f0f`](https://console.aws.amazon.com/systems-manager/parameters/%252Faws%252Fservice%252Feks%252Foptimized-ami%252F1.18%252Famazon-linux-2-gpu%252Frecommended%252Fimage_id/description?region=us-east-1)
+  . It comes with Kubernetes 1.18, CUDA 10, nvidia-docker 2, and Nvidia as docker runtime by default.
+    - The cloudsim node image should match the Kubernetes version you're currently using. In order to find the different
+      AMI base versions, visit [this site](https://docs.aws.amazon.com/eks/latest/userguide/eks-optimized-ami.html).
+    - The GPU enabled AMIs are below the `x86 accelerated` column.
 - Added an X server configuration specific to G3 instance GPUs
-
 ```
 cat > /etc/X11/xorg.conf.d/nvidia.conf <<-EOF
 Section "Device"
