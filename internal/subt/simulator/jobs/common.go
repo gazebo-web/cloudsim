@@ -106,10 +106,5 @@ func isMappingServerEnabled(svc subtapp.Services, groupID simulations.GroupID) b
 		return false
 	}
 
-	// By-pass job if mapping image is not defined.
-	if track.MappingImage == nil {
-		return false
-	}
-
-	return true
+	return track.MappingImage == nil
 }
