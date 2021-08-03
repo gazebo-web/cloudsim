@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/jinzhu/gorm"
 	subtapp "gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/application"
+	"gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/simulations"
 	"gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/simulator/state"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/actions"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/components/pods"
@@ -36,6 +37,25 @@ func prepareMappingCopyPodInput(store actions.Store, tx *gorm.DB, deployment *ac
 	s := store.State().(*state.StartSimulation)
 
 	if !s.Platform().Store().Ignition().LogsCopyEnabled() {
+		return jobs.LaunchPodsInput{}, nil
+	}
+
+	sim, err := s.Services().Simulations().Get(s.GroupID)
+	if err != nil {
+		return nil, err
+	}
+
+	// Parse to subt simulation
+	subtSim := sim.(simulations.Simulation)
+
+	// Get track
+	track, err := s.SubTServices().Tracks().Get(subtSim.GetTrack(), subtSim.GetWorldIndex(), subtSim.GetRunIndex())
+	if err != nil {
+		return nil, err
+	}
+
+	// By-pass job if mapping image is not defined.
+	if track.MappingImage == nil {
 		return jobs.LaunchPodsInput{}, nil
 	}
 
