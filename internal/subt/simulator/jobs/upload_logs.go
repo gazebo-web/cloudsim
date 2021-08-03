@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/jinzhu/gorm"
 	subtapp "gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/application"
+	"gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/simulations"
 	"gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/simulator/state"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/actions"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/components/pods"
@@ -42,6 +43,10 @@ func uploadLogs(store actions.Store, tx *gorm.DB, deployment *actions.Deployment
 	if err != nil {
 		return nil, err
 	}
+
+	//////////////////////////////////////////////////
+	// Robot Copy Pods
+	//////////////////////////////////////////////////
 
 	// Get the robot list
 	robots, err := s.Services().Simulations().GetRobots(s.GroupID)
@@ -82,6 +87,10 @@ func uploadLogs(store actions.Store, tx *gorm.DB, deployment *actions.Deployment
 		}
 	}
 
+	//////////////////////////////////////////////////
+	// Ignition Gazebo Server Copy Pod
+	//////////////////////////////////////////////////
+
 	// Get gazebo copy pod name
 	name := subtapp.GetPodNameGazeboServerCopy(s.GroupID)
 
@@ -104,6 +113,24 @@ func uploadLogs(store actions.Store, tx *gorm.DB, deployment *actions.Deployment
 	err = uploadSingleLogs(exec, containerName, "simulations/scripts/copy_to_s3.sh", scriptParams)
 	if err != nil {
 		return nil, err
+	}
+
+	//////////////////////////////////////////////////
+	// Mapping Server Copy Pod
+	//////////////////////////////////////////////////
+
+	// Parse to subt simulation
+	subtSim := sim.(simulations.Simulation)
+
+	// Get track
+	track, err := s.SubTServices().Tracks().Get(subtSim.GetTrack(), subtSim.GetWorldIndex(), subtSim.GetRunIndex())
+	if err != nil {
+		return nil, err
+	}
+
+	// By-pass the next block if mapping image is not defined.
+	if track.MappingImage == nil {
+		return nil, nil
 	}
 
 	// Get mapping server copy pod name
