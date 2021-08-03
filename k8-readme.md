@@ -293,7 +293,7 @@ aws ec2 authorize-security-group-egress --group-id sg-023c19380b48dcabb --protoc
     - Used the Kubernetes Security Group (sg-0c5c791266694a3ca)
     - Used 128 GB disk (General Purpose SSD -- gp2)
 - Using AWS EKS Amazon Linux 2 GPU-optimized
-  AMI: [`ami-0a6c8a2c130861f0f`](https://console.aws.amazon.com/systems-manager/parameters/%252Faws%252Fservice%252Feks%252Foptimized-ami%252F1.18%252Famazon-linux-2%252Frecommended%252Fimage_id/description?region=us-east-1)
+  AMI: [`ami-0a6c8a2c130861f0f`](https://console.aws.amazon.com/systems-manager/parameters/%252Faws%252Fservice%252Feks%252Foptimized-ami%252F1.18%252Famazon-linux-2-gpu%252Frecommended%252Fimage_id/description?region=us-east-1)
   . It comes with Kubernetes 1.18, CUDA 10, nvidia-docker 2, and Nvidia as docker runtime by default.
 - Added an X server configuration specific to G3 instance GPUs
 
