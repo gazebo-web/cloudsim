@@ -2,11 +2,9 @@ package jobs
 
 import (
 	"github.com/jinzhu/gorm"
-	"github.com/pkg/errors"
 	subtapp "gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/application"
 	"gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/simulator/state"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/actions"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/components/pods"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/resource"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulator/jobs"
 )
@@ -56,13 +54,5 @@ func createWaitRequestMappingServerPod(store actions.Store, tx *gorm.DB, deploym
 // In any other case, an error will result in a rollback.
 func checkMappingServerWaitError(store actions.Store, tx *gorm.DB, deployment *actions.Deployment, value interface{}) (interface{}, error) {
 	output := value.(jobs.WaitOutput)
-
-	// Ignore missing pods error if mapping image is not defined.
-	if errors.Is(output.Error, pods.ErrMissingPods) {
-		return nil, nil
-	} else if output.Error != nil {
-		return nil, output.Error
-	}
-
-	return nil, nil
+	return nil, output.Error
 }
