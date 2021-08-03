@@ -2,9 +2,12 @@ package jobs
 
 import (
 	"github.com/jinzhu/gorm"
+	subtapp "gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/application"
+	subtsims "gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/simulations"
 	"gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/simulator/state"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/actions"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/components/pods"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulator/jobs"
 )
 
@@ -85,4 +88,28 @@ func readFileContentFromPod(p pods.Pods, podName, namespace, path string) ([]byt
 	}
 
 	return buff.Bytes(), nil
+}
+
+func isMappingServerEnabled(svc subtapp.Services, groupID simulations.GroupID) bool {
+	// Get simulation
+	sim, err := svc.Simulations().Get(groupID)
+	if err != nil {
+		return false
+	}
+
+	// Parse to subt simulation
+	subtSim := sim.(subtsims.Simulation)
+
+	// Get track
+	track, err := svc.Tracks().Get(subtSim.GetTrack(), subtSim.GetWorldIndex(), subtSim.GetRunIndex())
+	if err != nil {
+		return false
+	}
+
+	// By-pass job if mapping image is not defined.
+	if track.MappingImage == nil {
+		return false
+	}
+
+	return true
 }
