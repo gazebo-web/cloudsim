@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/jinzhu/gorm"
 	subtapp "gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/application"
-	"gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/simulations"
 	"gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/simulator/state"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/actions"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/components/pods"
@@ -119,44 +118,32 @@ func uploadLogs(store actions.Store, tx *gorm.DB, deployment *actions.Deployment
 	// Mapping Server Copy Pod
 	//////////////////////////////////////////////////
 
-	// Parse to subt simulation
-	subtSim := sim.(simulations.Simulation)
+	if isMappingServerEnabled(s.SubTServices(), s.GroupID) {
+		// Get mapping server copy pod name
+		name = subtapp.GetPodNameMappingServerCopy(s.GroupID)
 
-	// Get track
-	track, err := s.SubTServices().Tracks().Get(subtSim.GetTrack(), subtSim.GetWorldIndex(), subtSim.GetRunIndex())
-	if err != nil {
-		return nil, err
-	}
+		res, err = s.Platform().Orchestrator().Pods().Get(name, ns)
+		if err != nil {
+			return nil, err
+		}
 
-	// By-pass the next block if mapping image is not defined.
-	if track.MappingImage == nil {
-		return nil, nil
-	}
+		// TODO Move to function
+		filename = fmt.Sprintf("%s-map.tar.gz", s.GroupID.String())
+		bucket = filepath.Join(logsBucket, subtapp.GetMappingServerLogKey(s.GroupID, *sim.GetOwner()))
 
-	// Get mapping server copy pod name
-	name = subtapp.GetPodNameMappingServerCopy(s.GroupID)
+		scriptParams = uploadLogsScript{
+			// TODO Move to store
+			Target:   "/tmp/mapping",
+			Filename: filename,
+			Bucket:   s.Platform().Storage().PrepareAddress(bucket, filename),
+		}
 
-	res, err = s.Platform().Orchestrator().Pods().Get(name, ns)
-	if err != nil {
-		return nil, err
-	}
-
-	// TODO Move to function
-	filename = fmt.Sprintf("%s-map.tar.gz", s.GroupID.String())
-	bucket = filepath.Join(logsBucket, subtapp.GetMappingServerLogKey(s.GroupID, *sim.GetOwner()))
-
-	scriptParams = uploadLogsScript{
-		// TODO Move to store
-		Target:   "/tmp/mapping",
-		Filename: filename,
-		Bucket:   s.Platform().Storage().PrepareAddress(bucket, filename),
-	}
-
-	exec = s.Platform().Orchestrator().Pods().Exec(res)
-	containerName = subtapp.GetContainerNameMappingServerCopy()
-	err = uploadSingleLogs(exec, containerName, "simulations/scripts/copy_to_s3.sh", scriptParams)
-	if err != nil {
-		return nil, err
+		exec = s.Platform().Orchestrator().Pods().Exec(res)
+		containerName = subtapp.GetContainerNameMappingServerCopy()
+		err = uploadSingleLogs(exec, containerName, "simulations/scripts/copy_to_s3.sh", scriptParams)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	return s, nil
