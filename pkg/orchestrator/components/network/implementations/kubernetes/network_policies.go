@@ -11,10 +11,37 @@ import (
 	"k8s.io/client-go/kubernetes"
 )
 
-// networkPolicies is an network.Policies implementation.
+// networkPolicies is a network.Policies implementation.
 type networkPolicies struct {
 	API    kubernetes.Interface
 	Logger ign.Logger
+}
+
+// RemoveBulk removes a set of network policies specified by the given selector in a certain namespace.
+func (np *networkPolicies) RemoveBulk(namespace string, selector resource.Selector) error {
+	np.Logger.Debug(
+		fmt.Sprintf("Removing network policies on namespace [%s] with the given selector: [%s]",
+			namespace, selector.String(),
+		),
+	)
+
+	err := np.API.NetworkingV1().NetworkPolicies(namespace).DeleteCollection(&metav1.DeleteOptions{}, metav1.ListOptions{
+		LabelSelector: selector.String(),
+	})
+	if err != nil {
+		np.Logger.Debug(
+			fmt.Sprintf("Removing network policies in namespace [%s] with selector: [%s] failed. Error: %s",
+				namespace, selector.String(), err,
+			),
+		)
+		return err
+	}
+	np.Logger.Debug(
+		fmt.Sprintf("Removing network policies in namespace [%s] with selector: [%s] succeeded.",
+			namespace, selector.String(),
+		),
+	)
+	return nil
 }
 
 // Remove removes a network policy with the given name and living in the given namespace.
