@@ -5,7 +5,6 @@ import (
 	subtapp "gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/application"
 	"gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/simulator/state"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/actions"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/resource"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulator/jobs"
 )
 
@@ -26,31 +25,10 @@ func prepareRemoveNetworkPoliciesInput(store actions.Store, tx *gorm.DB, deploym
 
 	ns := s.Platform().Store().Orchestrator().Namespace()
 
-	robots, err := s.Services().Simulations().GetRobots(s.GroupID)
-	if err != nil {
-		return nil, err
-	}
-
-	// This job is removing the following network policies:
-	// 1 Network policy for the Ignition Gazebo Server
-	// 2 Network policies per robot pod:
-	// 		- Field computer network policy
-	// 		- Comms bridge network policy
-	resources := make([]resource.Resource, 0, 2*len(robots)+1)
-
-	for i := range robots {
-		robotID := subtapp.GetRobotID(i)
-		resources = append(resources, resource.NewResource(subtapp.GetPodNameCommsBridge(s.GroupID, robotID), ns, nil))
-		resources = append(resources, resource.NewResource(subtapp.GetPodNameFieldComputer(s.GroupID, robotID), ns, nil))
-	}
-
-	resources = append(resources, resource.NewResource(subtapp.GetPodNameGazeboServer(s.GroupID), ns, nil))
-
-	if isMappingServerEnabled(s.SubTServices(), s.GroupID) {
-		resources = append(resources, resource.NewResource(subtapp.GetPodNameMappingServer(s.GroupID), ns, nil))
-	}
-
-	return jobs.RemoveNetworkPoliciesInput(resources), nil
+	return jobs.RemoveNetworkPoliciesInput{
+		Namespace: ns,
+		Selector:  subtapp.GetPodLabelsBase(s.GroupID, nil),
+	}, nil
 }
 
 // checkRemoveNetworkPoliciesError checks if an error has been thrown while removing network policies.
