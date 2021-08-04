@@ -287,6 +287,11 @@ func (m *ec2Machines) create(input machines.CreateMachinesInput) (*machines.Crea
 		return nil, machines.ErrInvalidClusterID
 	}
 
+	// Performs a rotation step to enforce the next request to use the following zone value.
+	defer func() {
+		m.zones.Next()
+	}()
+
 	if input.InitScript == nil {
 		userData, err := m.createUserData(input)
 		if err != nil {
@@ -343,9 +348,6 @@ func (m *ec2Machines) create(input machines.CreateMachinesInput) (*machines.Crea
 
 		return &output, nil
 	}
-
-	// Performs a rotation step to enforce the next request to use the following zone value.
-	m.zones.Next()
 
 	return nil, err
 }
