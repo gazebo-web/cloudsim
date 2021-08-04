@@ -24,6 +24,10 @@ func createWaitRequestMappingServerPod(store actions.Store, tx *gorm.DB, deploym
 
 	store.SetState(s)
 
+	if !isMappingServerEnabled(s.SubTServices(), s.GroupID) {
+		return nil, nil
+	}
+
 	name := subtapp.GetPodNameMappingServer(s.GroupID)
 	ns := s.Platform().Store().Orchestrator().Namespace()
 	labels := subtapp.GetPodLabelsMappingServer(s.GroupID, s.ParentGroupID)
@@ -36,10 +40,6 @@ func createWaitRequestMappingServerPod(store actions.Store, tx *gorm.DB, deploym
 	// Get timeout and poll frequency from store
 	timeout := s.Platform().Store().Orchestrator().Timeout()
 	pollFreq := s.Platform().Store().Orchestrator().PollFrequency()
-
-	if !isMappingServerEnabled(s.SubTServices(), s.GroupID) {
-		return nil, nil
-	}
 
 	// Return new wait input
 	return jobs.WaitInput{
