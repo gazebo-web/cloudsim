@@ -255,7 +255,7 @@ func (s *ec2CreateMachinesTestSuite) TestCreate_ErrorWithDryRunMode() {
 	s.Assert().True(errors.Is(err, machines.ErrUnknown))
 }
 
-func (s *ec2CreateMachinesTestSuite) TestCreate_RotatesAvailabilityZones() {
+func (s *ec2CreateMachinesTestSuite) TestCreate_RotateAvailabilityZones() {
 	before := s.machines.(*ec2Machines).zones.Get().(Zone)
 
 	output, err := s.machines.(*ec2Machines).create(machines.CreateMachinesInput{
