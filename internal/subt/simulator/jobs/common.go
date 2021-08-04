@@ -106,5 +106,5 @@ func isMappingServerEnabled(svc subtapp.Services, groupID simulations.GroupID) b
 		return false
 	}
 
-	return track.MappingImage == nil
+	return track.MappingImage != nil
 }
