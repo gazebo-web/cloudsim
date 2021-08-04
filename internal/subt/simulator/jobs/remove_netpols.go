@@ -33,6 +33,7 @@ func prepareRemoveNetworkPoliciesInput(store actions.Store, tx *gorm.DB, deploym
 
 	// This job is removing the following network policies:
 	// 1 Network policy for the Ignition Gazebo Server
+	// 1 Network policy for the Mapping Server
 	// 2 Network policies per robot pod:
 	// 		- Field computer network policy
 	// 		- Comms bridge network policy
