@@ -22,6 +22,10 @@ var GetMappingServerIP = &actions.Job{
 func getMappingServerIP(store actions.Store, tx *gorm.DB, deployment *actions.Deployment, value interface{}) (interface{}, error) {
 	s := store.State().(*state.StartSimulation)
 
+	if !isMappingServerEnabled(s.SubTServices(), s.GroupID) {
+		return nil, nil
+	}
+
 	ip, err := s.Platform().Orchestrator().Pods().GetIP(application.GetPodNameMappingServer(s.GroupID), s.Platform().Store().Orchestrator().Namespace())
 	if err != nil {
 		return nil, err

@@ -34,6 +34,13 @@ var Wait = &actions.Job{
 // 		Waiting for pods to have an ip assigned.
 // 		Waiting for pods to be on the "Ready" state.
 func wait(store actions.Store, tx *gorm.DB, deployment *actions.Deployment, value interface{}) (interface{}, error) {
+	// If value is nil, bypass the job.
+	if value == nil {
+		return WaitOutput{
+			Error: nil,
+		}, nil
+	}
+
 	input, ok := value.(WaitInput)
 	if !ok {
 		return nil, simulator.ErrInvalidInput

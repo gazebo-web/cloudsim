@@ -1,12 +1,7 @@
 package simulations
 
 import (
-	"github.com/gorilla/mux"
-	"github.com/jinzhu/gorm"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
-	"gitlab.com/ignitionrobotics/web/fuelserver/bundles/users"
 	"gitlab.com/ignitionrobotics/web/ign-go"
-	"net/http"
 )
 
 // Routes declares the routes related to simulations. See also IGN's router.go
@@ -313,6 +308,26 @@ var Routes = ign.Routes{
 			},
 		},
 		SecureMethods: ign.SecureMethods{},
+	},
+
+	ign.Route{
+		Name:        "Reconnect websocket",
+		Description: "Allow admins to reconnect a specific simulation to its respective websocket server",
+		URI:         "/simulations/{group}/reconnect",
+		Headers:     ign.AuthHeadersRequired,
+		Methods:     ign.Methods{},
+		SecureMethods: ign.SecureMethods{
+			ign.Method{
+				Type:        "POST",
+				Description: "Reconnect websocket",
+				Handlers: ign.FormatHandlers{
+					ign.FormatHandler{
+						Extension: "",
+						Handler:   ign.JSONResult(WithUser(ReconnectWebsocket)),
+					},
+				},
+			},
+		},
 	},
 
 	// Route to get machine information
@@ -666,12 +681,6 @@ var Routes = ign.Routes{
 			},
 		},
 	},
-}
-
-// Debug is a debug endpoint to get internal state information about a simulation.
-func Debug(user *users.User, tx *gorm.DB, w http.ResponseWriter, r *http.Request) (interface{}, *ign.ErrMsg) {
-	gid := mux.Vars(r)["groupID"]
-	return SimServImpl.Debug(user, simulations.GroupID(gid))
 }
 
 // MonitoringRoutes contains the different routes used for service monitoring.

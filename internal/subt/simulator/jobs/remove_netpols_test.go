@@ -92,8 +92,4 @@ func TestRemoveNetPols(t *testing.T) {
 	_, err := RemoveNetworkPolicies.Run(s, nil, nil, initialState)
 
 	assert.NoError(t, err)
-
-	_, err = RemoveNetworkPolicies.Run(s, nil, nil, initialState)
-
-	assert.Error(t, err)
 }

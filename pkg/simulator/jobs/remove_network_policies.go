@@ -8,13 +8,13 @@ import (
 )
 
 // RemoveNetworkPoliciesInput is the input for the RemoveNetworkPolicies job.
-type RemoveNetworkPoliciesInput []resource.Resource
+type RemoveNetworkPoliciesInput struct {
+	Selector  resource.Selector
+	Namespace string
+}
 
 // RemoveNetworkPoliciesOutput is the output of the RemoveNetworkPolicies job.
 type RemoveNetworkPoliciesOutput struct {
-	// Resource is the representation of the network policies that were removed.
-	Resource []resource.Resource
-
 	// Error has a reference to the latest error thrown when removing the network policies.
 	Error error
 }
@@ -30,22 +30,9 @@ func removeNetworkPolicies(store actions.Store, tx *gorm.DB, deployment *actions
 
 	input := value.(RemoveNetworkPoliciesInput)
 
-	resources := make([]resource.Resource, 0, len(input))
-	for _, in := range input {
-		err := s.Platform().Orchestrator().NetworkPolicies().Remove(in.Name(), in.Namespace())
-
-		if err != nil {
-			return RemoveNetworkPoliciesOutput{
-				Resource: resources,
-				Error:    err,
-			}, nil
-		}
-
-		resources = append(resources, in)
-	}
+	err := s.Platform().Orchestrator().NetworkPolicies().RemoveBulk(input.Namespace, input.Selector)
 
 	return RemoveNetworkPoliciesOutput{
-		Resource: resources,
-		Error:    nil,
+		Error: err,
 	}, nil
 }

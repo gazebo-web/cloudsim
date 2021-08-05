@@ -280,6 +280,12 @@ func (f Machines) Type() string {
 	return args.String(0)
 }
 
+// SidecarType mocks the SidecarType method.
+func (f Machines) SidecarType() string {
+	args := f.Called()
+	return args.String(0)
+}
+
 // FirewallRules mocks the FirewallRules method.
 func (f Machines) FirewallRules() []string {
 	args := f.Called()
@@ -288,6 +294,12 @@ func (f Machines) FirewallRules() []string {
 
 // BaseImage mocks the BaseImage method.
 func (f Machines) BaseImage() string {
+	args := f.Called()
+	return args.String(0)
+}
+
+// BaseImageGPU mocks the BaseImageGPU method.
+func (f Machines) BaseImageGPU() string {
 	args := f.Called()
 	return args.String(0)
 }

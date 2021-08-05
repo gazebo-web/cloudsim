@@ -56,4 +56,6 @@ type Policies interface {
 	Create(input CreateNetworkPolicyInput) (resource.Resource, error)
 	// Remove removes a network policy.
 	Remove(name, namespace string) error
+	// RemoveBulk removes a set of network policies specified by the given selector in a certain namespace.
+	RemoveBulk(namespace string, selector resource.Selector) error
 }
