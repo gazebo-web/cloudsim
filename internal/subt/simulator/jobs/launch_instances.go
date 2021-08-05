@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/jinzhu/gorm"
 	subtapp "gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/application"
+	"gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/simulations"
 	"gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/simulator/state"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/actions"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/machines"
@@ -51,7 +52,7 @@ func createLaunchInstancesInput(store actions.Store, tx *gorm.DB, deployment *ac
 			InstanceProfile: s.Platform().Store().Machines().InstanceProfile(),
 			KeyName:         s.Platform().Store().Machines().KeyName(),
 			Type:            s.Platform().Store().Machines().Type(),
-			Image:           s.Platform().Store().Machines().BaseImage(),
+			Image:           s.Platform().Store().Machines().BaseImageGPU(),
 			MinCount:        1,
 			MaxCount:        1,
 			FirewallRules:   s.Platform().Store().Machines().FirewallRules(),
@@ -74,13 +75,42 @@ func createLaunchInstancesInput(store actions.Store, tx *gorm.DB, deployment *ac
 			InstanceProfile: s.Platform().Store().Machines().InstanceProfile(),
 			KeyName:         s.Platform().Store().Machines().KeyName(),
 			Type:            s.Platform().Store().Machines().Type(),
-			Image:           s.Platform().Store().Machines().BaseImage(),
+			Image:           s.Platform().Store().Machines().BaseImageGPU(),
 			MinCount:        1,
 			MaxCount:        1,
 			FirewallRules:   s.Platform().Store().Machines().FirewallRules(),
 			Tags:            tags,
 			Retries:         10,
 			Labels:          subtapp.GetNodeLabelsFieldComputer(s.GroupID, r).Map(),
+			ClusterID:       clusterName,
+		})
+	}
+
+	sim, err := s.SubTServices().Simulations().Get(s.GroupID)
+	if err != nil {
+		return nil, err
+	}
+
+	subtSim := sim.(simulations.Simulation)
+
+	track, err := s.SubTServices().Tracks().Get(subtSim.GetTrack(), subtSim.GetWorldIndex(), subtSim.GetRunIndex())
+	if err != nil {
+		return nil, err
+	}
+
+	// Add mapping server node if mapping image is defined in track rules
+	if track.MappingImage != nil {
+		input = append(input, machines.CreateMachinesInput{
+			InstanceProfile: s.Platform().Store().Machines().InstanceProfile(),
+			KeyName:         s.Platform().Store().Machines().KeyName(),
+			Type:            s.Platform().Store().Machines().SidecarType(),
+			Image:           s.Platform().Store().Machines().BaseImage(),
+			MinCount:        1,
+			MaxCount:        1,
+			FirewallRules:   s.Platform().Store().Machines().FirewallRules(),
+			Tags:            subtapp.GetTagsInstanceSpecific(prefix, s.GroupID, "map-server", clusterName, "map-server"),
+			Retries:         10,
+			Labels:          subtapp.GetNodeLabelsMappingServer(s.GroupID).Map(),
 			ClusterID:       clusterName,
 		})
 	}
