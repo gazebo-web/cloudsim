@@ -40,6 +40,10 @@ func prepareMappingCreatePodInput(store actions.Store, tx *gorm.DB, deployment *
 	// Set up namespace
 	namespace := s.Platform().Store().Orchestrator().Namespace()
 
+	if !isMappingServerEnabled(s.SubTServices(), s.GroupID) {
+		return jobs.LaunchPodsInput{}, nil
+	}
+
 	// Get simulation
 	sim, err := s.Services().Simulations().Get(s.GroupID)
 	if err != nil {
@@ -53,11 +57,6 @@ func prepareMappingCreatePodInput(store actions.Store, tx *gorm.DB, deployment *
 	track, err := s.SubTServices().Tracks().Get(subtSim.GetTrack(), subtSim.GetWorldIndex(), subtSim.GetRunIndex())
 	if err != nil {
 		return nil, err
-	}
-
-	// By-pass job if mapping image is not defined.
-	if track.MappingImage == nil {
-		return jobs.LaunchPodsInput{}, nil
 	}
 
 	// Generate mapping server command args

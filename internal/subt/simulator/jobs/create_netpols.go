@@ -300,6 +300,10 @@ func removeCreatedNetworkPoliciesMappingServer(store actions.Store, tx *gorm.DB,
 func prepareNetworkPolicyMappingServerInput(store actions.Store, tx *gorm.DB, deployment *actions.Deployment, value interface{}) (interface{}, error) {
 	s := store.State().(*state.StartSimulation)
 
+	if !isMappingServerEnabled(s.SubTServices(), s.GroupID) {
+		return jobs.CreateNetworkPoliciesInput{}, nil
+	}
+
 	robots, err := s.Services().Simulations().GetRobots(s.GroupID)
 	if err != nil {
 		return nil, err
