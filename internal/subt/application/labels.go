@@ -42,6 +42,15 @@ func GetNodeLabelsGazeboServer(groupID simulations.GroupID) resource.Selector {
 	}))
 }
 
+// GetNodeLabelsMappingServer returns a selector that identifies a mapping server node.
+func GetNodeLabelsMappingServer(groupID simulations.GroupID) resource.Selector {
+	base := GetNodeLabelsBase(groupID)
+
+	return base.Extend(resource.NewSelector(map[string]string{
+		labelMappingServer: "true",
+	}))
+}
+
 // GetNodeLabelsBase returns the base labels to identify a simulation's node.
 func GetNodeLabelsBase(groupID simulations.GroupID) resource.Selector {
 	return resource.NewSelector(map[string]string{
