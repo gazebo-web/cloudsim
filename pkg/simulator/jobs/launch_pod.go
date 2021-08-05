@@ -31,6 +31,15 @@ func launchPods(store actions.Store, tx *gorm.DB, deployment *actions.Deployment
 	// Parse input
 	input, ok := value.(LaunchPodsInput)
 	if !ok {
+
+		// If assertion fails but LaunchPodsInput is nil, consider as no pods need to be launched.
+		if input == nil {
+			return LaunchPodsOutput{
+				Resources: []resource.Resource{},
+				Error:     nil,
+			}, nil
+		}
+
 		return nil, simulator.ErrInvalidInput
 	}
 

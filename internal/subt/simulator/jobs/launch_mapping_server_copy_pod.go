@@ -39,6 +39,10 @@ func prepareMappingCopyPodInput(store actions.Store, tx *gorm.DB, deployment *ac
 		return jobs.LaunchPodsInput{}, nil
 	}
 
+	if !isMappingServerEnabled(s.SubTServices(), s.GroupID) {
+		return jobs.LaunchPodsInput{}, nil
+	}
+
 	// Set up namespace
 	namespace := s.Platform().Store().Orchestrator().Namespace()
 
@@ -71,7 +75,7 @@ func prepareMappingCopyPodInput(store actions.Store, tx *gorm.DB, deployment *ac
 			Labels:                        subtapp.GetPodLabelsMappingServerCopy(s.GroupID, s.ParentGroupID).Map(),
 			RestartPolicy:                 pods.RestartPolicyNever,
 			TerminationGracePeriodSeconds: s.Platform().Store().Orchestrator().TerminationGracePeriod(),
-			NodeSelector:                  subtapp.GetNodeLabelsGazeboServer(s.GroupID),
+			NodeSelector:                  subtapp.GetNodeLabelsMappingServer(s.GroupID),
 			Containers: []pods.Container{
 				{
 					Name:    subtapp.GetContainerNameMappingServerCopy(),

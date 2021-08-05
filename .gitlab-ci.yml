@@ -279,6 +279,7 @@ integration:
   tags:
     - testing
     - kubernetes
+    - osrf
   environment:
     name: integration
   except:
@@ -297,6 +298,7 @@ integration_1:
   tags:
     - testing
     - kubernetes
+    - osrf
   environment:
     name: integration-1
   except:
@@ -315,6 +317,7 @@ staging:
   tags:
     - testing
     - kubernetes
+    - osrf
   environment:
     name: staging
   only:
@@ -332,6 +335,7 @@ subt-staging:
   tags:
     - testing
     - kubernetes
+    - subt
   environment:
     name: subt-staging
   only:
