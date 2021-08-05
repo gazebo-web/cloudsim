@@ -39,6 +39,10 @@ func prepareMappingCopyPodInput(store actions.Store, tx *gorm.DB, deployment *ac
 		return jobs.LaunchPodsInput{}, nil
 	}
 
+	if !isMappingServerEnabled(s.SubTServices(), s.GroupID) {
+		return jobs.LaunchPodsInput{}, nil
+	}
+
 	// Set up namespace
 	namespace := s.Platform().Store().Orchestrator().Namespace()
 
