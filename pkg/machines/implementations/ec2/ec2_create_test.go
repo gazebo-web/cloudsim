@@ -258,39 +258,23 @@ func (s *ec2CreateMachinesTestSuite) TestCreate_ErrorWithDryRunMode() {
 func (s *ec2CreateMachinesTestSuite) TestCreate_RotateAvailabilityZones() {
 	before := s.machines.(*ec2Machines).zones.Get().(Zone)
 
-	output, err := s.machines.(*ec2Machines).create(machines.CreateMachinesInput{
-		KeyName:       "key-name",
-		MinCount:      1,
-		MaxCount:      99,
-		FirewallRules: nil,
-		SubnetID:      aws.String("subnet-06fe9fdb790aa78e7"),
-		Tags:          nil,
-		Retries:       0,
-		ClusterID:     "cluster-name",
-	})
-	s.Require().NoError(err)
+	for i := 0; i < 11; i++ {
+		_, err := s.machines.(*ec2Machines).create(machines.CreateMachinesInput{
+			KeyName:       "key-name",
+			MinCount:      1,
+			MaxCount:      99,
+			FirewallRules: nil,
+			Tags:          nil,
+			Retries:       0,
+			ClusterID:     "cluster-name",
+		})
+		s.Require().NoError(err)
+	}
 
-	// If everything went well, the first zone should have been used first.
-	s.Assert().Equal(before.Zone, output.Zone)
-
-	// After the request, a rotation step is performed, making zone's cycler start on the next available zone.
+	// After an error occurred with the first zone, a rotation step is performed, making zone's cycler
+	// start on the next available zone.
 	after := s.machines.(*ec2Machines).zones.Get().(Zone)
 	s.Assert().NotEqual(before.Zone, after.Zone)
-
-	// Repeat call to make sure the next zone is being used
-	output, err = s.machines.(*ec2Machines).create(machines.CreateMachinesInput{
-		KeyName:       "key-name",
-		MinCount:      1,
-		MaxCount:      99,
-		FirewallRules: nil,
-		SubnetID:      aws.String("subnet-06fe9fdb790aa78e7"),
-		Tags:          nil,
-		Retries:       0,
-		ClusterID:     "cluster-name",
-	})
-	s.Require().NoError(err)
-
-	s.Assert().Equal(after.Zone, output.Zone)
 }
 
 type mockEC2Create struct {
@@ -303,6 +287,10 @@ type mockEC2Create struct {
 func (m *mockEC2Create) RunInstances(input *ec2.RunInstancesInput) (*ec2.Reservation, error) {
 	if m.InternalError != nil {
 		return nil, m.InternalError
+	}
+	if m.RunInstancesCalls == 10 {
+		m.RunInstancesCalls = 0
+		return nil, errors.New("too many requests on this zone")
 	}
 	m.RunInstancesCalls++
 	return &ec2.Reservation{}, nil
