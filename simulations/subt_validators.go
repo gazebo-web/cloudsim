@@ -990,6 +990,9 @@ var SubTCircuits = []string{
 	CircuitVirtualStixCircuit,
 	CircuitVirtualStixCircuit2,
 	CircuitFinalsPreliminaryRound,
+	CircuitFinalsPreliminaryRoundWorld1,
+	CircuitFinalsPreliminaryRoundWorld2,
+	CircuitFinalsPreliminaryRoundWorld3,
 }
 
 // SubTCompetitionCircuits is the list of circuits that are used for competitions.
