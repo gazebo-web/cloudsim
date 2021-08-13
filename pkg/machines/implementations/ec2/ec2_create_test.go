@@ -31,8 +31,16 @@ func (s *ec2CreateMachinesTestSuite) SetupTest() {
 		Logger: logger,
 		Zones: []Zone{
 			{
-				Zone:     "test",
-				SubnetID: "test",
+				Zone:     "test1",
+				SubnetID: "test1",
+			},
+			{
+				Zone:     "test2",
+				SubnetID: "test2",
+			},
+			{
+				Zone:     "test3",
+				SubnetID: "test3",
 			},
 		},
 	})
@@ -247,6 +255,28 @@ func (s *ec2CreateMachinesTestSuite) TestCreate_ErrorWithDryRunMode() {
 	s.Assert().True(errors.Is(err, machines.ErrUnknown))
 }
 
+func (s *ec2CreateMachinesTestSuite) TestCreate_RotateAvailabilityZones() {
+	before := s.machines.(*ec2Machines).zones.Get().(Zone)
+
+	for i := 0; i < 11; i++ {
+		_, err := s.machines.(*ec2Machines).create(machines.CreateMachinesInput{
+			KeyName:       "key-name",
+			MinCount:      1,
+			MaxCount:      99,
+			FirewallRules: nil,
+			Tags:          nil,
+			Retries:       0,
+			ClusterID:     "cluster-name",
+		})
+		s.Require().NoError(err)
+	}
+
+	// After an error occurred with the first zone, a rotation step is performed, making zone's cycler
+	// start on the next available zone.
+	after := s.machines.(*ec2Machines).zones.Get().(Zone)
+	s.Assert().NotEqual(before.Zone, after.Zone)
+}
+
 type mockEC2Create struct {
 	ec2iface.EC2API
 	RunInstancesCalls int
@@ -257,6 +287,10 @@ type mockEC2Create struct {
 func (m *mockEC2Create) RunInstances(input *ec2.RunInstancesInput) (*ec2.Reservation, error) {
 	if m.InternalError != nil {
 		return nil, m.InternalError
+	}
+	if m.RunInstancesCalls == 10 {
+		m.RunInstancesCalls = 0
+		return nil, errors.New("too many requests on this zone")
 	}
 	m.RunInstancesCalls++
 	return &ec2.Reservation{}, nil
