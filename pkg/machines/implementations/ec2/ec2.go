@@ -333,7 +333,8 @@ func (m *ec2Machines) create(input machines.CreateMachinesInput) (*machines.Crea
 
 		reservation, err := m.runInstance(runInstanceInput)
 		if err != nil {
-			return nil, err
+			// If there's an error, try with a different zone.
+			continue
 		}
 
 		var output machines.CreateMachinesOutput
