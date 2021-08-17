@@ -6,6 +6,7 @@ import (
 	ignws "gitlab.com/ignitionrobotics/web/cloudsim/pkg/transport/ign"
 	"gitlab.com/ignitionrobotics/web/ign-go"
 	"sync"
+	"time"
 )
 
 // Manager describes a set of methods to handle a set of RunningSimulation and their connections to different websocket servers.
@@ -38,7 +39,15 @@ func (m *manager) Reconnect(groupID simulations.GroupID) error {
 	m.lock.Lock()
 	defer m.lock.Unlock()
 	_ = t.Disconnect()
-	if err := t.Connect(); err != nil {
+
+	var err error
+	for i := 0; i < 10; i++ {
+		if err = t.Connect(); err != nil {
+			time.Sleep(1 * time.Second)
+		}
+	}
+
+	if err != nil {
 		return err
 	}
 
