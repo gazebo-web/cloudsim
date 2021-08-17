@@ -88,9 +88,6 @@ type SimulationDeployment struct {
 	AuthorizationToken *string `json:"-"`
 	// Score has the simulation's score. It's updated when the simulations finishes and gets processed.
 	Score *float64 `json:"score,omitempty"`
-	// MoleBridgeImage contains an optional Mole ROS/Pulsar bridge image URI. If not defined, the bridge will not be
-	// launched.
-	MoleBridgeImage *string `json:"-"`
 }
 
 // GetRunIndex returns the simulation's run index.
