@@ -308,7 +308,7 @@ func (m *ec2Machines) create(input machines.CreateMachinesInput) (*machines.Crea
 	var err error
 	for i, zone := 0, m.zones.Get().(Zone); i < m.zones.Len(); i, zone = i+1, m.zones.Next().(Zone) {
 		// Reset error when trying with a new zone.
-		// This variable needs to be set to nil because when Dry Run gets disabled (MaxRetries = 0), the error will be kept
+		// This variable needs to be set to nil because when Dry Run gets disabled (Retries = 0), the error will be kept
 		// between iterations, and it will make all the remaining zones to be skipped.
 		err = nil
 
