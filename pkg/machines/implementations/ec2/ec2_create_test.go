@@ -321,6 +321,7 @@ func (s *ec2CreateMachinesTestSuite) TestCreate_RotateAvailabilityDepletedZones(
 	})
 	s.Assert().Error(err)
 
+	// The previous error is the last caught error (zone 3)
 	after := s.machines.(*ec2Machines).zones.Get().(Zone)
 	s.Assert().NotEqual(before.Zone, after.Zone)
 	s.Assert().Equal("test3", after.Zone)
