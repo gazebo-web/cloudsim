@@ -258,7 +258,9 @@ func (s *ec2CreateMachinesTestSuite) TestCreate_ErrorWithDryRunMode() {
 func (s *ec2CreateMachinesTestSuite) TestCreate_RotateAvailabilityZones() {
 	before := s.machines.(*ec2Machines).zones.Get().(Zone)
 
-	for i := 0; i < 11; i++ {
+	s.ec2API.ResetInstanceCallsToZero = true
+
+	for i := 0; i < 5; i++ {
 		_, err := s.machines.(*ec2Machines).create(machines.CreateMachinesInput{
 			KeyName:       "key-name",
 			MinCount:      1,
@@ -271,16 +273,65 @@ func (s *ec2CreateMachinesTestSuite) TestCreate_RotateAvailabilityZones() {
 		s.Require().NoError(err)
 	}
 
+	// Request a new machine on zone 1, it will rotate to another zone.
+	_, _ = s.machines.(*ec2Machines).create(machines.CreateMachinesInput{
+		KeyName:       "key-name",
+		MinCount:      1,
+		MaxCount:      99,
+		FirewallRules: nil,
+		Tags:          nil,
+		Retries:       0,
+		ClusterID:     "cluster-name",
+	})
+
 	// After an error occurred with the first zone, a rotation step is performed, making zone's cycler
 	// start on the next available zone.
 	after := s.machines.(*ec2Machines).zones.Get().(Zone)
 	s.Assert().NotEqual(before.Zone, after.Zone)
 }
 
+func (s *ec2CreateMachinesTestSuite) TestCreate_RotateAvailabilityDepletedZones() {
+	before := s.machines.(*ec2Machines).zones.Get().(Zone)
+
+	// Request 10 machines on zone 1, this will cause all zones to be depleted (on the mock implementation).
+	s.ec2API.ResetInstanceCallsToZero = false
+
+	for i := 0; i < 5; i++ {
+		_, err := s.machines.(*ec2Machines).create(machines.CreateMachinesInput{
+			KeyName:       "key-name",
+			MinCount:      1,
+			MaxCount:      99,
+			FirewallRules: nil,
+			Tags:          nil,
+			Retries:       0,
+			ClusterID:     "cluster-name",
+		})
+		s.Require().NoError(err)
+	}
+
+	// After all zones are depleted, it should return an error.
+	_, err := s.machines.(*ec2Machines).create(machines.CreateMachinesInput{
+		KeyName:       "key-name",
+		MinCount:      1,
+		MaxCount:      99,
+		FirewallRules: nil,
+		Tags:          nil,
+		Retries:       0,
+		ClusterID:     "cluster-name",
+	})
+	s.Assert().Error(err)
+
+	// After all zones returned an error, the cycler returns to the first zone.
+	after := s.machines.(*ec2Machines).zones.Get().(Zone)
+	s.Assert().Equal(before.Zone, after.Zone)
+	s.Assert().Equal("test1", after.Zone)
+}
+
 type mockEC2Create struct {
 	ec2iface.EC2API
-	RunInstancesCalls int
-	InternalError     error
+	RunInstancesCalls        int
+	InternalError            error
+	ResetInstanceCallsToZero bool
 }
 
 // RunInstances mocks EC2 RunInstances method.
@@ -288,9 +339,11 @@ func (m *mockEC2Create) RunInstances(input *ec2.RunInstancesInput) (*ec2.Reserva
 	if m.InternalError != nil {
 		return nil, m.InternalError
 	}
-	if m.RunInstancesCalls == 10 {
-		m.RunInstancesCalls = 0
-		return nil, errors.New("too many requests on this zone")
+	if m.RunInstancesCalls >= 5 {
+		if m.ResetInstanceCallsToZero {
+			m.RunInstancesCalls = 0
+		}
+		return nil, awserr.New(ErrCodeInsufficientInstanceCapacity, "error instance capacity", errors.New("test error"))
 	}
 	m.RunInstancesCalls++
 	return &ec2.Reservation{}, nil
