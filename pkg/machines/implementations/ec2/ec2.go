@@ -307,6 +307,9 @@ func (m *ec2Machines) create(input machines.CreateMachinesInput) (*machines.Crea
 
 	var err error
 	for i, zone := 0, m.zones.Get().(Zone); i < m.zones.Len(); i, zone = i+1, m.zones.Next().(Zone) {
+		// Reset error when trying with a new zone.
+		err = nil
+
 		// Set zone information
 		input.Zone = &zone.Zone
 		input.SubnetID = &zone.SubnetID
@@ -328,27 +331,19 @@ func (m *ec2Machines) create(input machines.CreateMachinesInput) (*machines.Crea
 			}
 		}
 		if err != nil && try >= input.Retries {
-			if i == m.zones.Len()-1 {
-				return nil, err
-			}
 			continue
 		}
 
-		reservation, err := m.runInstance(runInstanceInput)
+		var reservation *ec2.Reservation
+		reservation, err = m.runInstance(runInstanceInput)
 		if err != nil {
-			if try == input.Retries {
-				return nil, err
-			}
-			if i == m.zones.Len()-1 {
-				return nil, err
-			}
 			// If there's an error, try with a different zone.
 			continue
 		}
 
 		var output machines.CreateMachinesOutput
-		for _, i := range reservation.Instances {
-			output.Instances = append(output.Instances, *i.InstanceId)
+		for _, instance := range reservation.Instances {
+			output.Instances = append(output.Instances, *instance.InstanceId)
 		}
 
 		return &output, nil

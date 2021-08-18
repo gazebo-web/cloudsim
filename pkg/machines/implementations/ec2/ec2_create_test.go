@@ -260,7 +260,7 @@ func (s *ec2CreateMachinesTestSuite) TestCreate_RotateAvailabilityZones() {
 
 	s.ec2API.ResetInstanceCallsToZero = true
 
-	for i := 0; i < 10; i++ {
+	for i := 0; i < 5; i++ {
 		_, err := s.machines.(*ec2Machines).create(machines.CreateMachinesInput{
 			KeyName:       "key-name",
 			MinCount:      1,
@@ -296,7 +296,7 @@ func (s *ec2CreateMachinesTestSuite) TestCreate_RotateAvailabilityDepletedZones(
 	// Request 10 machines on zone 1, this will cause all zones to be depleted (on the mock implementation).
 	s.ec2API.ResetInstanceCallsToZero = false
 
-	for i := 0; i < 10; i++ {
+	for i := 0; i < 5; i++ {
 		_, err := s.machines.(*ec2Machines).create(machines.CreateMachinesInput{
 			KeyName:       "key-name",
 			MinCount:      1,
@@ -321,10 +321,10 @@ func (s *ec2CreateMachinesTestSuite) TestCreate_RotateAvailabilityDepletedZones(
 	})
 	s.Assert().Error(err)
 
-	// The previous error is the last caught error (zone 3)
+	// After all zones returned an error, the cycler returns to the first zone.
 	after := s.machines.(*ec2Machines).zones.Get().(Zone)
-	s.Assert().NotEqual(before.Zone, after.Zone)
-	s.Assert().Equal("test3", after.Zone)
+	s.Assert().Equal(before.Zone, after.Zone)
+	s.Assert().Equal("test1", after.Zone)
 }
 
 type mockEC2Create struct {
@@ -339,11 +339,11 @@ func (m *mockEC2Create) RunInstances(input *ec2.RunInstancesInput) (*ec2.Reserva
 	if m.InternalError != nil {
 		return nil, m.InternalError
 	}
-	if m.RunInstancesCalls == 10 {
+	if m.RunInstancesCalls >= 5 {
 		if m.ResetInstanceCallsToZero {
 			m.RunInstancesCalls = 0
 		}
-		return nil, errors.New("too many requests on this zone")
+		return nil, awserr.New(ErrCodeInsufficientInstanceCapacity, "error instance capacity", errors.New("test error"))
 	}
 	m.RunInstancesCalls++
 	return &ec2.Reservation{}, nil
