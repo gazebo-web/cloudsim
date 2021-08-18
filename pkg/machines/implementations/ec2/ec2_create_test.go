@@ -291,6 +291,8 @@ func (s *ec2CreateMachinesTestSuite) TestCreate_RotateAvailabilityZones() {
 }
 
 func (s *ec2CreateMachinesTestSuite) TestCreate_RotateAvailabilityDepletedZones() {
+	before := s.machines.(*ec2Machines).zones.Get().(Zone)
+
 	// Request 10 machines on zone 1, this will cause all zones to be depleted (on the mock implementation).
 	s.ec2API.ResetInstanceCallsToZero = false
 
@@ -318,6 +320,10 @@ func (s *ec2CreateMachinesTestSuite) TestCreate_RotateAvailabilityDepletedZones(
 		ClusterID:     "cluster-name",
 	})
 	s.Assert().Error(err)
+
+	after := s.machines.(*ec2Machines).zones.Get().(Zone)
+	s.Assert().NotEqual(before.Zone, after.Zone)
+	s.Assert().Equal("test3", after.Zone)
 }
 
 type mockEC2Create struct {
