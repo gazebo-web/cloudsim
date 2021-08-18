@@ -291,7 +291,7 @@ func (s *ec2CreateMachinesTestSuite) TestCreate_RotateAvailabilityZones() {
 }
 
 func (s *ec2CreateMachinesTestSuite) TestCreate_RotateAvailabilityDepletedZones() {
-	// Request 10 machines on zone 1, this will cause to all zones to be depleted (on the mock implementation).
+	// Request 10 machines on zone 1, this will cause all zones to be depleted (on the mock implementation).
 	s.ec2API.ResetInstanceCallsToZero = false
 
 	for i := 0; i < 10; i++ {
