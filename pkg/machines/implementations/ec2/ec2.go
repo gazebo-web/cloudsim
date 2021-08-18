@@ -327,12 +327,21 @@ func (m *ec2Machines) create(input machines.CreateMachinesInput) (*machines.Crea
 				return nil, err
 			}
 		}
-		if err != nil && try >= input.Retries {
+		if err != nil {
+			if i == m.zones.Len()-1 {
+				return nil, err
+			}
 			continue
 		}
 
 		reservation, err := m.runInstance(runInstanceInput)
 		if err != nil {
+			if try == input.Retries {
+				return nil, err
+			}
+			if i == m.zones.Len()-1 {
+				return nil, err
+			}
 			// If there's an error, try with a different zone.
 			continue
 		}
