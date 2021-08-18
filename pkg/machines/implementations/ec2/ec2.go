@@ -327,7 +327,7 @@ func (m *ec2Machines) create(input machines.CreateMachinesInput) (*machines.Crea
 				return nil, err
 			}
 		}
-		if err != nil {
+		if err != nil && try >= input.Retries {
 			if i == m.zones.Len()-1 {
 				return nil, err
 			}
