@@ -1003,6 +1003,7 @@ var SubTCompetitionCircuits = []string{
 	CircuitVirtualStixCircuit,
 	CircuitVirtualStixCircuit2,
 	CircuitFinalsPreliminaryRound,
+	CircuitFinals,
 }
 
 // isValidRobotType checks if the field value is a valid Robot Type.
