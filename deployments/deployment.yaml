@@ -1,0 +1,49 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web-cloudsim
+  labels:
+    app: web-cloudsim
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: web-cloudsim
+  template:
+    metadata:
+      labels:
+        app: web-cloudsim
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8001"
+    spec:
+      containers:
+        - name: web-cloudsim
+          image: registry.gitlab.org/ignition/web/cloudsim:latest
+          imagePullPolicy: Always
+          resources:
+            limits:
+              cpu: "3.725"
+            requests:
+              cpu: "0.5"
+          ports:
+            - containerPort: 8001
+          env:
+            - name: IGN_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
+          envFrom:
+            - configMapRef:
+                name: env-vars
+          volumeMounts:
+            - name: config
+              mountPath: /etc/cloudsim/
+      volumes:
+        - name: config
+          configMap:
+            name: config
+      nodeSelector:
+        cloudsim: "true"
