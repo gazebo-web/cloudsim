@@ -42,7 +42,7 @@ func (m *manager) Reconnect(groupID simulations.GroupID) error {
 
 	var err error
 	for i := 0; i < 10; i++ {
-		time.Sleep(1 * time.Second)
+		time.Sleep(time.Duration(i) * time.Second)
 		if err = t.Connect(); err == nil {
 			break
 		}
