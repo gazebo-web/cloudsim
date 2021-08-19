@@ -25,7 +25,7 @@ type WebsocketTransporter interface {
 
 // Connect establishes a connection to the websocket server.
 func (w *websocketTransport) Connect() error {
-	if w.connection != nil {
+	if w.connection != nil && w.IsConnected() {
 		return errors.New("connection already established")
 	}
 	conn, err := createConnection(w.Address)
