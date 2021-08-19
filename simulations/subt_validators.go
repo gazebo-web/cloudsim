@@ -993,6 +993,7 @@ var SubTCircuits = []string{
 	CircuitFinalsPreliminaryRoundWorld1,
 	CircuitFinalsPreliminaryRoundWorld2,
 	CircuitFinalsPreliminaryRoundWorld3,
+	CircuitFinals,
 }
 
 // SubTCompetitionCircuits is the list of circuits that are used for competitions.
