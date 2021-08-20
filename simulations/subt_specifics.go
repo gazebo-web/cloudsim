@@ -126,6 +126,7 @@ const (
 	CircuitFinalsPreliminaryRoundWorld2 string = "Finals Preliminary Round World 2"
 	CircuitFinalsPreliminaryRoundWorld3 string = "Finals Preliminary Round World 3"
 	CircuitFinalsDryRun                 string = "Finals Dry Run"
+	CircuitFinals                       string = "Final Prize Round"
 
 	// Container names
 	GazeboServerContainerName    string = "gzserver-container"
