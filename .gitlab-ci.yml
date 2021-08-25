@@ -88,8 +88,6 @@ lint:
 vet:
   stage: test
   extends: .go-cache
-  dependencies:
-    - proto
   before_script:
     - *setup_modules
     - *setup_git_credentials
@@ -107,8 +105,6 @@ vet:
 test:
   stage: test
   extends: .go-cache
-  dependencies:
-    - proto
   before_script:
     - *setup_modules
     - *setup_git_credentials
@@ -133,8 +129,6 @@ test:
 race:
   stage: test
   extends: .go-cache
-  dependencies:
-    - proto
   before_script:
     - *setup_modules
     - *setup_git_credentials
@@ -152,8 +146,6 @@ race:
 coverage:
   stage: test
   extends: .go-cache
-  dependencies:
-    - proto
   before_script:
     - *setup_modules
     - *setup_git_credentials
