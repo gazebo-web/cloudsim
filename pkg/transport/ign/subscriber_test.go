@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/gorilla/websocket"
 	"github.com/stretchr/testify/suite"
-	"gitlab.com/ignitionrobotics/web/cloudsim/ign-transport/proto/ignition/msgs"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/transport"
 	"net/http"
 	"net/http/httptest"
@@ -26,7 +25,7 @@ type subscriberTestSuite struct {
 
 	testTopic        string
 	testTopicType    string
-	testTopicMessage msgs.StringMsg
+	testTopicMessage string
 
 	message     []byte
 	messageType int
@@ -41,9 +40,7 @@ func (suite *subscriberTestSuite) SetupTest() {
 
 	suite.testTopic = "test"
 	suite.testTopicType = "ignition.msgs.StringMsg"
-	suite.testTopicMessage = msgs.StringMsg{
-		Data: "test-server",
-	}
+	suite.testTopicMessage = "test-server"
 
 	suite.handler = func(w http.ResponseWriter, r *http.Request) {
 		conn, err := suite.upgrader.Upgrade(w, r, nil)
@@ -56,7 +53,7 @@ func (suite *subscriberTestSuite) SetupTest() {
 					"pub,%s,%s,%s",
 					suite.testTopic,
 					suite.testTopicType,
-					suite.testTopicMessage.String(),
+					suite.testTopicMessage,
 				)
 				err := conn.WriteMessage(websocket.TextMessage, []byte(msg))
 				suite.NoError(err)
@@ -92,7 +89,7 @@ func (suite *subscriberTestSuite) TestSubscribe_Accepted() {
 	err := suite.transport.Subscribe("test", func(message transport.Message) {
 		var payload string
 		suite.NoError(message.GetPayload(&payload))
-		suite.EqualValues(suite.testTopicMessage.String(), payload)
+		suite.EqualValues(suite.testTopicMessage, payload)
 	})
 	suite.NoError(err)
 }

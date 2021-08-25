@@ -3,7 +3,6 @@ package ign
 import (
 	"github.com/gorilla/websocket"
 	"github.com/stretchr/testify/assert"
-	"gitlab.com/ignitionrobotics/web/cloudsim/ign-transport/proto/ignition/msgs"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/transport"
 	"net/http"
 	"net/http/httptest"
@@ -24,10 +23,8 @@ func TestTransporterListenDontPanicHTTPClosed(t *testing.T) {
 		conn, err = upgrader.Upgrade(w, r, nil)
 		defer conn.Close()
 		assert.NoError(t, err)
-		msg := msgs.StringMsg{
-			Data: "test",
-		}
-		pub := NewPublicationMessage("test", "ignition.msgs.StringMsg", msg.String())
+		msg := "test"
+		pub := NewPublicationMessage("test", "ignition.msgs.StringMsg", msg)
 		conn.WriteMessage(websocket.TextMessage, pub.ToByteSlice())
 	}))
 
@@ -38,7 +35,7 @@ func TestTransporterListenDontPanicHTTPClosed(t *testing.T) {
 		defer tr.Disconnect()
 		assert.NoError(t, err)
 		tr.Subscribe("test", func(message transport.Message) {
-			var msg msgs.StringMsg
+			var msg string
 			err = message.GetPayload(&msg)
 			assert.NoError(t, err)
 		})
@@ -59,10 +56,8 @@ func TestTransporterListenDontPanicWSClosed(t *testing.T) {
 		conn, err = upgrader.Upgrade(w, r, nil)
 		defer conn.Close()
 		assert.NoError(t, err)
-		msg := msgs.StringMsg{
-			Data: "test",
-		}
-		pub := NewPublicationMessage("test", "ignition.msgs.StringMsg", msg.String())
+		msg := "test"
+		pub := NewPublicationMessage("test", "ignition.msgs.StringMsg", msg)
 		conn.WriteMessage(websocket.TextMessage, pub.ToByteSlice())
 	}))
 
@@ -73,7 +68,7 @@ func TestTransporterListenDontPanicWSClosed(t *testing.T) {
 		defer tr.Disconnect()
 		assert.NoError(t, err)
 		tr.Subscribe("test", func(message transport.Message) {
-			var msg msgs.StringMsg
+			var msg string
 			err = message.GetPayload(&msg)
 			assert.NoError(t, err)
 		})
