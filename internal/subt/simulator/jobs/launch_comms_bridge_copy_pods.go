@@ -83,7 +83,7 @@ func prepareCommsBridgeCreateCopyPodInput(store actions.Store, tx *gorm.DB, depl
 			Name:                          subtapp.GetPodNameCommsBridgeCopy(s.GroupID, subtapp.GetRobotID(i)),
 			Namespace:                     ns,
 			Labels:                        subtapp.GetPodLabelsCommsBridgeCopy(s.GroupID, s.ParentGroupID, r).Map(),
-			RestartPolicy:                 pods.RestartPolicyNever,
+			RestartPolicy:                 pods.RestartPolicyAlways,
 			TerminationGracePeriodSeconds: s.Platform().Store().Orchestrator().TerminationGracePeriod(),
 			NodeSelector:                  subtapp.GetNodeLabelsFieldComputer(s.GroupID, r),
 			Containers: []pods.Container{
