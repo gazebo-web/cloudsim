@@ -709,7 +709,7 @@ var ProfileRoutes = ign.Routes{
 		Name:        "CPU Profile",
 		Description: "Get cloudsim CPU profile data",
 		URI:         "/profile",
-		Methods: ign.Methods{
+		SecureMethods: ign.Methods{
 			ign.Method{
 				Type:        "GET",
 				Description: "Get cloudsim CPU profile data",
