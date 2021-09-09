@@ -1,6 +1,7 @@
 package kubernetes
 
 import (
+	"fmt"
 	"github.com/stretchr/testify/suite"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/components/network"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/resource"
@@ -193,4 +194,49 @@ func (s *networkPoliciesTestSuite) TestRemoveNetworkPolicy() {
 
 	err = s.networkPolicies.Remove(res.Name(), res.Namespace())
 	s.Assert().Error(err)
+}
+
+func (s *networkPoliciesTestSuite) TestRemoveNetworkPoliciesBulk() {
+	// Create network policies
+	s.setupTestRemoveBulk()
+
+	sel := resource.NewSelector(map[string]string{
+		"np": "0",
+	})
+
+	s.Assert().NoError(s.networkPolicies.RemoveBulk("default", sel))
+}
+
+func (s *networkPoliciesTestSuite) setupTestRemoveBulk() {
+	for i := 0; i < 3; i++ {
+		_, err := s.networkPolicies.Create(network.CreateNetworkPolicyInput{
+			Name:      fmt.Sprintf("test-np-%d", i),
+			Namespace: "default",
+			Labels: map[string]string{
+				"app": "test",
+				"np":  fmt.Sprintf("%d", i),
+			},
+			PodSelector: resource.NewSelector(s.pod.Labels),
+			PeersFrom: []resource.Selector{
+				resource.NewSelector(map[string]string{
+					"app": "test",
+				}),
+			},
+			PeersTo: []resource.Selector{
+				resource.NewSelector(map[string]string{
+					"app": "test",
+				}),
+			},
+			Ingresses: network.IngressRule{
+				Ports:    []int32{1111, 2222, 3333},
+				IPBlocks: []string{"10.0.0.3/24"},
+			},
+			Egresses: network.EgressRule{
+				Ports:         []int32{1111, 2222, 3333},
+				IPBlocks:      []string{"10.0.0.3/24"},
+				AllowOutbound: true,
+			},
+		})
+		s.Require().NoError(err)
+	}
 }

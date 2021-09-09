@@ -11,6 +11,8 @@ type Store interface {
 	Machines() Machines
 	// Orchestrator provides access to a set of configurations for cluster management.
 	Orchestrator() Orchestrator
+	// Mole provides access to a set of configurations for Mole integration.
+	Mole() Mole
 	// Ignition provides access to a set of common cloudsim configurations.
 	Ignition() Ignition
 }
@@ -24,14 +26,20 @@ type Machines interface {
 	// KeyName returns the name of the SSH private key that should be used when creating a machine.
 	KeyName() string
 
-	// Type returns the machine type that should be used when creating a machine.
+	// Type returns the machine type that should be used when requesting a simulation machine.
 	Type() string
+
+	// SidecarType returns the machine type that should be used when requesting a sidecar machine.
+	SidecarType() string
 
 	// FirewallRules returns the list of rules that should be applied to the created machine.
 	FirewallRules() []string
 
-	// BaseImage returns the base image that will be used when creating the machine.
+	// BaseImage returns the base image that will be used when creating machines.
 	BaseImage() string
+
+	// BaseImageGPU returns the base image with GPU support that will be used when creating simulation machines.
+	BaseImageGPU() string
 
 	// Timeout returns the maximum amount of time that a job should wait until a machine is created.
 	// Timeout is usually used with PollFrequency.
@@ -125,4 +133,19 @@ type Ignition interface {
 
 	// GetWebsocketPath returns the path of the websocket URL for the given simulations.GroupID.
 	GetWebsocketPath(groupID simulations.GroupID) string
+}
+
+// Mole provides configuration values for Mole integration resources.
+type Mole interface {
+	// BridgePulsarAddress returns the address of the Pulsar service the Mole bridge should connect to.
+	BridgePulsarAddress() string
+
+	// BridgePulsarPort returns the port the mole bridge should connect to for the Pulsar service.
+	BridgePulsarPort() int
+
+	// BridgePulsarHTTPPort returns the port the mole bridge should connect to for the Pulsar HTTP service.
+	BridgePulsarHTTPPort() int
+
+	// BridgeTopicRegex returns the regex used by the Mole bridge to filter topics.
+	BridgeTopicRegex() string
 }

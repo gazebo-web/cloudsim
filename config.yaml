@@ -1,7 +1,8 @@
-# This file contains configuration values for Cloudsim.
+# Configuration values for Cloudsim platforms.
+# These configurations define external services Cloudsim will use to launch simulations.
 # The `SIMSVC_PLATFORM_CONFIG_PATH` environment variable can be defined to specify the configuration file path.
 # If it is not defined, Cloudsim will automatically look for a `config.yaml` file in the directory it is executed from.
-# All value in this configuration file should be strings unless otherwise noted.
+# All values in this configuration file should be strings unless otherwise noted.
 
 # Values contains shared values used by different platform components.
 values:
@@ -20,7 +21,7 @@ components:
   # Machines are used to provision physical instances on which to run simulations.
   machines: &aws_machines
     type: "ec2"
-    config:
+    config: &aws_machines_config
       # Region the component will operate in.
       region: *region
 
@@ -29,7 +30,7 @@ components:
       # Default: -1
       # limit: -1
 
-      # Label set on all machines created by this component. Used to identify machines launched by this component.
+      # Label set on all machines. Used to identify machines launched by this component.
       # If there is more than one Cloudsim environment running in a single EC2 account and region, make sure that each
       # environment has a unique value.
       # Default: cloudsim-simulation-worker
@@ -39,7 +40,7 @@ components:
   # Orchestrator provides an abstraction to launch simulations on a set of physical machines.
   orchestrator: &kubernetes_gloo_orchestrator
     type: "kubernetes"
-    config:
+    config: &kubernetes_gloo_orchestrator_config
       api:
         # Path to the Kubernetes cluster connection configuration.
         kubeconfig: *kubeconfig
@@ -69,11 +70,11 @@ components:
   ## Storage
   # Storage is used to store files. This includes logs, summaries, and other simulation artifacts.
   # It is mainly used to store log files and allow users to download them.
-  # This component normally should use the same configuration across all platforms, unless your application explicitly
+  # This component should normally use the same configuration across all platforms, unless your application explicitly
   # requires otherwise.
   storage: &aws_storage
     type: "s3"
-    config:
+    config: &aws_storage_config
       # Region the component will operate in.
       region: *storageRegion
 
@@ -82,7 +83,7 @@ components:
   # It is composed of a set of sub-stores, each specifying configurations for different Cloudsim aspects.
   store: &store
     type: "store"
-    config:
+    config: &store_config
       # Contains values used to configure machine instances when launching simulations.
       machinesStore: &machinesStore
         # (Required) Used to define permissions for the machine within the provider.
@@ -93,9 +94,13 @@ components:
         # machines provider.
         keyNameValue: ""
 
-        # MachineTypeValue is the type of instance thGat will be created.
+        # MachineTypeValue is the type of instance used for simulation machines.
         # Default: "g3.4xlarge"
         # machineTypeValue: "g3.4xlarge"
+
+        # MachineSidecarTypeValue is the type of instance used for non-simulation machines.
+        # Default: "c5.4xlarge"
+        # machineSidecarTypeValue: "c5.4xlarge"
 
         # FirewallRulesValue is a set of firewall rules that will be applied to a new instance.
         # Type: []string
@@ -116,9 +121,14 @@ components:
         # Type: int
         # Default: -1
         # machinesLimitValue: -1
-        # (Required) Instance image used to launch machines.
+
+        # Instance image used to launch sidecar machines.
         # For AWS EC2, this value is the Amazon Machine Image (AMI) ID.
         baseImageValue: ""
+
+        # Instance image used to launch simulation machines (with GPU support).
+        # For AWS EC2, this value is the Amazon Machine Image (AMI) ID.
+        # baseImageGPUValue: ""
 
         # (Required) Prefix used when naming a new instance.
         namePrefixValue: ""
@@ -181,6 +191,25 @@ components:
         # (Required) Name of the storage component bucket to upload logs to.
         logsBucketValue: ""
 
+      moleStore: &moleStore
+        # (Required) Address of the Pulsar service the Mole bridge should connect to.
+        # If the Mole deployment is running on the same cluster this should be in the form of <SERVICE>.<NAMESPACE>.
+        bridgePulsarAddressValue: ""
+
+        # Port on which the Pulsar service is running.
+        # Type: uint
+        # Default: 6650
+        # bridgePulsarPortValue: 6650
+
+        # BridgePulsarHTTPPort returns the port on which the Mole Pulsar HTTP service is running.
+        # Type: uint
+        # Default: 8080
+        # bridgePulsarHTTPPortValue: 8080
+
+        # Regex used by the Mole bridge to filter topics.
+        # Default: "^subt/"
+        # bridgeTopicRegexValue: ""
+
       # Contains values used to configure various simulation orchestrator resources.
       orchestratorStore: &orchestratorStore
         # Amount of time in seconds to wait for an orchestrator resource to terminate.
@@ -216,34 +245,42 @@ components:
         # to simulation websocket servers.
         ingressHostValue: ""
 
+        # Max amount of time in seconds that the pod creation process will wait before marking the simulation as
+        # failed.
+        # Type: uint
+        # Default: 300
+        # podReadyTimeout: 300
+
   ## Secrets
   # Secrets provides access to a secrets manager. It is used to store and pass sensitive information to simulation
   # resources.
   secrets: &kubernetes_secrets
     type: "kubernetes"
-    config:
+    config: &kubernetes_secrets_config
       api:
         # Path to the Kubernetes cluster connection configuration.
         kubeconfig: *kubeconfig
 
   ## Email Sender
   # Used to send emails.
+  # This component should normally use the same configuration across all platforms, unless your application explicitly
+  # requires otherwise.
   emailSender: &aws_email_sender
     type: "ses"
-    config:
+    config: &aws_email_sender_config
       # Region the component will operate in.
       region: *region
 
 # Platforms
 platforms:
   # This block configures a platform to use the default components defined in this file.
-  us-east-1:
+  us_east_1:
     type: "platform"
     config:
       # These values are specific to this platform configuration.
       # All values must be defined for the configuration to be valid.
       values:
-        # AWS components target region.
+        # Target region for AWS components.
         - &region "us-east-1"
         # Path to Kubernetes components kubeconfig file.
         - &kubeconfig ""
@@ -267,6 +304,9 @@ platforms:
               <<: *machinesStore
             ignitionStore:
               <<: *ignitionStore
+              regionValue: *region
+            moleStore:
+              <<: *moleStore
             orchestratorStore:
               <<: *orchestratorStore
         secrets:
@@ -293,11 +333,13 @@ platforms:
 #        machines:
 #          <<: *aws_machines
 #          config:
+#            <<: *aws_machines_config
 #            # Override the default region
 #            region: *region
 #        orchestrator:
 #          <<: *kubernetes_gloo_orchestrator
 #          config:
+#            <<: *kubernetes_gloo_orchestrator_config
 #            api:
 #              # Override the default kubeconfig path
 #              kubeconfig: *kubeconfig
@@ -312,6 +354,9 @@ platforms:
 #              <<: *machinesStore
 #            ignitionStore:
 #              <<: *ignitionStore
+#              regionValue: *region
+#            moleStore:
+#              <<: *moleStore
 #            orchestratorStore:
 #              <<: *orchestratorStore
 #        secrets:
@@ -321,6 +366,7 @@ platforms:
 #              # Override the default kubeconfig path
 #              kubeconfig: *kubeconfig
 #        emailSender:
+#          # Email Sender should always point to the default region
 #          <<: *aws_email_sender
 #          config:
 #            # Override the component's region

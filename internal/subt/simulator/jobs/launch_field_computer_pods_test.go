@@ -34,7 +34,7 @@ func TestLaunchFieldComputerPods(t *testing.T) {
 
 	// Set up store
 	storeOrchestrator := sfake.NewFakeOrchestrator()
-	fakeStore := sfake.NewFakeStore(nil, storeOrchestrator, nil)
+	fakeStore := sfake.NewFakeStore(nil, storeOrchestrator, nil, nil)
 
 	// Mock orchestrator store methods for this test
 	storeOrchestrator.On("Namespace").Return("default")

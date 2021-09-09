@@ -32,7 +32,7 @@ func TestLaunchInstances(t *testing.T) {
 
 	// Initialize simulation
 	gid := simulations.GroupID("aaaa-bbbb-cccc-dddd")
-	sim := simfake.NewSimulation(gid, simulations.StatusPending, simulations.SimSingle, nil, "test", 1*time.Minute)
+	sim := simfake.NewSimulation(gid, simulations.StatusPending, simulations.SimSingle, nil, "test", 1*time.Minute, nil)
 
 	// Initialize fake simulation service
 	svc := simfake.NewService()
@@ -50,12 +50,14 @@ func TestLaunchInstances(t *testing.T) {
 	// Configure machine config fake env store
 	machineConfigStore := envfake.NewFakeMachines()
 
-	configStore := envfake.NewFakeStore(machineConfigStore, nil, nil)
+	configStore := envfake.NewFakeStore(machineConfigStore, nil, nil, nil)
 
 	machineConfigStore.On("InstanceProfile").Return("arn::test::1234")
 	machineConfigStore.On("KeyName").Return("testKey")
 	machineConfigStore.On("Type").Return("g3.4xlarge")
+	machineConfigStore.On("SidecarType").Return("c5.4xlarge")
 	machineConfigStore.On("BaseImage").Return("osrf/test-image")
+	machineConfigStore.On("BaseImageGPU").Return("osrf/test-image")
 	machineConfigStore.On("FirewallRules").Return([]string{"sg-12345"})
 	machineConfigStore.On("NamePrefix").Return("sim")
 	machineConfigStore.On("ClusterName").Return("cloudsim-cluster")

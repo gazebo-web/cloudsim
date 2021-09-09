@@ -25,7 +25,7 @@ func TestRemoveNetPols(t *testing.T) {
 	// Set up store
 	storeIgnition := sfake.NewFakeIgnition()
 	storeOrchestrator := sfake.NewFakeOrchestrator()
-	fakeStore := sfake.NewFakeStore(nil, storeOrchestrator, storeIgnition)
+	fakeStore := sfake.NewFakeStore(nil, storeOrchestrator, storeIgnition, nil)
 
 	// Mock orchestrator store methods for this test
 	storeOrchestrator.On("Namespace").Return("default")
@@ -49,6 +49,12 @@ func TestRemoveNetPols(t *testing.T) {
 		&networkingv1.NetworkPolicy{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      subtapp.GetPodNameCommsBridge(gid, subtapp.GetRobotID(0)),
+				Namespace: "default",
+			},
+		},
+		&networkingv1.NetworkPolicy{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      subtapp.GetPodNameMappingServer(gid),
 				Namespace: "default",
 			},
 		},
@@ -86,8 +92,4 @@ func TestRemoveNetPols(t *testing.T) {
 	_, err := RemoveNetworkPolicies.Run(s, nil, nil, initialState)
 
 	assert.NoError(t, err)
-
-	_, err = RemoveNetworkPolicies.Run(s, nil, nil, initialState)
-
-	assert.Error(t, err)
 }

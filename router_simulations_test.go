@@ -828,7 +828,7 @@ func TestGetCompetitionRobots(t *testing.T) {
 			"Get circuit robots (anonymous)",
 			URI,
 			nil,
-			ign.NewErrorMessage(ign.ErrorUnauthorized),
+			nil,
 			true,
 			true,
 		},

@@ -1,6 +1,7 @@
 package jobs
 
 import (
+	"fmt"
 	"github.com/jinzhu/gorm"
 	subtapp "gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/application"
 	"gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/simulator/state"
@@ -42,6 +43,10 @@ func uploadLogs(store actions.Store, tx *gorm.DB, deployment *actions.Deployment
 		return nil, err
 	}
 
+	//////////////////////////////////////////////////
+	// Robot Copy Pods
+	//////////////////////////////////////////////////
+
 	// Get the robot list
 	robots, err := s.Services().Simulations().GetRobots(s.GroupID)
 	if err != nil {
@@ -81,6 +86,10 @@ func uploadLogs(store actions.Store, tx *gorm.DB, deployment *actions.Deployment
 		}
 	}
 
+	//////////////////////////////////////////////////
+	// Ignition Gazebo Server Copy Pod
+	//////////////////////////////////////////////////
+
 	// Get gazebo copy pod name
 	name := subtapp.GetPodNameGazeboServerCopy(s.GroupID)
 
@@ -103,6 +112,38 @@ func uploadLogs(store actions.Store, tx *gorm.DB, deployment *actions.Deployment
 	err = uploadSingleLogs(exec, containerName, "simulations/scripts/copy_to_s3.sh", scriptParams)
 	if err != nil {
 		return nil, err
+	}
+
+	//////////////////////////////////////////////////
+	// Mapping Server Copy Pod
+	//////////////////////////////////////////////////
+
+	if isMappingServerEnabled(s.SubTServices(), s.GroupID) {
+		// Get mapping server copy pod name
+		name = subtapp.GetPodNameMappingServerCopy(s.GroupID)
+
+		res, err = s.Platform().Orchestrator().Pods().Get(name, ns)
+		if err != nil {
+			return nil, err
+		}
+
+		// TODO Move to function
+		filename = fmt.Sprintf("%s-map.tar.gz", s.GroupID.String())
+		bucket = filepath.Join(logsBucket, subtapp.GetMappingServerLogKey(s.GroupID, *sim.GetOwner()))
+
+		scriptParams = uploadLogsScript{
+			// TODO Move to store
+			Target:   "/tmp/mapping",
+			Filename: filename,
+			Bucket:   s.Platform().Storage().PrepareAddress(bucket, filename),
+		}
+
+		exec = s.Platform().Orchestrator().Pods().Exec(res)
+		containerName = subtapp.GetContainerNameMappingServerCopy()
+		err = uploadSingleLogs(exec, containerName, "simulations/scripts/copy_to_s3.sh", scriptParams)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	return s, nil

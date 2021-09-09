@@ -108,6 +108,7 @@ type SimService interface {
 	QueueRemoveElement(ctx context.Context, user *users.User, groupID string) (interface{}, *ign.ErrMsg)
 	QueueCount(ctx context.Context, user *users.User) (interface{}, *ign.ErrMsg)
 	Debug(user *users.User, groupID simulations.GroupID) (interface{}, *ign.ErrMsg)
+	ReconnectWebsocket(user *users.User, groupID simulations.GroupID) (interface{}, *ign.ErrMsg)
 }
 
 // NodeManager is responsible of creating and removing cloud instances, and
@@ -174,7 +175,7 @@ type Service struct {
 	applicationServices subtapp.Services
 	actionService       actions.Servicer
 	simulator           simulator.Simulator
-	serviceAdaptor      simulations.Service
+	ServiceAdaptor      simulations.Service
 }
 
 // SimServImpl holds the instance of the Simulations Service. It is set at initialization.
@@ -321,6 +322,38 @@ func (s *Service) Debug(user *users.User, groupID simulations.GroupID) (interfac
 		return nil, ign.NewErrorMessageWithBase(ign.ErrorSimGroupNotFound, err)
 	}
 	return p.RunningSimulations().Debug(groupID)
+}
+
+// ReconnectWebsocket reconnects a list of simulation to their respective websocket server
+func (s *Service) ReconnectWebsocket(user *users.User, groupID simulations.GroupID) (interface{}, *ign.ErrMsg) {
+	if !s.userAccessor.IsSystemAdmin(*user.Username) {
+		return nil, ign.NewErrorMessage(ign.ErrorUnauthorized)
+	}
+
+	sim, err := s.applicationServices.Simulations().Get(groupID)
+	if err != nil {
+		return nil, ign.NewErrorMessage(ign.ErrorUnexpected)
+	}
+
+	sel := sim.GetPlatform()
+	if sel == nil {
+		return nil, ign.NewErrorMessage(ign.ErrorMissingField)
+	}
+
+	p, err := s.platforms.Platform(*sel)
+	if err != nil {
+		return nil, ign.NewErrorMessageWithBase(ign.ErrorUnexpected, err)
+	}
+
+	if !p.RunningSimulations().Exists(sim.GetGroupID()) {
+		return nil, ign.NewErrorMessage(ign.ErrorUnexpected)
+	}
+
+	if err = p.RunningSimulations().Reconnect(sim.GetGroupID()); err != nil {
+		return nil, ign.NewErrorMessageWithBase(ign.ErrorUnexpected, err)
+	}
+
+	return nil, nil
 }
 
 // SetPoolEventsListener sets a new PoolNotificationCallback to the poolNotificationCallback field.
@@ -523,7 +556,9 @@ func (s *Service) initializeRunningSimulationsFromCluster(ctx context.Context, t
 		if simDep.HasStatus(simulations.StatusRunning) {
 			// Register a new live RunningSimulation
 			if err := s.createRunningSimulation(ctx, tx, simDep); err != nil {
-				return err
+				errMsg := fmt.Sprintf("Failed to create running simulation for %s: %s", groupID, err.Error())
+				s.logger.Warning(errMsg)
+				continue
 			}
 
 			s.logger.Info(fmt.Sprintf("Init - Added RunningSimulation for groupID: [%s]. Deployment Status in DB: [%d]", groupID, *simDep.DeploymentStatus))
@@ -2068,13 +2103,18 @@ func (s *Service) initPlatforms() (platformManager.Manager, error) {
 		Logger:     s.logger,
 	}
 
-	return platformManager.NewMapFromConfig(input)
+	m, err := platformManager.NewMapFromConfig(input)
+	if err != nil {
+		return nil, err
+	}
+
+	return platformManager.WithRoundRobin(m)
 }
 
 // TODO: Make initApplicationServices independent of Service by receiving arguments with the needed config.
 func (s *Service) initApplicationServices() subtapp.Services {
-	s.serviceAdaptor = NewSubTSimulationServiceAdaptor(s.DB)
-	base := application.NewServices(s.serviceAdaptor, s.userAccessor)
+	s.ServiceAdaptor = NewSubTSimulationServiceAdaptor(s.DB)
+	base := application.NewServices(s.ServiceAdaptor, s.userAccessor)
 	trackService := NewTracksService(s.DB, s.logger)
 	summaryService := summaries.NewService(s.DB)
 	return subtapp.NewServices(base, trackService, summaryService)

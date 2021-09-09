@@ -38,7 +38,7 @@ func TestLaunchGazeboServerCopyPod(t *testing.T) {
 	// Set up store
 	storeIgnition := sfake.NewFakeIgnition()
 	storeOrchestrator := sfake.NewFakeOrchestrator()
-	fakeStore := sfake.NewFakeStore(nil, storeOrchestrator, storeIgnition)
+	fakeStore := sfake.NewFakeStore(nil, storeOrchestrator, storeIgnition, nil)
 
 	// Mock ignition store methods for this test
 	storeIgnition.On("GazeboServerLogsPath").Return("/tmp/test")
@@ -125,7 +125,7 @@ func TestLaunchGazeboServerCopyPod(t *testing.T) {
 func TestLaunchGazeboServerCopyPodsLogsDisabled(t *testing.T) {
 	// Set up store
 	storeIgnition := sfake.NewFakeIgnition()
-	fakeStore := sfake.NewFakeStore(nil, nil, storeIgnition)
+	fakeStore := sfake.NewFakeStore(nil, nil, storeIgnition, nil)
 
 	// Mock ignition store methods for this test
 	storeIgnition.On("LogsCopyEnabled").Return(false)

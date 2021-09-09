@@ -53,12 +53,19 @@ func prepareNetworkPolicyGazeboServerInput(store actions.Store, tx *gorm.DB, dep
 		return nil, err
 	}
 
+	// All robots
 	selectors := make([]resource.Selector, len(robots))
 
 	// Each robot's comms bridge will be granted with permissions to communicate to the gazebo server
 	for i, r := range robots {
 		selectors[i] = subtapp.GetPodLabelsCommsBridge(s.GroupID, s.ParentGroupID, r)
 	}
+
+	// Mapping server
+	selectors = append(selectors, subtapp.GetPodLabelsMappingServer(s.GroupID, s.ParentGroupID))
+
+	// Allow traffic to and from the Mole bridge
+	selectors = append(selectors, subtapp.GetPodLabelsMoleBridge(s.GroupID, s.ParentGroupID))
 
 	return jobs.CreateNetworkPoliciesInput{
 		{
@@ -230,12 +237,16 @@ func prepareNetworkPolicyCommsBridgesInput(store actions.Store, tx *gorm.DB, dep
 				subtapp.GetPodLabelsGazeboServer(s.GroupID, s.ParentGroupID),
 				// Allow traffic from field computer
 				subtapp.GetPodLabelsFieldComputer(s.GroupID, s.ParentGroupID),
+				// Allow traffic from mapping server
+				subtapp.GetPodLabelsMappingServer(s.GroupID, s.ParentGroupID),
 			},
 			PeersTo: []resource.Selector{
 				// Allow traffic to gazebo server
 				subtapp.GetPodLabelsGazeboServer(s.GroupID, s.ParentGroupID),
 				// Allow traffic to field computer
 				subtapp.GetPodLabelsFieldComputer(s.GroupID, s.ParentGroupID),
+				// Allow traffic to mapping server
+				subtapp.GetPodLabelsMappingServer(s.GroupID, s.ParentGroupID),
 			},
 			Ingresses: network.IngressRule{
 				IPBlocks: []string{
@@ -259,4 +270,68 @@ func prepareNetworkPolicyCommsBridgesInput(store actions.Store, tx *gorm.DB, dep
 	}
 
 	return input, nil
+}
+
+// CreateNetworkPolicyMappingServer extends the generic jobs.CreateNetworkPolicies to create a network policy for the
+// mapping server.
+var CreateNetworkPolicyMappingServer = jobs.CreateNetworkPolicies.Extend(actions.Job{
+	Name:            "create-netpol-mapping-server",
+	PreHooks:        []actions.JobFunc{setStartState, prepareNetworkPolicyMappingServerInput},
+	PostHooks:       []actions.JobFunc{checkCreateNetworkPoliciesError, returnState},
+	RollbackHandler: removeCreatedNetworkPoliciesMappingServer,
+	InputType:       actions.GetJobDataType(&state.StartSimulation{}),
+	OutputType:      actions.GetJobDataType(&state.StartSimulation{}),
+})
+
+// removeCreatedNetworkPoliciesMappingServer removes the created network policies for the mapping server in case an error is thrown.
+func removeCreatedNetworkPoliciesMappingServer(store actions.Store, tx *gorm.DB, deployment *actions.Deployment, value interface{}, err error) (interface{}, error) {
+	s := store.State().(*state.StartSimulation)
+
+	name := subtapp.GetPodNameMappingServer(s.GroupID)
+	ns := s.Platform().Store().Orchestrator().Namespace()
+
+	_ = s.Platform().Orchestrator().NetworkPolicies().Remove(name, ns)
+
+	return nil, nil
+}
+
+// prepareNetworkPolicyMappingServerInput is a pre-hook of the CreateNetworkPolicyMappingServer job that prepares the input
+// for the generic jobs.CreateNetworkPolicies job.
+func prepareNetworkPolicyMappingServerInput(store actions.Store, tx *gorm.DB, deployment *actions.Deployment, value interface{}) (interface{}, error) {
+	s := store.State().(*state.StartSimulation)
+
+	if !isMappingServerEnabled(s.SubTServices(), s.GroupID) {
+		return jobs.CreateNetworkPoliciesInput{}, nil
+	}
+
+	robots, err := s.Services().Simulations().GetRobots(s.GroupID)
+	if err != nil {
+		return nil, err
+	}
+
+	// All robots
+	selectors := make([]resource.Selector, len(robots))
+
+	// Each robot's comms bridge will be granted with permissions to communicate to the mapping server
+	for i, r := range robots {
+		selectors[i] = subtapp.GetPodLabelsCommsBridge(s.GroupID, s.ParentGroupID, r)
+	}
+
+	// Allow traffic to and from gzserver
+	selectors = append(selectors, subtapp.GetPodLabelsGazeboServer(s.GroupID, s.ParentGroupID))
+
+	return jobs.CreateNetworkPoliciesInput{
+		network.CreateNetworkPolicyInput{
+			Name:        subtapp.GetPodNameMappingServer(s.GroupID),
+			Namespace:   s.Platform().Store().Orchestrator().Namespace(),
+			Labels:      subtapp.GetPodLabelsBase(s.GroupID, s.ParentGroupID).Map(),
+			PodSelector: subtapp.GetPodLabelsMappingServer(s.GroupID, s.ParentGroupID),
+			PeersFrom:   selectors,
+			PeersTo:     selectors,
+			Egresses: network.EgressRule{
+				// Allow traffic to the internet
+				AllowOutbound: true,
+			},
+		},
+	}, nil
 }

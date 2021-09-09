@@ -13,7 +13,7 @@ func TestCheckSimulationKind_Success(t *testing.T) {
 	var state int
 	s := actions.NewStore(&state)
 
-	sim := fake.NewSimulation("test-group-id", simulations.StatusPending, simulations.SimParent, nil, "test", 1*time.Minute)
+	sim := fake.NewSimulation("test-group-id", simulations.StatusPending, simulations.SimParent, nil, "test", 1*time.Minute, nil)
 
 	input := CheckSimulationKindInput{
 		Simulation: sim,
@@ -32,7 +32,7 @@ func TestCheckSimulationKind_ReturnsFalseWhenKindDoesNotMatch(t *testing.T) {
 	var state int
 	s := actions.NewStore(&state)
 
-	sim := fake.NewSimulation("test-group-id", simulations.StatusPending, simulations.SimChild, nil, "test", 1*time.Minute)
+	sim := fake.NewSimulation("test-group-id", simulations.StatusPending, simulations.SimChild, nil, "test", 1*time.Minute, nil)
 
 	input := CheckSimulationKindInput{
 		Simulation: sim,

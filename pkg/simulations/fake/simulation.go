@@ -87,7 +87,7 @@ func (f *fakeSimulation) GetPlatform() *string {
 
 // NewSimulation initializes a new fake simulation.
 func NewSimulation(groupID simulations.GroupID, status simulations.Status, kind simulations.Kind,
-	err *simulations.Error, image string, validFor time.Duration) simulations.Simulation {
+	err *simulations.Error, image string, validFor time.Duration, owner *string) simulations.Simulation {
 
 	return &fakeSimulation{
 		groupID:  groupID,
@@ -96,5 +96,6 @@ func NewSimulation(groupID simulations.GroupID, status simulations.Status, kind 
 		err:      err,
 		image:    image,
 		validFor: validFor,
+		owner:    owner,
 	}
 }
