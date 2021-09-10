@@ -1086,7 +1086,7 @@ func (s *Service) StartSimulationAsync(ctx context.Context,
 	// Dev note: in this case we check 'after' creating the record in the DB to make
 	// sure that in case of a race condition then both records are added with pending state
 	// and one of those (or both) can be rejected immediately.
-	if em := s.checkValidNumberOfSimulations(ctx, tx, simDep); em != nil {
+	if em := s.checkValidNumberOfSimulations(ctx, tx, simDep); !isAdmin && em != nil {
 		// In case of error we delete the simulation request from DB and exit.
 		tx.Model(simDep).Update(SimulationDeployment{
 			DeploymentStatus: simRejected.ToPtr(),
