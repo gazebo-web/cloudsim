@@ -3,7 +3,6 @@
 # The `SIMSVC_PLATFORM_CONFIG_PATH` environment variable can be defined to specify the configuration file path.
 # If it is not defined, Cloudsim will automatically look for a `config.yaml` file in the directory it is executed from.
 # All values in this configuration file should be strings unless otherwise noted.
-
 platforms:
   us_east_1:
     type: "platform"
