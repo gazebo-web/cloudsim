@@ -196,7 +196,7 @@ platforms:
           # (Required) Name of the storage component bucket to upload logs to.
           logsBucketValue: ""
 
-        moleStore: &moleStore
+        moleStore:
           # (Required) Address of the Pulsar service the Mole bridge should connect to.
           # If the Mole deployment is running on the same cluster this should be in the form of <SERVICE>.<NAMESPACE>.
           bridgePulsarAddressValue: ""
