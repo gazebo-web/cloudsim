@@ -6,6 +6,7 @@ import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/factory"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/platform"
 	platformFactory "gitlab.com/ignitionrobotics/web/cloudsim/pkg/platform/implementations"
+	"io/ioutil"
 )
 
 // Map is the default Manager implementation.
@@ -68,8 +69,16 @@ func NewMapFromConfig(input *NewInput) (Manager, error) {
 		return nil, ErrInvalidNewInput
 	}
 
+	list, err := listConfigFiles(input)
+	if err != nil {
+		return nil, err
+	}
+
+	m := make(Map, 0)
+
 	// Load config
-	fileConfig, err := loadPlatformConfiguration(input)
+	dir := input.ConfigPath
+	fileConfig, err := loadPlatformConfiguration(input.Loader, dir, list)
 	if err != nil {
 		return nil, err
 	}
@@ -80,19 +89,54 @@ func NewMapFromConfig(input *NewInput) (Manager, error) {
 	}
 
 	// Create and load map
-	m := make(Map, 0)
 	for name, config := range fileConfig.Platforms {
 		// Create platform
 		var out platform.Platform
-		if err := platformFactory.Factory.New(config, dependencies, &out); err != nil {
+		if err = platformFactory.Factory.New(&config, dependencies, &out); err != nil {
 			return nil, err
 		}
 
 		// Add platform to map
-		if err := m.set(name, out); err != nil {
+		if err = m.set(name, out); err != nil {
 			return nil, err
 		}
 	}
 
 	return m, nil
+}
+
+// listConfigFiles discovers a list of .yaml files in the given NewInput.ConfigPath directory.
+func listConfigFiles(input *NewInput) ([]string, error) {
+	files, err := ioutil.ReadDir(input.ConfigPath)
+	if err != nil {
+		return nil, err
+	}
+
+	result := make([]string, 0, len(files))
+	for _, f := range files {
+		// If is a directory, skip.
+		if f.IsDir() {
+			continue
+		}
+
+		// If is empty, skip.
+		if f.Size() == 0 {
+			continue
+		}
+
+		// If it's not a .yaml file, ignore.
+		var filename string
+		var ext string
+		_, err = fmt.Sscanf(f.Name(), "%s.%s", &filename, &ext)
+		if err != nil {
+			continue
+		}
+		if ext != "yaml" {
+			continue
+		}
+
+		result = append(result, f.Name())
+	}
+
+	return result, nil
 }
