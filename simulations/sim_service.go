@@ -182,9 +182,9 @@ type Service struct {
 var SimServImpl SimService
 
 type simServConfig struct {
-	// PlatformConfigPath is the filepath to the platform configuration file.
-	// If not defined, it will use the default config path.
-	PlatformConfigPath string `env:"SIMSVC_PLATFORM_CONFIG_PATH" envDefault:""`
+	// PlatformConfigPath is the directory to the platform configuration files.
+	// If not defined, it will use the current folder.
+	PlatformConfigPath string `env:"SIMSVC_PLATFORM_CONFIG_PATH" envDefault:"."`
 	// PoolSizeLaunchSim is the number of worker threads available to launch simulations.
 	PoolSizeLaunchSim int `env:"SIMSVC_POOL_LAUNCH_SIM" envDefault:"10"`
 	// PoolSizeTerminateSim is the number of worker threads available to terminate simulations.
