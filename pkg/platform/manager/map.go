@@ -7,6 +7,7 @@ import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/platform"
 	platformFactory "gitlab.com/ignitionrobotics/web/cloudsim/pkg/platform/implementations"
 	"io/ioutil"
+	"path/filepath"
 )
 
 // Map is the default Manager implementation.
@@ -125,13 +126,8 @@ func listConfigFiles(input *NewInput) ([]string, error) {
 		}
 
 		// If it's not a .yaml file, ignore.
-		var filename string
-		var ext string
-		_, err = fmt.Sscanf(f.Name(), "%s.%s", &filename, &ext)
-		if err != nil {
-			continue
-		}
-		if ext != "yaml" {
+		ext := filepath.Ext(f.Name())
+		if ext != ".yaml" {
 			continue
 		}
 

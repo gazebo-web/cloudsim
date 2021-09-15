@@ -1,7 +1,6 @@
 package manager
 
 import (
-	"fmt"
 	"github.com/pkg/errors"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/factory"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/loader"
@@ -10,6 +9,8 @@ import (
 	"gitlab.com/ignitionrobotics/web/ign-go"
 	"os"
 	"path"
+	"path/filepath"
+	"strings"
 )
 
 var (
@@ -99,12 +100,7 @@ func loadPlatformConfiguration(loader loader.Loader, dir string, paths []string)
 		}
 
 		// Get filename as key for platform map
-		var filename string
-		var ext string
-		_, err = fmt.Sscanf(p, "%s.%s", &filename, &ext)
-		if err != nil {
-			continue
-		}
+		filename := strings.TrimSuffix(p, filepath.Ext(p))
 
 		mc.Platforms[filename] = config
 		mc.Platforms[filename].Config["name"] = filename

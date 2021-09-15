@@ -102,7 +102,7 @@ func (s *testMapSuite) TestNewMap() {
 	yamlLoader := loader.NewYAMLLoader(logger)
 
 	input := &NewInput{
-		ConfigPath: "manager_config_test.yaml",
+		ConfigPath: ".",
 		Logger:     logger,
 		Loader:     yamlLoader,
 	}
