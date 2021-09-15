@@ -2,7 +2,7 @@
 # This manifest defines a specific platform configuration that Cloudsim will use to launch simulations.
 # The `SIMSVC_PLATFORM_CONFIG_PATH` environment variable should be defined to determine where cloudsim should look for
 # platform manifests.
-# If it is not defined, Cloudsim will automatically look for a config files in the root folder.
+# If it is not defined, Cloudsim will automatically look for manifest files in the root folder.
 # All values in this manifest should be strings unless otherwise noted.
 type: "platform"
 config:
