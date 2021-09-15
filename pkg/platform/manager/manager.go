@@ -9,7 +9,6 @@ import (
 	"gitlab.com/ignitionrobotics/web/ign-go"
 	"os"
 	"path"
-	"path/filepath"
 	"strings"
 )
 
@@ -100,7 +99,7 @@ func loadPlatformConfiguration(loader loader.Loader, dir string, paths []string)
 		}
 
 		// Get filename as key for platform map
-		filename := strings.TrimSuffix(p, filepath.Ext(p))
+		filename := strings.TrimSuffix(p, ".yaml")
 
 		mc.Platforms[filename] = config
 		mc.Platforms[filename].Config["name"] = filename
