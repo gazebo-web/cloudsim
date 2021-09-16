@@ -7,9 +7,7 @@ import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/platform"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
 	"gitlab.com/ignitionrobotics/web/ign-go"
-	"os"
 	"path"
-	"strings"
 )
 
 var (
@@ -46,7 +44,7 @@ type Manager interface {
 	// matched, the matched platform will be the first element in the returned list. If `target` is `nil` or is not
 	// found, the elements in the list will be returned in random order.
 	Platforms(selector *string) []platform.Platform
-	// GetPlatform returns the platform that matches a specific selector, or an error if it is not found.
+	// Platform returns the platform that matches a specific selector, or an error if it is not found.
 	Platform(selector string) (platform.Platform, error)
 }
 
@@ -89,23 +87,13 @@ func loadPlatformConfiguration(input *NewInput) (*managerConfig, error) {
 	for _, p := range list {
 		var config factory.Config
 
-		// Set default path if not defined
-		if p == "" {
-			var err error
-			var cwd string
-			if cwd, err = os.Getwd(); err != nil {
-				return nil, err
-			}
-			p = path.Join(cwd, "config.yaml")
-		}
-
 		err = input.Loader.Load(path.Join(dir, p), &config)
 		if err != nil {
 			continue
 		}
 
 		// Get filename as key for platform map
-		filename := strings.TrimSuffix(p, ".yaml")
+		filename := input.Loader.TrimExt(p)
 
 		mc.Platforms[filename] = config
 		mc.Platforms[filename].Config["name"] = filename
