@@ -76,8 +76,6 @@ type NewInput struct {
 // If a path is a directory, all config files within that directory will be loaded.
 // A `name` config value containing the platform name will be added to each platform's factory config fields.
 func loadPlatformConfiguration(input *NewInput) (*managerConfig, error) {
-	var err error
-
 	list, err := listConfigFiles(input.ConfigPath)
 	if err != nil {
 		return nil, err
