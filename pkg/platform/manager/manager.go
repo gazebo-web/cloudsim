@@ -75,13 +75,20 @@ type NewInput struct {
 // loadPlatformConfiguration loads platform configuration files from a list of paths and returns a loaded managerConfig value.
 // If a path is a directory, all config files within that directory will be loaded.
 // A `name` config value containing the platform name will be added to each platform's factory config fields.
-func loadPlatformConfiguration(loader loader.Loader, dir string, paths []string) (*managerConfig, error) {
+func loadPlatformConfiguration(input *NewInput) (*managerConfig, error) {
 	var err error
+
+	list, err := listConfigFiles(input.ConfigPath)
+	if err != nil {
+		return nil, err
+	}
+
 	mc := managerConfig{
 		Platforms: make(map[string]factory.Config),
 	}
 
-	for _, p := range paths {
+	dir := input.ConfigPath
+	for _, p := range list {
 		var config factory.Config
 
 		// Set default path if not defined
@@ -94,7 +101,7 @@ func loadPlatformConfiguration(loader loader.Loader, dir string, paths []string)
 			p = path.Join(cwd, "config.yaml")
 		}
 
-		err = loader.Load(path.Join(dir, p), &config)
+		err = input.Loader.Load(path.Join(dir, p), &config)
 		if err != nil {
 			continue
 		}

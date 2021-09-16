@@ -7,7 +7,7 @@ import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/platform"
 	platformFactory "gitlab.com/ignitionrobotics/web/cloudsim/pkg/platform/implementations"
 	"io/ioutil"
-	"path/filepath"
+	"os"
 )
 
 // Map is the default Manager implementation.
@@ -70,16 +70,7 @@ func NewMapFromConfig(input *NewInput) (Manager, error) {
 		return nil, ErrInvalidNewInput
 	}
 
-	list, err := listConfigFiles(input)
-	if err != nil {
-		return nil, err
-	}
-
-	m := make(Map, 0)
-
-	// Load config
-	dir := input.ConfigPath
-	fileConfig, err := loadPlatformConfiguration(input.Loader, dir, list)
+	fileConfig, err := loadPlatformConfiguration(input)
 	if err != nil {
 		return nil, err
 	}
@@ -88,6 +79,8 @@ func NewMapFromConfig(input *NewInput) (Manager, error) {
 	dependencies := factory.Dependencies{
 		"logger": input.Logger,
 	}
+
+	m := make(Map, 0)
 
 	// Create and load map
 	for name, config := range fileConfig.Platforms {
@@ -108,8 +101,19 @@ func NewMapFromConfig(input *NewInput) (Manager, error) {
 
 // listConfigFiles returns a list containing the file paths of all files found in a directory.
 // If a provided path is a file, the file path is returned instead.
-func listConfigFiles(input *NewInput) ([]string, error) {
-	files, err := ioutil.ReadDir(input.ConfigPath)
+func listConfigFiles(path string) ([]string, error) {
+	info, err := os.Stat(path)
+	if err != nil {
+		return nil, err
+	}
+
+	// If it's a file, return the file path.
+	if !info.IsDir() {
+		return []string{path}, nil
+	}
+
+	// If path is a directory, get all files from that directory.
+	files, err := ioutil.ReadDir(path)
 	if err != nil {
 		return nil, err
 	}
@@ -123,12 +127,6 @@ func listConfigFiles(input *NewInput) ([]string, error) {
 
 		// If is empty, skip.
 		if f.Size() == 0 {
-			continue
-		}
-
-		// If it's not a .yaml file, ignore.
-		ext := filepath.Ext(f.Name())
-		if ext != ".yaml" {
 			continue
 		}
 
