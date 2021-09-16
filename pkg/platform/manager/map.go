@@ -106,7 +106,8 @@ func NewMapFromConfig(input *NewInput) (Manager, error) {
 	return m, nil
 }
 
-// listConfigFiles discovers a list of .yaml files in the given NewInput.ConfigPath directory.
+// listConfigFiles returns a list containing the file paths of all files found in a directory.
+// If a provided path is a file, the file path is returned instead.
 func listConfigFiles(input *NewInput) ([]string, error) {
 	files, err := ioutil.ReadDir(input.ConfigPath)
 	if err != nil {

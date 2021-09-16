@@ -72,7 +72,8 @@ type NewInput struct {
 	Logger ign.Logger
 }
 
-// loadPlatformConfiguration loads platform configurations files listed on paths and returns a loaded managerConfig value.
+// loadPlatformConfiguration loads platform configuration files from a list of paths and returns a loaded managerConfig value.
+// If a path is a directory, all config files within that directory will be loaded.
 // A `name` config value containing the platform name will be added to each platform's factory config fields.
 func loadPlatformConfiguration(loader loader.Loader, dir string, paths []string) (*managerConfig, error) {
 	var err error
