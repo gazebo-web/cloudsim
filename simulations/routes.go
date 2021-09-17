@@ -513,7 +513,7 @@ var Routes = ign.Routes{
 		Description: "Gets the list of robots from the competition",
 		URI:         "/competition/robots",
 		Headers:     ign.AuthHeadersRequired,
-		Methods:     ign.Methods{
+		Methods: ign.Methods{
 			// swagger:route GET /competition/robots competition robots
 			//
 			// Gets the list of all competition robots.
@@ -719,7 +719,7 @@ var ProfileRoutes = ign.Routes{
 		Name:        "CPU Profile",
 		Description: "Get cloudsim CPU profile data",
 		URI:         "/profile",
-		SecureMethods: ign.Methods{
+		SecureMethods: ign.SecureMethods{
 			ign.Method{
 				Type:        "GET",
 				Description: "Get cloudsim CPU profile data",
