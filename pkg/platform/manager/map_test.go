@@ -109,7 +109,8 @@ func (s *testMapSuite) TestNewMap() {
 	manager, err := NewMapFromConfig(input)
 	s.Require().NoError(err)
 	s.Require().NotNil(manager)
-	s.Require().GreaterOrEqual(len(manager.Selectors()), 2)
+	s.Assert().GreaterOrEqual(len(manager.Selectors()), 2)
+	s.Assert().Equal([]string{"us-east-1", "us-east-2"}, manager.Selectors())
 }
 
 func (s *testMapSuite) TestNewMapWithFile() {
@@ -125,5 +126,6 @@ func (s *testMapSuite) TestNewMapWithFile() {
 	manager, err := NewMapFromConfig(input)
 	s.Require().NoError(err)
 	s.Require().NotNil(manager)
-	s.Require().GreaterOrEqual(len(manager.Selectors()), 1)
+	s.Assert().GreaterOrEqual(len(manager.Selectors()), 1)
+	s.Assert().Equal([]string{"us-east-1"}, manager.Selectors())
 }

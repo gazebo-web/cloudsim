@@ -153,4 +153,9 @@ func (s *testYAMLLoaderSuite) TestTrimExt() {
 	name := s.loader.TrimExt(filename)
 
 	s.Assert().Equal("test", name)
+
+	filename = "test.yaml"
+	name = s.loader.TrimExt(filename)
+
+	s.Assert().Equal("test", name)
 }

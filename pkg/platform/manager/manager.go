@@ -7,6 +7,7 @@ import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/platform"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
 	"gitlab.com/ignitionrobotics/web/ign-go"
+	"path/filepath"
 )
 
 var (
@@ -93,7 +94,8 @@ func loadPlatformConfiguration(input *NewInput) (*managerConfig, error) {
 		}
 
 		// Get filename as key for platform map
-		filename := input.Loader.TrimExt(p)
+		file := filepath.Base(p)
+		filename := input.Loader.TrimExt(file)
 
 		mc.Platforms[filename] = config
 		mc.Platforms[filename].Config["name"] = filename
