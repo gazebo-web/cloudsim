@@ -8,6 +8,7 @@ import (
 	platformFactory "gitlab.com/ignitionrobotics/web/cloudsim/pkg/platform/implementations"
 	"io/ioutil"
 	"os"
+	"path/filepath"
 )
 
 // Map is the default Manager implementation.
@@ -130,7 +131,7 @@ func listConfigFiles(path string) ([]string, error) {
 			continue
 		}
 
-		result = append(result, f.Name())
+		result = append(result, filepath.Join(path, f.Name()))
 	}
 
 	return result, nil

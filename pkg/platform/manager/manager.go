@@ -7,8 +7,6 @@ import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/platform"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
 	"gitlab.com/ignitionrobotics/web/ign-go"
-	"os"
-	"path"
 )
 
 var (
@@ -86,20 +84,10 @@ func loadPlatformConfiguration(input *NewInput) (*managerConfig, error) {
 		Platforms: make(map[string]factory.Config),
 	}
 
-	info, err := os.Stat(input.ConfigPath)
-	if err != nil {
-		return nil, err
-	}
-
-	dir := ""
-	if info.IsDir() {
-		dir = input.ConfigPath
-	}
-
 	for _, p := range list {
 		var config factory.Config
 
-		err = input.Loader.Load(path.Join(dir, p), &config)
+		err = input.Loader.Load(p, &config)
 		if err != nil {
 			continue
 		}
