@@ -6,7 +6,6 @@ import (
 	"gitlab.com/ignitionrobotics/web/ign-go"
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
-	"strings"
 )
 
 // yamlLoader is a Loader implementation to parse YAML files.
@@ -14,9 +13,9 @@ type yamlLoader struct {
 	logger ign.Logger
 }
 
-// TrimExt removes the .yaml extension from the given filename.
+// TrimExt removes the .yaml and .yml extension from the given filename.
 func (l *yamlLoader) TrimExt(filename string) string {
-	return strings.TrimSuffix(filename, ".yaml")
+	return trimExts(filename, ".yaml", ".yml")
 }
 
 // log logs a message using the logger contained by the loader. If logger is `nil`, no logging is performed.

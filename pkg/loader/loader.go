@@ -5,6 +5,7 @@ import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/utils/reflect"
 	"io/ioutil"
 	"path/filepath"
+	"strings"
 )
 
 var (
@@ -85,4 +86,14 @@ func LoadDirFiles(loader Loader, path string, out interface{}) []error {
 	}
 
 	return nil
+}
+
+// trimExts attempts to remove the given extensions from the filename.
+// 	Input: (file.yaml, .yaml)
+//	Output: (file)
+func trimExts(filename string, exts ...string) string {
+	for _, ext := range exts {
+		filename = strings.TrimSuffix(filename, ext)
+	}
+	return filename
 }
