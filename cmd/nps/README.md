@@ -1,3 +1,10 @@
+NPS:
+"image=learninglab/me4823:matlab_small"
+
+
+VRX and Class:
+DOCKER_IMAGE="learninglab/me4823:main"
+
 # How to start and stop a simulation
 
 1. Log into [https://staging-app.ignitionrobotics.org](https://staging-app.ignitionrobotics.org)

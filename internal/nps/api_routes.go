@@ -48,6 +48,7 @@ func (app *application) GetAPIRoutes() ign.Routes {
 		},
 		// Example usage:
 		//     curl -X POST -H "Private-Token: TOKEN" http://localhost:8001/1.0/stop/{groupid}
+    // Use a groupid of 'all' to stop all instances.
 		ign.Route{
 			Name:        "Stop simulation",
 			Description: "This is a route for stopping a simulation",

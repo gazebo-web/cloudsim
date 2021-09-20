@@ -119,6 +119,7 @@ func (ctrl *controller) Start(user *users.User, tx *gorm.DB, w http.ResponseWrit
 	if err != nil {
 		return nil, ign.NewErrorMessageWithBase(ign.ErrorForm, err)
 	}
+  users.AdjustAccountCredit(tx, *user.Username, -1.0)
 
 	// Send response to the user
 	return res, nil

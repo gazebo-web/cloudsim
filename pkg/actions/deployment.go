@@ -32,7 +32,7 @@ type Deployment struct {
 	// CurrentJob contains the current action job the deployment is executing.
 	CurrentJob string `gorm:"not null"`
 	// RollbackError contains the error that triggered the rollback of this deployment.
-	RollbackError *string
+  RollbackError *string `gorm:"type:text"`
 }
 
 // Deployments is a slice of Deployment pointers.

@@ -362,7 +362,7 @@ func queueHandler(queue *ign.Queue, do func(ctx context.Context, gid simulations
 		ctx := context.Background()
 		err := do(ctx, gid)
 		if err != nil {
-			logger.Error("queue: failed perform operation on the next element, error:", err)
+			logger.Error("queue: failed to perform operation on the next element, error:", err)
 		}
 	}
 }

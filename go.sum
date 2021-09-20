@@ -1287,6 +1287,8 @@ github.com/yvasiyarov/newrelic_platform_go v0.0.0-20140908184405-b21fdbd4370f/go
 github.com/zenazn/goji v0.9.0/go.mod h1:7S9M489iMyHBNxwZnk9/EHS098H4/F6TATF2mIxtB1Q=
 gitlab.com/ignitionrobotics/web/fuelserver v0.0.0-20200916210816-e30ab5ed9d47 h1:z9uMOLenMLVU3gBmmBa7lyyhC29fl/Jv6DeL2l43lYY=
 gitlab.com/ignitionrobotics/web/fuelserver v0.0.0-20200916210816-e30ab5ed9d47/go.mod h1:PLjdv73lgSOtVqoGEAqsa59hy14dJfvERzgXT5xZHls=
+gitlab.com/ignitionrobotics/web/fuelserver v0.0.0-20210629154842-4cde87665e38 h1:OdhK2u3RmummE5H0x6y1PMkv4PyKOIoBM0e9+VzjlII=
+gitlab.com/ignitionrobotics/web/fuelserver v0.0.0-20210629154842-4cde87665e38/go.mod h1:7s4B3rOIR6bhKb9ubmCQUBgxUTmmi/auOTluiZgTRNw=
 gitlab.com/ignitionrobotics/web/ign-go v0.0.0-20200804201637-78fc7e089169 h1:QuuRlXkvbfY4ZRy6HxsHS1uaXEkE4360lyFL+19GJHI=
 gitlab.com/ignitionrobotics/web/ign-go v0.0.0-20200804201637-78fc7e089169/go.mod h1:zfTiSMA+aWnzmQFGi8UgoozvCgEPPV1JqbPmPUucXIE=
 gitlab.com/ignitionrobotics/web/ign-go v0.0.0-20201013152111-8655ead5c276 h1:TTNxqbHIO68L14yBWkWQTevkqiWK7u6MC12jgtiCvjU=
