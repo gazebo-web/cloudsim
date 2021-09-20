@@ -149,18 +149,24 @@ func (s *testYAMLLoaderSuite) TestLoad() {
 }
 
 func (s *testYAMLLoaderSuite) TestTrimExt() {
-	filename := "test.yaml"
-	name := s.loader.TrimExt(filename)
+	s.Run("yaml gets trimmed", func() {
+		filename := "test.yaml"
+		name := s.loader.TrimExt(filename)
 
-	s.Assert().Equal("test", name)
+		s.Assert().Equal("test", name)
+	})
 
-	filename = "test.yml"
-	name = s.loader.TrimExt(filename)
+	s.Run("yml gets trimmed", func() {
+		filename := "test.yml"
+		name := s.loader.TrimExt(filename)
 
-	s.Assert().Equal("test", name)
+		s.Assert().Equal("test", name)
+	})
 
-	filename := "test.json"
-	name := s.loader.TrimExt(filename)
+	s.Run("json does not get trimmed", func() {
+		filename := "test.json"
+		name := s.loader.TrimExt(filename)
 
-	s.Assert().Equal("test.json", name)
+		s.Assert().Equal("test.json", name)
+	})
 }
