@@ -28,6 +28,8 @@ type SimulationDeployment struct {
 	DeletedAt *time.Time `gorm:"type:timestamp(2) NULL" sql:"index" json:"-"`
 	// Timestamp in which this simulation was stopped/terminated.
 	StoppedAt *time.Time `gorm:"type:timestamp(3) NULL" json:"stopped_at,omitempty"`
+	// LaunchedAt is the time on which the simulation was launched to run.
+	LaunchedAt *time.Time `gorm:"type:timestamp(3) NULL" json:"launched_at,omitempty"`
 	// Represents the maximum time this simulation should live. After that time
 	// it will be eligible for automatic termination.
 	// It is a time.Duration (stored as its string representation).
@@ -223,6 +225,13 @@ func (dep *SimulationDeployment) GetImage() string {
 		return ""
 	}
 	return *dep.Image
+}
+
+// GetLaunchedAt returns the time and date the simulation was officially launched. This date can differ from the
+// time the simulation was requested due to the simulation having been held, or because it has been unable to
+// launch because of insufficient cloud resources.
+func (dep *SimulationDeployment) GetLaunchedAt() *time.Time {
+	return dep.LaunchedAt
 }
 
 // GetValidFor returns the SimulationDeployment's ValidFor parsed as time.Duration.
@@ -607,6 +616,18 @@ func (dep *SimulationDeployment) updatePlatform(tx *gorm.DB, platform string) *i
 		return ign.NewErrorMessageWithBase(ign.ErrorDbSave, err)
 	}
 	dep.Platform = &platform
+
+	return nil
+}
+
+// updateLaunchedAt updates this SimulationDeployment's LaunchedAt field in the database.
+func (dep *SimulationDeployment) updateLaunchedAt(tx *gorm.DB, launchedAt time.Time) *ign.ErrMsg {
+	if err := tx.Model(&dep).Update(SimulationDeployment{
+		LaunchedAt: &launchedAt,
+	}).Error; err != nil {
+		return ign.NewErrorMessageWithBase(ign.ErrorDbSave, err)
+	}
+	dep.LaunchedAt = &launchedAt
 
 	return nil
 }

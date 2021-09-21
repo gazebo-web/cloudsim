@@ -217,7 +217,7 @@ func TestStopSimulationAction(t *testing.T) {
 	// Initialize subt application.
 	app := subtapp.NewServices(baseApp, trackService, summaryService)
 
-	rs := runsim.NewRunningSimulation(sim.GetGroupID(), int64(maxSimSeconds), sim.GetValidFor())
+	rs := runsim.NewRunningSimulation(sim)
 	ws := ignws.NewPubSubTransporterMock()
 
 	ws.On("Disconnect").Return(error(nil))

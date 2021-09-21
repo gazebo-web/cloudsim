@@ -74,6 +74,11 @@ func NewRunningSimulation(ctx context.Context, dep *SimulationDeployment, t ignw
 	var validFor time.Duration
 	validFor, _ = time.ParseDuration(*dep.ValidFor)
 
+	launchedAt := time.Now()
+	if dep.LaunchedAt != nil {
+		launchedAt = *dep.LaunchedAt
+	}
+
 	s := RunningSimulation{
 		GroupID:                groupID,
 		Owner:                  *dep.Owner,
@@ -81,8 +86,8 @@ func NewRunningSimulation(ctx context.Context, dep *SimulationDeployment, t ignw
 		lockCurrentState:       sync.RWMutex{},
 		lockDesiredState:       sync.RWMutex{},
 		publishing:             false,
-		SimCreatedAtTime:       time.Now(),
-		MaxValidUntil:          time.Now().Add(validFor),
+		SimCreatedAtTime:       launchedAt,
+		MaxValidUntil:          launchedAt.Add(validFor),
 		SimMaxAllowedSeconds:   int64(maxSimSeconds),
 		websocketTransportNode: t,
 	}

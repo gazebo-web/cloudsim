@@ -25,7 +25,9 @@ var LaunchInstances = &actions.Job{
 // jobLaunchInstancesDataKey is the key used to persist the list of machines that were created in the LaunchInstances job.
 const jobLaunchInstancesDataKey = "created-machines"
 
-func launchInstances(store actions.Store, tx *gorm.DB, deployment *actions.Deployment, value interface{}) (interface{}, error) {
+func launchInstances(store actions.Store, tx *gorm.DB, deployment *actions.Deployment,
+	value interface{}) (interface{}, error) {
+
 	// Get the store
 	s := store.State().(state.PlatformGetter)
 
@@ -33,8 +35,8 @@ func launchInstances(store actions.Store, tx *gorm.DB, deployment *actions.Deplo
 	in := value.(LaunchInstancesInput)
 
 	// Trigger the machine creation.
-	// If Machines.Create returns an error, it will return any machines that were successfully requested and provisioned 
-	// until the error was encountered. This job does not end if an error is returned here. Instead, the next block is 
+	// If Machines.Create returns an error, it will return any machines that were successfully requested and provisioned
+	// until the error was encountered. This job does not end if an error is returned here. Instead, the next block is
 	// executed to store the set of machines that were provisioned so that they can be terminated by the rollback handler.
 	out, err := s.Platform().Machines().Create(in)
 
@@ -51,7 +53,9 @@ func launchInstances(store actions.Store, tx *gorm.DB, deployment *actions.Deplo
 	return LaunchInstancesOutput(out), nil
 }
 
-func removeCreatedInstances(store actions.Store, tx *gorm.DB, deployment *actions.Deployment, value interface{}, err error) (interface{}, error) {
+func removeCreatedInstances(store actions.Store, tx *gorm.DB, deployment *actions.Deployment, value interface{},
+	err error) (interface{}, error) {
+
 	// Get the store
 	s := store.State().(state.PlatformGetter)
 

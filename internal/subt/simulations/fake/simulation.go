@@ -17,6 +17,7 @@ type SimulationConfig struct {
 	Track      string
 	Token      *string
 	Owner      *string
+	LaunchedAt *time.Time
 	Robots     []simulations.Robot
 	Marsupials []simulations.Robot
 }
@@ -83,6 +84,7 @@ func NewSimulation(config SimulationConfig) subt.Simulation {
 			config.Image,
 			1*time.Minute,
 			config.Owner,
+			config.LaunchedAt,
 		),
 		track:  config.Track,
 		robots: config.Robots,
