@@ -7,16 +7,17 @@ import (
 
 // fakeSimulation is a fake simulations.Simulation implementation.
 type fakeSimulation struct {
-	groupID   simulations.GroupID
-	status    simulations.Status
-	kind      simulations.Kind
-	err       *simulations.Error
-	image     string
-	validFor  time.Duration
-	processed bool
-	owner     *string
-	creator   string
-	platform  *string
+	groupID    simulations.GroupID
+	status     simulations.Status
+	kind       simulations.Kind
+	err        *simulations.Error
+	image      string
+	validFor   time.Duration
+	processed  bool
+	owner      *string
+	creator    string
+	platform   *string
+	launchedAt *time.Time
 }
 
 // IsProcessed returns if the simulation is processed.
@@ -54,6 +55,11 @@ func (f *fakeSimulation) GetImage() string {
 	return f.image
 }
 
+// GetLaunchedAt returns the time and date the fake simulation was launched.
+func (f *fakeSimulation) GetLaunchedAt() *time.Time {
+	return f.launchedAt
+}
+
 // GetError returns the fake simulation's error.
 // It returns nil if no error has been set.
 func (f *fakeSimulation) GetError() *simulations.Error {
@@ -87,15 +93,17 @@ func (f *fakeSimulation) GetPlatform() *string {
 
 // NewSimulation initializes a new fake simulation.
 func NewSimulation(groupID simulations.GroupID, status simulations.Status, kind simulations.Kind,
-	err *simulations.Error, image string, validFor time.Duration, owner *string) simulations.Simulation {
+	err *simulations.Error, image string, validFor time.Duration, owner *string,
+	launchedAt *time.Time) simulations.Simulation {
 
 	return &fakeSimulation{
-		groupID:  groupID,
-		status:   status,
-		kind:     kind,
-		err:      err,
-		image:    image,
-		validFor: validFor,
-		owner:    owner,
+		groupID:    groupID,
+		status:     status,
+		kind:       kind,
+		err:        err,
+		image:      image,
+		validFor:   validFor,
+		owner:      owner,
+		launchedAt: launchedAt,
 	}
 }
