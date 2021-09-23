@@ -129,6 +129,11 @@ type Simulation interface {
 	// GetImage returns the simulation's docker image. This image is used as the solution image.
 	GetImage() string
 
+	// GetLaunchedAt returns the time and date the simulation was officially launched. This date can differ from the
+	// time the simulation was requested due to the simulation having been held, or because it has been unable to
+	// launch because of insufficient cloud resources.
+	GetLaunchedAt() *time.Time
+
 	// GetValidFor returns the amount of time that the simulation is considered valid.
 	GetValidFor() time.Duration
 

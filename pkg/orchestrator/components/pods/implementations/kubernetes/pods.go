@@ -110,11 +110,19 @@ func generateKubernetesContainers(containers []pods.Container) []apiv1.Container
 			})
 		}
 
-		var resourceLimit map[apiv1.ResourceName]resource.Quantity
+		var resourceRequests map[apiv1.ResourceName]resource.Quantity
+		if len(c.ResourceRequests) > 0 {
+			resourceRequests = make(map[apiv1.ResourceName]resource.Quantity, len(c.ResourceRequests))
+			for k, v := range c.ResourceRequests {
+				resourceRequests[apiv1.ResourceName(k)] = resource.MustParse(v)
+			}
+		}
+
+		var resourceLimits map[apiv1.ResourceName]resource.Quantity
 		if len(c.ResourceLimits) > 0 {
-			resourceLimit = make(map[apiv1.ResourceName]resource.Quantity, len(c.ResourceLimits))
+			resourceLimits = make(map[apiv1.ResourceName]resource.Quantity, len(c.ResourceLimits))
 			for k, v := range c.ResourceLimits {
-				resourceLimit[apiv1.ResourceName(k)] = resource.MustParse(v)
+				resourceLimits[apiv1.ResourceName(k)] = resource.MustParse(v)
 			}
 		}
 
@@ -124,13 +132,17 @@ func generateKubernetesContainers(containers []pods.Container) []apiv1.Container
 			Image:   c.Image,
 			Command: c.Command,
 			Args:    c.Args,
+			Ports:   ports,
+			Env:     envs,
+			Resources: apiv1.ResourceRequirements{
+				Requests: resourceRequests,
+				Limits:   resourceLimits,
+			},
+			VolumeMounts: volumeMounts,
 			SecurityContext: &apiv1.SecurityContext{
 				Privileged:               c.Privileged,
 				AllowPrivilegeEscalation: c.AllowPrivilegeEscalation,
 			},
-			Ports:        ports,
-			VolumeMounts: volumeMounts,
-			Env:          envs,
 		})
 	}
 
@@ -141,10 +153,10 @@ func generateKubernetesContainers(containers []pods.Container) []apiv1.Container
 func (p *kubernetesPods) Create(input pods.CreatePodInput) (*pods.PodResource, error) {
 	p.Logger.Debug(fmt.Sprintf("Creating new pod. Input: %+v", input))
 
-	// Set up init containers.
+	// Set up init containers
 	initContainers := generateKubernetesContainers(input.InitContainers)
 
-	// Set up containers for pod.
+	// Set up containers for pod
 	containers := generateKubernetesContainers(input.Containers)
 
 	p.Logger.Debug(fmt.Sprintf("List of containers: %+v", containers))

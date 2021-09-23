@@ -119,6 +119,9 @@ func prepareCommsBridgePodInput(store actions.Store, tx *gorm.DB, deployment *ac
 						s.Platform().Store().Ignition().Verbosity(),
 					),
 					EnvVarsFrom: subtapp.GetEnvVarsFromSourceCommsBridge(),
+					ResourceRequests: map[pods.ResourceName]string{
+						pods.ResourceMemory: "3Gi",
+					},
 				},
 			},
 			Volumes:     volumes,
