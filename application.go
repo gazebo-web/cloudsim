@@ -137,6 +137,19 @@ func init() {
 	// Health
 	m := mainRouter.PathPrefix("/").Subrouter()
 	s.ConfigureRouterWithRoutes("/", m, sim.MonitoringRoutes)
+
+	// Profile
+	var cpuProfileEnabled bool
+	// Set the global configuration to true if the env var is set to true
+	if value, err := ign.ReadEnvVar("IGN_CPU_PROFILE_ENABLED"); err == nil && strings.ToLower(value) == "true" {
+		cpuProfileEnabled = true
+	}
+
+	if cpuProfileEnabled {
+		profileRouter := mainRouter.PathPrefix("/").Subrouter()
+		s.ConfigureRouterWithRoutes("/", profileRouter, sim.ProfileRoutes)
+	}
+
 	// Set router.
 	// Because a monitoring provider was set, this call will add monitoring routes as well as setting the router
 	globals.Server.SetRouter(mainRouter)

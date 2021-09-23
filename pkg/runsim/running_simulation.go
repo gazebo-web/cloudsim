@@ -70,13 +70,18 @@ func (rs *RunningSimulation) ReadWarmup(ctx context.Context, msg transport.Messa
 
 // NewRunningSimulation initializes a new RunningSimulation identified by the given groupID that will run for a maximum
 // amount of maxSimSeconds seconds and will be valid for the duration given in validFor.
-func NewRunningSimulation(groupID simulations.GroupID, maxSimSeconds int64, validFor time.Duration) *RunningSimulation {
+func NewRunningSimulation(sim simulations.Simulation) *RunningSimulation {
+	launchedAt := time.Now()
+	if sim.GetLaunchedAt() != nil {
+		launchedAt = *sim.GetLaunchedAt()
+	}
+
 	return &RunningSimulation{
-		GroupID:       groupID,
+		GroupID:       sim.GetGroupID(),
 		currentState:  stateUnknown,
 		publishing:    false,
-		CreatedAt:     time.Now(),
-		MaxValidUntil: time.Now().Add(validFor),
+		CreatedAt:     launchedAt,
+		MaxValidUntil: launchedAt.Add(sim.GetValidFor()),
 		Finished:      false,
 	}
 }

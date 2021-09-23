@@ -107,7 +107,10 @@ type Container struct {
 	// EnvVars is the list of env vars that should be gotten before passing them into the container.
 	EnvVarsFrom map[string]string
 
-	// ResourceLimits defines the resource limits for a certain container.
+	// ResourceRequests defines the minimum resources required for this container to run.
+	ResourceRequests map[ResourceName]string
+
+	// ResourceLimits defines the maximum amount of resources this container can use.
 	ResourceLimits map[ResourceName]string
 }
 
