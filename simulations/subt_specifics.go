@@ -126,6 +126,14 @@ const (
 	CircuitFinalsPreliminaryRoundWorld2 string = "Finals Preliminary Round World 2"
 	CircuitFinalsPreliminaryRoundWorld3 string = "Finals Preliminary Round World 3"
 	CircuitFinals                       string = "Final Prize Round"
+	CircuitFinalsWorld1                 string = "Finals Prize Round World 1"
+	CircuitFinalsWorld2                 string = "Finals Prize Round World 2"
+	CircuitFinalsWorld3                 string = "Finals Prize Round World 3"
+	CircuitFinalsWorld4                 string = "Finals Prize Round World 4"
+	CircuitFinalsWorld5                 string = "Finals Prize Round World 5"
+	CircuitFinalsWorld6                 string = "Finals Prize Round World 6"
+	CircuitFinalsWorld7                 string = "Finals Prize Round World 7"
+	CircuitFinalsWorld8                 string = "Finals Prize Round World 8"
 
 	// Container names
 	GazeboServerContainerName    string = "gzserver-container"
