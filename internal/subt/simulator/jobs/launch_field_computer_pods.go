@@ -71,7 +71,7 @@ func prepareFieldComputerPodInput(store actions.Store, tx *gorm.DB, deployment *
 					EnvVars:                  subtapp.GetEnvVarsFieldComputer(r.GetName(), s.CommsBridgeIPs[i]),
 					EnvVarsFrom:              subtapp.GetEnvVarsFromSourceFieldComputer(),
 					ResourceLimits: map[pods.ResourceName]string{
-						pods.ResourceMemory: "115Gi",
+						pods.ResourceMemory: "114Gi",
 					},
 				},
 			},
