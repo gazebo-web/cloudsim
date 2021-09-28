@@ -13,6 +13,11 @@ type yamlLoader struct {
 	logger ign.Logger
 }
 
+// TrimExt removes the .yaml and .yml extension from the given filename.
+func (l *yamlLoader) TrimExt(filename string) string {
+	return trimExts(filename, ".yaml", ".yml")
+}
+
 // log logs a message using the logger contained by the loader. If logger is `nil`, no logging is performed.
 func (l *yamlLoader) log(interfaces ...interface{}) {
 	if l.logger != nil {
