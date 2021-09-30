@@ -110,7 +110,8 @@ func (s *testMapSuite) TestNewMap() {
 	s.Require().NoError(err)
 	s.Require().NotNil(manager)
 	s.Assert().GreaterOrEqual(len(manager.Selectors()), 2)
-	s.Assert().Equal([]string{"us-east-1", "us-east-2"}, manager.Selectors())
+	s.Assert().Contains(manager.Selectors(), "us-east-1")
+	s.Assert().Contains(manager.Selectors(), "us-east-2")
 }
 
 func (s *testMapSuite) TestNewMapWithFile() {
