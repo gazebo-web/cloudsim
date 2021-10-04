@@ -70,10 +70,10 @@ func TestPods_WaitForPodsToBeReady(t *testing.T) {
 			Conditions: []apiv1.PodCondition{
 				{
 					Type:   apiv1.PodReady,
-					Status: apiv1.ConditionUnknown,
+					Status: apiv1.ConditionTrue,
 				},
 			},
-			Phase: apiv1.PodPending,
+			Phase: apiv1.PodRunning,
 		},
 	}
 
@@ -92,16 +92,6 @@ func TestPods_WaitForPodsToBeReady(t *testing.T) {
 		err = r.Wait(3*time.Second, 1*time.Microsecond)
 		wg.Done()
 	}()
-
-	pod.Status.Phase = apiv1.PodRunning
-	_, err = client.CoreV1().Pods("default").Update(pod)
-	assert.NoError(t, err)
-
-	pod.Status.Conditions = []apiv1.PodCondition{
-		{Type: apiv1.PodReady, Status: apiv1.ConditionTrue},
-	}
-	_, err = client.CoreV1().Pods("default").UpdateStatus(pod)
-	assert.NoError(t, err)
 
 	wg.Wait()
 	assert.NoError(t, err)
