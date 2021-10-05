@@ -34,9 +34,9 @@ type PubSubWebsocketTransporter interface {
 // support.
 type websocketPubSubTransport struct {
 	transport.WebsocketTransporter
-	topics    map[string]Callback
+	topics     map[string]Callback
 	topicsLock sync.RWMutex
-	listening bool
+	listening  bool
 }
 
 func newWebsocketPubSubTransport(transport transport.WebsocketTransporter) (*websocketPubSubTransport, error) {
