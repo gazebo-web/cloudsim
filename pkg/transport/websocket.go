@@ -11,7 +11,7 @@ import (
 type websocketTransport struct {
 	Address    url.URL
 	connection *websocket.Conn
-	connLock   sync.Mutex
+	connLock   sync.RWMutex
 }
 
 // WebsocketConnector is a group of methods that handle websocket connections.
@@ -81,8 +81,8 @@ func (w *websocketTransport) Disconnect() error {
 
 // Connection returns the active websocket connection.
 func (w *websocketTransport) Connection() *websocket.Conn {
-	w.connLock.Lock()
-	defer w.connLock.Unlock()
+	w.connLock.RLock()
+	defer w.connLock.RUnlock()
 	return w.connection
 }
 
