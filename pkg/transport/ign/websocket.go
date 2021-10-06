@@ -5,7 +5,6 @@ import (
 	"github.com/gorilla/websocket"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/transport"
 	"gitlab.com/ignitionrobotics/web/ign-go"
-	"sync"
 )
 
 // Callback is a function that will be executed after reading a message from a certain topic.
@@ -34,9 +33,8 @@ type PubSubWebsocketTransporter interface {
 // support.
 type websocketPubSubTransport struct {
 	transport.WebsocketTransporter
-	topics     map[string]Callback
-	topicsLock sync.Mutex
-	listening  bool
+	topics    map[string]Callback
+	listening bool
 }
 
 func newWebsocketPubSubTransport(transport transport.WebsocketTransporter) (*websocketPubSubTransport, error) {
@@ -84,10 +82,6 @@ func (w *websocketPubSubTransport) listen() error {
 }
 
 func (w *websocketPubSubTransport) processMessage(messageType int, message []byte) {
-	// Try to parse the incoming message as a Message struct
-	w.topicsLock.Lock()
-	defer w.topicsLock.Unlock()
-
 	if message, err := NewMessageFromByteSlice(message); err == nil {
 		if cb, ok := w.topics[message.Topic]; ok {
 			cb(message)
