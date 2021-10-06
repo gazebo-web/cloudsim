@@ -82,6 +82,7 @@ func (w *websocketPubSubTransport) listen() error {
 }
 
 func (w *websocketPubSubTransport) processMessage(messageType int, message []byte) {
+	// Try to parse the incoming message as a Message struct
 	if message, err := NewMessageFromByteSlice(message); err == nil {
 		if cb, ok := w.topics[message.Topic]; ok {
 			cb(message)
