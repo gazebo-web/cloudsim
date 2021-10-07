@@ -36,11 +36,11 @@ func TestTransporterListenDontPanicConnClosed(t *testing.T) {
 		assert.NoError(t, err)
 
 		// Start reading from topic test
-		tr.Subscribe("test", func(message transport.Message) {
+		assert.NoError(t, tr.Subscribe("test", func(message transport.Message) {
 			var msg msgs.StringMsg
 			err = message.GetPayload(&msg)
 			assert.NoError(t, err)
-		})
+		}))
 
 		// And when the server closes
 		server.Close()
