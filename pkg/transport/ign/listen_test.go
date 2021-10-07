@@ -52,11 +52,8 @@ func TestTransporterListenDontPanicWSClosed(t *testing.T) {
 		WriteBufferSize: 1024,
 	}
 
-	var conn *websocket.Conn
-	var err error
-
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		conn, err = upgrader.Upgrade(w, r, nil)
+		conn, err := upgrader.Upgrade(w, r, nil)
 		defer conn.Close()
 		assert.NoError(t, err)
 		msg := msgs.StringMsg{
@@ -72,11 +69,17 @@ func TestTransporterListenDontPanicWSClosed(t *testing.T) {
 		tr, err := NewIgnWebsocketTransporter(u.Host, u.Path, transport.WebsocketScheme, "")
 		defer tr.Disconnect()
 		assert.NoError(t, err)
+
+		// Start reading from topic test
 		tr.Subscribe("test", func(message transport.Message) {
 			var msg msgs.StringMsg
 			err = message.GetPayload(&msg)
 			assert.NoError(t, err)
 		})
-		conn.Close()
+
+		// And when the server closes
+		server.Close()
+
+		// No panics should occur
 	})
 }
