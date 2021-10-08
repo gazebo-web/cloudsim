@@ -4,6 +4,7 @@ import (
 	"time"
 )
 
+// GetSimulationResponse is the DTO for the GetSimulation controller method.
 type GetSimulationResponse struct {
 	CreatedAt time.Time `json:"created_at"`
 	Owner     string    `json:"owner"`
@@ -50,13 +51,13 @@ type ListResponse struct {
 	Simulations []GetSimulationResponse
 }
 
-// AddUserRequest is the request used to add a registerd user.
+// AddModifyUserRequest is the request used to add a registered user.
 type AddModifyUserRequest struct {
 	Username        string `form:"username"`
 	SimulationLimit int    `form:"simulation_limit"`
 }
 
-// AddUserResponse is the response used to add a registerd user.
+// AddModifyUserResponse is the response used to add a registered user.
 type AddModifyUserResponse struct {
 	Username        string `json:"username"`
 	SimulationLimit int    `json:"simulation_limit"`
