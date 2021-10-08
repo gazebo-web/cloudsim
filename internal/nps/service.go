@@ -225,7 +225,7 @@ func (s *service) MarkStopped(groupID simulations.GroupID) error {
 //
 // Origin: user --> POST /start --> controller.Start() --> service.Start()
 // Next: StartQueueHandler
-func (s *service) Start(ctx context.Context, user *interface{}, tx *gorm.DB, request StartRequest) (*StartResponse, error) {
+func (s *service) Start(ctx context.Context, user *users.User, tx *gorm.DB, request StartRequest) (*StartResponse, error) {
 	// Add business logic here to validate a request, update a database table,
 	// etc.
 
