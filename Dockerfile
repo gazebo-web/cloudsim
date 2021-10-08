@@ -14,17 +14,17 @@ RUN go mod download
 COPY . .
 
 # Build app
-RUN go install
+RUN go install ./cmd/nps
 
 # Runner
 FROM registry.gitlab.com/ignitionrobotics/web/images/cloudsim-base:1.1.0
 
 WORKDIR /app
 
-COPY --from=builder /go/bin/cloudsim .
+COPY --from=builder /go/bin/nps .
 COPY . .
 
 ENTRYPOINT [ "./docker-entrypoint.sh" ]
-CMD ["./cloudsim"]
+CMD ["./nps"]
 
 EXPOSE 8001
