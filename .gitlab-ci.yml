@@ -44,7 +44,7 @@ variables:
 .build_docker: &build_docker
   - echo "Creating docker image with tag $IMAGE_TAG."
   - docker pull $CI_REGISTRY_IMAGE:$IMAGE_CACHE || true
-  - DOCKER_BUILDKIT=1 docker build --cache-from $CI_REGISTRY_IMAGE:$IMAGE_CACHE --tag $CI_REGISTRY_IMAGE:$IMAGE_TAG .
+  - DOCKER_BUILDKIT=1 docker build --cache-from $CI_REGISTRY_IMAGE:$IMAGE_CACHE --tag $CI_REGISTRY_IMAGE:$IMAGE_TAG $DOCKER_EXTRA_ARGS .
   - docker push $CI_REGISTRY_IMAGE:$IMAGE_TAG
 
 ##########################################################
@@ -243,6 +243,17 @@ docker:branch:
     - branches
   except:
     - /^master$/
+
+docker:nps:
+  stage: package
+  extends: .docker
+  script:
+    - IMAGE_CACHE=latest
+    - DOCKER_EXTRA_ARGS='-f Dockerfile.nps'
+    - *set_image_tag_to_branch_name
+    - *build_docker
+  only:
+    - /feature\/app_nps/
 
 docker:latest:
   stage: package
