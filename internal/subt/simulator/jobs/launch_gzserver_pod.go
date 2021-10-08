@@ -58,7 +58,14 @@ func prepareGazeboCreatePodInput(store actions.Store, tx *gorm.DB, deployment *a
 	allowPrivilegeEscalation := true
 
 	// TODO: Get ports from Ignition Store
-	ports := []int32{11345, 11311}
+	ports := []orchestrator.ContainerPort{
+		{
+			ContainerPort: 11345,
+		},
+		{
+			ContainerPort: 11311,
+		},
+	}
 
 	volumes := []orchestrator.Volume{
 		{
