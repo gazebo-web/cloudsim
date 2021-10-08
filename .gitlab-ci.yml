@@ -243,6 +243,7 @@ docker:branch:
     - branches
   except:
     - /^master$/
+    - /^feature/app_nps/
 
 docker:nps:
   stage: package
