@@ -185,8 +185,6 @@ func (s *service) StopQueueHandler(ctx context.Context, groupID simulations.Grou
 
 	s.logger.Info("Stopping simulation for groupID:", groupID)
 	return nil
-
-	return nil
 }
 
 func (s *service) Get(groupID simulations.GroupID) (simulations.Simulation, error) {
