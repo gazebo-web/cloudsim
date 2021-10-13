@@ -3,80 +3,66 @@ package ign
 import (
 	"github.com/gorilla/websocket"
 	"github.com/stretchr/testify/assert"
-	"gitlab.com/ignitionrobotics/web/cloudsim/ign-transport/proto/ignition/msgs"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/transport"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"sync"
 	"testing"
+	"time"
 )
 
-func TestTransporterListenDontPanicHTTPClosed(t *testing.T) {
+func TestTransporterListenDontPanicConnClosed(t *testing.T) {
 	upgrader := websocket.Upgrader{
 		ReadBufferSize:  1024,
 		WriteBufferSize: 1024,
 	}
 
-	var conn *websocket.Conn
-	var err error
+	// Used to guarantee that the waiter goroutine is always executed before the websocket listener
+	var waiterLock sync.Mutex
+	// Used to guarantee that the websocket server closes the connection before the websocket listener is terminated
+	var connLock sync.Mutex
 
+	// Start the websocket server
+	// This server opens and immediately closes websocket connections
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		conn, err = upgrader.Upgrade(w, r, nil)
-		defer conn.Close()
+		wsConn, err := upgrader.Upgrade(w, r, nil)
 		assert.NoError(t, err)
-		msg := msgs.StringMsg{
-			Data: "test",
-		}
-		pub := NewPublicationMessage("test", "ignition.msgs.StringMsg", msg.String())
-		conn.WriteMessage(websocket.TextMessage, pub.ToByteSlice())
+		wsConn.Close()
 	}))
+
+	waiterLock.Lock()
+
+	// Waiter goroutine
+	// This block buys time to allow the server connection to close and cause the listener websocket to fail
+	go func() {
+		connLock.Lock()
+		waiterLock.Unlock()
+		// Give the server some time to close the websocket connection
+		time.Sleep(100 * time.Millisecond)
+		connLock.Unlock()
+	}()
+
+	// Ensure that the previous block runs before the next one
+	waiterLock.Lock()
 
 	u, err := url.Parse(server.URL)
 	assert.NoError(t, err)
 	assert.NotPanics(t, func() {
+		// Allow the test to terminate
+		defer waiterLock.Unlock()
+
 		tr, err := NewIgnWebsocketTransporter(u.Host, u.Path, transport.WebsocketScheme, "")
 		defer tr.Disconnect()
 		assert.NoError(t, err)
-		tr.Subscribe("test", func(message transport.Message) {
-			var msg msgs.StringMsg
-			err = message.GetPayload(&msg)
-			assert.NoError(t, err)
-		})
-		server.Close()
+
+		// Wait until the server is given time to terminate the connection
+		connLock.Lock()
 	})
-}
 
-func TestTransporterListenDontPanicWSClosed(t *testing.T) {
-	upgrader := websocket.Upgrader{
-		ReadBufferSize:  1024,
-		WriteBufferSize: 1024,
-	}
+	// Wait until the websocket listener has finished processing
+	waiterLock.Lock()
 
-	var conn *websocket.Conn
-	var err error
-
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		conn, err = upgrader.Upgrade(w, r, nil)
-		defer conn.Close()
-		assert.NoError(t, err)
-		msg := msgs.StringMsg{
-			Data: "test",
-		}
-		pub := NewPublicationMessage("test", "ignition.msgs.StringMsg", msg.String())
-		conn.WriteMessage(websocket.TextMessage, pub.ToByteSlice())
-	}))
-
-	u, err := url.Parse(server.URL)
-	assert.NoError(t, err)
-	assert.NotPanics(t, func() {
-		tr, err := NewIgnWebsocketTransporter(u.Host, u.Path, transport.WebsocketScheme, "")
-		defer tr.Disconnect()
-		assert.NoError(t, err)
-		tr.Subscribe("test", func(message transport.Message) {
-			var msg msgs.StringMsg
-			err = message.GetPayload(&msg)
-			assert.NoError(t, err)
-		})
-		conn.Close()
-	})
+	// Close the server
+	server.Close()
 }
