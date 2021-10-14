@@ -251,12 +251,12 @@ config:
           # Path to the Kubernetes cluster connection configuration.
           kubeconfig: ""
 
-      ## Email Sender
-      # Used to send emails.
-      # This component should normally use the same configuration across all platforms, unless your application explicitly
-      # requires otherwise.
-      emailSender:
-        type: "ses"
-        config:
-          # Region the component will operate in.
-          region: "us-east-1"
+    ## Email Sender
+    # Used to send emails.
+    # This component should normally use the same configuration across all platforms, unless your application explicitly
+    # requires otherwise.
+    emailSender:
+      type: "ses"
+      config:
+        # Region the component will operate in.
+        region: "us-east-1"
