@@ -97,16 +97,6 @@ config:
           # Example: ["sg-0123456789abcdefg"]
           # firewallRulesValue: [ "" ]
 
-          # (Required) Array of subnet IDs to launch simulations in.
-          # Type: []string
-          # Example: ["subnet-0123456789abcdefg"]
-          subnetsValue: [ "subnet-" ]
-
-          # (Required) Array of AWS availability zones to launch simulations in.
-          # Type: []string
-          # Example: ["us-east-1a"]
-          zonesValue: [ "us-east-1a" ]
-
           # Maximum number of machines that Cloudsim can have running at the same time. -1 is unlimited.
           # Type: int
           # Default: -1
