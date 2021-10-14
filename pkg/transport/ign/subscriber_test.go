@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"sync"
 	"testing"
 )
 
@@ -28,12 +29,18 @@ type subscriberTestSuite struct {
 	testTopicType    string
 	testTopicMessage msgs.StringMsg
 
+	subscribeLock sync.Mutex
+	messageLock   sync.Mutex
+
 	message     []byte
 	messageType int
 	subscribed  bool
 }
 
 func (suite *subscriberTestSuite) SetupTest() {
+	suite.messageLock.Lock()
+	defer suite.messageLock.Unlock()
+
 	suite.upgrader = websocket.Upgrader{
 		ReadBufferSize:  1024,
 		WriteBufferSize: 1024,
@@ -45,12 +52,22 @@ func (suite *subscriberTestSuite) SetupTest() {
 		Data: "test-server",
 	}
 
-	suite.handler = func(w http.ResponseWriter, r *http.Request) {
-		conn, err := suite.upgrader.Upgrade(w, r, nil)
-		suite.NoError(err)
+	suite.handler = suite.testSubscriberHandler(suite.upgrader, suite.testTopic)
+	suite.router = http.NewServeMux()
+	suite.router.Handle("/", suite.handler)
+	suite.server = httptest.NewServer(suite.router)
+}
+
+func (suite *subscriberTestSuite) testSubscriberHandler(upgrader websocket.Upgrader, testTopic string) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		conn, err := upgrader.Upgrade(w, r, nil)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
 		defer conn.Close()
+		// TODO: Change how this works if more than one connection needs to be opened.
 		for {
-			// TODO: Change how this works if more than one connection needs to be opened.
+			suite.subscribeLock.Lock()
 			if suite.subscribed {
 				msg := fmt.Sprintf(
 					"pub,%s,%s,%s",
@@ -59,23 +76,40 @@ func (suite *subscriberTestSuite) SetupTest() {
 					suite.testTopicMessage.String(),
 				)
 				err := conn.WriteMessage(websocket.TextMessage, []byte(msg))
-				suite.NoError(err)
+				if err != nil {
+					http.Error(w, err.Error(), http.StatusInternalServerError)
+					return
+				}
+			}
+			suite.subscribeLock.Unlock()
+
+			suite.messageLock.Lock()
+			suite.messageType, suite.message, err = conn.ReadMessage()
+			suite.messageLock.Unlock()
+
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
 			}
 
-			suite.messageType, suite.message, err = conn.ReadMessage()
-			suite.NoError(err)
+			suite.messageLock.Lock()
 			m, err := NewMessageFromByteSlice(suite.message)
-			suite.NoError(err)
-			if m.Topic == suite.testTopic {
+			suite.messageLock.Unlock()
+
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+
+			if m.Topic == testTopic {
+				suite.subscribeLock.Lock()
 				suite.subscribed = true
+				suite.subscribeLock.Unlock()
 				return
 			}
 			conn.WriteMessage(websocket.CloseUnsupportedData, []byte{})
 		}
 	}
-	suite.router = http.NewServeMux()
-	suite.router.Handle("/", suite.handler)
-	suite.server = httptest.NewServer(suite.router)
 }
 
 func (suite *subscriberTestSuite) init() PubSubWebsocketTransporter {
