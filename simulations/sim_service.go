@@ -8,6 +8,9 @@ import (
 	"github.com/panjf2000/ants"
 	"github.com/pkg/errors"
 	"github.com/satori/go.uuid"
+	apiCredits "gitlab.com/ignitionrobotics/billing/credits/pkg/api"
+	credits "gitlab.com/ignitionrobotics/billing/credits/pkg/client"
+	payments "gitlab.com/ignitionrobotics/billing/payments/pkg/client"
 	"gitlab.com/ignitionrobotics/web/cloudsim/globals"
 	subtapp "gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/application"
 	subtSimulator "gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/simulator"
@@ -35,6 +38,7 @@ import (
 	"gitlab.com/ignitionrobotics/web/ign-go"
 	"gitlab.com/ignitionrobotics/web/ign-go/scheduler"
 	"net/http"
+	"net/url"
 	"strconv"
 	"strings"
 	"sync"
@@ -132,6 +136,7 @@ const (
 	podGroupIDLabelKey    = "cloudsim-group-id"
 	cloudsimTagLabelKey   = "cloudsim"
 	cloudsimTagLabelValue = "true"
+	creditsApplication    = "osrf"
 )
 
 var (
@@ -176,6 +181,8 @@ type Service struct {
 	actionService       actions.Servicer
 	simulator           simulator.Simulator
 	ServiceAdaptor      simulations.Service
+	payments            payments.Client
+	credits             credits.Client
 }
 
 // SimServImpl holds the instance of the Simulations Service. It is set at initialization.
@@ -196,6 +203,12 @@ type simServConfig struct {
 	MaxDurationForSimulations int `env:"SIMSVC_SIM_MAX_DURATION_MINUTES" envDefault:"45"`
 	// IsTest determines if a service is being used for a test
 	IsTest bool
+	// BillingEnabled is set to true when the application needs to have billing enabled.
+	BillingEnabled bool `env:"SIMSVC_BILLING_ENABLED" envDefault:"false"`
+	// PaymentsURL contains the URL pointing to the Payments API.
+	PaymentsURL string `env:"SIMSVC_PAYMENTS_URL"`
+	// CreditsURL contains the URL pointing to the Credits API.
+	CreditsURL string `env:"SIMSVC_PAYMENTS_URL"`
 }
 
 // ApplicationType represents an Application (eg. SubT). Applications are used
@@ -285,6 +298,18 @@ func NewSimulationsService(ctx context.Context, db *gorm.DB, pf PoolFactory, ua 
 	if err != nil {
 		return nil, err
 	}
+
+	u, err := url.Parse(s.cfg.PaymentsURL)
+	if err != nil {
+		return nil, err
+	}
+	s.payments = payments.NewPaymentsClientV1(u, 5*time.Second)
+
+	u, err = url.Parse(s.cfg.CreditsURL)
+	if err != nil {
+		return nil, err
+	}
+	s.credits = credits.NewCreditsClientV1(u, 5*time.Second)
 
 	return &s, nil
 }
