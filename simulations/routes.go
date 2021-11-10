@@ -663,6 +663,30 @@ var Routes = ign.Routes{
 		},
 	},
 
+	//////////////
+	// Billing	//
+	//////////////
+
+	ign.Route{
+		Name:        "Get credits balance",
+		Description: "Get credits balance of the current user",
+		URI:         "/billing/credits",
+		Headers:     ign.AuthHeadersRequired,
+		Methods:     ign.Methods{},
+		SecureMethods: ign.SecureMethods{
+			ign.Method{
+				Type:        "DELETE",
+				Description: "Remove an element from the queue",
+				Handlers: ign.FormatHandlers{
+					ign.FormatHandler{
+						Extension: "",
+						Handler:   ign.JSONResult(WithUser(GetCreditsBalance)),
+					},
+				},
+			},
+		},
+	},
+
 	/////////////////////
 	ign.Route{
 		Name:        "Debug",

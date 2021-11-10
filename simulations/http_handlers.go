@@ -647,6 +647,11 @@ func QueueRemove(user *users.User, tx *gorm.DB, w http.ResponseWriter, r *http.R
 	return SimServImpl.QueueRemoveElement(r.Context(), user, groupID)
 }
 
+// GetCreditsBalance gets the credit balance of the current user.
+func GetCreditsBalance(user *users.User, tx *gorm.DB, w http.ResponseWriter, r *http.Request) (interface{}, *ign.ErrMsg) {
+	return SimServImpl.GetCreditsBalance(r.Context(), user)
+}
+
 // Healthz returns a string to confirm that cloudsim is running.
 //   curl -k -X GET --url http://localhost:8001/1.0/healthz
 func Healthz(tx *gorm.DB, w http.ResponseWriter, r *http.Request) (interface{}, *ign.ErrMsg) {

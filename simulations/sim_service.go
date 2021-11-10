@@ -113,6 +113,7 @@ type SimService interface {
 	QueueCount(ctx context.Context, user *users.User) (interface{}, *ign.ErrMsg)
 	Debug(user *users.User, groupID simulations.GroupID) (interface{}, *ign.ErrMsg)
 	ReconnectWebsocket(user *users.User, groupID simulations.GroupID) (interface{}, *ign.ErrMsg)
+	GetCreditsBalance(ctx context.Context, user *users.User) (interface{}, *ign.ErrMsg)
 }
 
 // NodeManager is responsible of creating and removing cloud instances, and
@@ -379,6 +380,17 @@ func (s *Service) ReconnectWebsocket(user *users.User, groupID simulations.Group
 	}
 
 	return nil, nil
+}
+
+func (s *Service) GetCreditsBalance(ctx context.Context, user *users.User) (interface{}, *ign.ErrMsg) {
+	res, err := s.credits.GetBalance(ctx, apiCredits.GetBalanceRequest{
+		Handle:      *user.Username,
+		Application: creditsApplication,
+	})
+	if err != nil {
+		return nil, ign.NewErrorMessageWithBase(ign.ErrorUnexpected, err)
+	}
+	return res, nil
 }
 
 // SetPoolEventsListener sets a new PoolNotificationCallback to the poolNotificationCallback field.
