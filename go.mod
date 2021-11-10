@@ -35,9 +35,12 @@ require (
 	github.com/satori/go.uuid v1.2.0
 	github.com/solo-io/gloo v1.4.12
 	github.com/solo-io/solo-kit v0.13.8-patch4
-	github.com/stretchr/testify v1.6.1
+	github.com/stretchr/testify v1.7.0
+	gitlab.com/ignitionrobotics/billing/credits v0.0.0-20211110124124-7dbf77a10783 // indirect
+	gitlab.com/ignitionrobotics/billing/customers v0.0.0-20211110150011-a2f39fb3a782 // indirect
+	gitlab.com/ignitionrobotics/billing/payments v0.0.0-20211110174459-d690b1b701e8 // indirect
 	gitlab.com/ignitionrobotics/web/fuelserver v0.0.0-20200916210816-e30ab5ed9d47
-	gitlab.com/ignitionrobotics/web/ign-go v0.0.0-20201013152111-8655ead5c276
+	gitlab.com/ignitionrobotics/web/ign-go v0.0.0-20211109185912-2322af1b387c
 	gitlab.com/ignitionrobotics/web/scheduler v0.5.1-0.20200114185916-4bd85f4ff2d6 // indirect
 	golang.org/x/crypto v0.0.0-20200820211705-5c72a883971a // indirect
 	golang.org/x/mod v0.4.0 // indirect
