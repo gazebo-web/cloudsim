@@ -123,7 +123,7 @@ func TestLaunchMoleBridgePods(t *testing.T) {
 	}, error(nil))
 
 	// Create SubT application service
-	app := subtapp.NewServices(application.NewServices(simService, userService), trackService, nil)
+	app := subtapp.NewServices(application.NewServices(simService, userService, nil), trackService, nil)
 
 	// Create new state: Start simulation state.
 	s := state.NewStartSimulation(p, app, gid)

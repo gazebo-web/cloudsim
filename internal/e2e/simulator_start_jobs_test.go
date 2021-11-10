@@ -61,15 +61,15 @@ func TestStartSimulationAction(t *testing.T) {
 	// Initialize mock for EC2
 	ec2api := mock.NewEC2()
 	ec2Machines, err := ec2.NewMachines(&ec2.NewInput{
-		API: ec2api,
+		API:    ec2api,
 		Logger: logger,
-		Zones:[]ec2.Zone{
+		Zones: []ec2.Zone{
 			{
-				Zone: "zone-0",
+				Zone:     "zone-0",
 				SubnetID: "subnet-0",
 			},
 			{
-				Zone: "zone-1",
+				Zone:     "zone-1",
 				SubnetID: "subnet-1",
 			},
 		},
@@ -160,7 +160,7 @@ func TestStartSimulationAction(t *testing.T) {
 	userService, err := users.NewService(ctx, &perm, db, "sysadmin")
 	require.NoError(t, err)
 
-	baseApp := application.NewServices(simService, userService)
+	baseApp := application.NewServices(simService, userService, nil)
 
 	// Initialize track repository.
 	trackRepository := tracks.NewRepository(db, logger)

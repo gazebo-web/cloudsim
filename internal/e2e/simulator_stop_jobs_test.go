@@ -185,7 +185,7 @@ func TestStopSimulationAction(t *testing.T) {
 	userService, err := users.NewService(ctx, &perm, db, "sysadmin")
 	require.NoError(t, err)
 
-	baseApp := application.NewServices(simService, userService)
+	baseApp := application.NewServices(simService, userService, nil)
 
 	// Initialize track repository.
 	trackRepository := tracks.NewRepository(db, logger)

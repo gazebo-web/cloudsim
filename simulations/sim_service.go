@@ -8,15 +8,13 @@ import (
 	"github.com/panjf2000/ants"
 	"github.com/pkg/errors"
 	"github.com/satori/go.uuid"
-	apiCredits "gitlab.com/ignitionrobotics/billing/credits/pkg/api"
-	credits "gitlab.com/ignitionrobotics/billing/credits/pkg/client"
-	payments "gitlab.com/ignitionrobotics/billing/payments/pkg/client"
 	"gitlab.com/ignitionrobotics/web/cloudsim/globals"
 	subtapp "gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/application"
 	subtSimulator "gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/simulator"
 	"gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/summaries"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/actions"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/application"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/billing"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/loader"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/machines"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/components/pods"
@@ -38,7 +36,6 @@ import (
 	"gitlab.com/ignitionrobotics/web/ign-go"
 	"gitlab.com/ignitionrobotics/web/ign-go/scheduler"
 	"net/http"
-	"net/url"
 	"strconv"
 	"strings"
 	"sync"
@@ -182,8 +179,7 @@ type Service struct {
 	actionService       actions.Servicer
 	simulator           simulator.Simulator
 	ServiceAdaptor      simulations.Service
-	payments            payments.Client
-	credits             credits.Client
+	billing             billing.Service
 }
 
 // SimServImpl holds the instance of the Simulations Service. It is set at initialization.
@@ -300,18 +296,6 @@ func NewSimulationsService(ctx context.Context, db *gorm.DB, pf PoolFactory, ua 
 		return nil, err
 	}
 
-	u, err := url.Parse(s.cfg.PaymentsURL)
-	if err != nil {
-		return nil, err
-	}
-	s.payments = payments.NewPaymentsClientV1(u, 5*time.Second)
-
-	u, err = url.Parse(s.cfg.CreditsURL)
-	if err != nil {
-		return nil, err
-	}
-	s.credits = credits.NewCreditsClientV1(u, 5*time.Second)
-
 	return &s, nil
 }
 
@@ -383,10 +367,7 @@ func (s *Service) ReconnectWebsocket(user *users.User, groupID simulations.Group
 }
 
 func (s *Service) GetCreditsBalance(ctx context.Context, user *users.User) (interface{}, *ign.ErrMsg) {
-	res, err := s.credits.GetBalance(ctx, apiCredits.GetBalanceRequest{
-		Handle:      *user.Username,
-		Application: creditsApplication,
-	})
+	res, err := s.billing.GetBalance(ctx, user)
 	if err != nil {
 		return nil, ign.NewErrorMessageWithBase(ign.ErrorUnexpected, err)
 	}
@@ -2166,9 +2147,14 @@ func (s *Service) initPlatforms() (platformManager.Manager, error) {
 // TODO: Make initApplicationServices independent of Service by receiving arguments with the needed config.
 func (s *Service) initApplicationServices() subtapp.Services {
 	s.ServiceAdaptor = NewSubTSimulationServiceAdaptor(s.DB)
-	base := application.NewServices(s.ServiceAdaptor, s.userAccessor)
+	s.billing = billing.NewService(billing.Config{
+		CreditsURL:  s.cfg.CreditsURL,
+		PaymentsURL: s.cfg.PaymentsURL,
+	})
+	base := application.NewServices(s.ServiceAdaptor, s.userAccessor, s.billing)
 	trackService := NewTracksService(s.DB, s.logger)
 	summaryService := summaries.NewService(s.DB)
+
 	return subtapp.NewServices(base, trackService, summaryService)
 }
 

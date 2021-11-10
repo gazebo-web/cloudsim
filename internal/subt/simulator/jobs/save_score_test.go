@@ -53,7 +53,7 @@ func TestSaveScore(t *testing.T) {
 	var fakeScoreService fakeScoreSaver
 
 	// Initialize application services for subt
-	appServices := subtapp.NewServices(application.NewServices(simFakeService, &fakeScoreService), nil, nil)
+	appServices := subtapp.NewServices(application.NewServices(simFakeService, &fakeScoreService, nil), nil, nil)
 
 	// Create a new stop state
 	startState := state.NewStopSimulation(nil, appServices, gid)

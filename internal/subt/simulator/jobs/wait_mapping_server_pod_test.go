@@ -77,7 +77,7 @@ func (suite *waitMappingServerPodTestSuite) waitForPod(sim simulations.Simulatio
 	svc.On("Get", sim.GetGroupID()).Return(sim, nil)
 
 	// Create SubT application service
-	app := subtapp.NewServices(application.NewServices(svc, nil), trackService, nil)
+	app := subtapp.NewServices(application.NewServices(svc, nil, nil), trackService, nil)
 
 	s := state.NewStartSimulation(p, app, sim.GetGroupID())
 	store := actions.NewStore(s)

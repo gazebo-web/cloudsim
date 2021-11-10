@@ -156,7 +156,7 @@ func (s *removePodsTestSuite) SetupTest() {
 	})
 	s.SimulationService.On("Get", s.GroupID).Return(sim, nil)
 
-	services := application.NewServices(s.SimulationService, nil)
+	services := application.NewServices(s.SimulationService, nil, nil)
 
 	s.ApplicationServices = subtapp.NewServices(services, nil, nil)
 
