@@ -459,7 +459,10 @@ func (s *Service) Start(ctx context.Context) error {
 	}
 
 	s.logger.Info("Initializing application services")
-	s.applicationServices = s.initApplicationServices()
+	s.applicationServices, err = s.initApplicationServices()
+	if err != nil {
+		return err
+	}
 
 	s.logger.Info("Initializing action service")
 
@@ -2145,17 +2148,23 @@ func (s *Service) initPlatforms() (platformManager.Manager, error) {
 }
 
 // TODO: Make initApplicationServices independent of Service by receiving arguments with the needed config.
-func (s *Service) initApplicationServices() subtapp.Services {
+func (s *Service) initApplicationServices() (subtapp.Services, error) {
 	s.ServiceAdaptor = NewSubTSimulationServiceAdaptor(s.DB)
-	s.billing = billing.NewService(billing.Config{
+
+	var err error
+	s.billing, err = billing.NewService(billing.Config{
 		CreditsURL:  s.cfg.CreditsURL,
 		PaymentsURL: s.cfg.PaymentsURL,
 	})
+	if err != nil {
+		return nil, err
+	}
+
 	base := application.NewServices(s.ServiceAdaptor, s.userAccessor, s.billing)
 	trackService := NewTracksService(s.DB, s.logger)
 	summaryService := summaries.NewService(s.DB)
 
-	return subtapp.NewServices(base, trackService, summaryService)
+	return subtapp.NewServices(base, trackService, summaryService), nil
 }
 
 // TODO: Make initSimulator independent of Service by receiving arguments with the needed config.

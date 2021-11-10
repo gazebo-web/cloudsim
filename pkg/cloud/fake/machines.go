@@ -12,6 +12,12 @@ type Machines struct {
 	*mock.Mock
 }
 
+// CalculateCosts mocks the CalculateCosts method.
+func (m *Machines) CalculateCosts(input []machines.CreateMachinesInput) (machines.CalculateCostsOutput, error) {
+	args := m.Called(input)
+	return args.Get(0).(machines.CalculateCostsOutput), args.Error(1)
+}
+
 // List mocks the List method.
 func (m *Machines) List(input machines.ListMachinesInput) (*machines.ListMachinesOutput, error) {
 	args := m.Called(input)

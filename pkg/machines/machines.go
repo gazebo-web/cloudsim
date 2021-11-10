@@ -57,7 +57,7 @@ func NewTags(resourceType string) []Tag {
 	return []Tag{
 		{
 			Resource: resourceType,
-			Map: map[string]string{},
+			Map:      map[string]string{},
 		},
 	}
 }
@@ -259,6 +259,11 @@ type ListMachinesOutput struct {
 	Instances []ListMachinesItem
 }
 
+type CalculateCostsOutput struct {
+	Amount   int
+	Currency string
+}
+
 // Machines requests physical instances from a cloud provider on which to deploy applications
 type Machines interface {
 	// Create creates a set of cloud machines with a certain configuration.
@@ -277,4 +282,7 @@ type Machines interface {
 
 	// List returns a list of machines based on the given input.
 	List(input ListMachinesInput) (*ListMachinesOutput, error)
+
+	// CalculateCosts calculates the amount money in a certain currency a set of machines will cost per hour.
+	CalculateCosts(input []CreateMachinesInput) (CalculateCostsOutput, error)
 }

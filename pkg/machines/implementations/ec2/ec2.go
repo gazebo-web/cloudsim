@@ -607,6 +607,14 @@ func (m *ec2Machines) List(input machines.ListMachinesInput) (*machines.ListMach
 	return &output, nil
 }
 
+// CalculateCosts calculates the amount money in a certain currency a set of machines will cost per hour.
+func (m *ec2Machines) CalculateCosts(input []machines.CreateMachinesInput) (machines.CalculateCostsOutput, error) {
+	return machines.CalculateCostsOutput{
+		Amount:   0,
+		Currency: "usd",
+	}, nil
+}
+
 // NewInput includes a set of field to create a new machines.Machines EC2 implementation.
 type NewInput struct {
 	// API has a reference to the EC2 API.

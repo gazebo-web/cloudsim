@@ -452,8 +452,8 @@ github.com/go-playground/universal-translator v0.17.0 h1:icxd5fm+REJzpZx7ZfpaD87
 github.com/go-playground/universal-translator v0.17.0/go.mod h1:UkSxE5sNxxRwHyU+Scu5vgOQjsIJAF8j9muTVoKLVtA=
 github.com/go-sql-driver/mysql v1.4.0/go.mod h1:zAC/RDZ24gD3HViQzih4MyKcchzm+sOG5ZlKdlhCg5w=
 github.com/go-sql-driver/mysql v1.4.1/go.mod h1:zAC/RDZ24gD3HViQzih4MyKcchzm+sOG5ZlKdlhCg5w=
-github.com/go-sql-driver/mysql v1.5.0 h1:ozyZYNQW3x3HtqT1jira07DN2PArx2v7/mN66gGcHOs=
 github.com/go-sql-driver/mysql v1.5.0/go.mod h1:DCzpHaOWr8IXmIStZouvnhqoel9Qv2LBy8hT2VhHyBg=
+github.com/go-sql-driver/mysql v1.6.0 h1:BCTh4TKNUYmOmMUcQ3IipzF5prigylS7XXjEkfCHuOE=
 github.com/go-sql-driver/mysql v1.6.0/go.mod h1:DCzpHaOWr8IXmIStZouvnhqoel9Qv2LBy8hT2VhHyBg=
 github.com/go-stack/stack v1.8.0/go.mod h1:v0f6uXyyMGvRgIKkXu+yp6POWl0qKG85gN/melR3HDY=
 github.com/go-swagger/go-swagger v0.21.0/go.mod h1:tDb8PdDVFcaE8EPXkMOsuxpL3UEPiwu1UDZar9Z/1RY=
@@ -725,8 +725,8 @@ github.com/jinzhu/gorm v1.9.16/go.mod h1:G3LB3wezTOWM2ITLzPxEXgSkOXAntiLHS7UdBef
 github.com/jinzhu/inflection v1.0.0 h1:K317FqzuhWc8YvSVlFMCCUb36O/S9MCKRDI7QkRKD/E=
 github.com/jinzhu/inflection v1.0.0/go.mod h1:h+uFLlag+Qp1Va5pdKtLDYj+kHp5pxUVkryuEj+Srlc=
 github.com/jinzhu/now v1.0.1/go.mod h1:d3SSVoowX0Lcu0IBviAWJpolVfI5UJVZZ7cO71lE/z8=
-github.com/jinzhu/now v1.1.1 h1:g39TucaRWyV3dwDO++eEc6qf8TVIQ/Da48WmqjZ3i7E=
 github.com/jinzhu/now v1.1.1/go.mod h1:d3SSVoowX0Lcu0IBviAWJpolVfI5UJVZZ7cO71lE/z8=
+github.com/jinzhu/now v1.1.2 h1:eVKgfIdy9b6zbWBMgFpfDPoAMifwSZagU9HmEU6zgiI=
 github.com/jinzhu/now v1.1.2/go.mod h1:d3SSVoowX0Lcu0IBviAWJpolVfI5UJVZZ7cO71lE/z8=
 github.com/jirfag/go-printf-func-name v0.0.0-20191110105641-45db9963cdd3/go.mod h1:HEWGJkRDzjJY2sqdDwxccsGicWEf9BQOZsq2tV+xzM0=
 github.com/jmespath/go-jmespath v0.0.0-20160202185014-0b12d6b521d8/go.mod h1:Nht3zPeWKUH0NzdCt2Blrr5ys8VGpn0CEB0cQHVjt7k=
@@ -914,6 +914,7 @@ github.com/mozilla/tls-observatory v0.0.0-20200220173314-aae45faa4006/go.mod h1:
 github.com/mpvl/unique v0.0.0-20150818121801-cbe035fff7de/go.mod h1:kJun4WP5gFuHZgRjZUWWuH1DTxCtxbHDOIJsudS8jzY=
 github.com/mrunalp/fileutils v0.0.0-20160930181131-4ee1cc9a8058/go.mod h1:x8F1gnqOkIEiO4rqoeEEEqQbo7HjGMTvyoq3gej4iT0=
 github.com/mrunalp/fileutils v0.0.0-20171103030105-7d4729fb3618/go.mod h1:x8F1gnqOkIEiO4rqoeEEEqQbo7HjGMTvyoq3gej4iT0=
+github.com/mssola/user_agent v0.5.3 h1:lBRPML9mdFuIZgI2cmlQ+atbpJdLdeVl2IDodjBR578=
 github.com/mssola/user_agent v0.5.3/go.mod h1:TTPno8LPY3wAIEKRpAtkdMT0f8SE24pLRGPahjCH4uw=
 github.com/munnerz/goautoneg v0.0.0-20120707110453-a547fc61f48d/go.mod h1:+n7T8mK8HuQTcFwEeznm/DIxMOiR9yIdICNftLE1DvQ=
 github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822/go.mod h1:+n7T8mK8HuQTcFwEeznm/DIxMOiR9yIdICNftLE1DvQ=
@@ -1206,8 +1207,7 @@ github.com/stretchr/testify v1.2.2/go.mod h1:a8OnRcib4nhh0OaRAV+Yts87kKdq0PP7pXf
 github.com/stretchr/testify v1.3.0/go.mod h1:M5WIy9Dh21IEIfnGCwXGc5bZfKNJtfHm1UVUgZn+9EI=
 github.com/stretchr/testify v1.4.0/go.mod h1:j7eGeouHqKxXV5pUuKE4zz7dFj8WfuZ+81PSLYec5m4=
 github.com/stretchr/testify v1.5.1/go.mod h1:5W2xD1RspED5o8YsWQXVCued0rvSQ+mT+I5cxcmMvtA=
-github.com/stretchr/testify v1.6.1 h1:hDPOHmpOpP40lSULcqw7IrRb/u7w6RpDC9399XyoNd0=
-github.com/stretchr/testify v1.6.1/go.mod h1:6Fq8oRcR53rry900zMqJjRRixrwX3KX962/h/Wwjteg=
+github.com/stretchr/testify v1.7.0 h1:nwc3DEeHmmLAfoZucVR881uASk0Mfjw8xYJ99tb5CcY=
 github.com/stretchr/testify v1.7.0/go.mod h1:6Fq8oRcR53rry900zMqJjRRixrwX3KX962/h/Wwjteg=
 github.com/stripe/stripe-go/v72 v72.72.0/go.mod h1:QwqJQtduHubZht9mek5sds9CtQcKFdsykV9ZepRWwo0=
 github.com/subosito/gotenv v1.2.0/go.mod h1:N0PQaV/YGNqwC0u51sEeR/aUtSLEXKX9iv69rRypqCw=
@@ -1267,15 +1267,13 @@ github.com/yvasiyarov/newrelic_platform_go v0.0.0-20140908184405-b21fdbd4370f/go
 github.com/zenazn/goji v0.9.0/go.mod h1:7S9M489iMyHBNxwZnk9/EHS098H4/F6TATF2mIxtB1Q=
 gitlab.com/ignitionrobotics/billing/credits v0.0.0-20211110124124-7dbf77a10783 h1:Fd2rAOydSXY/hjqYQWzdfohs5s5jfQbiR02ylTc7pL4=
 gitlab.com/ignitionrobotics/billing/credits v0.0.0-20211110124124-7dbf77a10783/go.mod h1:2Vj2X9dvr+qrwzyjyijGOKegX9c5n9IzU5ASFr81vds=
-gitlab.com/ignitionrobotics/billing/customers v0.0.0-20211110150011-a2f39fb3a782 h1:G98Xl81W+cK+8oqyBXOELPa21whWp0U6141WBXpiSnY=
 gitlab.com/ignitionrobotics/billing/customers v0.0.0-20211110150011-a2f39fb3a782/go.mod h1:/mtnUFtluiIhUAWSLVcUJnO48Xkq3CyOU+Si/iMETWk=
 gitlab.com/ignitionrobotics/billing/payments v0.0.0-20211110174459-d690b1b701e8 h1:Q8iNbUIVWwUqgsZ4i1v587zsLwQAvULliCJRtbMvbdE=
 gitlab.com/ignitionrobotics/billing/payments v0.0.0-20211110174459-d690b1b701e8/go.mod h1:bI2ZSYFHP8g1fD5KSNgAxBLz7CA9PIHOJzfubKd9g5s=
 gitlab.com/ignitionrobotics/web/fuelserver v0.0.0-20200916210816-e30ab5ed9d47 h1:z9uMOLenMLVU3gBmmBa7lyyhC29fl/Jv6DeL2l43lYY=
 gitlab.com/ignitionrobotics/web/fuelserver v0.0.0-20200916210816-e30ab5ed9d47/go.mod h1:PLjdv73lgSOtVqoGEAqsa59hy14dJfvERzgXT5xZHls=
 gitlab.com/ignitionrobotics/web/ign-go v0.0.0-20200804201637-78fc7e089169/go.mod h1:zfTiSMA+aWnzmQFGi8UgoozvCgEPPV1JqbPmPUucXIE=
-gitlab.com/ignitionrobotics/web/ign-go v0.0.0-20201013152111-8655ead5c276 h1:TTNxqbHIO68L14yBWkWQTevkqiWK7u6MC12jgtiCvjU=
-gitlab.com/ignitionrobotics/web/ign-go v0.0.0-20201013152111-8655ead5c276/go.mod h1:zfTiSMA+aWnzmQFGi8UgoozvCgEPPV1JqbPmPUucXIE=
+gitlab.com/ignitionrobotics/web/ign-go v0.0.0-20211109185912-2322af1b387c h1:0HzzogDXr3N/pBjRrVbtti6pfgzjbYlhBcRWHDUWpDE=
 gitlab.com/ignitionrobotics/web/ign-go v0.0.0-20211109185912-2322af1b387c/go.mod h1:IiLZKx/AKubhvop0TM+zTSLYocZk9TtrchU+qnTl5ms=
 gitlab.com/ignitionrobotics/web/scheduler v0.5.0/go.mod h1:wSLPCGnC6TPQh7sFuonkhTUv4KnLdNOcy4ps77qffEQ=
 gitlab.com/ignitionrobotics/web/scheduler v0.5.1-0.20200114185916-4bd85f4ff2d6 h1:IdeZ0KiDTN+H6oWoRQMy3skNiAsozsheI33t9Sprw7Q=
