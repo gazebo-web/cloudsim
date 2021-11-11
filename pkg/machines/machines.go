@@ -259,8 +259,13 @@ type ListMachinesOutput struct {
 	Instances []ListMachinesItem
 }
 
+// CalculateCostsOutput is the output value returned by Machines.CalculateCosts. It describes the amount of money in
+// a certain currency that a group of machines costs.
 type CalculateCostsOutput struct {
-	Amount   int
+	// Amount is the money that the group of machines costs in the minimum currency value (e.g. cents for USD).
+	Amount int
+
+	// Currency is the ISO 4217 currency code in lowercase format.
 	Currency string
 }
 
