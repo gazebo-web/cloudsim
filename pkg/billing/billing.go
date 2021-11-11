@@ -11,10 +11,30 @@ import (
 	"time"
 )
 
+// CreateSessionRequest is used to create a new payment session.
+type CreateSessionRequest struct {
+	// SuccessURL is the url where to redirect users after a payment succeeds.
+	SuccessURL string `json:"success_url"`
+
+	// CancelURL is the url where to redirect users after a payment fails.
+	CancelURL string `json:"cancel_url"`
+
+	// Handle is the username of the user that is starting the payment session.
+	Handle string `json:"-"`
+}
+
+// CreateSessionResponse is the response from calling Service.CreateSession.
+type CreateSessionResponse apiPayments.CreateSessionResponse
+
+// GetBalanceResponse is the response from calling Service.GetBalance.
+type GetBalanceResponse apiCredits.GetBalanceResponse
+
 // Service holds methods to interact with different billing services.
 type Service interface {
-	GetBalance(ctx context.Context, user *users.User) (interface{}, error)
-	CreateSession(ctx context.Context, user *users.User, in CreateSessionRequest) (interface{}, error)
+	// GetBalance returns the credits balance of the given user.
+	GetBalance(ctx context.Context, user *users.User) (GetBalanceResponse, error)
+	// CreateSession creates a new payment session.
+	CreateSession(ctx context.Context, in CreateSessionRequest) (CreateSessionResponse, error)
 }
 
 // service is a Service implementation using the payments and credits V1 API.
@@ -30,39 +50,44 @@ type service struct {
 	applicationName string
 }
 
-// CreateSessionRequest is used to create a new payment session.
-type CreateSessionRequest struct {
-	// SuccessURL is the url where to redirect users after a payment succeeds.
-	SuccessURL string `json:"success_url"`
-	// CancelURL is the url where to redirect users after a payment fails.
-	CancelURL string `json:"cancel_url"`
-}
-
 // CreateSession creates a new payment session.
-func (s *service) CreateSession(ctx context.Context, user *users.User, in CreateSessionRequest) (interface{}, error) {
-	return s.payments.CreateSession(ctx, apiPayments.CreateSessionRequest{
+func (s *service) CreateSession(ctx context.Context, req CreateSessionRequest) (CreateSessionResponse, error) {
+	res, err := s.payments.CreateSession(ctx, apiPayments.CreateSessionRequest{
 		Service:     "stripe",
-		SuccessURL:  in.SuccessURL,
-		CancelURL:   in.CancelURL,
-		Handle:      *user.Username,
+		SuccessURL:  req.SuccessURL,
+		CancelURL:   req.CancelURL,
+		Handle:      req.Handle,
 		Application: s.applicationName,
 	})
+	if err != nil {
+		return CreateSessionResponse{}, err
+	}
+	return CreateSessionResponse(res), nil
 }
 
 // GetBalance returns the credits balance of the given user.
-func (s *service) GetBalance(ctx context.Context, user *users.User) (interface{}, error) {
-	return s.credits.GetBalance(ctx, apiCredits.GetBalanceRequest{
+func (s *service) GetBalance(ctx context.Context, user *users.User) (GetBalanceResponse, error) {
+	res, err := s.credits.GetBalance(ctx, apiCredits.GetBalanceRequest{
 		Handle:      *user.Username,
 		Application: s.applicationName,
 	})
+	if err != nil {
+		return GetBalanceResponse{}, err
+	}
+	return GetBalanceResponse(res), nil
 }
 
 // Config is used to configure new service implementations
 type Config struct {
-	CreditsURL      string
-	PaymentsURL     string
+	// CreditsURL contains the URL of the Credits API.
+	CreditsURL string
+	// PaymentsURL contains the URL of the Payments API.
+	PaymentsURL string
+	// ApplicationName contains the unique name for this application. Used to track billing operations and keep them
+	// in the same application context.
 	ApplicationName string
-	Timeout         time.Duration
+	// Timeout is the amount of time a client can wait until a timeout occurs.
+	Timeout time.Duration
 }
 
 // NewService initializes a new Service implementation using the given config.
