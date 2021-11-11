@@ -2114,7 +2114,9 @@ func (s *Service) GetCreditsBalance(ctx context.Context, user *users.User) (inte
 
 // CreateSession starts a checkout session with the payment service for the current user.
 func (s *Service) CreateSession(ctx context.Context, user *users.User, req billing.CreateSessionRequest) (interface{}, *ign.ErrMsg) {
-	res, err := s.billing.CreateSession(ctx, user, req)
+	req.Handle = *user.Username
+
+	res, err := s.billing.CreateSession(ctx, req)
 	if err != nil {
 		return nil, ign.NewErrorMessageWithBase(ign.ErrorUnexpected, err)
 	}
