@@ -111,6 +111,7 @@ type SimService interface {
 	Debug(user *users.User, groupID simulations.GroupID) (interface{}, *ign.ErrMsg)
 	ReconnectWebsocket(user *users.User, groupID simulations.GroupID) (interface{}, *ign.ErrMsg)
 	GetCreditsBalance(ctx context.Context, user *users.User) (interface{}, *ign.ErrMsg)
+	CreateSession(ctx context.Context, user *users.User, req billing.CreateSessionRequest) (interface{}, *ign.ErrMsg)
 }
 
 // NodeManager is responsible of creating and removing cloud instances, and
@@ -364,14 +365,6 @@ func (s *Service) ReconnectWebsocket(user *users.User, groupID simulations.Group
 	}
 
 	return nil, nil
-}
-
-func (s *Service) GetCreditsBalance(ctx context.Context, user *users.User) (interface{}, *ign.ErrMsg) {
-	res, err := s.billing.GetBalance(ctx, user)
-	if err != nil {
-		return nil, ign.NewErrorMessageWithBase(ign.ErrorUnexpected, err)
-	}
-	return res, nil
 }
 
 // SetPoolEventsListener sets a new PoolNotificationCallback to the poolNotificationCallback field.
@@ -2105,6 +2098,27 @@ func (s *Service) QueueRemoveElement(ctx context.Context, user *users.User, grou
 		return nil, ign.NewErrorMessage(ign.ErrorUnauthorized)
 	}
 	return s.launchHandlerQueue.Remove(groupID)
+}
+
+// ///////////////////////////////////////////////////////////////////////
+// ///////////////////////////////////////////////////////////////////////
+
+// GetCreditsBalance gets the credit balance of the current user.
+func (s *Service) GetCreditsBalance(ctx context.Context, user *users.User) (interface{}, *ign.ErrMsg) {
+	res, err := s.billing.GetBalance(ctx, user)
+	if err != nil {
+		return nil, ign.NewErrorMessageWithBase(ign.ErrorUnexpected, err)
+	}
+	return res, nil
+}
+
+// CreateSession starts a checkout session with the payment service for the current user.
+func (s *Service) CreateSession(ctx context.Context, user *users.User, req billing.CreateSessionRequest) (interface{}, *ign.ErrMsg) {
+	res, err := s.billing.CreateSession(ctx, user, req)
+	if err != nil {
+		return nil, ign.NewErrorMessageWithBase(ign.ErrorUnexpected, err)
+	}
+	return res, nil
 }
 
 func (s *Service) getPlatforms(simDep *SimulationDeployment) []platform.Platform {
