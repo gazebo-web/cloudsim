@@ -675,12 +675,32 @@ var Routes = ign.Routes{
 		Methods:     ign.Methods{},
 		SecureMethods: ign.SecureMethods{
 			ign.Method{
-				Type:        "DELETE",
-				Description: "Remove an element from the queue",
+				Type:        "GET",
+				Description: "Get credits balance",
 				Handlers: ign.FormatHandlers{
 					ign.FormatHandler{
 						Extension: "",
 						Handler:   ign.JSONResult(WithUser(GetCreditsBalance)),
+					},
+				},
+			},
+		},
+	},
+
+	ign.Route{
+		Name:        "Create payment session",
+		Description: "Start a payment session",
+		URI:         "/billing/session",
+		Headers:     ign.AuthHeadersRequired,
+		Methods:     ign.Methods{},
+		SecureMethods: ign.SecureMethods{
+			ign.Method{
+				Type:        "POST",
+				Description: "Create a payment session",
+				Handlers: ign.FormatHandlers{
+					ign.FormatHandler{
+						Extension: "",
+						Handler:   ign.JSONResult(WithUser(CreateSession)),
 					},
 				},
 			},
