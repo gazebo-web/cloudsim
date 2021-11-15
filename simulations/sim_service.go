@@ -206,7 +206,7 @@ type simServConfig struct {
 	// PaymentsURL contains the URL pointing to the Payments API.
 	PaymentsURL string `env:"SIMSVC_PAYMENTS_URL"`
 	// CreditsURL contains the URL pointing to the Credits API.
-	CreditsURL string `env:"SIMSVC_PAYMENTS_URL"`
+	CreditsURL string `env:"SIMSVC_CREDITS_URL"`
 }
 
 // ApplicationType represents an Application (eg. SubT). Applications are used
