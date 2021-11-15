@@ -664,7 +664,7 @@ func CreateSession(user *users.User, tx *gorm.DB, w http.ResponseWriter, r *http
 
 	// CreateSimulation is the input form
 	var req billing.CreateSessionRequest
-	if em := ParseStruct(&req, r, false); em != nil {
+	if em := ParseStruct(&req, r, true); em != nil {
 		return nil, em
 	}
 	return SimServImpl.CreateSession(r.Context(), user, req)
