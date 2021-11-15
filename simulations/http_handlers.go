@@ -655,16 +655,8 @@ func GetCreditsBalance(user *users.User, tx *gorm.DB, w http.ResponseWriter, r *
 
 // CreateSession starts a payment session with the payments service for the current user.
 func CreateSession(user *users.User, tx *gorm.DB, w http.ResponseWriter, r *http.Request) (interface{}, *ign.ErrMsg) {
-	// Parse form's values and files.
-	// https://golang.org/pkg/net/http/#Request.ParseMultipartForm
-	if err := r.ParseMultipartForm(0); err != nil {
-		return nil, ign.NewErrorMessageWithBase(ign.ErrorForm, err)
-	}
-	defer r.MultipartForm.RemoveAll()
-
-	// CreateSimulation is the input form
 	var req billing.CreateSessionRequest
-	if em := ParseStruct(&req, r, true); em != nil {
+	if em := ParseStruct(&req, r, false); em != nil {
 		return nil, em
 	}
 	return SimServImpl.CreateSession(r.Context(), user, req)
