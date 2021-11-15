@@ -2171,7 +2171,7 @@ func (s *Service) initApplicationServices() (subtapp.Services, error) {
 	s.billing, err = billing.NewService(billing.Config{
 		CreditsURL:  s.cfg.CreditsURL,
 		PaymentsURL: s.cfg.PaymentsURL,
-	})
+	}, s.logger)
 	if err != nil {
 		return nil, err
 	}

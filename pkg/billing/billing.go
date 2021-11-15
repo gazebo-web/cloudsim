@@ -7,6 +7,7 @@ import (
 	apiPayments "gitlab.com/ignitionrobotics/billing/payments/pkg/api"
 	payments "gitlab.com/ignitionrobotics/billing/payments/pkg/client"
 	"gitlab.com/ignitionrobotics/web/fuelserver/bundles/users"
+	"gitlab.com/ignitionrobotics/web/ign-go"
 	"net/url"
 	"time"
 )
@@ -48,10 +49,14 @@ type service struct {
 	// applicationName is the name of the current application that consumes billing services.
 	// This value keeps all application transactions in the same context.
 	applicationName string
+
+	// logger is used to log relevant information in different methods.
+	logger ign.Logger
 }
 
 // CreateSession creates a new payment session.
 func (s *service) CreateSession(ctx context.Context, req CreateSessionRequest) (CreateSessionResponse, error) {
+	s.logger.Debug("Creating session:", req)
 	res, err := s.payments.CreateSession(ctx, apiPayments.CreateSessionRequest{
 		Service:     "stripe",
 		SuccessURL:  req.SuccessURL,
@@ -67,11 +72,13 @@ func (s *service) CreateSession(ctx context.Context, req CreateSessionRequest) (
 
 // GetBalance returns the credits balance of the given user.
 func (s *service) GetBalance(ctx context.Context, user *users.User) (GetBalanceResponse, error) {
+	s.logger.Debug("Getting balance for user:", *user.Username)
 	res, err := s.credits.GetBalance(ctx, apiCredits.GetBalanceRequest{
 		Handle:      *user.Username,
 		Application: s.applicationName,
 	})
 	if err != nil {
+		s.logger.Debug("Failed to get balance:", err)
 		return GetBalanceResponse{}, err
 	}
 	return GetBalanceResponse(res), nil
@@ -91,7 +98,7 @@ type Config struct {
 }
 
 // NewService initializes a new Service implementation using the given config.
-func NewService(cfg Config) (Service, error) {
+func NewService(cfg Config, logger ign.Logger) (Service, error) {
 	u, err := url.Parse(cfg.PaymentsURL)
 	if err != nil {
 		return nil, err
@@ -107,5 +114,6 @@ func NewService(cfg Config) (Service, error) {
 		payments:        p,
 		credits:         c,
 		applicationName: cfg.ApplicationName,
+		logger:          logger,
 	}, nil
 }
