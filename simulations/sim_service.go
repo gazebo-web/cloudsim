@@ -2172,7 +2172,7 @@ func (s *Service) initApplicationServices() (subtapp.Services, error) {
 		CreditsURL:      s.cfg.CreditsURL,
 		PaymentsURL:     s.cfg.PaymentsURL,
 		ApplicationName: "osrf",
-		Timeout:         time.Second,
+		Timeout:         30 * time.Second,
 	}, s.logger)
 	if err != nil {
 		return nil, err
