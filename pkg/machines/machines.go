@@ -2,7 +2,6 @@ package machines
 
 import (
 	"github.com/pkg/errors"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/calculator"
 )
 
 var (
@@ -264,8 +263,6 @@ type ListMachinesOutput struct {
 
 // Machines requests physical instances from a cloud provider on which to deploy applications
 type Machines interface {
-	calculator.CostCalculator
-
 	// Create creates a set of cloud machines with a certain configuration.
 	Create(input []CreateMachinesInput) ([]CreateMachinesOutput, error)
 
