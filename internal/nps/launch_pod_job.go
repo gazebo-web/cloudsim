@@ -13,6 +13,8 @@ import (
 )
 
 /////////////////////////////////////////////
+
+// LaunchPod is the NPS-specific job used to launch pods.
 var LaunchPod = jobs.LaunchPods.Extend(actions.Job{
 	Name:      "launch-pod",
 	PreHooks:  []actions.JobFunc{setStartState, prepareCreatePodInput},
@@ -49,7 +51,7 @@ func prepareCreatePodInput(store actions.Store, tx *gorm.DB, deployment *actions
 
 	// \todo Improvment: Get ports dynamically.
 	ports := []orchestrator.ContainerPort{
-		orchestrator.ContainerPort{
+		{
 			ContainerPort: 8080,
 			HostPort:      8080,
 		},
@@ -177,6 +179,7 @@ func prepareCreatePodInput(store actions.Store, tx *gorm.DB, deployment *actions
 					Volumes: volumes,
 					// EnvVars is the list of env vars that should be passed into the container.
 					EnvVars: envVars,
+					// Capabilities defines a set of credentials/permissions the user for this pod has.
 					Capabilities: &orchestrator.Capabilities{
 						Add: []string{"SYS_ADMIN"},
 					},

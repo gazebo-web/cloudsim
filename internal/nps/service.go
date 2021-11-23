@@ -29,10 +29,10 @@ type Service interface {
 
 	// Start will run the StartSimulationAction to launch cloud machines
 	// and a docker image.
-	Start(user *users.User, tx *gorm.DB, ctx context.Context, request StartRequest) (*StartResponse, error)
+	Start(ctx context.Context, user *users.User, tx *gorm.DB, request StartRequest) (*StartResponse, error)
 
 	// Stop will run the StopSimulationAction to terminate clouds machines.
-	Stop(user *users.User, tx *gorm.DB, ctx context.Context, request StopRequest) (*StopResponse, error)
+	Stop(ctx context.Context, user *users.User, tx *gorm.DB, request StopRequest) (*StopResponse, error)
 
 	// StartQueueHandler processes entries in the startQueue.
 	StartQueueHandler(ctx context.Context, groupID simulations.GroupID) error
@@ -185,8 +185,6 @@ func (s *service) StopQueueHandler(ctx context.Context, groupID simulations.Grou
 
 	s.logger.Info("Stopping simulation for groupID:", groupID)
 	return nil
-
-	return nil
 }
 
 func (s *service) Get(groupID simulations.GroupID) (simulations.Simulation, error) {
@@ -225,7 +223,7 @@ func (s *service) MarkStopped(groupID simulations.GroupID) error {
 //
 // Origin: user --> POST /start --> controller.Start() --> service.Start()
 // Next: StartQueueHandler
-func (s *service) Start(user *users.User, tx *gorm.DB, ctx context.Context, request StartRequest) (*StartResponse, error) {
+func (s *service) Start(ctx context.Context, user *users.User, tx *gorm.DB, request StartRequest) (*StartResponse, error) {
 	// Add business logic here to validate a request, update a database table,
 	// etc.
 
@@ -274,7 +272,7 @@ func (s *service) Start(user *users.User, tx *gorm.DB, ctx context.Context, requ
 //
 // Origin: user --> POST /stop --> controller.Stop() --> service.Stop()
 // Next: StopQueueHandler
-func (s *service) Stop(user *users.User, tx *gorm.DB, ctx context.Context, request StopRequest) (*StopResponse, error) {
+func (s *service) Stop(ctx context.Context, user *users.User, tx *gorm.DB, request StopRequest) (*StopResponse, error) {
 
 	// Update the database entry with the latest status
 	// \todo Help needed: I think this is not the recommended method to update

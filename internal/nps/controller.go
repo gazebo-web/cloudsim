@@ -115,11 +115,11 @@ func (ctrl *controller) Start(user *users.User, tx *gorm.DB, w http.ResponseWrit
 	}
 
 	// Hand off the start request data to the service.
-	res, err := ctrl.service.Start(user, tx, r.Context(), req)
+	res, err := ctrl.service.Start(r.Context(), user, tx, req)
 	if err != nil {
 		return nil, ign.NewErrorMessageWithBase(ign.ErrorForm, err)
 	}
-  users.AdjustAccountCredit(tx, *user.Username, -1.0)
+	users.AdjustAccountCredit(tx, *user.Username, -1.0)
 
 	// Send response to the user
 	return res, nil
@@ -159,32 +159,32 @@ func (ctrl *controller) Stop(user *users.User, tx *gorm.DB, w http.ResponseWrite
 			}
 
 			if !strings.Contains(sim.Status, "stop") && !strings.Contains(sim.Status, "remov") {
-				ctrl.service.Stop(user, tx, r.Context(), req)
+				ctrl.service.Stop(r.Context(), user, tx, req)
 			}
 		}
 
 		return "All instances stopped", nil
 
-	} else {
-		// Get the matching simulation
-		var simulation Simulation
-		if err := tx.Where("group_id=?", groupID).First(&simulation).Error; err != nil {
-			return nil, ign.NewErrorMessageWithBase(ign.ErrorIDNotFound, err)
+	}
+
+	// Get the matching simulation
+	var simulation Simulation
+	if err := tx.Where("group_id=?", groupID).First(&simulation).Error; err != nil {
+		return nil, ign.NewErrorMessageWithBase(ign.ErrorIDNotFound, err)
+	}
+
+	if !strings.Contains(simulation.Status, "stop") && !strings.Contains(simulation.Status, "remov") {
+		// Construct the stop request to send to the service
+		req := StopRequest{
+			GroupID: simulation.GroupID,
 		}
 
-		if !strings.Contains(simulation.Status, "stop") && !strings.Contains(simulation.Status, "remov") {
-			// Construct the stop request to send to the service
-			req := StopRequest{
-				GroupID: simulation.GroupID,
-			}
-
-			res, err := ctrl.service.Stop(user, tx, r.Context(), req)
-			if err != nil {
-				return nil, ign.NewErrorMessageWithBase(ign.ErrorForm, err)
-			}
-			// Send response to the user
-			return res, nil
+		res, err := ctrl.service.Stop(r.Context(), user, tx, req)
+		if err != nil {
+			return nil, ign.NewErrorMessageWithBase(ign.ErrorForm, err)
 		}
+		// Send response to the user
+		return res, nil
 	}
 
 	return nil, nil
@@ -281,8 +281,9 @@ func Healthz(tx *gorm.DB, w http.ResponseWriter, r *http.Request) (interface{}, 
 }
 
 ////////////////////////////////////////////////
-// All of the following is to handle user access in routes
+
 // HTTPHandler is used to invoke inner logic based on incoming Http requests.
+// All of the following is to handle user access in routes
 type HTTPHandler struct {
 	UserAccessor useracc.Service
 }

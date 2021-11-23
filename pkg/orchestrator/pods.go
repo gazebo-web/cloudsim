@@ -96,6 +96,8 @@ type Container struct {
 	Capabilities *Capabilities
 }
 
+// Capabilities defines a set of credentials/permissions a user can have.
+// It is used to configure user capabilities in launched pods.
 type Capabilities struct {
 	Add  []string
 	Drop []string
