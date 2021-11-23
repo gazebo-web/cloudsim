@@ -1,0 +1,37 @@
+# This policy blocks all incoming traffic to Cloudsim pods.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny-nps-pods-ingress
+  labels:
+    cloudsim: "true"
+spec:
+  podSelector:
+    matchLabels:
+      cloudsim: "true"
+  policyTypes:
+  - Ingress
+
+---
+# this policy blocks all egress traffic to internet.
+# It also allows all outbound traffic on ports 53/udp and 53/tcp for DNS resolution
+# (only inside the cluster)
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny-external-egress-nps
+spec:
+  podSelector:
+    matchLabels:
+      cloudsim: "true"
+  policyTypes:
+  - Egress
+  egress:
+  # allow DNS resolution (only inside the cluster)
+  - to:
+    - namespaceSelector: {}
+    ports:
+    - port: 8080
+      protocol: UDP
+    - port: 8080
+      protocol: TCP
