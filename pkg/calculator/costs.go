@@ -11,6 +11,7 @@ type Rate struct {
 	Currency string
 
 	// Frequency is the frequency at which a resource gets charged.
+	// As an example, setting this to time.Hour indicates a rate of `Amount` credits per hour.
 	Frequency time.Duration
 }
 
