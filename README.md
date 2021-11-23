@@ -225,6 +225,8 @@ export IGN_PARTITION=foo
 # SUBT specifics
 # Grace period in secods to wait for the Gazebo container to finish
 export SUBT_GZSERVER_TERMINATE_GRACE_PERIOD_SECONDS=30
+# Disable requirement for robot images to be inside a specific ECR repo
+export SUBT_DISABLE_ROBOT_IMAGE_ECR_CHECK=false
 # Disable simulation score generation 
 export IGN_DISABLE_SCORE_GENERATION=false
 
