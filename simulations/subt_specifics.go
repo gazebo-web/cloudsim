@@ -153,6 +153,8 @@ type subTSpecificsConfig struct {
 	// MaxRobotModelCount is the maximum number of robots per model type. E.g. Up to 5 of any model: X1, X2, etc.
 	// Robot models are defined in SubTRobotType. A value of 0 means unlimited robots.
 	MaxRobotModelCount int `env:"SUBT_MAX_ROBOT_MODEL_COUNT" envDefault:"0"`
+	// DisableRobotImageECRCheck disables the requirement for a robot image to be inside a specific ECR repo.
+	DisableRobotImageECRCheck bool `env:"SUBT_DISABLE_ROBOT_IMAGE_ECR_CHECK" envDefault:"false"`
 	// FuelURL contains the URL to a Fuel environment. This base URL is used to generate
 	// URLs for users to access specific assets within Fuel.
 	FuelURL string `env:"IGN_FUEL_URL" envDefault:"https://fuel.ignitionrobotics.org/1.0"`
@@ -379,7 +381,7 @@ func (sa *SubTApplication) customizeSimulationRequest(ctx context.Context,
 			}
 		}
 
-		if !subtSim.robotImagesBelongToECROwner() {
+		if !sa.cfg.DisableRobotImageECRCheck && !subtSim.robotImagesBelongToECROwner() {
 			return NewErrorMessage(ErrorInvalidRobotImage)
 		}
 
