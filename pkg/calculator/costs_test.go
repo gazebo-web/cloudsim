@@ -6,7 +6,7 @@ import (
 	"time"
 )
 
-func TestSumRates(t *testing.T) {
+func TestAggregateRates(t *testing.T) {
 	r1 := Rate{
 		Amount:    100, // 100 in seconds -> 360000 in hours
 		Currency:  "usd",
@@ -25,7 +25,7 @@ func TestSumRates(t *testing.T) {
 		Frequency: time.Hour,
 	}
 
-	out := SumRates([]Rate{r1, r2, r3})
+	out := AggregateRates([]Rate{r1, r2, r3})
 
 	assert.Equal(t, "usd", out.Currency)
 	assert.Equal(t, time.Hour, out.Frequency)

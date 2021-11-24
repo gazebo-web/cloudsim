@@ -11,12 +11,13 @@ type Rate struct {
 	Currency string
 
 	// Frequency is the frequency at which a resource gets charged.
+	// As an example, setting this to time.Hour indicates a rate of `Amount` credits per hour.
 	Frequency time.Duration
 }
 
-// Aggregate merges the current rate with the rate given as an argument, and returns the sum of both values
+// Sum merges the current rate with the rate given as an argument, and returns the sum of both values
 // expressed in hours.
-func (r Rate) Aggregate(rate Rate) Rate {
+func (r Rate) Sum(rate Rate) Rate {
 	r = transformRate(r, time.Hour)
 	rate = transformRate(rate, time.Hour)
 	return Rate{
@@ -32,28 +33,21 @@ func (r Rate) Aggregate(rate Rate) Rate {
 // Otherwise, it will return the current rate.
 func transformRate(rate Rate, freq time.Duration) Rate {
 	f := int64(1)
-	if freq.Milliseconds() > rate.Frequency.Milliseconds() && rate.Frequency.Milliseconds() > 0 {
-		f = freq.Milliseconds() / rate.Frequency.Milliseconds()
+	if freq > rate.Frequency && rate.Frequency > 0 {
+		f = int64(freq / rate.Frequency)
 		rate.Frequency = freq
 	}
 	rate.Amount = rate.Amount * uint(f)
 	return rate
 }
 
-// SumRates sums up the given rates and returns the representation in hours.
-func SumRates(rates []Rate) Rate {
+// AggregateRates aggregates the given rates and returns the representation in hours.
+func AggregateRates(rates []Rate) Rate {
 	var out Rate
 	for _, r := range rates {
-		out = out.Aggregate(r)
+		out = out.Sum(r)
 	}
 	return out
-}
-
-// RateAggregator holds a method to merge two rates together.
-type RateAggregator interface {
-	// Aggregate merges the current rate with the rate given as an argument, and returns the sum of both values
-	// expressed in hours.
-	Aggregate(rate Rate) Rate
 }
 
 // Resource groups a set of fields from a resource consumed by cloudsim. It's used to calculate the cost at which
