@@ -6,7 +6,7 @@ import (
 	"time"
 )
 
-func TestSumRates(t *testing.T) {
+func TestAggregateRates(t *testing.T) {
 	r1 := Rate{
 		Amount:    100, // 100 in seconds -> 360000 in hours
 		Currency:  "usd",
