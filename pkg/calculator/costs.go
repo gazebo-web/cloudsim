@@ -33,8 +33,8 @@ func (r Rate) Sum(rate Rate) Rate {
 // Otherwise, it will return the current rate.
 func transformRate(rate Rate, freq time.Duration) Rate {
 	f := int64(1)
-	if freq.Milliseconds() > rate.Frequency.Milliseconds() && rate.Frequency.Milliseconds() > 0 {
-		f = freq.Milliseconds() / rate.Frequency.Milliseconds()
+	if freq > rate.Frequency && rate.Frequency > 0 {
+		f = int64(freq / rate.Frequency)
 		rate.Frequency = freq
 	}
 	rate.Amount = rate.Amount * uint(f)
