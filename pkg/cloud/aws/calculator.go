@@ -9,8 +9,10 @@ import (
 )
 
 const (
+	// KindMachines is used to identify the kind of calculator.Resource for EC2 machines.
 	KindMachines = "AmazonEC2"
-	KindStorage  = "AmazonS3"
+	// KindStorage is used to identify the kind of calculator.Resource for S3 storage.
+	KindStorage = "AmazonS3"
 )
 
 // PriceParser parses a given AWS price result from the Pricing API and returns a calculator.Rate value.
@@ -25,6 +27,7 @@ type costCalculator struct {
 	priceParser PriceParser
 }
 
+// CalculateCost calculates the cost of an arbitrary set of AWS resources.
 func (c *costCalculator) CalculateCost(resources []calculator.Resource) (calculator.Rate, error) {
 	rates := make([]calculator.Rate, len(resources))
 	for i, res := range resources {
@@ -37,6 +40,7 @@ func (c *costCalculator) CalculateCost(resources []calculator.Resource) (calcula
 	return calculator.AggregateRates(rates), nil
 }
 
+// calculateRate calculates the rate of a given resource.
 func (c *costCalculator) calculateRate(res calculator.Resource) (calculator.Rate, error) {
 	list, err := c.API.GetProducts(&pricing.GetProductsInput{
 		FormatVersion: aws.String("aws_v1"),
@@ -57,6 +61,7 @@ func (c *costCalculator) calculateRate(res calculator.Resource) (calculator.Rate
 	return rate, nil
 }
 
+// convertResourceToFilters converts the given resource into a set of filters for the Pricing API.
 func (c *costCalculator) convertResourceToFilters(resource calculator.Resource) []*pricing.Filter {
 	filters := make([]*pricing.Filter, 0, len(resource.Values))
 	for k, v := range resource.Values {
@@ -73,6 +78,7 @@ func (c *costCalculator) convertResourceToFilters(resource calculator.Resource) 
 	return filters
 }
 
+// NewCostCalculator initializes a new cost calculator for a certain AWS resource.
 func NewCostCalculator(api pricingiface.PricingAPI, priceParser PriceParser) calculator.CostCalculator {
 	return &costCalculator{
 		API:         api,
