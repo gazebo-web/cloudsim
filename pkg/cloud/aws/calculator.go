@@ -34,7 +34,7 @@ func (c *costCalculator) CalculateCost(resources []calculator.Resource) (calcula
 		}
 		rates[i] = rate
 	}
-	return calculator.SumRates(rates), nil
+	return calculator.AggregateRates(rates), nil
 }
 
 func (c *costCalculator) calculateRate(res calculator.Resource) (calculator.Rate, error) {
