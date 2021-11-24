@@ -1,0 +1,142 @@
+{
+  "product": {
+    "productFamily": "Compute Instance",
+    "attributes": {
+      "enhancedNetworkingSupported": "Yes",
+      "intelTurboAvailable": "Yes",
+      "memory": "122 GiB",
+      "dedicatedEbsThroughput": "3500 Mbps",
+      "vcpu": "16",
+      "classicnetworkingsupport": "false",
+      "capacitystatus": "UnusedCapacityReservation",
+      "locationType": "AWS Region",
+      "storage": "EBS only",
+      "instanceFamily": "GPU instance",
+      "operatingSystem": "Linux",
+      "intelAvx2Available": "Yes",
+      "regionCode": "us-east-1",
+      "physicalProcessor": "Intel Xeon E5-2686 v4 (Broadwell)",
+      "clockSpeed": "2.3 GHz",
+      "ecu": "58",
+      "networkPerformance": "Up to 10 Gigabit",
+      "servicename": "Amazon Elastic Compute Cloud",
+      "instancesku": "SQ37ZQ2CZ2H95VDC",
+      "vpcnetworkingsupport": "true",
+      "instanceType": "g3.4xlarge",
+      "tenancy": "Shared",
+      "usagetype": "UnusedBox:g3.4xlarge",
+      "normalizationSizeFactor": "32",
+      "gpu": "1",
+      "intelAvxAvailable": "Yes",
+      "processorFeatures": "Intel AVX; Intel AVX2; Intel Turbo",
+      "servicecode": "AmazonEC2",
+      "licenseModel": "No License required",
+      "currentGeneration": "Yes",
+      "preInstalledSw": "NA",
+      "location": "US East (N. Virginia)",
+      "processorArchitecture": "64-bit",
+      "marketoption": "OnDemand",
+      "operation": "RunInstances",
+      "availabilityzone": "NA"
+    },
+    "sku": "PGHV9RW38NFGGPKH"
+  },
+  "serviceCode": "AmazonEC2",
+  "terms": {
+    "OnDemand": {
+      "PGHV9RW38NFGGPKH.JRTCKXETXF": {
+        "priceDimensions": {
+          "PGHV9RW38NFGGPKH.JRTCKXETXF.6YS6EN2CT7": {
+            "unit": "Hrs",
+            "endRange": "Inf",
+            "description": "$1.14 per Unused Reservation Linux g3.4xlarge Instance Hour",
+            "appliesTo": [],
+            "rateCode": "PGHV9RW38NFGGPKH.JRTCKXETXF.6YS6EN2CT7",
+            "beginRange": "0",
+            "pricePerUnit": {
+              "USD": "1.1400000000"
+            }
+          }
+        },
+        "sku": "PGHV9RW38NFGGPKH",
+        "effectiveDate": "2021-11-01T00:00:00Z",
+        "offerTermCode": "JRTCKXETXF",
+        "termAttributes": {}
+      }
+    }
+  },
+  "version": "20211119012359",
+  "publicationDate": "2021-11-19T01:23:59Z"
+}
+
+
+{
+  "product": {
+    "attributes": {
+      "availabilityzone": "NA",
+      "capacitystatus": "UnusedCapacityReservation",
+      "classicnetworkingsupport": "false",
+      "clockSpeed": "2.3 GHz",
+      "currentGeneration": "Yes",
+      "dedicatedEbsThroughput": "3500 Mbps",
+      "ecu": "58",
+      "enhancedNetworkingSupported": "Yes",
+      "gpu": "1",
+      "instanceFamily": "GPU instance",
+      "instanceType": "g3.4xlarge",
+      "instancesku": "SQ37ZQ2CZ2H95VDC",
+      "intelAvx2Available": "Yes",
+      "intelAvxAvailable": "Yes",
+      "intelTurboAvailable": "Yes",
+      "licenseModel": "No License required",
+      "location": "US East (N. Virginia)",
+      "locationType": "AWS Region",
+      "marketoption": "OnDemand",
+      "memory": "122 GiB",
+      "networkPerformance": "Up to 10 Gigabit",
+      "normalizationSizeFactor": "32",
+      "operatingSystem": "Linux",
+      "operation": "RunInstances",
+      "physicalProcessor": "Intel Xeon E5-2686 v4 (Broadwell)",
+      "preInstalledSw": "NA",
+      "processorArchitecture": "64-bit",
+      "processorFeatures": "Intel AVX; Intel AVX2; Intel Turbo",
+      "regionCode": "us-east-1",
+      "servicecode": "AmazonEC2",
+      "servicename": "Amazon Elastic Compute Cloud",
+      "storage": "EBS only",
+      "tenancy": "Shared",
+      "usagetype": "UnusedBox:g3.4xlarge",
+      "vcpu": "16",
+      "vpcnetworkingsupport": "true"
+    },
+    "productFamily": "Compute Instance",
+    "sku": "PGHV9RW38NFGGPKH"
+  },
+  "publicationDate": "2021-11-22T19:55:48Z",
+  "serviceCode": "AmazonEC2",
+  "terms": {
+    "OnDemand": {
+      "PGHV9RW38NFGGPKH.JRTCKXETXF": {
+        "effectiveDate": "2021-11-01T00:00:00Z",
+        "offerTermCode": "JRTCKXETXF",
+        "priceDimensions": {
+          "PGHV9RW38NFGGPKH.JRTCKXETXF.6YS6EN2CT7": {
+            "appliesTo": [],
+            "beginRange": "0",
+            "description": "$1.14 per Unused Reservation Linux g3.4xlarge Instance Hour",
+            "endRange": "Inf",
+            "pricePerUnit": {
+              "USD": "1.1400000000"
+            },
+            "rateCode": "PGHV9RW38NFGGPKH.JRTCKXETXF.6YS6EN2CT7",
+            "unit": "Hrs"
+          }
+        },
+        "sku": "PGHV9RW38NFGGPKH",
+        "termAttributes": {}
+      }
+    }
+  },
+  "version": "20211122195548"
+}
