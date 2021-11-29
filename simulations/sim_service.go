@@ -201,6 +201,8 @@ type simServConfig struct {
 	MaxDurationForSimulations int `env:"SIMSVC_SIM_MAX_DURATION_MINUTES" envDefault:"45"`
 	// IsTest determines if a service is being used for a test
 	IsTest bool
+	// MinCredits determines the minimum amount of credits needed to run simulations.
+	MinCredits int `env:"SIMSVC_SIM_MIN_CREDITS" envDefault:"100"`
 	// BillingEnabled is set to true when the application needs to have billing enabled.
 	BillingEnabled bool `env:"SIMSVC_BILLING_ENABLED" envDefault:"false"`
 	// PaymentsURL contains the URL pointing to the Payments API.
@@ -2213,8 +2215,8 @@ func (s *Service) hasEnoughCredits(user *users.User) error {
 		return err
 	}
 	// TODO: Change 100 to env var
-	if res.Credits < 100 {
-		return errors.New("not enough credits")
+	if res.Credits < s.cfg.MinCredits {
+		return fmt.Errorf("not enough credits (%d), should have at least %d credits", res.Credits, s.cfg.MinCredits)
 	}
 	return nil
 }
