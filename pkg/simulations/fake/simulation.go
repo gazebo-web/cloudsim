@@ -20,6 +20,26 @@ type fakeSimulation struct {
 	platform   *string
 	launchedAt *time.Time
 	rate       *calculator.Rate
+	stoppedAt  *time.Time
+}
+
+func (f *fakeSimulation) GetRate() calculator.Rate {
+	if f.rate != nil {
+		return *f.rate
+	}
+	return calculator.Rate{
+		Amount:    0,
+		Currency:  "usd",
+		Frequency: time.Hour,
+	}
+}
+
+func (f *fakeSimulation) GetStoppedAt() *time.Time {
+	return f.stoppedAt
+}
+
+func (f *fakeSimulation) ApplyRate() (uint, error) {
+	return 0, nil
 }
 
 // SetRate sets the given rate.

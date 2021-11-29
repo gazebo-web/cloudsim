@@ -152,4 +152,13 @@ type Simulation interface {
 
 	// SetRate sets the given rate to this simulation.
 	SetRate(rate calculator.Rate)
+
+	// GetRate returns the rate at which this simulation should be charged.
+	GetRate() calculator.Rate
+
+	// GetStoppedAt returns the date and time when a simulation stopped from running.
+	GetStoppedAt() *time.Time
+
+	// ApplyRate applies the current rate to this simulation resulting in the amount of money that it should be charged.
+	ApplyRate() (uint, error)
 }

@@ -6,6 +6,7 @@ import (
 	credits "gitlab.com/ignitionrobotics/billing/credits/pkg/client"
 	apiPayments "gitlab.com/ignitionrobotics/billing/payments/pkg/api"
 	payments "gitlab.com/ignitionrobotics/billing/payments/pkg/client"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
 	"gitlab.com/ignitionrobotics/web/fuelserver/bundles/users"
 	"gitlab.com/ignitionrobotics/web/ign-go"
 	"net/url"
@@ -38,6 +39,8 @@ type Service interface {
 	CreateSession(ctx context.Context, in CreateSessionRequest) (CreateSessionResponse, error)
 	// IsEnabled returns true when this service is enabled.
 	IsEnabled() bool
+	// SubtractCredits subtracts the credits from the given user for the amount of time the given simulation has been running.
+	SubtractCredits(ctx context.Context, user *users.User, sim simulations.Simulation) error
 }
 
 // service is a Service implementation using the payments and credits V1 API.
@@ -57,6 +60,30 @@ type service struct {
 
 	// enabled is set to true when this service is enabled.
 	enabled bool
+}
+
+// SubtractCredits subtracts the credits from the given user for the amount of time the given simulation has been running.
+func (s *service) SubtractCredits(ctx context.Context, user *users.User, sim simulations.Simulation) error {
+	rate := sim.GetRate()
+
+	price, err := sim.ApplyRate()
+	if err != nil {
+		return err
+	}
+
+	_, err = s.credits.DecreaseCredits(ctx, apiCredits.DecreaseCreditsRequest{
+		Transaction: apiCredits.Transaction{
+			Handle:      *user.Username,
+			Amount:      price,
+			Currency:    rate.Currency,
+			Application: s.applicationName,
+		},
+	})
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // IsEnabled returns true when this service is enabled.

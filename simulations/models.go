@@ -3,12 +3,14 @@ package simulations
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/jinzhu/gorm"
 	subtsim "gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/simulations"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/calculator"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
 	"gitlab.com/ignitionrobotics/web/ign-go"
+	"math"
 	"strconv"
 	"strings"
 	"time"
@@ -93,6 +95,35 @@ type SimulationDeployment struct {
 	Score *float64 `json:"score,omitempty"`
 	// Rate is the rate at which this simulation should be charged for in USD.
 	Rate *uint
+}
+
+func (dep *SimulationDeployment) GetRate() calculator.Rate {
+	var rate uint
+	if dep.Rate != nil {
+		rate = *dep.Rate
+	}
+	return calculator.Rate{
+		Amount:    rate,
+		Currency:  "usd",
+		Frequency: time.Hour,
+	}
+}
+
+func (dep *SimulationDeployment) GetStoppedAt() *time.Time {
+	return dep.StoppedAt
+}
+
+// ApplyRate applies the current rate to this simulation resulting in the amount of money that it should be charged.
+func (dep *SimulationDeployment) ApplyRate() (uint, error) {
+	if dep.Rate == nil {
+		return 0, errors.New("rate not defined")
+	}
+	if dep.LaunchedAt == nil || dep.StoppedAt == nil {
+		return 0, errors.New("simulation should have been launched and marked as stopped before being charged")
+	}
+	duration := dep.StoppedAt.Sub(*dep.LaunchedAt)
+	hours := uint(math.Ceil(duration.Hours()))
+	return *dep.Rate * hours, nil
 }
 
 // SetRate sets the given rate to the current simulation.
