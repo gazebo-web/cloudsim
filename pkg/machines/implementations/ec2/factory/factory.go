@@ -75,7 +75,7 @@ func initializeAPI(config *Config, dependencies *Dependencies) error {
 
 // initializePricingAPI initializes the Pricing API dependency.
 func initializePricingAPI(config *Config, dependencies *Dependencies) error {
-	if dependencies.API != nil {
+	if dependencies.PricingAPI != nil {
 		return nil
 	}
 
