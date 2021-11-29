@@ -19,19 +19,14 @@ type priceEC2 struct {
 	Frequency string `json:"frequency"`
 
 	// Amounts groups the currencies and the respective amounts of money that a certain EC2 machines can be charged for.
-	Amounts []struct {
-		// Currency holds the currency code
-		Currency string `json:"currency"`
-		// Amount is the amount of money to charge.
-		Amount string `json:"amount"`
-	} `json:"amounts"`
+	Amounts map[string]string `json:"amounts"`
 }
 
 // ParseEC2 is a PriceParser func used for parsing EC2 pricing. It reads the given product definition and returns
 // a rate at which the given product should be charged.
 // If multiple currencies are present, it returns the first one it finds.
 func ParseEC2(product aws.JSONValue) (calculator.Rate, error) {
-	q, err := gojq.Parse("{frequency: .terms.OnDemand[].priceDimensions[].unit, amounts: .terms.OnDemand[].priceDimensions[].pricePerUnit | to_entries | map_values({ currency: .key, amount: .value }) }")
+	q, err := gojq.Parse("{frequency: .terms.OnDemand[].priceDimensions[].unit, amounts: .terms.OnDemand[].priceDimensions[].pricePerUnit }")
 	if err != nil {
 		return calculator.Rate{}, err
 	}
@@ -47,14 +42,19 @@ func ParseEC2(product aws.JSONValue) (calculator.Rate, error) {
 		return calculator.Rate{}, err
 	}
 
-	amount, err := strconv.ParseFloat(p.Amounts[0].Amount, 64)
+	money, ok := p.Amounts["USD"]
+	if !ok {
+		return calculator.Rate{}, errors.New("amount in usd currency not found")
+	}
+
+	amount, err := strconv.ParseFloat(money, 64)
 	if err != nil {
 		return calculator.Rate{}, err
 	}
 
 	return calculator.Rate{
 		Amount:    parseAmount(amount),
-		Currency:  parseCurrency(p.Amounts[0].Currency),
+		Currency:  parseCurrency("usd"),
 		Frequency: parseFrequency(p.Frequency),
 	}, nil
 }
