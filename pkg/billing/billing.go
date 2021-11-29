@@ -36,6 +36,8 @@ type Service interface {
 	GetBalance(ctx context.Context, user *users.User) (GetBalanceResponse, error)
 	// CreateSession creates a new payment session.
 	CreateSession(ctx context.Context, in CreateSessionRequest) (CreateSessionResponse, error)
+	// IsEnabled returns true when this service is enabled.
+	IsEnabled() bool
 }
 
 // service is a Service implementation using the payments and credits V1 API.
@@ -52,6 +54,14 @@ type service struct {
 
 	// logger is used to log relevant information in different methods.
 	logger ign.Logger
+
+	// enabled is set to true when this service is enabled.
+	enabled bool
+}
+
+// IsEnabled returns true when this service is enabled.
+func (s *service) IsEnabled() bool {
+	return s.enabled
 }
 
 // CreateSession creates a new payment session.
