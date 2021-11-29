@@ -2,7 +2,6 @@ package aws
 
 import (
 	"errors"
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/itchyny/gojq"
 	"github.com/mitchellh/mapstructure"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/calculator"
@@ -24,7 +23,7 @@ type priceEC2 struct {
 
 // ParseEC2 is a PriceParser func used for parsing EC2 pricing. It reads the given product definition and returns
 // a rate at which the given product should be charged in USD.
-func ParseEC2(product aws.JSONValue) (calculator.Rate, error) {
+func ParseEC2(product map[string]interface{}) (calculator.Rate, error) {
 	q, err := gojq.Parse("{frequency: .terms.OnDemand[].priceDimensions[].unit, amounts: .terms.OnDemand[].priceDimensions[].pricePerUnit }")
 	if err != nil {
 		return calculator.Rate{}, err
