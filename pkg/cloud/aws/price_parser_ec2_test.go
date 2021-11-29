@@ -25,10 +25,10 @@ func TestPriceParserEC2(t *testing.T) {
 }
 
 func TestNormalizeAmount(t *testing.T) {
-	assert.Equal(t, uint(114), normalizeAmount(1.14))
-	assert.Equal(t, uint(235), normalizeAmount(2.35))
-	assert.Equal(t, uint(1514), normalizeAmount(15.14))
-	assert.Equal(t, uint(70), normalizeAmount(0.7))
-	assert.Equal(t, uint(104), normalizeAmount(1.04))
-	assert.Equal(t, uint(30), normalizeAmount(0.3))
+	assert.Equal(t, uint(114), parseAmount(1.14))
+	assert.Equal(t, uint(235), parseAmount(2.35))
+	assert.Equal(t, uint(1514), parseAmount(15.14))
+	assert.Equal(t, uint(70), parseAmount(0.7))
+	assert.Equal(t, uint(104), parseAmount(1.04))
+	assert.Equal(t, uint(30), parseAmount(0.3))
 }

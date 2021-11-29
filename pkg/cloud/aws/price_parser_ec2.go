@@ -53,15 +53,15 @@ func ParseEC2(product aws.JSONValue) (calculator.Rate, error) {
 	}
 
 	return calculator.Rate{
-		Amount:    normalizeAmount(amount),
-		Currency:  normalizeCurrency(p.Amounts[0].Currency),
-		Frequency: normalizeFrequency(p.Frequency),
+		Amount:    parseAmount(amount),
+		Currency:  parseCurrency(p.Amounts[0].Currency),
+		Frequency: parseFrequency(p.Frequency),
 	}, nil
 }
 
-// normalizeFrequency converts the given unit of time from AWS to time.Duration.
+// parseFrequency converts the given unit of time from AWS to time.Duration.
 // It defaults to time.Hour.
-func normalizeFrequency(timeUnit string) time.Duration {
+func parseFrequency(timeUnit string) time.Duration {
 	switch timeUnit {
 	case "Hrs":
 		return time.Hour
@@ -69,13 +69,13 @@ func normalizeFrequency(timeUnit string) time.Duration {
 	return time.Hour
 }
 
-// normalizeCurrency converts the given currency into a ISO 4217 currency code in lowercase format.
-func normalizeCurrency(currency string) string {
+// parseCurrency converts the given currency into a ISO 4217 currency code in lowercase format.
+func parseCurrency(currency string) string {
 	return strings.ToLower(currency)
 }
 
-// normalizeAmount converts the given amount to cents in USD.
-func normalizeAmount(amount float64) uint {
+// parseAmount converts the given amount to cents in USD.
+func parseAmount(amount float64) uint {
 	return uint(math.Round(amount * 100))
 }
 
