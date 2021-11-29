@@ -18,7 +18,7 @@ const (
 // PriceParser parses a given AWS price result from the Pricing API and returns a calculator.Rate value.
 // Different implementations depending on the response of the Pricing API can be added using this function signature.
 // EC2 example: ParseEC2
-type PriceParser func(price aws.JSONValue) (calculator.Rate, error)
+type PriceParser func(price map[string]interface{}) (calculator.Rate, error)
 
 // costCalculator provides an AWS calculator for different services.
 type costCalculator struct {
