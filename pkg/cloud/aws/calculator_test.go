@@ -66,7 +66,7 @@ func TestCalculator(t *testing.T) {
 		},
 	}
 
-	c := NewCostCalculator(&pricingMock{
+	c := newCostCalculator(&pricingMock{
 		T:                t,
 		ExpectedResource: res,
 	}, ParseEC2, KindMachines)

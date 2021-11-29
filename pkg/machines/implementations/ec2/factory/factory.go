@@ -40,7 +40,7 @@ func NewFunc(config interface{}, dependencies factory.Dependencies, out interfac
 		WorkerGroupName: typeConfig.WorkerGroupName,
 		Region:          typeConfig.Region,
 		Zones:           typeConfig.Zones,
-		CostCalculator:  aws.NewCostCalculator(typeDependencies.PricingAPI, aws.ParseEC2, aws.KindMachines),
+		CostCalculator:  aws.NewCostCalculatorEC2(typeDependencies.PricingAPI),
 	})
 	if err != nil {
 		return err

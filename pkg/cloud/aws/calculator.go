@@ -92,11 +92,16 @@ func (c *costCalculator) appendServiceCodeFilter(filters []*pricing.Filter) []*p
 	})
 }
 
-// NewCostCalculator initializes a new cost calculator for a certain AWS resource.
-func NewCostCalculator(api pricingiface.PricingAPI, priceParser PriceParser, resource string) calculator.CostCalculator {
+// newCostCalculator initializes a new cost calculator for a certain AWS resource.
+func newCostCalculator(api pricingiface.PricingAPI, priceParser PriceParser, resource string) calculator.CostCalculator {
 	return &costCalculator{
 		API:         api,
 		priceParser: priceParser,
 		resource:    resource,
 	}
+}
+
+// NewCostCalculatorEC2 initializes a new cost calculator for AWS EC2 resources.
+func NewCostCalculatorEC2(api pricingiface.PricingAPI) calculator.CostCalculator {
+	return newCostCalculator(api, ParseEC2, KindMachines)
 }
