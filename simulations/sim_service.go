@@ -201,6 +201,8 @@ type simServConfig struct {
 	MaxDurationForSimulations int `env:"SIMSVC_SIM_MAX_DURATION_MINUTES" envDefault:"45"`
 	// IsTest determines if a service is being used for a test
 	IsTest bool
+	// MinCredits determines the minimum amount of credits needed to run simulations.
+	MinCredits int `env:"SIMSVC_SIM_MIN_CREDITS" envDefault:"100"`
 	// BillingEnabled is set to true when the application needs to have billing enabled.
 	BillingEnabled bool `env:"SIMSVC_BILLING_ENABLED" envDefault:"false"`
 	// PaymentsURL contains the URL pointing to the Payments API.
@@ -1106,6 +1108,12 @@ func (s *Service) StartSimulationAsync(ctx context.Context,
 			if err != nil {
 				return nil, ign.NewErrorMessageWithBase(ign.ErrorDbSave, err)
 			}
+		}
+	}
+
+	if !isAdmin && s.isBillingEnabled() {
+		if err := s.hasEnoughCredits(user); err != nil {
+			return nil, ign.NewErrorMessageWithBase(ign.ErrorDbSave, err)
 		}
 	}
 
@@ -2193,4 +2201,21 @@ func (s *Service) initSimulator() simulator.Simulator {
 		ActionService:         s.actionService,
 		DisableDefaultActions: false,
 	})
+}
+
+// isBillingEnabled returns true if billing is enabled.
+func (s *Service) isBillingEnabled() bool {
+	return s.cfg.BillingEnabled
+}
+
+// hasEnoughCredits checks that the given user has enough credits to run a simulation.
+func (s *Service) hasEnoughCredits(user *users.User) error {
+	res, err := s.billing.GetBalance(context.Background(), user)
+	if err != nil {
+		return err
+	}
+	if res.Credits < s.cfg.MinCredits {
+		return fmt.Errorf("not enough credits (%d), should have at least %d credits", res.Credits, s.cfg.MinCredits)
+	}
+	return nil
 }
