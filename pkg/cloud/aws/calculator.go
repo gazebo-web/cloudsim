@@ -23,8 +23,11 @@ type PriceParser func(price aws.JSONValue) (calculator.Rate, error)
 // costCalculator provides an AWS calculator for different services.
 type costCalculator struct {
 	// API holds a reference to a pricingiface.PricingAPI implementation.
-	API         pricingiface.PricingAPI
+	API pricingiface.PricingAPI
+	// priceParser holds a reference to a specific price parser implementation such as ParseEC2.
 	priceParser PriceParser
+	// resource describes the name of the service that is being used to calculate costs from.
+	resource string
 }
 
 // CalculateCost calculates the cost of an arbitrary set of AWS resources.
@@ -42,11 +45,13 @@ func (c *costCalculator) CalculateCost(resources []calculator.Resource) (calcula
 
 // calculateRate calculates the rate of a given resource.
 func (c *costCalculator) calculateRate(res calculator.Resource) (calculator.Rate, error) {
+	filters := c.convertResourceToFilters(res)
+	filters = c.appendServiceCodeFilter(filters)
 	list, err := c.API.GetProducts(&pricing.GetProductsInput{
 		FormatVersion: aws.String("aws_v1"),
 		MaxResults:    aws.Int64(1),
-		ServiceCode:   aws.String(res.Kind),
-		Filters:       c.convertResourceToFilters(res),
+		ServiceCode:   aws.String(c.resource),
+		Filters:       filters,
 	})
 	if err != nil {
 		return calculator.Rate{}, err
@@ -78,10 +83,20 @@ func (c *costCalculator) convertResourceToFilters(resource calculator.Resource) 
 	return filters
 }
 
+// appendServiceCodeFilter adds a service code filter to the given list of filters.
+func (c *costCalculator) appendServiceCodeFilter(filters []*pricing.Filter) []*pricing.Filter {
+	return append(filters, &pricing.Filter{
+		Field: aws.String("ServiceCode"),
+		Type:  aws.String(pricing.FilterTypeTermMatch),
+		Value: &c.resource,
+	})
+}
+
 // NewCostCalculator initializes a new cost calculator for a certain AWS resource.
-func NewCostCalculator(api pricingiface.PricingAPI, priceParser PriceParser) calculator.CostCalculator {
+func NewCostCalculator(api pricingiface.PricingAPI, priceParser PriceParser, resource string) calculator.CostCalculator {
 	return &costCalculator{
 		API:         api,
 		priceParser: priceParser,
+		resource:    resource,
 	}
 }

@@ -55,7 +55,6 @@ func (api *pricingMock) GetProducts(input *pricing.GetProductsInput) (*pricing.G
 
 func TestCalculator(t *testing.T) {
 	res := calculator.Resource{
-		Kind: KindMachines,
 		Values: map[string]interface{}{
 			"ServiceCode":     "AmazonEC2",
 			"instanceType":    "g3.4xlarge",
@@ -70,7 +69,7 @@ func TestCalculator(t *testing.T) {
 	c := NewCostCalculator(&pricingMock{
 		T:                t,
 		ExpectedResource: res,
-	}, ParseEC2)
+	}, ParseEC2, KindMachines)
 
 	rate, err := c.CalculateCost([]calculator.Resource{res})
 	require.NoError(t, err)

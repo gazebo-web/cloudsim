@@ -11,7 +11,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2/ec2iface"
 	"github.com/pkg/errors"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/calculator"
-	cloud "gitlab.com/ignitionrobotics/web/cloudsim/pkg/cloud/aws"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/cycler"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/defaults"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/machines"
@@ -629,9 +628,7 @@ func (m *ec2Machines) convertCreateMachinesInputToResources(inputs []machines.Cr
 	outputs := make([]calculator.Resource, len(inputs))
 	for i, in := range inputs {
 		outputs[i] = calculator.Resource{
-			Kind: cloud.KindMachines,
 			Values: map[string]interface{}{
-				"ServiceCode":     cloud.KindMachines,
 				"instanceType":    in.Type,
 				"marketoption":    "OnDemand",
 				"operatingSystem": "Linux",
