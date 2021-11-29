@@ -105,6 +105,8 @@ type Config struct {
 	ApplicationName string
 	// Timeout is the amount of time a client can wait until a timeout occurs.
 	Timeout time.Duration
+	// Enabled is set to true if the service should be enabled.
+	Enabled bool
 }
 
 // NewService initializes a new Service implementation using the given config.
@@ -125,5 +127,6 @@ func NewService(cfg Config, logger ign.Logger) (Service, error) {
 		credits:         c,
 		applicationName: cfg.ApplicationName,
 		logger:          logger,
+		enabled:         cfg.Enabled,
 	}, nil
 }
