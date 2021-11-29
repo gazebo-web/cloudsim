@@ -1109,6 +1109,12 @@ func (s *Service) StartSimulationAsync(ctx context.Context,
 		}
 	}
 
+	if !isAdmin && s.shouldChargeCreator() {
+		if err := s.hasEnoughCredits(user); err != nil {
+			return nil, ign.NewErrorMessageWithBase(ign.ErrorDbSave, err)
+		}
+	}
+
 	// Set read and write permissions to owner (eg, the team) and to the Application
 	// organizing team (eg. subt).
 	if em := s.bulkAddPermissions(groupID, []per.Action{per.Read, per.Write}, owner, *simDep.Application); em != nil {
@@ -2193,4 +2199,22 @@ func (s *Service) initSimulator() simulator.Simulator {
 		ActionService:         s.actionService,
 		DisableDefaultActions: false,
 	})
+}
+
+// shouldChargeCreator returns true if billing is enabled.
+func (s *Service) shouldChargeCreator() bool {
+	return s.cfg.BillingEnabled
+}
+
+// hasEnoughCredits checks that the given user has enough credits to run a simulation.
+func (s *Service) hasEnoughCredits(user *users.User) error {
+	res, err := s.billing.GetBalance(context.Background(), user)
+	if err != nil {
+		return err
+	}
+	// TODO: Change 100 to env var
+	if res.Credits < 100 {
+		return errors.New("not enough credits")
+	}
+	return nil
 }
