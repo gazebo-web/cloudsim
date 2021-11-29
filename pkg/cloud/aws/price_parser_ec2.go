@@ -69,7 +69,7 @@ func normalizeFrequency(timeUnit string) time.Duration {
 	return time.Hour
 }
 
-// normalizeCurrency converts the given currency into a ISO 1472 currency code in lowercase format.
+// normalizeCurrency converts the given currency into a ISO 4217 currency code in lowercase format.
 func normalizeCurrency(currency string) string {
 	return strings.ToLower(currency)
 }
