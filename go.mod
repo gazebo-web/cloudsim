@@ -16,10 +16,10 @@ require (
 	github.com/fatih/structtag v1.2.0
 	github.com/go-playground/form v3.1.4+incompatible
 	github.com/golang/protobuf v1.4.2
-	github.com/google/go-cmp v0.5.4 // indirect
 	github.com/gorilla/mux v1.8.0
 	github.com/gorilla/websocket v1.4.2
 	github.com/imdario/mergo v0.3.8
+	github.com/itchyny/gojq v0.12.5
 	github.com/jinzhu/gorm v1.9.16
 	github.com/johannesboyne/gofakes3 v0.0.0-20210116212202-e8b5dbd08102
 	github.com/joho/godotenv v1.3.0
@@ -44,7 +44,6 @@ require (
 	golang.org/x/crypto v0.0.0-20200820211705-5c72a883971a // indirect
 	golang.org/x/mod v0.4.0 // indirect
 	golang.org/x/net v0.0.0-20201021035429-f5854403a974
-	golang.org/x/sys v0.0.0-20201009025420-dfb3f7c4e634 // indirect
 	golang.org/x/text v0.3.4 // indirect
 	golang.org/x/tools v0.0.0-20210105210202-9ed45478a130 // indirect
 	google.golang.org/protobuf v1.25.0

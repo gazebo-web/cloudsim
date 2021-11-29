@@ -2,6 +2,7 @@ package fake
 
 import (
 	"github.com/stretchr/testify/mock"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/calculator"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/machines"
 )
 
@@ -12,10 +13,10 @@ type Machines struct {
 	*mock.Mock
 }
 
-// CalculateCosts mocks the CalculateCosts method.
-func (m *Machines) CalculateCosts(input []machines.CreateMachinesInput) (machines.CalculateCostsOutput, error) {
-	args := m.Called(input)
-	return args.Get(0).(machines.CalculateCostsOutput), args.Error(1)
+// CalculateCost mocks the CalculateCost method.
+func (m *Machines) CalculateCost(inputs []machines.CreateMachinesInput) (calculator.Rate, error) {
+	args := m.Called(inputs)
+	return args.Get(0).(calculator.Rate), args.Error(1)
 }
 
 // List mocks the List method.
