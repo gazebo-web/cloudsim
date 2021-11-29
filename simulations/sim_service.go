@@ -1111,7 +1111,7 @@ func (s *Service) StartSimulationAsync(ctx context.Context,
 		}
 	}
 
-	if !isAdmin && s.shouldChargeCreator() {
+	if !isAdmin && s.isBillingEnabled() {
 		if err := s.hasEnoughCredits(user); err != nil {
 			return nil, ign.NewErrorMessageWithBase(ign.ErrorDbSave, err)
 		}
@@ -2203,8 +2203,8 @@ func (s *Service) initSimulator() simulator.Simulator {
 	})
 }
 
-// shouldChargeCreator returns true if billing is enabled.
-func (s *Service) shouldChargeCreator() bool {
+// isBillingEnabled returns true if billing is enabled.
+func (s *Service) isBillingEnabled() bool {
 	return s.cfg.BillingEnabled
 }
 
