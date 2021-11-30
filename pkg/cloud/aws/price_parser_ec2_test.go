@@ -5,13 +5,13 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"os"
+	"io/ioutil"
 	"testing"
 	"time"
 )
 
 func TestPriceParserEC2(t *testing.T) {
-	b, err := os.ReadFile("./price_ec2.json")
+	b, err := ioutil.ReadFile("./price_ec2.json")
 	require.NoError(t, err)
 
 	var value aws.JSONValue

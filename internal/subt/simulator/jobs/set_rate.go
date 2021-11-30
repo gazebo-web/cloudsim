@@ -13,8 +13,8 @@ var SetRate = &actions.Job{
 	PreHooks:   []actions.JobFunc{setStartState},
 	Execute:    setRate,
 	PostHooks:  []actions.JobFunc{returnState},
-	InputType:  actions.GetJobDataType(&state.StopSimulation{}),
-	OutputType: actions.GetJobDataType(&state.StopSimulation{}),
+	InputType:  actions.GetJobDataType(&state.StartSimulation{}),
+	OutputType: actions.GetJobDataType(&state.StartSimulation{}),
 }
 
 // setRate is the execute function of the SetRate job that will set the rate a which a simulation should be charged.

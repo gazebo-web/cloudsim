@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/calculator"
-	"os"
+	"io/ioutil"
 	"testing"
 )
 
@@ -40,7 +40,7 @@ func (api *pricingMock) GetProducts(input *pricing.GetProductsInput) (*pricing.G
 		assert.Equal(api.T, v, *r.Value)
 	}
 
-	b, err := os.ReadFile("./price_ec2.json")
+	b, err := ioutil.ReadFile("./price_ec2.json")
 	require.NoError(api.T, err)
 
 	var value aws.JSONValue
