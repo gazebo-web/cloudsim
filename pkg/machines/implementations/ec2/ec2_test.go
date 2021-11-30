@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/stretchr/testify/suite"
+	cloud "gitlab.com/ignitionrobotics/web/cloudsim/pkg/cloud/aws"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/cycler"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/machines"
 	"gitlab.com/ignitionrobotics/web/ign-go"
@@ -52,9 +53,10 @@ func (s *EC2MachinesTestSuite) TestNewMachines() {
 	ec := ec2.New(session)
 	logger := ign.NewLoggerNoRollbar("TestNewMachines", ign.VerbosityDebug)
 	m, err := NewMachines(&NewInput{
-		API:    ec,
-		Logger: logger,
-		Zones:  s.zones,
+		API:            ec,
+		CostCalculator: cloud.NewCostCalculatorEC2(nil),
+		Logger:         logger,
+		Zones:          s.zones,
 	})
 	s.Require().NoError(err)
 	e, ok := m.(*ec2Machines)
