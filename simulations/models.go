@@ -94,9 +94,10 @@ type SimulationDeployment struct {
 	// Score has the simulation's score. It's updated when the simulations finishes and gets processed.
 	Score *float64 `json:"score,omitempty"`
 	// Rate is the rate at which this simulation should be charged for in USD.
-	Rate *uint
+	Rate *uint `json:"-"`
 }
 
+// GetRate returns at which rate this simulation will be charged per hour.
 func (dep *SimulationDeployment) GetRate() calculator.Rate {
 	var rate uint
 	if dep.Rate != nil {
@@ -109,6 +110,7 @@ func (dep *SimulationDeployment) GetRate() calculator.Rate {
 	}
 }
 
+// GetStoppedAt returns at what time the simulation stopped. It returns nil if the simulation didn't stop.
 func (dep *SimulationDeployment) GetStoppedAt() *time.Time {
 	return dep.StoppedAt
 }
