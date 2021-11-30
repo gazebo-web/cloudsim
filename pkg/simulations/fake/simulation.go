@@ -23,6 +23,7 @@ type fakeSimulation struct {
 	stoppedAt  *time.Time
 }
 
+// GetRate returns the rate.
 func (f *fakeSimulation) GetRate() calculator.Rate {
 	if f.rate != nil {
 		return *f.rate
@@ -34,10 +35,12 @@ func (f *fakeSimulation) GetRate() calculator.Rate {
 	}
 }
 
+// GetStoppedAt returns the stopped at field.
 func (f *fakeSimulation) GetStoppedAt() *time.Time {
 	return f.stoppedAt
 }
 
+// ApplyRate mocks applying a rate to the current fake simulation.
 func (f *fakeSimulation) ApplyRate() (uint, error) {
 	return 0, nil
 }
