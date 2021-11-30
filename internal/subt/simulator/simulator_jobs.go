@@ -12,6 +12,7 @@ var JobsStartSimulation = actions.Jobs{
 	jobs.CheckSimulationNoErrors,
 	jobs.SetSimulationStatusToLaunchInstances,
 	jobs.LaunchInstances,
+	jobs.SetRate,
 	jobs.SetSimulationStatusToWaitInstances,
 	jobs.WaitForInstances,
 	jobs.SetSimulationStatusToWaitNodes,
@@ -69,4 +70,5 @@ var JobsStopSimulation = actions.Jobs{
 	jobs.SetSimulationStatusToDeletingNodes,
 	jobs.RemoveInstances,
 	jobs.SetSimulationStatusToTerminated,
+	jobs.ChargeUser,
 }
