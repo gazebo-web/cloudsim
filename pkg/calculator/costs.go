@@ -53,9 +53,6 @@ func AggregateRates(rates []Rate) Rate {
 // Resource groups a set of fields from a resource consumed by cloudsim. It's used to calculate the cost at which
 // the resource should be charged for.
 type Resource struct {
-	// Kind represents what kind of resource is being used to calculate its Rate.
-	Kind string
-
 	// Values contains a set of arbitrary values used to calculate the Rate of this resource.
 	Values map[string]interface{}
 }
