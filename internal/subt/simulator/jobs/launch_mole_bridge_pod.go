@@ -71,7 +71,7 @@ func prepareMoleBridgePodInput(store actions.Store, tx *gorm.DB, deployment *act
 		org, em := s.Services().Users().GetOrganization(*owner)
 		// If the owner is not an organization, by-pass the mole bridge pod job.
 		if em != nil {
-			return nil, nil
+			return jobs.LaunchPodsInput([]pods.CreatePodInput{}), nil
 		}
 		teamID = int(org.ID)
 	}
