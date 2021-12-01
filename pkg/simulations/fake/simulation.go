@@ -40,9 +40,12 @@ func (f *fakeSimulation) GetStoppedAt() *time.Time {
 	return f.stoppedAt
 }
 
-// ApplyRate mocks applying a rate to the current fake simulation.
-func (f *fakeSimulation) ApplyRate() (uint, error) {
-	return 0, nil
+// GetCost mocks the GetCost method.
+func (f *fakeSimulation) GetCost() (uint, calculator.Rate, error) {
+	if f.rate == nil {
+		return 0, calculator.Rate{}, nil
+	}
+	return 0, *f.rate, nil
 }
 
 // SetRate sets the given rate.

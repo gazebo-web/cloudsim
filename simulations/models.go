@@ -93,7 +93,7 @@ type SimulationDeployment struct {
 	AuthorizationToken *string `json:"-"`
 	// Score has the simulation's score. It's updated when the simulations finishes and gets processed.
 	Score *float64 `json:"score,omitempty"`
-	// Rate is the rate at which this simulation should be charged for in USD.
+	// Rate is the rate at which this simulation should be charged for in USD per hour.
 	Rate *uint `json:"-"`
 }
 
@@ -115,17 +115,18 @@ func (dep *SimulationDeployment) GetStoppedAt() *time.Time {
 	return dep.StoppedAt
 }
 
-// ApplyRate applies the current rate to this simulation resulting in the amount of money that it should be charged.
-func (dep *SimulationDeployment) ApplyRate() (uint, error) {
+// GetCost applies the current rate to this simulation resulting in the amount of money that it should be charged.
+// The calculation will always be rounded up to the closest hour
+func (dep *SimulationDeployment) GetCost() (uint, calculator.Rate, error) {
 	if dep.Rate == nil {
-		return 0, errors.New("rate not defined")
+		return 0, calculator.Rate{}, errors.New("rate not defined")
 	}
 	if dep.LaunchedAt == nil || dep.StoppedAt == nil {
-		return 0, errors.New("simulation should have been launched and marked as stopped before being charged")
+		return 0, dep.GetRate(), errors.New("simulation should have been launched and marked as stopped before being charged")
 	}
 	duration := dep.StoppedAt.Sub(*dep.LaunchedAt)
 	hours := uint(math.Ceil(duration.Hours()))
-	return *dep.Rate * hours, nil
+	return *dep.Rate * hours, dep.GetRate(), nil
 }
 
 // SetRate sets the given rate to the current simulation.

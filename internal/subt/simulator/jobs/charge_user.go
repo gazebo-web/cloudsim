@@ -30,6 +30,10 @@ func chargeUser(store actions.Store, tx *gorm.DB, deployment *actions.Deployment
 		return nil, err
 	}
 
+	if s.SubTServices().Users().IsSystemAdmin(sim.GetCreator()) {
+		return s, nil
+	}
+
 	user, em := s.SubTServices().Users().GetUserFromUsername(sim.GetCreator())
 	if em != nil {
 		return nil, em.BaseError

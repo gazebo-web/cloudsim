@@ -159,6 +159,6 @@ type Simulation interface {
 	// GetStoppedAt returns the date and time when a simulation stopped from running.
 	GetStoppedAt() *time.Time
 
-	// ApplyRate applies the current rate to this simulation resulting in the amount of money that it should be charged.
-	ApplyRate() (uint, error)
+	// GetCost applies the current rate to this simulation resulting in the amount of money that it should be charged.
+	GetCost() (uint, calculator.Rate, error)
 }

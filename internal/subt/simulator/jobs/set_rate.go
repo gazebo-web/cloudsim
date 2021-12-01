@@ -25,12 +25,16 @@ func setRate(store actions.Store, tx *gorm.DB, deployment *actions.Deployment, v
 		return s, nil
 	}
 
-	rate, err := s.Platform().Machines().CalculateCost(s.CreateMachinesInput)
+	sim, err := s.SubTServices().Simulations().Get(s.GroupID)
 	if err != nil {
 		return nil, err
 	}
 
-	sim, err := s.SubTServices().Simulations().Get(s.GroupID)
+	if !s.SubTServices().Users().IsSystemAdmin(sim.GetCreator()) {
+		return s, nil
+	}
+
+	rate, err := s.Platform().Machines().CalculateCost(s.CreateMachinesInput)
 	if err != nil {
 		return nil, err
 	}

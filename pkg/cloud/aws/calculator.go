@@ -26,8 +26,8 @@ type costCalculator struct {
 	API pricingiface.PricingAPI
 	// priceParser holds a reference to a specific price parser implementation such as ParseEC2.
 	priceParser PriceParser
-	// resource describes the name of the service that is being used to calculate costs from.
-	resource string
+	// kind describes the name of the service that is being used to calculate costs from.
+	kind string
 }
 
 // CalculateCost calculates the cost of an arbitrary set of AWS resources.
@@ -50,7 +50,7 @@ func (c *costCalculator) calculateRate(res calculator.Resource) (calculator.Rate
 	list, err := c.API.GetProducts(&pricing.GetProductsInput{
 		FormatVersion: aws.String("aws_v1"),
 		MaxResults:    aws.Int64(1),
-		ServiceCode:   aws.String(c.resource),
+		ServiceCode:   aws.String(c.kind),
 		Filters:       filters,
 	})
 	if err != nil {
@@ -88,16 +88,16 @@ func (c *costCalculator) appendServiceCodeFilter(filters []*pricing.Filter) []*p
 	return append(filters, &pricing.Filter{
 		Field: aws.String("ServiceCode"),
 		Type:  aws.String(pricing.FilterTypeTermMatch),
-		Value: &c.resource,
+		Value: &c.kind,
 	})
 }
 
-// newCostCalculator initializes a new cost calculator for a certain AWS resource.
-func newCostCalculator(api pricingiface.PricingAPI, priceParser PriceParser, resource string) calculator.CostCalculator {
+// newCostCalculator initializes a new cost calculator for a certain AWS kind.
+func newCostCalculator(api pricingiface.PricingAPI, priceParser PriceParser, kind string) calculator.CostCalculator {
 	return &costCalculator{
 		API:         api,
 		priceParser: priceParser,
-		resource:    resource,
+		kind:        kind,
 	}
 }
 
