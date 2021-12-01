@@ -30,7 +30,7 @@ func setRate(store actions.Store, tx *gorm.DB, deployment *actions.Deployment, v
 		return nil, err
 	}
 
-	if !s.SubTServices().Users().IsSystemAdmin(sim.GetCreator()) {
+	if s.SubTServices().Users().IsSystemAdmin(sim.GetCreator()) {
 		return s, nil
 	}
 
