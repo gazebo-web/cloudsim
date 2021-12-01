@@ -60,11 +60,14 @@ type service struct {
 
 	// enabled is set to true when this service is enabled.
 	enabled bool
+
+	// profitMargin is the value
+	profitMargin uint
 }
 
 // SubtractCredits subtracts the credits from the given user for the amount of time the given simulation has been running.
 func (s *service) SubtractCredits(ctx context.Context, user *users.User, sim simulations.Simulation) error {
-	price, rate, err := sim.GetCost()
+	cost, rate, err := sim.GetCost()
 	if err != nil {
 		return err
 	}
@@ -72,7 +75,7 @@ func (s *service) SubtractCredits(ctx context.Context, user *users.User, sim sim
 	_, err = s.credits.DecreaseCredits(ctx, apiCredits.DecreaseCreditsRequest{
 		Transaction: apiCredits.Transaction{
 			Handle:      *user.Username,
-			Amount:      price,
+			Amount:      s.applyProfitMargin(cost),
 			Currency:    rate.Currency,
 			Application: s.applicationName,
 		},
@@ -119,6 +122,11 @@ func (s *service) GetBalance(ctx context.Context, user *users.User) (GetBalanceR
 	return GetBalanceResponse(res), nil
 }
 
+// applyProfitMargin applies the profit margin to the given cost and returns the final price.
+func (s *service) applyProfitMargin(cost uint) uint {
+	return cost * s.profitMargin
+}
+
 // Config is used to configure new service implementations
 type Config struct {
 	// CreditsURL contains the URL of the Credits API.
@@ -132,6 +140,9 @@ type Config struct {
 	Timeout time.Duration
 	// Enabled is set to true if the service should be enabled.
 	Enabled bool
+	// ProfitMargin measures how much profit is generated from a simulation. Defines the amount by which the costs should be
+	// multiplied to generate a profit.
+	ProfitMargin uint
 }
 
 // NewService initializes a new Service implementation using the given config.
@@ -153,5 +164,6 @@ func NewService(cfg Config, logger ign.Logger) (Service, error) {
 		applicationName: cfg.ApplicationName,
 		logger:          logger,
 		enabled:         cfg.Enabled,
+		profitMargin:    cfg.ProfitMargin,
 	}, nil
 }
