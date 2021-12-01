@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/jinzhu/gorm"
 	subtsim "gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/simulations"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/calculator"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
 	"gitlab.com/ignitionrobotics/web/ign-go"
 	"strconv"
@@ -90,6 +91,13 @@ type SimulationDeployment struct {
 	AuthorizationToken *string `json:"-"`
 	// Score has the simulation's score. It's updated when the simulations finishes and gets processed.
 	Score *float64 `json:"score,omitempty"`
+	// Rate is the rate at which this simulation should be charged for in USD.
+	Rate *uint
+}
+
+// SetRate sets the given rate to the current simulation.
+func (dep *SimulationDeployment) SetRate(rate calculator.Rate) {
+	dep.Rate = &rate.Amount
 }
 
 // GetRunIndex returns the simulation's run index.

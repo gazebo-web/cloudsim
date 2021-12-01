@@ -2,6 +2,7 @@ package simulations
 
 import (
 	"errors"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/calculator"
 	"time"
 )
 
@@ -148,4 +149,7 @@ type Simulation interface {
 
 	// GetPlatform returns the Simulation's platform.
 	GetPlatform() *string
+
+	// SetRate sets the given rate to this simulation.
+	SetRate(rate calculator.Rate)
 }

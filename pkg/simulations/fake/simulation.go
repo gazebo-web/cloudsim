@@ -1,6 +1,7 @@
 package fake
 
 import (
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/calculator"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
 	"time"
 )
@@ -18,6 +19,12 @@ type fakeSimulation struct {
 	creator    string
 	platform   *string
 	launchedAt *time.Time
+	rate       *calculator.Rate
+}
+
+// SetRate sets the given rate.
+func (f *fakeSimulation) SetRate(rate calculator.Rate) {
+	f.rate = &rate
 }
 
 // IsProcessed returns if the simulation is processed.
@@ -86,7 +93,7 @@ func (f *fakeSimulation) GetKind() simulations.Kind {
 	return f.kind
 }
 
-// GetKind returns the simulation's kind.
+// GetPlatform returns the simulation's platform.
 func (f *fakeSimulation) GetPlatform() *string {
 	return f.platform
 }
