@@ -64,9 +64,7 @@ type service struct {
 
 // SubtractCredits subtracts the credits from the given user for the amount of time the given simulation has been running.
 func (s *service) SubtractCredits(ctx context.Context, user *users.User, sim simulations.Simulation) error {
-	rate := sim.GetRate()
-
-	price, err := sim.ApplyRate()
+	price, rate, err := sim.GetCost()
 	if err != nil {
 		return err
 	}
