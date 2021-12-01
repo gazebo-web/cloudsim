@@ -1,6 +1,9 @@
 package machines
 
-import "github.com/pkg/errors"
+import (
+	"github.com/pkg/errors"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/calculator"
+)
 
 var (
 	// ErrMissingKeyName is returned when the key name is missing.
@@ -259,16 +262,6 @@ type ListMachinesOutput struct {
 	Instances []ListMachinesItem
 }
 
-// CalculateCostsOutput is the output value returned by Machines.CalculateCosts. It describes the amount of money in
-// a certain currency that a group of machines costs.
-type CalculateCostsOutput struct {
-	// Amount is the money that the group of machines costs in the minimum currency value (e.g. cents for USD).
-	Amount int
-
-	// Currency is the ISO 4217 currency code in lowercase format.
-	Currency string
-}
-
 // Machines requests physical instances from a cloud provider on which to deploy applications
 type Machines interface {
 	// Create creates a set of cloud machines with a certain configuration.
@@ -288,6 +281,6 @@ type Machines interface {
 	// List returns a list of machines based on the given input.
 	List(input ListMachinesInput) (*ListMachinesOutput, error)
 
-	// CalculateCosts calculates the amount money in a certain currency a set of machines will cost per hour.
-	CalculateCosts(input []CreateMachinesInput) (CalculateCostsOutput, error)
+	// CalculateCost calculates the cost rate at which a group of machines would be charged for when they get created.
+	CalculateCost(inputs []CreateMachinesInput) (calculator.Rate, error)
 }

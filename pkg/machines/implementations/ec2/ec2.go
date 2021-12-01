@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/aws/aws-sdk-go/service/ec2/ec2iface"
 	"github.com/pkg/errors"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/calculator"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/cycler"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/defaults"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/machines"
@@ -85,8 +86,13 @@ type ec2Machines struct {
 	// API is an EC2 API implementation used to interact with the AWS EC2 service. The API configuration defines the
 	// region this component operates in.
 	API ec2iface.EC2API
+	// costCalculator is a calculator.CostCalculator implementation for AWS EC2 products. This cost calculator allows
+	// ec2Machines.CalculateCost to calculate the rate at which a group of machines will be charged.
+	costCalculator calculator.CostCalculator
 	// Logger is used to store log information.
 	Logger ign.Logger
+	// region contains the identifier of the region where this component points to.
+	region string
 	// zones contains the set of availability zones this component will launch simulation instances in.
 	zones cycler.Cycler
 	// workerGroupName contains a value used to tag provisioned EC2 machines.
@@ -607,18 +613,41 @@ func (m *ec2Machines) List(input machines.ListMachinesInput) (*machines.ListMach
 	return &output, nil
 }
 
-// CalculateCosts calculates the amount money in a certain currency a set of machines will cost per hour.
-func (m *ec2Machines) CalculateCosts(input []machines.CreateMachinesInput) (machines.CalculateCostsOutput, error) {
-	return machines.CalculateCostsOutput{
-		Amount:   0,
-		Currency: "usd",
-	}, nil
+// CalculateCost calculates the amount money in a certain currency a set of machines will cost per hour.
+func (m *ec2Machines) CalculateCost(inputs []machines.CreateMachinesInput) (calculator.Rate, error) {
+	resources := m.convertCreateMachinesInputToResources(inputs)
+	rate, err := m.costCalculator.CalculateCost(resources)
+	if err != nil {
+		return calculator.Rate{}, err
+	}
+	return rate, nil
+}
+
+// convertCreateMachinesInputToResources converts the given set of machine inputs into a set of resources to calculate costs from.
+func (m *ec2Machines) convertCreateMachinesInputToResources(inputs []machines.CreateMachinesInput) []calculator.Resource {
+	outputs := make([]calculator.Resource, len(inputs))
+	for i, in := range inputs {
+		outputs[i] = calculator.Resource{
+			Values: map[string]interface{}{
+				"instanceType":    in.Type,
+				"marketoption":    "OnDemand",
+				"operatingSystem": "Linux",
+				"regionCode":      m.region,
+				"tenancy":         "Shared",
+				"capacitystatus":  "Used",
+				"preInstalledSw":  "NA",
+			},
+		}
+	}
+	return outputs
 }
 
 // NewInput includes a set of field to create a new machines.Machines EC2 implementation.
 type NewInput struct {
 	// API has a reference to the EC2 API.
 	API ec2iface.EC2API `validate:"required"`
+	// CostCalculator contains an implementation of calculator.CostCalculator.
+	CostCalculator calculator.CostCalculator `validate:"required"`
 	// Logger is an instance of ign.Logger for logging messages in the Machines component.
 	Logger ign.Logger `validate:"required"`
 	// Limit defines the maximum number of machines that this component can have running simultaneously.
@@ -627,6 +656,8 @@ type NewInput struct {
 	// WorkerGroupName is the label value set on all machines created by this component. It is used to identify
 	// machines created by this component.
 	WorkerGroupName string `default:"cloudsim-simulation-worker"`
+	// Region contains the name of the region the machines.Machines component will point to.
+	Region string
 	// Zones contains the set of availability zones this component will launch simulation instances in.
 	Zones []Zone
 }
@@ -658,9 +689,11 @@ func NewMachines(input *NewInput) (machines.Machines, error) {
 	}
 	return &ec2Machines{
 		API:             input.API,
+		costCalculator:  input.CostCalculator,
 		Logger:          input.Logger,
 		limit:           *input.Limit,
 		workerGroupName: input.WorkerGroupName,
+		region:          input.Region,
 		zones:           zones,
 	}, nil
 }
