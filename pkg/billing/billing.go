@@ -61,7 +61,7 @@ type service struct {
 	// enabled is set to true when this service is enabled.
 	enabled bool
 
-	// profitMargin is the value
+	// profitMargin is the value at which costs will be multiplied to determine the selling price.
 	profitMargin uint
 }
 
