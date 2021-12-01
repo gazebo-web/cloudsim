@@ -208,7 +208,8 @@ type simServConfig struct {
 	// PaymentsURL contains the URL pointing to the Payments API.
 	PaymentsURL string `env:"SIMSVC_PAYMENTS_URL"`
 	// CreditsURL contains the URL pointing to the Credits API.
-	CreditsURL string `env:"SIMSVC_CREDITS_URL"`
+	CreditsURL   string `env:"SIMSVC_CREDITS_URL"`
+	ProfitMargin uint   `env:"SIMSVC_PROFIT_MARGIN" envDefault:"1"`
 }
 
 // ApplicationType represents an Application (eg. SubT). Applications are used
@@ -2182,6 +2183,7 @@ func (s *Service) initApplicationServices() (subtapp.Services, error) {
 		ApplicationName: "osrf",
 		Timeout:         30 * time.Second,
 		Enabled:         s.cfg.BillingEnabled,
+		ProfitMargin:    s.cfg.ProfitMargin,
 	}, s.logger)
 	if err != nil {
 		return nil, err
