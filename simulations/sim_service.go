@@ -2181,6 +2181,7 @@ func (s *Service) initApplicationServices() (subtapp.Services, error) {
 		PaymentsURL:     s.cfg.PaymentsURL,
 		ApplicationName: "osrf",
 		Timeout:         30 * time.Second,
+		Enabled:         s.cfg.BillingEnabled,
 	}, s.logger)
 	if err != nil {
 		return nil, err
