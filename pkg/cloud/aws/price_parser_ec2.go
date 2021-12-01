@@ -18,6 +18,7 @@ type priceEC2 struct {
 	Frequency string `json:"frequency"`
 
 	// Amounts groups the currencies and the respective amounts of money that a certain EC2 machines can be charged for.
+	// Keys specify currencies, and values contain amounts.
 	Amounts map[string]string `json:"amounts"`
 }
 

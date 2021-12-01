@@ -635,6 +635,7 @@ func (m *ec2Machines) convertCreateMachinesInputToResources(inputs []machines.Cr
 				"regionCode":      m.region,
 				"tenancy":         "Shared",
 				"capacitystatus":  "Used",
+				"preInstalledSw":  "NA",
 			},
 		}
 	}
