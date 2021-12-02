@@ -208,8 +208,9 @@ type simServConfig struct {
 	// PaymentsURL contains the URL pointing to the Payments API.
 	PaymentsURL string `env:"SIMSVC_PAYMENTS_URL"`
 	// CreditsURL contains the URL pointing to the Credits API.
-	CreditsURL   string `env:"SIMSVC_CREDITS_URL"`
-	ProfitMargin uint   `env:"SIMSVC_PROFIT_MARGIN" envDefault:"1"`
+	CreditsURL string `env:"SIMSVC_CREDITS_URL"`
+	// ProfitMargin contains the times that costs should be multiplied to get selling prices.
+	ProfitMargin uint `env:"SIMSVC_PROFIT_MARGIN" envDefault:"1"`
 }
 
 // ApplicationType represents an Application (eg. SubT). Applications are used
