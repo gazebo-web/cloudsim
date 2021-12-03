@@ -52,6 +52,7 @@ var JobsStopSimulation = actions.Jobs{
 	jobs.CheckSimulationTerminateRequestedStatus,
 	jobs.CheckStopSimulationIsNotParent,
 	jobs.SetStoppedAt,
+	jobs.ChargeUser,
 	jobs.DisconnectWebsocket,
 	jobs.RemoveRunningSimulation,
 	jobs.SetSimulationStatusToProcessingResults,
@@ -70,5 +71,4 @@ var JobsStopSimulation = actions.Jobs{
 	jobs.SetSimulationStatusToDeletingNodes,
 	jobs.RemoveInstances,
 	jobs.SetSimulationStatusToTerminated,
-	jobs.ChargeUser,
 }
