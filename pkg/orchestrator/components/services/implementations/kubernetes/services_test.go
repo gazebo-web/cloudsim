@@ -141,7 +141,7 @@ func TestGetAllServicesSuccess(t *testing.T) {
 	})
 	require.NoError(t, err)
 
-	result, err := s.GetAllBySelector("default", resource.NewSelector(map[string]string{"service": "test"}))
+	result, err := s.List("default", resource.NewSelector(map[string]string{"service": "test"}))
 	require.NoError(t, err)
 	assert.Len(t, result, 2)
 }
@@ -182,7 +182,7 @@ func TestGetAllServicesFailsWhenUsingWrongLabels(t *testing.T) {
 	})
 	require.NoError(t, err)
 
-	result, err := s.GetAllBySelector("default", resource.NewSelector(map[string]string{"another": "test"}))
+	result, err := s.List("default", resource.NewSelector(map[string]string{"another": "test"}))
 	require.NoError(t, err)
 	assert.Len(t, result, 0)
 }
@@ -191,7 +191,7 @@ func TestGetAllServicesFailsWhenNoServicesDoesNotExist(t *testing.T) {
 	client := fake.NewSimpleClientset()
 	s := NewServices(client, ign.NewLoggerNoRollbar("TestService", ign.VerbosityDebug))
 
-	result, err := s.GetAllBySelector("default", resource.NewSelector(map[string]string{"some": "test"}))
+	result, err := s.List("default", resource.NewSelector(map[string]string{"some": "test"}))
 	require.NoError(t, err)
 	assert.Len(t, result, 0)
 }
