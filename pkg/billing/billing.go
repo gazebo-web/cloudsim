@@ -6,6 +6,7 @@ import (
 	credits "gitlab.com/ignitionrobotics/billing/credits/pkg/client"
 	apiPayments "gitlab.com/ignitionrobotics/billing/payments/pkg/api"
 	payments "gitlab.com/ignitionrobotics/billing/payments/pkg/client"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
 	"gitlab.com/ignitionrobotics/web/fuelserver/bundles/users"
 	"gitlab.com/ignitionrobotics/web/ign-go"
 	"net/url"
@@ -38,6 +39,8 @@ type Service interface {
 	CreateSession(ctx context.Context, in CreateSessionRequest) (CreateSessionResponse, error)
 	// IsEnabled returns true when this service is enabled.
 	IsEnabled() bool
+	// SubtractCredits subtracts the credits from the given user for the amount of time the given simulation has been running.
+	SubtractCredits(ctx context.Context, user *users.User, sim simulations.Simulation) error
 }
 
 // service is a Service implementation using the payments and credits V1 API.
@@ -57,6 +60,31 @@ type service struct {
 
 	// enabled is set to true when this service is enabled.
 	enabled bool
+
+	// profitMargin is the value at which costs will be multiplied to determine the selling price.
+	profitMargin uint
+}
+
+// SubtractCredits subtracts the credits from the given user for the amount of time the given simulation has been running.
+func (s *service) SubtractCredits(ctx context.Context, user *users.User, sim simulations.Simulation) error {
+	cost, rate, err := sim.GetCost()
+	if err != nil {
+		return err
+	}
+
+	_, err = s.credits.DecreaseCredits(ctx, apiCredits.DecreaseCreditsRequest{
+		Transaction: apiCredits.Transaction{
+			Handle:      *user.Username,
+			Amount:      s.applyProfitMargin(cost),
+			Currency:    rate.Currency,
+			Application: s.applicationName,
+		},
+	})
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // IsEnabled returns true when this service is enabled.
@@ -94,6 +122,11 @@ func (s *service) GetBalance(ctx context.Context, user *users.User) (GetBalanceR
 	return GetBalanceResponse(res), nil
 }
 
+// applyProfitMargin applies the profit margin to the given cost and returns the final price.
+func (s *service) applyProfitMargin(cost uint) uint {
+	return cost * s.profitMargin
+}
+
 // Config is used to configure new service implementations
 type Config struct {
 	// CreditsURL contains the URL of the Credits API.
@@ -107,6 +140,9 @@ type Config struct {
 	Timeout time.Duration
 	// Enabled is set to true if the service should be enabled.
 	Enabled bool
+	// ProfitMargin measures how much profit is generated from a simulation. Defines the amount by which the costs should be
+	// multiplied to generate a profit.
+	ProfitMargin uint
 }
 
 // NewService initializes a new Service implementation using the given config.
@@ -128,5 +164,6 @@ func NewService(cfg Config, logger ign.Logger) (Service, error) {
 		applicationName: cfg.ApplicationName,
 		logger:          logger,
 		enabled:         cfg.Enabled,
+		profitMargin:    cfg.ProfitMargin,
 	}, nil
 }

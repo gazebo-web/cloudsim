@@ -20,6 +20,32 @@ type fakeSimulation struct {
 	platform   *string
 	launchedAt *time.Time
 	rate       *calculator.Rate
+	stoppedAt  *time.Time
+}
+
+// GetRate returns the rate.
+func (f *fakeSimulation) GetRate() calculator.Rate {
+	if f.rate != nil {
+		return *f.rate
+	}
+	return calculator.Rate{
+		Amount:    0,
+		Currency:  "usd",
+		Frequency: time.Hour,
+	}
+}
+
+// GetStoppedAt returns the stopped at field.
+func (f *fakeSimulation) GetStoppedAt() *time.Time {
+	return f.stoppedAt
+}
+
+// GetCost mocks the GetCost method.
+func (f *fakeSimulation) GetCost() (uint, calculator.Rate, error) {
+	if f.rate == nil {
+		return 0, calculator.Rate{}, nil
+	}
+	return 0, *f.rate, nil
 }
 
 // SetRate sets the given rate.
