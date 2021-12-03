@@ -3,12 +3,14 @@ package simulations
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/jinzhu/gorm"
 	subtsim "gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/simulations"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/calculator"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
 	"gitlab.com/ignitionrobotics/web/ign-go"
+	"math"
 	"strconv"
 	"strings"
 	"time"
@@ -91,8 +93,40 @@ type SimulationDeployment struct {
 	AuthorizationToken *string `json:"-"`
 	// Score has the simulation's score. It's updated when the simulations finishes and gets processed.
 	Score *float64 `json:"score,omitempty"`
-	// Rate is the rate at which this simulation should be charged for in USD.
-	Rate *uint
+	// Rate is the rate at which this simulation should be charged for in USD per hour.
+	Rate *uint `json:"-"`
+}
+
+// GetRate returns at which rate this simulation will be charged per hour.
+func (dep *SimulationDeployment) GetRate() calculator.Rate {
+	var rate uint
+	if dep.Rate != nil {
+		rate = *dep.Rate
+	}
+	return calculator.Rate{
+		Amount:    rate,
+		Currency:  "usd",
+		Frequency: time.Hour,
+	}
+}
+
+// GetStoppedAt returns at what time the simulation stopped. It returns nil if the simulation didn't stop.
+func (dep *SimulationDeployment) GetStoppedAt() *time.Time {
+	return dep.StoppedAt
+}
+
+// GetCost applies the current rate to this simulation resulting in the amount of money that it should be charged.
+// The calculation will always be rounded up to the closest hour
+func (dep *SimulationDeployment) GetCost() (uint, calculator.Rate, error) {
+	if dep.Rate == nil {
+		return 0, calculator.Rate{}, errors.New("rate not defined")
+	}
+	if dep.LaunchedAt == nil || dep.StoppedAt == nil {
+		return 0, dep.GetRate(), errors.New("simulation should have been launched and marked as stopped before being charged")
+	}
+	duration := dep.StoppedAt.Sub(*dep.LaunchedAt)
+	hours := uint(math.Ceil(duration.Hours()))
+	return *dep.Rate * hours, dep.GetRate(), nil
 }
 
 // SetRate sets the given rate to the current simulation.
