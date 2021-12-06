@@ -21,6 +21,7 @@ import (
 	"k8s.io/api/extensions/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
+	"math/rand"
 	"net/http"
 	"net/url"
 	"path"
@@ -137,12 +138,25 @@ const (
 	CircuitSystemsFinalsPreliminaryRound1 string = "Systems Finals Preliminary World 1"
 	CircuitSystemsFinalsPreliminaryRound2 string = "Systems Finals Preliminary World 2"
 	CircuitSystemsFinalsPrizeRound        string = "Systems Finals Prize Round"
+	CircuitSubTPortalAccess               string = "SubT Portal Access"
 
 	// Container names
 	GazeboServerContainerName    string = "gzserver-container"
 	CommsBridgeContainerName     string = "comms-bridge"
 	FieldComputerContainerName   string = "field-computer"
 	CopyToS3SidecarContainerName string = "copy-to-s3"
+)
+
+var (
+	// CircuitSets contains a mapping between specific circuits and sets of circuits. Circuits in this map will pick
+	// a single circuit from the set at random when launching the simulation.
+	CircuitSets = map[string][]string{
+		CircuitSubTPortalAccess: {
+			CircuitUrbanQual,
+			CircuitCaveQual,
+			CircuitFinalsQual,
+		},
+	}
 )
 
 // subTSpecificsConfig is an internal type needed by the SubT application definition.
@@ -294,6 +308,18 @@ func (sa *SubTApplication) getRobotIdentifierFromList(robotList []SubTRobot, rob
 // //////////////////////////////////////////////////////////////////////////
 // //////////////////////////////////////////////////////////////////////////
 
+// getLaunchableCircuitName returns the name of the circuit that will be used to run the simulation.
+// If the input `circuit` contains a circuit set, it will return the name a random circuit from its set.
+// If it doesn't, it will return the input circuit's name.
+func (sa *SubTApplication) getLaunchableCircuitName(circuit string) string {
+	worlds, ok := CircuitSets[circuit]
+	if !ok {
+		return circuit
+	}
+
+	return worlds[rand.Intn(len(worlds))]
+}
+
 // customizeSimulationRequest performs operations to a simulation request in order to be
 // executed by SubT application.
 func (sa *SubTApplication) customizeSimulationRequest(ctx context.Context,
@@ -395,7 +421,7 @@ func (sa *SubTApplication) customizeSimulationRequest(ctx context.Context,
 	}
 
 	extra := &ExtraInfoSubT{
-		Circuit:    subtSim.Circuit,
+		Circuit:    sa.getLaunchableCircuitName(subtSim.Circuit),
 		Robots:     robots,
 		Marsupials: marsupials,
 	}
