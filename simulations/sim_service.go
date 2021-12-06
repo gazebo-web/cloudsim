@@ -1062,6 +1062,12 @@ func (s *Service) StartSimulationAsync(ctx context.Context,
 		stopOnEnd = *createSim.StopOnEnd
 	}
 
+	if !isAdmin && s.isBillingEnabled() {
+		if err := s.hasEnoughCredits(user); err != nil {
+			return nil, NewErrorMessageWithBase(ErrorNotEnoughCredits, err)
+		}
+	}
+
 	// Create and assign a new GroupID
 	groupID := uuid.NewV4().String()
 
@@ -1110,12 +1116,6 @@ func (s *Service) StartSimulationAsync(ctx context.Context,
 			if err != nil {
 				return nil, ign.NewErrorMessageWithBase(ign.ErrorDbSave, err)
 			}
-		}
-	}
-
-	if !isAdmin && s.isBillingEnabled() {
-		if err := s.hasEnoughCredits(user); err != nil {
-			return nil, ign.NewErrorMessageWithBase(ign.ErrorDbSave, err)
 		}
 	}
 
