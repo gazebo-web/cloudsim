@@ -27,6 +27,6 @@ COPY --from=builder /go/bin/nps .
 COPY . .
 
 ENTRYPOINT [ "./docker-entrypoint.sh" ]
-CMD ["./cmd/nps/nps"]
+CMD ["/app/nps"]
 
 EXPOSE 8001
