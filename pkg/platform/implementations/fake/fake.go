@@ -5,9 +5,11 @@ import (
 	"github.com/aws/aws-sdk-go/aws/client"
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/pricing"
 	"github.com/aws/aws-sdk-go/service/ses"
 	"github.com/johannesboyne/gofakes3"
 	"github.com/johannesboyne/gofakes3/backend/s3mem"
+	cloud "gitlab.com/ignitionrobotics/web/cloudsim/pkg/cloud/aws"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/defaults"
 	email "gitlab.com/ignitionrobotics/web/cloudsim/pkg/email/implementations/ses"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/machines/implementations/ec2"
@@ -49,9 +51,11 @@ func (input *NewInput) SetDefaults() error {
 	// Components
 	if input.Machines == nil {
 		var err error
+
 		newInput := &ec2.NewInput{
-			API:    mock.NewEC2(),
-			Logger: input.Logger,
+			API:            mock.NewEC2(),
+			CostCalculator: cloud.NewCostCalculatorEC2(pricing.New(input.Session)),
+			Logger:         input.Logger,
 			Zones: []ec2.Zone{
 				{
 					Zone:     "fake",
