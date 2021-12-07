@@ -320,8 +320,8 @@ staging:
     - osrf
   environment:
     name: staging
-  only:
-    - develop
+  except:
+    - master
   when: manual
 
 subt-staging:
