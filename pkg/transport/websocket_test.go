@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"sync"
 	"testing"
 )
 
@@ -21,6 +22,7 @@ type websocketTestSuite struct {
 	server    *httptest.Server
 	router    *http.ServeMux
 
+	messageLock sync.Mutex
 	message     []byte
 	messageType int
 }
@@ -31,19 +33,8 @@ func (suite *websocketTestSuite) SetupTest() {
 		WriteBufferSize: 1024,
 	}
 
-	suite.handler = func(w http.ResponseWriter, r *http.Request) {
-		conn, err := suite.upgrader.Upgrade(w, r, nil)
-		suite.NoError(err)
-		defer conn.Close()
-		for {
-			if err = conn.WriteMessage(websocket.TextMessage, []byte("test-server")); err != nil {
-				return
-			}
-			if suite.messageType, suite.message, err = conn.ReadMessage(); err != nil {
-				return
-			}
-		}
-	}
+	suite.handler = suite.setupHandler(suite.upgrader)
+
 	suite.router = http.NewServeMux()
 	suite.router.Handle("/", suite.handler)
 	suite.server = httptest.NewServer(suite.router)
@@ -93,4 +84,29 @@ func (suite *websocketTestSuite) TestDisconnect() {
 	suite.True(suite.transport.IsConnected())
 	suite.transport.Disconnect()
 	suite.False(suite.transport.IsConnected())
+}
+
+func (suite *websocketTestSuite) setupHandler(upgrader websocket.Upgrader) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		conn, err := upgrader.Upgrade(w, r, nil)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		defer conn.Close()
+		for {
+			if err = conn.WriteMessage(websocket.TextMessage, []byte("test-server")); err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+			suite.messageLock.Lock()
+			suite.messageType, suite.message, err = conn.ReadMessage()
+			suite.messageLock.Unlock()
+
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+		}
+	}
 }
