@@ -73,6 +73,8 @@ const (
 	ErrorLaunchSupersededSimulation SimErrCode = 5524
 	// ErrorInvalidRunInformation is triggered when the run information file for a simulation cannot be accessed
 	ErrorInvalidRunInformation SimErrCode = 5525
+	// ErrorNotEnoughCredits is returned when the user doesn't have enough credits to run a simulation.
+	ErrorNotEnoughCredits SimErrCode = 5526
 )
 
 // NewErrorMessageWithBase receives an error code and a root error
@@ -194,6 +196,10 @@ func ErrorMessage(err SimErrCode) ign.ErrMsg {
 		em.Msg = "Submission deadline reached."
 		em.ErrCode = int(ErrorSubmissionDeadlineReached)
 		em.StatusCode = http.StatusBadRequest
+	case ErrorNotEnoughCredits:
+		em.Msg = "Not enough credits."
+		em.ErrCode = int(ErrorNotEnoughCredits)
+		em.StatusCode = http.StatusForbidden
 	}
 
 	em.BaseError = errors.New(em.Msg)

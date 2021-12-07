@@ -83,7 +83,7 @@ func TestRemoveNetPols(t *testing.T) {
 	simservice.On("GetRobots", gid).Return(robots, error(nil))
 
 	// Create SubT application service
-	app := subtapp.NewServices(application.NewServices(simservice, nil), nil, nil)
+	app := subtapp.NewServices(application.NewServices(simservice, nil, nil), nil, nil)
 
 	// Create new state: Start simulation state.
 	initialState := state.NewStopSimulation(p, app, gid)
