@@ -458,6 +458,7 @@ func (s *Service) Start(ctx context.Context) error {
 	s.logger.Info("Initializing application services")
 	s.applicationServices, err = s.initApplicationServices()
 	if err != nil {
+		s.logger.Error("Failed to initialize application services:", err)
 		return err
 	}
 
@@ -2176,6 +2177,16 @@ func (s *Service) initPlatforms() (platformManager.Manager, error) {
 // TODO: Make initApplicationServices independent of Service by receiving arguments with the needed config.
 func (s *Service) initApplicationServices() (subtapp.Services, error) {
 	s.ServiceAdaptor = NewSubTSimulationServiceAdaptor(s.DB)
+
+	if s.cfg.BillingEnabled {
+		if len(s.cfg.CreditsURL) == 0 {
+			return nil, errors.New("env var SIMSVC_CREDITS_URL must be set when billing is enabled")
+		}
+
+		if len(s.cfg.PaymentsURL) == 0 {
+			return nil, errors.New("env var SIMSVC_PAYMENTS_URL must be set when billing is enabled")
+		}
+	}
 
 	var err error
 	s.billing, err = billing.NewService(billing.Config{
