@@ -1005,6 +1005,7 @@ var SubTCircuits = []string{
 	CircuitSystemsFinalsPreliminaryRound1,
 	CircuitSystemsFinalsPreliminaryRound2,
 	CircuitSystemsFinalsPrizeRound,
+	CircuitSubTPortalAccess,
 }
 
 // SubTCompetitionCircuits is the list of circuits that are used for competitions.
