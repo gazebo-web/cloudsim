@@ -394,7 +394,8 @@ func (sa *SubTApplication) customizeSimulationRequest(ctx context.Context,
 		marsupials = append(marsupials, marsupial)
 	}
 
-	rules, err = GetCircuitRules(tx, subtSim.Circuit)
+	circuit := sa.getLaunchableCircuitName(subtSim.Circuit)
+	rules, err = GetCircuitRules(tx, circuit)
 	if err != nil {
 		return NewErrorMessageWithBase(ErrorCircuitRuleNotFound, err)
 	}
@@ -411,7 +412,7 @@ func (sa *SubTApplication) customizeSimulationRequest(ctx context.Context,
 			return NewErrorMessage(ErrorInvalidRobotImage)
 		}
 
-		if !sa.isQualified(subtSim.Owner, subtSim.Circuit, username) {
+		if !sa.isQualified(subtSim.Owner, circuit, username) {
 			return NewErrorMessage(ErrorNotQualified)
 		}
 
@@ -421,11 +422,11 @@ func (sa *SubTApplication) customizeSimulationRequest(ctx context.Context,
 	}
 
 	extra := &ExtraInfoSubT{
-		Circuit:    sa.getLaunchableCircuitName(subtSim.Circuit),
+		Circuit:    sa.getLaunchableCircuitName(circuit),
 		Robots:     robots,
 		Marsupials: marsupials,
 	}
-	createSim.ExtraSelector = &subtSim.Circuit
+	createSim.ExtraSelector = &circuit
 
 	if createSim.Extra, err = extra.ToJSON(); err != nil {
 		return ign.NewErrorMessageWithBase(ign.ErrorMarshalJSON, err)
