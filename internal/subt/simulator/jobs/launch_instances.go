@@ -37,6 +37,9 @@ func removeLaunchedInstances(store actions.Store, tx *gorm.DB, deployment *actio
 		Filters: filters,
 	})
 
+	// Try to charge users
+	_ = chargeCredits(s.SubTServices(), s.GroupID)
+
 	return nil, nil
 }
 
