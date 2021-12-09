@@ -121,8 +121,12 @@ func (dep *SimulationDeployment) GetCost() (uint, calculator.Rate, error) {
 	if dep.Rate == nil {
 		return 0, calculator.Rate{}, errors.New("rate not defined")
 	}
-	if dep.LaunchedAt == nil || dep.StoppedAt == nil {
-		return 0, dep.GetRate(), errors.New("simulation should have been launched and marked as stopped before being charged")
+	if dep.LaunchedAt == nil {
+		return 0, dep.GetRate(), errors.New("simulation should have been launched before being charged")
+	}
+	if dep.StoppedAt == nil {
+		now := time.Now()
+		dep.StoppedAt = &now
 	}
 	duration := dep.StoppedAt.Sub(*dep.LaunchedAt)
 	hours := uint(math.Ceil(duration.Hours()))
