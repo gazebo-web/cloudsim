@@ -37,6 +37,11 @@ func removeLaunchedInstances(store actions.Store, tx *gorm.DB, deployment *actio
 		Filters: filters,
 	})
 
+	// Check if billing is enabled
+	if !s.SubTServices().Billing().IsEnabled() {
+		return nil, nil
+	}
+
 	// Try to charge users
 	_ = chargeCredits(s.SubTServices(), s.GroupID)
 
