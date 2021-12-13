@@ -21,6 +21,7 @@ import (
 	"k8s.io/api/extensions/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
+	"math/rand"
 	"net/http"
 	"net/url"
 	"path"
@@ -137,12 +138,25 @@ const (
 	CircuitSystemsFinalsPreliminaryRound1 string = "Systems Finals Preliminary World 1"
 	CircuitSystemsFinalsPreliminaryRound2 string = "Systems Finals Preliminary World 2"
 	CircuitSystemsFinalsPrizeRound        string = "Systems Finals Prize Round"
+	CircuitSubTPortalAccess               string = "SubT Portal Access"
 
 	// Container names
 	GazeboServerContainerName    string = "gzserver-container"
 	CommsBridgeContainerName     string = "comms-bridge"
 	FieldComputerContainerName   string = "field-computer"
 	CopyToS3SidecarContainerName string = "copy-to-s3"
+)
+
+var (
+	// CircuitSets contains a mapping between specific circuits and sets of circuits. Circuits in this map will pick
+	// a single circuit from the set at random when launching the simulation.
+	CircuitSets = map[string][]string{
+		CircuitSubTPortalAccess: {
+			CircuitUrbanQual,
+			CircuitCaveQual,
+			CircuitFinalsQual,
+		},
+	}
 )
 
 // subTSpecificsConfig is an internal type needed by the SubT application definition.
@@ -153,6 +167,8 @@ type subTSpecificsConfig struct {
 	// MaxRobotModelCount is the maximum number of robots per model type. E.g. Up to 5 of any model: X1, X2, etc.
 	// Robot models are defined in SubTRobotType. A value of 0 means unlimited robots.
 	MaxRobotModelCount int `env:"SUBT_MAX_ROBOT_MODEL_COUNT" envDefault:"0"`
+	// DisableRobotImageECRCheck disables the requirement for a robot image to be inside a specific ECR repo.
+	DisableRobotImageECRCheck bool `env:"SUBT_DISABLE_ROBOT_IMAGE_ECR_CHECK" envDefault:"false"`
 	// FuelURL contains the URL to a Fuel environment. This base URL is used to generate
 	// URLs for users to access specific assets within Fuel.
 	FuelURL string `env:"IGN_FUEL_URL" envDefault:"https://fuel.ignitionrobotics.org/1.0"`
@@ -292,6 +308,18 @@ func (sa *SubTApplication) getRobotIdentifierFromList(robotList []SubTRobot, rob
 // //////////////////////////////////////////////////////////////////////////
 // //////////////////////////////////////////////////////////////////////////
 
+// getLaunchableCircuitName returns the name of the circuit that will be used to run the simulation.
+// If the input `circuit` contains a circuit set, it will return the name a random circuit from its set.
+// If it doesn't, it will return the input circuit's name.
+func (sa *SubTApplication) getLaunchableCircuitName(circuit string) string {
+	worlds, ok := CircuitSets[circuit]
+	if !ok {
+		return circuit
+	}
+
+	return worlds[rand.Intn(len(worlds))]
+}
+
 // customizeSimulationRequest performs operations to a simulation request in order to be
 // executed by SubT application.
 func (sa *SubTApplication) customizeSimulationRequest(ctx context.Context,
@@ -366,7 +394,8 @@ func (sa *SubTApplication) customizeSimulationRequest(ctx context.Context,
 		marsupials = append(marsupials, marsupial)
 	}
 
-	rules, err = GetCircuitRules(tx, subtSim.Circuit)
+	circuit := sa.getLaunchableCircuitName(subtSim.Circuit)
+	rules, err = GetCircuitRules(tx, circuit)
 	if err != nil {
 		return NewErrorMessageWithBase(ErrorCircuitRuleNotFound, err)
 	}
@@ -379,11 +408,11 @@ func (sa *SubTApplication) customizeSimulationRequest(ctx context.Context,
 			}
 		}
 
-		if !subtSim.robotImagesBelongToECROwner() {
+		if !sa.cfg.DisableRobotImageECRCheck && !subtSim.robotImagesBelongToECROwner() {
 			return NewErrorMessage(ErrorInvalidRobotImage)
 		}
 
-		if !sa.isQualified(subtSim.Owner, subtSim.Circuit, username) {
+		if !sa.isQualified(subtSim.Owner, circuit, username) {
 			return NewErrorMessage(ErrorNotQualified)
 		}
 
@@ -393,11 +422,11 @@ func (sa *SubTApplication) customizeSimulationRequest(ctx context.Context,
 	}
 
 	extra := &ExtraInfoSubT{
-		Circuit:    subtSim.Circuit,
+		Circuit:    sa.getLaunchableCircuitName(circuit),
 		Robots:     robots,
 		Marsupials: marsupials,
 	}
-	createSim.ExtraSelector = &subtSim.Circuit
+	createSim.ExtraSelector = &circuit
 
 	if createSim.Extra, err = extra.ToJSON(); err != nil {
 		return ign.NewErrorMessageWithBase(ign.ErrorMarshalJSON, err)

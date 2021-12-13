@@ -1,6 +1,7 @@
 package application
 
 import (
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/billing"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/users"
 )
@@ -12,12 +13,21 @@ type Services interface {
 
 	// Users provides access to a different set of methods for managing users.
 	Users() users.Service
+
+	// Billing provides access to a different set of methods for managing credits.
+	Billing() billing.Service
 }
 
 // services is a Services implementation.
 type services struct {
 	simulation simulations.Service
 	user       users.Service
+	billing    billing.Service
+}
+
+// Billing returns the underlying Billing service.
+func (s *services) Billing() billing.Service {
+	return s.billing
 }
 
 // Users returns the underlying User service.
@@ -31,9 +41,10 @@ func (s *services) Simulations() simulations.Service {
 }
 
 // NewServices initializes a new Application Services implementation.
-func NewServices(simulation simulations.Service, user users.Service) Services {
+func NewServices(simulation simulations.Service, user users.Service, billing billing.Service) Services {
 	return &services{
 		simulation: simulation,
 		user:       user,
+		billing:    billing,
 	}
 }

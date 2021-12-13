@@ -6,6 +6,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/aws/aws-sdk-go/service/ec2/ec2iface"
 	"github.com/stretchr/testify/suite"
+	cloud "gitlab.com/ignitionrobotics/web/cloudsim/pkg/cloud/aws"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/machines"
 	"gitlab.com/ignitionrobotics/web/ign-go"
 	"testing"
@@ -29,12 +30,13 @@ func (s *ec2CountMachinesTestSuite) SetupTest() {
 	logger := ign.NewLoggerNoRollbar("ec2CountMachinesTestSuite", ign.VerbosityDebug)
 	var err error
 	s.machines, err = NewMachines(&NewInput{
-		API: s.ec2API,
-		Logger: logger,
+		API:             s.ec2API,
+		CostCalculator:  cloud.NewCostCalculatorEC2(nil),
+		Logger:          logger,
 		WorkerGroupName: workerGroupName,
 		Zones: []Zone{
 			{
-				Zone: "test",
+				Zone:     "test",
 				SubnetID: "test",
 			},
 		},
@@ -82,8 +84,8 @@ func (s *ec2CountMachinesTestSuite) TestCount_GetMachinesWithFilters() {
 
 type mockEC2Count struct {
 	ec2iface.EC2API
-	InternalError  error
-	ReturnMachines bool
+	InternalError   error
+	ReturnMachines  bool
 	WorkerGroupName string
 }
 

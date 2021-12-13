@@ -1,6 +1,7 @@
 package factory
 
 import (
+	"github.com/aws/aws-sdk-go/service/pricing"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/cloud/aws"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/factory"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/machines/implementations/ec2"
@@ -23,6 +24,7 @@ func NewFunc(config interface{}, dependencies factory.Dependencies, out interfac
 	// Initialize dependencies
 	dependenciesInitFns := []func(config *Config, dependencies *Dependencies) error{
 		initializeAPI,
+		initializePricingAPI,
 	}
 	for _, initFn := range dependenciesInitFns {
 		if err := initFn(&typeConfig, &typeDependencies); err != nil {
@@ -32,11 +34,13 @@ func NewFunc(config interface{}, dependencies factory.Dependencies, out interfac
 
 	// Create instance
 	api, err := ec2.NewMachines(&ec2.NewInput{
-		API: typeDependencies.API,
-		Logger: typeDependencies.Logger,
-		Limit: typeConfig.Limit,
+		API:             typeDependencies.API,
+		Logger:          typeDependencies.Logger,
+		Limit:           typeConfig.Limit,
 		WorkerGroupName: typeConfig.WorkerGroupName,
-		Zones: typeConfig.Zones,
+		Region:          typeConfig.Region,
+		Zones:           typeConfig.Zones,
+		CostCalculator:  aws.NewCostCalculatorEC2(typeDependencies.PricingAPI),
 	})
 	if err != nil {
 		return err
@@ -65,6 +69,25 @@ func initializeAPI(config *Config, dependencies *Dependencies) error {
 
 	// Create API
 	dependencies.API = ec2.NewAPI(cp)
+
+	return nil
+}
+
+// initializePricingAPI initializes the Pricing API dependency.
+func initializePricingAPI(config *Config, dependencies *Dependencies) error {
+	if dependencies.PricingAPI != nil {
+		return nil
+	}
+
+	// Prepare config provider
+	awsConfig := aws.Config{Region: config.Region}
+	cp, err := aws.GetConfigProvider(awsConfig)
+	if err != nil {
+		return factory.ErrorWithContext(err)
+	}
+
+	// Create API
+	dependencies.PricingAPI = pricing.New(cp)
 
 	return nil
 }
