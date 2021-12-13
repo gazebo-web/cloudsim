@@ -16,6 +16,7 @@ import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/tracks"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/actions"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/application"
+	cloud "gitlab.com/ignitionrobotics/web/cloudsim/pkg/cloud/aws"
 	email "gitlab.com/ignitionrobotics/web/cloudsim/pkg/email/implementations/ses"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/machines/implementations/ec2"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/migrations"
@@ -110,8 +111,9 @@ func TestStopSimulationAction(t *testing.T) {
 		mock.NewEC2Instance("test-gz-1", subtapp.GetTagsInstanceSpecific("gzserver", sim.GetGroupID(), "sim", "cloudsim", "gzserver")),
 	)
 	ec2Machines, err := ec2.NewMachines(&ec2.NewInput{
-		API:    ec2api,
-		Logger: logger,
+		API:            ec2api,
+		CostCalculator: cloud.NewCostCalculatorEC2(nil),
+		Logger:         logger,
 		Zones: []ec2.Zone{
 			{
 				Zone:     "test",
@@ -185,7 +187,7 @@ func TestStopSimulationAction(t *testing.T) {
 	userService, err := users.NewService(ctx, &perm, db, "sysadmin")
 	require.NoError(t, err)
 
-	baseApp := application.NewServices(simService, userService)
+	baseApp := application.NewServices(simService, userService, nil)
 
 	// Initialize track repository.
 	trackRepository := tracks.NewRepository(db, logger)

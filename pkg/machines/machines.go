@@ -1,6 +1,9 @@
 package machines
 
-import "github.com/pkg/errors"
+import (
+	"github.com/pkg/errors"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/calculator"
+)
 
 var (
 	// ErrMissingKeyName is returned when the key name is missing.
@@ -57,7 +60,7 @@ func NewTags(resourceType string) []Tag {
 	return []Tag{
 		{
 			Resource: resourceType,
-			Map: map[string]string{},
+			Map:      map[string]string{},
 		},
 	}
 }
@@ -277,4 +280,7 @@ type Machines interface {
 
 	// List returns a list of machines based on the given input.
 	List(input ListMachinesInput) (*ListMachinesOutput, error)
+
+	// CalculateCost calculates the cost rate at which a group of machines would be charged for when they get created.
+	CalculateCost(inputs []CreateMachinesInput) (calculator.Rate, error)
 }

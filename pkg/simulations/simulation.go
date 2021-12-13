@@ -2,6 +2,7 @@ package simulations
 
 import (
 	"errors"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/calculator"
 	"time"
 )
 
@@ -148,4 +149,16 @@ type Simulation interface {
 
 	// GetPlatform returns the Simulation's platform.
 	GetPlatform() *string
+
+	// SetRate sets the given rate to this simulation.
+	SetRate(rate calculator.Rate)
+
+	// GetRate returns the rate at which this simulation should be charged.
+	GetRate() calculator.Rate
+
+	// GetStoppedAt returns the date and time when a simulation stopped from running.
+	GetStoppedAt() *time.Time
+
+	// GetCost applies the current rate to this simulation resulting in the amount of money that it should be charged.
+	GetCost() (uint, calculator.Rate, error)
 }
