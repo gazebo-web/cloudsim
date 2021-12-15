@@ -431,6 +431,6 @@ func TestExtendJob(t *testing.T) {
 	require.Equal(t, 1, len(extendedJob.PostHooks))
 	require.Equal(t, getFuncPtr(hook), getFuncPtr(extendedJob.PostHooks[0]))
 
-	require.NotNil(t, jobVar.RollbackHandler)
-	require.Equal(t, getFuncPtr(rollback), getFuncPtr(jobVar.RollbackHandler))
+	require.NotNil(t, extendedJob.RollbackHandler)
+	require.Equal(t, getFuncPtr(rollback), getFuncPtr(extendedJob.RollbackHandler))
 }

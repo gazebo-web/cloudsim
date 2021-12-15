@@ -153,14 +153,9 @@ func (j *Job) Extend(extension Job) *Job {
 		extension.Name = j.Name
 	}
 
-	// Extend job hooks
+	// Create the extended job
 	if err := mergo.Merge(&extension, *j); err != nil {
 		panic(fmt.Sprintf("extend for %s failed to merge definitions: %s", j.Name, err.Error()))
-	}
-
-	// Extend the rollback handler
-	if extension.RollbackHandler != nil {
-		j.RollbackHandler = extension.RollbackHandler
 	}
 
 	return &extension
