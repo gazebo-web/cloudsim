@@ -29,7 +29,8 @@ func (sa *SimulationServiceAdaptor) UpdateScore(groupID simulations.GroupID, sco
 	return nil
 }
 
-// MarkStopped marks a simulation with the time where it has stopped running.
+// MarkStopped marks a simulation with the time when it has stopped running.
+// If the StoppedAt value is already set, it won't be updated.
 func (sa *SimulationServiceAdaptor) MarkStopped(groupID simulations.GroupID) error {
 	return sa.db.Model(&SimulationDeployment{}).Transaction(func(tx *gorm.DB) error {
 		var sim SimulationDeployment
