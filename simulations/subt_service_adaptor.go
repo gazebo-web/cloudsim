@@ -31,13 +31,22 @@ func (sa *SimulationServiceAdaptor) UpdateScore(groupID simulations.GroupID, sco
 
 // MarkStopped marks a simulation with the time where it has stopped running.
 func (sa *SimulationServiceAdaptor) MarkStopped(groupID simulations.GroupID) error {
-	at := time.Now()
-	if err := sa.db.Model(&SimulationDeployment{}).Where("group_id = ?", groupID).Update(SimulationDeployment{
-		StoppedAt: &at,
-	}).Error; err != nil {
-		return err
-	}
-	return nil
+	return sa.db.Model(&SimulationDeployment{}).Transaction(func(tx *gorm.DB) error {
+		var sim SimulationDeployment
+		if err := sa.db.Model(&SimulationDeployment{}).Where("group_id = ?", groupID).First(&sim).Error; err != nil {
+			return err
+		}
+		if sim.StoppedAt != nil {
+			return nil
+		}
+		at := time.Now()
+		if err := sa.db.Model(&SimulationDeployment{}).Where("group_id = ?", groupID).Update(SimulationDeployment{
+			StoppedAt: &at,
+		}).Error; err != nil {
+			return err
+		}
+		return nil
+	})
 }
 
 // Create creates a simulation (SimulationDeployment) from the given input.
