@@ -34,7 +34,7 @@ func (sa *SimulationServiceAdaptor) UpdateScore(groupID simulations.GroupID, sco
 func (sa *SimulationServiceAdaptor) MarkStopped(groupID simulations.GroupID) error {
 	at := time.Now()
 	return sa.db.Model(&SimulationDeployment{}).
-		Where("group_id = ? AND stopped_at IS NULL").
+		Where("group_id = ? AND stopped_at IS NULL", groupID).
 		Update(SimulationDeployment{
 			StoppedAt: &at,
 		}).Error
