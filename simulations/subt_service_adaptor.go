@@ -29,15 +29,15 @@ func (sa *SimulationServiceAdaptor) UpdateScore(groupID simulations.GroupID, sco
 	return nil
 }
 
-// MarkStopped marks a simulation with the time where it has stopped running.
+// MarkStopped marks a simulation with the time when it has stopped running.
+// If the StoppedAt value is already set, it won't be updated.
 func (sa *SimulationServiceAdaptor) MarkStopped(groupID simulations.GroupID) error {
 	at := time.Now()
-	if err := sa.db.Model(&SimulationDeployment{}).Where("group_id = ?", groupID).Update(SimulationDeployment{
-		StoppedAt: &at,
-	}).Error; err != nil {
-		return err
-	}
-	return nil
+	return sa.db.Model(&SimulationDeployment{}).
+		Where("group_id = ? AND stopped_at IS NULL", groupID).
+		Update(SimulationDeployment{
+			StoppedAt: &at,
+		}).Error
 }
 
 // Create creates a simulation (SimulationDeployment) from the given input.
