@@ -40,6 +40,16 @@ func (sa *SimulationServiceAdaptor) MarkStopped(groupID simulations.GroupID) err
 		}).Error
 }
 
+// MarkCharged marks a simulation identified with the given Group ID as charged.
+func (sa *SimulationServiceAdaptor) MarkCharged(groupID simulations.GroupID) error {
+	at := time.Now()
+	return sa.db.Model(&SimulationDeployment{}).
+		Where("group_id = ? AND charged_at IS NULL", groupID).
+		Update(SimulationDeployment{
+			StoppedAt: &at,
+		}).Error
+}
+
 // Create creates a simulation (SimulationDeployment) from the given input.
 func (sa *SimulationServiceAdaptor) Create(input simulations.CreateSimulationInput) (simulations.Simulation, error) {
 	dep, err := NewSimulationDeployment()

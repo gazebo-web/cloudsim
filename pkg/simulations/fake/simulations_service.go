@@ -75,6 +75,12 @@ func (s *Service) MarkStopped(groupID simulations.GroupID) error {
 	return args.Error(0)
 }
 
+// MarkCharged marks a simulation identified with the given Group ID as charged.
+func (s *Service) MarkCharged(groupID simulations.GroupID) error {
+	args := s.Called(groupID)
+	return args.Error(0)
+}
+
 // NewService initializes a new fake service implementation.
 func NewService() *Service {
 	return &Service{

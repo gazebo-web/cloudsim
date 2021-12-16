@@ -161,4 +161,7 @@ type Simulation interface {
 
 	// GetCost applies the current rate to this simulation resulting in the amount of money that it should be charged.
 	GetCost() (uint, calculator.Rate, error)
+
+	// GetChargedAt returns the date and time when a simulation was charged.
+	GetChargedAt() *time.Time
 }
