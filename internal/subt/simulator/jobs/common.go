@@ -118,7 +118,13 @@ func chargeCredits(svc subtapp.Services, gid simulations.GroupID) error {
 		return err
 	}
 
+	// If user is a sysadmin, skip charging.
 	if svc.Users().IsSystemAdmin(sim.GetCreator()) {
+		return nil
+	}
+
+	// If sim was already charged, skip charging.
+	if sim.GetChargedAt() != nil {
 		return nil
 	}
 
@@ -131,5 +137,6 @@ func chargeCredits(svc subtapp.Services, gid simulations.GroupID) error {
 	if err != nil {
 		return err
 	}
+
 	return nil
 }
