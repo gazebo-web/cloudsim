@@ -41,6 +41,7 @@ func (sa *SimulationServiceAdaptor) MarkStopped(groupID simulations.GroupID) err
 }
 
 // MarkCharged marks a simulation identified with the given Group ID as charged.
+// If the ChargedAt value is already set, it won't be updated.
 func (sa *SimulationServiceAdaptor) MarkCharged(groupID simulations.GroupID) error {
 	at := time.Now()
 	return sa.db.Model(&SimulationDeployment{}).
