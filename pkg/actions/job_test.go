@@ -1,6 +1,7 @@
 package actions
 
 import (
+	"fmt"
 	"github.com/jinzhu/gorm"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
@@ -379,6 +380,9 @@ func TestExtendJob(t *testing.T) {
 		Execute: func(store Store, tx *gorm.DB, deployment *Deployment, value interface{}) (interface{}, error) {
 			return jobName, nil
 		},
+		RollbackHandler: func(store Store, tx *gorm.DB, deployment *Deployment, value interface{}, err error) (interface{}, error) {
+			return jobName, nil
+		},
 	}
 
 	getFuncPtr := func(fn interface{}) uintptr {
@@ -400,9 +404,13 @@ func TestExtendJob(t *testing.T) {
 	hook := func(store Store, tx *gorm.DB, deployment *Deployment, value interface{}) (interface{}, error) {
 		return nil, nil
 	}
+	rollback := JobErrorHandler(func(store Store, tx *gorm.DB, deployment *Deployment, value interface{}, err error) (interface{}, error) {
+		return fmt.Sprintf("%s-test", jobName), nil
+	})
 	extendedJob := jobVar.Extend(Job{
-		PreHooks:  []JobFunc{hook},
-		PostHooks: []JobFunc{hook},
+		PreHooks:        []JobFunc{hook},
+		PostHooks:       []JobFunc{hook},
+		RollbackHandler: rollback,
 	})
 
 	// Ensure that the name and Execute functions remain the same
@@ -412,6 +420,7 @@ func TestExtendJob(t *testing.T) {
 	// Ensure the original job was not modified
 	require.Nil(t, jobVar.PreHooks)
 	require.Nil(t, jobVar.PostHooks)
+	require.NotNil(t, jobVar.RollbackHandler)
 
 	// Check that the extended job contains extended properties
 	require.NotNil(t, extendedJob.PreHooks)
@@ -421,4 +430,7 @@ func TestExtendJob(t *testing.T) {
 	require.NotNil(t, extendedJob.PostHooks)
 	require.Equal(t, 1, len(extendedJob.PostHooks))
 	require.Equal(t, getFuncPtr(hook), getFuncPtr(extendedJob.PostHooks[0]))
+
+	require.NotNil(t, extendedJob.RollbackHandler)
+	require.Equal(t, getFuncPtr(rollback), getFuncPtr(extendedJob.RollbackHandler))
 }

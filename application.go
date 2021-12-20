@@ -139,15 +139,15 @@ func init() {
 	s.ConfigureRouterWithRoutes("/", m, sim.MonitoringRoutes)
 
 	// Profile
-	var cpuProfileEnabled bool
-	// Set the global configuration to true if the env var is set to true
 	if value, err := ign.ReadEnvVar("IGN_CPU_PROFILE_ENABLED"); err == nil && strings.ToLower(value) == "true" {
-		cpuProfileEnabled = true
+		profileRouter := mainRouter.PathPrefix(apiPrefix).Subrouter()
+		s.ConfigureRouterWithRoutes("/", profileRouter, sim.ProfileRoutes)
 	}
 
-	if cpuProfileEnabled {
-		profileRouter := mainRouter.PathPrefix("/").Subrouter()
-		s.ConfigureRouterWithRoutes("/", profileRouter, sim.ProfileRoutes)
+	// Billing
+	if value, err := ign.ReadEnvVar("SIMSVC_BILLING_ENABLED"); err == nil && strings.ToLower(value) == "true" {
+		billingRouter := mainRouter.PathPrefix(apiPrefix).Subrouter()
+		s.ConfigureRouterWithRoutes("/", billingRouter, sim.BillingRoutes)
 	}
 
 	// Set router.
