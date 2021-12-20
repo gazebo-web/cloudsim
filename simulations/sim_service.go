@@ -1588,6 +1588,10 @@ func (s *Service) requeueSimulation(simDep *SimulationDeployment) *ign.ErrMsg {
 	if em := simDep.updateSimDepStatus(s.DB, simPending); em != nil {
 		return em
 	}
+	// Revert charged at to nil.
+	if em := simDep.updateChargedAt(s.DB, nil); em != nil {
+		return em
+	}
 	// Wait a little time and requeue the simulation
 	Sleep(time.Minute)
 	s.queueLaunchRequest(*simDep.GroupID)

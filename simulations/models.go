@@ -685,6 +685,15 @@ func (dep *SimulationDeployment) updateLaunchedAt(tx *gorm.DB, launchedAt time.T
 	return nil
 }
 
+// updateChargedAt updates this SimulationDeployment's ChargedAt field in the database.
+func (dep *SimulationDeployment) updateChargedAt(tx *gorm.DB, chargedAt *time.Time) *ign.ErrMsg {
+	if err := tx.Model(&dep).Updates(map[string]interface{}{"charged_at": chargedAt}).Error; err != nil {
+		return ign.NewErrorMessageWithBase(ign.ErrorDbSave, err)
+	}
+	dep.ChargedAt = chargedAt
+	return nil
+}
+
 // setErrorStatus sets an error status to the simulation deployment and updates the DB.
 func (dep *SimulationDeployment) setErrorStatus(tx *gorm.DB, st ErrorStatus) *ign.ErrMsg {
 	val := st.ToStringPtr()
