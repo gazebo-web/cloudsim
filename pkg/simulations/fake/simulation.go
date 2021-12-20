@@ -23,6 +23,12 @@ type fakeSimulation struct {
 	stoppedAt  *time.Time
 }
 
+// GetChargedAt mocks the GetChargedAt method.
+func (f *fakeSimulation) GetChargedAt() *time.Time {
+	now := time.Now()
+	return &now
+}
+
 // GetRate returns the rate.
 func (f *fakeSimulation) GetRate() calculator.Rate {
 	if f.rate != nil {
