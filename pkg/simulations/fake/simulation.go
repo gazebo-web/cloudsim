@@ -1,22 +1,62 @@
 package fake
 
 import (
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/calculator"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
 	"time"
 )
 
 // fakeSimulation is a fake simulations.Simulation implementation.
 type fakeSimulation struct {
-	groupID   simulations.GroupID
-	status    simulations.Status
-	kind      simulations.Kind
-	err       *simulations.Error
-	image     string
-	validFor  time.Duration
-	processed bool
-	owner     *string
-	creator   string
-	platform  *string
+	groupID    simulations.GroupID
+	status     simulations.Status
+	kind       simulations.Kind
+	err        *simulations.Error
+	image      string
+	validFor   time.Duration
+	processed  bool
+	owner      *string
+	creator    string
+	platform   *string
+	launchedAt *time.Time
+	rate       *calculator.Rate
+	stoppedAt  *time.Time
+}
+
+// GetChargedAt mocks the GetChargedAt method.
+func (f *fakeSimulation) GetChargedAt() *time.Time {
+	now := time.Now()
+	return &now
+}
+
+// GetRate returns the rate.
+func (f *fakeSimulation) GetRate() calculator.Rate {
+	if f.rate != nil {
+		return *f.rate
+	}
+	return calculator.Rate{
+		Amount:    0,
+		Currency:  "usd",
+		Frequency: time.Hour,
+	}
+}
+
+// GetStoppedAt returns the stopped at field.
+func (f *fakeSimulation) GetStoppedAt() *time.Time {
+	return f.stoppedAt
+}
+
+// GetCost mocks the GetCost method.
+func (f *fakeSimulation) GetCost() (uint, calculator.Rate, error) {
+	if f.rate == nil {
+		return 0, calculator.Rate{}, nil
+	}
+	return 0, *f.rate, nil
+}
+
+// SetRate sets the given rate.
+func (f *fakeSimulation) SetRate(rate calculator.Rate) {
+	f.rate = &rate
 }
 
 // IsProcessed returns if the simulation is processed.
@@ -54,6 +94,11 @@ func (f *fakeSimulation) GetImage() string {
 	return f.image
 }
 
+// GetLaunchedAt returns the time and date the fake simulation was launched.
+func (f *fakeSimulation) GetLaunchedAt() *time.Time {
+	return f.launchedAt
+}
+
 // GetError returns the fake simulation's error.
 // It returns nil if no error has been set.
 func (f *fakeSimulation) GetError() *simulations.Error {
@@ -80,22 +125,24 @@ func (f *fakeSimulation) GetKind() simulations.Kind {
 	return f.kind
 }
 
-// GetKind returns the simulation's kind.
+// GetPlatform returns the simulation's platform.
 func (f *fakeSimulation) GetPlatform() *string {
 	return f.platform
 }
 
 // NewSimulation initializes a new fake simulation.
 func NewSimulation(groupID simulations.GroupID, status simulations.Status, kind simulations.Kind,
-	err *simulations.Error, image string, validFor time.Duration, owner *string) simulations.Simulation {
+	err *simulations.Error, image string, validFor time.Duration, owner *string,
+	launchedAt *time.Time) simulations.Simulation {
 
 	return &fakeSimulation{
-		groupID:  groupID,
-		status:   status,
-		kind:     kind,
-		err:      err,
-		image:    image,
-		validFor: validFor,
-		owner:    owner,
+		groupID:    groupID,
+		status:     status,
+		kind:       kind,
+		err:        err,
+		image:      image,
+		validFor:   validFor,
+		owner:      owner,
+		launchedAt: launchedAt,
 	}
 }

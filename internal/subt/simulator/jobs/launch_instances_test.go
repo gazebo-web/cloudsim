@@ -32,11 +32,11 @@ func TestLaunchInstances(t *testing.T) {
 
 	// Initialize simulation
 	gid := simulations.GroupID("aaaa-bbbb-cccc-dddd")
-	sim := simfake.NewSimulation(gid, simulations.StatusPending, simulations.SimSingle, nil, "test", 1*time.Minute, nil)
+	sim := simfake.NewSimulation(gid, simulations.StatusPending, simulations.SimSingle, nil, "test", 1*time.Minute, nil, nil)
 
 	// Initialize fake simulation service
 	svc := simfake.NewService()
-	app := application.NewServices(svc, nil)
+	app := application.NewServices(svc, nil, nil)
 
 	svc.On("Get", gid).Return(sim, error(nil)).Once()
 

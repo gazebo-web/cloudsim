@@ -69,7 +69,7 @@ func (s *kubernetesServices) Get(name, namespace string) (resource.Resource, err
 	return resource.NewResource(name, namespace, resource.NewSelector(output.Labels)), nil
 }
 
-func (s *kubernetesServices) GetAllBySelector(namespace string, selector resource.Selector) ([]resource.Resource, error) {
+func (s *kubernetesServices) List(namespace string, selector resource.Selector) ([]resource.Resource, error) {
 	s.Logger.Debug(fmt.Sprintf("Getting all services that match the following selectors: [%s]", selector.String()))
 
 	list, err := s.API.CoreV1().Services(namespace).List(metav1.ListOptions{

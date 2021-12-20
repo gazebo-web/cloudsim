@@ -17,12 +17,12 @@ import (
 func TestCheckSimulationStatus_Success(t *testing.T) {
 	// Initialize simulation
 	gid := simulations.GroupID("aaaa-bbbb-cccc-dddd")
-	sim := fake.NewSimulation(gid, simulations.StatusPending, simulations.SimSingle, nil, "test", 1*time.Minute, nil)
+	sim := fake.NewSimulation(gid, simulations.StatusPending, simulations.SimSingle, nil, "test", 1*time.Minute, nil, nil)
 
 	// Initialize fake simulation service
 	svc := fake.NewService()
 	svc.On("Get", gid).Return(sim, nil)
-	app := application.NewServices(svc, nil)
+	app := application.NewServices(svc, nil, nil)
 
 	tracksService := tracks.NewService(nil, nil, nil)
 
@@ -53,12 +53,12 @@ func TestCheckSimulationStatus_Success(t *testing.T) {
 func TestCheckSimulationStatus_ErrSimInvaludStatus(t *testing.T) {
 	// Initialize simulation
 	gid := simulations.GroupID("aaaa-bbbb-cccc-dddd")
-	sim := fake.NewSimulation(gid, simulations.StatusRunning, simulations.SimSingle, nil, "test", 1*time.Minute, nil)
+	sim := fake.NewSimulation(gid, simulations.StatusRunning, simulations.SimSingle, nil, "test", 1*time.Minute, nil, nil)
 
 	// Initialize fake simulation service
 	svc := fake.NewService()
 	svc.On("Get", gid).Return(sim, nil)
-	app := application.NewServices(svc, nil)
+	app := application.NewServices(svc, nil, nil)
 
 	tracksService := tracks.NewService(nil, nil, nil)
 

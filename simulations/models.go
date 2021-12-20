@@ -3,11 +3,14 @@ package simulations
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/jinzhu/gorm"
 	subtsim "gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/simulations"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/calculator"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
 	"gitlab.com/ignitionrobotics/web/ign-go"
+	"math"
 	"strconv"
 	"strings"
 	"time"
@@ -28,6 +31,10 @@ type SimulationDeployment struct {
 	DeletedAt *time.Time `gorm:"type:timestamp(2) NULL" sql:"index" json:"-"`
 	// Timestamp in which this simulation was stopped/terminated.
 	StoppedAt *time.Time `gorm:"type:timestamp(3) NULL" json:"stopped_at,omitempty"`
+	// LaunchedAt is the time on which the simulation was launched to run.
+	LaunchedAt *time.Time `gorm:"type:timestamp(3) NULL" json:"launched_at,omitempty"`
+	// ChargedAt is the time on which this simulation was charged.
+	ChargedAt *time.Time `gorm:"type:timestamp(3) NULL" json:"-"`
 	// Represents the maximum time this simulation should live. After that time
 	// it will be eligible for automatic termination.
 	// It is a time.Duration (stored as its string representation).
@@ -88,6 +95,54 @@ type SimulationDeployment struct {
 	AuthorizationToken *string `json:"-"`
 	// Score has the simulation's score. It's updated when the simulations finishes and gets processed.
 	Score *float64 `json:"score,omitempty"`
+	// Rate is the rate at which this simulation should be charged for in USD per hour.
+	Rate *uint `json:"-"`
+}
+
+// GetChargedAt returns the date and time on which this simulation was charged.
+func (dep *SimulationDeployment) GetChargedAt() *time.Time {
+	return dep.ChargedAt
+}
+
+// GetRate returns at which rate this simulation will be charged per hour.
+func (dep *SimulationDeployment) GetRate() calculator.Rate {
+	var rate uint
+	if dep.Rate != nil {
+		rate = *dep.Rate
+	}
+	return calculator.Rate{
+		Amount:    rate,
+		Currency:  "usd",
+		Frequency: time.Hour,
+	}
+}
+
+// GetStoppedAt returns at what time the simulation stopped. It returns nil if the simulation didn't stop.
+func (dep *SimulationDeployment) GetStoppedAt() *time.Time {
+	return dep.StoppedAt
+}
+
+// GetCost applies the current rate to this simulation resulting in the amount of money that it should be charged.
+// The calculation will always be rounded up to the closest hour
+func (dep *SimulationDeployment) GetCost() (uint, calculator.Rate, error) {
+	if dep.Rate == nil {
+		return 0, calculator.Rate{}, errors.New("rate not defined")
+	}
+	if dep.LaunchedAt == nil {
+		return 0, dep.GetRate(), errors.New("simulation should have been launched before being charged")
+	}
+	if dep.StoppedAt == nil {
+		now := time.Now()
+		dep.StoppedAt = &now
+	}
+	duration := dep.StoppedAt.Sub(*dep.LaunchedAt)
+	hours := uint(math.Ceil(duration.Hours()))
+	return *dep.Rate * hours, dep.GetRate(), nil
+}
+
+// SetRate sets the given rate to the current simulation.
+func (dep *SimulationDeployment) SetRate(rate calculator.Rate) {
+	dep.Rate = &rate.Amount
 }
 
 // GetRunIndex returns the simulation's run index.
@@ -223,6 +278,13 @@ func (dep *SimulationDeployment) GetImage() string {
 		return ""
 	}
 	return *dep.Image
+}
+
+// GetLaunchedAt returns the time and date the simulation was officially launched. This date can differ from the
+// time the simulation was requested due to the simulation having been held, or because it has been unable to
+// launch because of insufficient cloud resources.
+func (dep *SimulationDeployment) GetLaunchedAt() *time.Time {
+	return dep.LaunchedAt
 }
 
 // GetValidFor returns the SimulationDeployment's ValidFor parsed as time.Duration.
@@ -409,6 +471,7 @@ func (dep *SimulationDeployment) Clone() *SimulationDeployment {
 	clone.UpdatedAt = time.Time{}
 	clone.StoppedAt = nil
 	clone.DeletedAt = nil
+	clone.ChargedAt = nil
 
 	return &clone
 }
@@ -608,6 +671,27 @@ func (dep *SimulationDeployment) updatePlatform(tx *gorm.DB, platform string) *i
 	}
 	dep.Platform = &platform
 
+	return nil
+}
+
+// updateLaunchedAt updates this SimulationDeployment's LaunchedAt field in the database.
+func (dep *SimulationDeployment) updateLaunchedAt(tx *gorm.DB, launchedAt time.Time) *ign.ErrMsg {
+	if err := tx.Model(&dep).Update(SimulationDeployment{
+		LaunchedAt: &launchedAt,
+	}).Error; err != nil {
+		return ign.NewErrorMessageWithBase(ign.ErrorDbSave, err)
+	}
+	dep.LaunchedAt = &launchedAt
+
+	return nil
+}
+
+// updateChargedAt updates this SimulationDeployment's ChargedAt field in the database.
+func (dep *SimulationDeployment) updateChargedAt(tx *gorm.DB, chargedAt *time.Time) *ign.ErrMsg {
+	if err := tx.Model(&dep).Updates(map[string]interface{}{"charged_at": chargedAt}).Error; err != nil {
+		return ign.NewErrorMessageWithBase(ign.ErrorDbSave, err)
+	}
+	dep.ChargedAt = chargedAt
 	return nil
 }
 

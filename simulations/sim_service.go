@@ -14,6 +14,7 @@ import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/summaries"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/actions"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/application"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/billing"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/loader"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/machines"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/components/pods"
@@ -109,6 +110,8 @@ type SimService interface {
 	QueueCount(ctx context.Context, user *users.User) (interface{}, *ign.ErrMsg)
 	Debug(user *users.User, groupID simulations.GroupID) (interface{}, *ign.ErrMsg)
 	ReconnectWebsocket(user *users.User, groupID simulations.GroupID) (interface{}, *ign.ErrMsg)
+	GetCreditsBalance(ctx context.Context, user *users.User) (interface{}, *ign.ErrMsg)
+	CreateSession(ctx context.Context, user *users.User, req billing.CreateSessionRequest) (interface{}, *ign.ErrMsg)
 }
 
 // NodeManager is responsible of creating and removing cloud instances, and
@@ -132,6 +135,7 @@ const (
 	podGroupIDLabelKey    = "cloudsim-group-id"
 	cloudsimTagLabelKey   = "cloudsim"
 	cloudsimTagLabelValue = "true"
+	creditsApplication    = "osrf"
 )
 
 var (
@@ -176,6 +180,7 @@ type Service struct {
 	actionService       actions.Servicer
 	simulator           simulator.Simulator
 	ServiceAdaptor      simulations.Service
+	billing             billing.Service
 }
 
 // SimServImpl holds the instance of the Simulations Service. It is set at initialization.
@@ -196,6 +201,16 @@ type simServConfig struct {
 	MaxDurationForSimulations int `env:"SIMSVC_SIM_MAX_DURATION_MINUTES" envDefault:"45"`
 	// IsTest determines if a service is being used for a test
 	IsTest bool
+	// MinCredits determines the minimum amount of credits needed to run simulations.
+	MinCredits int `env:"SIMSVC_SIM_MIN_CREDITS" envDefault:"100"`
+	// BillingEnabled is set to true when the application needs to have billing enabled.
+	BillingEnabled bool `env:"SIMSVC_BILLING_ENABLED" envDefault:"false"`
+	// PaymentsURL contains the URL pointing to the Payments API.
+	PaymentsURL string `env:"SIMSVC_PAYMENTS_URL"`
+	// CreditsURL contains the URL pointing to the Credits API.
+	CreditsURL string `env:"SIMSVC_CREDITS_URL"`
+	// ProfitMargin contains the times that costs should be multiplied to get selling prices.
+	ProfitMargin uint `env:"SIMSVC_PROFIT_MARGIN" envDefault:"1"`
 }
 
 // ApplicationType represents an Application (eg. SubT). Applications are used
@@ -441,7 +456,11 @@ func (s *Service) Start(ctx context.Context) error {
 	}
 
 	s.logger.Info("Initializing application services")
-	s.applicationServices = s.initApplicationServices()
+	s.applicationServices, err = s.initApplicationServices()
+	if err != nil {
+		s.logger.Error("Failed to initialize application services:", err)
+		return err
+	}
 
 	s.logger.Info("Initializing action service")
 
@@ -871,6 +890,27 @@ var LaunchSimulation = func(s *Service, ctx context.Context,
 // ///////////////////////////////////////////////////////////////////////
 // ///////////////////////////////////////////////////////////////////////
 
+// updateSimulationStartValues sets the fields of a SimulationDeployment based on  starting simulation.
+func (s *Service) updateSimulationStartValues(simDep *SimulationDeployment, p platform.Platform) error {
+	// Update the current platform
+	ignErr := simDep.updatePlatform(s.DB, p.GetName())
+	if ignErr != nil {
+		err := ignErr.BaseError
+		s.logger.Debug("Failed to update simulation deployment:", err)
+		return err
+	}
+
+	// Update the LaunchedAt time to right now
+	ignErr = simDep.updateLaunchedAt(s.DB, time.Now())
+	if ignErr != nil {
+		err := ignErr.BaseError
+		s.logger.Debug("Failed to update simulation deployment:", err)
+		return err
+	}
+
+	return nil
+}
+
 // workerStartSimulation is a thread pool worker in charge of launching simulations.
 func (s *Service) workerStartSimulation(payload interface{}) {
 	groupID, ok := payload.(string)
@@ -889,8 +929,9 @@ func (s *Service) workerStartSimulation(payload interface{}) {
 	// Cycle through platforms and launch simulations
 	platforms := s.getPlatforms(simDep)
 	for _, p := range platforms {
-		// Update SimulationDeployment platform
-		simDep.updatePlatform(s.DB, p.GetName())
+		if err := s.updateSimulationStartValues(simDep, p); err != nil {
+			break
+		}
 
 		err = s.simulator.Start(s.baseCtx, p, simulations.GroupID(groupID))
 		if err == nil {
@@ -899,10 +940,9 @@ func (s *Service) workerStartSimulation(payload interface{}) {
 			em := simDep.updateSimDepStatus(s.DB, simPending)
 			if em != nil {
 				err = em.BaseError
-				s.logger.Debug("Failed update simulation deployment status:", err)
+				s.logger.Debug("Failed to update simulation deployment status:", err)
 				break
 			}
-
 			continue
 		} else {
 			s.logger.Debug("Worker StartSimulation failed: ", err)
@@ -912,7 +952,6 @@ func (s *Service) workerStartSimulation(payload interface{}) {
 				s.logger.Debug("Failed to set simulation deployment error status:", err)
 				break
 			}
-
 			break
 		}
 	}
@@ -1022,6 +1061,12 @@ func (s *Service) StartSimulationAsync(ctx context.Context,
 	// Only system admins can request instances to stop on end
 	if createSim.StopOnEnd != nil && isAdmin {
 		stopOnEnd = *createSim.StopOnEnd
+	}
+
+	if !isAdmin && s.isBillingEnabled() {
+		if err := s.hasEnoughCredits(user); err != nil {
+			return nil, NewErrorMessageWithBase(ErrorNotEnoughCredits, err)
+		}
 	}
 
 	// Create and assign a new GroupID
@@ -1472,11 +1517,6 @@ func (s *Service) createRunningSimulation(ctx context.Context, tx *gorm.DB, dep 
 		return err
 	}
 
-	_, maxSimSeconds, err := s.getGazeboWorldStatsTopicAndLimit(ctx, tx, dep)
-	if err != nil {
-		return err
-	}
-
 	// TODO: warmup topic is not a generic concept as it is specific of SubT. Need to move to a SubT custom code.
 	// TODO: Consider allowing Applications to configure the RunningSimulation instance.
 	worldWarmupTopic, err := s.getGazeboWorldWarmupTopic(ctx, tx, dep)
@@ -1490,7 +1530,7 @@ func (s *Service) createRunningSimulation(ctx context.Context, tx *gorm.DB, dep 
 		return err
 	}
 
-	rs := runsim.NewRunningSimulation(dep.GetGroupID(), int64(maxSimSeconds), dep.GetValidFor())
+	rs := runsim.NewRunningSimulation(dep)
 
 	err = t.Subscribe(worldWarmupTopic, func(message transport.Message) {
 		_ = rs.ReadWarmup(context.Background(), message)
@@ -1546,6 +1586,10 @@ func newTransporter(host, path, token string, isTest bool) (ignws.PubSubWebsocke
 func (s *Service) requeueSimulation(simDep *SimulationDeployment) *ign.ErrMsg {
 	// Revert the simulation deployment status to Pending
 	if em := simDep.updateSimDepStatus(s.DB, simPending); em != nil {
+		return em
+	}
+	// Revert charged at to nil.
+	if em := simDep.updateChargedAt(s.DB, nil); em != nil {
 		return em
 	}
 	// Wait a little time and requeue the simulation
@@ -2071,6 +2115,29 @@ func (s *Service) QueueRemoveElement(ctx context.Context, user *users.User, grou
 	return s.launchHandlerQueue.Remove(groupID)
 }
 
+// ///////////////////////////////////////////////////////////////////////
+// ///////////////////////////////////////////////////////////////////////
+
+// GetCreditsBalance gets the credit balance of the current user.
+func (s *Service) GetCreditsBalance(ctx context.Context, user *users.User) (interface{}, *ign.ErrMsg) {
+	res, err := s.billing.GetBalance(ctx, user)
+	if err != nil {
+		return nil, ign.NewErrorMessageWithBase(ign.ErrorUnexpected, err)
+	}
+	return res, nil
+}
+
+// CreateSession starts a checkout session with the payment service for the current user.
+func (s *Service) CreateSession(ctx context.Context, user *users.User, req billing.CreateSessionRequest) (interface{}, *ign.ErrMsg) {
+	req.Handle = *user.Username
+
+	res, err := s.billing.CreateSession(ctx, req)
+	if err != nil {
+		return nil, ign.NewErrorMessageWithBase(ign.ErrorUnexpected, err)
+	}
+	return res, nil
+}
+
 func (s *Service) getPlatforms(simDep *SimulationDeployment) []platform.Platform {
 	// Get the platforms
 	platforms := s.platforms.Platforms(simDep.Platform)
@@ -2112,12 +2179,37 @@ func (s *Service) initPlatforms() (platformManager.Manager, error) {
 }
 
 // TODO: Make initApplicationServices independent of Service by receiving arguments with the needed config.
-func (s *Service) initApplicationServices() subtapp.Services {
+func (s *Service) initApplicationServices() (subtapp.Services, error) {
 	s.ServiceAdaptor = NewSubTSimulationServiceAdaptor(s.DB)
-	base := application.NewServices(s.ServiceAdaptor, s.userAccessor)
+
+	if s.cfg.BillingEnabled {
+		if len(s.cfg.CreditsURL) == 0 {
+			return nil, errors.New("env var SIMSVC_CREDITS_URL must be set when billing is enabled")
+		}
+
+		if len(s.cfg.PaymentsURL) == 0 {
+			return nil, errors.New("env var SIMSVC_PAYMENTS_URL must be set when billing is enabled")
+		}
+	}
+
+	var err error
+	s.billing, err = billing.NewService(billing.Config{
+		CreditsURL:      s.cfg.CreditsURL,
+		PaymentsURL:     s.cfg.PaymentsURL,
+		ApplicationName: "osrf",
+		Timeout:         30 * time.Second,
+		Enabled:         s.cfg.BillingEnabled,
+		ProfitMargin:    s.cfg.ProfitMargin,
+	}, s.logger)
+	if err != nil {
+		return nil, err
+	}
+
+	base := application.NewServices(s.ServiceAdaptor, s.userAccessor, s.billing)
 	trackService := NewTracksService(s.DB, s.logger)
 	summaryService := summaries.NewService(s.DB)
-	return subtapp.NewServices(base, trackService, summaryService)
+
+	return subtapp.NewServices(base, trackService, summaryService), nil
 }
 
 // TODO: Make initSimulator independent of Service by receiving arguments with the needed config.
@@ -2128,4 +2220,21 @@ func (s *Service) initSimulator() simulator.Simulator {
 		ActionService:         s.actionService,
 		DisableDefaultActions: false,
 	})
+}
+
+// isBillingEnabled returns true if billing is enabled.
+func (s *Service) isBillingEnabled() bool {
+	return s.cfg.BillingEnabled
+}
+
+// hasEnoughCredits checks that the given user has enough credits to run a simulation.
+func (s *Service) hasEnoughCredits(user *users.User) error {
+	res, err := s.billing.GetBalance(context.Background(), user)
+	if err != nil {
+		return err
+	}
+	if res.Credits < s.cfg.MinCredits {
+		return fmt.Errorf("not enough credits (%d), should have at least %d credits", res.Credits, s.cfg.MinCredits)
+	}
+	return nil
 }

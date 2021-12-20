@@ -2,6 +2,8 @@ package simulations
 
 import (
 	"gitlab.com/ignitionrobotics/web/ign-go"
+	"net/http"
+	"net/http/pprof"
 )
 
 // Routes declares the routes related to simulations. See also IGN's router.go
@@ -511,7 +513,7 @@ var Routes = ign.Routes{
 		Description: "Gets the list of robots from the competition",
 		URI:         "/competition/robots",
 		Headers:     ign.AuthHeadersRequired,
-		Methods:     ign.Methods{
+		Methods: ign.Methods{
 			// swagger:route GET /competition/robots competition robots
 			//
 			// Gets the list of all competition robots.
@@ -660,7 +662,6 @@ var Routes = ign.Routes{
 			},
 		},
 	},
-
 	/////////////////////
 	ign.Route{
 		Name:        "Debug",
@@ -676,6 +677,49 @@ var Routes = ign.Routes{
 					ign.FormatHandler{
 						Extension: "",
 						Handler:   ign.JSONResult(WithUser(Debug)),
+					},
+				},
+			},
+		},
+	},
+}
+
+// BillingRoutes contains the different routes for billing operations.
+var BillingRoutes = ign.Routes{
+	ign.Route{
+		Name:        "Get credits balance",
+		Description: "Get credits balance of the current user",
+		URI:         "/billing/credits",
+		Headers:     ign.AuthHeadersRequired,
+		Methods:     ign.Methods{},
+		SecureMethods: ign.SecureMethods{
+			ign.Method{
+				Type:        "GET",
+				Description: "Get credits balance",
+				Handlers: ign.FormatHandlers{
+					ign.FormatHandler{
+						Extension: "",
+						Handler:   ign.JSONResult(WithUser(GetCreditsBalance)),
+					},
+				},
+			},
+		},
+	},
+
+	ign.Route{
+		Name:        "Create payment session",
+		Description: "Start a payment session",
+		URI:         "/billing/session",
+		Headers:     ign.AuthHeadersRequired,
+		Methods:     ign.Methods{},
+		SecureMethods: ign.SecureMethods{
+			ign.Method{
+				Type:        "POST",
+				Description: "Create a payment session",
+				Handlers: ign.FormatHandlers{
+					ign.FormatHandler{
+						Extension: "",
+						Handler:   ign.JSONResult(WithUser(CreateSession)),
 					},
 				},
 			},
@@ -708,5 +752,26 @@ var MonitoringRoutes = ign.Routes{
 			},
 		},
 		SecureMethods: ign.SecureMethods{},
+	},
+}
+
+// ProfileRoutes contains the different routes to perform CPU profiling.
+var ProfileRoutes = ign.Routes{
+	ign.Route{
+		Name:        "CPU Profile",
+		Description: "Get cloudsim CPU profile data",
+		URI:         "/profile",
+		SecureMethods: ign.SecureMethods{
+			ign.Method{
+				Type:        "GET",
+				Description: "Get cloudsim CPU profile data",
+				Handlers: ign.FormatHandlers{
+					ign.FormatHandler{
+						Extension: "",
+						Handler:   http.HandlerFunc(pprof.Profile),
+					},
+				},
+			},
+		},
 	},
 }
