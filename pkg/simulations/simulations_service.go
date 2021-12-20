@@ -38,6 +38,9 @@ type Service interface {
 	// MarkStopped marks a simulation identified with the given Group ID as stopped.
 	MarkStopped(groupID GroupID) error
 
+	// MarkCharged marks a simulation identified with the given Group ID as charged.
+	MarkCharged(groupID GroupID) error
+
 	// GetWebsocketToken returns a websocket token for a certain simulation with the given GroupID.
 	GetWebsocketToken(groupID GroupID) (string, error)
 }

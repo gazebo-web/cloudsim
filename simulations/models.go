@@ -33,6 +33,8 @@ type SimulationDeployment struct {
 	StoppedAt *time.Time `gorm:"type:timestamp(3) NULL" json:"stopped_at,omitempty"`
 	// LaunchedAt is the time on which the simulation was launched to run.
 	LaunchedAt *time.Time `gorm:"type:timestamp(3) NULL" json:"launched_at,omitempty"`
+	// ChargedAt is the time on which this simulation was charged.
+	ChargedAt *time.Time `gorm:"type:timestamp(3) NULL" json:"-"`
 	// Represents the maximum time this simulation should live. After that time
 	// it will be eligible for automatic termination.
 	// It is a time.Duration (stored as its string representation).
@@ -95,6 +97,11 @@ type SimulationDeployment struct {
 	Score *float64 `json:"score,omitempty"`
 	// Rate is the rate at which this simulation should be charged for in USD per hour.
 	Rate *uint `json:"-"`
+}
+
+// GetChargedAt returns the date and time on which this simulation was charged.
+func (dep *SimulationDeployment) GetChargedAt() *time.Time {
+	return dep.ChargedAt
 }
 
 // GetRate returns at which rate this simulation will be charged per hour.
@@ -464,6 +471,7 @@ func (dep *SimulationDeployment) Clone() *SimulationDeployment {
 	clone.UpdatedAt = time.Time{}
 	clone.StoppedAt = nil
 	clone.DeletedAt = nil
+	clone.ChargedAt = nil
 
 	return &clone
 }
@@ -675,6 +683,15 @@ func (dep *SimulationDeployment) updateLaunchedAt(tx *gorm.DB, launchedAt time.T
 	}
 	dep.LaunchedAt = &launchedAt
 
+	return nil
+}
+
+// updateChargedAt updates this SimulationDeployment's ChargedAt field in the database.
+func (dep *SimulationDeployment) updateChargedAt(tx *gorm.DB, chargedAt *time.Time) *ign.ErrMsg {
+	if err := tx.Model(&dep).Updates(map[string]interface{}{"charged_at": chargedAt}).Error; err != nil {
+		return ign.NewErrorMessageWithBase(ign.ErrorDbSave, err)
+	}
+	dep.ChargedAt = chargedAt
 	return nil
 }
 
