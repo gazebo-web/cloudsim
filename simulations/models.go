@@ -471,6 +471,7 @@ func (dep *SimulationDeployment) Clone() *SimulationDeployment {
 	clone.UpdatedAt = time.Time{}
 	clone.StoppedAt = nil
 	clone.DeletedAt = nil
+	clone.ChargedAt = nil
 
 	return &clone
 }
