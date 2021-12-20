@@ -42,8 +42,10 @@ func removeLaunchedInstances(store actions.Store, tx *gorm.DB, deployment *actio
 		return nil, nil
 	}
 
-	// Try to charge users
-	_ = chargeCredits(s.SubTServices(), s.GroupID)
+	// Charge the user if the error is not retryable
+	if !machines.ErrorIsRetryable(err) {
+		_ = chargeCredits(s.SubTServices(), s.GroupID)
+	}
 
 	return nil, nil
 }

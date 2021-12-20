@@ -662,11 +662,30 @@ var Routes = ign.Routes{
 			},
 		},
 	},
+	/////////////////////
+	ign.Route{
+		Name:        "Debug",
+		Description: "Debug multi region support",
+		URI:         "/debug/{groupID}",
+		Headers:     ign.AuthHeadersRequired,
+		Methods:     ign.Methods{},
+		SecureMethods: ign.SecureMethods{
+			ign.Method{
+				Type:        "GET",
+				Description: "Debug websocket messages",
+				Handlers: ign.FormatHandlers{
+					ign.FormatHandler{
+						Extension: "",
+						Handler:   ign.JSONResult(WithUser(Debug)),
+					},
+				},
+			},
+		},
+	},
+}
 
-	//////////////
-	// Billing	//
-	//////////////
-
+// BillingRoutes contains the different routes for billing operations.
+var BillingRoutes = ign.Routes{
 	ign.Route{
 		Name:        "Get credits balance",
 		Description: "Get credits balance of the current user",
@@ -701,27 +720,6 @@ var Routes = ign.Routes{
 					ign.FormatHandler{
 						Extension: "",
 						Handler:   ign.JSONResult(WithUser(CreateSession)),
-					},
-				},
-			},
-		},
-	},
-
-	/////////////////////
-	ign.Route{
-		Name:        "Debug",
-		Description: "Debug multi region support",
-		URI:         "/debug/{groupID}",
-		Headers:     ign.AuthHeadersRequired,
-		Methods:     ign.Methods{},
-		SecureMethods: ign.SecureMethods{
-			ign.Method{
-				Type:        "GET",
-				Description: "Debug websocket messages",
-				Handlers: ign.FormatHandlers{
-					ign.FormatHandler{
-						Extension: "",
-						Handler:   ign.JSONResult(WithUser(Debug)),
 					},
 				},
 			},
