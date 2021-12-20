@@ -138,5 +138,10 @@ func chargeCredits(svc subtapp.Services, gid simulations.GroupID) error {
 		return err
 	}
 
+	err = svc.Simulations().MarkCharged(gid)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }

@@ -29,10 +29,5 @@ func chargeUser(store actions.Store, tx *gorm.DB, deployment *actions.Deployment
 		return nil, err
 	}
 
-	err = s.SubTServices().Simulations().MarkCharged(s.GroupID)
-	if err != nil {
-		return nil, err
-	}
-
 	return s, nil
 }
