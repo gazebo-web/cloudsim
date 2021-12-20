@@ -7,6 +7,8 @@ import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/platform"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
 	"gitlab.com/ignitionrobotics/web/ign-go"
+	"os"
+	"path"
 	"path/filepath"
 )
 
@@ -76,6 +78,16 @@ type NewInput struct {
 //	If NewInput.ConfigPath is a file, it will only use that file as the config file.
 // 	A `name` config value containing the platform name will be added to each platform's factory config fields.
 func loadPlatformConfiguration(input *NewInput) (*managerConfig, error) {
+	// Set default path if not defined
+	if input.ConfigPath == "" {
+		var err error
+		var cwd string
+		if cwd, err = os.Getwd(); err != nil {
+			return nil, err
+		}
+		input.ConfigPath = path.Join(cwd, "config.yaml")
+	}
+
 	list, err := listConfigFiles(input.ConfigPath)
 	if err != nil {
 		return nil, err
