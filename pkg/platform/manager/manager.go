@@ -7,8 +7,7 @@ import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/platform"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
 	"gitlab.com/ignitionrobotics/web/ign-go"
-	"os"
-	"path"
+	"path/filepath"
 )
 
 var (
@@ -45,7 +44,7 @@ type Manager interface {
 	// matched, the matched platform will be the first element in the returned list. If `target` is `nil` or is not
 	// found, the elements in the list will be returned in random order.
 	Platforms(selector *string) []platform.Platform
-	// GetPlatform returns the platform that matches a specific selector, or an error if it is not found.
+	// Platform returns the platform that matches a specific selector, or an error if it is not found.
 	Platform(selector string) (platform.Platform, error)
 }
 
@@ -55,7 +54,7 @@ type managerConfig struct {
 	// A platform will be created for each entry in the map.
 	// Keys define platform names.
 	// Values must must match the platform factory Config struct.
-	Platforms map[string]*factory.Config
+	Platforms map[string]factory.Config
 }
 
 // NewInput contains common information necessary to create a new manager implementation instance.
@@ -71,29 +70,38 @@ type NewInput struct {
 	Logger ign.Logger
 }
 
-// loadPlatformConfiguration loads a platform configuration file and returns a loaded managerConfig value.
-// A `name` config value containing the platform name will be added to each platform's factory config fields.
+// loadPlatformConfiguration loads platform configuration files from NewInput.ConfigPath and returns a loaded managerConfig
+// value.
+// 	If NewInput.ConfigPath is a directory, all config files within that directory will be loaded.
+//	If NewInput.ConfigPath is a file, it will only use that file as the config file.
+// 	A `name` config value containing the platform name will be added to each platform's factory config fields.
 func loadPlatformConfiguration(input *NewInput) (*managerConfig, error) {
-	// Set default path if not defined
-	if input.ConfigPath == "" {
-		var err error
-		var cwd string
-		if cwd, err = os.Getwd(); err != nil {
-			return nil, err
+	list, err := listConfigFiles(input.ConfigPath)
+	if err != nil {
+		return nil, err
+	}
+
+	mc := managerConfig{
+		Platforms: make(map[string]factory.Config),
+	}
+
+	for _, p := range list {
+		var config factory.Config
+
+		err = input.Loader.Load(p, &config)
+		if err != nil {
+			continue
 		}
-		input.ConfigPath = path.Join(cwd, "config.yaml")
+
+		// Get filename as key for platform map
+		file := filepath.Base(p)
+		filename := input.Loader.TrimExt(file)
+
+		mc.Platforms[filename] = config
+		mc.Platforms[filename].Config["name"] = filename
 	}
 
-	// Load platform configurations
-	config := &managerConfig{}
-	err := input.Loader.Load(input.ConfigPath, config)
-
-	// Append each platform name to its set of values
-	for name, config := range config.Platforms {
-		config.Config["name"] = name
-	}
-
-	return config, err
+	return &mc, err
 }
 
 // GetSimulationPlatform gets the platform.Platform associated with a simulation.
