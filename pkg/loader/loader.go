@@ -5,6 +5,7 @@ import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/utils/reflect"
 	"io/ioutil"
 	"path/filepath"
+	"strings"
 )
 
 var (
@@ -17,8 +18,13 @@ var (
 // Loader reads and parses files into Go structs
 type Loader interface {
 	// Load loads a file from a specific path into the passed output value.
-	// Loaders that do not use files can ignore the `path` parameter.
+	//	 Loaders that do not use files can ignore the `path` parameter.
 	Load(path string, out interface{}) error
+	// TrimExt returns the filename without the file extension.
+	//	 Loaders should remove the extension of the file they expect as config.
+	//	 - A YAML Loader will remove the `.yaml` extension.
+	//	 - A JSON Loader will remove the `.json` extension.
+	TrimExt(filename string) string
 }
 
 // LoadFile loads a single file into a target struct.
@@ -80,4 +86,14 @@ func LoadDirFiles(loader Loader, path string, out interface{}) []error {
 	}
 
 	return nil
+}
+
+// trimExts attempts to remove the given extensions from the filename.
+// 	Input: (file.yaml, .yaml)
+//	Output: (file)
+func trimExts(filename string, exts ...string) string {
+	for _, ext := range exts {
+		filename = strings.TrimSuffix(filename, ext)
+	}
+	return filename
 }
