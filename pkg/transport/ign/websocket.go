@@ -5,6 +5,7 @@ import (
 	"github.com/gorilla/websocket"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/transport"
 	"gitlab.com/ignitionrobotics/web/ign-go"
+	"sync"
 )
 
 // Callback is a function that will be executed after reading a message from a certain topic.
@@ -33,8 +34,9 @@ type PubSubWebsocketTransporter interface {
 // support.
 type websocketPubSubTransport struct {
 	transport.WebsocketTransporter
-	topics    map[string]Callback
-	listening bool
+	topics     map[string]Callback
+	topicsLock sync.RWMutex
+	listening  bool
 }
 
 func newWebsocketPubSubTransport(transport transport.WebsocketTransporter) (*websocketPubSubTransport, error) {
@@ -82,6 +84,9 @@ func (w *websocketPubSubTransport) listen() error {
 }
 
 func (w *websocketPubSubTransport) processMessage(messageType int, message []byte) {
+	w.topicsLock.RLock()
+	defer w.topicsLock.RUnlock()
+
 	// Try to parse the incoming message as a Message struct
 	if message, err := NewMessageFromByteSlice(message); err == nil {
 		if cb, ok := w.topics[message.Topic]; ok {
@@ -94,6 +99,9 @@ func (w *websocketPubSubTransport) processMessage(messageType int, message []byt
 // It will also create a new go routine that will read messages until the connection is lost or closed.
 // The incoming messages will be sent as an argument for the given callback.
 func (w *websocketPubSubTransport) Subscribe(topic string, cb Callback) error {
+	w.topicsLock.Lock()
+	defer w.topicsLock.Unlock()
+
 	sub := NewSubscriptionMessage(topic)
 
 	// Send a subscription message to the websocket server
@@ -113,6 +121,9 @@ func (w *websocketPubSubTransport) Subscribe(topic string, cb Callback) error {
 
 // Unsubscribe closes a connection to the given topic.
 func (w *websocketPubSubTransport) Unsubscribe(topic string) error {
+	w.topicsLock.Lock()
+	defer w.topicsLock.Unlock()
+
 	delete(w.topics, topic)
 
 	return nil

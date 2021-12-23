@@ -126,7 +126,7 @@ func TestWait_WaitForNodesToBeReady(t *testing.T) {
 		Status: apiv1.NodeStatus{
 			Conditions: []apiv1.NodeCondition{
 				{
-					Type:   apiv1.NodeNetworkUnavailable,
+					Type:   apiv1.NodeReady,
 					Status: apiv1.ConditionTrue,
 				},
 			},
@@ -145,11 +145,6 @@ func TestWait_WaitForNodesToBeReady(t *testing.T) {
 		err = r.Wait(3*time.Second, 1*time.Microsecond)
 		wg.Done()
 	}()
-
-	node.Status.Conditions = append(node.Status.Conditions, apiv1.NodeCondition{Type: apiv1.NodeReady, Status: apiv1.ConditionTrue})
-
-	_, err = cli.CoreV1().Nodes().UpdateStatus(&node)
-	assert.NoError(t, err)
 
 	wg.Wait()
 	assert.NoError(t, err)

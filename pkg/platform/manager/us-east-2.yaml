@@ -1,0 +1,65 @@
+type: "platform"
+config:
+  # These values are specific to this platform configuration.
+  # All values must be defined for the configuration to be valid.
+  values:
+    # AWS components target region.
+    - &region "us-east-2"
+    # Path to Kubernetes components kubeconfig file.
+    - &kubeconfig ""
+  components:
+    machines:
+      type: "ec2"
+      config:
+        region: *region
+        zones:
+          - zone: "us-east-1a"
+            subnetID: "subnet-0123456789abcdefg"
+    orchestrator:
+      type: "kubernetes"
+      config:
+        api:
+          kubeconfig: *kubeconfig
+        components:
+          nodes:
+            type: "kubernetes"
+          pods:
+            type: "kubernetes"
+          services:
+            type: "kubernetes"
+          ingresses:
+            type: "gloo"
+          ingressRules:
+            type: "gloo"
+          networkPolicies:
+            type: "kubernetes"
+    storage:
+      type: "s3"
+      config:
+        region: "us-east-2"
+    store:
+      type: "store"
+      config:
+        machinesStore:
+          instanceProfileValue: "test"
+          keyNameValue: "test"
+          firewallRulesValue: [ "sg-0123456789abcdefg" ]
+          namePrefixValue: "test"
+          clusterNameValue: "test"
+        ignitionStore:
+          defaultSenderValue: "test@ignitionrobotics.org"
+          logsBucketValue: "test_bucket"
+        moleStore:
+          bridgePulsarAddressValue: "mole-proxy-test"
+        orchestratorStore:
+          ingressNameValue: "test"
+          ingressHostValue: "test.com"
+    secrets:
+      type: "kubernetes"
+      config:
+        api:
+          kubeconfig: *kubeconfig
+    emailSender:
+      type: "ses"
+      config:
+        region: *region
