@@ -6,7 +6,6 @@ import (
 	machines "gitlab.com/ignitionrobotics/web/cloudsim/pkg/machines/implementations"
 	orchestrator "gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/implementations"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/platform"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/runsim"
 	secrets "gitlab.com/ignitionrobotics/web/cloudsim/pkg/secrets/implementations"
 	storage "gitlab.com/ignitionrobotics/web/cloudsim/pkg/storage/implementations"
 	store "gitlab.com/ignitionrobotics/web/cloudsim/pkg/store/implementations"
@@ -69,9 +68,6 @@ func NewFunc(config interface{}, dependencies factory.Dependencies, out interfac
 	if err := factory.CallFactories(factoryCalls); err != nil {
 		return err
 	}
-
-	// Configure the RunningSimulations component
-	components.RunningSimulations = runsim.NewManager()
 
 	// Set output value
 	platform, err := platform.NewPlatform(typeConfig.Name, components)
