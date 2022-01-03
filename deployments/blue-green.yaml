@@ -1,14 +1,13 @@
 apiVersion: flagger.app/v1beta1
 kind: Canary
 metadata:
-  name: $APPLICATION_NAME
-  namespace: $APPLICATION_ENVIRONMENT
+  name: web-cloudsim
 spec:
   provider: kubernetes
   targetRef:
     apiVersion: apps/v1
     kind: Deployment
-    name: $APPLICATION_NAME
+    name: web-cloudsim
   progressDeadlineSeconds: 60
   service:
     name: web-cloudsim
@@ -34,13 +33,12 @@ spec:
         timeout: 5s
         metadata:
           type: cmd
-          cmd: $HEY_CMD
+          cmd: "hey -z 15s -q 5 -c 2 http://web-cloudsim-canary.default.svc.cluster.local/healthz"
 ---
 apiVersion: flagger.app/v1beta1
 kind: MetricTemplate
 metadata:
   name: not-found-percentage
-  namespace: $APPLICATION_ENVIRONMENT
 spec:
   provider:
     type: prometheus
