@@ -139,7 +139,6 @@ race:
     name: testing
   tags:
     - gitlab-org
-  allow_failure: true
 
 coverage:
   stage: test
