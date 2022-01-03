@@ -19,8 +19,6 @@ type Components struct {
 	Secrets *factory.Config `yaml:"secrets"`
 	// EmailSender contains configuration to instance a EmailSender implementation using a factory.
 	EmailSender *factory.Config `yaml:"emailSender"`
-	// RunningSimulations contains configuration to instance a RunningSimulations implementation using a factory.
-	RunningSimulations *factory.Config `yaml:"runningSimulations"`
 }
 
 // Config is used to create a platform.
