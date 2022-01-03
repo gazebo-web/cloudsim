@@ -1,6 +1,7 @@
 package jobs
 
 import (
+	"context"
 	"github.com/jinzhu/gorm"
 	subtapp "gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/application"
 	subtsims "gitlab.com/ignitionrobotics/web/cloudsim/internal/subt/simulations"
@@ -107,4 +108,40 @@ func isMappingServerEnabled(svc subtapp.Services, groupID simulations.GroupID) b
 	}
 
 	return track.MappingImage != nil
+}
+
+// chargeCredits deducts credits for a simulation.
+// The owner and number of credits are obtained from the simulation.
+func chargeCredits(svc subtapp.Services, gid simulations.GroupID) error {
+	sim, err := svc.Simulations().Get(gid)
+	if err != nil {
+		return err
+	}
+
+	// If user is a sysadmin, skip charging.
+	if svc.Users().IsSystemAdmin(sim.GetCreator()) {
+		return nil
+	}
+
+	// If sim was already charged, skip charging.
+	if sim.GetChargedAt() != nil {
+		return nil
+	}
+
+	user, em := svc.Users().GetUserFromUsername(sim.GetCreator())
+	if em != nil {
+		return em.BaseError
+	}
+
+	err = svc.Billing().SubtractCredits(context.Background(), user, sim)
+	if err != nil {
+		return err
+	}
+
+	err = svc.Simulations().MarkCharged(gid)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

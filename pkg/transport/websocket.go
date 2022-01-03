@@ -4,12 +4,14 @@ import (
 	"errors"
 	"github.com/gorilla/websocket"
 	"net/url"
+	"sync"
 )
 
 // websocketTransport is a WebsocketTransporter implementation.
 type websocketTransport struct {
 	Address    url.URL
 	connection *websocket.Conn
+	connLock   sync.RWMutex
 }
 
 // WebsocketConnector is a group of methods that handle websocket connections.
@@ -25,7 +27,10 @@ type WebsocketTransporter interface {
 
 // Connect establishes a connection to the websocket server.
 func (w *websocketTransport) Connect() error {
-	if w.connection != nil {
+	w.connLock.Lock()
+	defer w.connLock.Unlock()
+
+	if w.connection != nil && w.IsConnected() {
 		return errors.New("connection already established")
 	}
 	conn, err := createConnection(w.Address)
@@ -48,6 +53,9 @@ func createConnection(addr url.URL) (*websocket.Conn, error) {
 
 // IsConnected checks if the connection has been established
 func (w *websocketTransport) IsConnected() bool {
+	w.connLock.Lock()
+	defer w.connLock.Unlock()
+
 	if w == nil || w.connection == nil {
 		return false
 	}
@@ -57,6 +65,9 @@ func (w *websocketTransport) IsConnected() bool {
 
 // Disconnect closes the connection.
 func (w *websocketTransport) Disconnect() error {
+	w.connLock.Lock()
+	defer w.connLock.Unlock()
+
 	if w == nil || w.connection == nil {
 		return nil
 	}
@@ -70,6 +81,8 @@ func (w *websocketTransport) Disconnect() error {
 
 // Connection returns the active websocket connection.
 func (w *websocketTransport) Connection() *websocket.Conn {
+	w.connLock.RLock()
+	defer w.connLock.RUnlock()
 	return w.connection
 }
 

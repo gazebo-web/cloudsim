@@ -308,6 +308,32 @@ func (suite *IngressTestSuite) TestUpsertIngressRuleRemoveIngressRule() {
 	test(ingress, suite.ingressHostRuleIndex, 1, multiplePaths[2])
 }
 
+func TestSubTApplicationTestSuite(t *testing.T) {
+	suite.Run(t, &SubTApplicationTestSuite{})
+}
+
+type SubTApplicationTestSuite struct {
+	suite.Suite
+	app *SubTApplication
+}
+
+func (suite *SubTApplicationTestSuite) SetupTest() {
+	app, err := NewSubTApplication(context.Background())
+	suite.Require().NoError(err)
+	suite.app = app
+}
+
+func (suite *SubTApplicationTestSuite) TestGetLaunchableCircuitName() {
+	// A circuit with no circuit set should return the same circuit name
+	suite.Assert().Equal("test", suite.app.getLaunchableCircuitName("test"))
+
+	// A circuit with a circuit set should not return the same circuit name
+	suite.Assert().NotEqual(
+		CircuitSubTPortalAccess,
+		suite.app.getLaunchableCircuitName(CircuitSubTPortalAccess),
+	)
+}
+
 func TestIsSubmissionDeadlineReached(t *testing.T) {
 	t.Run("Should return false when submission deadline is not set", func(t *testing.T) {
 		c := SubTCircuitRules{SubmissionDeadline: nil}
@@ -326,6 +352,7 @@ func TestIsSubmissionDeadlineReached(t *testing.T) {
 		assert.True(t, isSubmissionDeadlineReached(c))
 	})
 }
+
 func TestIsCompetitionCircuit(t *testing.T) {
 	assert.True(t, IsCompetitionCircuit("Tunnel Circuit"))
 	assert.True(t, IsCompetitionCircuit("Urban Circuit"))

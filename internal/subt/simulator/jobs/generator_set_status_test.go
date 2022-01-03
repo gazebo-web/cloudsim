@@ -27,14 +27,14 @@ func TestGenerateSetSimulationStatusJob(t *testing.T) {
 
 	// Initialize simulation
 	gid := simulations.GroupID("aaaa-bbbb-cccc-dddd")
-	sim := fake.NewSimulation(gid, simulations.StatusPending, simulations.SimSingle, nil, "test", 1*time.Minute, nil)
+	sim := fake.NewSimulation(gid, simulations.StatusPending, simulations.SimSingle, nil, "test", 1*time.Minute, nil, nil)
 
 	// Initialize fake simulation service
 	svc := fake.NewService()
 	svc.On("UpdateStatus", gid, simulations.StatusRunning).Return(error(nil)).Run(func(args mock.Arguments) {
 		sim.SetStatus(simulations.StatusRunning)
 	})
-	app := application.NewServices(svc, nil)
+	app := application.NewServices(svc, nil, nil)
 
 	tracksService := tracks.NewService(nil, nil, nil)
 

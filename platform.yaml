@@ -1,0 +1,252 @@
+# Platform manifest file.
+# This manifest defines a specific platform configuration that Cloudsim will use to launch simulations.
+# The `SIMSVC_PLATFORM_CONFIG_PATH` environment variable should be defined to determine where cloudsim should look for
+# platform manifests.
+# If it is not defined, Cloudsim will automatically look for manifest files in the root folder.
+# All values in this manifest should be strings unless otherwise noted.
+type: "platform"
+config:
+  components:
+    ## Machines
+    # Machines are used to provision physical instances on which to run simulations.
+    machines:
+      type: "ec2"
+      config:
+        # Region the component will operate in.
+        region: "us-east-1"
+
+        # Maximum number of machines that this component is able to launch.
+        # -1 is unlimited. Note that the component will still be limited by EC2 availability.
+        # Default: -1
+        # limit: -1
+
+        # Label set on all machines. Used to identify machines launched by this component.
+        # If there is more than one Cloudsim environment running in a single EC2 account and region, make sure that each
+        # environment has a unique value.
+        # Default: cloudsim-simulation-worker
+        # workerGroupName: ""
+
+    ## Orchestrator
+    # Orchestrator provides an abstraction to launch simulations on a set of physical machines.
+    orchestrator:
+      type: "kubernetes"
+      config:
+        api:
+          # Path to the Kubernetes cluster connection configuration.
+          kubeconfig: ""
+        components:
+          # Nodes are an abstraction of a physical machine available to the orchestrator that are ultimately used to run
+          # pods on.
+          nodes:
+            type: "kubernetes"
+          # Pods are logical units that contain applications. Pods themselves can be contained of multiple containers.
+          pods:
+            type: "kubernetes"
+          # Services provide mechanisms to expose services running in pods to other pods managed by the orchestrator, or
+          # to allow external access from the Internet.
+          services:
+            type: "kubernetes"
+          # Ingresses allow external access (from outside the cluster, e.g. the Internet) to orchestrator services.
+          ingresses:
+            type: "gloo"
+          # Ingress rules control external access interactions with orchestrator ingresses.
+          ingressRules:
+            type: "gloo"
+          # Network policies define the possible interactions between pods managed by the orchestrator.
+          # They can be thought of as a firewall for pods.
+          networkPolicies:
+            type: "kubernetes"
+
+    ## Storage
+    # Storage is used to store files. This includes logs, summaries, and other simulation artifacts.
+    # It is mainly used to store log files and allow users to download them.
+    # This component should normally use the same configuration across all platforms, unless your application explicitly
+    # requires otherwise.
+    storage:
+      type: "s3"
+      config:
+        # Region the component will operate in.
+        region: "us-east-1"
+
+    ## Store
+    # Store contains various Cloudsim configuration options used to configure and launch simulations.
+    # It is composed of a set of sub-stores, each specifying configurations for different Cloudsim aspects.
+    store:
+      type: "store"
+      config:
+        # Contains values used to configure machine instances when launching simulations.
+        machinesStore:
+          # (Required) Used to define permissions for the machine within the provider.
+          # For AWS EC2, this value is the instance profile ARN.
+          instanceProfileValue: ""
+
+          # (Required) Name of the SSH key used to access machines. This key must be registered in the platform's
+          # machines provider.
+          keyNameValue: ""
+
+          # MachineTypeValue is the type of instance used for simulation machines.
+          # Default: "g3.4xlarge"
+          # machineTypeValue: "g3.4xlarge"
+
+          # MachineSidecarTypeValue is the type of instance used for non-simulation machines.
+          # Default: "c5.4xlarge"
+          # machineSidecarTypeValue: "c5.4xlarge"
+
+          # FirewallRulesValue is a set of firewall rules that will be applied to a new instance.
+          # Type: []string
+          # Example: ["sg-0123456789abcdefg"]
+          # firewallRulesValue: [ "" ]
+
+          # Maximum number of machines that Cloudsim can have running at the same time. -1 is unlimited.
+          # Type: int
+          # Default: -1
+          # machinesLimitValue: -1
+
+          # Instance image used to launch sidecar machines.
+          # For AWS EC2, this value is the Amazon Machine Image (AMI) ID.
+          baseImageValue: ""
+
+          # Instance image used to launch simulation machines (with GPU support).
+          # For AWS EC2, this value is the Amazon Machine Image (AMI) ID.
+          # baseImageGPUValue: ""
+
+          # (Required) Prefix used when naming a new instance.
+          namePrefixValue: ""
+
+          # (Required) Name of the cluster EC2 instances will join.
+          clusterNameValue: ""
+
+          # Max amount of time in seconds that the machine creation process will wait until marking the simulation as
+          # failed.
+          # Type: uint
+          # Default: 300
+          # nodeReadyTimeout: 300
+
+        # Contains values used to configure simulation pods.
+        # These configurations affect Ignition Gazebo simulation servers, communication bridges and team field computer
+        # pods.
+        ignitionStore:
+          # Path inside the Ignition Gazebo container where the logs volume will be mounted.
+          # The logs volume can be accessed by the Gazebo container or another pod with the same volume to upload logs
+          # to storage.
+          # Default: "/tmp/ign"
+          # gazeboServerLogsPathValue: ""
+
+          # Path inside ROS master containers (i.e. communication bridges) where the ROS logs volume will be mounted.
+          # Default: "/home/developer/.ros"
+          # rosLogsPathValue: ""
+
+          # Path inside copy pods where the logs volume will be mounted.
+          # Copy pods are pods launched to access logs produced by the simulation server and communication bridges.
+          # They are launched as separate pods to allow accessing logs even in cases where the pod producing the log is
+          # terminated unexpectedly or abruptly.
+          # Default: "/tmp/logs"
+          # sidecarContainerLogsPathValue: ""
+
+          # IGN_VERBOSE value to set as an environment variable in simulation pods.
+          # Type: string
+          # Default: 2 (WARNING)
+          # verbosityValue: 2
+
+          # Enables upload of simulation logs to the platform storage.
+          # Type: bool
+          # Default: false
+          # logsCopyEnabledValue: true
+
+          # Region in which to launch simulations.
+          # Default: "us-east-1"
+          # regionValue: ""
+
+          # Name of the secret-type resource in the orchestrator containing sensitive information required by simulations.
+          # Default: "aws-secrets"
+          # secretsNameValue: ""
+
+          # Array of email addresses to include as recipients in all summary result emails.
+          # Type: []string
+          # defaultRecipientsValue: [""]
+
+          # (Required) Email address to use when sending summary result emails.
+          defaultSenderValue: ""
+
+          # (Required) Name of the storage component bucket to upload logs to.
+          logsBucketValue: ""
+
+        moleStore:
+          # (Required) Address of the Pulsar service the Mole bridge should connect to.
+          # If the Mole deployment is running on the same cluster this should be in the form of <SERVICE>.<NAMESPACE>.
+          bridgePulsarAddressValue: ""
+
+          # Port on which the Pulsar service is running.
+          # Type: uint
+          # Default: 6650
+          # bridgePulsarPortValue: 6650
+
+          # BridgePulsarHTTPPort returns the port on which the Mole Pulsar HTTP service is running.
+          # Type: uint
+          # Default: 8080
+          # bridgePulsarHTTPPortValue: 8080
+
+          # Regex used by the Mole bridge to filter topics.
+          # Default: "^subt/"
+          # bridgeTopicRegexValue: ""
+
+        # Contains values used to configure various simulation orchestrator resources.
+        orchestratorStore:
+          # Amount of time in seconds to wait for an orchestrator resource to terminate.
+          # Resources that exceed this time will be forcefully terminated.
+          # Type: uint
+          # Default: 120
+          # terminationGracePeriodSecondsValue: 120
+
+          # Array of additional nameservers to add to simulation pods.
+          # Type: []string
+          # Default: ["8.8.8.8", "1.1.1.1"]
+          # nameserverValues: [""]
+
+          # Orchestrator namespace to launch simulations in.
+          # Default: "default"
+          namespaceValue: ""
+
+          # IngressNamespaceValue is the orchestrator namespace where the Cloudsim ingress is defined.
+          # Default: "default"
+          # ingressNamespaceValue: ""
+
+          # (Required) Name of the orchestrator Ingress used to route client requests from the Internet to
+          # different internal services. This configuration is required to enable websocket connections to simulations.
+          # For Gloo Ingress and Ingress Rules components, this should contain the name of the Virtual Service for the
+          # websocket address.
+          ingressNameValue: ""
+
+          # (Required) IngressHostValue contains the domain URL used to route incoming websocket connections.
+          # It is used to select a specific rule to modify in an ingress.
+          # The ingress resource referenced by the `IngressName` configuration must contain at least one rule with a host
+          # value matching this configuration.
+          # For Gloo Ingress and Ingress Rules components, this should contain the domain that users will use to connect
+          # to simulation websocket servers.
+          ingressHostValue: ""
+
+          # Max amount of time in seconds that the pod creation process will wait before marking the simulation as
+          # failed.
+          # Type: uint
+          # Default: 300
+          # podReadyTimeout: 300
+
+    ## Secrets
+    # Secrets provides access to a secrets manager. It is used to store and pass sensitive information to simulation
+    # resources.
+    secrets:
+      type: "kubernetes"
+      config:
+        api:
+          # Path to the Kubernetes cluster connection configuration.
+          kubeconfig: ""
+
+    ## Email Sender
+    # Used to send emails.
+    # This component should normally use the same configuration across all platforms, unless your application explicitly
+    # requires otherwise.
+    emailSender:
+      type: "ses"
+      config:
+        # Region the component will operate in.
+        region: "us-east-1"

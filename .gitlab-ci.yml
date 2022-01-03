@@ -31,7 +31,7 @@ variables:
 .build_docker: &build_docker
   - echo "Creating docker image with tag $IMAGE_TAG."
   - docker pull $CI_REGISTRY_IMAGE:$IMAGE_CACHE || true
-  - docker build --cache-from $CI_REGISTRY_IMAGE:$IMAGE_CACHE --tag $CI_REGISTRY_IMAGE:$IMAGE_TAG .
+  - DOCKER_BUILDKIT=1 docker build --cache-from $CI_REGISTRY_IMAGE:$IMAGE_CACHE --tag $CI_REGISTRY_IMAGE:$IMAGE_TAG .
   - docker push $CI_REGISTRY_IMAGE:$IMAGE_TAG
 
 ##########################################################

@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/aws/aws-sdk-go/service/ec2/ec2iface"
 	"github.com/stretchr/testify/suite"
+	cloud "gitlab.com/ignitionrobotics/web/cloudsim/pkg/cloud/aws"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/machines"
 	"gitlab.com/ignitionrobotics/web/ign-go"
 	"testing"
@@ -27,8 +28,9 @@ func (s *ec2CreateMachinesTestSuite) SetupTest() {
 	logger := ign.NewLoggerNoRollbar("ec2CreateMachinesTestSuite", ign.VerbosityDebug)
 	var err error
 	s.machines, err = NewMachines(&NewInput{
-		API:    s.ec2API,
-		Logger: logger,
+		API:            s.ec2API,
+		Logger:         logger,
+		CostCalculator: cloud.NewCostCalculatorEC2(nil),
 		Zones: []Zone{
 			{
 				Zone:     "test1",
@@ -209,8 +211,9 @@ func (s *ec2CreateMachinesTestSuite) TestCreate_ValidWithDryRunMode() {
 	logger := ign.NewLoggerNoRollbar("ec2TerminateMachinesTestSuite", ign.VerbosityDebug)
 	var err error
 	s.machines, err = NewMachines(&NewInput{
-		API:    mock,
-		Logger: logger,
+		API:            mock,
+		CostCalculator: cloud.NewCostCalculatorEC2(nil),
+		Logger:         logger,
 		Zones: []Zone{
 			{
 				Zone:     "test",

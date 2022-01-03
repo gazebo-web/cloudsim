@@ -32,6 +32,6 @@ type CreateServiceInput struct {
 type Services interface {
 	Create(input CreateServiceInput) (resource.Resource, error)
 	Get(name, namespace string) (resource.Resource, error)
-	GetAllBySelector(namespace string, selector resource.Selector) ([]resource.Resource, error)
+	List(namespace string, selector resource.Selector) ([]resource.Resource, error)
 	Remove(resource resource.Resource) error
 }

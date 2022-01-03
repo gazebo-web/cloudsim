@@ -137,6 +137,19 @@ func init() {
 	// Health
 	m := mainRouter.PathPrefix("/").Subrouter()
 	s.ConfigureRouterWithRoutes("/", m, sim.MonitoringRoutes)
+
+	// Profile
+	if value, err := ign.ReadEnvVar("IGN_CPU_PROFILE_ENABLED"); err == nil && strings.ToLower(value) == "true" {
+		profileRouter := mainRouter.PathPrefix(apiPrefix).Subrouter()
+		s.ConfigureRouterWithRoutes("/", profileRouter, sim.ProfileRoutes)
+	}
+
+	// Billing
+	if value, err := ign.ReadEnvVar("SIMSVC_BILLING_ENABLED"); err == nil && strings.ToLower(value) == "true" {
+		billingRouter := mainRouter.PathPrefix(apiPrefix).Subrouter()
+		s.ConfigureRouterWithRoutes("/", billingRouter, sim.BillingRoutes)
+	}
+
 	// Set router.
 	// Because a monitoring provider was set, this call will add monitoring routes as well as setting the router
 	globals.Server.SetRouter(mainRouter)

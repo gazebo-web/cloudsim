@@ -2,6 +2,7 @@ package simulations
 
 import (
 	"errors"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/calculator"
 	"time"
 )
 
@@ -129,6 +130,11 @@ type Simulation interface {
 	// GetImage returns the simulation's docker image. This image is used as the solution image.
 	GetImage() string
 
+	// GetLaunchedAt returns the time and date the simulation was officially launched. This date can differ from the
+	// time the simulation was requested due to the simulation having been held, or because it has been unable to
+	// launch because of insufficient cloud resources.
+	GetLaunchedAt() *time.Time
+
 	// GetValidFor returns the amount of time that the simulation is considered valid.
 	GetValidFor() time.Duration
 
@@ -143,4 +149,19 @@ type Simulation interface {
 
 	// GetPlatform returns the Simulation's platform.
 	GetPlatform() *string
+
+	// SetRate sets the given rate to this simulation.
+	SetRate(rate calculator.Rate)
+
+	// GetRate returns the rate at which this simulation should be charged.
+	GetRate() calculator.Rate
+
+	// GetStoppedAt returns the date and time when a simulation stopped from running.
+	GetStoppedAt() *time.Time
+
+	// GetCost applies the current rate to this simulation resulting in the amount of money that it should be charged.
+	GetCost() (uint, calculator.Rate, error)
+
+	// GetChargedAt returns the time and date this simulation was charged.
+	GetChargedAt() *time.Time
 }

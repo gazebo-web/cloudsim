@@ -993,6 +993,19 @@ var SubTCircuits = []string{
 	CircuitFinalsPreliminaryRoundWorld1,
 	CircuitFinalsPreliminaryRoundWorld2,
 	CircuitFinalsPreliminaryRoundWorld3,
+	CircuitFinals,
+	CircuitFinalsWorld1,
+	CircuitFinalsWorld2,
+	CircuitFinalsWorld3,
+	CircuitFinalsWorld4,
+	CircuitFinalsWorld5,
+	CircuitFinalsWorld6,
+	CircuitFinalsWorld7,
+	CircuitFinalsWorld8,
+	CircuitSystemsFinalsPreliminaryRound1,
+	CircuitSystemsFinalsPreliminaryRound2,
+	CircuitSystemsFinalsPrizeRound,
+	CircuitSubTPortalAccess,
 }
 
 // SubTCompetitionCircuits is the list of circuits that are used for competitions.
@@ -1003,6 +1016,7 @@ var SubTCompetitionCircuits = []string{
 	CircuitVirtualStixCircuit,
 	CircuitVirtualStixCircuit2,
 	CircuitFinalsPreliminaryRound,
+	CircuitFinals,
 }
 
 // isValidRobotType checks if the field value is a valid Robot Type.

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/gorilla/mux"
 	"github.com/jinzhu/gorm"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/billing"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
 	useracc "gitlab.com/ignitionrobotics/web/cloudsim/pkg/users"
 	"gitlab.com/ignitionrobotics/web/fuelserver/bundles/users"
@@ -645,6 +646,20 @@ func QueueRemove(user *users.User, tx *gorm.DB, w http.ResponseWriter, r *http.R
 		return nil, ign.NewErrorMessage(ign.ErrorIDNotInRequest)
 	}
 	return SimServImpl.QueueRemoveElement(r.Context(), user, groupID)
+}
+
+// GetCreditsBalance gets the credit balance of the current user.
+func GetCreditsBalance(user *users.User, tx *gorm.DB, w http.ResponseWriter, r *http.Request) (interface{}, *ign.ErrMsg) {
+	return SimServImpl.GetCreditsBalance(r.Context(), user)
+}
+
+// CreateSession starts a payment session with the payments service for the current user.
+func CreateSession(user *users.User, tx *gorm.DB, w http.ResponseWriter, r *http.Request) (interface{}, *ign.ErrMsg) {
+	var req billing.CreateSessionRequest
+	if em := ParseStruct(&req, r, false); em != nil {
+		return nil, em
+	}
+	return SimServImpl.CreateSession(r.Context(), user, req)
 }
 
 // Healthz returns a string to confirm that cloudsim is running.

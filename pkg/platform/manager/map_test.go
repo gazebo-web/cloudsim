@@ -102,12 +102,31 @@ func (s *testMapSuite) TestNewMap() {
 	yamlLoader := loader.NewYAMLLoader(logger)
 
 	input := &NewInput{
-		ConfigPath: "manager_config_test.yaml",
+		ConfigPath: ".",
 		Logger:     logger,
 		Loader:     yamlLoader,
 	}
 	manager, err := NewMapFromConfig(input)
 	s.Require().NoError(err)
 	s.Require().NotNil(manager)
-	s.Require().GreaterOrEqual(len(manager.Selectors()), 2)
+	s.Assert().GreaterOrEqual(len(manager.Selectors()), 2)
+	s.Assert().Contains(manager.Selectors(), "us-east-1")
+	s.Assert().Contains(manager.Selectors(), "us-east-2")
+}
+
+func (s *testMapSuite) TestNewMapWithFile() {
+	// Prepare input
+	logger := ign.NewLoggerNoRollbar("test", ign.VerbosityWarning)
+	yamlLoader := loader.NewYAMLLoader(logger)
+
+	input := &NewInput{
+		ConfigPath: "us-east-1.yaml",
+		Logger:     logger,
+		Loader:     yamlLoader,
+	}
+	manager, err := NewMapFromConfig(input)
+	s.Require().NoError(err)
+	s.Require().NotNil(manager)
+	s.Assert().GreaterOrEqual(len(manager.Selectors()), 1)
+	s.Assert().Equal([]string{"us-east-1"}, manager.Selectors())
 }

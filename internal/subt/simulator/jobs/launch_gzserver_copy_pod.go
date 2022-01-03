@@ -71,7 +71,7 @@ func prepareGazeboCreateCopyPodInput(store actions.Store, tx *gorm.DB, deploymen
 			Name:                          subtapp.GetPodNameGazeboServerCopy(s.GroupID),
 			Namespace:                     namespace,
 			Labels:                        subtapp.GetPodLabelsGazeboServerCopy(s.GroupID, s.ParentGroupID).Map(),
-			RestartPolicy:                 pods.RestartPolicyNever,
+			RestartPolicy:                 pods.RestartPolicyAlways,
 			TerminationGracePeriodSeconds: s.Platform().Store().Orchestrator().TerminationGracePeriod(),
 			NodeSelector:                  subtapp.GetNodeLabelsGazeboServer(s.GroupID),
 			Containers: []pods.Container{

@@ -21,6 +21,7 @@ import (
 	"k8s.io/api/extensions/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
+	"math/rand"
 	"net/http"
 	"net/url"
 	"path"
@@ -65,72 +66,97 @@ const (
 
 	// A predefined const to refer to the SubT Application type
 	// This will be used to know which Pods and services launch.
-	applicationSubT                     string = "subt"
-	CircuitNIOSHSRConfigA               string = "NIOSH SR Config A"
-	CircuitNIOSHSRConfigB               string = "NIOSH SR Config B"
-	CircuitNIOSHEXConfigA               string = "NIOSH EX Config A"
-	CircuitNIOSHEXConfigB               string = "NIOSH EX Config B"
-	CircuitVirtualStix                  string = "Virtual Stix"
-	CircuitTunnelCircuit                string = "Tunnel Circuit"
-	CircuitTunnelPractice1              string = "Tunnel Practice 1"
-	CircuitTunnelPractice2              string = "Tunnel Practice 2"
-	CircuitTunnelPractice3              string = "Tunnel Practice 3"
-	CircuitSimpleTunnel1                string = "Simple Tunnel 1"
-	CircuitSimpleTunnel2                string = "Simple Tunnel 2"
-	CircuitSimpleTunnel3                string = "Simple Tunnel 3"
-	CircuitTunnelCircuitWorld1          string = "Tunnel Circuit World 1"
-	CircuitTunnelCircuitWorld2          string = "Tunnel Circuit World 2"
-	CircuitTunnelCircuitWorld3          string = "Tunnel Circuit World 3"
-	CircuitTunnelCircuitWorld4          string = "Tunnel Circuit World 4"
-	CircuitTunnelCircuitWorld5          string = "Tunnel Circuit World 5"
-	CircuitUrbanQual                    string = "Urban Qualification"
-	CircuitUrbanSimple1                 string = "Urban Simple 1"
-	CircuitUrbanSimple2                 string = "Urban Simple 2"
-	CircuitUrbanSimple3                 string = "Urban Simple 3"
-	CircuitUrbanPractice1               string = "Urban Practice 1"
-	CircuitUrbanPractice2               string = "Urban Practice 2"
-	CircuitUrbanPractice3               string = "Urban Practice 3"
-	CircuitUrbanCircuit                 string = "Urban Circuit"
-	CircuitUrbanCircuitWorld1           string = "Urban Circuit World 1"
-	CircuitUrbanCircuitWorld2           string = "Urban Circuit World 2"
-	CircuitUrbanCircuitWorld3           string = "Urban Circuit World 3"
-	CircuitUrbanCircuitWorld4           string = "Urban Circuit World 4"
-	CircuitUrbanCircuitWorld5           string = "Urban Circuit World 5"
-	CircuitUrbanCircuitWorld6           string = "Urban Circuit World 6"
-	CircuitUrbanCircuitWorld7           string = "Urban Circuit World 7"
-	CircuitUrbanCircuitWorld8           string = "Urban Circuit World 8"
-	CircuitCaveSimple1                  string = "Cave Simple 1"
-	CircuitCaveSimple2                  string = "Cave Simple 2"
-	CircuitCaveSimple3                  string = "Cave Simple 3"
-	CircuitCaveQual                     string = "Cave Qualification"
-	CircuitCavePractice1                string = "Cave Practice 1"
-	CircuitCavePractice2                string = "Cave Practice 2"
-	CircuitCavePractice3                string = "Cave Practice 3"
-	CircuitCaveCircuit                  string = "Cave Circuit"
-	CircuitCaveCircuitWorld1            string = "Cave Circuit World 1"
-	CircuitCaveCircuitWorld2            string = "Cave Circuit World 2"
-	CircuitCaveCircuitWorld3            string = "Cave Circuit World 3"
-	CircuitCaveCircuitWorld4            string = "Cave Circuit World 4"
-	CircuitCaveCircuitWorld5            string = "Cave Circuit World 5"
-	CircuitCaveCircuitWorld6            string = "Cave Circuit World 6"
-	CircuitCaveCircuitWorld7            string = "Cave Circuit World 7"
-	CircuitCaveCircuitWorld8            string = "Cave Circuit World 8"
-	CircuitFinalsQual                   string = "Finals Qualification"
-	CircuitFinalsPractice1              string = "Finals Practice 1"
-	CircuitFinalsPractice2              string = "Finals Practice 2"
-	CircuitFinalsPractice3              string = "Finals Practice 3"
-	CircuitVirtualStixCircuit           string = "Virtual Stix Circuit"
-	CircuitVirtualStixCircuit2          string = "Virtual Stix Circuit 2"
-	CircuitFinalsPreliminaryRound       string = "Finals Preliminary Round"
-	CircuitFinalsPreliminaryRoundWorld1 string = "Finals Preliminary Round World 1"
-	CircuitFinalsPreliminaryRoundWorld2 string = "Finals Preliminary Round World 2"
-	CircuitFinalsPreliminaryRoundWorld3 string = "Finals Preliminary Round World 3"
+	applicationSubT                       string = "subt"
+	CircuitNIOSHSRConfigA                 string = "NIOSH SR Config A"
+	CircuitNIOSHSRConfigB                 string = "NIOSH SR Config B"
+	CircuitNIOSHEXConfigA                 string = "NIOSH EX Config A"
+	CircuitNIOSHEXConfigB                 string = "NIOSH EX Config B"
+	CircuitVirtualStix                    string = "Virtual Stix"
+	CircuitTunnelCircuit                  string = "Tunnel Circuit"
+	CircuitTunnelPractice1                string = "Tunnel Practice 1"
+	CircuitTunnelPractice2                string = "Tunnel Practice 2"
+	CircuitTunnelPractice3                string = "Tunnel Practice 3"
+	CircuitSimpleTunnel1                  string = "Simple Tunnel 1"
+	CircuitSimpleTunnel2                  string = "Simple Tunnel 2"
+	CircuitSimpleTunnel3                  string = "Simple Tunnel 3"
+	CircuitTunnelCircuitWorld1            string = "Tunnel Circuit World 1"
+	CircuitTunnelCircuitWorld2            string = "Tunnel Circuit World 2"
+	CircuitTunnelCircuitWorld3            string = "Tunnel Circuit World 3"
+	CircuitTunnelCircuitWorld4            string = "Tunnel Circuit World 4"
+	CircuitTunnelCircuitWorld5            string = "Tunnel Circuit World 5"
+	CircuitUrbanQual                      string = "Urban Qualification"
+	CircuitUrbanSimple1                   string = "Urban Simple 1"
+	CircuitUrbanSimple2                   string = "Urban Simple 2"
+	CircuitUrbanSimple3                   string = "Urban Simple 3"
+	CircuitUrbanPractice1                 string = "Urban Practice 1"
+	CircuitUrbanPractice2                 string = "Urban Practice 2"
+	CircuitUrbanPractice3                 string = "Urban Practice 3"
+	CircuitUrbanCircuit                   string = "Urban Circuit"
+	CircuitUrbanCircuitWorld1             string = "Urban Circuit World 1"
+	CircuitUrbanCircuitWorld2             string = "Urban Circuit World 2"
+	CircuitUrbanCircuitWorld3             string = "Urban Circuit World 3"
+	CircuitUrbanCircuitWorld4             string = "Urban Circuit World 4"
+	CircuitUrbanCircuitWorld5             string = "Urban Circuit World 5"
+	CircuitUrbanCircuitWorld6             string = "Urban Circuit World 6"
+	CircuitUrbanCircuitWorld7             string = "Urban Circuit World 7"
+	CircuitUrbanCircuitWorld8             string = "Urban Circuit World 8"
+	CircuitCaveSimple1                    string = "Cave Simple 1"
+	CircuitCaveSimple2                    string = "Cave Simple 2"
+	CircuitCaveSimple3                    string = "Cave Simple 3"
+	CircuitCaveQual                       string = "Cave Qualification"
+	CircuitCavePractice1                  string = "Cave Practice 1"
+	CircuitCavePractice2                  string = "Cave Practice 2"
+	CircuitCavePractice3                  string = "Cave Practice 3"
+	CircuitCaveCircuit                    string = "Cave Circuit"
+	CircuitCaveCircuitWorld1              string = "Cave Circuit World 1"
+	CircuitCaveCircuitWorld2              string = "Cave Circuit World 2"
+	CircuitCaveCircuitWorld3              string = "Cave Circuit World 3"
+	CircuitCaveCircuitWorld4              string = "Cave Circuit World 4"
+	CircuitCaveCircuitWorld5              string = "Cave Circuit World 5"
+	CircuitCaveCircuitWorld6              string = "Cave Circuit World 6"
+	CircuitCaveCircuitWorld7              string = "Cave Circuit World 7"
+	CircuitCaveCircuitWorld8              string = "Cave Circuit World 8"
+	CircuitFinalsQual                     string = "Finals Qualification"
+	CircuitFinalsPractice1                string = "Finals Practice 1"
+	CircuitFinalsPractice2                string = "Finals Practice 2"
+	CircuitFinalsPractice3                string = "Finals Practice 3"
+	CircuitVirtualStixCircuit             string = "Virtual Stix Circuit"
+	CircuitVirtualStixCircuit2            string = "Virtual Stix Circuit 2"
+	CircuitFinalsPreliminaryRound         string = "Finals Preliminary Round"
+	CircuitFinalsPreliminaryRoundWorld1   string = "Finals Preliminary Round World 1"
+	CircuitFinalsPreliminaryRoundWorld2   string = "Finals Preliminary Round World 2"
+	CircuitFinalsPreliminaryRoundWorld3   string = "Finals Preliminary Round World 3"
+	CircuitFinals                         string = "Final Prize Round"
+	CircuitFinalsWorld1                   string = "Finals Prize Round World 1"
+	CircuitFinalsWorld2                   string = "Finals Prize Round World 2"
+	CircuitFinalsWorld3                   string = "Finals Prize Round World 3"
+	CircuitFinalsWorld4                   string = "Finals Prize Round World 4"
+	CircuitFinalsWorld5                   string = "Finals Prize Round World 5"
+	CircuitFinalsWorld6                   string = "Finals Prize Round World 6"
+	CircuitFinalsWorld7                   string = "Finals Prize Round World 7"
+	CircuitFinalsWorld8                   string = "Finals Prize Round World 8"
+	CircuitSystemsFinalsPreliminaryRound1 string = "Systems Finals Preliminary World 1"
+	CircuitSystemsFinalsPreliminaryRound2 string = "Systems Finals Preliminary World 2"
+	CircuitSystemsFinalsPrizeRound        string = "Systems Finals Prize Round"
+	CircuitSubTPortalAccess               string = "SubT Portal Access"
 
 	// Container names
 	GazeboServerContainerName    string = "gzserver-container"
 	CommsBridgeContainerName     string = "comms-bridge"
 	FieldComputerContainerName   string = "field-computer"
 	CopyToS3SidecarContainerName string = "copy-to-s3"
+)
+
+var (
+	// CircuitSets contains a mapping between specific circuits and sets of circuits. Circuits in this map will pick
+	// a single circuit from the set at random when launching the simulation.
+	CircuitSets = map[string][]string{
+		CircuitSubTPortalAccess: {
+			CircuitUrbanQual,
+			CircuitCaveQual,
+			CircuitFinalsQual,
+		},
+	}
 )
 
 // subTSpecificsConfig is an internal type needed by the SubT application definition.
@@ -141,6 +167,8 @@ type subTSpecificsConfig struct {
 	// MaxRobotModelCount is the maximum number of robots per model type. E.g. Up to 5 of any model: X1, X2, etc.
 	// Robot models are defined in SubTRobotType. A value of 0 means unlimited robots.
 	MaxRobotModelCount int `env:"SUBT_MAX_ROBOT_MODEL_COUNT" envDefault:"0"`
+	// DisableRobotImageECRCheck disables the requirement for a robot image to be inside a specific ECR repo.
+	DisableRobotImageECRCheck bool `env:"SUBT_DISABLE_ROBOT_IMAGE_ECR_CHECK" envDefault:"false"`
 	// FuelURL contains the URL to a Fuel environment. This base URL is used to generate
 	// URLs for users to access specific assets within Fuel.
 	FuelURL string `env:"IGN_FUEL_URL" envDefault:"https://fuel.ignitionrobotics.org/1.0"`
@@ -187,9 +215,9 @@ func (sa *SubTApplication) getPlatformName() string {
 	return platformSubT
 }
 
-////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////
+// //////////////////////////////////////////////////////////////////////////
+// //////////////////////////////////////////////////////////////////////////
+// //////////////////////////////////////////////////////////////////////////
 
 // getGazeboPodName returns the name of the Gazebo pod for a simulation.
 func (sa *SubTApplication) getGazeboPodName(podNamePrefix string) string {
@@ -215,18 +243,18 @@ func (sa *SubTApplication) getWebsocketServiceName(podNamePrefix string) string 
 	return fmt.Sprintf("%s-websocket", podNamePrefix)
 }
 
-////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////
+// //////////////////////////////////////////////////////////////////////////
+// //////////////////////////////////////////////////////////////////////////
+// //////////////////////////////////////////////////////////////////////////
 
 // getSimulationIngressPath returns the request path for the websocket server of a simulation.
 func (sa *SubTApplication) getSimulationIngressPath(groupID string) string {
 	return fmt.Sprintf("/simulations/%s", groupID)
 }
 
-////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////
+// //////////////////////////////////////////////////////////////////////////
+// //////////////////////////////////////////////////////////////////////////
+// //////////////////////////////////////////////////////////////////////////
 
 // getSimulationSummaryFilename returns the filename of a simulation summary.
 func (sa *SubTApplication) getSimulationSummaryFilename(groupID string) string {
@@ -245,9 +273,9 @@ func (sa *SubTApplication) getRobotROSLogsFilename(groupID string, robotName str
 	return fmt.Sprintf("%s-fc-%s-commsbridge.tar.gz", groupID, strings.ToLower(robotName))
 }
 
-////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////
+// //////////////////////////////////////////////////////////////////////////
+// //////////////////////////////////////////////////////////////////////////
+// //////////////////////////////////////////////////////////////////////////
 
 // getRobotIdentifierFromNames returns the robot identifier of a robot in a simulation.
 // You should call this function when you have a simulation deployment, since it has a property called robotNames.
@@ -276,9 +304,21 @@ func (sa *SubTApplication) getRobotIdentifierFromList(robotList []SubTRobot, rob
 	return nil, err
 }
 
-////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////
+// //////////////////////////////////////////////////////////////////////////
+// //////////////////////////////////////////////////////////////////////////
+// //////////////////////////////////////////////////////////////////////////
+
+// getLaunchableCircuitName returns the name of the circuit that will be used to run the simulation.
+// If the input `circuit` contains a circuit set, it will return the name a random circuit from its set.
+// If it doesn't, it will return the input circuit's name.
+func (sa *SubTApplication) getLaunchableCircuitName(circuit string) string {
+	worlds, ok := CircuitSets[circuit]
+	if !ok {
+		return circuit
+	}
+
+	return worlds[rand.Intn(len(worlds))]
+}
 
 // customizeSimulationRequest performs operations to a simulation request in order to be
 // executed by SubT application.
@@ -354,7 +394,8 @@ func (sa *SubTApplication) customizeSimulationRequest(ctx context.Context,
 		marsupials = append(marsupials, marsupial)
 	}
 
-	rules, err = GetCircuitRules(tx, subtSim.Circuit)
+	circuit := sa.getLaunchableCircuitName(subtSim.Circuit)
+	rules, err = GetCircuitRules(tx, circuit)
 	if err != nil {
 		return NewErrorMessageWithBase(ErrorCircuitRuleNotFound, err)
 	}
@@ -367,11 +408,11 @@ func (sa *SubTApplication) customizeSimulationRequest(ctx context.Context,
 			}
 		}
 
-		if !subtSim.robotImagesBelongToECROwner() {
+		if !sa.cfg.DisableRobotImageECRCheck && !subtSim.robotImagesBelongToECROwner() {
 			return NewErrorMessage(ErrorInvalidRobotImage)
 		}
 
-		if !sa.isQualified(subtSim.Owner, subtSim.Circuit, username) {
+		if !sa.isQualified(subtSim.Owner, circuit, username) {
 			return NewErrorMessage(ErrorNotQualified)
 		}
 
@@ -381,11 +422,11 @@ func (sa *SubTApplication) customizeSimulationRequest(ctx context.Context,
 	}
 
 	extra := &ExtraInfoSubT{
-		Circuit:    subtSim.Circuit,
+		Circuit:    sa.getLaunchableCircuitName(circuit),
 		Robots:     robots,
 		Marsupials: marsupials,
 	}
-	createSim.ExtraSelector = &subtSim.Circuit
+	createSim.ExtraSelector = &circuit
 
 	if createSim.Extra, err = extra.ToJSON(); err != nil {
 		return ign.NewErrorMessageWithBase(ign.ErrorMarshalJSON, err)
@@ -404,9 +445,9 @@ func (sa *SubTApplication) isQualified(owner, circuit string, username string) b
 	return IsOwnerQualifiedForCircuit(globals.Server.Db, owner, circuit, username)
 }
 
-////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////
+// //////////////////////////////////////////////////////////////////////////
+// //////////////////////////////////////////////////////////////////////////
+// //////////////////////////////////////////////////////////////////////////
 
 // spawnChildSimulationDeployments. By default, we launch a single simulation from a CreateSimulation request.
 // But we allow specific ApplicationTypes (eg. SubT) to spawn multiple simulations
@@ -472,9 +513,9 @@ func (sa *SubTApplication) spawnChildSimulationDeployments(ctx context.Context, 
 	return nil, nil
 }
 
-////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////
+// //////////////////////////////////////////////////////////////////////////
+// //////////////////////////////////////////////////////////////////////////
+// //////////////////////////////////////////////////////////////////////////
 
 // GetSchedulableTasks returns a slice of schedulable tasks to be registered on cloudsim's scheduler.
 func (sa *SubTApplication) GetSchedulableTasks(ctx context.Context, s *Service, tx *gorm.DB) []SchedulableTask {
@@ -521,9 +562,9 @@ func (sa *SubTApplication) launchCircuitOnCompetitionDay(ctx context.Context, s 
 	return tasks
 }
 
-////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////
+// //////////////////////////////////////////////////////////////////////////
+// //////////////////////////////////////////////////////////////////////////
+// //////////////////////////////////////////////////////////////////////////
 
 // checkCanShutdownSimulation allows specific applications to decide if a given user
 // can shutdown a simulation.
@@ -547,9 +588,9 @@ func (sa *SubTApplication) checkCanShutdownSimulation(ctx context.Context, s *Se
 	return true, nil
 }
 
-////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////
+// //////////////////////////////////////////////////////////////////////////
+// //////////////////////////////////////////////////////////////////////////
+// //////////////////////////////////////////////////////////////////////////
 
 // checkValidNumberOfSimulations checks if the given owner hasn't gone beyond the
 // maximum number of allowed simulations for the circuit.
@@ -581,9 +622,9 @@ func (sa *SubTApplication) checkValidNumberOfSimulations(ctx context.Context, s 
 	return nil
 }
 
-////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////
+// //////////////////////////////////////////////////////////////////////////
+// //////////////////////////////////////////////////////////////////////////
+// //////////////////////////////////////////////////////////////////////////
 
 // getGazeboWorldStatsTopicAndLimit returns the topic to subscribe to get notifications about the simulation
 // state (eg. /world/default/stats) and time, as well as the limit of simulation seconds, if any.
@@ -656,9 +697,9 @@ func (sa *SubTApplication) getGazeboWorldWarmupTopic(ctx context.Context, tx *go
 	return warmupTopic, nil
 }
 
-////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////
+// //////////////////////////////////////////////////////////////////////////
+// //////////////////////////////////////////////////////////////////////////
+// //////////////////////////////////////////////////////////////////////////
 
 // getSimulationWebsocketAddress returns a simulation's websocket server address as well a the authorization token.
 func (sa *SubTApplication) getSimulationWebsocketAddress(ctx context.Context, s *Service, tx *gorm.DB,
@@ -678,9 +719,9 @@ func (sa *SubTApplication) getSimulationWebsocketAddress(ctx context.Context, s 
 	}, nil
 }
 
-////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////
+// //////////////////////////////////////////////////////////////////////////
+// //////////////////////////////////////////////////////////////////////////
+// //////////////////////////////////////////////////////////////////////////
 
 // getSimulationLogsForDownload returns a link to the GZ logs that were saved in S3.
 func (sa *SubTApplication) getSimulationLogsForDownload(ctx context.Context, tx *gorm.DB, p platform.Platform,
@@ -766,9 +807,9 @@ func (sa *SubTApplication) getSimulationLiveLogs(ctx context.Context, s *Service
 	return &podLog, nil
 }
 
-////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////
+// //////////////////////////////////////////////////////////////////////////
+// //////////////////////////////////////////////////////////////////////////
+// //////////////////////////////////////////////////////////////////////////
 
 // getIngress retrieves an Ingress from the cluster.
 func getIngress(ctx context.Context, kc kubernetes.Interface, namespace string,
@@ -895,9 +936,9 @@ func removeIngressRule(ctx context.Context, kc kubernetes.Interface, namespace s
 	return updateIngress(ctx, kc, namespace, ingress)
 }
 
-////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////
+// //////////////////////////////////////////////////////////////////////////
+// //////////////////////////////////////////////////////////////////////////
+// //////////////////////////////////////////////////////////////////////////
 
 // processScore creates the competition_scores entry for a simulation and updates its score.
 func processScore(ctx context.Context, userAccessor useracc.Service, tx *gorm.DB,
@@ -925,9 +966,9 @@ func processScore(ctx context.Context, userAccessor useracc.Service, tx *gorm.DB
 	return nil
 }
 
-////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////
+// //////////////////////////////////////////////////////////////////////////
+// //////////////////////////////////////////////////////////////////////////
+// //////////////////////////////////////////////////////////////////////////
 
 // getMaxDurationForSimulation returns the max allowed duration for a simulation,
 // before marking it for shutdown.
@@ -936,9 +977,9 @@ func (sa *SubTApplication) getMaxDurationForSimulation(ctx context.Context, tx *
 	return time.Duration(sa.cfg.MaxDurationForSimulations) * time.Minute
 }
 
-////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////
+// //////////////////////////////////////////////////////////////////////////
+// //////////////////////////////////////////////////////////////////////////
+// //////////////////////////////////////////////////////////////////////////
 
 // uploadToS3LogBucket uploads a file to a simulation log folder.
 func (sa *SubTApplication) uploadToS3SimulationLogBucket(p platform.Platform, dep *SimulationDeployment,
@@ -1033,9 +1074,9 @@ func (sa *SubTApplication) updateMultiSimStatuses(ctx context.Context, tx *gorm.
 	return nil
 }
 
-////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////
+// //////////////////////////////////////////////////////////////////////////
+// //////////////////////////////////////////////////////////////////////////
+// //////////////////////////////////////////////////////////////////////////
 
 // invalidateSimulation is invoked by the sim_service when a simulation is about
 // to be restarted. The old simulation run should be invalidated. This usually
@@ -1057,9 +1098,9 @@ func (sa *SubTApplication) getCompetitionRobots() (interface{}, *ign.ErrMsg) {
 	return SubTRobotTypes, nil
 }
 
-////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////
+// //////////////////////////////////////////////////////////////////////////
+// //////////////////////////////////////////////////////////////////////////
+// //////////////////////////////////////////////////////////////////////////
 
 // ValidateSimulationLaunch returns an error if there is an error on the validation process.
 // Any function that needs to validate a simulation right before pushing to the queue should be appended here.
