@@ -88,7 +88,6 @@ vet:
   before_script:
     - *setup_modules
     - *setup_git_credentials
-    - *setup_db
   script:
     - go vet $(go list ./...)
   environment:
