@@ -82,24 +82,21 @@ lint:
   tags:
     - gitlab-org
 
-###########################################################
-## Testing stage
-
 vet:
-  stage: test
+  stage: format
   extends: .go-cache
   before_script:
     - *setup_modules
     - *setup_git_credentials
-    - *setup_db
   script:
     - go vet $(go list ./...)
-  services:
-    - mysql:5.7
   environment:
     name: testing
   tags:
     - gitlab-org
+
+###########################################################
+## Testing stage
 
 test:
   stage: test
