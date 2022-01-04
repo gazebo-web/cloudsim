@@ -5,7 +5,6 @@ import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/email"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/machines"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/runsim"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/secrets"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/storage"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/store"
@@ -39,22 +38,18 @@ type Platform interface {
 	// Secrets returns a secrets.Secrets component.
 	Secrets() secrets.Secrets
 
-	// RunningSimulations returns a runsim.Manager component.
-	RunningSimulations() runsim.Manager
-
 	// EmailSender returns an email.Sender component.
 	EmailSender() email.Sender
 }
 
 // Components lists the components used to initialize a Platform.
 type Components struct {
-	Machines           machines.Machines
-	Storage            storage.Storage
-	Cluster            orchestrator.Cluster
-	Store              store.Store
-	Secrets            secrets.Secrets
-	EmailSender        email.Sender
-	RunningSimulations runsim.Manager
+	Machines    machines.Machines
+	Storage     storage.Storage
+	Cluster     orchestrator.Cluster
+	Store       store.Store
+	Secrets     secrets.Secrets
+	EmailSender email.Sender
 }
 
 // NewPlatform initializes a new platform using the given components.
@@ -64,27 +59,25 @@ func NewPlatform(name string, components Components) (Platform, error) {
 	}
 
 	return &platform{
-		name:               name,
-		storage:            components.Storage,
-		machines:           components.Machines,
-		orchestrator:       components.Cluster,
-		store:              components.Store,
-		secrets:            components.Secrets,
-		email:              components.EmailSender,
-		runningSimulations: components.RunningSimulations,
+		name:         name,
+		storage:      components.Storage,
+		machines:     components.Machines,
+		orchestrator: components.Cluster,
+		store:        components.Store,
+		secrets:      components.Secrets,
+		email:        components.EmailSender,
 	}, nil
 }
 
 // platform is a Platform implementation.
 type platform struct {
-	name               string
-	storage            storage.Storage
-	machines           machines.Machines
-	orchestrator       orchestrator.Cluster
-	store              store.Store
-	secrets            secrets.Secrets
-	runningSimulations runsim.Manager
-	email              email.Sender
+	name         string
+	storage      storage.Storage
+	machines     machines.Machines
+	orchestrator orchestrator.Cluster
+	store        store.Store
+	secrets      secrets.Secrets
+	email        email.Sender
 }
 
 func (p *platform) GetName() string {
@@ -94,11 +87,6 @@ func (p *platform) GetName() string {
 // EmailSender returns a email.Sender implementation.
 func (p *platform) EmailSender() email.Sender {
 	return p.email
-}
-
-// RunningSimulations returns a runsim.Manager implementation.
-func (p *platform) RunningSimulations() runsim.Manager {
-	return p.runningSimulations
 }
 
 // Store returns a store.Store implementation.

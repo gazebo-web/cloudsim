@@ -16,7 +16,6 @@ import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/mock"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/implementations/kubernetes"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/platform"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/runsim"
 	fakeSecrets "gitlab.com/ignitionrobotics/web/cloudsim/pkg/secrets/implementations/fake"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/storage/implementations/s3"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/store/implementations/store"
@@ -110,10 +109,6 @@ func (input *NewInput) SetDefaults() error {
 
 	if input.EmailSender == nil {
 		input.EmailSender = email.NewEmailSender(ses.New(input.Session), input.Logger)
-	}
-
-	if input.RunningSimulations == nil {
-		input.RunningSimulations = runsim.NewManager()
 	}
 
 	return nil

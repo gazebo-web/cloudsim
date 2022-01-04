@@ -23,7 +23,6 @@ func (s *FakePlatformTestSuite) ValidateFakePlatform(p platform.Platform) {
 	s.Require().NotNil(p.Store())
 	s.Require().NotNil(p.Secrets())
 	s.Require().NotNil(p.EmailSender())
-	s.Require().NotNil(p.RunningSimulations())
 }
 
 func (s *FakePlatformTestSuite) TestNewFakePlatformNilConfig() {
