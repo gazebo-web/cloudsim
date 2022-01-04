@@ -1,28 +1,27 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: $APPLICATION_NAME
-  namespace: $APPLICATION_ENVIRONMENT
+  name: web-cloudsim
   labels:
-    app: $APPLICATION_NAME
+    app: web-cloudsim
 spec:
   replicas: 1
   strategy:
     type: Recreate
   selector:
     matchLabels:
-      app: $APPLICATION_NAME
+      app: web-cloudsim
   template:
     metadata:
       labels:
-        app: $APPLICATION_NAME
+        app: web-cloudsim
       annotations:
         prometheus.io/scrape: "true"
         prometheus.io/port: "8001"
     spec:
       containers:
-        - name: $APPLICATION_NAME
-          image: $CONTAINER_IMAGE
+        - name: web-cloudsim
+          image: registry.gitlab.com/ignitionrobotics/web/cloudsim:latest
           imagePullPolicy: Always
           resources:
             limits:
