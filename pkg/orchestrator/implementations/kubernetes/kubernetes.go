@@ -1,8 +1,11 @@
 package kubernetes
 
 import (
+	gatewayV1 "github.com/solo-io/gloo/projects/gateway/pkg/api/v1/kube/client/clientset/versioned/typed/gateway.solo.io/v1"
+	glooV1 "github.com/solo-io/gloo/projects/gloo/pkg/api/v1/kube/client/clientset/versioned/typed/gloo.solo.io/v1"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/components/ingresses"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/components/ingresses/implementations/gloo"
 	kubernetesIngresses "gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/components/ingresses/implementations/kubernetes"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/components/ingresses/implementations/kubernetes/rules"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/components/network"
@@ -95,15 +98,29 @@ func NewCustomKubernetes(config Config) orchestrator.Cluster {
 	}
 }
 
-// NewDefaultKubernetes initializes the set of Kubernetes subcomponents using
+// newDefaultKubernetes initializes the set of Kubernetes subcomponents using
 // the given kubernetes client api, spdy initializer and logger.
-func NewDefaultKubernetes(api kubernetes.Interface, spdyInit spdy.Initializer, logger ign.Logger) orchestrator.Cluster {
+func newDefaultKubernetes(api kubernetes.Interface, spdyInit spdy.Initializer, logger ign.Logger) orchestrator.Cluster {
 	return &k8s{
 		nodes:           kubernetesNodes.NewNodes(api, logger),
 		pods:            kubernetesPods.NewPods(api, spdyInit, logger),
 		ingressRules:    rules.NewIngressRules(api, logger),
 		services:        kubernetesServices.NewServices(api, logger),
 		ingresses:       kubernetesIngresses.NewIngresses(api, logger),
+		networkPolicies: kubernetesNetwork.NewNetworkPolicies(api, logger),
+	}
+}
+
+// newKubernetesWithGloo initializes the set of Kubernetes subcomponents using the given kubernetes client api,
+// spdy initializer and logger. It also uses the given gloo and gateway clients to initialize Gloo to manage
+// ingresses and ingress rules.
+func newKubernetesWithGloo(api kubernetes.Interface, glooClient glooV1.GlooV1Interface, gatewayClient gatewayV1.GatewayV1Interface, spdyInit spdy.Initializer, logger ign.Logger) orchestrator.Cluster {
+	return &k8s{
+		nodes:           kubernetesNodes.NewNodes(api, logger),
+		pods:            kubernetesPods.NewPods(api, spdyInit, logger),
+		ingressRules:    gloo.NewVirtualHosts(gatewayClient, logger),
+		services:        kubernetesServices.NewServices(api, logger),
+		ingresses:       gloo.NewVirtualServices(gatewayClient, logger, glooClient),
 		networkPolicies: kubernetesNetwork.NewNetworkPolicies(api, logger),
 	}
 }
@@ -129,10 +146,33 @@ func InitializeKubernetes(kubeconfig string, logger ign.Logger) (orchestrator.Cl
 	if err != nil {
 		return nil, err
 	}
-	client, err := client.NewAPI(config)
+	c, err := client.NewAPI(config)
 	if err != nil {
 		return nil, err
 	}
 	spdyInit := spdy.NewSPDYInitializer(config)
-	return NewDefaultKubernetes(client, spdyInit, logger), nil
+	return newDefaultKubernetes(c, spdyInit, logger), nil
+}
+
+// InitializeKubernetesWithGloo initializes a new Kubernetes orchestrator with Gloo to manage ingress and ingress rules.
+// `kubeconfig` is the path to the target cluster's kubeconfig file. If it is empty, the default config is used.
+func InitializeKubernetesWithGloo(kubeconfig string, logger ign.Logger) (orchestrator.Cluster, error) {
+	config, err := client.GetConfig(kubeconfig)
+	if err != nil {
+		return nil, err
+	}
+	c, err := client.NewAPI(config)
+	if err != nil {
+		return nil, err
+	}
+	g, err := glooV1.NewForConfig(config)
+	if err != nil {
+		return nil, err
+	}
+	gw, err := gatewayV1.NewForConfig(config)
+	if err != nil {
+		return nil, err
+	}
+	spdyInit := spdy.NewSPDYInitializer(config)
+	return newKubernetesWithGloo(c, g, gw, spdyInit, logger), nil
 }
