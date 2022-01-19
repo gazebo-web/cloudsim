@@ -1,7 +1,6 @@
 package users
 
 import (
-	"context"
 	"github.com/caarlos0/env"
 	"github.com/casbin/casbin/v2"
 	"github.com/casbin/gorm-adapter/v2"
@@ -77,7 +76,7 @@ type service struct {
 }
 
 // NewService initializes a new Service.
-func NewService(ctx context.Context, resourcePermissions *per.Permissions, db *gorm.DB, sysAdmin string) (Service, error) {
+func NewService(resourcePermissions *per.Permissions, db *gorm.DB, sysAdmin string) (Service, error) {
 
 	ua := service{}
 	ua.Db = db
