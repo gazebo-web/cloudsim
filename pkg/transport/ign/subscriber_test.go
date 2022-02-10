@@ -137,7 +137,7 @@ func (suite *subscriberTestSuite) TestSubscribe_Rejected() {
 	})
 }
 
-func (suite *subscriberTestSuite) AfterTest() {
+func (suite *subscriberTestSuite) TearDownTest() {
 	if suite.transport != nil {
 		suite.transport.Disconnect()
 	}
