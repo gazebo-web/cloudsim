@@ -1,6 +1,7 @@
 package ign
 
 import (
+	"context"
 	"errors"
 	"github.com/gorilla/websocket"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/transport"
@@ -9,7 +10,7 @@ import (
 )
 
 // Callback is a function that will be executed after reading a message from a certain topic.
-type Callback func(message transport.Message)
+type Callback func(ctx context.Context, message transport.Message)
 
 // Publisher represents a set of methods that will let some process send messages to another process.
 type Publisher interface {
@@ -37,10 +38,12 @@ type websocketPubSubTransport struct {
 	topics     map[string]Callback
 	topicsLock sync.RWMutex
 	listening  bool
+	baseCtx    context.Context
 }
 
-func newWebsocketPubSubTransport(transport transport.WebsocketTransporter) (*websocketPubSubTransport, error) {
+func newWebsocketPubSubTransport(baseCtx context.Context, transport transport.WebsocketTransporter) (*websocketPubSubTransport, error) {
 	pubsub := &websocketPubSubTransport{
+		baseCtx:              baseCtx,
 		WebsocketTransporter: transport,
 		topics:               make(map[string]Callback, 0),
 	}
@@ -90,7 +93,7 @@ func (w *websocketPubSubTransport) processMessage(messageType int, message []byt
 	// Try to parse the incoming message as a Message struct
 	if message, err := NewMessageFromByteSlice(message); err == nil {
 		if cb, ok := w.topics[message.Topic]; ok {
-			cb(message)
+			cb(w.baseCtx, message)
 		}
 	}
 }
@@ -138,13 +141,13 @@ func (w *websocketPubSubTransport) Publish(message Message) error {
 // implementation. It also establishes a connection to the given addr and sends an authorization message with the
 // given token. The token should be the same as the simulation authorization token from the simulation that the
 // transporter is attempting to connect to.
-func NewIgnWebsocketTransporter(host, path, scheme, token string) (PubSubWebsocketTransporter, error) {
+func NewIgnWebsocketTransporter(baseCtx context.Context, host, path, scheme, token string) (PubSubWebsocketTransporter, error) {
 	wst, err := transport.NewWebsocketTransporter(host, path, scheme)
 	if err != nil {
 		return nil, err
 	}
 
-	pubsub, err := newWebsocketPubSubTransport(wst)
+	pubsub, err := newWebsocketPubSubTransport(baseCtx, wst)
 	if err != nil {
 		return nil, err
 	}
