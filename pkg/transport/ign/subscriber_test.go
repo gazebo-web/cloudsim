@@ -1,6 +1,7 @@
 package ign
 
 import (
+	context2 "context"
 	"fmt"
 	"github.com/gorilla/websocket"
 	"github.com/stretchr/testify/suite"
@@ -114,7 +115,7 @@ func (suite *subscriberTestSuite) init() PubSubWebsocketTransporter {
 	var err error
 	u, err := url.Parse(suite.server.URL)
 	suite.NoError(err)
-	suite.transport, err = NewIgnWebsocketTransporter(u.Host, u.Path, transport.WebsocketScheme, "1234")
+	suite.transport, err = NewIgnWebsocketTransporter(context2.TODO(), u.Host, u.Path, transport.WebsocketScheme, "1234")
 	suite.NoError(err)
 	return suite.transport
 }
