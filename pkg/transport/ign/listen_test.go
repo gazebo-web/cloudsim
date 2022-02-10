@@ -1,6 +1,7 @@
 package ign
 
 import (
+	"context"
 	"github.com/gorilla/websocket"
 	"github.com/stretchr/testify/assert"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/transport"
@@ -52,7 +53,7 @@ func TestTransporterListenDontPanicConnClosed(t *testing.T) {
 		// Allow the test to terminate
 		defer waiterLock.Unlock()
 
-		tr, err := NewIgnWebsocketTransporter(u.Host, u.Path, transport.WebsocketScheme, "")
+		tr, err := NewIgnWebsocketTransporter(context.TODO(), u.Host, u.Path, transport.WebsocketScheme, "")
 		defer tr.Disconnect()
 		assert.NoError(t, err)
 
