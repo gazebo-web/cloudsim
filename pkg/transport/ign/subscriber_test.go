@@ -1,7 +1,7 @@
 package ign
 
 import (
-	context2 "context"
+	"context"
 	"fmt"
 	"github.com/gorilla/websocket"
 	"github.com/stretchr/testify/suite"
@@ -115,14 +115,14 @@ func (suite *subscriberTestSuite) init() PubSubWebsocketTransporter {
 	var err error
 	u, err := url.Parse(suite.server.URL)
 	suite.NoError(err)
-	suite.transport, err = NewIgnWebsocketTransporter(context2.TODO(), u.Host, u.Path, transport.WebsocketScheme, "1234")
+	suite.transport, err = NewIgnWebsocketTransporter(context.TODO(), u.Host, u.Path, transport.WebsocketScheme, "1234")
 	suite.NoError(err)
 	return suite.transport
 }
 
 func (suite *subscriberTestSuite) TestSubscribe_Accepted() {
 	suite.init()
-	err := suite.transport.Subscribe("test", func(message transport.Message) {
+	err := suite.transport.Subscribe("test", func(ctx context.Context, message transport.Message) {
 		var payload string
 		suite.NoError(message.GetPayload(&payload))
 		suite.EqualValues(suite.testTopicMessage, payload)
@@ -132,7 +132,7 @@ func (suite *subscriberTestSuite) TestSubscribe_Accepted() {
 
 func (suite *subscriberTestSuite) TestSubscribe_Rejected() {
 	suite.init()
-	_ = suite.transport.Subscribe("wrong-test", func(message transport.Message) {
+	_ = suite.transport.Subscribe("wrong-test", func(ctx context.Context, message transport.Message) {
 		suite.Equal(nil, message)
 	})
 }
