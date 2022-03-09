@@ -34,7 +34,25 @@ func getDBConfigFromEnvVars() (*ign.DatabaseConfig, error) {
 	return &dbConfig, nil
 }
 
-// GetTestDBFromEnvVars reads environment variables to return a Gorm database connection.
+// GetDBFromEnvVars reads environment variables to return a Gorm database connection.
+func GetDBFromEnvVars() (*gorm.DB, error) {
+	// Get the db config
+	dbConfig, err := getDBConfigFromEnvVars()
+	if err != nil {
+		return nil, err
+	}
+
+	// Connect to the db
+	db, err := ign.InitDbWithCfg(dbConfig)
+	if err != nil {
+		return nil, err
+	}
+
+	return db, nil
+}
+
+// GetTestDBFromEnvVars reads environment variables to return a Gorm database connection to a test database.
+// The test database will have "_test" automatically appended to the target database name.
 func GetTestDBFromEnvVars() (*gorm.DB, error) {
 	// Get the db config
 	dbConfig, err := getDBConfigFromEnvVars()
