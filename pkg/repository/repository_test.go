@@ -25,7 +25,6 @@ type Test struct {
 func (suite *RepositoryTestSuite) SetupSuite() {
 	db, err := utilsgorm.GetTestDBFromEnvVars()
 	suite.Require().NoError(err)
-
 	suite.db = db
 }
 
@@ -35,6 +34,5 @@ func (suite *RepositoryTestSuite) SetupTest() {
 }
 
 func (suite *RepositoryTestSuite) TearDownSuite() {
-	conn := suite.db.DB()
-	suite.Require().NoError(conn.Close())
+	suite.Require().NoError(suite.db.Close())
 }
