@@ -36,3 +36,8 @@ func (suite *RepositoryTestSuite) SetupTest() {
 func (suite *RepositoryTestSuite) TearDownSuite() {
 	suite.Require().NoError(suite.db.Close())
 }
+
+func (suite *RepositoryTestSuite) TestImplementsInterface() {
+	var expected *Repository
+	suite.Assert().Implements(expected, new(repositorySQL))
+}
