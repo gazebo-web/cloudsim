@@ -16,23 +16,23 @@ var (
 // Repository holds methods to CRUD an entity on a certain persistence layer.
 type Repository interface {
 	// Create is a bulk operation to create multiple entries with a single operation.
-	//	entities: should be a slice of the same data structure implementing Model.
+	//	entities: should be a slice of a Model implementation.
 	Create(entities []Model) ([]Model, error)
 	// Find filters entries and stores filtered entries in output.
 	//	output: will contain the result of the query. It must be a pointer to a slice.
 	//	offset: defines the number of results to skip before loading values to output.
-	//	limit: defines the maximum number of entries to return. A nil value returns infinite results.
+	//	limit: defines the maximum number of entries to write to output. A nil value will write all matching entries.
 	// 	filters: filter entries by field value.
 	Find(output interface{}, offset, limit *int, filters ...Filter) error
-	// FindOne filters entries and stores the first filtered entry in output, it must be a pointer to
-	// a data structure implementing Model.
+	// FindOne filters entries and stores the first filtered entry in output. 
+	// output must be a pointer to a Model implementation.
 	FindOne(output Model, filters ...Filter) error
 	// Update updates all model entries that match the provided filters with the given data.
 	//	data: must be a map[string]interface{}
-	//  filters: filter entries that should be updated.
+	//	filters: selection criteria for entries that should be updated.
 	Update(data interface{}, filters ...Filter) error
 	// Delete removes all the model entries that match filters.
-	//  filters: filter entries that should be deleted.
+	//	filters: selection criteria for entries that should be deleted.
 	Delete(filters ...Filter) error
 	// Model returns this repository's model.
 	Model() Model
