@@ -19,7 +19,7 @@ type repositorySQL struct {
 	entity Model
 }
 
-// Create is a bulk operation to create N amount of models passed in an array.
+// Create is a bulk operation to create multiple entries with a single operation.
 func (r *repositorySQL) Create(entities []Model) ([]Model, error) {
 	tx := r.DB.Begin()
 	defer func() {
@@ -61,13 +61,13 @@ func (r *repositorySQL) Find(output interface{}, offset, limit *int, filters ...
 }
 
 // FindOne applies the given filters to write on entity the first result found.
-func (r *repositorySQL) FindOne(entity Model, filters ...Filter) error {
+func (r *repositorySQL) FindOne(output Model, filters ...Filter) error {
 	if len(filters) == 0 {
 		return ErrNoFilter
 	}
 	q := r.startQuery()
 	q = r.setQueryFilters(q, filters)
-	q = q.First(entity)
+	q = q.First(output)
 	err := q.Error
 	if err != nil {
 		return err
@@ -84,7 +84,7 @@ func (r *repositorySQL) Update(data interface{}, filters ...Filter) error {
 	if err != nil {
 		return err
 	} else if q.RowsAffected == 0 {
-		return ErrNoEntitiesUpdated
+		return ErrNoEntriesUpdated
 	}
 	return nil
 }
@@ -98,7 +98,7 @@ func (r *repositorySQL) Delete(filters ...Filter) error {
 	if err != nil {
 		return err
 	} else if q.RowsAffected == 0 {
-		return ErrNoEntitiesDeleted
+		return ErrNoEntriesDeleted
 	}
 	return nil
 }
