@@ -101,7 +101,7 @@ func (r *repositorySQL) Delete(filters ...Filter) error {
 	return nil
 }
 
-// startQuery inits a gorm query for this repository's model.
+// startQuery inits a gorm query for this repository's model. Multiple filters are ANDd together.
 func (r *repositorySQL) startQuery() *gorm.DB {
 	return r.DB.Model(r.Model())
 }
