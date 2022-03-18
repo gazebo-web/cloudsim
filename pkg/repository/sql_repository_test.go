@@ -129,6 +129,9 @@ func (suite *RepositoryTestSuite) TestFindOne() {
 	suite.Assert().NoError(suite.Repository.FindOne(&t, Filter{
 		Template: "name = ?",
 		Values:   []interface{}{"Test1"},
+	}, Filter{
+		Template: "value = ?",
+		Values:   []interface{}{1},
 	}))
 
 	suite.Assert().Equal("Test1", t.Name)
