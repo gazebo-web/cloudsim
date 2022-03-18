@@ -53,7 +53,7 @@ func (suite *RepositoryTestSuite) SetupTest() {
 		Value: 3,
 	}
 
-	res, err := suite.Repository.Create([]Model{test1, test2, test3})
+	res, err := suite.Repository.CreateBulk([]Model{test1, test2, test3})
 	suite.Require().NoError(err)
 	suite.Require().Len(res, 3)
 }
@@ -70,7 +70,7 @@ func (suite *RepositoryTestSuite) TestImplementsInterface() {
 
 func (suite *RepositoryTestSuite) TestCreateOne() {
 	// Creating one record should not fail.
-	res, err := suite.Repository.Create([]Model{&Test{
+	res, err := suite.Repository.CreateBulk([]Model{&Test{
 		Name:  "test",
 		Value: 999,
 	}})
@@ -85,7 +85,7 @@ func (suite *RepositoryTestSuite) TestCreateOne() {
 
 func (suite *RepositoryTestSuite) TestCreateMultiple() {
 	// Creating multiple records should not fail
-	res, err := suite.Repository.Create([]Model{
+	res, err := suite.Repository.CreateBulk([]Model{
 		&Test{
 			Name:  "test",
 			Value: 999,

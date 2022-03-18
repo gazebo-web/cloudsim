@@ -19,9 +19,19 @@ type repositorySQL struct {
 	entity Model
 }
 
-// Create is a bulk operation to create multiple entries with a single operation.
+// Create inserts a single entry.
+//	entity: The entry to insert.
+func (r *repositorySQL) Create(entity Model) (Model, error) {
+	result, err := r.CreateBulk([]Model{entity})
+	if err != nil {
+		return nil, err
+	}
+	return result[0], nil
+}
+
+// CreateBulk is a bulk operation to create multiple entries with a single operation.
 //	entities: should be a slice of the same data structure implementing Model.
-func (r *repositorySQL) Create(entities []Model) ([]Model, error) {
+func (r *repositorySQL) CreateBulk(entities []Model) ([]Model, error) {
 	for _, entity := range entities {
 		err := r.DB.Model(r.Model()).Create(entity).Error
 		if err != nil {
