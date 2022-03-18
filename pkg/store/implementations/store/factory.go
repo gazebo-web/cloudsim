@@ -20,7 +20,6 @@ func NewFunc(config interface{}, dependencies factory.Dependencies, out interfac
 	store := &store{
 		machines:     &typeConfig.MachinesStore,
 		orchestrator: &typeConfig.OrchestratorStore,
-		mole:         &typeConfig.MoleStore,
 		ignition:     &typeConfig.IgnitionStore,
 	}
 	if err := factory.SetValue(out, store); err != nil {
