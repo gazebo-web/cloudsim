@@ -20,6 +20,7 @@ type repositorySQL struct {
 }
 
 // Create is a bulk operation to create multiple entries with a single operation.
+//	entities: should be a slice of the same data structure implementing Model.
 func (r *repositorySQL) Create(entities []Model) ([]Model, error) {
 	tx := r.DB.Begin()
 	defer func() {
@@ -42,7 +43,7 @@ func (r *repositorySQL) Create(entities []Model) ([]Model, error) {
 }
 
 // Find filters entries and stores filtered entries in output.
-//	output: will contain the result of the query. It must be a slice.
+//	output: will contain the result of the query. It must be a pointer to a slice.
 //	offset: defines the number of results to skip before loading values to output.
 //	limit: defines the maximum number of entries to return. A nil value returns infinite results.
 // 	filters: filter entries by field value.
@@ -64,7 +65,8 @@ func (r *repositorySQL) Find(output interface{}, offset, limit *int, filters ...
 	return nil
 }
 
-// FindOne filters entries and stores the first filtered entry in output.
+// FindOne filters entries and stores the first filtered entry in output, it must be a pointer to
+// a data structure implementing Model.
 func (r *repositorySQL) FindOne(output Model, filters ...Filter) error {
 	if len(filters) == 0 {
 		return ErrNoFilter
@@ -81,6 +83,7 @@ func (r *repositorySQL) FindOne(output Model, filters ...Filter) error {
 
 // Update updates all model entries that match the provided filters with the given data.
 //	data: must be a map[string]interface{}
+//  filters: filter entries that should be updated.
 func (r *repositorySQL) Update(data interface{}, filters ...Filter) error {
 	q := r.startQuery()
 	q = r.setQueryFilters(q, filters)
@@ -95,6 +98,7 @@ func (r *repositorySQL) Update(data interface{}, filters ...Filter) error {
 }
 
 // Delete removes all the model entries that match filters.
+//  filters: filter entries that should be deleted.
 func (r *repositorySQL) Delete(filters ...Filter) error {
 	q := r.startQuery()
 	q = r.setQueryFilters(q, filters)
