@@ -41,7 +41,11 @@ func (r *repositorySQL) Create(entities []Model) ([]Model, error) {
 	return entities, nil
 }
 
-// Find writes on output the result of applying offset, limit and filters to find a range of models.
+// Find filters entries and stores filtered entries in output.
+//	output: will contain the result of the query. It must be a slice.
+//	offset: defines the number of results to skip before loading values to output.
+//	limit: defines the maximum number of entries to return. A nil value returns infinite results.
+// 	filters: filter entries by field value.
 func (r *repositorySQL) Find(output interface{}, offset, limit *int, filters ...Filter) error {
 	q := r.startQuery()
 	if limit != nil {
@@ -60,7 +64,7 @@ func (r *repositorySQL) Find(output interface{}, offset, limit *int, filters ...
 	return nil
 }
 
-// FindOne applies the given filters to write on entity the first result found.
+// FindOne filters entries and stores the first filtered entry in output.
 func (r *repositorySQL) FindOne(output Model, filters ...Filter) error {
 	if len(filters) == 0 {
 		return ErrNoFilter
@@ -75,7 +79,8 @@ func (r *repositorySQL) FindOne(output Model, filters ...Filter) error {
 	return nil
 }
 
-// Update updates with the given data the different models that match filters.
+// Update updates all model entries that match the provided filters with the given data.
+//	data: must be a map[string]interface{}
 func (r *repositorySQL) Update(data interface{}, filters ...Filter) error {
 	q := r.startQuery()
 	q = r.setQueryFilters(q, filters)
@@ -89,7 +94,7 @@ func (r *repositorySQL) Update(data interface{}, filters ...Filter) error {
 	return nil
 }
 
-// Delete removes all the models that match filters.
+// Delete removes all the model entries that match filters.
 func (r *repositorySQL) Delete(filters ...Filter) error {
 	q := r.startQuery()
 	q = r.setQueryFilters(q, filters)

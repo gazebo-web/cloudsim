@@ -23,7 +23,7 @@ type Repository interface {
 	//	limit: defines the maximum number of entries to return. A nil value returns infinite results.
 	// 	filters: filter entries by field value.
 	Find(output interface{}, offset, limit *int, filters ...Filter) error
-	// FindOne filters entries and stores the first filtered entry in `output`.
+	// FindOne filters entries and stores the first filtered entry in output.
 	FindOne(output Model, filters ...Filter) error
 	// Update updates all model entries that match the provided filters with the given data.
 	//	data: must be a map[string]interface{}
