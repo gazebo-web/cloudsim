@@ -90,8 +90,6 @@ func (r *repositorySQL) Update(data interface{}, filters ...Filter) error {
 	err := q.Error
 	if err != nil {
 		return err
-	} else if q.RowsAffected == 0 {
-		return ErrNoEntriesUpdated
 	}
 	return nil
 }
@@ -105,8 +103,6 @@ func (r *repositorySQL) Delete(filters ...Filter) error {
 	err := q.Error
 	if err != nil {
 		return err
-	} else if q.RowsAffected == 0 {
-		return ErrNoEntriesDeleted
 	}
 	return nil
 }

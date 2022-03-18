@@ -176,6 +176,6 @@ func (suite *RepositoryTestSuite) TestDelete() {
 	var t Test
 	suite.Assert().Error(suite.Repository.FindOne(&t, filter))
 
-	// Deleting again should fail, the record no longer exists.
-	suite.Assert().Error(suite.Repository.Delete(filter))
+	// Deleting is idempotent, deleting twice should not return an error.
+	suite.Assert().NoError(suite.Repository.Delete(filter))
 }
