@@ -22,22 +22,11 @@ type repositorySQL struct {
 // Create is a bulk operation to create multiple entries with a single operation.
 //	entities: should be a slice of the same data structure implementing Model.
 func (r *repositorySQL) Create(entities []Model) ([]Model, error) {
-	tx := r.DB.Begin()
-	defer func() {
-		if r := recover(); r != nil {
-			tx.Rollback()
-		}
-	}()
 	for _, entity := range entities {
-		err := tx.Model(r.Model()).Create(entity).Error
+		err := r.DB.Model(r.Model()).Create(entity).Error
 		if err != nil {
-			tx.Rollback()
 			return nil, err
 		}
-	}
-	err := tx.Commit().Error
-	if err != nil {
-		return nil, err
 	}
 	return entities, nil
 }
