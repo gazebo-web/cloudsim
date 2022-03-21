@@ -2,7 +2,7 @@ package repository
 
 import (
 	"github.com/jinzhu/gorm"
-	"reflect"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/utils/reflect"
 )
 
 // NewRepositorySQL initializes a new Repository implementation for SQL databases.
@@ -122,11 +122,5 @@ func (r *repositorySQL) setQueryFilters(q *gorm.DB, filters []Filter) *gorm.DB {
 
 // Model returns this repository's model.
 func (r *repositorySQL) Model() Model {
-	entity := reflect.ValueOf(r.entity)
-
-	if entity.Kind() == reflect.Ptr {
-		entity = reflect.Indirect(entity)
-	}
-
-	return reflect.New(entity.Type()).Interface().(Model)
+	return reflect.NewInstance(r.entity).(Model)
 }
