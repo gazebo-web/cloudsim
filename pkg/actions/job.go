@@ -161,6 +161,14 @@ func (j *Job) Extend(extension Job) *Job {
 	return &extension
 }
 
+// Rename creates a copy of this job with a new name.
+// Useful for when you want to run a job more than once in a single action.
+func (j Job) Rename(name string) *Job {
+	j.Name = name
+
+	return &j
+}
+
 // registerTypes registers types used by this job in a registry.
 func (j *Job) registerTypes(registry dataTypeRegistry) {
 	registry.register(GetJobDataType(j.InputType))
