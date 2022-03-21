@@ -434,3 +434,19 @@ func TestExtendJob(t *testing.T) {
 	require.NotNil(t, extendedJob.RollbackHandler)
 	require.Equal(t, getFuncPtr(rollback), getFuncPtr(extendedJob.RollbackHandler))
 }
+
+func TestRenameJob(t *testing.T) {
+	job := &Job{Name: "test"}
+
+	newName := "newJob"
+	newJob := job.Rename("newJob")
+
+	// New job should be a different instance
+	require.NotEqual(t, newJob, job)
+
+	// Original job name should not have changed
+	assert.NotEqual(t, newName, job.Name)
+
+	// New job name should have the intended name
+	assert.Equal(t, newName, newJob.Name)
+}
