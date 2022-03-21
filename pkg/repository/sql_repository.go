@@ -73,11 +73,7 @@ func (r *repositorySQL) FindOne(output Model, filters ...Filter) error {
 	q := r.startQuery()
 	q = r.setQueryFilters(q, filters)
 	q = q.First(output)
-	err := q.Error
-	if err != nil {
-		return err
-	}
-	return nil
+	return q.Error
 }
 
 // Update updates all model entries that match the provided filters with the given data.
@@ -87,11 +83,7 @@ func (r *repositorySQL) Update(data interface{}, filters ...Filter) error {
 	q := r.startQuery()
 	q = r.setQueryFilters(q, filters)
 	q = q.Update(data)
-	err := q.Error
-	if err != nil {
-		return err
-	}
-	return nil
+	return q.Error
 }
 
 // Delete removes all the model entries that match filters.
