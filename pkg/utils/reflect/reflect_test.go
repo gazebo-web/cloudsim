@@ -283,3 +283,39 @@ func TestSetValueInvalidOutValueError(t *testing.T) {
 	out := 1
 	assert.Equal(t, ErrInvalidOutValue, SetValue(&out, Test{}))
 }
+
+func TestNewInstanceElementaryValue(t *testing.T) {
+	expected := 1
+	out := NewInstance(expected)
+	assert.IsType(t, expected, out)
+	assert.Equal(t, 0, out)
+}
+
+func TestNewInstanceElementaryValuePointer(t *testing.T) {
+	expected := 1
+	out := NewInstance(&expected).(*int)
+	assert.IsType(t, &expected, out)
+	// Since the new instance will contain the zero value, the values should not match
+	assert.NotEqual(t, expected, *out)
+	// Verify that the output value contains the zero value
+	assert.Equal(t, 0, *out)
+}
+
+func TestNewInstanceStructPointer(t *testing.T) {
+	expected := &Test{1}
+	out := NewInstance(expected).(*Test)
+	// Since the new instance will contain the zero value, the values should not match
+	assert.NotEqual(t, expected, out)
+	// Verify that the output value contains the zero value
+	assert.Equal(t, Test{}, *out)
+}
+
+func TestNewInstanceInterface(t *testing.T) {
+	expected := &Test{1}
+	out := NewInstance(expected).(Tester)
+	assert.IsType(t, expected, out)
+	// Since the new instance will contain the zero value, the values should not match
+	assert.NotEqual(t, expected, out)
+	// Verify that the output value contains the zero value
+	assert.Equal(t, Test{}, *out.(*Test))
+}
