@@ -9,7 +9,6 @@ import (
 type Config struct {
 	MachinesStore     machinesStore
 	IgnitionStore     ignitionStore
-	MoleStore         moleStore
 	OrchestratorStore orchestratorStore
 }
 

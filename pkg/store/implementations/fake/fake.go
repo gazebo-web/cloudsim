@@ -12,7 +12,6 @@ type Fake struct {
 	machines     store.Machines
 	orchestrator store.Orchestrator
 	ignition     store.Ignition
-	mole         store.Mole
 }
 
 // Machines mocks the Machine store.
@@ -30,19 +29,13 @@ func (f *Fake) Ignition() store.Ignition {
 	return f.ignition
 }
 
-// Mole mocks the Mole store.
-func (f *Fake) Mole() store.Mole {
-	return f.mole
-}
-
 // NewFakeStore initializes a new fake store implementation using fake configuration providers.
 // This provider uses the mock library
-func NewFakeStore(machines *Machines, orchestrator *Orchestrator, ignition *Ign, mole *Mole) *Fake {
+func NewFakeStore(machines *Machines, orchestrator *Orchestrator, ignition *Ign) *Fake {
 	return &Fake{
 		machines:     machines,
 		orchestrator: orchestrator,
 		ignition:     ignition,
-		mole:         mole,
 	}
 }
 
@@ -53,7 +46,6 @@ func NewDefaultFakeStore() *Fake {
 		machines:     NewFakeMachines(),
 		orchestrator: NewFakeOrchestrator(),
 		ignition:     NewFakeIgnition(),
-		mole:         NewFakeMole(),
 	}
 }
 
@@ -155,48 +147,12 @@ func NewFakeIgnition() *Ign {
 	}
 }
 
-// Mole is a fake store.Mole implementation.
-type Mole struct {
-	*mock.Mock
-}
-
-var _ store.Mole = (*Mole)(nil)
-
-// BridgePulsarAddress returns the address of the Pulsar service the Mole bridge should connect to.
-func (m *Mole) BridgePulsarAddress() string {
-	args := m.Called()
-	return args.String(0)
-}
-
-// BridgePulsarPort returns the port on which the Pulsar service the mole bridge should connect to is running.
-func (m *Mole) BridgePulsarPort() int {
-	args := m.Called()
-	return args.Int(0)
-}
-
-// BridgePulsarHTTPPort returns the port on which the HTTP service the mole bridge should connect to is running.
-func (m *Mole) BridgePulsarHTTPPort() int {
-	args := m.Called()
-	return args.Int(0)
-}
-
-// BridgeTopicRegex returns the regex used by the Mole bridge to filter topics.
-func (m *Mole) BridgeTopicRegex() string {
-	args := m.Called()
-	return args.String(0)
-}
-
-// NewFakeMole initializes a fake store.Mole implementation.
-func NewFakeMole() *Mole {
-	return &Mole{
-		Mock: new(mock.Mock),
-	}
-}
-
 // Orchestrator is a fake store.Orchestrator implementation.
 type Orchestrator struct {
 	*mock.Mock
 }
+
+var _ store.Orchestrator = (*Orchestrator)(nil)
 
 // Timeout mocks the Timeout method.
 func (f Orchestrator) Timeout() time.Duration {
@@ -257,6 +213,8 @@ func NewFakeOrchestrator() *Orchestrator {
 type Machines struct {
 	*mock.Mock
 }
+
+var _ store.Machines = (*Machines)(nil)
 
 // InstanceProfile mocks the InstanceProfile method.
 func (f Machines) InstanceProfile() *string {

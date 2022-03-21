@@ -78,6 +78,20 @@ func SetMapValue(out interface{}, key interface{}, value interface{}) error {
 	return nil
 }
 
+// NewInstance returns a new instance of the same type as the input value.
+// The returned value will contain the zero value of the type.
+func NewInstance(value interface{}) interface{} {
+	entity := reflect.ValueOf(value)
+
+	if entity.Kind() == reflect.Ptr {
+		entity = reflect.New(entity.Elem().Type())
+	} else {
+		entity = reflect.New(entity.Type()).Elem()
+	}
+
+	return entity.Interface()
+}
+
 // NewCollectionValueInstance receives a collection (slice, map) and returns a new instance of the collection's value
 // type. If the collection value type is a pointer type, a pointer object to a new instance of the type value is
 // returned.
@@ -91,7 +105,7 @@ func NewCollectionValueInstance(collection interface{}) (interface{}, error) {
 	// Get the collection's value type
 	t := s.Elem()
 
-	// Create the collection type instance
+	// Create the collection element instance
 	var v reflect.Value
 	// If the value is a pointer, assign a value of the correct type
 	if t.Kind() == reflect.Ptr {
