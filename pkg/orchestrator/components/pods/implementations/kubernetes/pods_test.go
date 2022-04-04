@@ -178,10 +178,12 @@ func TestPods_CreateSuccess(t *testing.T) {
 	logger := ign.NewLoggerNoRollbar("TestPods", ign.VerbosityDebug)
 	p := NewPods(client, f, logger)
 
+	imagePullCredentials := []string{"secret", "top-secret"}
 	res, err := p.Create(pods.CreatePodInput{
 		Name:                          "test",
 		Namespace:                     "default",
 		Labels:                        map[string]string{"app": "test"},
+		ImagePullCredentials:          imagePullCredentials,
 		RestartPolicy:                 pods.RestartPolicyNever,
 		TerminationGracePeriodSeconds: time.Second * 5,
 		NodeSelector:                  nil,
@@ -204,10 +206,17 @@ func TestPods_CreateSuccess(t *testing.T) {
 	assert.NoError(t, err)
 
 	createdPod, err := client.CoreV1().Pods(res.Namespace()).Get(res.Name(), metav1.GetOptions{})
+
+	imagePullSecrets := make([]string, len(createdPod.Spec.ImagePullSecrets))
+	for i, secret := range createdPod.Spec.ImagePullSecrets {
+		imagePullSecrets[i] = secret.Name
+	}
+
 	assert.NoError(t, err)
 	assert.Equal(t, res.Name(), createdPod.Name)
 	assert.Equal(t, res.Namespace(), createdPod.Namespace)
 	assert.Equal(t, res.Selector().Map(), createdPod.GetLabels())
+	assert.Equal(t, imagePullCredentials, imagePullSecrets)
 	assert.Equal(t, apiv1.RestartPolicyNever, createdPod.Spec.RestartPolicy)
 	assert.Len(t, createdPod.Spec.Containers, 1)
 	assert.Equal(t, "ignition/test", createdPod.Spec.Containers[0].Image)

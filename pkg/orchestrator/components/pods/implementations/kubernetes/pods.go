@@ -179,6 +179,12 @@ func (p *kubernetesPods) Create(input pods.CreatePodInput) (*pods.PodResource, e
 
 	p.Logger.Debug(fmt.Sprintf("List of volumes: %+v", volumes))
 
+	// Parse image pull secrets
+	imagePullSecrets := make([]apiv1.LocalObjectReference, len(input.ImagePullCredentials))
+	for i, secret := range input.ImagePullCredentials {
+		imagePullSecrets[i].Name = secret
+	}
+
 	// Parse termination grace period config.
 	terminationGracePeriod := int64(input.TerminationGracePeriodSeconds.Seconds())
 
@@ -189,6 +195,7 @@ func (p *kubernetesPods) Create(input pods.CreatePodInput) (*pods.PodResource, e
 			Labels: input.Labels,
 		},
 		Spec: apiv1.PodSpec{
+			ImagePullSecrets:              imagePullSecrets,
 			RestartPolicy:                 apiv1.RestartPolicy(input.RestartPolicy),
 			TerminationGracePeriodSeconds: &terminationGracePeriod,
 			InitContainers:                initContainers,
