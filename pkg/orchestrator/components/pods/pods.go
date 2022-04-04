@@ -79,7 +79,7 @@ type Container struct {
 	// Name is the container's name.
 	Name string
 
-	// Image is the image running inside the container.
+	// Image is the OCI image that this container will run.
 	Image string
 
 	// Command is the entrypoint array. It's not executed within a shell.
@@ -118,23 +118,37 @@ type Container struct {
 type CreatePodInput struct {
 	// Name is the name of the pod that will be created.
 	Name string
+
 	// Namespace is the namespace where the pod will live in.
 	Namespace string
+
 	// Labels are the map of labels that will be applied to the pod.
 	Labels map[string]string
+
+	// ImagePullCredentials contains the names or paths of credentials used to pull OCI images from a container
+	// registry.
+	// For Kubernetes, this is equivalent to a pod's ImagePullSecrets.
+	ImagePullCredentials []string
+
 	// RestartPolicy defines how the pod should react after an error.
 	RestartPolicy RestartPolicy
+
 	// TerminationGracePeriodSeconds is the time duration in seconds the pod needs to terminate gracefully.
 	TerminationGracePeriodSeconds time.Duration
+
 	// NodeSelector defines the node where the pod should run in.
 	NodeSelector resource.Selector
+
 	// InitContainers is the list of containers that are created during pod initialization.
-	// InitContainers are launched before Containers, and are typically used to initialize the pod.
+	// Init containers are launched before Containers, and are typically used to initialize the pod.
 	InitContainers []Container
+
 	// Containers is the list of containers that should be created inside the pod.
 	Containers []Container
+
 	// Volumes are the list of volumes that will be created to persist the data from the Container.Volumes.
 	Volumes []Volume
+
 	// Nameservers are the list of DNS Nameservers that will be used to expose the pod to the internet.
 	Nameservers []string
 }
