@@ -92,7 +92,7 @@ func (input *NewInput) SetDefaults() error {
 	}
 
 	if input.Cluster == nil {
-		input.Cluster = kubernetes.NewFakeKubernetes(input.Logger)
+		input.Cluster, _ = kubernetes.NewFakeKubernetes(input.Logger)
 	}
 
 	if input.Store == nil {

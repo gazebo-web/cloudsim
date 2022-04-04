@@ -122,7 +122,7 @@ func NewDefaultKubernetes(api kubernetes.Interface, spdyInit spdy.Initializer, l
 }
 
 // NewFakeKubernetes initializes the set of Kubernetes subcomponents using fake implementations.
-func NewFakeKubernetes(logger ign.Logger) orchestrator.Cluster {
+func NewFakeKubernetes(logger ign.Logger) (orchestrator.Cluster, *fake.Clientset) {
 	api := fake.NewSimpleClientset()
 	spdyInit := spdy.NewSPDYFakeInitializer()
 	return &k8s{
@@ -133,7 +133,7 @@ func NewFakeKubernetes(logger ign.Logger) orchestrator.Cluster {
 		ingresses:       kubernetesIngresses.NewIngresses(api, logger),
 		networkPolicies: kubernetesNetwork.NewNetworkPolicies(api, logger),
 		configurations:  kubernetesConfigMaps.NewConfigMaps(api, logger),
-	}
+	}, api
 }
 
 // InitializeKubernetes initializes a new Kubernetes orchestrator.
