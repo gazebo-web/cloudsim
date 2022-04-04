@@ -2,6 +2,7 @@ package factory
 
 import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/factory"
+	configMapsImpl "gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/components/configurations/implementations"
 	ingressesImpl "gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/components/ingresses/implementations"
 	networkImpl "gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/components/network/implementations"
 	nodesImpl "gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/components/nodes/implementations"
@@ -87,6 +88,13 @@ func NewFunc(config interface{}, dependencies factory.Dependencies, out interfac
 			Config:       typeConfig.Components.NetworkPolicies,
 			Dependencies: dependencies,
 			Out:          &components.NetworkPolicies,
+		},
+		// ConfigMaps
+		{
+			Factory:      configMapsImpl.Factory,
+			Config:       typeConfig.Components.Configurations,
+			Dependencies: dependencies,
+			Out:          &components.Configurations,
 		},
 	}
 	if err := factory.CallFactories(factoryCalls); err != nil {

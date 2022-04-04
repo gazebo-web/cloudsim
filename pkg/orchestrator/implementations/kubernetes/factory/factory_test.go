@@ -61,6 +61,7 @@ func (s *testKubernetesFactorySuite) TestInitializeComponentConfig() {
 			IngressRules:    &factory.Config{Config: factory.ConfigValues{"api": componentConfig}},
 			Services:        &factory.Config{},
 			NetworkPolicies: &factory.Config{},
+			Configurations:  &factory.Config{},
 		},
 	}
 
@@ -70,6 +71,7 @@ func (s *testKubernetesFactorySuite) TestInitializeComponentConfig() {
 	s.Require().Equal(orchestratorConfig, typeConfig.Components.Pods.Config["api"])
 	s.Require().Equal(orchestratorConfig, typeConfig.Components.Services.Config["api"])
 	s.Require().Equal(orchestratorConfig, typeConfig.Components.NetworkPolicies.Config["api"])
+	s.Require().Equal(orchestratorConfig, typeConfig.Components.Configurations.Config["api"])
 	// Verify that the pre-existing configs were not updated
 	s.Require().Equal(componentConfig, typeConfig.Components.Ingresses.Config["api"])
 	s.Require().Equal(componentConfig, typeConfig.Components.IngressRules.Config["api"])

@@ -33,6 +33,8 @@ config:
             type: "gloo"
           networkPolicies:
             type: "kubernetes"
+          configurations:
+            type: "kubernetes"
     storage:
       type: "s3"
       config:

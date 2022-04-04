@@ -1,6 +1,7 @@
 package orchestrator
 
 import (
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/components/configurations"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/components/ingresses"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/components/network"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/components/nodes"
@@ -16,4 +17,5 @@ type Cluster interface {
 	Ingresses() ingresses.Ingresses
 	IngressRules() ingresses.IngressRules
 	NetworkPolicies() network.Policies
+	Configurations() configurations.Configurations
 }
