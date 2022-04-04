@@ -4,6 +4,7 @@ import (
 	"github.com/stretchr/testify/suite"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/factory"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator"
+	configurationsImpl "gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/components/configurations/implementations"
 	ingressesImpl "gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/components/ingresses/implementations"
 	networkImpl "gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/components/network/implementations"
 	nodesImpl "gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/components/nodes/implementations"
@@ -62,6 +63,7 @@ func (s *testKubernetesFactorySuite) TestIngressesNewKubernetes() {
 				"ingresses":       factory.ConfigValues{"type": ingressesImpl.Kubernetes},
 				"ingressRules":    factory.ConfigValues{"type": ingressesImpl.Kubernetes},
 				"networkPolicies": factory.ConfigValues{"type": networkImpl.Kubernetes},
+				"configurations":  factory.ConfigValues{"type": configurationsImpl.Kubernetes},
 			},
 		},
 	}
@@ -87,6 +89,7 @@ func (s *testKubernetesFactorySuite) TestIngressesNewKubernetesGloo() {
 				"ingresses":       factory.ConfigValues{"type": ingressesImpl.Gloo},
 				"ingressRules":    factory.ConfigValues{"type": ingressesImpl.Gloo},
 				"networkPolicies": factory.ConfigValues{"type": networkImpl.Kubernetes},
+				"configurations":  factory.ConfigValues{"type": configurationsImpl.Kubernetes},
 			},
 		},
 	}

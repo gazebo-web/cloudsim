@@ -5,6 +5,7 @@ import (
 	email "gitlab.com/ignitionrobotics/web/cloudsim/pkg/email/implementations"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/factory"
 	machines "gitlab.com/ignitionrobotics/web/cloudsim/pkg/machines/implementations"
+	configurationsImpl "gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/components/configurations/implementations"
 	ingressesImpl "gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/components/ingresses/implementations"
 	networkImpl "gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/components/network/implementations"
 	nodesImpl "gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/components/nodes/implementations"
@@ -63,6 +64,7 @@ func (s *testPlatformFactorySuite) TestNewFunc() {
 							"ingresses":       factory.ConfigValues{"type": ingressesImpl.Gloo},
 							"ingressRules":    factory.ConfigValues{"type": ingressesImpl.Gloo},
 							"networkPolicies": factory.ConfigValues{"type": networkImpl.Kubernetes},
+							"configurations":  factory.ConfigValues{"type": configurationsImpl.Kubernetes},
 						},
 					},
 				},

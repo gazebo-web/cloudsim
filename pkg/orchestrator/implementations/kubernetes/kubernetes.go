@@ -2,6 +2,8 @@ package kubernetes
 
 import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/components/configurations"
+	kubernetesConfigMaps "gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/components/configurations/implementations/kubernetes"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/components/ingresses"
 	kubernetesIngresses "gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/components/ingresses/implementations/kubernetes"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/components/ingresses/implementations/kubernetes/rules"
@@ -22,23 +24,26 @@ import (
 
 // k8s is a orchestrator.Cluster implementation.
 type k8s struct {
-	// nodes has a reference to an nodes.Nodes implementation.
+	// nodes has a reference to a nodes.Nodes implementation.
 	nodes nodes.Nodes
 
-	// pods has a reference to an pods.Pods implementation.
+	// pods has a reference to a pods.Pods implementation.
 	pods pods.Pods
 
 	// ingressRules has a reference to an ingresses.IngressRules implementation.
 	ingressRules ingresses.IngressRules
 
-	// services has a reference to an services.Services implementation.
-	services services.Services
-
 	// ingresses has a reference to an ingresses.Ingresses implementation.
 	ingresses ingresses.Ingresses
 
-	// networkPolicies has a reference to an network.Policies implementation.
+	// services has a reference to a services.Services implementation.
+	services services.Services
+
+	// networkPolicies has a reference to a network.Policies implementation.
 	networkPolicies network.Policies
+
+	// configurations has a reference to a configurations.Configurations implementation.
+	configurations configurations.Configurations
 }
 
 // IngressRules returns the Kubernetes ingresses.IngressRules implementation.
@@ -71,6 +76,11 @@ func (k *k8s) NetworkPolicies() network.Policies {
 	return k.networkPolicies
 }
 
+// Configurations returns the Kubernetes configurations.Configurations implementation.
+func (k *k8s) Configurations() configurations.Configurations {
+	return k.configurations
+}
+
 // Config is used to group the inputs for NewCustomKubernetes.
 // It includes all the needed subcomponents required by Kubernetes.
 type Config struct {
@@ -80,6 +90,7 @@ type Config struct {
 	IngressRules    ingresses.IngressRules
 	Services        services.Services
 	NetworkPolicies network.Policies
+	Configurations  configurations.Configurations
 }
 
 // NewCustomKubernetes returns a orchestrator.Cluster implementation using Kubernetes.
@@ -92,6 +103,7 @@ func NewCustomKubernetes(config Config) orchestrator.Cluster {
 		ingressRules:    config.IngressRules,
 		services:        config.Services,
 		networkPolicies: config.NetworkPolicies,
+		configurations:  config.Configurations,
 	}
 }
 
@@ -105,6 +117,7 @@ func NewDefaultKubernetes(api kubernetes.Interface, spdyInit spdy.Initializer, l
 		services:        kubernetesServices.NewServices(api, logger),
 		ingresses:       kubernetesIngresses.NewIngresses(api, logger),
 		networkPolicies: kubernetesNetwork.NewNetworkPolicies(api, logger),
+		configurations:  kubernetesConfigMaps.NewConfigMaps(api, logger),
 	}
 }
 
@@ -119,6 +132,7 @@ func NewFakeKubernetes(logger ign.Logger) orchestrator.Cluster {
 		services:        kubernetesServices.NewServices(api, logger),
 		ingresses:       kubernetesIngresses.NewIngresses(api, logger),
 		networkPolicies: kubernetesNetwork.NewNetworkPolicies(api, logger),
+		configurations:  kubernetesConfigMaps.NewConfigMaps(api, logger),
 	}
 }
 
