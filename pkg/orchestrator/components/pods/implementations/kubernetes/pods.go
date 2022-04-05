@@ -58,17 +58,11 @@ func (p *kubernetesPods) Get(name, namespace string) (*pods.PodResource, error) 
 
 	pod, err := p.API.CoreV1().Pods(namespace).Get(name, metav1.GetOptions{})
 	if err != nil {
-		p.Logger.Debug(fmt.Sprintf(
-			"Getting pod with name [%s] in namespace [%s] failed. Error: %+v.",
-			name, namespace, err,
-		))
+		p.Logger.Debug(fmt.Sprintf("Getting pod with name [%s] in namespace [%s] failed. Error: %+v.", name, namespace, err))
 		return nil, err
 	}
 
-	p.Logger.Debug(fmt.Sprintf(
-		"Getting pod with name [%s] in namespace [%s] succeeded.",
-		name, namespace,
-	))
+	p.Logger.Debug(fmt.Sprintf("Getting pod with name [%s] in namespace [%s] succeeded.", name, namespace))
 
 	res := kubernetesPodToPodResource(*pod)
 	return &res, nil
@@ -81,11 +75,7 @@ func generateKubernetesContainers(containers []pods.Container) []apiv1.Container
 	for _, c := range containers {
 		var volumeMounts []apiv1.VolumeMount
 		for _, v := range c.Volumes {
-			volumeMounts = append(volumeMounts, apiv1.VolumeMount{
-				Name:      v.Name,
-				MountPath: v.MountPath,
-				SubPath:   v.SubPath,
-			})
+			volumeMounts = append(volumeMounts, ParseVolumeMount(v))
 		}
 
 		// Setup ports
@@ -163,18 +153,8 @@ func (p *kubernetesPods) Create(input pods.CreatePodInput) (*pods.PodResource, e
 
 	// Set up volumes
 	var volumes []apiv1.Volume
-
 	for _, v := range input.Volumes {
-		hostPathType := apiv1.HostPathType(v.HostPathType)
-		volumes = append(volumes, apiv1.Volume{
-			Name: v.Name,
-			VolumeSource: apiv1.VolumeSource{
-				HostPath: &apiv1.HostPathVolumeSource{
-					Path: v.HostPath,
-					Type: &hostPathType,
-				},
-			},
-		})
+		volumes = append(volumes, ParseVolume(v))
 	}
 
 	p.Logger.Debug(fmt.Sprintf("List of volumes: %+v", volumes))

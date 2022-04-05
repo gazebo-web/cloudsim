@@ -33,18 +33,6 @@ const (
 	RestartPolicyOnFailure = RestartPolicy(corev1.RestartPolicyOnFailure)
 )
 
-// HostPathType defines the host path type used for volumes.
-type HostPathType corev1.HostPathType
-
-const (
-	// HostPathUnset is used for backwards compatibility, leave it empty if unset.
-	HostPathUnset = HostPathType(corev1.HostPathUnset)
-
-	// HostPathDirectoryOrCreate should be set if nothing exists at the given path, an empty directory will be created
-	// there as needed with file mode 0755.
-	HostPathDirectoryOrCreate = HostPathType(corev1.HostPathDirectoryOrCreate)
-)
-
 // ResourceName is the name of a certain pod resource like memory or cpu.
 type ResourceName corev1.ResourceName
 
@@ -53,21 +41,6 @@ const (
 	// (500Gi = 500GiB = 500 * 1024 * 1024 * 1024)
 	ResourceMemory = ResourceName(corev1.ResourceMemory)
 )
-
-// Volume represents a storage that will be used to persist data from a certain Container.
-type Volume struct {
-	// Name is the name of the volume.
-	Name string
-	// HostPath represents a pre-existing file or directory on the host
-	// machine that is directly exposed to the container.
-	HostPath string
-	// MountPath is the path within the container at which the volume should be mounted.
-	MountPath string
-	// SubPath is the path within the volume from which the container's volume should be mounted.
-	SubPath string
-	// HostPathType defines the mount type and mounting behavior.
-	HostPathType HostPathType
-}
 
 const (
 	// EnvVarSourcePodIP is used to identify the Pod IP source when getting env vars.
