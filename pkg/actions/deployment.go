@@ -125,9 +125,14 @@ func (d *Deployment) SetJobData(tx *gorm.DB, job *string, dataType deploymentDat
 }
 
 // GetJobData gets job data entry of a specific type for a job in this deployment.
-// The job data is written to `out`. `out` must be a pointer.
 func (d *Deployment) GetJobData(tx *gorm.DB, job *string, dataType deploymentDataType) (interface{}, error) {
-	return getDeploymentData(tx, d, job, dataType)
+	return getDeploymentDataFromRegistry(tx, d, job, dataType)
+}
+
+// GetJobDataOutValue gets job data entry for a job in this deployment and stores the result in the passed output value.
+// `out` must be a pointer.
+func (d *Deployment) GetJobDataOutValue(tx *gorm.DB, job *string, dataType deploymentDataType, out interface{}) error {
+	return getDeploymentDataOutValue(tx, d, job, dataType, out)
 }
 
 // addJobError adds a new deployment error entry for a deployment job.

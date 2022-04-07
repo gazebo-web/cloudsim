@@ -112,7 +112,7 @@ func TestValue(t *testing.T) {
 	require.Equal(t, nil, test(nil))
 }
 
-func TestSetDeploymentJobDataAndGetDeploymentJobData(t *testing.T) {
+func TestSetDeploymentJobDataAndGetDeploymentData(t *testing.T) {
 	tr := setupTest(t)
 	defer tr.db.Close()
 
@@ -126,7 +126,7 @@ func TestSetDeploymentJobDataAndGetDeploymentJobData(t *testing.T) {
 	deployment, err := newDeployment(tr.db, td.action, uuid.NewV4().String())
 	require.NoError(t, err)
 
-	// Get total count of entries
+	// Check total entry count
 	require.Equal(t, 0, dsdtd.getJobDataCount(t, tr.db, deployment))
 
 	// Job data
@@ -148,7 +148,7 @@ func TestSetDeploymentJobDataAndGetDeploymentJobData(t *testing.T) {
 
 	// Get the job data from the database
 	compareWithDB := func(job string, dataType deploymentDataType, expected interface{}) {
-		out, err := getDeploymentData(tr.db, deployment, &job, dataType)
+		out, err := getDeploymentDataFromRegistry(tr.db, deployment, &job, dataType)
 		require.NoError(t, err)
 		dbJobData := out.(DeploymentJobDataTestStruct)
 		require.Equal(t, dsdtd.marshallJSON(t, expected), dsdtd.marshallJSON(t, dbJobData))
@@ -156,6 +156,44 @@ func TestSetDeploymentJobDataAndGetDeploymentJobData(t *testing.T) {
 	compareWithDB(td.jobName1, DeploymentJobInput, testInputData)
 	compareWithDB(td.jobName1, DeploymentJobData, testJobData)
 	// Check that the job with null data returns an error
-	_, err = getDeploymentData(tr.db, deployment, &td.jobName2, DeploymentJobData)
+	_, err = getDeploymentDataFromRegistry(tr.db, deployment, &td.jobName2, DeploymentJobData)
 	require.Equal(t, ErrDeploymentDataNoData, err)
+}
+
+func TestSetDeploymentJobDataAndGetDeploymentDataOutValue(t *testing.T) {
+	tr := setupTest(t)
+	defer tr.db.Close()
+
+	td := getTestData(t)
+	dsdtd := deploymentJobDataTestData
+
+	deployment, err := newDeployment(tr.db, td.action, uuid.NewV4().String())
+	require.NoError(t, err)
+
+	// Check total entry count
+	require.Equal(t, 0, dsdtd.getJobDataCount(t, tr.db, deployment))
+
+	// Job data
+	testJobData := dsdtd.createTestData(123, "input", false, 321, "inputPtr", true)
+
+	// Create the job data entries
+	const JobDataType = "test-type"
+	require.NoError(t, setDeploymentData(tr.db, deployment, &td.jobName1, JobDataType, testJobData))
+	// Check that two entries have been created
+	assert.Equal(t, 1, dsdtd.getJobDataCount(t, tr.db, deployment))
+
+	// Update an existing job data entry
+	testJobData = dsdtd.createTestData(111, "modifiedInput", true, 999, "modifiedPtr", false)
+	require.NoError(t, setDeploymentData(tr.db, deployment, &td.jobName1, JobDataType, testJobData))
+	// Check that the number of entries remains the same
+	assert.Equal(t, 1, dsdtd.getJobDataCount(t, tr.db, deployment))
+
+	// Get the job data from the database
+	compareWithDB := func(job string, dataType deploymentDataType, expected interface{}) {
+		dbJobData := &DeploymentJobDataTestStruct{}
+		require.NoError(t, getDeploymentDataOutValue(tr.db, deployment, &job, dataType, dbJobData))
+		require.NotNil(t, dbJobData)
+		require.Equal(t, dsdtd.marshallJSON(t, expected), dsdtd.marshallJSON(t, *dbJobData))
+	}
+	compareWithDB(td.jobName1, JobDataType, testJobData)
 }
