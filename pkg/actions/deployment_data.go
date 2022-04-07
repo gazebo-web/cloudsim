@@ -40,7 +40,8 @@ type deploymentData struct {
 	// This is used in tandem with a dataTypeRegistry to automatically marshal and unmarshal data from storage.
 	DataType string `gorm:"not null"`
 	// Data contains the job's data. Marshalling and unmarshalling of this data is performed automatically when using
-	// `setDeploymentData` and `getDeploymentData`, respectively.
+	// `setDeploymentData` for marshalling, and `getDeploymentDataFromRegistry` and `getDeploymentDataToValue` when
+	// unmarshalling, respectively.
 	Data *string `gorm:"not null;type:text"`
 }
 
@@ -65,6 +66,12 @@ func (dsd *deploymentData) Value() (interface{}, error) {
 
 	// Return the value of the pointer
 	return reflect.ValueOf(out).Elem().Interface(), nil
+}
+
+// OutValue unmarshals the value stored in this deploymentData instance inside on output value.
+// `out` must be a pointer.
+func (dsd *deploymentData) OutValue(out interface{}) error {
+	return json.Unmarshal([]byte(*dsd.Data), out)
 }
 
 // DeploymentDataSet is a slice of deploymentData pointers.
@@ -122,37 +129,65 @@ func setDeploymentData(tx *gorm.DB, deployment *Deployment, job *string, deploym
 }
 
 // getDeploymentData gets a deployment job deploymentData entry from storage.
-// Returns an error if there is no data of the selected type for the deployment job.
 // `dataType` defines the deploymentDataType of job data returned.
+// Returns an error if there is no data of the selected type for the deployment job.
 func getDeploymentData(tx *gorm.DB, deployment *Deployment, job *string,
-	deploymentDataType deploymentDataType) (interface{}, error) {
+	deploymentDataType deploymentDataType) (*deploymentData, error) {
+
 	// If job is nil, use the deployment's current job
 	if job == nil {
 		job = &deployment.CurrentJob
 	}
 
 	// Get the job data database entry
-	deploymentData := deploymentData{}
+	data := &deploymentData{}
 	err := tx.
 		Where("deployment_id = ?", deployment.ID).
 		Where("job = ?", *job).
 		Where("type = ?", deploymentDataType).
-		First(&deploymentData).
+		First(data).
 		Error
 	if err != nil {
 		return nil, err
 	}
 
 	// Return an error indicating no data was stored
-	if deploymentData.Data == nil || *deploymentData.Data == "null" {
+	if data.Data == nil || *data.Data == "null" {
 		return nil, ErrDeploymentDataNoData
 	}
 
-	// Get the value from the job data entry
-	out, err := deploymentData.Value()
+	return data, nil
+}
+
+// getDeploymentDataFromRegistry gets a deployment job deploymentData entry from storage and returns it in a value
+// whose type is resolved automatically using a type registry.
+// `dataType` defines the deploymentDataType of job data returned.
+// Returns an error if there is no data of the selected type for the deployment job.
+// Keep in mind that the type registry is only able to resolve complex types that have been explicitly registered.
+// In order to get elementary data types, consider using getDeploymentDataOutValue instead.
+func getDeploymentDataFromRegistry(tx *gorm.DB, deployment *Deployment, job *string,
+	deploymentDataType deploymentDataType) (interface{}, error) {
+
+	data, err := getDeploymentData(tx, deployment, job, deploymentDataType)
 	if err != nil {
 		return nil, err
 	}
 
-	return out, nil
+	// Get the value from the job data entry
+	return data.Value()
+}
+
+// getDeploymentDataOutValue gets a deployment job deploymentData entry from storage and stores it inside a passed
+// output value.
+// `dataType` defines the deploymentDataType of job data returned.
+// Returns an error if there is no data of the selected type for the deployment job.
+func getDeploymentDataOutValue(tx *gorm.DB, deployment *Deployment, job *string,
+	deploymentDataType deploymentDataType, out interface{}) error {
+
+	data, err := getDeploymentData(tx, deployment, job, deploymentDataType)
+	if err != nil {
+		return err
+	}
+
+	return data.OutValue(out)
 }
