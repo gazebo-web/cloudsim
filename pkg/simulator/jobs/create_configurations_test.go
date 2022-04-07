@@ -5,9 +5,10 @@ import (
 	"github.com/stretchr/testify/suite"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/actions"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/components/configurations"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/implementations/kubernetes"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/platform"
+	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/store"
+	fakeStore "gitlab.com/ignitionrobotics/web/cloudsim/pkg/store/implementations/fake"
 	gormUtils "gitlab.com/ignitionrobotics/web/cloudsim/pkg/utils/db/gorm"
 	"gitlab.com/ignitionrobotics/web/ign-go"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -23,6 +24,7 @@ type testCreateConfigurationsSuite struct {
 	suite.Suite
 	kubernetesAPI      *fake.Clientset
 	cluster            orchestrator.Cluster
+	store              store.Store
 	jobName            string
 	namespace          string
 	configurationName1 string
@@ -34,38 +36,21 @@ func (suite *testCreateConfigurationsSuite) SetupSuite() {
 	logger := ign.NewLoggerNoRollbar("TestCreateConfigurationsSuite", ign.VerbosityInfo)
 	suite.cluster, suite.kubernetesAPI = kubernetes.NewFakeKubernetes(logger)
 
-	suite.jobName = "test_job"
+	suite.store = fakeStore.NewDefaultFakeStore()
+	// Set up store
+	storeIgnition := fakeStore.NewFakeIgnition()
+	storeOrchestrator := fakeStore.NewFakeOrchestrator()
+
+	// Mock orchestrator store methods for this test
+	storeOrchestrator.On("Namespace").Return("default")
+
+	suite.store = fakeStore.NewFakeStore(nil, storeOrchestrator, storeIgnition)
 
 	suite.namespace = "default"
 
 	suite.configurationName1 = "test-1"
 	suite.configurationName2 = "test-2"
 	suite.configurationName3 = "test-3"
-
-	_, err := suite.cluster.Configurations().Create(
-		configurations.CreateConfigurationInput{
-			Name:      suite.configurationName1,
-			Namespace: suite.namespace,
-		},
-	)
-	suite.Require().NoError(err)
-
-	_, err = suite.cluster.Configurations().Create(
-		configurations.CreateConfigurationInput{
-			Name:      suite.configurationName2,
-			Namespace: suite.namespace,
-		},
-	)
-	suite.Require().NoError(err)
-
-	_, err = suite.cluster.Configurations().Create(
-		configurations.CreateConfigurationInput{
-			Name:      suite.configurationName3,
-			Namespace: suite.namespace,
-		},
-	)
-	suite.Require().NoError(err)
-
 }
 
 func (suite *testCreateConfigurationsSuite) getNumberOfConfigurations() int {
@@ -95,6 +80,7 @@ func (suite *testCreateConfigurationsSuite) TestRemoveCreatedConfigurationsOnFai
 	p, err := platform.NewPlatform(
 		"test", platform.Components{
 			Cluster: suite.cluster,
+			Store:   suite.store,
 		},
 	)
 	suite.Require().NoError(err)
@@ -103,37 +89,39 @@ func (suite *testCreateConfigurationsSuite) TestRemoveCreatedConfigurationsOnFai
 	}
 	store := state.ToStore()
 
-	// Create job data
+	// Create deployment
 	deployment := &actions.Deployment{
 		Action:     suite.jobName,
 		CurrentJob: suite.jobName,
 	}
-	suite.Require().NoError(db.Create(deployment).Error)
 
-	err = deployment.SetJobData(
-		db, &suite.jobName, actions.DeploymentJobInput, &CreateConfigurationsInput{
-			{
-				Namespace: suite.namespace,
-				Name:      suite.configurationName1,
-			},
-			{
-				Namespace: suite.namespace,
-				Name:      suite.configurationName2,
-			},
-			{
-				Namespace: suite.namespace,
-				Name:      suite.configurationName3,
-			},
+	// There should be no pre-existing configurations
+	suite.Require().Equal(0, suite.getNumberOfConfigurations())
+
+	// Create the configurations
+	_, err = CreateConfigurations.Run(store, db, deployment, CreateConfigurationsInput{
+		{
+			Name:      suite.configurationName1,
+			Namespace: suite.namespace,
 		},
-	)
+		{
+			Name:      suite.configurationName2,
+			Namespace: suite.namespace,
+		},
+		{
+			Name:      suite.configurationName3,
+			Namespace: suite.namespace,
+		},
+	})
 	suite.Require().NoError(err)
 
-	// Check that configurations exist
+	// There should be 3 configurations
 	suite.Require().Equal(3, suite.getNumberOfConfigurations())
 
-	expectedErr := errors.New("error")
-	_, err = DeleteCreatedConfigurationsOnFailure(store, db, deployment, nil, expectedErr)
-	suite.Equal(expectedErr, err)
+	// Run the rollback handler
+	err = errors.New("error")
+	_, err = DeleteCreatedConfigurationsOnFailure(store, db, deployment, nil, err)
+	suite.Assert().NoError(err)
 
 	// Verify that configurations no longer exist
 	suite.Require().Equal(0, suite.getNumberOfConfigurations())

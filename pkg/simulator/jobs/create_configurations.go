@@ -19,6 +19,8 @@ type CreateConfigurationsOutput struct {
 	Error     error
 }
 
+const createdConfigurationsJobDataType = "created-configurations"
+
 // CreateConfigurations is a generic job to create cluster configurations.
 var CreateConfigurations = &actions.Job{
 	Name:       "create-configurations",
@@ -64,6 +66,13 @@ func createConfigurations(store actions.Store, tx *gorm.DB, deployment *actions.
 		created = append(created, res)
 	}
 
+	// Store configuration names
+	configs := make([]string, 0, len(created))
+	for _, res := range created {
+		configs = append(configs, res.Name())
+	}
+	deployment.SetJobData(tx, nil, createdConfigurationsJobDataType, configs)
+
 	return CreateConfigurationsOutput{
 		Resources: created,
 		Error:     err,
@@ -78,23 +87,23 @@ func DeleteCreatedConfigurationsOnFailure(store actions.Store, tx *gorm.DB, depl
 	// Get the store
 	s := store.State().(state.PlatformGetter)
 
-	// Get the list of instances from the execute function
-	data, dataErr := deployment.GetJobData(tx, nil, actions.DeploymentJobInput)
+	// Get the set of configurations from the job data
+	configs := make([]string, 0)
+	dataErr := deployment.GetJobDataOutValue(tx, nil, createdConfigurationsJobDataType, &configs)
 	if dataErr != nil {
 		return nil, dataErr
 	}
 
-	// Parse the list of instances
-	createdConfigurations, ok := data.(*CreateConfigurationsInput)
-	if !ok || createdConfigurations == nil {
-		return nil, err
-	}
-
-	// Terminate the instances
-	for _, c := range *createdConfigurations {
-		res := resource.NewResource(c.Name, c.Namespace, nil)
+	// Delete the confingurations
+	namespace := s.Platform().Store().Orchestrator().Namespace()
+	for _, name := range configs {
+		res := resource.NewResource(
+			name,
+			namespace,
+			nil,
+		)
 		_, _ = s.Platform().Orchestrator().Configurations().Delete(res)
 	}
 
-	return nil, err
+	return nil, nil
 }
