@@ -3,7 +3,7 @@ package factory
 import (
 	"github.com/aws/aws-sdk-go/service/ses/sesiface"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/validate"
-	"gitlab.com/ignitionrobotics/web/ign-go"
+	"gitlab.com/ignitionrobotics/web/ign-go/v5"
 )
 
 // Dependencies is used to create an SES storage component.

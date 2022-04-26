@@ -6,7 +6,7 @@ import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/loader"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/platform"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
-	"gitlab.com/ignitionrobotics/web/ign-go"
+	"gitlab.com/ignitionrobotics/web/ign-go/v5"
 	"path/filepath"
 )
 
