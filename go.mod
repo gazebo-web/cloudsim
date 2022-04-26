@@ -35,7 +35,7 @@ require (
 	gitlab.com/ignitionrobotics/billing/payments v0.0.0-20211110174459-d690b1b701e8
 	gitlab.com/ignitionrobotics/web/fuelserver v0.0.0-20200916210816-e30ab5ed9d47
 	gitlab.com/ignitionrobotics/web/ign-go v0.0.0-20211109185912-2322af1b387c
-	gitlab.com/ignitionrobotics/web/ign-go/v5 v5.3.0 // indirect
+	gitlab.com/ignitionrobotics/web/ign-go/v5 v5.3.0
 	golang.org/x/crypto v0.0.0-20200820211705-5c72a883971a // indirect
 	golang.org/x/mod v0.4.0 // indirect
 	golang.org/x/net v0.0.0-20201021035429-f5854403a974
