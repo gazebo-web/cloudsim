@@ -10,7 +10,7 @@ import (
 	cloud "gitlab.com/ignitionrobotics/web/cloudsim/pkg/cloud/aws"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/cycler"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/machines"
-	"gitlab.com/ignitionrobotics/web/ign-go"
+	"gitlab.com/ignitionrobotics/web/ign-go/v5"
 	"testing"
 	"time"
 )

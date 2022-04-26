@@ -10,7 +10,7 @@ import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/store"
 	fakeStore "gitlab.com/ignitionrobotics/web/cloudsim/pkg/store/implementations/fake"
 	gormUtils "gitlab.com/ignitionrobotics/web/cloudsim/pkg/utils/db/gorm"
-	"gitlab.com/ignitionrobotics/web/ign-go"
+	"gitlab.com/ignitionrobotics/web/ign-go/v5"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes/fake"
 	"testing"

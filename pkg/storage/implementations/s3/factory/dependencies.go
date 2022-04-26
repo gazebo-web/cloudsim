@@ -3,7 +3,7 @@ package factory
 import (
 	"github.com/aws/aws-sdk-go/service/s3/s3iface"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/validate"
-	"gitlab.com/ignitionrobotics/web/ign-go"
+	"gitlab.com/ignitionrobotics/web/ign-go/v5"
 )
 
 // Dependencies is used to create an S3 storage component.

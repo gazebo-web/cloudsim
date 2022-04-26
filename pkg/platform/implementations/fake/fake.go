@@ -19,7 +19,7 @@ import (
 	fakeSecrets "gitlab.com/ignitionrobotics/web/cloudsim/pkg/secrets/implementations/fake"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/storage/implementations/s3"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/store/implementations/store"
-	"gitlab.com/ignitionrobotics/web/ign-go"
+	"gitlab.com/ignitionrobotics/web/ign-go/v5"
 	"net/http/httptest"
 )
 

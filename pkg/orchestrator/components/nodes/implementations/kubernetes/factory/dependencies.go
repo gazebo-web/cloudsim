@@ -2,7 +2,7 @@ package factory
 
 import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/validate"
-	"gitlab.com/ignitionrobotics/web/ign-go"
+	"gitlab.com/ignitionrobotics/web/ign-go/v5"
 	kubeapi "k8s.io/client-go/kubernetes"
 )
 
