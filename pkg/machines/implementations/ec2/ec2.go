@@ -15,7 +15,7 @@ import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/defaults"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/machines"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/validate"
-	"gitlab.com/ignitionrobotics/web/ign-go"
+	"gitlab.com/ignitionrobotics/web/ign-go/v5"
 	"regexp"
 	"strings"
 	"sync"

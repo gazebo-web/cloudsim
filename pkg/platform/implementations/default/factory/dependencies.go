@@ -2,7 +2,7 @@ package factory
 
 import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/validate"
-	"gitlab.com/ignitionrobotics/web/ign-go"
+	"gitlab.com/ignitionrobotics/web/ign-go/v5"
 )
 
 // Dependencies is used to create an EC2 machines component.

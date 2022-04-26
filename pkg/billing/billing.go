@@ -8,7 +8,7 @@ import (
 	payments "gitlab.com/ignitionrobotics/billing/payments/pkg/client"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
 	"gitlab.com/ignitionrobotics/web/fuelserver/bundles/users"
-	"gitlab.com/ignitionrobotics/web/ign-go"
+	"gitlab.com/ignitionrobotics/web/ign-go/v5"
 	"net/url"
 	"time"
 )

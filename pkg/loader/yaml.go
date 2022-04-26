@@ -3,7 +3,7 @@ package loader
 import (
 	"github.com/pkg/errors"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/defaults"
-	"gitlab.com/ignitionrobotics/web/ign-go"
+	"gitlab.com/ignitionrobotics/web/ign-go/v5"
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
 )

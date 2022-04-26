@@ -2,7 +2,7 @@ package kubernetes
 
 import (
 	"github.com/stretchr/testify/assert"
-	"gitlab.com/ignitionrobotics/web/ign-go"
+	"gitlab.com/ignitionrobotics/web/ign-go/v5"
 	"k8s.io/client-go/kubernetes/fake"
 	"testing"
 )

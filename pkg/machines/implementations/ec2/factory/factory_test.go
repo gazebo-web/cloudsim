@@ -6,7 +6,7 @@ import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/factory"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/machines"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/machines/implementations/ec2"
-	"gitlab.com/ignitionrobotics/web/ign-go"
+	"gitlab.com/ignitionrobotics/web/ign-go/v5"
 	"testing"
 )
 
@@ -56,7 +56,7 @@ func (s *testEC2FactorySuite) TestNewFuncDefaultConfig() {
 		ec2iface.EC2API
 	}{}
 	dependencies := factory.Dependencies{
-		"api": ec2API,
+		"api":    ec2API,
 		"logger": ign.NewLoggerNoRollbar("test", ign.VerbosityWarning),
 	}
 

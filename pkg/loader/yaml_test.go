@@ -2,7 +2,7 @@ package loader
 
 import (
 	"github.com/stretchr/testify/suite"
-	"gitlab.com/ignitionrobotics/web/ign-go"
+	"gitlab.com/ignitionrobotics/web/ign-go/v5"
 	"io/ioutil"
 	"os"
 	"testing"

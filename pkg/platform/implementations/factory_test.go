@@ -16,7 +16,7 @@ import (
 	secrets "gitlab.com/ignitionrobotics/web/cloudsim/pkg/secrets/implementations"
 	storage "gitlab.com/ignitionrobotics/web/cloudsim/pkg/storage/implementations"
 	store "gitlab.com/ignitionrobotics/web/cloudsim/pkg/store/implementations"
-	"gitlab.com/ignitionrobotics/web/ign-go"
+	"gitlab.com/ignitionrobotics/web/ign-go/v5"
 	"testing"
 )
 

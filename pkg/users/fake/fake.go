@@ -5,7 +5,7 @@ import (
 	"github.com/stretchr/testify/mock"
 	"gitlab.com/ignitionrobotics/web/fuelserver/bundles/users"
 	per "gitlab.com/ignitionrobotics/web/fuelserver/permissions"
-	"gitlab.com/ignitionrobotics/web/ign-go"
+	"gitlab.com/ignitionrobotics/web/ign-go/v5"
 	"net/http"
 )
 
