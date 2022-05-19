@@ -80,8 +80,11 @@ var (
 	// StatusTerminated is used when a simulation has been terminated.
 	StatusTerminated Status = "terminated"
 
-	// StatusSuperseded is used when a simulation has been superseded
+	// StatusSuperseded is used when a simulation has been superseded.
 	StatusSuperseded Status = "superseded"
+
+	// StatusRestarted is used when a simulation has been restarted.
+	StatusRestarted Status = "restarted"
 
 	// StatusUnknown is used to represent an unknown status.
 	StatusUnknown Status = "unknown"
