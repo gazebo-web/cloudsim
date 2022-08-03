@@ -1,156 +1,29 @@
-image: registry.gitlab.com/ignitionrobotics/web/images/cloudsim-pipelines:1.1.0
-
-variables:
-  PKG_NAME: gitlab.com/ignitionrobotics/web/cloudsim
-  MYSQL_DATABASE: "cloudsim_test"
-  MYSQL_ROOT_PASSWORD: "root"
-
-##########################################################
-# Aliases
-
-.setup_modules: &setup_modules
-  - mkdir -p -v $GOPKGPATH
-
-.download_modules: &download_modules
-  - go mod download
-
-.gitlab_credentials: &setup_git_credentials
-  - git config --global user.name "ign-cloudsim"
-  - git config --global user.email "ign-cloudsim@test.org"
-
-.setup_db: &setup_db
-  - mysql -u root -proot -h mysql -e "CREATE DATABASE usersdb_test"
-
-##########################################################
-# Cache configuration
-
-.go-cache:
-  # Paths in the cache need to be in the build directory or Gitlab will ignore them
-  variables:
-    GOPATH: $CI_PROJECT_DIR/.go
-    GOPKGPATH: $CI_PROJECT_DIR/.go/pkg/mod
-  cache:
-    paths:
-      - $GOPKGPATH/
-
-##########################################################
-# Stages
-
 stages:
-  - install
   - format
   - test
   - package
-  - deploy
 
-##########################################################
-# Installing stage
+include:
+  - remote: https://gitlab.com/ignitionrobotics/web/golang-ci/-/raw/main/fmt.yml
+  - remote: https://gitlab.com/ignitionrobotics/web/golang-ci/-/raw/main/lint.yml
+  - remote: https://gitlab.com/ignitionrobotics/web/golang-ci/-/raw/main/vet.yml
+  - remote: https://gitlab.com/ignitionrobotics/web/golang-ci/-/raw/main/test.yml
 
-dependencies:
-  stage: install
-  extends: .go-cache
-  before_script:
-    - *setup_modules
-  script:
-    - *download_modules
-    - ls $GOPKGPATH
-  tags:
-    - gitlab-org
-
-##########################################################
-# Formatting stage
-
-fmt:
-  stage: format
-  extends: .go-cache
-  before_script:
-    - *setup_modules
-    - *setup_git_credentials
-  script:
-    - go fmt $(go list ./...)
-  tags:
-    - gitlab-org
-
-lint:
-  stage: format
-  extends: .go-cache
-  before_script:
-    - *setup_modules
-    - *setup_git_credentials
-  script:
-    - golint -set_exit_status $(go list ./...)
-  tags:
-    - gitlab-org
-
-vet:
-  stage: format
-  extends: .go-cache
-  before_script:
-    - *setup_modules
-    - *setup_git_credentials
-  script:
-    - go vet $(go list ./...)
-  environment:
-    name: testing
-  tags:
-    - gitlab-org
-
-###########################################################
-## Testing stage
+variables:
+  MYSQL_DATABASE: cloudsim
+  MYSQL_ROOT_PASSWORD: root
 
 test:
-  stage: test
-  extends: .go-cache
-  before_script:
-    - *setup_modules
-    - *setup_git_credentials
-    - *setup_db
-    - go install github.com/jstemmer/go-junit-report
-  script:
-    - go test -p 1 -v $(go list ./...) 2>&1 | tee test_output
-  after_script:
-    - $GOPATH/bin/go-junit-report -set-exit-code < test_output > report.xml
   services:
-    - mysql:5.7
-  environment:
-    name: testing
-  tags:
-    - gitlab-org
-  artifacts:
-    when: always
-    reports:
-      junit: report.xml
-
-race:
-  stage: test
-  extends: .go-cache
-  before_script:
-    - *setup_modules
-    - *setup_git_credentials
-    - *setup_db
-  script:
-    - go test -p 1 -v -failfast -race $(go list ./...)
-  services:
-    - mysql:5.7
-  environment:
-    name: testing
-  tags:
-    - gitlab-org
+    - name: mysql:latest
+      alias: mysql
 
 coverage:
-  stage: test
-  extends: .go-cache
-  before_script:
-    - *setup_modules
-    - *setup_git_credentials
-    - *setup_db
-  script:
-    - go test -p 1 -v -failfast -covermode=atomic -coverprofile=coverage.tx  $(go list ./...)
-    - go tool cover -func=coverage.tx
-    - bash <(curl -s https://codecov.io/bash)
   services:
-    - mysql:5.7
-  environment:
-    name: testing
-  tags:
-    - gitlab-org
+    - name: mysql:latest
+      alias: mysql
+
+race:
+  services:
+    - name: mysql:latest
+      alias: mysql
