@@ -1,6 +1,7 @@
 package jobs
 
 import (
+	"context"
 	"github.com/jinzhu/gorm"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/actions"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/components/pods"
@@ -55,7 +56,7 @@ func launchPods(store actions.Store, tx *gorm.DB, deployment *actions.Deployment
 
 	for _, in := range input {
 		var res resource.Resource
-		res, err = s.Platform().Orchestrator().Pods().Create(in)
+		res, err = s.Platform().Orchestrator().Pods().Create(context.Background(), in)
 		if err != nil {
 			return nil, err
 		}
