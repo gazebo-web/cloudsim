@@ -1,6 +1,7 @@
 package kubernetes
 
 import (
+	"context"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/components/pods"
@@ -83,7 +84,7 @@ func TestPods_WaitForPodsToBeReady(t *testing.T) {
 	m := NewPods(client, f, logger)
 	selector := resource.NewSelector(map[string]string{"test": "app"})
 	res := resource.NewResource("test", "default", selector)
-	r := m.WaitForCondition(res, resource.ReadyCondition)
+	r := m.WaitForCondition(context.TODO(), res, resource.ReadyCondition)
 
 	var wg sync.WaitGroup
 	var err error
@@ -120,7 +121,7 @@ func TestPods_WaitForPodsErrWhenPodStateSucceeded(t *testing.T) {
 	m := NewPods(client, f, logger)
 	selector := resource.NewSelector(map[string]string{"test": "app"})
 	res := resource.NewResource("test", "default", selector)
-	r := m.WaitForCondition(res, resource.ReadyCondition)
+	r := m.WaitForCondition(context.TODO(), res, resource.ReadyCondition)
 
 	var wg sync.WaitGroup
 	var err error
@@ -158,7 +159,7 @@ func TestPods_WaitForPodsErrWhenPodStateFailed(t *testing.T) {
 
 	selector := resource.NewSelector(map[string]string{"test": "app"})
 	res := resource.NewResource("test", "default", selector)
-	r := m.WaitForCondition(res, resource.ReadyCondition)
+	r := m.WaitForCondition(context.TODO(), res, resource.ReadyCondition)
 
 	var wg sync.WaitGroup
 	var err error
@@ -179,7 +180,7 @@ func TestPods_CreateSuccess(t *testing.T) {
 	p := NewPods(client, f, logger)
 
 	imagePullCredentials := []string{"secret", "top-secret"}
-	res, err := p.Create(pods.CreatePodInput{
+	res, err := p.Create(context.TODO(), pods.CreatePodInput{
 		Name:                          "test",
 		Namespace:                     "default",
 		Labels:                        map[string]string{"app": "test"},
@@ -205,7 +206,7 @@ func TestPods_CreateSuccess(t *testing.T) {
 
 	assert.NoError(t, err)
 
-	createdPod, err := client.CoreV1().Pods(res.Namespace()).Get(res.Name(), metav1.GetOptions{})
+	createdPod, err := client.CoreV1().Pods(res.Namespace()).Get(context.TODO(), res.Name(), metav1.GetOptions{})
 
 	imagePullSecrets := make([]string, len(createdPod.Spec.ImagePullSecrets))
 	for i, secret := range createdPod.Spec.ImagePullSecrets {
@@ -244,7 +245,7 @@ func TestPods_CreateFailsWhenPodAlreadyExists(t *testing.T) {
 	logger := ign.NewLoggerNoRollbar("TestPods", ign.VerbosityDebug)
 	p := NewPods(client, f, logger)
 
-	_, err := p.Create(pods.CreatePodInput{
+	_, err := p.Create(context.TODO(), pods.CreatePodInput{
 		Name:                          "test",
 		Namespace:                     "default",
 		Labels:                        map[string]string{"app": "test"},
@@ -276,9 +277,7 @@ func TestPods_DeleteFailsWhenPodDoesNotExist(t *testing.T) {
 	logger := ign.NewLoggerNoRollbar("TestPods", ign.VerbosityDebug)
 	p := NewPods(client, f, logger)
 
-	_, err := p.Delete(
-		resource.NewResource("test", "default", resource.NewSelector(map[string]string{})),
-	)
+	_, err := p.Delete(context.TODO(), resource.NewResource("test", "default", resource.NewSelector(map[string]string{})))
 
 	assert.Error(t, err)
 }
@@ -305,15 +304,13 @@ func TestPods_DeleteSuccess(t *testing.T) {
 	logger := ign.NewLoggerNoRollbar("TestPods", ign.VerbosityDebug)
 	p := NewPods(client, f, logger)
 
-	_, err := p.Delete(
-		resource.NewResource("test", "default", resource.NewSelector(map[string]string{
-			"app": "test",
-		})),
-	)
+	_, err := p.Delete(context.TODO(), resource.NewResource("test", "default", resource.NewSelector(map[string]string{
+		"app": "test",
+	})))
 
 	assert.NoError(t, err)
 
-	_, err = client.CoreV1().Pods("default").Get("test", metav1.GetOptions{})
+	_, err = client.CoreV1().Pods("default").Get(context.TODO(), "test", metav1.GetOptions{})
 	assert.Error(t, err)
 }
 
@@ -323,7 +320,7 @@ func TestPods_GetFails(t *testing.T) {
 	logger := ign.NewLoggerNoRollbar("TestPods", ign.VerbosityDebug)
 	p := NewPods(client, f, logger)
 
-	_, err := p.Get("test", "default")
+	_, err := p.Get(context.TODO(), "test", "default")
 
 	assert.Error(t, err)
 }
@@ -350,7 +347,7 @@ func TestPods_GetSuccess(t *testing.T) {
 	logger := ign.NewLoggerNoRollbar("TestPods", ign.VerbosityDebug)
 	p := NewPods(client, f, logger)
 
-	_, err := p.Get("test", "default")
+	_, err := p.Get(context.TODO(), "test", "default")
 
 	assert.NoError(t, err)
 }
@@ -390,33 +387,33 @@ func TestPods_List(t *testing.T) {
 	p := NewPods(client, f, logger)
 
 	// Getting pods in a certain namespace
-	list, err := p.List("default", resource.NewSelector(map[string]string{
+	list, err := p.List(context.TODO(), "default", resource.NewSelector(map[string]string{
 		"app": "test",
 	}))
 	require.NoError(t, err)
 	assert.Len(t, list, 2)
 
 	// Getting elements from another namespace should only return the elements from that namespace.
-	list, err = p.List("cloudsim", resource.NewSelector(map[string]string{
+	list, err = p.List(context.TODO(), "cloudsim", resource.NewSelector(map[string]string{
 		"app": "test",
 	}))
 	require.NoError(t, err)
 	assert.Len(t, list, 1)
 
 	// A wrong defined selector should return an empty response.
-	list, err = p.List("default", resource.NewSelector(map[string]string{
+	list, err = p.List(context.TODO(), "default", resource.NewSelector(map[string]string{
 		"app": "undefined",
 	}))
 	require.NoError(t, err)
 	assert.Len(t, list, 0)
 
 	// An empty selector should return all pods in the given namespace.
-	list, err = p.List("default", resource.NewSelector(nil))
+	list, err = p.List(context.TODO(), "default", resource.NewSelector(nil))
 	require.NoError(t, err)
 	assert.Len(t, list, 2)
 
 	// A nil selector should return all pods in the given namespace.
-	list, err = p.List("default", nil)
+	list, err = p.List(context.TODO(), "default", nil)
 	require.NoError(t, err)
 	assert.Len(t, list, 2)
 }
