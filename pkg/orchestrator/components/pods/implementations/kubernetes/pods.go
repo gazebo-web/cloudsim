@@ -1,37 +1,36 @@
 package kubernetes
 
 import (
+	"context"
 	"fmt"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/components/pods"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/components/spdy"
 	orchestratorResource "gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/resource"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/waiter"
 	"gitlab.com/ignitionrobotics/web/ign-go/v5"
+	"gitlab.com/ignitionrobotics/web/ign-go/v5/kubernetes"
 	apiv1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/client-go/kubernetes"
-	podutil "k8s.io/kubernetes/pkg/api/v1/pod"
-	"k8s.io/kubernetes/pkg/client/conditions"
+	client "k8s.io/client-go/kubernetes"
 )
 
 // kubernetesPods is a pods.Pods implementation.
 type kubernetesPods struct {
-	API    kubernetes.Interface
+	API    client.Interface
 	SPDY   spdy.Initializer
 	Logger ign.Logger
 }
 
 // List returns a list of pod resources matching the giving selector in the given namespace.
 // If selector is nil or empty (doesn't have any labels specified) it will return all the resources in the given namespace.
-func (p *kubernetesPods) List(namespace string,
-	selector orchestratorResource.Selector) ([]pods.PodResource, error) {
+func (p *kubernetesPods) List(ctx context.Context, namespace string, selector orchestratorResource.Selector) ([]pods.PodResource, error) {
 
 	if selector == nil {
 		selector = orchestratorResource.NewSelector(map[string]string{})
 	}
 	p.Logger.Debug(fmt.Sprintf("Getting list of pods in namespace [%s] matching the following labels: [%s]", namespace, selector.String()))
-	res, err := p.API.CoreV1().Pods(namespace).List(metav1.ListOptions{LabelSelector: selector.String()})
+	res, err := p.API.CoreV1().Pods(namespace).List(ctx, metav1.ListOptions{LabelSelector: selector.String()})
 	if err != nil {
 		p.Logger.Debug(fmt.Sprintf("Failed to list pods in namespace [%s] matching the following labels: [%s]", namespace, selector.String()))
 		return nil, err
@@ -53,10 +52,10 @@ func (p *kubernetesPods) List(namespace string,
 }
 
 // Get gets a pod with the certain name and in the given namespace and returns a resource that identifies that pod.
-func (p *kubernetesPods) Get(name, namespace string) (*pods.PodResource, error) {
+func (p *kubernetesPods) Get(ctx context.Context, name, namespace string) (*pods.PodResource, error) {
 	p.Logger.Debug(fmt.Sprintf("Getting pod with name [%s] in namespace [%s]", name, namespace))
 
-	pod, err := p.API.CoreV1().Pods(namespace).Get(name, metav1.GetOptions{})
+	pod, err := p.API.CoreV1().Pods(namespace).Get(ctx, name, metav1.GetOptions{})
 	if err != nil {
 		p.Logger.Debug(fmt.Sprintf("Getting pod with name [%s] in namespace [%s] failed. Error: %+v.", name, namespace, err))
 		return nil, err
@@ -140,7 +139,7 @@ func generateKubernetesContainers(containers []pods.Container) []apiv1.Container
 }
 
 // Create creates a new pod with the information given in resource.CreatePodInput.
-func (p *kubernetesPods) Create(input pods.CreatePodInput) (*pods.PodResource, error) {
+func (p *kubernetesPods) Create(ctx context.Context, input pods.CreatePodInput) (*pods.PodResource, error) {
 	p.Logger.Debug(fmt.Sprintf("Creating new pod. Input: %+v", input))
 
 	// Set up init containers
@@ -194,7 +193,7 @@ func (p *kubernetesPods) Create(input pods.CreatePodInput) (*pods.PodResource, e
 	}
 
 	// Create pod in Kubernetes
-	created, err := p.API.CoreV1().Pods(input.Namespace).Create(pod)
+	created, err := p.API.CoreV1().Pods(input.Namespace).Create(ctx, pod, metav1.CreateOptions{})
 	if err != nil {
 		p.Logger.Debug(fmt.Sprintf("Creating new pod failed. Input: %+v. Error: %s", input, err))
 		return nil, err
@@ -221,12 +220,12 @@ func getEnvVarValueFromSource(from string) *apiv1.EnvVarSource {
 }
 
 // Delete deletes the pod identified by the given resource.
-func (p *kubernetesPods) Delete(resource orchestratorResource.Resource) (orchestratorResource.Resource, error) {
+func (p *kubernetesPods) Delete(ctx context.Context, resource orchestratorResource.Resource) (orchestratorResource.Resource, error) {
 	p.Logger.Debug(
 		fmt.Sprintf("Deleting pod with name [%s] in namespace [%s]", resource.Name(), resource.Namespace()),
 	)
 
-	err := p.API.CoreV1().Pods(resource.Namespace()).Delete(resource.Name(), &metav1.DeleteOptions{})
+	err := p.API.CoreV1().Pods(resource.Namespace()).Delete(ctx, resource.Name(), metav1.DeleteOptions{})
 	if err != nil {
 		p.Logger.Debug(fmt.Sprintf(
 			"Deleting pod with name [%s] in namespace [%s] failed. Error: %+v.",
@@ -244,21 +243,20 @@ func (p *kubernetesPods) Delete(resource orchestratorResource.Resource) (orchest
 }
 
 // Exec creates a new executor.
-func (p *kubernetesPods) Exec(pod orchestratorResource.Resource) pods.Executor {
+func (p *kubernetesPods) Exec(ctx context.Context, pod orchestratorResource.Resource) pods.Executor {
 	p.Logger.Debug(fmt.Sprintf("Creating new executor for pod [%s] in namespace [%s]", pod.Name(), pod.Namespace()))
 	return newExecutor(p.API, pod, p.SPDY, p.Logger)
 }
 
 // Reader creates a new reader.
-func (p *kubernetesPods) Reader(pod orchestratorResource.Resource) pods.Reader {
+func (p *kubernetesPods) Reader(ctx context.Context, pod orchestratorResource.Resource) pods.Reader {
 	p.Logger.Debug(fmt.Sprintf("Creating new reader for pod [%s]", pod.Name()))
 	return newReader(p.API, pod, p.SPDY, p.Logger)
 }
 
 // WaitForCondition creates a new wait request that will be used to wait for a resource to match a certain condition.
 // The wait request won't be triggered until the method Wait has been called.
-func (p *kubernetesPods) WaitForCondition(resource orchestratorResource.Resource,
-	condition orchestratorResource.Condition) waiter.Waiter {
+func (p *kubernetesPods) WaitForCondition(ctx context.Context, resource orchestratorResource.Resource, condition orchestratorResource.Condition) waiter.Waiter {
 
 	p.Logger.Debug(fmt.Sprintf("Creating wait for condition [%+v] request on pods matching the following selector: [%s]",
 		condition, resource.Selector(),
@@ -274,7 +272,7 @@ func (p *kubernetesPods) WaitForCondition(resource orchestratorResource.Resource
 		var podsNotReady []*apiv1.Pod
 
 		// Get list of pods
-		po, err := p.API.CoreV1().Pods(resource.Namespace()).List(opts)
+		po, err := p.API.CoreV1().Pods(resource.Namespace()).List(ctx, opts)
 		if err != nil {
 			p.Logger.Debug("[WaitForCondition] Failed to get pods from orchestrator: ", err)
 			return false, nil
@@ -285,26 +283,26 @@ func (p *kubernetesPods) WaitForCondition(resource orchestratorResource.Resource
 		}
 
 		// Iterate over list of pods
-		for _, i := range po.Items {
+		for _, item := range po.Items {
 			var ready bool
 
 			// Check that pod doesn't match the given condition.
 			switch condition {
 			case orchestratorResource.ReadyCondition:
-				ready, err = p.isPodReady(&i)
+				ready, err = kubernetes.IsPodReady(&item)
 				if err != nil {
 					return false, nil
 				}
 				break
 			case orchestratorResource.HasIPStatusCondition:
-				ready = p.podHasIP(&i)
+				ready = p.podHasIP(&item)
 				break
 			}
 
 			// Add pod to list if pod isn't ready.
 			if !ready {
 				pod := new(apiv1.Pod)
-				*pod = i
+				*pod = item
 				podsNotReady = append(podsNotReady, pod)
 			}
 		}
@@ -319,14 +317,6 @@ func (p *kubernetesPods) WaitForCondition(resource orchestratorResource.Resource
 	return waiter.NewWaitRequest(job)
 }
 
-// isPodReady checks if the given Kubernetes Pod matches the ready condition.
-func (p *kubernetesPods) isPodReady(pod *apiv1.Pod) (bool, error) {
-	if pod.Status.Phase == apiv1.PodFailed || pod.Status.Phase == apiv1.PodSucceeded {
-		return false, conditions.ErrPodCompleted
-	}
-	return podutil.IsPodReady(pod), nil
-}
-
 func (p *kubernetesPods) podHasIP(pod *apiv1.Pod) bool {
 	return pod.Status.PodIP != ""
 }
@@ -335,10 +325,10 @@ func (p *kubernetesPods) podHasIP(pod *apiv1.Pod) bool {
 // It will return an error if no IP has been assigned to the pod when calling this method.
 // This job assumes that the pod is ready and can be accessed immediately. A WaitForCondition job must be executed at some point
 // before executing this job to ensure that the pod is ready and has an IP assigned (resource.HasIPStatusCondition).
-func (p *kubernetesPods) GetIP(name, namespace string) (string, error) {
+func (p *kubernetesPods) GetIP(ctx context.Context, name string, namespace string) (string, error) {
 	p.Logger.Debug(fmt.Sprintf("Getting IP from pod with name [%s] in namespace [%s]", name, namespace))
 
-	pod, err := p.API.CoreV1().Pods(namespace).Get(name, metav1.GetOptions{})
+	pod, err := p.API.CoreV1().Pods(namespace).Get(ctx, name, metav1.GetOptions{})
 	if err != nil {
 		p.Logger.Debug(fmt.Sprintf(
 			"Getting IP from pod with name [%s] in namespace [%s] failed. Error: %+v.",
@@ -366,7 +356,7 @@ func (p *kubernetesPods) GetIP(name, namespace string) (string, error) {
 }
 
 // NewPods initializes a new pods.Pods implementation for managing Kubernetes Pods.
-func NewPods(api kubernetes.Interface, spdy spdy.Initializer, logger ign.Logger) pods.Pods {
+func NewPods(api client.Interface, spdy spdy.Initializer, logger ign.Logger) pods.Pods {
 	return &kubernetesPods{
 		API:    api,
 		SPDY:   spdy,
