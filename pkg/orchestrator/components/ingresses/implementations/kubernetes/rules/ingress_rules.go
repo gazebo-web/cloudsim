@@ -6,7 +6,7 @@ import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/components/ingresses"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/resource"
 	"gitlab.com/ignitionrobotics/web/ign-go/v5"
-	"k8s.io/api/extensions/v1beta1"
+	networkingv1 "k8s.io/api/networking/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 )
@@ -25,7 +25,7 @@ func (m *ingressRules) Get(ctx context.Context, resource resource.Resource, host
 	))
 
 	// Get ingress from cluster
-	ingress, err := m.API.ExtensionsV1beta1().Ingresses(resource.Namespace()).Get(ctx, resource.Name(), metav1.GetOptions{})
+	ingress, err := m.API.NetworkingV1().Ingresses(resource.Namespace()).Get(ctx, resource.Name(), metav1.GetOptions{})
 	if err != nil {
 		m.Logger.Debug(fmt.Sprintf(
 			"Getting ingress rule with name [%s] failed. Error: [%s]",
@@ -35,7 +35,7 @@ func (m *ingressRules) Get(ctx context.Context, resource resource.Resource, host
 	}
 
 	// Get rule that matches the given host
-	var rule *v1beta1.HTTPIngressRuleValue
+	var rule *networkingv1.HTTPIngressRuleValue
 	for _, ingressRule := range ingress.Spec.Rules {
 		if ingressRule.Host == host {
 			rule = ingressRule.IngressRuleValue.HTTP
@@ -65,7 +65,7 @@ func (m *ingressRules) Upsert(ctx context.Context, rule ingresses.Rule, paths ..
 	m.Logger.Debug(fmt.Sprintf("Upserting rule from host [%s] ", rule.Host()))
 
 	// Get ingress from cluster
-	ingress, err := m.API.ExtensionsV1beta1().Ingresses(rule.Resource().Namespace()).Get(ctx, rule.Resource().Name(), metav1.GetOptions{})
+	ingress, err := m.API.NetworkingV1().Ingresses(rule.Resource().Namespace()).Get(ctx, rule.Resource().Name(), metav1.GetOptions{})
 	if err != nil {
 		return err
 	}
@@ -89,10 +89,10 @@ func (m *ingressRules) Upsert(ctx context.Context, rule ingresses.Rule, paths ..
 	rule.UpsertPaths(paths)
 
 	// Update ingress paths
-	ingress.Spec.Rules[position] = rule.ToOutput().(v1beta1.IngressRule)
+	ingress.Spec.Rules[position] = rule.ToOutput().(networkingv1.IngressRule)
 
 	// Update ingress in cluster
-	_, err = m.API.ExtensionsV1beta1().Ingresses(rule.Resource().Namespace()).Update(ctx, ingress, metav1.UpdateOptions{})
+	_, err = m.API.NetworkingV1().Ingresses(rule.Resource().Namespace()).Update(ctx, ingress, metav1.UpdateOptions{})
 	if err != nil {
 		m.Logger.Debug(fmt.Sprintf("Error while updating rules from host [%s] ", rule.Host()))
 		return err
@@ -107,7 +107,7 @@ func (m *ingressRules) Remove(ctx context.Context, rule ingresses.Rule, paths ..
 	m.Logger.Debug(fmt.Sprintf("Removing rule paths from host [%s] ", rule.Host()))
 
 	// Get ingress from cluster
-	ingress, err := m.API.ExtensionsV1beta1().Ingresses(rule.Resource().Namespace()).Get(ctx, rule.Resource().Name(), metav1.GetOptions{})
+	ingress, err := m.API.NetworkingV1().Ingresses(rule.Resource().Namespace()).Get(ctx, rule.Resource().Name(), metav1.GetOptions{})
 	if err != nil {
 		return err
 	}
@@ -131,10 +131,10 @@ func (m *ingressRules) Remove(ctx context.Context, rule ingresses.Rule, paths ..
 	rule.RemovePaths(paths)
 
 	// Assign new rules to the ingress
-	ingress.Spec.Rules[position] = rule.ToOutput().(v1beta1.IngressRule)
+	ingress.Spec.Rules[position] = rule.ToOutput().(networkingv1.IngressRule)
 
 	// Update ingress
-	_, err = m.API.ExtensionsV1beta1().Ingresses(rule.Resource().Namespace()).Update(ctx, ingress, metav1.UpdateOptions{})
+	_, err = m.API.NetworkingV1().Ingresses(rule.Resource().Namespace()).Update(ctx, ingress, metav1.UpdateOptions{})
 	if err != nil {
 		m.Logger.Debug(fmt.Sprintf(
 			"Error while removing rule paths from host [%s]. Error: %s",
@@ -150,7 +150,7 @@ func (m *ingressRules) Remove(ctx context.Context, rule ingresses.Rule, paths ..
 // findRule finds the given rule in the provided slice of searchRules.
 // It returns the position of the given rule.
 // It returns -1 if it didn't find the rule.
-func findRule(rule ingresses.Rule, searchRules []v1beta1.IngressRule) int {
+func findRule(rule ingresses.Rule, searchRules []networkingv1.IngressRule) int {
 	position := -1
 	for i, ingressRule := range searchRules {
 		if ingressRule.Host == rule.Host() {
