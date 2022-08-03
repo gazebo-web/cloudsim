@@ -1,6 +1,7 @@
 package jobs
 
 import (
+	"context"
 	"github.com/jinzhu/gorm"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/actions"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/resource"
@@ -29,7 +30,7 @@ func removeConfigurations(store actions.Store, tx *gorm.DB, deployment *actions.
 
 	input := value.(RemoveConfigurationsInput)
 
-	_, err := s.Platform().Orchestrator().Configurations().Delete(input.Resource)
+	_, err := s.Platform().Orchestrator().Configurations().Delete(context.TODO(), input.Resource)
 
 	return RemoveConfigurationsOutput{
 		Error: err,

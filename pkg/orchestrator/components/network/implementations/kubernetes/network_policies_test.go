@@ -1,6 +1,7 @@
 package kubernetes
 
 import (
+	"context"
 	"fmt"
 	"github.com/stretchr/testify/suite"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/components/network"
@@ -115,7 +116,7 @@ func (s *networkPoliciesTestSuite) TestCreateIngressSpec() {
 }
 
 func (s *networkPoliciesTestSuite) TestCreateNetworkPolicy() {
-	res, err := s.networkPolicies.Create(network.CreateNetworkPolicyInput{
+	res, err := s.networkPolicies.Create(context.TODO(), network.CreateNetworkPolicyInput{
 		Name:      "test-np",
 		Namespace: "default",
 		Labels: map[string]string{
@@ -151,14 +152,14 @@ func (s *networkPoliciesTestSuite) TestCreateNetworkPolicy() {
 		"np":  "true",
 	}, res.Selector().Map())
 
-	np, err := s.client.NetworkingV1().NetworkPolicies(res.Namespace()).Get("test-np", metav1.GetOptions{})
+	np, err := s.client.NetworkingV1().NetworkPolicies(res.Namespace()).Get(context.TODO(), "test-np", metav1.GetOptions{})
 	s.NoError(err)
 	s.Equal(res.Name(), np.Name)
 }
 
 func (s *networkPoliciesTestSuite) TestRemoveNetworkPolicy() {
 	// Create a network policy
-	res, err := s.networkPolicies.Create(network.CreateNetworkPolicyInput{
+	res, err := s.networkPolicies.Create(context.TODO(), network.CreateNetworkPolicyInput{
 		Name:      "test-np",
 		Namespace: "default",
 		Labels: map[string]string{
@@ -189,10 +190,10 @@ func (s *networkPoliciesTestSuite) TestRemoveNetworkPolicy() {
 
 	s.Require().NoError(err)
 
-	err = s.networkPolicies.Remove(res.Name(), res.Namespace())
+	err = s.networkPolicies.Remove(context.TODO(), res.Name(), res.Namespace())
 	s.Assert().NoError(err)
 
-	err = s.networkPolicies.Remove(res.Name(), res.Namespace())
+	err = s.networkPolicies.Remove(context.TODO(), res.Name(), res.Namespace())
 	s.Assert().Error(err)
 }
 
@@ -204,12 +205,12 @@ func (s *networkPoliciesTestSuite) TestRemoveNetworkPoliciesBulk() {
 		"np": "0",
 	})
 
-	s.Assert().NoError(s.networkPolicies.RemoveBulk("default", sel))
+	s.Assert().NoError(s.networkPolicies.RemoveBulk(context.TODO(), "default", sel))
 }
 
 func (s *networkPoliciesTestSuite) setupTestRemoveBulk() {
 	for i := 0; i < 3; i++ {
-		_, err := s.networkPolicies.Create(network.CreateNetworkPolicyInput{
+		_, err := s.networkPolicies.Create(context.TODO(), network.CreateNetworkPolicyInput{
 			Name:      fmt.Sprintf("test-np-%d", i),
 			Namespace: "default",
 			Labels: map[string]string{

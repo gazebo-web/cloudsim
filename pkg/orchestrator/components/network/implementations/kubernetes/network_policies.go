@@ -1,6 +1,7 @@
 package kubernetes
 
 import (
+	"context"
 	"fmt"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/components/network"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/resource"
@@ -18,14 +19,14 @@ type networkPolicies struct {
 }
 
 // RemoveBulk removes a set of network policies specified by the given selector in a certain namespace.
-func (np *networkPolicies) RemoveBulk(namespace string, selector resource.Selector) error {
+func (np *networkPolicies) RemoveBulk(ctx context.Context, namespace string, selector resource.Selector) error {
 	np.Logger.Debug(
 		fmt.Sprintf("Removing network policies on namespace [%s] with the given selector: [%s]",
 			namespace, selector.String(),
 		),
 	)
 
-	err := np.API.NetworkingV1().NetworkPolicies(namespace).DeleteCollection(&metav1.DeleteOptions{}, metav1.ListOptions{
+	err := np.API.NetworkingV1().NetworkPolicies(namespace).DeleteCollection(ctx, metav1.DeleteOptions{}, metav1.ListOptions{
 		LabelSelector: selector.String(),
 	})
 	if err != nil {
@@ -45,10 +46,10 @@ func (np *networkPolicies) RemoveBulk(namespace string, selector resource.Select
 }
 
 // Remove removes a network policy with the given name and living in the given namespace.
-func (np *networkPolicies) Remove(name, namespace string) error {
+func (np *networkPolicies) Remove(ctx context.Context, name string, namespace string) error {
 	np.Logger.Debug(fmt.Sprintf("Removing network policy with name [%s] in namespace [%s]", name, namespace))
 
-	err := np.API.NetworkingV1().NetworkPolicies(namespace).Delete(name, &metav1.DeleteOptions{})
+	err := np.API.NetworkingV1().NetworkPolicies(namespace).Delete(ctx, name, metav1.DeleteOptions{})
 	if err != nil {
 		np.Logger.Debug(fmt.Sprintf("Removing network policy with name [%s] in namespace [%s] failed. Error: %s", name, namespace, err))
 		return err
@@ -58,7 +59,7 @@ func (np *networkPolicies) Remove(name, namespace string) error {
 }
 
 // Create creates a network policy.
-func (np *networkPolicies) Create(input network.CreateNetworkPolicyInput) (resource.Resource, error) {
+func (np *networkPolicies) Create(ctx context.Context, input network.CreateNetworkPolicyInput) (resource.Resource, error) {
 	// Prepare ingress spec
 	specIngress := np.createIngressSpec(input.Ingresses, input.PeersFrom)
 
@@ -84,7 +85,7 @@ func (np *networkPolicies) Create(input network.CreateNetworkPolicyInput) (resou
 	np.Logger.Debug(fmt.Sprintf("Creating network policy with name [%s] in namespace [%s]", input.Name, input.Namespace))
 
 	// Create network policy
-	_, err := np.API.NetworkingV1().NetworkPolicies(input.Namespace).Create(createNetworkPolicy)
+	_, err := np.API.NetworkingV1().NetworkPolicies(input.Namespace).Create(ctx, createNetworkPolicy, metav1.CreateOptions{})
 	if err != nil {
 		np.Logger.Debug(fmt.Sprintf("Creating network policy with name [%s] in namespace [%s] failed. Error: %s", input.Name, input.Namespace, err))
 		return nil, err

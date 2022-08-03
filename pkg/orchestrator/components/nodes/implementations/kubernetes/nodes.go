@@ -1,6 +1,7 @@
 package kubernetes
 
 import (
+	"context"
 	"fmt"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/components/nodes"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/resource"
@@ -19,20 +20,20 @@ type kubernetesNodes struct {
 
 // WaitForCondition creates a new wait request that will be used to wait for a resource to match a certain condition.
 // The wait request won't be triggered until the method Wait has been called.
-func (m *kubernetesNodes) WaitForCondition(resource resource.Resource, condition resource.Condition) waiter.Waiter {
+func (m *kubernetesNodes) WaitForCondition(ctx context.Context, node resource.Resource, condition resource.Condition) waiter.Waiter {
 	m.Logger.Debug(fmt.Sprintf("Creating wait for condition [%+v] request on nodes matching the following selector: [%s]",
-		condition, resource.Selector(),
+		condition, node.Selector(),
 	))
 
 	// Prepare options
 	opts := metav1.ListOptions{
-		LabelSelector: resource.Selector().String(),
+		LabelSelector: node.Selector().String(),
 	}
 
 	// Create job
 	job := func() (bool, error) {
 		var nodesNotReady []*apiv1.Node
-		nodeList, err := m.API.CoreV1().Nodes().List(opts)
+		nodeList, err := m.API.CoreV1().Nodes().List(ctx, opts)
 		if err != nil {
 			m.Logger.Debug("[WaitForCondition] Failed to get nodes from orchestrator: ", err)
 			return false, nil
@@ -52,7 +53,7 @@ func (m *kubernetesNodes) WaitForCondition(resource resource.Resource, condition
 
 	m.Logger.Debug(fmt.Sprintf(
 		"Wait for condition [%+v] request on nodes matching the following selector: [%s] was created.",
-		condition, resource.Selector(),
+		condition, node.Selector(),
 	))
 
 	// Return new wait request with the created job

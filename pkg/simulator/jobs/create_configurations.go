@@ -1,6 +1,7 @@
 package jobs
 
 import (
+	"context"
 	"github.com/jinzhu/gorm"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/actions"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/components/configurations"
@@ -59,7 +60,7 @@ func createConfigurations(store actions.Store, tx *gorm.DB, deployment *actions.
 
 	for _, in := range input {
 		var res resource.Resource
-		res, err = s.Platform().Orchestrator().Configurations().Create(in)
+		res, err = s.Platform().Orchestrator().Configurations().Create(context.TODO(), in)
 		if err != nil {
 			return nil, err
 		}
@@ -102,7 +103,7 @@ func DeleteCreatedConfigurationsOnFailure(store actions.Store, tx *gorm.DB, depl
 			namespace,
 			nil,
 		)
-		_, _ = s.Platform().Orchestrator().Configurations().Delete(res)
+		_, _ = s.Platform().Orchestrator().Configurations().Delete(context.TODO(), res)
 	}
 
 	return nil, nil

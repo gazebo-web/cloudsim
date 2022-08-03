@@ -1,6 +1,7 @@
 package services
 
 import (
+	"context"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/resource"
 )
 
@@ -30,8 +31,8 @@ type CreateServiceInput struct {
 // Services groups a set of methods for managing services like Load Balancers.
 // services are usually used to abstract a group of pods behind a single endpoint.
 type Services interface {
-	Create(input CreateServiceInput) (resource.Resource, error)
-	Get(name, namespace string) (resource.Resource, error)
-	List(namespace string, selector resource.Selector) ([]resource.Resource, error)
-	Remove(resource resource.Resource) error
+	Create(ctx context.Context, input CreateServiceInput) (resource.Resource, error)
+	Get(ctx context.Context, name string, namespace string) (resource.Resource, error)
+	List(ctx context.Context, namespace string, selector resource.Selector) ([]resource.Resource, error)
+	Remove(ctx context.Context, resource resource.Resource) error
 }

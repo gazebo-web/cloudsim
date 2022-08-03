@@ -157,6 +157,6 @@ type Executor interface {
 
 // Reader groups a set of methods to read files and logs from a Pod.
 type Reader interface {
-	File(container string, paths ...string) (*bytes.Buffer, error)
-	Logs(container string, lines int64) (string, error)
+	File(ctx context.Context, container string, paths ...string) (*bytes.Buffer, error)
+	Logs(ctx context.Context, container string, lines int64) (string, error)
 }

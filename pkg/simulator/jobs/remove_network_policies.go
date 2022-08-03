@@ -1,6 +1,7 @@
 package jobs
 
 import (
+	"context"
 	"github.com/jinzhu/gorm"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/actions"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/resource"
@@ -30,7 +31,7 @@ func removeNetworkPolicies(store actions.Store, tx *gorm.DB, deployment *actions
 
 	input := value.(RemoveNetworkPoliciesInput)
 
-	err := s.Platform().Orchestrator().NetworkPolicies().RemoveBulk(input.Namespace, input.Selector)
+	err := s.Platform().Orchestrator().NetworkPolicies().RemoveBulk(context.TODO(), input.Namespace, input.Selector)
 
 	return RemoveNetworkPoliciesOutput{
 		Error: err,

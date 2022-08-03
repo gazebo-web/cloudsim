@@ -1,6 +1,7 @@
 package jobs
 
 import (
+	"context"
 	"errors"
 	"github.com/stretchr/testify/suite"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/actions"
@@ -54,7 +55,7 @@ func (suite *testCreateConfigurationsSuite) SetupSuite() {
 }
 
 func (suite *testCreateConfigurationsSuite) getNumberOfConfigurations() int {
-	cms, err := suite.kubernetesAPI.CoreV1().ConfigMaps(suite.namespace).List(metav1.ListOptions{})
+	cms, err := suite.kubernetesAPI.CoreV1().ConfigMaps(suite.namespace).List(context.TODO(), metav1.ListOptions{})
 	suite.Require().NoError(err)
 
 	return len(cms.Items)
