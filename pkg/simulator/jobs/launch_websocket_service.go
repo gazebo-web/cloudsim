@@ -1,6 +1,7 @@
 package jobs
 
 import (
+	"context"
 	"github.com/jinzhu/gorm"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/actions"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/components/services"
@@ -31,7 +32,7 @@ func launchWebsocketService(store actions.Store, tx *gorm.DB, deployment *action
 	input := value.(LaunchWebsocketServiceInput)
 
 	// Create service
-	res, err := s.Platform().Orchestrator().Services().Create(services.CreateServiceInput(input))
+	res, err := s.Platform().Orchestrator().Services().Create(context.TODO(), services.CreateServiceInput(input))
 
 	return LaunchWebsocketServiceOutput{
 		Resource: res,

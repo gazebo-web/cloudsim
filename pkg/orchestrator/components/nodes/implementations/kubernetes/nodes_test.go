@@ -136,7 +136,7 @@ func TestWait_WaitForNodesToBeReady(t *testing.T) {
 	nm := NewNodes(cli, ign.NewLoggerNoRollbar("TestNodes", ign.VerbosityDebug))
 	selector := resource.NewSelector(map[string]string{"test": "app"})
 	res := resource.NewResource("test", "default", selector)
-	r := nm.WaitForCondition(res, resource.ReadyCondition)
+	r := nm.WaitForCondition(nil, res, resource.ReadyCondition)
 
 	var wg sync.WaitGroup
 	var err error
@@ -172,7 +172,7 @@ func TestWait_ErrWhenNodesArentReady(t *testing.T) {
 
 	selector := resource.NewSelector(map[string]string{"test": "app"})
 	res := resource.NewResource("test", "default", selector)
-	r := nm.WaitForCondition(res, resource.ReadyCondition)
+	r := nm.WaitForCondition(nil, res, resource.ReadyCondition)
 
 	var wg sync.WaitGroup
 	var err error

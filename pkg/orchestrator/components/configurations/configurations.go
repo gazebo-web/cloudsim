@@ -1,6 +1,7 @@
 package configurations
 
 import (
+	"context"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/resource"
 )
 
@@ -27,7 +28,7 @@ type CreateConfigurationInput struct {
 // Depending on the Cluster implementation, Configurations can be mounted directly in a pod when running it.
 type Configurations interface {
 	// Create creates a new configuration.
-	Create(input CreateConfigurationInput) (resource.Resource, error)
+	Create(ctx context.Context, input CreateConfigurationInput) (resource.Resource, error)
 	// Delete deletes a configuration.
-	Delete(resource resource.Resource) (resource.Resource, error)
+	Delete(ctx context.Context, resource resource.Resource) (resource.Resource, error)
 }

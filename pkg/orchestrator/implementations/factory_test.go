@@ -86,8 +86,6 @@ func (s *testKubernetesFactorySuite) TestIngressesNewKubernetesGloo() {
 				"nodes":           factory.ConfigValues{"type": nodesImpl.Kubernetes},
 				"pods":            factory.ConfigValues{"type": podsImpl.Kubernetes},
 				"services":        factory.ConfigValues{"type": servicesImpl.Kubernetes},
-				"ingresses":       factory.ConfigValues{"type": ingressesImpl.Gloo},
-				"ingressRules":    factory.ConfigValues{"type": ingressesImpl.Gloo},
 				"networkPolicies": factory.ConfigValues{"type": networkImpl.Kubernetes},
 				"configurations":  factory.ConfigValues{"type": configurationsImpl.Kubernetes},
 			},

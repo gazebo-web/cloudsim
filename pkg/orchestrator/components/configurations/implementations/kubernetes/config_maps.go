@@ -1,6 +1,7 @@
 package kubernetes
 
 import (
+	"context"
 	"fmt"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/components/configurations"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/resource"
@@ -17,7 +18,7 @@ type configMaps struct {
 }
 
 // Create creates a config map.
-func (cm *configMaps) Create(input configurations.CreateConfigurationInput) (resource.Resource, error) {
+func (cm *configMaps) Create(ctx context.Context, input configurations.CreateConfigurationInput) (resource.Resource, error) {
 	// Prepare input for Kubernetes
 	configMap := &apiv1.ConfigMap{
 		ObjectMeta: metav1.ObjectMeta{
@@ -37,7 +38,7 @@ func (cm *configMaps) Create(input configurations.CreateConfigurationInput) (res
 	)
 
 	// Create config map
-	_, err := cm.API.CoreV1().ConfigMaps(input.Namespace).Create(configMap)
+	_, err := cm.API.CoreV1().ConfigMaps(input.Namespace).Create(ctx, configMap, metav1.CreateOptions{})
 	if err != nil {
 		cm.Logger.Debug(
 			fmt.Sprintf(
@@ -61,12 +62,12 @@ func (cm *configMaps) Create(input configurations.CreateConfigurationInput) (res
 }
 
 // Delete removes a config map with the given name in the given namespace.
-func (cm *configMaps) Delete(resource resource.Resource) (resource.Resource, error) {
+func (cm *configMaps) Delete(ctx context.Context, resource resource.Resource) (resource.Resource, error) {
 	cm.Logger.Debug(
 		fmt.Sprintf("Deleting pod with name [%s] in namespace [%s]", resource.Name(), resource.Namespace()),
 	)
 
-	err := cm.API.CoreV1().ConfigMaps(resource.Namespace()).Delete(resource.Name(), &metav1.DeleteOptions{})
+	err := cm.API.CoreV1().ConfigMaps(resource.Namespace()).Delete(ctx, resource.Name(), metav1.DeleteOptions{})
 	if err != nil {
 		cm.Logger.Debug(fmt.Sprintf(
 			"Deleting pod with name [%s] in namespace [%s] failed. Error: %+v.",

@@ -1,6 +1,7 @@
 package kubernetes
 
 import (
+	"context"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/components/services"
@@ -15,7 +16,7 @@ import (
 func TestCreateService(t *testing.T) {
 	client := fake.NewSimpleClientset()
 	s := NewServices(client, ign.NewLoggerNoRollbar("TestService", ign.VerbosityDebug))
-	res, err := s.Create(services.CreateServiceInput{
+	res, err := s.Create(context.TODO(), services.CreateServiceInput{
 		Name:      "service-test",
 		Type:      "ClusterIP",
 		Namespace: "default",
@@ -32,7 +33,7 @@ func TestCreateService(t *testing.T) {
 	assert.NotNil(t, res)
 	require.NoError(t, err)
 
-	result, err := client.CoreV1().Services("default").Get("service-test", metav1.GetOptions{})
+	result, err := client.CoreV1().Services("default").Get(context.TODO(), "service-test", metav1.GetOptions{})
 	assert.NoError(t, err)
 	assert.Equal(t, corev1.ServiceTypeClusterIP, result.Spec.Type)
 }
@@ -40,7 +41,7 @@ func TestCreateService(t *testing.T) {
 func TestCreateServiceFailsWhenServiceIsAlreadyCreated(t *testing.T) {
 	client := fake.NewSimpleClientset()
 	s := NewServices(client, ign.NewLoggerNoRollbar("TestService", ign.VerbosityDebug))
-	_, err := s.Create(services.CreateServiceInput{
+	_, err := s.Create(context.TODO(), services.CreateServiceInput{
 		Name:      "service-test",
 		Type:      "ClusterIP",
 		Namespace: "default",
@@ -56,7 +57,7 @@ func TestCreateServiceFailsWhenServiceIsAlreadyCreated(t *testing.T) {
 	})
 	require.NoError(t, err)
 
-	_, err = s.Create(services.CreateServiceInput{
+	_, err = s.Create(context.TODO(), services.CreateServiceInput{
 		Name:      "service-test",
 		Type:      "ClusterIP",
 		Namespace: "default",
@@ -76,7 +77,7 @@ func TestCreateServiceFailsWhenServiceIsAlreadyCreated(t *testing.T) {
 func TestGetServiceFailsWhenServiceDoesNotExist(t *testing.T) {
 	client := fake.NewSimpleClientset()
 	s := NewServices(client, ign.NewLoggerNoRollbar("TestService", ign.VerbosityDebug))
-	_, err := s.Get("test", "default")
+	_, err := s.Get(context.TODO(), "test", "default")
 	assert.Error(t, err)
 }
 
@@ -84,7 +85,7 @@ func TestGetServiceSuccessWhenServiceExists(t *testing.T) {
 	client := fake.NewSimpleClientset()
 	s := NewServices(client, ign.NewLoggerNoRollbar("TestService", ign.VerbosityDebug))
 
-	_, err := s.Create(services.CreateServiceInput{
+	_, err := s.Create(context.TODO(), services.CreateServiceInput{
 		Name:      "service-test",
 		Type:      "ClusterIP",
 		Namespace: "default",
@@ -100,7 +101,7 @@ func TestGetServiceSuccessWhenServiceExists(t *testing.T) {
 	})
 	require.NoError(t, err)
 
-	result, err := s.Get("service-test", "default")
+	result, err := s.Get(context.TODO(), "service-test", "default")
 	require.NoError(t, err)
 	assert.Equal(t, "service-test", result.Name())
 }
@@ -109,7 +110,7 @@ func TestGetAllServicesSuccess(t *testing.T) {
 	client := fake.NewSimpleClientset()
 	s := NewServices(client, ign.NewLoggerNoRollbar("TestService", ign.VerbosityDebug))
 
-	_, err := s.Create(services.CreateServiceInput{
+	_, err := s.Create(context.TODO(), services.CreateServiceInput{
 		Name:      "service-test",
 		Type:      "ClusterIP",
 		Namespace: "default",
@@ -125,7 +126,7 @@ func TestGetAllServicesSuccess(t *testing.T) {
 	})
 	require.NoError(t, err)
 
-	_, err = s.Create(services.CreateServiceInput{
+	_, err = s.Create(context.TODO(), services.CreateServiceInput{
 		Name:      "service-test2",
 		Type:      "ClusterIP",
 		Namespace: "default",
@@ -141,7 +142,7 @@ func TestGetAllServicesSuccess(t *testing.T) {
 	})
 	require.NoError(t, err)
 
-	result, err := s.List("default", resource.NewSelector(map[string]string{"service": "test"}))
+	result, err := s.List(context.TODO(), "default", resource.NewSelector(map[string]string{"service": "test"}))
 	require.NoError(t, err)
 	assert.Len(t, result, 2)
 }
@@ -150,7 +151,7 @@ func TestGetAllServicesFailsWhenUsingWrongLabels(t *testing.T) {
 	client := fake.NewSimpleClientset()
 	s := NewServices(client, ign.NewLoggerNoRollbar("TestService", ign.VerbosityDebug))
 
-	_, err := s.Create(services.CreateServiceInput{
+	_, err := s.Create(context.TODO(), services.CreateServiceInput{
 		Name:      "service-test",
 		Type:      "ClusterIP",
 		Namespace: "default",
@@ -166,7 +167,7 @@ func TestGetAllServicesFailsWhenUsingWrongLabels(t *testing.T) {
 	})
 	assert.NoError(t, err)
 
-	_, err = s.Create(services.CreateServiceInput{
+	_, err = s.Create(context.TODO(), services.CreateServiceInput{
 		Name:      "service-test2",
 		Type:      "ClusterIP",
 		Namespace: "default",
@@ -182,7 +183,7 @@ func TestGetAllServicesFailsWhenUsingWrongLabels(t *testing.T) {
 	})
 	require.NoError(t, err)
 
-	result, err := s.List("default", resource.NewSelector(map[string]string{"another": "test"}))
+	result, err := s.List(context.TODO(), "default", resource.NewSelector(map[string]string{"another": "test"}))
 	require.NoError(t, err)
 	assert.Len(t, result, 0)
 }
@@ -191,7 +192,7 @@ func TestGetAllServicesFailsWhenNoServicesDoesNotExist(t *testing.T) {
 	client := fake.NewSimpleClientset()
 	s := NewServices(client, ign.NewLoggerNoRollbar("TestService", ign.VerbosityDebug))
 
-	result, err := s.List("default", resource.NewSelector(map[string]string{"some": "test"}))
+	result, err := s.List(context.TODO(), "default", resource.NewSelector(map[string]string{"some": "test"}))
 	require.NoError(t, err)
 	assert.Len(t, result, 0)
 }
@@ -200,7 +201,7 @@ func TestRemoveServiceSuccessWhenServiceExists(t *testing.T) {
 	client := fake.NewSimpleClientset()
 	s := NewServices(client, ign.NewLoggerNoRollbar("TestService", ign.VerbosityDebug))
 
-	_, err := s.Create(services.CreateServiceInput{
+	_, err := s.Create(context.TODO(), services.CreateServiceInput{
 		Name:      "service-test",
 		Type:      "ClusterIP",
 		Namespace: "default",
@@ -216,10 +217,10 @@ func TestRemoveServiceSuccessWhenServiceExists(t *testing.T) {
 	})
 	assert.NoError(t, err)
 
-	res, err := s.Get("service-test", "default")
+	res, err := s.Get(context.TODO(), "service-test", "default")
 	assert.NoError(t, err)
 
-	err = s.Remove(res)
+	err = s.Remove(context.TODO(), res)
 	assert.NoError(t, err)
 }
 
@@ -229,6 +230,6 @@ func TestRemoveServiceFailsWhenServiceDoesNotExist(t *testing.T) {
 
 	res := resource.NewResource("test", "default", resource.NewSelector(nil))
 
-	err := s.Remove(res)
+	err := s.Remove(context.TODO(), res)
 	assert.Error(t, err)
 }
