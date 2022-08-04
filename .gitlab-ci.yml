@@ -17,13 +17,20 @@ test:
   services:
     - name: mysql:latest
       alias: mysql
+  tags:
+    - gitlab-org
+
 
 coverage:
   services:
     - name: mysql:latest
       alias: mysql
+  tags:
+    - gitlab-org
 
 race:
   services:
     - name: mysql:latest
       alias: mysql
+  tags:
+    - gitlab-org
