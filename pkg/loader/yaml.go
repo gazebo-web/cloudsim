@@ -6,11 +6,26 @@ import (
 	"gitlab.com/ignitionrobotics/web/ign-go/v5"
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
+	"strings"
 )
+
+const extensionYAML = ".yaml"
+const extensionYML = ".yml"
 
 // yamlLoader is a Loader implementation to parse YAML files.
 type yamlLoader struct {
 	logger ign.Logger
+}
+
+// Filter returns the list of files that contain either .yaml or .yml.
+func (l *yamlLoader) Filter(list []string) []string {
+	result := make([]string, 0, len(list))
+	for _, item := range list {
+		if strings.Contains(item, extensionYAML) || strings.Contains(item, extensionYML) {
+			result = append(result, item)
+		}
+	}
+	return result
 }
 
 // TrimExt removes the .yaml and .yml extension from the given filename.

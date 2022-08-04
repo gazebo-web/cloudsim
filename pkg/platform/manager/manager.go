@@ -32,10 +32,10 @@ var (
 // Every platform is uniquely identified by a Selector, a user-defined identifier. To make use of a specific platform,
 // the target platform's Selector is passed to the Manager implementation through the Platform method.
 // An example of a selector platformMap:
-//   * aws_k8s_us_east_1 - Platform containing AWS and Kubernetes components pointed at us-east-1.
-//   * aws_k8s_us_east_2 - Platform containing AWS and Kubernetes components pointed at us-east-2.
-//   * gcp_mesos - Platform containing GCE and Apache Mesos components.
-//   * azure_swarm - Platform containing Azure and Docker Swarm components.
+//   - aws_k8s_us_east_1 - Platform containing AWS and Kubernetes components pointed at us-east-1.
+//   - aws_k8s_us_east_2 - Platform containing AWS and Kubernetes components pointed at us-east-2.
+//   - gcp_mesos - Platform containing GCE and Apache Mesos components.
+//   - azure_swarm - Platform containing Azure and Docker Swarm components.
 type Manager interface {
 	// Selectors returns a slice with all the available platform selectors.
 	Selectors() []string
@@ -72,9 +72,10 @@ type NewInput struct {
 
 // loadPlatformConfiguration loads platform configuration files from NewInput.ConfigPath and returns a loaded managerConfig
 // value.
-// 	If NewInput.ConfigPath is a directory, all config files within that directory will be loaded.
+//
+//	If NewInput.ConfigPath is a directory, all config files within that directory will be loaded.
 //	If NewInput.ConfigPath is a file, it will only use that file as the config file.
-// 	A `name` config value containing the platform name will be added to each platform's factory config fields.
+//	A `name` config value containing the platform name will be added to each platform's factory config fields.
 func loadPlatformConfiguration(input *NewInput) (*managerConfig, error) {
 	list, err := listConfigFiles(input.ConfigPath)
 	if err != nil {
@@ -84,6 +85,8 @@ func loadPlatformConfiguration(input *NewInput) (*managerConfig, error) {
 	mc := managerConfig{
 		Platforms: make(map[string]factory.Config),
 	}
+
+	list = input.Loader.Filter(list)
 
 	for _, p := range list {
 		var config factory.Config

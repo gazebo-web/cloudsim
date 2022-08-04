@@ -4,9 +4,9 @@ config:
   # All values must be defined for the configuration to be valid.
   values:
     # AWS components target region.
-    - &region "us-east-1"
+    - &region "us-east-2"
     # Path to Kubernetes components kubeconfig file.
-    - &kubeconfig ""
+    - &kubeconfig "./testdata/config"
   components:
     machines:
       type: "ec2"
@@ -28,9 +28,9 @@ config:
           services:
             type: "kubernetes"
           ingresses:
-            type: "gloo"
+            type: "kubernetes"
           ingressRules:
-            type: "gloo"
+            type: "kubernetes"
           networkPolicies:
             type: "kubernetes"
           configurations:
@@ -38,7 +38,7 @@ config:
     storage:
       type: "s3"
       config:
-        region: "us-east-1"
+        region: "us-east-2"
     store:
       type: "store"
       config:

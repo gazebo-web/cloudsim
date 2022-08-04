@@ -102,7 +102,7 @@ func (s *testMapSuite) TestNewMap() {
 	yamlLoader := loader.NewYAMLLoader(logger)
 
 	input := &NewInput{
-		ConfigPath: ".",
+		ConfigPath: "./testdata",
 		Logger:     logger,
 		Loader:     yamlLoader,
 	}
@@ -120,7 +120,7 @@ func (s *testMapSuite) TestNewMapWithFile() {
 	yamlLoader := loader.NewYAMLLoader(logger)
 
 	input := &NewInput{
-		ConfigPath: "us-east-1.yaml",
+		ConfigPath: "./testdata/us-east-1.yaml",
 		Logger:     logger,
 		Loader:     yamlLoader,
 	}

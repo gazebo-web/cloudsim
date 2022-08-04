@@ -25,6 +25,8 @@ type Loader interface {
 	//	 - A YAML Loader will remove the `.yaml` extension.
 	//	 - A JSON Loader will remove the `.json` extension.
 	TrimExt(filename string) string
+	// Filter returns the list of files that match the extension this Loader can process.
+	Filter(list []string) []string
 }
 
 // LoadFile loads a single file into a target struct.
@@ -89,7 +91,8 @@ func LoadDirFiles(loader Loader, path string, out interface{}) []error {
 }
 
 // trimExts attempts to remove the given extensions from the filename.
-// 	Input: (file.yaml, .yaml)
+//
+//	Input: (file.yaml, .yaml)
 //	Output: (file)
 func trimExts(filename string, exts ...string) string {
 	for _, ext := range exts {
