@@ -12,6 +12,7 @@ include:
 variables:
   MYSQL_DATABASE: cloudsim
   MYSQL_ROOT_PASSWORD: root
+  KUBECONFIG: kube_config
 
 test:
   services:
