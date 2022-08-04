@@ -6,7 +6,7 @@ config:
     # AWS components target region.
     - &region "us-east-2"
     # Path to Kubernetes components kubeconfig file.
-    - &kubeconfig "./testdata/config"
+    - &kubeconfig ""
   components:
     machines:
       type: "ec2"
