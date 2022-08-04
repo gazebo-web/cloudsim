@@ -18,6 +18,7 @@ test:
   services:
     - name: mysql:latest
       alias: mysql
+  environment: testing
   tags:
     - gitlab-org
 
@@ -26,6 +27,7 @@ coverage:
   services:
     - name: mysql:latest
       alias: mysql
+  environment: testing
   tags:
     - gitlab-org
 
@@ -33,5 +35,6 @@ race:
   services:
     - name: mysql:latest
       alias: mysql
+  environment: testing
   tags:
     - gitlab-org
