@@ -12,7 +12,7 @@ include:
 variables:
   MYSQL_DATABASE: cloudsim
   MYSQL_ROOT_PASSWORD: root
-  KUBECONFIG: $CI_PROJECT_DIR/kube_config
+  KUBECONFIG: $CI_PROJECT_DIR/kubeconfig
 
 test:
   services:
