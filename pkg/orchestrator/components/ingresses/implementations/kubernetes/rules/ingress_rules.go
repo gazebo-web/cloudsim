@@ -95,10 +95,12 @@ func (m *ingressRules) Upsert(ctx context.Context, rule ingresses.Rule, paths ..
 
 	// Update ingress paths
 	ingress.Spec.Rules[position] = rule.ToOutput().(networkingv1.IngressRule)
+	log.Println("Rules:", ingress.Spec.Rules)
 
 	// Update ingress in cluster
 	_, err = m.API.NetworkingV1().Ingresses(rule.Resource().Namespace()).Update(ctx, ingress, metav1.UpdateOptions{})
 	if err != nil {
+		log.Println("Error k8s update ingress:", err)
 		m.Logger.Debug(fmt.Sprintf("Error while updating rules from host [%s] ", rule.Host()))
 		return err
 	}
