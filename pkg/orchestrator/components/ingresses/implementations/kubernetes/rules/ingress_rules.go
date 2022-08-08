@@ -9,6 +9,7 @@ import (
 	networkingv1 "k8s.io/api/networking/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
+	"log"
 )
 
 // ingressRules is an ingresses.IngressRules implementation.
@@ -23,6 +24,7 @@ func (m *ingressRules) Get(ctx context.Context, resource resource.Resource, host
 		"Getting ingress rule with name [%s] in namespace [%s] and with the following selectors: [%s] ",
 		resource.Name(), resource.Namespace(), resource.Selector().String(),
 	))
+	log.Println("Getting ingress rule")
 
 	// Get ingress from cluster
 	ingress, err := m.API.NetworkingV1().Ingresses(resource.Namespace()).Get(ctx, resource.Name(), metav1.GetOptions{})
@@ -49,6 +51,8 @@ func (m *ingressRules) Get(ctx context.Context, resource resource.Resource, host
 	// Prepare paths and create output
 	paths := NewPaths(rule.Paths)
 	out := NewRule(resource, host, paths)
+	log.Printf("Got ingress rule: %v\n", out)
+	log.Printf("Got k8s ingress rule: %v\n", *rule)
 
 	m.Logger.Debug(
 		fmt.Sprintf(
@@ -84,6 +88,7 @@ func (m *ingressRules) Upsert(ctx context.Context, rule ingresses.Rule, paths ..
 		)
 		return ingresses.ErrRuleNotFound
 	}
+	log.Println("Update rule that was found in:", position)
 
 	// Upsert paths into rule
 	rule.UpsertPaths(paths)
@@ -97,6 +102,8 @@ func (m *ingressRules) Upsert(ctx context.Context, rule ingresses.Rule, paths ..
 		m.Logger.Debug(fmt.Sprintf("Error while updating rules from host [%s] ", rule.Host()))
 		return err
 	}
+
+	log.Printf("Updated ingress rule: %v\n", rule)
 
 	m.Logger.Debug(fmt.Sprintf("Rule [%s] has been updated. Paths: [%+v]", rule.Host(), rule.Paths()))
 	return nil
@@ -126,6 +133,7 @@ func (m *ingressRules) Remove(ctx context.Context, rule ingresses.Rule, paths ..
 		)
 		return ingresses.ErrRuleNotFound
 	}
+	log.Println("Remove rule that was found in:", position)
 
 	// Remove paths from rule
 	rule.RemovePaths(paths)
@@ -143,6 +151,7 @@ func (m *ingressRules) Remove(ctx context.Context, rule ingresses.Rule, paths ..
 		return err
 	}
 
+	log.Println(fmt.Sprintf("Paths from rule host [%s] have been removed. Current paths: [%+v]", rule.Host(), rule.Paths()))
 	m.Logger.Debug(fmt.Sprintf("Paths from rule host [%s] have been removed. Current paths: [%+v]", rule.Host(), rule.Paths()))
 	return nil
 }
