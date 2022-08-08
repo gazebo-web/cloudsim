@@ -50,21 +50,22 @@ func TestUpsertPaths(t *testing.T) {
 func TestUpsertPathsWithSameHost(t *testing.T) {
 	list := []Path{
 		{
-			UID:      "gazebosim.org",
+			UID:      "server0",
 			Address:  "/example/0",
 			Endpoint: Endpoint{Name: "server0", Port: 3333},
 		},
 		{
-			UID:      "gazebosim.org",
+			UID:      "server1",
 			Address:  "/example/1",
 			Endpoint: Endpoint{Name: "server1", Port: 1234},
 		},
 	}
 
+	// Point /example/2 to server1 but with different port.
 	item := Path{
-		UID:      "gazebosim.org",
+		UID:      "server1",
 		Address:  "/example/2",
-		Endpoint: Endpoint{Name: "server2", Port: 3333},
+		Endpoint: Endpoint{Name: "server1", Port: 3333},
 	}
 
 	result := UpsertPaths(list, []Path{item})
