@@ -28,12 +28,14 @@ func (r *rule) RemovePaths(paths []ingresses.Path) {
 	r.paths = ingresses.RemovePaths(r.paths, paths)
 }
 
-// toIngressPaths converts the current rule paths into an slice of v1beta1.HTTPIngressPath.
+// toIngressPaths converts the current rule paths into a slice of networkingv1.HTTPIngressPath.
 func (r *rule) toIngressPaths() []networkingv1.HTTPIngressPath {
+	pathType := networkingv1.PathTypePrefix
 	var result []networkingv1.HTTPIngressPath
 	for _, p := range r.paths {
 		result = append(result, networkingv1.HTTPIngressPath{
-			Path: p.Address,
+			Path:     p.Address,
+			PathType: &pathType,
 			Backend: networkingv1.IngressBackend{
 				Service: &networkingv1.IngressServiceBackend{
 					Name: p.Endpoint.Name,
