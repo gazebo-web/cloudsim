@@ -33,7 +33,7 @@ type Rule interface {
 // Path matches a certain Address to a specific Endpoint.
 type Path struct {
 	// UID is an unique identifier used to identify different paths.
-	// In kubernetes: It's the backend service name.
+	// In kubernetes: It's the URL path.
 	// In gloo: It's the route name.
 	UID string
 

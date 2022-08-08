@@ -85,7 +85,7 @@ func NewPaths(in []networkingv1.HTTPIngressPath) []ingresses.Path {
 	var out []ingresses.Path
 	for _, p := range in {
 		out = append(out, ingresses.Path{
-			UID:     p.Backend.Service.Name,
+			UID:     p.Path,
 			Address: p.Path,
 			Endpoint: ingresses.Endpoint{
 				Name: p.Backend.Service.Name,
