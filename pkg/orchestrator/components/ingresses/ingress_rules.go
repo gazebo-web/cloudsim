@@ -74,7 +74,7 @@ func UpsertPaths(list, elements []Path) []Path {
 	for _, p := range elements {
 		var updated bool
 		for i, rulePath := range list {
-			if rulePath.UID == p.UID && rulePath.Address == p.Address {
+			if rulePath.UID == p.UID {
 				updated = true
 				list[i] = p
 				break
