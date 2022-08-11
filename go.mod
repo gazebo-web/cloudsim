@@ -19,13 +19,13 @@ require (
 	github.com/mitchellh/mapstructure v1.1.2
 	github.com/pkg/errors v0.9.1
 	github.com/satori/go.uuid v1.2.0
-	github.com/stretchr/testify v1.7.0
+	github.com/stretchr/testify v1.7.1
 	gitlab.com/ignitionrobotics/billing/credits v0.0.0-20211110124124-7dbf77a10783
 	gitlab.com/ignitionrobotics/billing/payments v0.0.0-20211110174459-d690b1b701e8
 	gitlab.com/ignitionrobotics/web/fuelserver v0.0.0-20200916210816-e30ab5ed9d47
 	gitlab.com/ignitionrobotics/web/ign-go v0.0.0-20211109185912-2322af1b387c
-	gitlab.com/ignitionrobotics/web/ign-go/v5 v5.7.1-0.20220803131849-d31c64fa30d0
-	google.golang.org/protobuf v1.27.1
+	gitlab.com/ignitionrobotics/web/ign-go/v5 v5.8.0
+	google.golang.org/protobuf v1.28.0
 	gopkg.in/go-playground/validator.v9 v9.31.0
 	gopkg.in/yaml.v2 v2.4.0
 	k8s.io/api v0.24.3
@@ -37,11 +37,11 @@ require (
 	github.com/Knetic/govaluate v3.0.1-0.20171022003610-9aa49832a739+incompatible // indirect
 	github.com/PuerkitoBio/purell v1.1.1 // indirect
 	github.com/PuerkitoBio/urlesc v0.0.0-20170810143723-de5bf2ad4578 // indirect
-	github.com/auth0/go-jwt-middleware v0.0.0-20200507191422-d30d7b9ece63 // indirect
+	github.com/auth0/go-jwt-middleware v0.0.0-20200810150920-a32d7af194d1 // indirect
 	github.com/codegangsta/negroni v1.0.0 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible // indirect
-	github.com/elastic/go-elasticsearch/v8 v8.0.0-20200508105138-fc4f6f3c7fc3 // indirect
+	github.com/elastic/go-elasticsearch/v8 v8.0.0-20200916133832-96c1726edbaa // indirect
 	github.com/emicklei/go-restful v2.9.5+incompatible // indirect
 	github.com/emirpasic/gods v1.12.0 // indirect
 	github.com/evanphx/json-patch v4.12.0+incompatible // indirect
@@ -66,7 +66,7 @@ require (
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/kevinburke/ssh_config v0.0.0-20190725054713-01f96b0aa0cd // indirect
 	github.com/leodido/go-urn v1.2.0 // indirect
-	github.com/lib/pq v1.7.0 // indirect
+	github.com/lib/pq v1.8.0 // indirect
 	github.com/mailru/easyjson v0.7.6 // indirect
 	github.com/mitchellh/go-homedir v1.1.0 // indirect
 	github.com/mitchellh/reflectwalk v1.0.0 // indirect
@@ -75,7 +75,10 @@ require (
 	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/mssola/user_agent v0.5.3 // indirect
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
+	github.com/onsi/ginkgo v1.14.1 // indirect
+	github.com/onsi/gomega v1.10.2 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
+	github.com/prometheus/common v0.11.1 // indirect
 	github.com/rollbar/rollbar-go v1.2.0 // indirect
 	github.com/ryszard/goskiplist v0.0.0-20150312221310-2dfbae5fcf46 // indirect
 	github.com/sergi/go-diff v1.1.0 // indirect

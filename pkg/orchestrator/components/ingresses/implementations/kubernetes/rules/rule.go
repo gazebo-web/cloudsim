@@ -3,8 +3,7 @@ package rules
 import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/components/ingresses"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/resource"
-	"k8s.io/api/extensions/v1beta1"
-	"k8s.io/apimachinery/pkg/util/intstr"
+	networkingv1 "k8s.io/api/networking/v1"
 )
 
 // rule is an ingresses.Rule implementation.
@@ -29,17 +28,20 @@ func (r *rule) RemovePaths(paths []ingresses.Path) {
 	r.paths = ingresses.RemovePaths(r.paths, paths)
 }
 
-// toIngressPaths converts the current rule paths into an slice of v1beta1.HTTPIngressPath.
-func (r *rule) toIngressPaths() []v1beta1.HTTPIngressPath {
-	var result []v1beta1.HTTPIngressPath
+// toIngressPaths converts the current rule paths into a slice of networkingv1.HTTPIngressPath.
+func (r *rule) toIngressPaths() []networkingv1.HTTPIngressPath {
+	pathType := networkingv1.PathTypePrefix
+	var result []networkingv1.HTTPIngressPath
 	for _, p := range r.paths {
-		result = append(result, v1beta1.HTTPIngressPath{
-			Path: p.Address,
-			Backend: v1beta1.IngressBackend{
-				ServiceName: p.Endpoint.Name,
-				ServicePort: intstr.IntOrString{
-					Type:   intstr.Int,
-					IntVal: p.Endpoint.Port,
+		result = append(result, networkingv1.HTTPIngressPath{
+			Path:     p.Address,
+			PathType: &pathType,
+			Backend: networkingv1.IngressBackend{
+				Service: &networkingv1.IngressServiceBackend{
+					Name: p.Endpoint.Name,
+					Port: networkingv1.ServiceBackendPort{
+						Number: p.Endpoint.Port,
+					},
 				},
 			},
 		})
@@ -49,10 +51,10 @@ func (r *rule) toIngressPaths() []v1beta1.HTTPIngressPath {
 
 // ToOutput returns the current rule as a v1beta1.IngressRule.
 func (r *rule) ToOutput() interface{} {
-	return v1beta1.IngressRule{
+	return networkingv1.IngressRule{
 		Host: r.host,
-		IngressRuleValue: v1beta1.IngressRuleValue{
-			HTTP: &v1beta1.HTTPIngressRuleValue{
+		IngressRuleValue: networkingv1.IngressRuleValue{
+			HTTP: &networkingv1.HTTPIngressRuleValue{
 				Paths: r.toIngressPaths(),
 			},
 		},
@@ -79,15 +81,15 @@ func NewRule(resource resource.Resource, host string, paths []ingresses.Path) in
 }
 
 // NewPaths returns a generic group of Paths from the given set of Kubernetes HTTPIngressPaths.
-func NewPaths(in []v1beta1.HTTPIngressPath) []ingresses.Path {
+func NewPaths(in []networkingv1.HTTPIngressPath) []ingresses.Path {
 	var out []ingresses.Path
 	for _, p := range in {
 		out = append(out, ingresses.Path{
-			UID:     p.Backend.ServiceName,
+			UID:     p.Path,
 			Address: p.Path,
 			Endpoint: ingresses.Endpoint{
-				Name: p.Backend.ServiceName,
-				Port: p.Backend.ServicePort.IntVal,
+				Name: p.Backend.Service.Name,
+				Port: p.Backend.Service.Port.Number,
 			},
 		})
 	}
