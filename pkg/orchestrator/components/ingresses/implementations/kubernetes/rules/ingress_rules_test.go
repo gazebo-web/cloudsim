@@ -6,9 +6,8 @@ import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/components/ingresses"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/resource"
 	"gitlab.com/ignitionrobotics/web/ign-go/v5"
-	"k8s.io/api/extensions/v1beta1"
+	networkingv1 "k8s.io/api/networking/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/client-go/kubernetes/fake"
 	"testing"
 )
@@ -108,9 +107,16 @@ func TestRule_UpsertRulesReturnsNoError(t *testing.T) {
 func TestRule_RemovePathsReturnsNoError(t *testing.T) {
 	ing := newTestIngress()
 
-	k8sIngressPathToRemove := v1beta1.HTTPIngressPath{
-		Path:    "delete-me",
-		Backend: v1beta1.IngressBackend{},
+	k8sIngressPathToRemove := networkingv1.HTTPIngressPath{
+		Path: "delete-me",
+		Backend: networkingv1.IngressBackend{
+			Service: &networkingv1.IngressServiceBackend{
+				Name: "test",
+				Port: networkingv1.ServiceBackendPort{
+					Number: 1234,
+				},
+			},
+		},
 	}
 
 	ing.Spec.Rules[0].HTTP.Paths = append(ing.Spec.Rules[0].HTTP.Paths, k8sIngressPathToRemove)
@@ -125,7 +131,7 @@ func TestRule_RemovePathsReturnsNoError(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Len(t, r.Paths(), 2)
 
-	pathsToRemove := NewPaths([]v1beta1.HTTPIngressPath{k8sIngressPathToRemove})
+	pathsToRemove := NewPaths([]networkingv1.HTTPIngressPath{k8sIngressPathToRemove})
 
 	err = m.Remove(context.TODO(), r, pathsToRemove...)
 	assert.NoError(t, err)
@@ -135,27 +141,28 @@ func TestRule_RemovePathsReturnsNoError(t *testing.T) {
 	assert.Len(t, r.Paths(), 1)
 }
 
-func newTestIngress() v1beta1.Ingress {
-	return v1beta1.Ingress{
+func newTestIngress() networkingv1.Ingress {
+	return networkingv1.Ingress{
 		TypeMeta: metav1.TypeMeta{},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "test",
 			Namespace: "default",
 		},
-		Spec: v1beta1.IngressSpec{
-			Rules: []v1beta1.IngressRule{
+		Spec: networkingv1.IngressSpec{
+			Rules: []networkingv1.IngressRule{
 				{
 					Host: "test.com",
-					IngressRuleValue: v1beta1.IngressRuleValue{
-						HTTP: &v1beta1.HTTPIngressRuleValue{
-							Paths: []v1beta1.HTTPIngressPath{
+					IngressRuleValue: networkingv1.IngressRuleValue{
+						HTTP: &networkingv1.HTTPIngressRuleValue{
+							Paths: []networkingv1.HTTPIngressPath{
 								{
 									Path: "test",
-									Backend: v1beta1.IngressBackend{
-										ServiceName: "test-service",
-										ServicePort: intstr.IntOrString{
-											Type:   intstr.Int,
-											IntVal: 3333,
+									Backend: networkingv1.IngressBackend{
+										Service: &networkingv1.IngressServiceBackend{
+											Name: "test-service",
+											Port: networkingv1.ServiceBackendPort{
+												Number: 3333,
+											},
 										},
 									},
 								},
@@ -165,6 +172,6 @@ func newTestIngress() v1beta1.Ingress {
 				},
 			},
 		},
-		Status: v1beta1.IngressStatus{},
+		Status: networkingv1.IngressStatus{},
 	}
 }
