@@ -727,8 +727,8 @@ gitlab.com/ignitionrobotics/web/fuelserver v0.0.0-20200916210816-e30ab5ed9d47/go
 gitlab.com/ignitionrobotics/web/ign-go v0.0.0-20200804201637-78fc7e089169/go.mod h1:zfTiSMA+aWnzmQFGi8UgoozvCgEPPV1JqbPmPUucXIE=
 gitlab.com/ignitionrobotics/web/ign-go v0.0.0-20211109185912-2322af1b387c h1:0HzzogDXr3N/pBjRrVbtti6pfgzjbYlhBcRWHDUWpDE=
 gitlab.com/ignitionrobotics/web/ign-go v0.0.0-20211109185912-2322af1b387c/go.mod h1:IiLZKx/AKubhvop0TM+zTSLYocZk9TtrchU+qnTl5ms=
-gitlab.com/ignitionrobotics/web/ign-go/v5 v5.7.1-0.20220803131849-d31c64fa30d0 h1:P75FaW4E9NDXrYrF2Tb9AFkUgO+ozBJAp7MiWjlnrQk=
-gitlab.com/ignitionrobotics/web/ign-go/v5 v5.7.1-0.20220803131849-d31c64fa30d0/go.mod h1:/8kB2wOBHt8tKyRizD2+LcK1NUyr1QAAcQrGKSZ0/xQ=
+gitlab.com/ignitionrobotics/web/ign-go/v5 v5.8.0 h1:c9BAE35Y8MLJKiZVNY89w2TnLOWNfm+s1myyL6V76Yk=
+gitlab.com/ignitionrobotics/web/ign-go/v5 v5.8.0/go.mod h1:KWzVlmzQk0QCEORjcvvB7PA7v0/y7vtOLwmVO5xrhFI=
 gitlab.com/ignitionrobotics/web/scheduler v0.5.0/go.mod h1:wSLPCGnC6TPQh7sFuonkhTUv4KnLdNOcy4ps77qffEQ=
 go.etcd.io/bbolt v1.3.2/go.mod h1:IbVyRI1SCnLcuJnV2u8VeU0CEYM7e686BmAb1XKL+uU=
 go.etcd.io/bbolt v1.3.3/go.mod h1:IbVyRI1SCnLcuJnV2u8VeU0CEYM7e686BmAb1XKL+uU=
