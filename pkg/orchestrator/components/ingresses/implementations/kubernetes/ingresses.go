@@ -1,6 +1,7 @@
 package kubernetes
 
 import (
+	"context"
 	"fmt"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/components/ingresses"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/resource"
@@ -16,10 +17,10 @@ type kubernetesIngresses struct {
 }
 
 // Get returns an ingress with the given name.
-func (m *kubernetesIngresses) Get(name string, namespace string) (resource.Resource, error) {
+func (m *kubernetesIngresses) Get(ctx context.Context, name string, namespace string) (resource.Resource, error) {
 	m.Logger.Debug(fmt.Sprintf("Getting ingress with name [%s] in namespace [%s]", name, namespace))
 
-	out, err := m.API.ExtensionsV1beta1().Ingresses(namespace).Get(name, metav1.GetOptions{})
+	out, err := m.API.ExtensionsV1beta1().Ingresses(namespace).Get(ctx, name, metav1.GetOptions{})
 	if err != nil {
 		m.Logger.Debug(fmt.Sprintf("Getting ingress with name [%s] in namespace [%s] failed.", name, namespace))
 		return nil, err

@@ -1,6 +1,7 @@
 package kubernetes
 
 import (
+	"context"
 	"fmt"
 	"github.com/stretchr/testify/suite"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/components/configurations"
@@ -45,16 +46,14 @@ func (s *configMapsTestSuite) SetupTest() {
 }
 
 func (s *configMapsTestSuite) TestCreateConfigMap() {
-	res, err := s.configMaps.Create(
-		configurations.CreateConfigurationInput{
-			Name:      "test-np",
-			Namespace: "default",
-			Labels: map[string]string{
-				"app": "test",
-				"np":  "true",
-			},
+	res, err := s.configMaps.Create(context.TODO(), configurations.CreateConfigurationInput{
+		Name:      "test-np",
+		Namespace: "default",
+		Labels: map[string]string{
+			"app": "test",
+			"np":  "true",
 		},
-	)
+	})
 	s.NoError(err)
 	s.Equal("test-np", res.Name())
 	s.Equal("default", res.Namespace())
@@ -65,47 +64,43 @@ func (s *configMapsTestSuite) TestCreateConfigMap() {
 		}, res.Selector().Map(),
 	)
 
-	np, err := s.client.CoreV1().ConfigMaps(res.Namespace()).Get("test-np", metav1.GetOptions{})
+	np, err := s.client.CoreV1().ConfigMaps(res.Namespace()).Get(context.TODO(), "test-np", metav1.GetOptions{})
 	s.NoError(err)
 	s.Equal(res.Name(), np.Name)
 }
 
 func (s *configMapsTestSuite) TestDeleteConfiguration() {
 	// Create a config map
-	res, err := s.configMaps.Create(
-		configurations.CreateConfigurationInput{
-			Name:      "test-np",
-			Namespace: "default",
-			Labels: map[string]string{
-				"app": "test",
-				"np":  "true",
-			},
+	res, err := s.configMaps.Create(context.TODO(), configurations.CreateConfigurationInput{
+		Name:      "test-np",
+		Namespace: "default",
+		Labels: map[string]string{
+			"app": "test",
+			"np":  "true",
 		},
-	)
+	})
 
 	s.Require().NoError(err)
 
 	// Trying to remove an existent config map should not fail
-	_, err = s.configMaps.Delete(res)
+	_, err = s.configMaps.Delete(context.TODO(), res)
 	s.Assert().NoError(err)
 
 	// Trying to remove a nonexistent config map should fail
-	_, err = s.configMaps.Delete(res)
+	_, err = s.configMaps.Delete(context.TODO(), res)
 	s.Assert().Error(err)
 }
 
 func (s *configMapsTestSuite) setupTestRemoveBulk() {
 	for i := 0; i < 3; i++ {
-		_, err := s.configMaps.Create(
-			configurations.CreateConfigurationInput{
-				Name:      fmt.Sprintf("test-np-%d", i),
-				Namespace: "default",
-				Labels: map[string]string{
-					"app": "test",
-					"np":  fmt.Sprintf("%d", i),
-				},
+		_, err := s.configMaps.Create(context.TODO(), configurations.CreateConfigurationInput{
+			Name:      fmt.Sprintf("test-np-%d", i),
+			Namespace: "default",
+			Labels: map[string]string{
+				"app": "test",
+				"np":  fmt.Sprintf("%d", i),
 			},
-		)
+		})
 		s.Require().NoError(err)
 	}
 }

@@ -28,9 +28,9 @@ config:
           services:
             type: "kubernetes"
           ingresses:
-            type: "gloo"
+            type: "kubernetes"
           ingressRules:
-            type: "gloo"
+            type: "kubernetes"
           networkPolicies:
             type: "kubernetes"
           configurations:

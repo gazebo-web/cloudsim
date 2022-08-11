@@ -1,6 +1,7 @@
 package jobs
 
 import (
+	"context"
 	"github.com/jinzhu/gorm"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/actions"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/resource"
@@ -45,7 +46,7 @@ func removePods(store actions.Store, tx *gorm.DB, deployment *actions.Deployment
 
 	for _, in := range input {
 		var res resource.Resource
-		res, err = s.Platform().Orchestrator().Pods().Delete(in)
+		res, err = s.Platform().Orchestrator().Pods().Delete(context.Background(), in)
 		if err != nil {
 			return nil, err
 		}

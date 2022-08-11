@@ -1,6 +1,7 @@
 package jobs
 
 import (
+	"context"
 	"github.com/jinzhu/gorm"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/actions"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/components/network"
@@ -33,7 +34,7 @@ func createNetworkPolicies(store actions.Store, tx *gorm.DB, deployment *actions
 
 	resources := make([]resource.Resource, 0, len(input))
 	for _, in := range input {
-		res, err := s.Platform().Orchestrator().NetworkPolicies().Create(in)
+		res, err := s.Platform().Orchestrator().NetworkPolicies().Create(context.TODO(), in)
 
 		if err != nil {
 			return CreateNetworkPoliciesOutput{

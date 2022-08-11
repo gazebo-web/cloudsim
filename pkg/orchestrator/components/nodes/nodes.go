@@ -1,6 +1,7 @@
 package nodes
 
 import (
+	"context"
 	"errors"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/resource"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/waiter"
@@ -15,5 +16,5 @@ var (
 
 // Nodes groups a set of methods to register nodes into a cluster.
 type Nodes interface {
-	WaitForCondition(node resource.Resource, condition resource.Condition) waiter.Waiter
+	WaitForCondition(ctx context.Context, node resource.Resource, condition resource.Condition) waiter.Waiter
 }

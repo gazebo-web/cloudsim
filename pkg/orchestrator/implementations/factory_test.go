@@ -74,31 +74,3 @@ func (s *testKubernetesFactorySuite) TestIngressesNewKubernetes() {
 	// Validate the type of the returned object
 	s.Equal("*kubernetes.k8s", reflect.TypeOf(cluster).String())
 }
-
-func (s *testKubernetesFactorySuite) TestIngressesNewKubernetesGloo() {
-	config := factory.Config{
-		Type: Kubernetes,
-		Config: factory.ConfigValues{
-			"api": factory.ConfigValues{
-				"kubeconfig": "",
-			},
-			"components": factory.ConfigValues{
-				"nodes":           factory.ConfigValues{"type": nodesImpl.Kubernetes},
-				"pods":            factory.ConfigValues{"type": podsImpl.Kubernetes},
-				"services":        factory.ConfigValues{"type": servicesImpl.Kubernetes},
-				"ingresses":       factory.ConfigValues{"type": ingressesImpl.Gloo},
-				"ingressRules":    factory.ConfigValues{"type": ingressesImpl.Gloo},
-				"networkPolicies": factory.ConfigValues{"type": networkImpl.Kubernetes},
-				"configurations":  factory.ConfigValues{"type": configurationsImpl.Kubernetes},
-			},
-		},
-	}
-
-	var cluster orchestrator.Cluster
-	s.callFactory(&config, &cluster)
-
-	// Validate the type of the returned object
-	s.Equal("*kubernetes.k8s", reflect.TypeOf(cluster).String())
-	s.Equal("*gloo.VirtualServices", reflect.TypeOf(cluster.Ingresses()).String())
-	s.Equal("*gloo.virtualHosts", reflect.TypeOf(cluster.IngressRules()).String())
-}

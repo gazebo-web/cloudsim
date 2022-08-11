@@ -1,6 +1,7 @@
 package rules
 
 import (
+	"context"
 	"github.com/stretchr/testify/assert"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/components/ingresses"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/resource"
@@ -21,7 +22,7 @@ func TestRule_GetRuleReturnsIngressRule(t *testing.T) {
 
 	selector := resource.NewSelector(nil)
 	res := resource.NewResource("test", "default", selector)
-	rule, err := ir.Get(res, "test.com")
+	rule, err := ir.Get(context.TODO(), res, "test.com")
 	assert.NoError(t, err)
 	assert.Equal(t, "test.com", rule.Host())
 	assert.Len(t, rule.Paths(), 1)
@@ -35,7 +36,7 @@ func TestRule_GetRuleReturnsErrorWhenIngressDoesNotExist(t *testing.T) {
 	m := NewIngressRules(client, ign.NewLoggerNoRollbar("TestRule", ign.VerbosityDebug))
 	selector := resource.NewSelector(nil)
 	res := resource.NewResource("test", "default", selector)
-	_, err := m.Get(res, "test.com")
+	_, err := m.Get(context.TODO(), res, "test.com")
 	assert.Error(t, err)
 }
 
@@ -53,7 +54,7 @@ func TestRule_UpsertRulesReturnsErrorIfIngressDoesNotExist(t *testing.T) {
 	selector := resource.NewSelector(nil)
 	res := resource.NewResource("test", "default", selector)
 	rule := NewRule(res, "test.org", []ingresses.Path{})
-	err := m.Upsert(rule, path)
+	err := m.Upsert(context.TODO(), rule, path)
 	assert.Error(t, err)
 }
 
@@ -72,7 +73,7 @@ func TestRule_UpsertRulesReturnsErrorIfRuleDoesNotExist(t *testing.T) {
 	selector := resource.NewSelector(nil)
 	res := resource.NewResource("test", "default", selector)
 	rule := NewRule(res, "test.org", []ingresses.Path{})
-	err := m.Upsert(rule, path)
+	err := m.Upsert(context.TODO(), rule, path)
 	assert.Error(t, err)
 	assert.Equal(t, ingresses.ErrRuleNotFound, err)
 }
@@ -86,7 +87,7 @@ func TestRule_UpsertRulesReturnsNoError(t *testing.T) {
 	selector := resource.NewSelector(nil)
 	res := resource.NewResource("test", "default", selector)
 
-	r, err := m.Get(res, "test.com")
+	r, err := m.Get(context.TODO(), res, "test.com")
 	assert.NoError(t, err)
 
 	path := ingresses.Path{
@@ -96,10 +97,10 @@ func TestRule_UpsertRulesReturnsNoError(t *testing.T) {
 			Port: 80,
 		},
 	}
-	err = m.Upsert(r, path)
+	err = m.Upsert(context.TODO(), r, path)
 	assert.NoError(t, err)
 
-	result, err := m.Get(res, "test.com")
+	result, err := m.Get(context.TODO(), res, "test.com")
 	assert.NoError(t, err)
 	assert.Len(t, result.Paths(), 2)
 }
@@ -120,16 +121,16 @@ func TestRule_RemovePathsReturnsNoError(t *testing.T) {
 
 	selector := resource.NewSelector(nil)
 	res := resource.NewResource("test", "default", selector)
-	r, err := m.Get(res, "test.com")
+	r, err := m.Get(context.TODO(), res, "test.com")
 	assert.NoError(t, err)
 	assert.Len(t, r.Paths(), 2)
 
 	pathsToRemove := NewPaths([]v1beta1.HTTPIngressPath{k8sIngressPathToRemove})
 
-	err = m.Remove(r, pathsToRemove...)
+	err = m.Remove(context.TODO(), r, pathsToRemove...)
 	assert.NoError(t, err)
 
-	r, err = m.Get(res, "test.com")
+	r, err = m.Get(context.TODO(), res, "test.com")
 	assert.NoError(t, err)
 	assert.Len(t, r.Paths(), 1)
 }
