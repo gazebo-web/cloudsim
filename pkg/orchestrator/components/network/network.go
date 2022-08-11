@@ -1,6 +1,7 @@
 package network
 
 import (
+	"context"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/resource"
 )
 
@@ -53,9 +54,9 @@ type CreateNetworkPolicyInput struct {
 // Policies groups a set of methods to manage network policies.
 type Policies interface {
 	// Create creates a new network policy.
-	Create(input CreateNetworkPolicyInput) (resource.Resource, error)
+	Create(ctx context.Context, input CreateNetworkPolicyInput) (resource.Resource, error)
 	// Remove removes a network policy.
-	Remove(name, namespace string) error
+	Remove(ctx context.Context, name string, namespace string) error
 	// RemoveBulk removes a set of network policies specified by the given selector in a certain namespace.
-	RemoveBulk(namespace string, selector resource.Selector) error
+	RemoveBulk(ctx context.Context, namespace string, selector resource.Selector) error
 }

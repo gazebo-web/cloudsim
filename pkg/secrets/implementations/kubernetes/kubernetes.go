@@ -14,7 +14,7 @@ type kubernetesSecrets struct {
 
 // Get gets a certain secret with the given name and in the given namespace.
 func (s *kubernetesSecrets) Get(ctx context.Context, name, namespace string) (*secrets.Secret, error) {
-	sc, err := s.client.Secrets(namespace).Get(name, metav1.GetOptions{})
+	sc, err := s.client.Secrets(namespace).Get(ctx, name, metav1.GetOptions{})
 	if err != nil {
 		return nil, err
 	}

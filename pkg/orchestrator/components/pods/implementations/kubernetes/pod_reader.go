@@ -2,6 +2,7 @@ package kubernetes
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/components/pods"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/components/spdy"
@@ -21,7 +22,7 @@ type reader struct {
 }
 
 // File is used to read files from inside a container located in the given paths.
-func (r *reader) File(container string, paths ...string) (*bytes.Buffer, error) {
+func (r *reader) File(ctx context.Context, container string, paths ...string) (*bytes.Buffer, error) {
 	if len(container) == 0 {
 		r.logger.Debug(fmt.Sprintf("Reading file from paths [%+v] on pod [%s]", paths, r.pod.Name()))
 	} else {
@@ -61,7 +62,7 @@ func (r *reader) File(container string, paths ...string) (*bytes.Buffer, error) 
 }
 
 // Logs returns the log from the given container running inside the resource.
-func (r *reader) Logs(container string, lines int64) (string, error) {
+func (r *reader) Logs(ctx context.Context, container string, lines int64) (string, error) {
 	r.logger.Debug(fmt.Sprintf("Reading logs from container [%s] in pod [%s]", container, r.pod.Name()))
 
 	// Prepare request to get logs
@@ -71,7 +72,7 @@ func (r *reader) Logs(container string, lines int64) (string, error) {
 	})
 
 	// Open data stream
-	re, err := req.Stream()
+	re, err := req.Stream(ctx)
 	if err != nil {
 		r.logger.Debug(fmt.Sprintf("Reading logs from container [%s] in pod [%s] failed. Error: %s", container, r.pod.Name(), err.Error()))
 		return "", err

@@ -1,10 +1,10 @@
 package actions
 
 import (
+	"context"
 	"github.com/jinzhu/gorm"
 	gormUtils "gitlab.com/ignitionrobotics/web/cloudsim/pkg/utils/db/gorm"
 	"gitlab.com/ignitionrobotics/web/ign-go/v5"
-	"golang.org/x/net/context"
 	"testing"
 )
 

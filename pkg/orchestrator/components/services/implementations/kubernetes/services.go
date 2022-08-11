@@ -1,6 +1,7 @@
 package kubernetes
 
 import (
+	"context"
 	"fmt"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/components/services"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/resource"
@@ -17,7 +18,7 @@ type kubernetesServices struct {
 }
 
 // Create creates a new service defined by the given input.
-func (s *kubernetesServices) Create(input services.CreateServiceInput) (resource.Resource, error) {
+func (s *kubernetesServices) Create(ctx context.Context, input services.CreateServiceInput) (resource.Resource, error) {
 	s.Logger.Debug(fmt.Sprintf("Creating new Service. Input: %+v", input))
 
 	// Create service port from input
@@ -41,7 +42,7 @@ func (s *kubernetesServices) Create(input services.CreateServiceInput) (resource
 	}
 
 	// Launch the resource
-	_, err := s.API.CoreV1().Services(input.Namespace).Create(newService)
+	_, err := s.API.CoreV1().Services(input.Namespace).Create(ctx, newService, metav1.CreateOptions{})
 	if err != nil {
 		s.Logger.Debug(fmt.Sprintf("Creating new Service %s failed. Error: %+v", input.Name, err))
 		return nil, err
@@ -55,10 +56,10 @@ func (s *kubernetesServices) Create(input services.CreateServiceInput) (resource
 	return res, nil
 }
 
-func (s *kubernetesServices) Get(name, namespace string) (resource.Resource, error) {
+func (s *kubernetesServices) Get(ctx context.Context, name string, namespace string) (resource.Resource, error) {
 	s.Logger.Debug(fmt.Sprintf("Getting service with name [%s] in namespace [%s].", name, namespace))
 
-	output, err := s.API.CoreV1().Services(namespace).Get(name, metav1.GetOptions{})
+	output, err := s.API.CoreV1().Services(namespace).Get(ctx, name, metav1.GetOptions{})
 
 	if err != nil {
 		s.Logger.Debug(fmt.Sprintf("Getting service with name [%s] in namespace [%s] failed. Error: %s", name, namespace, err))
@@ -69,10 +70,10 @@ func (s *kubernetesServices) Get(name, namespace string) (resource.Resource, err
 	return resource.NewResource(name, namespace, resource.NewSelector(output.Labels)), nil
 }
 
-func (s *kubernetesServices) List(namespace string, selector resource.Selector) ([]resource.Resource, error) {
+func (s *kubernetesServices) List(ctx context.Context, namespace string, selector resource.Selector) ([]resource.Resource, error) {
 	s.Logger.Debug(fmt.Sprintf("Getting all services that match the following selectors: [%s]", selector.String()))
 
-	list, err := s.API.CoreV1().Services(namespace).List(metav1.ListOptions{
+	list, err := s.API.CoreV1().Services(namespace).List(ctx, metav1.ListOptions{
 		LabelSelector: selector.String(),
 	})
 
@@ -98,13 +99,13 @@ func (s *kubernetesServices) List(namespace string, selector resource.Selector) 
 	return output, nil
 }
 
-func (s *kubernetesServices) Remove(resource resource.Resource) error {
+func (s *kubernetesServices) Remove(ctx context.Context, resource resource.Resource) error {
 	s.Logger.Debug(fmt.Sprintf(
 		"Removing service with name [%s] in namespace [%s].",
 		resource.Name(), resource.Namespace()),
 	)
 
-	err := s.API.CoreV1().Services(resource.Namespace()).Delete(resource.Name(), &metav1.DeleteOptions{})
+	err := s.API.CoreV1().Services(resource.Namespace()).Delete(ctx, resource.Name(), metav1.DeleteOptions{})
 
 	if err != nil {
 		s.Logger.Debug(fmt.Sprintf(

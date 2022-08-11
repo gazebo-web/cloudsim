@@ -6,7 +6,6 @@ import (
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/factory"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/platform"
 	platformFactory "gitlab.com/ignitionrobotics/web/cloudsim/pkg/platform/implementations"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 )
@@ -114,7 +113,7 @@ func listConfigFiles(path string) ([]string, error) {
 	}
 
 	// If path is a directory, get all files from that directory.
-	files, err := ioutil.ReadDir(path)
+	files, err := os.ReadDir(path)
 	if err != nil {
 		return nil, err
 	}
@@ -126,8 +125,14 @@ func listConfigFiles(path string) ([]string, error) {
 			continue
 		}
 
+		// Get the file info
+		info, err := f.Info()
+		if err != nil {
+			continue
+		}
+
 		// If is empty, skip.
-		if f.Size() == 0 {
+		if info.Size() == 0 {
 			continue
 		}
 

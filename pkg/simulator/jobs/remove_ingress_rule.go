@@ -1,6 +1,7 @@
 package jobs
 
 import (
+	"context"
 	"github.com/jinzhu/gorm"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/actions"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/components/ingresses"
@@ -33,7 +34,7 @@ func removeIngressRules(store actions.Store, tx *gorm.DB, deployment *actions.De
 
 	input := value.(RemoveIngressRulesInput)
 
-	res, err := s.Platform().Orchestrator().Ingresses().Get(input.Name, input.Namespace)
+	res, err := s.Platform().Orchestrator().Ingresses().Get(context.TODO(), input.Name, input.Namespace)
 	if err != nil {
 		return RemoveIngressRulesOutput{
 			Error: err,
@@ -49,12 +50,12 @@ func removeIngressRules(store actions.Store, tx *gorm.DB, deployment *actions.De
 		freq *= 2
 
 		var rule ingresses.Rule
-		rule, err = s.Platform().Orchestrator().IngressRules().Get(res, input.Host)
+		rule, err = s.Platform().Orchestrator().IngressRules().Get(context.TODO(), res, input.Host)
 		if err != nil {
 			continue
 		}
 
-		err = s.Platform().Orchestrator().IngressRules().Remove(rule, input.Paths...)
+		err = s.Platform().Orchestrator().IngressRules().Remove(context.TODO(), rule, input.Paths...)
 		if err != nil {
 			continue
 		}

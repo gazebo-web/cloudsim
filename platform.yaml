@@ -48,10 +48,10 @@ config:
             type: "kubernetes"
           # Ingresses allow external access (from outside the cluster, e.g. the Internet) to orchestrator services.
           ingresses:
-            type: "gloo"
+            type: "kubernetes"
           # Ingress rules control external access interactions with orchestrator ingresses.
           ingressRules:
-            type: "gloo"
+            type: "kubernetes"
           # Network policies define the possible interactions between pods managed by the orchestrator.
           # They can be thought of as a firewall for pods.
           networkPolicies:

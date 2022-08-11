@@ -1,6 +1,7 @@
 package ingresses
 
 import (
+	"context"
 	"errors"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/resource"
 )
@@ -62,9 +63,9 @@ type Endpoint struct {
 
 // IngressRules groups a set of methods to manage rules from a certain Ingresses.
 type IngressRules interface {
-	Get(resource resource.Resource, host string) (Rule, error)
-	Upsert(rule Rule, paths ...Path) error
-	Remove(rule Rule, paths ...Path) error
+	Get(ctx context.Context, resource resource.Resource, host string) (Rule, error)
+	Upsert(ctx context.Context, rule Rule, paths ...Path) error
+	Remove(ctx context.Context, rule Rule, paths ...Path) error
 }
 
 // UpsertPaths updates or inserts the given elements into the given list.

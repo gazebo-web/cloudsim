@@ -2,6 +2,7 @@ package pods
 
 import (
 	"bytes"
+	"context"
 	"errors"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/resource"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/resource/phase"
@@ -135,14 +136,14 @@ type PodResource struct {
 
 // Pods groups a set of methods to perform an operation with a Pod.
 type Pods interface {
-	Create(input CreatePodInput) (*PodResource, error)
-	Exec(resource resource.Resource) Executor
-	Reader(resource resource.Resource) Reader
-	WaitForCondition(resource resource.Resource, condition resource.Condition) waiter.Waiter
-	Delete(resource resource.Resource) (resource.Resource, error)
-	Get(name, namespace string) (*PodResource, error)
-	GetIP(name, namespace string) (string, error)
-	List(namespace string, selector resource.Selector) ([]PodResource, error)
+	Create(ctx context.Context, input CreatePodInput) (*PodResource, error)
+	Exec(ctx context.Context, resource resource.Resource) Executor
+	Reader(ctx context.Context, resource resource.Resource) Reader
+	WaitForCondition(ctx context.Context, resource resource.Resource, condition resource.Condition) waiter.Waiter
+	Delete(ctx context.Context, resource resource.Resource) (resource.Resource, error)
+	Get(ctx context.Context, name, namespace string) (*PodResource, error)
+	GetIP(ctx context.Context, name string, namespace string) (string, error)
+	List(ctx context.Context, namespace string, selector resource.Selector) ([]PodResource, error)
 }
 
 // Executor groups a set of methods to run commands and scripts inside a Pod.
@@ -156,6 +157,6 @@ type Executor interface {
 
 // Reader groups a set of methods to read files and logs from a Pod.
 type Reader interface {
-	File(container string, paths ...string) (*bytes.Buffer, error)
-	Logs(container string, lines int64) (string, error)
+	File(ctx context.Context, container string, paths ...string) (*bytes.Buffer, error)
+	Logs(ctx context.Context, container string, lines int64) (string, error)
 }
