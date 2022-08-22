@@ -138,7 +138,7 @@ type Pods interface {
 	Create(input CreatePodInput) (*PodResource, error)
 	Exec(resource resource.Resource) Executor
 	Reader(resource resource.Resource) Reader
-	WaitForCondition(resource resource.Resource, condition resource.Condition) waiter.Waiter
+	WaitForCondition(resource resource.Resource, condition ...resource.Condition) waiter.Waiter
 	Delete(resource resource.Resource) (resource.Resource, error)
 	Get(name, namespace string) (*PodResource, error)
 	GetIP(name, namespace string) (string, error)

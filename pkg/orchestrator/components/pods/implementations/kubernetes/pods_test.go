@@ -172,6 +172,96 @@ func TestPods_WaitForPodsErrWhenPodStateFailed(t *testing.T) {
 	assert.Error(t, err)
 }
 
+func TestPods_WaitForPodsMultipleConditions(t *testing.T) {
+	readyPod := &apiv1.Pod{
+		TypeMeta: metav1.TypeMeta{},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "ready",
+			Namespace: "default",
+			Labels: map[string]string{
+				"test": "ready-succeeded",
+			},
+		},
+		Spec: apiv1.PodSpec{},
+		Status: apiv1.PodStatus{
+			Conditions: []apiv1.PodCondition{
+				{
+					Type:   apiv1.PodReady,
+					Status: apiv1.ConditionTrue,
+				},
+			},
+			Phase: apiv1.PodRunning,
+		},
+	}
+	succeededPod := &apiv1.Pod{
+		TypeMeta: metav1.TypeMeta{},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "succeeded",
+			Namespace: "default",
+			Labels: map[string]string{
+				"test": "ready-succeeded",
+			},
+		},
+		Spec: apiv1.PodSpec{},
+		Status: apiv1.PodStatus{
+			Conditions: []apiv1.PodCondition{
+				{
+					Type:   apiv1.PodReady,
+					Status: apiv1.ConditionFalse,
+				},
+			},
+			Phase: apiv1.PodSucceeded,
+		},
+	}
+	failedPod := &apiv1.Pod{
+		TypeMeta: metav1.TypeMeta{},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "failed",
+			Namespace: "default",
+			Labels: map[string]string{
+				"test": "failed",
+			},
+		},
+		Spec: apiv1.PodSpec{},
+		Status: apiv1.PodStatus{
+			Conditions: []apiv1.PodCondition{
+				{
+					Type:   apiv1.PodReady,
+					Status: apiv1.ConditionFalse,
+				},
+			},
+			Phase: apiv1.PodSucceeded,
+		},
+	}
+
+	client := fake.NewSimpleClientset(readyPod, succeededPod, failedPod)
+	f := spdy.NewSPDYFakeInitializer()
+	logger := ign.NewLoggerNoRollbar("TestPods", ign.VerbosityDebug)
+	m := NewPods(client, f, logger)
+
+	test := func(selector resource.Selector) error {
+		var wg sync.WaitGroup
+		var err error
+
+		res := resource.NewResource("test", "default", selector)
+		r := m.WaitForCondition(res, resource.ReadyCondition, resource.SucceededCondition)
+		wg.Add(1)
+		go func() {
+			err = r.Wait(200*time.Millisecond, 1*time.Millisecond)
+			wg.Done()
+		}()
+		wg.Wait()
+
+		return err
+	}
+
+	// Ready and succeeded pods should pass
+	assert.NoError(t, test(resource.NewSelector(map[string]string{"test": "ready-succeeded"})))
+
+	// Failed should not pass
+	assert.NoError(t, test(resource.NewSelector(map[string]string{"test": "failed"})))
+}
+
 func TestPods_CreateSuccess(t *testing.T) {
 	client := fake.NewSimpleClientset()
 	f := spdy.NewSPDYFakeInitializer()
