@@ -89,7 +89,7 @@ func TestPods_WaitForPodsToBeReady(t *testing.T) {
 	var err error
 	wg.Add(1)
 	go func() {
-		err = r.Wait(3*time.Second, 1*time.Microsecond)
+		err = r.Wait(100*time.Millisecond, 1*time.Millisecond)
 		wg.Done()
 	}()
 
@@ -126,7 +126,7 @@ func TestPods_WaitForPodsErrWhenPodStateSucceeded(t *testing.T) {
 	var err error
 	wg.Add(1)
 	go func() {
-		err = r.Wait(3*time.Second, 1*time.Microsecond)
+		err = r.Wait(100*time.Millisecond, 1*time.Millisecond)
 		wg.Done()
 	}()
 
@@ -164,12 +164,50 @@ func TestPods_WaitForPodsErrWhenPodStateFailed(t *testing.T) {
 	var err error
 	wg.Add(1)
 	go func() {
-		err = r.Wait(3*time.Second, 1*time.Microsecond)
+		err = r.Wait(100*time.Millisecond, 1*time.Millisecond)
 		wg.Done()
 	}()
 
 	wg.Wait()
 	assert.Error(t, err)
+}
+
+func TestPods_WaitForPodsErr(t *testing.T) {
+	pod := &apiv1.Pod{
+		TypeMeta: metav1.TypeMeta{},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "test",
+			Namespace: "default",
+			Labels: map[string]string{
+				"test": "app",
+			},
+		},
+		Spec: apiv1.PodSpec{},
+		Status: apiv1.PodStatus{
+			Conditions: []apiv1.PodCondition{},
+			Phase:      apiv1.PodFailed,
+		},
+	}
+
+	client := fake.NewSimpleClientset(pod)
+	f := spdy.NewSPDYFakeInitializer()
+	logger := ign.NewLoggerNoRollbar("TestPods", ign.VerbosityDebug)
+	m := NewPods(client, f, logger)
+
+	selector := resource.NewSelector(map[string]string{"test": "app"})
+	res := resource.NewResource("test", "default", selector)
+	r := m.WaitForCondition(res, resource.FailedCondition)
+
+	var wg sync.WaitGroup
+	var err error
+	wg.Add(1)
+	go func() {
+		err = r.Wait(100*time.Millisecond, 1*time.Millisecond)
+		wg.Done()
+	}()
+
+	wg.Wait()
+	assert.NoError(t, err)
 }
 
 func TestPods_WaitForPodsMultipleConditions(t *testing.T) {
