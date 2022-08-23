@@ -302,6 +302,9 @@ func (p *kubernetesPods) WaitForCondition(resource orchestratorResource.Resource
 				case orchestratorResource.SucceededCondition:
 					ready = item.Status.Phase == apiv1.PodSucceeded
 					break
+				case orchestratorResource.FailedCondition:
+					ready = item.Status.Phase == apiv1.PodFailed
+					break
 				case orchestratorResource.HasIPStatusCondition:
 					ready = p.podHasIP(&item)
 					break
