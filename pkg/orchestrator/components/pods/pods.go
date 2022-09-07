@@ -139,7 +139,7 @@ type Pods interface {
 	Create(ctx context.Context, input CreatePodInput) (*PodResource, error)
 	Exec(ctx context.Context, resource resource.Resource) Executor
 	Reader(ctx context.Context, resource resource.Resource) Reader
-	WaitForCondition(ctx context.Context, resource resource.Resource, condition resource.Condition) waiter.Waiter
+	WaitForCondition(ctx context.Context, resource resource.Resource, condition ...resource.Condition) waiter.Waiter
 	Delete(ctx context.Context, resource resource.Resource) (resource.Resource, error)
 	Get(ctx context.Context, name, namespace string) (*PodResource, error)
 	GetIP(ctx context.Context, name string, namespace string) (string, error)
