@@ -256,10 +256,14 @@ func (p *kubernetesPods) Reader(ctx context.Context, pod orchestratorResource.Re
 
 // WaitForCondition creates a new wait request that will be used to wait for a resource to match a certain condition.
 // The wait request won't be triggered until the method Wait has been called.
-func (p *kubernetesPods) WaitForCondition(ctx context.Context, resource orchestratorResource.Resource, condition orchestratorResource.Condition) waiter.Waiter {
+// If more than one condition is provided, the waiter will return once any of the conditions are met.
+func (p *kubernetesPods) WaitForCondition(ctx context.Context, resource orchestratorResource.Resource,
+	conditions ...orchestratorResource.Condition) waiter.Waiter {
 
-	p.Logger.Debug(fmt.Sprintf("Creating wait for condition [%+v] request on pods matching the following selector: [%s]",
-		condition, resource.Selector(),
+	p.Logger.Debug(fmt.Sprintf(
+		"Creating wait for conditions [%+v] request on pods matching the following selector: [%s]",
+		conditions,
+		resource.Selector(),
 	))
 
 	// Prepare options
@@ -282,21 +286,30 @@ func (p *kubernetesPods) WaitForCondition(ctx context.Context, resource orchestr
 			return false, pods.ErrMissingPods
 		}
 
-		// Iterate over list of pods
+		// Check that pod matches any of the given conditions
 		for _, item := range po.Items {
 			var ready bool
-
-			// Check that pod doesn't match the given condition.
-			switch condition {
-			case orchestratorResource.ReadyCondition:
-				ready, err = kubernetes.IsPodReady(&item)
-				if err != nil {
-					return false, nil
+			for _, condition := range conditions {
+				switch condition {
+				case orchestratorResource.ReadyCondition:
+					ready, err = kubernetes.IsPodReady(&item)
+					if err != nil && err != kubernetes.ErrPodCompleted {
+						return false, nil
+					}
+					break
+				case orchestratorResource.SucceededCondition:
+					ready = kubernetes.IsPodSucceeded(&item)
+					break
+				case orchestratorResource.FailedCondition:
+					ready = kubernetes.IsPodFailed(&item)
+					break
+				case orchestratorResource.HasIPStatusCondition:
+					ready = p.podHasIP(&item)
+					break
 				}
-				break
-			case orchestratorResource.HasIPStatusCondition:
-				ready = p.podHasIP(&item)
-				break
+				if ready {
+					break
+				}
 			}
 
 			// Add pod to list if pod isn't ready.
@@ -310,8 +323,8 @@ func (p *kubernetesPods) WaitForCondition(ctx context.Context, resource orchestr
 	}
 
 	p.Logger.Debug(fmt.Sprintf(
-		"Wait for condition [%+v] request on pods matching the following selector: [%s] was created.",
-		condition, resource.Selector(),
+		"Wait for conditions [%+v] request on pods matching the following selector: [%s] was created.",
+		conditions, resource.Selector(),
 	))
 
 	return waiter.NewWaitRequest(job)

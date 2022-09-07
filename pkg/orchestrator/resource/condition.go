@@ -12,6 +12,16 @@ var (
 		Type:   "Ready",
 		Status: "True",
 	}
+	// SucceededCondition is used to indicate that Pods have completed successfully and returned no errors.
+	SucceededCondition = Condition{
+		Type:   "Succeeded",
+		Status: "True",
+	}
+	// FailedCondition is used to indicate that Pods have failed.
+	FailedCondition = Condition{
+		Type:   "Failed",
+		Status: "True",
+	}
 	// HasIPStatusCondition is used to indicate that pods have ips available.
 	HasIPStatusCondition = Condition{
 		Type:   "HasIPStatus",
