@@ -25,6 +25,7 @@ require (
 	gitlab.com/ignitionrobotics/web/fuelserver v0.0.0-20200916210816-e30ab5ed9d47
 	gitlab.com/ignitionrobotics/web/ign-go v0.0.0-20211109185912-2322af1b387c
 	gitlab.com/ignitionrobotics/web/ign-go/v5 v5.10.0
+	gitlab.com/ignitionrobotics/web/ign-go/v6 v6.0.0
 	google.golang.org/protobuf v1.28.0
 	gopkg.in/go-playground/validator.v9 v9.31.0
 	gopkg.in/yaml.v2 v2.4.0
@@ -88,7 +89,6 @@ require (
 	github.com/stretchr/objx v0.2.0 // indirect
 	github.com/urfave/negroni v1.0.0 // indirect
 	github.com/xanzy/ssh-agent v0.2.1 // indirect
-	gitlab.com/ignitionrobotics/web/ign-go/v6 v6.0.0 // indirect
 	golang.org/x/crypto v0.0.0-20220214200702-86341886e292 // indirect
 	golang.org/x/net v0.0.0-20220127200216-cd36cc0744dd // indirect
 	golang.org/x/oauth2 v0.0.0-20211104180415-d3ed0bb246c8 // indirect
