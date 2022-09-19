@@ -7,7 +7,7 @@ import (
 	"github.com/satori/go.uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"gitlab.com/ignitionrobotics/web/ign-go/v5"
+	"gitlab.com/ignitionrobotics/web/ign-go/v6"
 	"testing"
 )
 
@@ -517,7 +517,8 @@ func TestProcessJobsNilOutput(t *testing.T) {
 }
 
 // Execute
-//   Helper functions
+//
+//	Helper functions
 func testServiceValidateExecute(t *testing.T, db *gorm.DB, deployment *Deployment, jobCount int) {
 	td := getTestData(t)
 	std := serviceTestData
@@ -612,7 +613,7 @@ func testServiceUpdateJobsForRollback(t *testing.T, jobs Jobs) {
 	jobs[1].RollbackHandler = nil
 }
 
-//   Tests
+// Tests
 func TestExecuteInvalidAction(t *testing.T) {
 	tr := setupTest(t)
 	defer tr.db.Close()

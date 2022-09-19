@@ -4,7 +4,7 @@ import (
 	"context"
 	"github.com/jinzhu/gorm"
 	gormUtils "gitlab.com/ignitionrobotics/web/cloudsim/pkg/utils/db/gorm"
-	"gitlab.com/ignitionrobotics/web/ign-go/v5"
+	"gitlab.com/ignitionrobotics/web/ign-go/v6"
 	"testing"
 )
 

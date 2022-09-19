@@ -4,7 +4,7 @@ import (
 	"github.com/stretchr/testify/suite"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/factory"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/components/services"
-	"gitlab.com/ignitionrobotics/web/ign-go/v5"
+	"gitlab.com/ignitionrobotics/web/ign-go/v6"
 	"k8s.io/client-go/kubernetes"
 	"testing"
 )
