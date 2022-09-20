@@ -3,7 +3,7 @@ package loader
 import (
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/suite"
-	"gitlab.com/ignitionrobotics/web/ign-go/v5"
+	"gitlab.com/ignitionrobotics/web/ign-go/v6"
 	"io/ioutil"
 	"os"
 	"path/filepath"
