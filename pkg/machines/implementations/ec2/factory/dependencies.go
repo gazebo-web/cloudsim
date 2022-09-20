@@ -4,7 +4,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2/ec2iface"
 	"github.com/aws/aws-sdk-go/service/pricing"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/validate"
-	"gitlab.com/ignitionrobotics/web/ign-go/v5"
+	"gitlab.com/ignitionrobotics/web/ign-go/v6"
 )
 
 // Dependencies is used to create an EC2 machines component.

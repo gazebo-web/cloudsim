@@ -8,7 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/ses"
 	"github.com/aws/aws-sdk-go/service/ses/sesiface"
 	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/email"
-	"gitlab.com/ignitionrobotics/web/ign-go/v5"
+	"gitlab.com/ignitionrobotics/web/ign-go/v6"
 )
 
 // NewAPI returns an AWS Simple Email Service (SES) client from the given config provider.

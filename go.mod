@@ -25,6 +25,7 @@ require (
 	gitlab.com/ignitionrobotics/web/fuelserver v0.0.0-20200916210816-e30ab5ed9d47
 	gitlab.com/ignitionrobotics/web/ign-go v0.0.0-20211109185912-2322af1b387c
 	gitlab.com/ignitionrobotics/web/ign-go/v5 v5.10.0
+	gitlab.com/ignitionrobotics/web/ign-go/v6 v6.0.0
 	google.golang.org/protobuf v1.28.0
 	gopkg.in/go-playground/validator.v9 v9.31.0
 	gopkg.in/yaml.v2 v2.4.0
@@ -45,7 +46,7 @@ require (
 	github.com/emicklei/go-restful v2.9.5+incompatible // indirect
 	github.com/emirpasic/gods v1.12.0 // indirect
 	github.com/evanphx/json-patch v4.12.0+incompatible // indirect
-	github.com/go-logr/logr v1.2.0 // indirect
+	github.com/go-logr/logr v1.2.3 // indirect
 	github.com/go-openapi/jsonpointer v0.19.5 // indirect
 	github.com/go-openapi/jsonreference v0.19.5 // indirect
 	github.com/go-openapi/swag v0.19.14 // indirect
