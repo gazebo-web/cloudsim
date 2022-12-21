@@ -1,8 +1,8 @@
 package loader
 
 import (
+	"github.com/gazebo-web/gz-go/v7"
 	"github.com/stretchr/testify/suite"
-	"gitlab.com/ignitionrobotics/web/ign-go/v6"
 	"io/ioutil"
 	"os"
 	"testing"
@@ -57,7 +57,7 @@ type testYAMLLoaderSuite struct {
 }
 
 func (s *testYAMLLoaderSuite) SetupSuite() {
-	logger := ign.NewLoggerNoRollbar("test", ign.VerbosityWarning)
+	logger := gz.NewLoggerNoRollbar("test", gz.VerbosityWarning)
 	s.loader = NewYAMLLoader(logger).(*yamlLoader)
 }
 

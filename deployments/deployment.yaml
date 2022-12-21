@@ -21,7 +21,7 @@ spec:
     spec:
       containers:
         - name: web-cloudsim
-          image: registry.gitlab.com/ignitionrobotics/web/cloudsim:latest
+          image: registry.github.com/gazebo-web/cloudsim:latest
           imagePullPolicy: Always
           resources:
             limits:

@@ -1,10 +1,10 @@
 package implementations
 
 import (
+	"github.com/gazebo-web/cloudsim/pkg/factory"
+	"github.com/gazebo-web/cloudsim/pkg/store"
+	"github.com/gazebo-web/cloudsim/pkg/utils/structs"
 	"github.com/stretchr/testify/suite"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/factory"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/store"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/utils/structs"
 	"reflect"
 	"testing"
 )

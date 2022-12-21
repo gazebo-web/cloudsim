@@ -1,8 +1,8 @@
 package manager
 
 import (
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/cycler"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/platform"
+	"github.com/gazebo-web/cloudsim/pkg/cycler"
+	"github.com/gazebo-web/cloudsim/pkg/platform"
 )
 
 // WithRoundRobin initializes a new Manager using a base platform Manager but iterates over the inner manager using round robin.

@@ -1,11 +1,11 @@
 package factory
 
 import (
+	errorsutils "github.com/gazebo-web/cloudsim/pkg/utils/errors"
+	"github.com/gazebo-web/cloudsim/pkg/utils/reflect"
+	"github.com/gazebo-web/cloudsim/pkg/validate"
 	"github.com/mitchellh/mapstructure"
 	"github.com/pkg/errors"
-	errorsutils "gitlab.com/ignitionrobotics/web/cloudsim/pkg/utils/errors"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/utils/reflect"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/validate"
 )
 
 var (
@@ -30,11 +30,10 @@ type NewFunc func(config interface{}, dependencies Dependencies, out interface{}
 // Factory instances objects of a specific type with a given configuration.
 // A factory works by mapping an object type to a factory creation function (NewFunc).
 //
-// Example
+// # Example
 //
 // The `example` package has an `Exampler` interface, and three different implementations of it.
 // A package `Factory` is defined to allow other packages to dynamically request `Exampler` implementations.
-//
 //
 // In order to allow the package factory to create `Exampler` implementations, each implementation must define and
 // register a factory creation function (NewFunc) in the package factory.
@@ -43,26 +42,28 @@ type NewFunc func(config interface{}, dependencies Dependencies, out interface{}
 //
 // example/implementations/type1/example.go
 // ```
-// func newType1(config interface{}, dependencies factory.Dependencies, out interface{}) error {
-//     // It is recommended to define a Config struct for your factory creation function.
-//     var typeConfig *Config
-//     if err := factory.SetValueAndValidate(&typeConfig, config); err != nil {
-//         return err
-//     }
 //
-//     // Parse dependencies
-//     // It is recommended to define a Config struct for your factory creation function.
-//     var typeDependencies Dependencies
-//     if err := dependencies.ToStruct(&typeDependencies); err != nil {
-//         return err
-//     }
+//	func newType1(config interface{}, dependencies factory.Dependencies, out interface{}) error {
+//	    // It is recommended to define a Config struct for your factory creation function.
+//	    var typeConfig *Config
+//	    if err := factory.SetValueAndValidate(&typeConfig, config); err != nil {
+//	        return err
+//	    }
 //
-//     // Initialize the implementation
-//     t1 := [...]
+//	    // Parse dependencies
+//	    // It is recommended to define a Config struct for your factory creation function.
+//	    var typeDependencies Dependencies
+//	    if err := dependencies.ToStruct(&typeDependencies); err != nil {
+//	        return err
+//	    }
 //
-//     // Set the the output value to the newly created instance
-//	   factory.SetValue(out, t1)
-// }
+//	    // Initialize the implementation
+//	    t1 := [...]
+//
+//	    // Set the the output value to the newly created instance
+//		   factory.SetValue(out, t1)
+//	}
+//
 // ```
 //
 // Create a package factory and register all implementations.
@@ -72,41 +73,46 @@ type NewFunc func(config interface{}, dependencies Dependencies, out interface{}
 // package example
 //
 // const (
-//     // Implementation types
-//     Type1 = "type1"
-//     Type2 = "type2"
-//     Type3 = "type3"
+//
+//	// Implementation types
+//	Type1 = "type1"
+//	Type2 = "type2"
+//	Type3 = "type3"
+//
 // )
 //
-// var Factory := factorymap.Map{
-//     Type1: type1New,
-//     Type2: type2New,
-//     Type3: type3New,
-// }
+//	var Factory := factorymap.Map{
+//	    Type1: type1New,
+//	    Type2: type2New,
+//	    Type3: type3New,
+//	}
+//
 // ```
 //
 // The package factory can now be used by other packages that need `Exampler`s.
 //
 // consumer/consumer.go
 // ```
-// func Example() error {
-//     // Prepare the factory config
-//     // This config is loaded manually here, but it can also be loaded from a file
-//     config := &factory.Config{
-//          Type: example.Type1,
-//          Config: [...],
-//     }
 //
-//     // Prepare factory dependencies
-//     dependencies := Dependencies{ [...] },
+//	func Example() error {
+//	    // Prepare the factory config
+//	    // This config is loaded manually here, but it can also be loaded from a file
+//	    config := &factory.Config{
+//	         Type: example.Type1,
+//	         Config: [...],
+//	    }
 //
-//     // Create a new `Exampler` object
-//     var exampler example.Exampler
-//     err := example.Factory.New(config, dependencies, &exampler)
-//     if err != nil {
-//         return err
-//     }
-// }
+//	    // Prepare factory dependencies
+//	    dependencies := Dependencies{ [...] },
+//
+//	    // Create a new `Exampler` object
+//	    var exampler example.Exampler
+//	    err := example.Factory.New(config, dependencies, &exampler)
+//	    if err != nil {
+//	        return err
+//	    }
+//	}
+//
 // ```
 type Factory interface {
 	// New sets the `out` parameter to a new instance of the specific object type.

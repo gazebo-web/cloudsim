@@ -1,8 +1,8 @@
 package store
 
 import (
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/defaults"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/validate"
+	"github.com/gazebo-web/cloudsim/pkg/defaults"
+	"github.com/gazebo-web/cloudsim/pkg/validate"
 )
 
 // Config is used to create a store component.

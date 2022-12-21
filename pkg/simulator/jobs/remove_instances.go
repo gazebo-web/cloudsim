@@ -1,10 +1,10 @@
 package jobs
 
 import (
+	"github.com/gazebo-web/cloudsim/pkg/actions"
+	"github.com/gazebo-web/cloudsim/pkg/machines"
+	"github.com/gazebo-web/cloudsim/pkg/simulator/state"
 	"github.com/jinzhu/gorm"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/actions"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/machines"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulator/state"
 )
 
 // RemoveInstancesInput is the input of the RemoveInstances job.

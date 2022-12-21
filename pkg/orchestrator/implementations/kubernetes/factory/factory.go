@@ -1,15 +1,15 @@
 package factory
 
 import (
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/factory"
-	configMapsImpl "gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/components/configurations/implementations"
-	ingressesImpl "gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/components/ingresses/implementations"
-	networkImpl "gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/components/network/implementations"
-	nodesImpl "gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/components/nodes/implementations"
-	podsImpl "gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/components/pods/implementations"
-	servicesImpl "gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/components/services/implementations"
-	kubernetesCluster "gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/implementations/kubernetes"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/implementations/kubernetes/client"
+	"github.com/gazebo-web/cloudsim/pkg/factory"
+	configMapsImpl "github.com/gazebo-web/cloudsim/pkg/orchestrator/components/configurations/implementations"
+	ingressesImpl "github.com/gazebo-web/cloudsim/pkg/orchestrator/components/ingresses/implementations"
+	networkImpl "github.com/gazebo-web/cloudsim/pkg/orchestrator/components/network/implementations"
+	nodesImpl "github.com/gazebo-web/cloudsim/pkg/orchestrator/components/nodes/implementations"
+	podsImpl "github.com/gazebo-web/cloudsim/pkg/orchestrator/components/pods/implementations"
+	servicesImpl "github.com/gazebo-web/cloudsim/pkg/orchestrator/components/services/implementations"
+	kubernetesCluster "github.com/gazebo-web/cloudsim/pkg/orchestrator/implementations/kubernetes"
+	"github.com/gazebo-web/cloudsim/pkg/orchestrator/implementations/kubernetes/client"
 	"reflect"
 )
 

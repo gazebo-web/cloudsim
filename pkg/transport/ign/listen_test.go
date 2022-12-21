@@ -2,9 +2,9 @@ package ign
 
 import (
 	"context"
+	"github.com/gazebo-web/cloudsim/pkg/transport"
 	"github.com/gorilla/websocket"
 	"github.com/stretchr/testify/assert"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/transport"
 	"net/http"
 	"net/http/httptest"
 	"net/url"

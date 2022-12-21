@@ -1,9 +1,9 @@
 package jobs
 
 import (
+	"github.com/gazebo-web/cloudsim/pkg/actions"
+	"github.com/gazebo-web/cloudsim/pkg/simulations"
 	"github.com/jinzhu/gorm"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/actions"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
 )
 
 // CheckSimulationKindInput is the input of the CheckSimulationKind job.

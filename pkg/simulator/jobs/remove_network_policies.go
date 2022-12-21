@@ -2,10 +2,10 @@ package jobs
 
 import (
 	"context"
+	"github.com/gazebo-web/cloudsim/pkg/actions"
+	"github.com/gazebo-web/cloudsim/pkg/orchestrator/resource"
+	"github.com/gazebo-web/cloudsim/pkg/simulator/state"
 	"github.com/jinzhu/gorm"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/actions"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/resource"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulator/state"
 )
 
 // RemoveNetworkPoliciesInput is the input for the RemoveNetworkPolicies job.

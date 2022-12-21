@@ -3,10 +3,10 @@ package kubernetes
 import (
 	"context"
 	"fmt"
+	"github.com/gazebo-web/cloudsim/pkg/orchestrator/components/network"
+	"github.com/gazebo-web/cloudsim/pkg/orchestrator/resource"
+	"github.com/gazebo-web/gz-go/v7"
 	"github.com/stretchr/testify/suite"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/components/network"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/resource"
-	"gitlab.com/ignitionrobotics/web/ign-go/v6"
 	apiv1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes/fake"
@@ -21,7 +21,7 @@ type networkPoliciesTestSuite struct {
 	suite.Suite
 	pod             *apiv1.Pod
 	client          *fake.Clientset
-	logger          ign.Logger
+	logger          gz.Logger
 	networkPolicies *networkPolicies
 }
 
@@ -39,7 +39,7 @@ func (s *networkPoliciesTestSuite) SetupTest() {
 		Status: apiv1.PodStatus{},
 	}
 	s.client = fake.NewSimpleClientset()
-	s.logger = ign.NewLoggerNoRollbar("TestNetworkPolicies", ign.VerbosityDebug)
+	s.logger = gz.NewLoggerNoRollbar("TestNetworkPolicies", gz.VerbosityDebug)
 	s.networkPolicies = &networkPolicies{
 		API:    s.client,
 		Logger: s.logger,

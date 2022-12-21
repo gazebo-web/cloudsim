@@ -1,8 +1,8 @@
 package machines
 
 import (
+	"github.com/gazebo-web/cloudsim/pkg/calculator"
 	"github.com/pkg/errors"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/calculator"
 )
 
 var (

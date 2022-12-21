@@ -3,12 +3,12 @@ package kubernetes
 import (
 	"context"
 	"fmt"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/components/pods"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/components/spdy"
-	orchestratorResource "gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/resource"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/waiter"
+	"github.com/gazebo-web/cloudsim/pkg/orchestrator/components/pods"
+	"github.com/gazebo-web/cloudsim/pkg/orchestrator/components/spdy"
+	orchestratorResource "github.com/gazebo-web/cloudsim/pkg/orchestrator/resource"
+	"github.com/gazebo-web/cloudsim/pkg/waiter"
+	"github.com/gazebo-web/gz-go/v7"
 	"gitlab.com/ignitionrobotics/web/ign-go/v5/kubernetes"
-	"gitlab.com/ignitionrobotics/web/ign-go/v6"
 	apiv1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -19,7 +19,7 @@ import (
 type kubernetesPods struct {
 	API    client.Interface
 	SPDY   spdy.Initializer
-	Logger ign.Logger
+	Logger gz.Logger
 }
 
 // List returns a list of pod resources matching the giving selector in the given namespace.
@@ -369,7 +369,7 @@ func (p *kubernetesPods) GetIP(ctx context.Context, name string, namespace strin
 }
 
 // NewPods initializes a new pods.Pods implementation for managing Kubernetes Pods.
-func NewPods(api client.Interface, spdy spdy.Initializer, logger ign.Logger) pods.Pods {
+func NewPods(api client.Interface, spdy spdy.Initializer, logger gz.Logger) pods.Pods {
 	return &kubernetesPods{
 		API:    api,
 		SPDY:   spdy,

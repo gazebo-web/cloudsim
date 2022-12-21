@@ -1,13 +1,13 @@
 package fake
 
-import "gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
+import "github.com/gazebo-web/cloudsim/pkg/simulations"
 
 // fakeRobot is a fake simulations.Robot implementation to use with tests.
 type fakeRobot struct {
 	// name is the robot's name.
 	name string
 	// kind is the robot's kind.
-	kind  string
+	kind string
 	// image is the robot's image.
 	image string
 }

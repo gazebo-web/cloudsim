@@ -1,8 +1,8 @@
 package store
 
 import (
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/defaults"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/factory"
+	"github.com/gazebo-web/cloudsim/pkg/defaults"
+	"github.com/gazebo-web/cloudsim/pkg/factory"
 )
 
 // NewFunc is the factory creation function for the Kubernetes orchestrator.Cluster implementation.

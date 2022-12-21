@@ -1,6 +1,6 @@
 package factory
 
-import "gitlab.com/ignitionrobotics/web/cloudsim/pkg/validate"
+import "github.com/gazebo-web/cloudsim/pkg/validate"
 
 // Config is used to create an SES storage component.
 type Config struct {

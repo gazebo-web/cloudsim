@@ -1,14 +1,14 @@
 package factory
 
 import (
-	email "gitlab.com/ignitionrobotics/web/cloudsim/pkg/email/implementations"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/factory"
-	machines "gitlab.com/ignitionrobotics/web/cloudsim/pkg/machines/implementations"
-	orchestrator "gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/implementations"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/platform"
-	secrets "gitlab.com/ignitionrobotics/web/cloudsim/pkg/secrets/implementations"
-	storage "gitlab.com/ignitionrobotics/web/cloudsim/pkg/storage/implementations"
-	store "gitlab.com/ignitionrobotics/web/cloudsim/pkg/store/implementations"
+	email "github.com/gazebo-web/cloudsim/pkg/email/implementations"
+	"github.com/gazebo-web/cloudsim/pkg/factory"
+	machines "github.com/gazebo-web/cloudsim/pkg/machines/implementations"
+	orchestrator "github.com/gazebo-web/cloudsim/pkg/orchestrator/implementations"
+	"github.com/gazebo-web/cloudsim/pkg/platform"
+	secrets "github.com/gazebo-web/cloudsim/pkg/secrets/implementations"
+	storage "github.com/gazebo-web/cloudsim/pkg/storage/implementations"
+	store "github.com/gazebo-web/cloudsim/pkg/store/implementations"
 )
 
 // NewFunc is the factory creation function for the EC2 Machines implementation.

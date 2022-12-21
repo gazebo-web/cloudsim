@@ -3,9 +3,9 @@ package ign
 import (
 	"context"
 	"errors"
+	"github.com/gazebo-web/cloudsim/pkg/transport"
+	"github.com/gazebo-web/gz-go/v7"
 	"github.com/gorilla/websocket"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/transport"
-	"gitlab.com/ignitionrobotics/web/ign-go/v6"
 	"sync"
 )
 
@@ -67,7 +67,7 @@ func (w *websocketPubSubTransport) listen() error {
 		// Recover from panics to prevent a websocket connection from terminating the server
 		defer func() {
 			if p := recover(); p != nil {
-				logger := ign.NewLogger("ws_cb_proxy", true, ign.VerbosityDebug)
+				logger := gz.NewLogger("ws_cb_proxy", true, gz.VerbosityDebug)
 				logger.Critical("Panic while running websocket transport listen() function: ", p)
 			}
 		}()

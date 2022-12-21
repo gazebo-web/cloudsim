@@ -1,23 +1,23 @@
 package kubernetes
 
 import (
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/components/configurations"
-	kubernetesConfigMaps "gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/components/configurations/implementations/kubernetes"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/components/ingresses"
-	kubernetesIngresses "gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/components/ingresses/implementations/kubernetes"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/components/ingresses/implementations/kubernetes/rules"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/components/network"
-	kubernetesNetwork "gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/components/network/implementations/kubernetes"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/components/nodes"
-	kubernetesNodes "gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/components/nodes/implementations/kubernetes"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/components/pods"
-	kubernetesPods "gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/components/pods/implementations/kubernetes"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/components/services"
-	kubernetesServices "gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/components/services/implementations/kubernetes"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/components/spdy"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/implementations/kubernetes/client"
-	"gitlab.com/ignitionrobotics/web/ign-go/v6"
+	"github.com/gazebo-web/cloudsim/pkg/orchestrator"
+	"github.com/gazebo-web/cloudsim/pkg/orchestrator/components/configurations"
+	kubernetesConfigMaps "github.com/gazebo-web/cloudsim/pkg/orchestrator/components/configurations/implementations/kubernetes"
+	"github.com/gazebo-web/cloudsim/pkg/orchestrator/components/ingresses"
+	kubernetesIngresses "github.com/gazebo-web/cloudsim/pkg/orchestrator/components/ingresses/implementations/kubernetes"
+	"github.com/gazebo-web/cloudsim/pkg/orchestrator/components/ingresses/implementations/kubernetes/rules"
+	"github.com/gazebo-web/cloudsim/pkg/orchestrator/components/network"
+	kubernetesNetwork "github.com/gazebo-web/cloudsim/pkg/orchestrator/components/network/implementations/kubernetes"
+	"github.com/gazebo-web/cloudsim/pkg/orchestrator/components/nodes"
+	kubernetesNodes "github.com/gazebo-web/cloudsim/pkg/orchestrator/components/nodes/implementations/kubernetes"
+	"github.com/gazebo-web/cloudsim/pkg/orchestrator/components/pods"
+	kubernetesPods "github.com/gazebo-web/cloudsim/pkg/orchestrator/components/pods/implementations/kubernetes"
+	"github.com/gazebo-web/cloudsim/pkg/orchestrator/components/services"
+	kubernetesServices "github.com/gazebo-web/cloudsim/pkg/orchestrator/components/services/implementations/kubernetes"
+	"github.com/gazebo-web/cloudsim/pkg/orchestrator/components/spdy"
+	"github.com/gazebo-web/cloudsim/pkg/orchestrator/implementations/kubernetes/client"
+	"github.com/gazebo-web/gz-go/v7"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/kubernetes/fake"
 )
@@ -109,7 +109,7 @@ func NewCustomKubernetes(config Config) orchestrator.Cluster {
 
 // NewDefaultKubernetes initializes the set of Kubernetes subcomponents using
 // the given kubernetes client api, spdy initializer and logger.
-func NewDefaultKubernetes(api kubernetes.Interface, spdyInit spdy.Initializer, logger ign.Logger) orchestrator.Cluster {
+func NewDefaultKubernetes(api kubernetes.Interface, spdyInit spdy.Initializer, logger gz.Logger) orchestrator.Cluster {
 	return &k8s{
 		nodes:           kubernetesNodes.NewNodes(api, logger),
 		pods:            kubernetesPods.NewPods(api, spdyInit, logger),
@@ -122,7 +122,7 @@ func NewDefaultKubernetes(api kubernetes.Interface, spdyInit spdy.Initializer, l
 }
 
 // NewFakeKubernetes initializes the set of Kubernetes subcomponents using fake implementations.
-func NewFakeKubernetes(logger ign.Logger) (orchestrator.Cluster, *fake.Clientset) {
+func NewFakeKubernetes(logger gz.Logger) (orchestrator.Cluster, *fake.Clientset) {
 	api := fake.NewSimpleClientset()
 	spdyInit := spdy.NewSPDYFakeInitializer()
 	return &k8s{
@@ -138,7 +138,7 @@ func NewFakeKubernetes(logger ign.Logger) (orchestrator.Cluster, *fake.Clientset
 
 // InitializeKubernetes initializes a new Kubernetes orchestrator.
 // `kubeconfig` is the path to the target cluster's kubeconfig file. If it is empty, the default config is used.
-func InitializeKubernetes(kubeconfig string, logger ign.Logger) (orchestrator.Cluster, error) {
+func InitializeKubernetes(kubeconfig string, logger gz.Logger) (orchestrator.Cluster, error) {
 	config, err := client.GetConfig(kubeconfig)
 	if err != nil {
 		return nil, err

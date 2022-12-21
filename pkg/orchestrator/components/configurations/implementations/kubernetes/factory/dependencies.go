@@ -1,15 +1,15 @@
 package factory
 
 import (
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/validate"
-	"gitlab.com/ignitionrobotics/web/ign-go/v6"
+	"github.com/gazebo-web/cloudsim/pkg/validate"
+	"github.com/gazebo-web/gz-go/v7"
 	kubeapi "k8s.io/client-go/kubernetes"
 )
 
 // Dependencies are used to create a Kubernetes cluster component.
 type Dependencies struct {
 	// Logger is used to store log information.
-	Logger ign.Logger `validate:"required"`
+	Logger gz.Logger `validate:"required"`
 
 	// API is the Kubernetes clientset.
 	API kubeapi.Interface `validate:"required"`

@@ -1,8 +1,8 @@
 package implementations
 
 import (
-	factorymap "gitlab.com/ignitionrobotics/web/cloudsim/pkg/factory/map"
-	ec2factory "gitlab.com/ignitionrobotics/web/cloudsim/pkg/machines/implementations/ec2/factory"
+	factorymap "github.com/gazebo-web/cloudsim/pkg/factory/map"
+	ec2factory "github.com/gazebo-web/cloudsim/pkg/machines/implementations/ec2/factory"
 )
 
 const (

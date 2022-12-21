@@ -3,9 +3,9 @@ package kubernetes
 import (
 	"context"
 	"fmt"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/components/configurations"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/resource"
-	"gitlab.com/ignitionrobotics/web/ign-go/v6"
+	"github.com/gazebo-web/cloudsim/pkg/orchestrator/components/configurations"
+	"github.com/gazebo-web/cloudsim/pkg/orchestrator/resource"
+	"github.com/gazebo-web/gz-go/v7"
 	apiv1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
@@ -14,7 +14,7 @@ import (
 // configMaps is a configurations.Configurations Kubernetes implementation.
 type configMaps struct {
 	API    kubernetes.Interface
-	Logger ign.Logger
+	Logger gz.Logger
 }
 
 // Create creates a config map.
@@ -85,7 +85,7 @@ func (cm *configMaps) Delete(ctx context.Context, resource resource.Resource) (r
 }
 
 // NewConfigMaps initializes a new configurations.Configurations Kubernetes implementation.
-func NewConfigMaps(api kubernetes.Interface, logger ign.Logger) configurations.Configurations {
+func NewConfigMaps(api kubernetes.Interface, logger gz.Logger) configurations.Configurations {
 	return &configMaps{
 		API:    api,
 		Logger: logger,

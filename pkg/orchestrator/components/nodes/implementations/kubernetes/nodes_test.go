@@ -1,10 +1,10 @@
 package kubernetes
 
 import (
+	"github.com/gazebo-web/cloudsim/pkg/orchestrator/resource"
+	"github.com/gazebo-web/cloudsim/pkg/waiter"
+	"github.com/gazebo-web/gz-go/v7"
 	"github.com/stretchr/testify/assert"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/resource"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/waiter"
-	"gitlab.com/ignitionrobotics/web/ign-go/v6"
 	apiv1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes/fake"
@@ -15,7 +15,7 @@ import (
 
 func TestNewNodeNodes(t *testing.T) {
 	client := fake.NewSimpleClientset()
-	nm := NewNodes(client, ign.NewLoggerNoRollbar("TestNodes", ign.VerbosityDebug))
+	nm := NewNodes(client, gz.NewLoggerNoRollbar("TestNodes", gz.VerbosityDebug))
 	assert.NotNil(t, nm)
 }
 
@@ -133,7 +133,7 @@ func TestWait_WaitForNodesToBeReady(t *testing.T) {
 		},
 	}
 	cli := fake.NewSimpleClientset(&node)
-	nm := NewNodes(cli, ign.NewLoggerNoRollbar("TestNodes", ign.VerbosityDebug))
+	nm := NewNodes(cli, gz.NewLoggerNoRollbar("TestNodes", gz.VerbosityDebug))
 	selector := resource.NewSelector(map[string]string{"test": "app"})
 	res := resource.NewResource("test", "default", selector)
 	r := nm.WaitForCondition(nil, res, resource.ReadyCondition)
@@ -168,7 +168,7 @@ func TestWait_ErrWhenNodesArentReady(t *testing.T) {
 		},
 	}
 	cli := fake.NewSimpleClientset(&node)
-	nm := NewNodes(cli, ign.NewLoggerNoRollbar("TestNodes", ign.VerbosityDebug))
+	nm := NewNodes(cli, gz.NewLoggerNoRollbar("TestNodes", gz.VerbosityDebug))
 
 	selector := resource.NewSelector(map[string]string{"test": "app"})
 	res := resource.NewResource("test", "default", selector)

@@ -1,8 +1,8 @@
 package factory
 
 import (
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/machines/implementations/ec2"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/validate"
+	"github.com/gazebo-web/cloudsim/pkg/machines/implementations/ec2"
+	"github.com/gazebo-web/cloudsim/pkg/validate"
 )
 
 // Config is used to create an EC2 machines component.

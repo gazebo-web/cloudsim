@@ -2,8 +2,8 @@ package fake
 
 import (
 	"context"
+	"github.com/gazebo-web/cloudsim/pkg/secrets"
 	"github.com/stretchr/testify/mock"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/secrets"
 )
 
 // Fake is a fake Secrets implementation.

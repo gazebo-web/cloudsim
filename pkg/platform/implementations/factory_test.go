@@ -1,22 +1,22 @@
 package implementations
 
 import (
+	email "github.com/gazebo-web/cloudsim/pkg/email/implementations"
+	"github.com/gazebo-web/cloudsim/pkg/factory"
+	machines "github.com/gazebo-web/cloudsim/pkg/machines/implementations"
+	configurationsImpl "github.com/gazebo-web/cloudsim/pkg/orchestrator/components/configurations/implementations"
+	ingressesImpl "github.com/gazebo-web/cloudsim/pkg/orchestrator/components/ingresses/implementations"
+	networkImpl "github.com/gazebo-web/cloudsim/pkg/orchestrator/components/network/implementations"
+	nodesImpl "github.com/gazebo-web/cloudsim/pkg/orchestrator/components/nodes/implementations"
+	podsImpl "github.com/gazebo-web/cloudsim/pkg/orchestrator/components/pods/implementations"
+	servicesImpl "github.com/gazebo-web/cloudsim/pkg/orchestrator/components/services/implementations"
+	orchestrator "github.com/gazebo-web/cloudsim/pkg/orchestrator/implementations"
+	"github.com/gazebo-web/cloudsim/pkg/platform"
+	secrets "github.com/gazebo-web/cloudsim/pkg/secrets/implementations"
+	storage "github.com/gazebo-web/cloudsim/pkg/storage/implementations"
+	store "github.com/gazebo-web/cloudsim/pkg/store/implementations"
+	"github.com/gazebo-web/gz-go/v7"
 	"github.com/stretchr/testify/suite"
-	email "gitlab.com/ignitionrobotics/web/cloudsim/pkg/email/implementations"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/factory"
-	machines "gitlab.com/ignitionrobotics/web/cloudsim/pkg/machines/implementations"
-	configurationsImpl "gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/components/configurations/implementations"
-	ingressesImpl "gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/components/ingresses/implementations"
-	networkImpl "gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/components/network/implementations"
-	nodesImpl "gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/components/nodes/implementations"
-	podsImpl "gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/components/pods/implementations"
-	servicesImpl "gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/components/services/implementations"
-	orchestrator "gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/implementations"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/platform"
-	secrets "gitlab.com/ignitionrobotics/web/cloudsim/pkg/secrets/implementations"
-	storage "gitlab.com/ignitionrobotics/web/cloudsim/pkg/storage/implementations"
-	store "gitlab.com/ignitionrobotics/web/cloudsim/pkg/store/implementations"
-	"gitlab.com/ignitionrobotics/web/ign-go/v6"
 	"testing"
 )
 
@@ -110,7 +110,7 @@ func (s *testPlatformFactorySuite) TestNewFunc() {
 	}
 
 	// Prepare dependencies
-	logger := ign.NewLoggerNoRollbar("test", ign.VerbosityWarning)
+	logger := gz.NewLoggerNoRollbar("test", gz.VerbosityWarning)
 	dependencies := factory.Dependencies{
 		"Logger": logger,
 	}

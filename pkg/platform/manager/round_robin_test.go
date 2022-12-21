@@ -1,8 +1,8 @@
 package manager
 
 import (
+	"github.com/gazebo-web/cloudsim/pkg/platform"
 	"github.com/stretchr/testify/suite"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/platform"
 	"testing"
 )
 

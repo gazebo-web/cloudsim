@@ -5,9 +5,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/pricing"
 	"github.com/aws/aws-sdk-go/service/pricing/pricingiface"
+	"github.com/gazebo-web/cloudsim/pkg/calculator"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/calculator"
 	"os"
 	"testing"
 )

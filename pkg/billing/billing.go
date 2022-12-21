@@ -2,13 +2,13 @@ package billing
 
 import (
 	"context"
+	"github.com/gazebo-web/cloudsim/pkg/simulations"
+	"github.com/gazebo-web/gz-go/v7"
 	apiCredits "gitlab.com/ignitionrobotics/billing/credits/pkg/api"
 	credits "gitlab.com/ignitionrobotics/billing/credits/pkg/client"
 	apiPayments "gitlab.com/ignitionrobotics/billing/payments/pkg/api"
 	payments "gitlab.com/ignitionrobotics/billing/payments/pkg/client"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
 	"gitlab.com/ignitionrobotics/web/fuelserver/bundles/users"
-	"gitlab.com/ignitionrobotics/web/ign-go/v6"
 	"net/url"
 	"time"
 )
@@ -56,7 +56,7 @@ type service struct {
 	applicationName string
 
 	// logger is used to log relevant information in different methods.
-	logger ign.Logger
+	logger gz.Logger
 
 	// enabled is set to true when this service is enabled.
 	enabled bool
@@ -146,7 +146,7 @@ type Config struct {
 }
 
 // NewService initializes a new Service implementation using the given config.
-func NewService(cfg Config, logger ign.Logger) (Service, error) {
+func NewService(cfg Config, logger gz.Logger) (Service, error) {
 	u, err := url.Parse(cfg.PaymentsURL)
 	if err != nil {
 		return nil, err

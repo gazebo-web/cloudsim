@@ -3,10 +3,10 @@ package ec2
 import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/aws/aws-sdk-go/service/ec2/ec2iface"
+	cloud "github.com/gazebo-web/cloudsim/pkg/cloud/aws"
+	"github.com/gazebo-web/cloudsim/pkg/machines"
+	"github.com/gazebo-web/gz-go/v7"
 	"github.com/stretchr/testify/suite"
-	cloud "gitlab.com/ignitionrobotics/web/cloudsim/pkg/cloud/aws"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/machines"
-	"gitlab.com/ignitionrobotics/web/ign-go/v6"
 	"testing"
 )
 
@@ -22,7 +22,7 @@ type ec2TerminateMachinesTestSuite struct {
 
 func (s *ec2TerminateMachinesTestSuite) SetupTest() {
 	s.ec2API = &mockEC2Terminate{}
-	logger := ign.NewLoggerNoRollbar("ec2TerminateMachinesTestSuite", ign.VerbosityDebug)
+	logger := gz.NewLoggerNoRollbar("ec2TerminateMachinesTestSuite", gz.VerbosityDebug)
 	var err error
 	s.machines, err = NewMachines(&NewInput{
 		API:            s.ec2API,

@@ -1,10 +1,10 @@
 package factory
 
 import (
+	"github.com/gazebo-web/cloudsim/pkg/factory"
+	"github.com/gazebo-web/cloudsim/pkg/orchestrator/components/ingresses"
+	"github.com/gazebo-web/gz-go/v7"
 	"github.com/stretchr/testify/suite"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/factory"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/components/ingresses"
-	"gitlab.com/ignitionrobotics/web/ign-go/v6"
 	"k8s.io/client-go/kubernetes"
 	"testing"
 )
@@ -19,7 +19,7 @@ type testKubernetesIngressesFactorySuite struct {
 
 func (s *testKubernetesIngressesFactorySuite) TestNewFunc() {
 	// Prepare dependencies
-	logger := ign.NewLoggerNoRollbar("test", ign.VerbosityWarning)
+	logger := gz.NewLoggerNoRollbar("test", gz.VerbosityWarning)
 	kubernetesAPI := struct {
 		kubernetes.Interface
 	}{}
@@ -43,7 +43,7 @@ type testKubernetesIngressRulesFactorySuite struct {
 
 func (s *testKubernetesIngressRulesFactorySuite) TestNewFunc() {
 	// Prepare dependencies
-	logger := ign.NewLoggerNoRollbar("test", ign.VerbosityWarning)
+	logger := gz.NewLoggerNoRollbar("test", gz.VerbosityWarning)
 	kubernetesAPI := struct {
 		kubernetes.Interface
 	}{}

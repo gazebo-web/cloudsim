@@ -3,10 +3,10 @@ package kubernetes
 import (
 	"bytes"
 	"fmt"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/components/pods"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/components/spdy"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/resource"
-	"gitlab.com/ignitionrobotics/web/ign-go/v6"
+	"github.com/gazebo-web/cloudsim/pkg/orchestrator/components/pods"
+	"github.com/gazebo-web/cloudsim/pkg/orchestrator/components/spdy"
+	"github.com/gazebo-web/cloudsim/pkg/orchestrator/resource"
+	"github.com/gazebo-web/gz-go/v7"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/remotecommand"
 )
@@ -16,7 +16,7 @@ type executor struct {
 	API      kubernetes.Interface
 	pod      resource.Resource
 	spdyInit spdy.Initializer
-	logger   ign.Logger
+	logger   gz.Logger
 }
 
 // Cmd is used to run a command in a container inside a resource.
@@ -62,7 +62,7 @@ func (e *executor) Script(container, script string) error {
 }
 
 // newExecutor initializes a new executor.
-func newExecutor(api kubernetes.Interface, pod resource.Resource, spdyInit spdy.Initializer, logger ign.Logger) pods.Executor {
+func newExecutor(api kubernetes.Interface, pod resource.Resource, spdyInit spdy.Initializer, logger gz.Logger) pods.Executor {
 	return &executor{
 		API:      api,
 		pod:      pod,

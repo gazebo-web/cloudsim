@@ -2,7 +2,7 @@ package ingresses
 
 import (
 	"context"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/resource"
+	"github.com/gazebo-web/cloudsim/pkg/orchestrator/resource"
 )
 
 // Ingresses groups a set of methods for managing Ingresses.

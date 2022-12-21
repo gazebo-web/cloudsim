@@ -1,8 +1,8 @@
 package rules
 
 import (
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/components/ingresses"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/resource"
+	"github.com/gazebo-web/cloudsim/pkg/orchestrator/components/ingresses"
+	"github.com/gazebo-web/cloudsim/pkg/orchestrator/resource"
 	networkingv1 "k8s.io/api/networking/v1"
 )
 

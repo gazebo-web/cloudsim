@@ -2,11 +2,11 @@ package factory
 
 import (
 	"github.com/aws/aws-sdk-go/service/ec2/ec2iface"
+	"github.com/gazebo-web/cloudsim/pkg/factory"
+	"github.com/gazebo-web/cloudsim/pkg/machines"
+	"github.com/gazebo-web/cloudsim/pkg/machines/implementations/ec2"
+	"github.com/gazebo-web/gz-go/v7"
 	"github.com/stretchr/testify/suite"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/factory"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/machines"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/machines/implementations/ec2"
-	"gitlab.com/ignitionrobotics/web/ign-go/v6"
 	"testing"
 )
 
@@ -57,7 +57,7 @@ func (s *testEC2FactorySuite) TestNewFuncDefaultConfig() {
 	}{}
 	dependencies := factory.Dependencies{
 		"api":    ec2API,
-		"logger": ign.NewLoggerNoRollbar("test", ign.VerbosityWarning),
+		"logger": gz.NewLoggerNoRollbar("test", gz.VerbosityWarning),
 	}
 
 	var out machines.Machines

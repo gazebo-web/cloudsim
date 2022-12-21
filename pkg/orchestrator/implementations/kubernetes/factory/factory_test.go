@@ -1,8 +1,8 @@
 package factory
 
 import (
+	"github.com/gazebo-web/cloudsim/pkg/factory"
 	"github.com/stretchr/testify/suite"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/factory"
 	"k8s.io/client-go/kubernetes"
 	"testing"
 )

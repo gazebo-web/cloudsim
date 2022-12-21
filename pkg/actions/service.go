@@ -3,8 +3,8 @@ package actions
 import (
 	"errors"
 	"fmt"
+	"github.com/gazebo-web/gz-go/v7"
 	"github.com/jinzhu/gorm"
-	"gitlab.com/ignitionrobotics/web/ign-go/v6"
 	"runtime/debug"
 )
 
@@ -34,11 +34,11 @@ type Servicer interface {
 // service provides operations to register and execute actions.
 type service struct {
 	actions map[string]*Action
-	logger  ign.Logger
+	logger  gz.Logger
 }
 
 // NewService returns a pointer to an action Servicer implementation.
-func NewService(logger ign.Logger) Servicer {
+func NewService(logger gz.Logger) Servicer {
 	service := &service{
 		logger: logger,
 	}

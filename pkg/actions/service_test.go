@@ -3,11 +3,11 @@ package actions
 import (
 	"errors"
 	"fmt"
+	"github.com/gazebo-web/gz-go/v7"
 	"github.com/jinzhu/gorm"
 	"github.com/satori/go.uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"gitlab.com/ignitionrobotics/web/ign-go/v6"
 	"testing"
 )
 
@@ -224,7 +224,7 @@ var serviceTestData = struct {
 func newTestService(t *testing.T) *service {
 	td := getTestData(t)
 
-	service := NewService(ign.NewLoggerNoRollbar("Actions", ign.VerbosityDebug)).(*service)
+	service := NewService(gz.NewLoggerNoRollbar("Actions", gz.VerbosityDebug)).(*service)
 
 	if err := service.RegisterAction(&td.applicationName, td.actionName, td.action); err != nil {
 		panic(fmt.Sprintf("failed to register action %s", td.actionName))

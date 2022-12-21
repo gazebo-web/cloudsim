@@ -1,8 +1,8 @@
 package loader
 
 import (
+	"github.com/gazebo-web/cloudsim/pkg/utils/reflect"
 	"github.com/pkg/errors"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/utils/reflect"
 	"io/ioutil"
 	"path/filepath"
 	"strings"

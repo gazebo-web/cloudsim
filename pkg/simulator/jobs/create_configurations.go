@@ -2,12 +2,12 @@ package jobs
 
 import (
 	"context"
+	"github.com/gazebo-web/cloudsim/pkg/actions"
+	"github.com/gazebo-web/cloudsim/pkg/orchestrator/components/configurations"
+	"github.com/gazebo-web/cloudsim/pkg/orchestrator/resource"
+	"github.com/gazebo-web/cloudsim/pkg/simulator"
+	"github.com/gazebo-web/cloudsim/pkg/simulator/state"
 	"github.com/jinzhu/gorm"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/actions"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/components/configurations"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/resource"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulator"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulator/state"
 )
 
 // CreateConfigurationsInput is the input of the CreateConfigurations job.

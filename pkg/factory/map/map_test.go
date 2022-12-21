@@ -2,9 +2,9 @@ package factorymap
 
 import (
 	"fmt"
+	"github.com/gazebo-web/cloudsim/pkg/factory"
 	"github.com/mitchellh/mapstructure"
 	"github.com/stretchr/testify/suite"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/factory"
 	"gopkg.in/go-playground/validator.v9"
 	"testing"
 )

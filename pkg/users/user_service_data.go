@@ -2,10 +2,10 @@ package users
 
 import (
 	"context"
+	"github.com/gazebo-web/gz-go/v7"
 	"github.com/jinzhu/gorm"
 	fuelusers "gitlab.com/ignitionrobotics/web/fuelserver/bundles/users"
 	per "gitlab.com/ignitionrobotics/web/fuelserver/permissions"
-	"gitlab.com/ignitionrobotics/web/ign-go"
 	"log"
 	"strings"
 )
@@ -59,7 +59,7 @@ func NewUserAccessorDataMock(ctx context.Context, ua Service, sysadminIdentiy, a
 }
 
 // ReloadEverything ...
-func (m *UserAccessorDataMock) ReloadEverything(ctx context.Context) *ign.ErrMsg {
+func (m *UserAccessorDataMock) ReloadEverything(ctx context.Context) *gz.ErrMsg {
 	// Foreign key checks are temporarily disabled to be able to drop tables
 	m.ua.Db.Exec("SET FOREIGN_KEY_CHECKS=0;")
 
@@ -75,7 +75,7 @@ func (m *UserAccessorDataMock) ReloadEverything(ctx context.Context) *ign.ErrMsg
 	return nil
 }
 
-func (m *UserAccessorDataMock) addTestData(ctx context.Context) *ign.ErrMsg {
+func (m *UserAccessorDataMock) addTestData(ctx context.Context) *gz.ErrMsg {
 
 	usersDb := m.ua.Db
 
@@ -129,17 +129,17 @@ func (m *UserAccessorDataMock) addTestData(ctx context.Context) *ign.ErrMsg {
 	return nil
 }
 
-func (m *UserAccessorDataMock) addUserToDb(tx *gorm.DB, u *fuelusers.User) *ign.ErrMsg {
+func (m *UserAccessorDataMock) addUserToDb(tx *gorm.DB, u *fuelusers.User) *gz.ErrMsg {
 	// Add the user tso the dat-abase.
 	// Note: we also need to add (before) a row to UniqueOwners
 	owner := fuelusers.UniqueOwner{Name: u.Username, OwnerType: fuelusers.OwnerTypeUser}
 	if err := tx.Create(&owner).Create(&u).Error; err != nil {
-		return ign.NewErrorMessageWithBase(ign.ErrorDbSave, err)
+		return gz.NewErrorMessageWithBase(gz.ErrorDbSave, err)
 	}
 	return nil
 }
 
-func (m *UserAccessorDataMock) addOrgToDB(tx *gorm.DB, org *fuelusers.Organization, creator *fuelusers.User) *ign.ErrMsg {
+func (m *UserAccessorDataMock) addOrgToDB(tx *gorm.DB, org *fuelusers.Organization, creator *fuelusers.User) *gz.ErrMsg {
 	// Create the organization in the permissions DB as a 'group' and set the
 	// creator as the 'owner'.
 	// This is the same as adding the user to the 'default' team of the Org.
@@ -150,7 +150,7 @@ func (m *UserAccessorDataMock) addOrgToDB(tx *gorm.DB, org *fuelusers.Organizati
 
 	owner := fuelusers.UniqueOwner{Name: org.Name, OwnerType: fuelusers.OwnerTypeOrg}
 	if err := tx.Create(&owner).Create(org).Error; err != nil {
-		return ign.NewErrorMessageWithBase(ign.ErrorDbSave, err)
+		return gz.NewErrorMessageWithBase(gz.ErrorDbSave, err)
 	}
 
 	return nil

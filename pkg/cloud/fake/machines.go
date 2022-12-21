@@ -1,9 +1,9 @@
 package fake
 
 import (
+	"github.com/gazebo-web/cloudsim/pkg/calculator"
+	"github.com/gazebo-web/cloudsim/pkg/machines"
 	"github.com/stretchr/testify/mock"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/calculator"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/machines"
 )
 
 var _ machines.Machines = (*Machines)(nil)

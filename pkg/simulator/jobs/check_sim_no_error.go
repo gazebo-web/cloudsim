@@ -2,9 +2,9 @@ package jobs
 
 import (
 	"fmt"
+	"github.com/gazebo-web/cloudsim/pkg/actions"
+	"github.com/gazebo-web/cloudsim/pkg/simulations"
 	"github.com/jinzhu/gorm"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/actions"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
 )
 
 // CheckSimulationNoErrorInput is the input of the CheckSimulationNoError job.

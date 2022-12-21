@@ -2,8 +2,8 @@ package gorm
 
 import (
 	"errors"
+	"github.com/gazebo-web/gz-go/v7"
 	"github.com/jinzhu/gorm"
-	"gitlab.com/ignitionrobotics/web/ign-go"
 	"log"
 )
 
@@ -19,11 +19,11 @@ var (
 // * IGN_DB_PASSWORD Password to connect to the DBMS with.
 // * IGN_DB_NAME Name of the database to connect to.
 // * IGN_DB_MAX_OPEN_CONNS - (Optional) You run the risk of getting a 'too many connections' error if this is not set.
-func getDBConfigFromEnvVars() (*ign.DatabaseConfig, error) {
+func getDBConfigFromEnvVars() (*gz.DatabaseConfig, error) {
 	// Get the db config
-	var dbConfig ign.DatabaseConfig
+	var dbConfig gz.DatabaseConfig
 	var err error
-	dbConfig, err = ign.NewDatabaseConfigFromEnvVars()
+	dbConfig, err = gz.NewDatabaseConfigFromEnvVars()
 	if err != nil {
 		return nil, err
 	}
@@ -43,7 +43,7 @@ func GetDBFromEnvVars() (*gorm.DB, error) {
 	}
 
 	// Connect to the db
-	db, err := ign.InitDbWithCfg(dbConfig)
+	db, err := gz.InitDbWithCfg(dbConfig)
 	if err != nil {
 		return nil, err
 	}
@@ -64,7 +64,7 @@ func GetTestDBFromEnvVars() (*gorm.DB, error) {
 	dbConfig.Name += "_test"
 
 	// Connect to the db
-	db, err := ign.InitDbWithCfg(dbConfig)
+	db, err := gz.InitDbWithCfg(dbConfig)
 	if err != nil {
 		return nil, err
 	}

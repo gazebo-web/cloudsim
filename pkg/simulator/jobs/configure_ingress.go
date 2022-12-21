@@ -2,10 +2,10 @@ package jobs
 
 import (
 	"context"
+	"github.com/gazebo-web/cloudsim/pkg/actions"
+	"github.com/gazebo-web/cloudsim/pkg/orchestrator/components/ingresses"
+	"github.com/gazebo-web/cloudsim/pkg/simulator/state"
 	"github.com/jinzhu/gorm"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/actions"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/components/ingresses"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulator/state"
 	"time"
 )
 

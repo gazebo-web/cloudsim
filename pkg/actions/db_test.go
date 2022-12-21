@@ -2,16 +2,16 @@ package actions
 
 import (
 	"context"
+	gormUtils "github.com/gazebo-web/cloudsim/pkg/utils/db/gorm"
+	"github.com/gazebo-web/gz-go/v7"
 	"github.com/jinzhu/gorm"
-	gormUtils "gitlab.com/ignitionrobotics/web/cloudsim/pkg/utils/db/gorm"
-	"gitlab.com/ignitionrobotics/web/ign-go/v6"
 	"testing"
 )
 
 // TestResource contains resources used for testing.
 type TestResource struct {
 	store  Store
-	logger *ign.Logger
+	logger *gz.Logger
 	db     *gorm.DB
 }
 
@@ -22,7 +22,7 @@ type storeTestData struct {
 // setupTest can be called at the start of a test in the actions package to get a set of common values used for testing.
 func setupTest(t *testing.T) *TestResource {
 	ctx := context.Background()
-	logger := ign.LoggerFromContext(ctx)
+	logger := gz.LoggerFromContext(ctx)
 	db, err := gormUtils.GetTestDBFromEnvVars()
 
 	if err != nil {

@@ -1,9 +1,9 @@
 package factory
 
 import (
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/factory"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/implementations/kubernetes/client"
-	kubernetesSecrets "gitlab.com/ignitionrobotics/web/cloudsim/pkg/secrets/implementations/kubernetes"
+	"github.com/gazebo-web/cloudsim/pkg/factory"
+	"github.com/gazebo-web/cloudsim/pkg/orchestrator/implementations/kubernetes/client"
+	kubernetesSecrets "github.com/gazebo-web/cloudsim/pkg/secrets/implementations/kubernetes"
 )
 
 // NewFunc is the factory creation function for the Kubernetes pods.Pods implementation.

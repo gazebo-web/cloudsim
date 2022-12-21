@@ -5,7 +5,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/pricing"
 	"github.com/aws/aws-sdk-go/service/pricing/pricingiface"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/calculator"
+	"github.com/gazebo-web/cloudsim/pkg/calculator"
 )
 
 const (

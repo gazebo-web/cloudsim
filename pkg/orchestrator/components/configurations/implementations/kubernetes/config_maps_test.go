@@ -3,9 +3,9 @@ package kubernetes
 import (
 	"context"
 	"fmt"
+	"github.com/gazebo-web/cloudsim/pkg/orchestrator/components/configurations"
+	"github.com/gazebo-web/gz-go/v7"
 	"github.com/stretchr/testify/suite"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/components/configurations"
-	"gitlab.com/ignitionrobotics/web/ign-go/v6"
 	apiv1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes/fake"
@@ -20,7 +20,7 @@ type configMapsTestSuite struct {
 	suite.Suite
 	pod        *apiv1.Pod
 	client     *fake.Clientset
-	logger     ign.Logger
+	logger     gz.Logger
 	configMaps *configMaps
 }
 
@@ -38,7 +38,7 @@ func (s *configMapsTestSuite) SetupTest() {
 		Status: apiv1.PodStatus{},
 	}
 	s.client = fake.NewSimpleClientset()
-	s.logger = ign.NewLoggerNoRollbar("TestConfigMaps", ign.VerbosityDebug)
+	s.logger = gz.NewLoggerNoRollbar("TestConfigMaps", gz.VerbosityDebug)
 	s.configMaps = &configMaps{
 		API:    s.client,
 		Logger: s.logger,

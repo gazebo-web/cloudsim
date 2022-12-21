@@ -1,6 +1,6 @@
 package store
 
-import storepkg "gitlab.com/ignitionrobotics/web/cloudsim/pkg/store"
+import storepkg "github.com/gazebo-web/cloudsim/pkg/store"
 
 // store is a store.Store implementation.
 type store struct {

@@ -2,7 +2,7 @@ package services
 
 import (
 	"context"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/resource"
+	"github.com/gazebo-web/cloudsim/pkg/orchestrator/resource"
 )
 
 // CreateServiceInput is used as an input of Services.Create method.

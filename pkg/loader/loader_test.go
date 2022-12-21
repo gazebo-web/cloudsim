@@ -1,9 +1,9 @@
 package loader
 
 import (
+	"github.com/gazebo-web/gz-go/v7"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/suite"
-	"gitlab.com/ignitionrobotics/web/ign-go/v6"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -26,7 +26,7 @@ func TestLoaderSuite(t *testing.T) {
 type testLoaderSuite struct {
 	suite.Suite
 	tmpDir          string
-	logger          ign.Logger
+	logger          gz.Logger
 	loader          Loader
 	applicationsDir string
 	file1           file
@@ -53,7 +53,7 @@ func (s *testLoaderSuite) deleteTmpDir() error {
 }
 
 func (s *testLoaderSuite) SetupSuite() {
-	s.logger = ign.NewLoggerNoRollbar("testLoaderSuite", ign.VerbosityWarning)
+	s.logger = gz.NewLoggerNoRollbar("testLoaderSuite", gz.VerbosityWarning)
 	// Using a YAML loader, but any loader will do
 	s.loader = NewYAMLLoader(s.logger)
 

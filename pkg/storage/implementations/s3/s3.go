@@ -6,8 +6,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws/client"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3iface"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/storage"
-	"gitlab.com/ignitionrobotics/web/ign-go/v6"
+	"github.com/gazebo-web/cloudsim/pkg/storage"
+	"github.com/gazebo-web/gz-go/v7"
 	"net/http"
 	"path/filepath"
 	"time"
@@ -21,7 +21,7 @@ func NewAPI(config client.ConfigProvider) s3iface.S3API {
 // s3Storage is a storage.Storage implementation.
 type s3Storage struct {
 	API    s3iface.S3API
-	Logger ign.Logger
+	Logger gz.Logger
 }
 
 func (s s3Storage) PrepareAddress(bucket, key string) string {
@@ -82,7 +82,7 @@ func (s s3Storage) GetURL(bucket string, key string, expiresIn time.Duration) (s
 }
 
 // NewStorage initializes a new storage.Storage implementation using s3.
-func NewStorage(api s3iface.S3API, logger ign.Logger) storage.Storage {
+func NewStorage(api s3iface.S3API, logger gz.Logger) storage.Storage {
 	return &s3Storage{
 		API:    api,
 		Logger: logger,
