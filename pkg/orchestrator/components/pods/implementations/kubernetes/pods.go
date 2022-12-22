@@ -8,7 +8,7 @@ import (
 	orchestratorResource "github.com/gazebo-web/cloudsim/pkg/orchestrator/resource"
 	"github.com/gazebo-web/cloudsim/pkg/waiter"
 	"github.com/gazebo-web/gz-go/v7"
-	"gitlab.com/ignitionrobotics/web/ign-go/v5/kubernetes"
+	"github.com/gazebo-web/gz-go/v7/kubernetes"
 	apiv1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"

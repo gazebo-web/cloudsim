@@ -9,6 +9,7 @@ require (
 	github.com/casbin/gorm-adapter/v2 v2.1.0
 	github.com/creasty/defaults v1.5.1
 	github.com/fatih/structtag v1.2.0
+	github.com/gazebo-web/fuel-server v0.0.0-20221222154843-c5b492eacd6d
 	github.com/gazebo-web/gz-go/v7 v7.0.0
 	github.com/golang/protobuf v1.5.2
 	github.com/gorilla/websocket v1.4.2
@@ -23,9 +24,6 @@ require (
 	github.com/stretchr/testify v1.8.0
 	gitlab.com/ignitionrobotics/billing/credits v0.0.0-20211110124124-7dbf77a10783
 	gitlab.com/ignitionrobotics/billing/payments v0.0.0-20211110174459-d690b1b701e8
-	gitlab.com/ignitionrobotics/web/fuelserver v0.0.0-20200916210816-e30ab5ed9d47
-	gitlab.com/ignitionrobotics/web/ign-go/v5 v5.10.0
-	gitlab.com/ignitionrobotics/web/ign-go/v6 v6.0.0
 	gopkg.in/go-playground/validator.v9 v9.31.0
 	gopkg.in/yaml.v2 v2.4.0
 	k8s.io/api v0.24.3
@@ -99,7 +97,6 @@ require (
 	golang.org/x/tools v0.1.5 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
 	google.golang.org/protobuf v1.28.0 // indirect
-	gopkg.in/go-playground/assert.v1 v1.2.1 // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/src-d/go-billy.v4 v4.3.2 // indirect
 	gopkg.in/src-d/go-git.v4 v4.13.1 // indirect

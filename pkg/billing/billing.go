@@ -3,12 +3,12 @@ package billing
 import (
 	"context"
 	"github.com/gazebo-web/cloudsim/pkg/simulations"
+	"github.com/gazebo-web/fuel-server/bundles/users"
 	"github.com/gazebo-web/gz-go/v7"
 	apiCredits "gitlab.com/ignitionrobotics/billing/credits/pkg/api"
 	credits "gitlab.com/ignitionrobotics/billing/credits/pkg/client"
 	apiPayments "gitlab.com/ignitionrobotics/billing/payments/pkg/api"
 	payments "gitlab.com/ignitionrobotics/billing/payments/pkg/client"
-	"gitlab.com/ignitionrobotics/web/fuelserver/bundles/users"
 	"net/url"
 	"time"
 )

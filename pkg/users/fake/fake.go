@@ -1,11 +1,11 @@
 package fake
 
 import (
+	"github.com/gazebo-web/fuel-server/bundles/users"
+	per "github.com/gazebo-web/fuel-server/permissions"
 	"github.com/gazebo-web/gz-go/v7"
 	"github.com/jinzhu/gorm"
 	"github.com/stretchr/testify/mock"
-	"gitlab.com/ignitionrobotics/web/fuelserver/bundles/users"
-	per "gitlab.com/ignitionrobotics/web/fuelserver/permissions"
 	"net/http"
 )
 

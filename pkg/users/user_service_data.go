@@ -2,10 +2,10 @@ package users
 
 import (
 	"context"
+	fuelusers "github.com/gazebo-web/fuel-server/bundles/users"
+	per "github.com/gazebo-web/fuel-server/permissions"
 	"github.com/gazebo-web/gz-go/v7"
 	"github.com/jinzhu/gorm"
-	fuelusers "gitlab.com/ignitionrobotics/web/fuelserver/bundles/users"
-	per "gitlab.com/ignitionrobotics/web/fuelserver/permissions"
 	"log"
 	"strings"
 )
