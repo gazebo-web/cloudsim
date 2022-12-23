@@ -1,0 +1,52 @@
+name: Test
+on:
+  push:
+    branches: [ $default-branch ]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    env:
+      IGN_DB_USERNAME: gazebo
+      IGN_DB_PASSWORD: 1234
+      IGN_DB_NAME: gazebo_db
+    services:
+      mysql:
+        image: mysql:5.7
+        ports:
+          - 3306
+        env:
+          MYSQL_USER: gazebo
+          MYSQL_PASSWORD: 1234
+          MYSQL_DATABASE: gazebo_db
+          MYSQL_RANDOM_ROOT_PASSWORD: true
+        options: --health-cmd="mysqladmin ping" --health-interval=5s --health-timeout=2s --health-retries=3
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Verify MySQL connection
+        env:
+          PORT: ${{ job.services.mysql.ports[3306] }}
+        run: |
+          while ! mysqladmin ping -h"127.0.0.1" -P"$PORT" --silent; do
+            sleep 1
+          done          
+
+      - name: Set up Go
+        uses: actions/setup-go@v3
+        with:
+          go-version: ${{ inputs.go-version }}
+          cache: true
+
+      - name: Test
+        env:
+          IGN_DB_ADDRESS: "127.0.0.1:${{ job.services.mysql.ports[3306] }}"
+          IGN_DB_USERNAME: ${{ job.services.mysql.env.MYSQL_USER }}
+          IGN_DB_PASSWORD: ${{ job.services.mysql.env.MYSQL_PASSWORD }}
+          IGN_DB_NAME: ${{ job.services.mysql.env.MYSQL_DATABASE }}
+        run: |
+          go test -race -covermode=atomic -coverprofile=coverage.tx -v ./...
+          go tool cover -func=coverage.tx -o=coverage.out
