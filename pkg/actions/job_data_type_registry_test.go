@@ -2,7 +2,6 @@ package actions
 
 import (
 	"github.com/stretchr/testify/require"
-	"reflect"
 	"testing"
 )
 
@@ -18,7 +17,7 @@ func TestRegistryRegisterAndGetType(t *testing.T) {
 		require.NoError(t, err)
 		if value != nil {
 			require.NotPanics(t, func() {
-				_ = out.(reflect.Type)
+				_ = out
 			})
 		} else {
 			require.Nil(t, out)

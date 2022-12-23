@@ -32,8 +32,7 @@ func (m *WebsocketTransportMock) Disconnect() error {
 // Connection is a mock for the Connection method.
 func (m *WebsocketTransportMock) Connection() *websocket.Conn {
 	args := m.Called()
-	var c *websocket.Conn
-	c = args.Get(0).(*websocket.Conn)
+	c := args.Get(0).(*websocket.Conn)
 	return c
 }
 

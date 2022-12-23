@@ -1,6 +1,7 @@
 package kubernetes
 
 import (
+	"context"
 	"github.com/gazebo-web/cloudsim/pkg/orchestrator/resource"
 	"github.com/gazebo-web/cloudsim/pkg/waiter"
 	"github.com/gazebo-web/gz-go/v7"
@@ -136,7 +137,7 @@ func TestWait_WaitForNodesToBeReady(t *testing.T) {
 	nm := NewNodes(cli, gz.NewLoggerNoRollbar("TestNodes", gz.VerbosityDebug))
 	selector := resource.NewSelector(map[string]string{"test": "app"})
 	res := resource.NewResource("test", "default", selector)
-	r := nm.WaitForCondition(nil, res, resource.ReadyCondition)
+	r := nm.WaitForCondition(context.Background(), res, resource.ReadyCondition)
 
 	var wg sync.WaitGroup
 	var err error
@@ -172,7 +173,7 @@ func TestWait_ErrWhenNodesArentReady(t *testing.T) {
 
 	selector := resource.NewSelector(map[string]string{"test": "app"})
 	res := resource.NewResource("test", "default", selector)
-	r := nm.WaitForCondition(nil, res, resource.ReadyCondition)
+	r := nm.WaitForCondition(context.Background(), res, resource.ReadyCondition)
 
 	var wg sync.WaitGroup
 	var err error

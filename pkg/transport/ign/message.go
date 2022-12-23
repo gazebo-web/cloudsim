@@ -2,7 +2,7 @@ package ign
 
 import (
 	"errors"
-	"github.com/golang/protobuf/proto"
+	"google.golang.org/protobuf/proto"
 	"strings"
 )
 

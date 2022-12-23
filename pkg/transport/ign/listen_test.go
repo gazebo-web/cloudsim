@@ -54,7 +54,9 @@ func TestTransporterListenDontPanicConnClosed(t *testing.T) {
 		defer waiterLock.Unlock()
 
 		tr, err := NewIgnWebsocketTransporter(context.TODO(), u.Host, u.Path, transport.WebsocketScheme, "")
-		defer tr.Disconnect()
+		defer func(tr PubSubWebsocketTransporter) {
+			_ = tr.Disconnect()
+		}(tr)
 		assert.NoError(t, err)
 
 		// Wait until the server is given time to terminate the connection
