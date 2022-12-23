@@ -164,8 +164,7 @@ func (m *ec2Machines) isValidClusterID(clusterID string) bool {
 // newRunInstancesInput initializes the configuration to run EC2 instances with the given input.
 func (m *ec2Machines) newRunInstancesInput(createMachines machines.CreateMachinesInput) *ec2.RunInstancesInput {
 	// Prepare EC2 inputs
-	var iamProfile *ec2.IamInstanceProfileSpecification
-	iamProfile = &ec2.IamInstanceProfileSpecification{
+	iamProfile := &ec2.IamInstanceProfileSpecification{
 		Arn:  createMachines.InstanceProfile,
 		Name: nil,
 	}

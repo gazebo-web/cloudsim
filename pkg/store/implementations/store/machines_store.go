@@ -46,9 +46,6 @@ type machinesStore struct {
 
 	// NodeReadyTimeout is the total amount of time in seconds that the machine creation process will wait.
 	NodeReadyTimeout uint `default:"300" env:"CLOUDSIM_MACHINES_NODE_READY_TIMEOUT_SECONDS"`
-
-	// subnetZoneIndex is used as round robin index for setting different subnets and zones to different machines.
-	subnetZoneIndex int
 }
 
 // SetDefaults sets default values for the store.

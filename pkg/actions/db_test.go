@@ -16,7 +16,6 @@ type TestResource struct {
 }
 
 type storeTestData struct {
-	value int
 }
 
 // setupTest can be called at the start of a test in the actions package to get a set of common values used for testing.

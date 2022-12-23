@@ -19,15 +19,6 @@ type testSecretsFactorySuite struct {
 	suite.Suite
 }
 
-func (s *testSecretsFactorySuite) createFactoryConfig(objectType string,
-	config factory.ConfigValues) *factory.Config {
-
-	return &factory.Config{
-		Type:   objectType,
-		Config: config,
-	}
-}
-
 func (s *testSecretsFactorySuite) TestIngressesNewKubernetes() {
 	// Prepare config
 	config := &factory.Config{

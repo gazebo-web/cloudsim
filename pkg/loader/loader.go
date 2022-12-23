@@ -3,7 +3,7 @@ package loader
 import (
 	"github.com/gazebo-web/cloudsim/pkg/utils/reflect"
 	"github.com/pkg/errors"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 	"strings"
 )
@@ -47,7 +47,7 @@ func LoadFile(loader Loader, path string, out interface{}) error {
 // not accessible. It is up to the caller to consider this a critical error. All other errors are critical.
 func LoadDirFiles(loader Loader, path string, out interface{}) []error {
 	// Get the directory's list of files
-	files, err := ioutil.ReadDir(path)
+	files, err := os.ReadDir(path)
 	if err != nil {
 		return []error{err}
 	}

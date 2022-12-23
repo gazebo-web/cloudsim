@@ -39,8 +39,5 @@ func setSimulationStatus(store actions.Store, tx *gorm.DB, deployment *actions.D
 		return nil, err
 	}
 
-	return SetSimulationStatusOutput{
-		GroupID: input.GroupID,
-		Status:  input.Status,
-	}, nil
+	return SetSimulationStatusOutput(input), nil
 }

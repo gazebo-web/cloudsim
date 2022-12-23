@@ -62,22 +62,16 @@ func (s *networkPoliciesTestSuite) TestCreateEgressSpec() {
 		switch i {
 		case 0:
 			s.Equal(int32(1111), r.Ports[0].Port.IntVal)
-			break
 		case 1:
 			s.Equal(int32(2222), r.Ports[0].Port.IntVal)
-			break
 		case 2:
 			s.Equal(int32(3333), r.Ports[0].Port.IntVal)
-			break
 		case 3:
 			s.Equal("10.0.0.3/24", r.To[0].IPBlock.CIDR)
-			break
 		case 4:
 			s.Equal(labels, r.To[0].PodSelector.MatchLabels)
-			break
 		case 5:
 			s.NotNil(r)
-			break
 		}
 
 	}
@@ -98,19 +92,14 @@ func (s *networkPoliciesTestSuite) TestCreateIngressSpec() {
 		switch i {
 		case 0:
 			s.Equal(int32(1111), r.Ports[0].Port.IntVal)
-			break
 		case 1:
 			s.Equal(int32(2222), r.Ports[0].Port.IntVal)
-			break
 		case 2:
 			s.Equal(int32(3333), r.Ports[0].Port.IntVal)
-			break
 		case 3:
 			s.Equal("10.0.0.3/24", r.From[0].IPBlock.CIDR)
-			break
 		case 4:
 			s.Equal(labels, r.From[0].PodSelector.MatchLabels)
-			break
 		}
 	}
 }

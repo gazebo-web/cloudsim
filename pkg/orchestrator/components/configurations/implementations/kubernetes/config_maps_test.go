@@ -2,7 +2,6 @@ package kubernetes
 
 import (
 	"context"
-	"fmt"
 	"github.com/gazebo-web/cloudsim/pkg/orchestrator/components/configurations"
 	"github.com/gazebo-web/gz-go/v7"
 	"github.com/stretchr/testify/suite"
@@ -89,18 +88,4 @@ func (s *configMapsTestSuite) TestDeleteConfiguration() {
 	// Trying to remove a nonexistent config map should fail
 	_, err = s.configMaps.Delete(context.TODO(), res)
 	s.Assert().Error(err)
-}
-
-func (s *configMapsTestSuite) setupTestRemoveBulk() {
-	for i := 0; i < 3; i++ {
-		_, err := s.configMaps.Create(context.TODO(), configurations.CreateConfigurationInput{
-			Name:      fmt.Sprintf("test-np-%d", i),
-			Namespace: "default",
-			Labels: map[string]string{
-				"app": "test",
-				"np":  fmt.Sprintf("%d", i),
-			},
-		})
-		s.Require().NoError(err)
-	}
 }

@@ -53,10 +53,14 @@ func createConnection(addr url.URL) (*websocket.Conn, error) {
 
 // IsConnected checks if the connection has been established
 func (w *websocketTransport) IsConnected() bool {
+	if w == nil {
+		return false
+	}
+
 	w.connLock.Lock()
 	defer w.connLock.Unlock()
 
-	if w == nil || w.connection == nil {
+	if w.connection == nil {
 		return false
 	}
 	err := w.connection.WriteMessage(websocket.PingMessage, []byte{})
@@ -65,10 +69,13 @@ func (w *websocketTransport) IsConnected() bool {
 
 // Disconnect closes the connection.
 func (w *websocketTransport) Disconnect() error {
+	if w == nil {
+		return nil
+	}
 	w.connLock.Lock()
 	defer w.connLock.Unlock()
 
-	if w == nil || w.connection == nil {
+	if w.connection == nil {
 		return nil
 	}
 	err := w.connection.Close()

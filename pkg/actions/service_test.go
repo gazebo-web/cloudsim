@@ -126,6 +126,7 @@ var serviceTestData = struct {
 					*rollbackHandlerCalls = append(*rollbackHandlerCalls, jobIndex)
 
 					data, err := deployment.GetJobData(tx, nil, DeploymentJobData)
+					require.NoError(t, err)
 					jobData := data.(*ServiceTestStruct)
 
 					require.Equal(t, jobData.PreHook, jobIndex)

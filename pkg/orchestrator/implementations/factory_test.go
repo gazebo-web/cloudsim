@@ -24,15 +24,6 @@ type testKubernetesFactorySuite struct {
 	suite.Suite
 }
 
-func (s *testKubernetesFactorySuite) createFactoryConfig(objectType string,
-	config factory.ConfigValues) *factory.Config {
-
-	return &factory.Config{
-		Type:   objectType,
-		Config: config,
-	}
-}
-
 func (s *testKubernetesFactorySuite) callFactory(config *factory.Config, out interface{}) {
 	// Prepare dependencies
 	logger := gz.NewLoggerNoRollbar("test", gz.VerbosityWarning)
