@@ -40,7 +40,7 @@ jobs:
         run: |
           mkdir /home/runner/.kube
           cp ./kubeconfig /home/runner/.kube/config
-          echo /home/runner/.kube/config
+          cat /home/runner/.kube/config
 
       - name: Set up Go
         uses: actions/setup-go@v3
