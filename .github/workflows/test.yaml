@@ -35,10 +35,12 @@ jobs:
             sleep 1
           done          
 
-      - uses: "finnp/create-file-action@master"
-        env:
-          FILE_NAME: ".kube/config"
-          FILE_DATA: "${{ secrets.kube_config }}"
+      - name: Display the path
+        shell: cmd
+        run: |
+          mkdir .kube
+          touch .kube/config
+          echo ${{ secrets.KUBE_CONFIG }} > .kube/config
 
       - name: Set up Go
         uses: actions/setup-go@v3
