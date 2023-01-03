@@ -36,7 +36,7 @@ jobs:
             sleep 1
           done          
 
-      - name: Copy kube config file
+      - name: Copy Kubernetes config file
         run: |
           mkdir /home/runner/.kube
           cp ./kubeconfig /home/runner/.kube/config
