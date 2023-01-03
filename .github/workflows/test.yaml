@@ -38,7 +38,7 @@ jobs:
 
       - name: Copy kube config file
         run: |
-          mkdir .kube
+          mkdir /home/runner/.kube
           cp ./kubeconfig /home/runner/.kube/config
           echo /home/runner/.kube/config
 
