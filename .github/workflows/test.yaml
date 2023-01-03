@@ -39,8 +39,8 @@ jobs:
       - name: Copy kube config file
         run: |
           mkdir .kube
-          cp kubeconfig .kube/config
-          echo .kube/config
+          cp ./kubeconfig /home/runner/.kube/config
+          echo /home/runner/.kube/config
 
       - name: Set up Go
         uses: actions/setup-go@v3
