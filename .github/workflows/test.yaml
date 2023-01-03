@@ -11,6 +11,7 @@ jobs:
       IGN_DB_USERNAME: gazebo
       IGN_DB_PASSWORD: 1234
       IGN_DB_NAME: gazebo_db
+      IGN_DB_MAX_OPEN_CONNS: 66
     services:
       mysql:
         image: mysql:5.7
@@ -39,6 +40,7 @@ jobs:
         run: |
           mkdir .kube
           cp kubeconfig .kube/config
+          echo .kube/config
 
       - name: Set up Go
         uses: actions/setup-go@v3
