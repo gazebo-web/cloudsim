@@ -35,10 +35,15 @@ jobs:
             sleep 1
           done          
 
+      - uses: "finnp/create-file-action@master"
+        env:
+          FILE_NAME: ".kube/config"
+          FILE_DATA: "${{ secrets.kube_config }}"
+
       - name: Set up Go
         uses: actions/setup-go@v3
         with:
-          go-version: ${{ inputs.go-version }}
+          go-version: '1.19'
           cache: true
 
       - name: Test
