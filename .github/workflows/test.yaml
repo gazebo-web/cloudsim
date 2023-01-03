@@ -51,7 +51,11 @@ jobs:
       - name: Test
         env:
           IGN_DB_ADDRESS: "127.0.0.1:${{ job.services.mysql.ports[3306] }}"
-          CLOUDSIM_MACHINES_CLUSTER_NAME: "testing-cluster"
+          CLOUDSIM_MACHINES_CLUSTER_NAME: "testing"
+          CLOUDSIM_AWS_GZ_LOGS_BUCKET: "test_bucket_name"
+          CLOUDSIM_IGN_DEFAULT_SENDER: "test@openrobotics.org"
+          CLOUDSIM_ORCHESTRATOR_INGRESS_HOST: "ws.openrobotics.org"
+          SUBT_ORCHESTRATOR_INGRESS_NAME: "ingress"
         run: |
           go test -timeout 60m -covermode=atomic -coverprofile=coverage.tx -v ./...
           go tool cover -func=coverage.tx -o=coverage.out
