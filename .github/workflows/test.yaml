@@ -35,11 +35,10 @@ jobs:
             sleep 1
           done          
 
-      - name: Display the path
+      - name: Copy kube config file
         run: |
           mkdir .kube
-          touch .kube/config
-          echo "${{ secrets.KUBE_CONFIG }}" > .kube/config
+          cp kubeconfig .kube/config
 
       - name: Set up Go
         uses: actions/setup-go@v3
