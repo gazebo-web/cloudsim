@@ -39,7 +39,7 @@ type machinesStore struct {
 	BaseImageGPUValue string `default:"ami-08861f7e7b409ed0c" env:"CLOUDSIM_MACHINES_BASE_GPU_IMAGE"`
 
 	// NamePrefixValue is the prefix used when naming a new instance.
-	NamePrefixValue string `validate:"required" default:"cloudsim-subt-node" env:"CLOUDSIM_MACHINES_NAME_PREFIX,required"`
+	NamePrefixValue string `validate:"required" default:"cloudsim-node" env:"CLOUDSIM_MACHINES_NAME_PREFIX"`
 
 	// ClusterNameValue contains the name of the cluster EC2 instances will join.
 	ClusterNameValue string `validate:"required" env:"CLOUDSIM_MACHINES_CLUSTER_NAME,required"`
