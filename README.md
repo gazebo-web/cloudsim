@@ -17,12 +17,12 @@
 The cloudsim library provides multiple components that are used by applications to run simulations in the cloud. These components usually are an abstraction of a third-party service that will be consumed by cloudsim, and they were created in
 order to let the application decide which cloud provider to use.
 
-We'll cover each component in more detail later in this document.
+A more extensive description of each component and examples on how to create applications will be introduced in a future version of this document.
 
 ### Features
 - A **Simulator** component that allows to schedule simulations in a certain **Platform**.
 - A **Platform** component that groups other components in such a way that represents a certain region in a cloud provider or a custom setup used by applications.
-- A **Machines** component in charge of interacting with a cloud provider and performing various operations with machine instances like _EC2_ instances.
+- A **Machines** component in charge of interacting with a cloud provider and performing various operations (request, termination, count) with instances like _EC2_ machines.
 - A **Storage** component that uploads artifacts produced by a Simulation to a cloud storage like _S3_.
 - A **Cost Calculator** component that allows application to keep track of their expenses and the cost of running simulations in a certain cloud provider.
 - An **Orchestrator** component that interacts with a Kubernetes cluster to launch, stop and restart simulation resources, including but not limited to the following sub-components:
