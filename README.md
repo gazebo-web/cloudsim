@@ -39,7 +39,7 @@ A more extensive description of each component and examples on how to create app
 ## Installation
 Using Go CLI
 ```shell
-go get github.com/gazebo-web/cloudsim@4.0.0
+go get github.com/gazebo-web/cloudsim/v4
 ```
 
 ## Contribute
