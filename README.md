@@ -30,7 +30,7 @@
 - An **Email Sender** that allows notifying users about their simulations.
 
 The cloudsim library provides multiple components that are used by applications to run simulations in the cloud. These components usually are an abstraction of a third-party service that will be consumed by cloudsim, and they were created in
-order to let the application decide which cloud provider to use.
+order to let the application decide which technologies to use.
 
 A more extensive description of each component and examples on how to create applications will be introduced in a future version of this document.
 
