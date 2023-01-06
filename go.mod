@@ -11,7 +11,6 @@ require (
 	github.com/fatih/structtag v1.2.0
 	github.com/gazebo-web/fuel-server v0.0.0-20221222154843-c5b492eacd6d
 	github.com/gazebo-web/gz-go/v7 v7.0.0
-	github.com/golang/protobuf v1.5.2
 	github.com/gorilla/websocket v1.4.2
 	github.com/imdario/mergo v0.3.8
 	github.com/itchyny/gojq v0.12.5
@@ -24,6 +23,7 @@ require (
 	github.com/stretchr/testify v1.8.0
 	gitlab.com/ignitionrobotics/billing/credits v0.0.0-20211110124124-7dbf77a10783
 	gitlab.com/ignitionrobotics/billing/payments v0.0.0-20211110174459-d690b1b701e8
+	google.golang.org/protobuf v1.28.0
 	gopkg.in/go-playground/validator.v9 v9.31.0
 	gopkg.in/yaml.v2 v2.4.0
 	k8s.io/api v0.24.3
@@ -52,6 +52,7 @@ require (
 	github.com/go-playground/universal-translator v0.17.0 // indirect
 	github.com/go-sql-driver/mysql v1.6.0 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
+	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/google/gnostic v0.5.7-v3refs // indirect
 	github.com/google/gofuzz v1.1.0 // indirect
 	github.com/gorilla/mux v1.8.0 // indirect
@@ -96,7 +97,6 @@ require (
 	golang.org/x/time v0.0.0-20220210224613-90d013bbcef8 // indirect
 	golang.org/x/tools v0.1.5 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
-	google.golang.org/protobuf v1.28.0 // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/src-d/go-billy.v4 v4.3.2 // indirect
 	gopkg.in/src-d/go-git.v4 v4.13.1 // indirect

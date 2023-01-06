@@ -39,10 +39,7 @@ func createConfigurations(store actions.Store, tx *gorm.DB, deployment *actions.
 	if !ok {
 		// If assertion fails but CreateConfigurationsInput is nil, assume that no configurations need to be created.
 		if input == nil {
-			return CreateConfigurationsOutput{
-				Resources: []resource.Resource{},
-				Error:     nil,
-			}, nil
+			return CreateConfigurationsOutput{}, nil
 		}
 
 		return nil, simulator.ErrInvalidInput
@@ -72,7 +69,7 @@ func createConfigurations(store actions.Store, tx *gorm.DB, deployment *actions.
 	for _, res := range created {
 		configs = append(configs, res.Name())
 	}
-	deployment.SetJobData(tx, nil, createdConfigurationsJobDataType, configs)
+	err = deployment.SetJobData(tx, nil, createdConfigurationsJobDataType, configs)
 
 	return CreateConfigurationsOutput{
 		Resources: created,

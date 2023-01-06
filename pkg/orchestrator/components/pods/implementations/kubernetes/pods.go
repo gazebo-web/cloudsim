@@ -296,16 +296,12 @@ func (p *kubernetesPods) WaitForCondition(ctx context.Context, resource orchestr
 					if err != nil && err != kubernetes.ErrPodCompleted {
 						return false, nil
 					}
-					break
 				case orchestratorResource.SucceededCondition:
 					ready = kubernetes.IsPodSucceeded(&item)
-					break
 				case orchestratorResource.FailedCondition:
 					ready = kubernetes.IsPodFailed(&item)
-					break
 				case orchestratorResource.HasIPStatusCondition:
 					ready = p.podHasIP(&item)
-					break
 				}
 				if ready {
 					break

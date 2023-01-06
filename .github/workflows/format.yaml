@@ -1,0 +1,8 @@
+name: Format
+on: push
+
+jobs:
+  go:
+    uses: gazebo-web/.github/.github/workflows/format-go.yaml@27231b9a836d63698425e065d538fa1ece231f3f
+    with:
+      go-version: '1.19'

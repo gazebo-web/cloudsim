@@ -50,6 +50,9 @@ func (e *sesEmail) Send(recipients []string, sender, subject, template string, d
 	}
 
 	err = e.send(sender, recipients, subject, content)
+	if err != nil {
+		return err
+	}
 
 	return nil
 }

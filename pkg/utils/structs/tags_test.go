@@ -30,7 +30,7 @@ func TestGetNameFieldDefaultTagNiPointer(t *testing.T) {
 	var value *TagTest
 
 	assert.Panics(t, func() {
-		GetFieldTagValue(value, "Name", "default")
+		_, _ = GetFieldTagValue(value, "Name", "default")
 	})
 }
 

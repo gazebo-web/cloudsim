@@ -17,15 +17,6 @@ type testStoreFactorySuite struct {
 	suite.Suite
 }
 
-func (s *testStoreFactorySuite) createFactoryConfig(objectType string,
-	config factory.ConfigValues) *factory.Config {
-
-	return &factory.Config{
-		Type:   objectType,
-		Config: config,
-	}
-}
-
 func (s *testStoreFactorySuite) TestNewStore() {
 	// Prepare config
 	key := "test"

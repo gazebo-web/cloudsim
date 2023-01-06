@@ -30,9 +30,6 @@ var executeInputTestData = struct {
 
 type TestExecuteInput struct {
 	*ExecuteInput
-	i int
-	s string
-	b bool
 }
 
 func TestNewExecuteInput(t *testing.T) {
