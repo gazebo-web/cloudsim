@@ -1,8 +1,8 @@
 package rules
 
 import (
-	"github.com/gazebo-web/cloudsim/pkg/orchestrator/components/ingresses"
-	"github.com/gazebo-web/cloudsim/pkg/orchestrator/resource"
+	"github.com/gazebo-web/cloudsim/v4/pkg/orchestrator/components/ingresses"
+	"github.com/gazebo-web/cloudsim/v4/pkg/orchestrator/resource"
 	networkingv1 "k8s.io/api/networking/v1"
 )
 

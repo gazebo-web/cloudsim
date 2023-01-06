@@ -1,9 +1,9 @@
 package jobs
 
 import (
-	"github.com/gazebo-web/cloudsim/pkg/actions"
-	"github.com/gazebo-web/cloudsim/pkg/simulations"
-	"github.com/gazebo-web/cloudsim/pkg/simulations/fake"
+	"github.com/gazebo-web/cloudsim/v4/pkg/actions"
+	"github.com/gazebo-web/cloudsim/v4/pkg/simulations"
+	"github.com/gazebo-web/cloudsim/v4/pkg/simulations/fake"
 	"github.com/stretchr/testify/assert"
 	"testing"
 	"time"

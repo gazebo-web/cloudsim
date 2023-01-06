@@ -1,7 +1,7 @@
 package factorymap
 
 import (
-	"github.com/gazebo-web/cloudsim/pkg/factory"
+	"github.com/gazebo-web/cloudsim/v4/pkg/factory"
 )
 
 // Map is the default Factory implementation.

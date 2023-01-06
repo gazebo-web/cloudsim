@@ -1,12 +1,12 @@
 package orchestrator
 
 import (
-	"github.com/gazebo-web/cloudsim/pkg/orchestrator/components/configurations"
-	"github.com/gazebo-web/cloudsim/pkg/orchestrator/components/ingresses"
-	"github.com/gazebo-web/cloudsim/pkg/orchestrator/components/network"
-	"github.com/gazebo-web/cloudsim/pkg/orchestrator/components/nodes"
-	"github.com/gazebo-web/cloudsim/pkg/orchestrator/components/pods"
-	"github.com/gazebo-web/cloudsim/pkg/orchestrator/components/services"
+	"github.com/gazebo-web/cloudsim/v4/pkg/orchestrator/components/configurations"
+	"github.com/gazebo-web/cloudsim/v4/pkg/orchestrator/components/ingresses"
+	"github.com/gazebo-web/cloudsim/v4/pkg/orchestrator/components/network"
+	"github.com/gazebo-web/cloudsim/v4/pkg/orchestrator/components/nodes"
+	"github.com/gazebo-web/cloudsim/v4/pkg/orchestrator/components/pods"
+	"github.com/gazebo-web/cloudsim/v4/pkg/orchestrator/components/services"
 )
 
 // Cluster groups a set of methods for managing a cluster.

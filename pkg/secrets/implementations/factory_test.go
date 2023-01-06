@@ -1,8 +1,8 @@
 package implementations
 
 import (
-	"github.com/gazebo-web/cloudsim/pkg/factory"
-	"github.com/gazebo-web/cloudsim/pkg/secrets"
+	"github.com/gazebo-web/cloudsim/v4/pkg/factory"
+	"github.com/gazebo-web/cloudsim/v4/pkg/secrets"
 	"github.com/gazebo-web/gz-go/v7"
 	"github.com/stretchr/testify/suite"
 	"k8s.io/client-go/kubernetes"

@@ -1,14 +1,14 @@
 package implementations
 
 import (
-	"github.com/gazebo-web/cloudsim/pkg/factory"
-	"github.com/gazebo-web/cloudsim/pkg/orchestrator"
-	configurationsImpl "github.com/gazebo-web/cloudsim/pkg/orchestrator/components/configurations/implementations"
-	ingressesImpl "github.com/gazebo-web/cloudsim/pkg/orchestrator/components/ingresses/implementations"
-	networkImpl "github.com/gazebo-web/cloudsim/pkg/orchestrator/components/network/implementations"
-	nodesImpl "github.com/gazebo-web/cloudsim/pkg/orchestrator/components/nodes/implementations"
-	podsImpl "github.com/gazebo-web/cloudsim/pkg/orchestrator/components/pods/implementations"
-	servicesImpl "github.com/gazebo-web/cloudsim/pkg/orchestrator/components/services/implementations"
+	"github.com/gazebo-web/cloudsim/v4/pkg/factory"
+	"github.com/gazebo-web/cloudsim/v4/pkg/orchestrator"
+	configurationsImpl "github.com/gazebo-web/cloudsim/v4/pkg/orchestrator/components/configurations/implementations"
+	ingressesImpl "github.com/gazebo-web/cloudsim/v4/pkg/orchestrator/components/ingresses/implementations"
+	networkImpl "github.com/gazebo-web/cloudsim/v4/pkg/orchestrator/components/network/implementations"
+	nodesImpl "github.com/gazebo-web/cloudsim/v4/pkg/orchestrator/components/nodes/implementations"
+	podsImpl "github.com/gazebo-web/cloudsim/v4/pkg/orchestrator/components/pods/implementations"
+	servicesImpl "github.com/gazebo-web/cloudsim/v4/pkg/orchestrator/components/services/implementations"
 	"github.com/gazebo-web/gz-go/v7"
 	"github.com/stretchr/testify/suite"
 	"k8s.io/client-go/kubernetes"

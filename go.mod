@@ -1,4 +1,4 @@
-module github.com/gazebo-web/cloudsim
+module github.com/gazebo-web/cloudsim/v4
 
 go 1.19
 

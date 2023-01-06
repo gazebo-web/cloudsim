@@ -4,7 +4,7 @@ import (
 	"errors"
 	"github.com/aws/aws-sdk-go/service/ses"
 	"github.com/aws/aws-sdk-go/service/ses/sesiface"
-	"github.com/gazebo-web/cloudsim/pkg/email"
+	"github.com/gazebo-web/cloudsim/v4/pkg/email"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )

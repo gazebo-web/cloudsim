@@ -2,8 +2,8 @@ package rules
 
 import (
 	"context"
-	"github.com/gazebo-web/cloudsim/pkg/orchestrator/components/ingresses"
-	"github.com/gazebo-web/cloudsim/pkg/orchestrator/resource"
+	"github.com/gazebo-web/cloudsim/v4/pkg/orchestrator/components/ingresses"
+	"github.com/gazebo-web/cloudsim/v4/pkg/orchestrator/resource"
 	"github.com/gazebo-web/gz-go/v7"
 	"github.com/stretchr/testify/assert"
 	networkingv1 "k8s.io/api/networking/v1"

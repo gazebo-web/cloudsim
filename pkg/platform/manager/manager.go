@@ -1,10 +1,10 @@
 package manager
 
 import (
-	"github.com/gazebo-web/cloudsim/pkg/factory"
-	"github.com/gazebo-web/cloudsim/pkg/loader"
-	"github.com/gazebo-web/cloudsim/pkg/platform"
-	"github.com/gazebo-web/cloudsim/pkg/simulations"
+	"github.com/gazebo-web/cloudsim/v4/pkg/factory"
+	"github.com/gazebo-web/cloudsim/v4/pkg/loader"
+	"github.com/gazebo-web/cloudsim/v4/pkg/platform"
+	"github.com/gazebo-web/cloudsim/v4/pkg/simulations"
 	"github.com/gazebo-web/gz-go/v7"
 	"github.com/pkg/errors"
 	"path/filepath"

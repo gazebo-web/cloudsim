@@ -1,9 +1,9 @@
 package factory
 
 import (
-	"github.com/gazebo-web/cloudsim/pkg/factory"
-	kubernetesIngresses "github.com/gazebo-web/cloudsim/pkg/orchestrator/components/ingresses/implementations/kubernetes"
-	kubernetesIngressRules "github.com/gazebo-web/cloudsim/pkg/orchestrator/components/ingresses/implementations/kubernetes/rules"
+	"github.com/gazebo-web/cloudsim/v4/pkg/factory"
+	kubernetesIngresses "github.com/gazebo-web/cloudsim/v4/pkg/orchestrator/components/ingresses/implementations/kubernetes"
+	kubernetesIngressRules "github.com/gazebo-web/cloudsim/v4/pkg/orchestrator/components/ingresses/implementations/kubernetes/rules"
 )
 
 // IngressesNewFunc is the factory creation function for the Kubernetes ingresses.Ingresses implementation.

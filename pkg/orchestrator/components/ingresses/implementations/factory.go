@@ -1,8 +1,8 @@
 package implementations
 
 import (
-	factorymap "github.com/gazebo-web/cloudsim/pkg/factory/map"
-	kubernetesIngresses "github.com/gazebo-web/cloudsim/pkg/orchestrator/components/ingresses/implementations/kubernetes/factory"
+	factorymap "github.com/gazebo-web/cloudsim/v4/pkg/factory/map"
+	kubernetesIngresses "github.com/gazebo-web/cloudsim/v4/pkg/orchestrator/components/ingresses/implementations/kubernetes/factory"
 )
 
 const (

@@ -1,6 +1,6 @@
 package fake
 
-import "github.com/gazebo-web/cloudsim/pkg/simulations"
+import "github.com/gazebo-web/cloudsim/v4/pkg/simulations"
 
 // fakeRobot is a fake simulations.Robot implementation to use with tests.
 type fakeRobot struct {

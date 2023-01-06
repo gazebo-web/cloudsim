@@ -2,7 +2,7 @@ package billing
 
 import (
 	"context"
-	"github.com/gazebo-web/cloudsim/pkg/simulations"
+	"github.com/gazebo-web/cloudsim/v4/pkg/simulations"
 	"github.com/gazebo-web/fuel-server/bundles/users"
 	"github.com/gazebo-web/gz-go/v7"
 	apiCredits "gitlab.com/ignitionrobotics/billing/credits/pkg/api"

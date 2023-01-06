@@ -2,8 +2,8 @@ package kubernetes
 
 import (
 	"context"
-	"github.com/gazebo-web/cloudsim/pkg/orchestrator/components/services"
-	"github.com/gazebo-web/cloudsim/pkg/orchestrator/resource"
+	"github.com/gazebo-web/cloudsim/v4/pkg/orchestrator/components/services"
+	"github.com/gazebo-web/cloudsim/v4/pkg/orchestrator/resource"
 	"github.com/gazebo-web/gz-go/v7"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"

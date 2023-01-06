@@ -1,9 +1,9 @@
 package application
 
 import (
-	"github.com/gazebo-web/cloudsim/pkg/billing"
-	"github.com/gazebo-web/cloudsim/pkg/simulations"
-	"github.com/gazebo-web/cloudsim/pkg/users"
+	"github.com/gazebo-web/cloudsim/v4/pkg/billing"
+	"github.com/gazebo-web/cloudsim/v4/pkg/simulations"
+	"github.com/gazebo-web/cloudsim/v4/pkg/users"
 )
 
 // Services groups the services needed by an application to launch simulations.

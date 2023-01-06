@@ -1,12 +1,12 @@
 package platform
 
 import (
-	"github.com/gazebo-web/cloudsim/pkg/email"
-	"github.com/gazebo-web/cloudsim/pkg/machines"
-	"github.com/gazebo-web/cloudsim/pkg/orchestrator"
-	"github.com/gazebo-web/cloudsim/pkg/secrets"
-	"github.com/gazebo-web/cloudsim/pkg/storage"
-	"github.com/gazebo-web/cloudsim/pkg/store"
+	"github.com/gazebo-web/cloudsim/v4/pkg/email"
+	"github.com/gazebo-web/cloudsim/v4/pkg/machines"
+	"github.com/gazebo-web/cloudsim/v4/pkg/orchestrator"
+	"github.com/gazebo-web/cloudsim/v4/pkg/secrets"
+	"github.com/gazebo-web/cloudsim/v4/pkg/storage"
+	"github.com/gazebo-web/cloudsim/v4/pkg/store"
 	"github.com/pkg/errors"
 )
 

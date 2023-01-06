@@ -2,7 +2,7 @@ package fake
 
 import (
 	"context"
-	"github.com/gazebo-web/cloudsim/pkg/secrets"
+	"github.com/gazebo-web/cloudsim/v4/pkg/secrets"
 	"github.com/stretchr/testify/mock"
 )
 

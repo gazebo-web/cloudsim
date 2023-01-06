@@ -1,7 +1,7 @@
 package manager
 
 import (
-	"github.com/gazebo-web/cloudsim/pkg/platform"
+	"github.com/gazebo-web/cloudsim/v4/pkg/platform"
 	"github.com/stretchr/testify/suite"
 	"testing"
 )

@@ -1,8 +1,8 @@
 package factory
 
 import (
-	"github.com/gazebo-web/cloudsim/pkg/factory"
-	kubernetesNetpols "github.com/gazebo-web/cloudsim/pkg/orchestrator/components/network/implementations/kubernetes"
+	"github.com/gazebo-web/cloudsim/v4/pkg/factory"
+	kubernetesNetpols "github.com/gazebo-web/cloudsim/v4/pkg/orchestrator/components/network/implementations/kubernetes"
 )
 
 // NewFunc is the factory creation function for the Kubernetes network.Policies implementation.
