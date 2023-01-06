@@ -3,8 +3,8 @@ package simulator
 import (
 	"context"
 	"errors"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/platform"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
+	"github.com/gazebo-web/cloudsim/pkg/platform"
+	"github.com/gazebo-web/cloudsim/pkg/simulations"
 )
 
 var (

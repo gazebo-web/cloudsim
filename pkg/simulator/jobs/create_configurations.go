@@ -2,12 +2,12 @@ package jobs
 
 import (
 	"context"
+	"github.com/gazebo-web/cloudsim/pkg/actions"
+	"github.com/gazebo-web/cloudsim/pkg/orchestrator/components/configurations"
+	"github.com/gazebo-web/cloudsim/pkg/orchestrator/resource"
+	"github.com/gazebo-web/cloudsim/pkg/simulator"
+	"github.com/gazebo-web/cloudsim/pkg/simulator/state"
 	"github.com/jinzhu/gorm"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/actions"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/components/configurations"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/resource"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulator"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulator/state"
 )
 
 // CreateConfigurationsInput is the input of the CreateConfigurations job.
@@ -39,10 +39,7 @@ func createConfigurations(store actions.Store, tx *gorm.DB, deployment *actions.
 	if !ok {
 		// If assertion fails but CreateConfigurationsInput is nil, assume that no configurations need to be created.
 		if input == nil {
-			return CreateConfigurationsOutput{
-				Resources: []resource.Resource{},
-				Error:     nil,
-			}, nil
+			return CreateConfigurationsOutput{}, nil
 		}
 
 		return nil, simulator.ErrInvalidInput
@@ -72,7 +69,7 @@ func createConfigurations(store actions.Store, tx *gorm.DB, deployment *actions.
 	for _, res := range created {
 		configs = append(configs, res.Name())
 	}
-	deployment.SetJobData(tx, nil, createdConfigurationsJobDataType, configs)
+	err = deployment.SetJobData(tx, nil, createdConfigurationsJobDataType, configs)
 
 	return CreateConfigurationsOutput{
 		Resources: created,

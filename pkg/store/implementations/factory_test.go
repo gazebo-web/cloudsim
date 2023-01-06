@@ -1,10 +1,10 @@
 package implementations
 
 import (
+	"github.com/gazebo-web/cloudsim/pkg/factory"
+	"github.com/gazebo-web/cloudsim/pkg/store"
+	"github.com/gazebo-web/cloudsim/pkg/utils/structs"
 	"github.com/stretchr/testify/suite"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/factory"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/store"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/utils/structs"
 	"reflect"
 	"testing"
 )
@@ -15,15 +15,6 @@ func TestStoreFactorySuite(t *testing.T) {
 
 type testStoreFactorySuite struct {
 	suite.Suite
-}
-
-func (s *testStoreFactorySuite) createFactoryConfig(objectType string,
-	config factory.ConfigValues) *factory.Config {
-
-	return &factory.Config{
-		Type:   objectType,
-		Config: config,
-	}
 }
 
 func (s *testStoreFactorySuite) TestNewStore() {

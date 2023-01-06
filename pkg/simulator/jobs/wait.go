@@ -1,10 +1,10 @@
 package jobs
 
 import (
+	"github.com/gazebo-web/cloudsim/pkg/actions"
+	"github.com/gazebo-web/cloudsim/pkg/simulator"
+	"github.com/gazebo-web/cloudsim/pkg/waiter"
 	"github.com/jinzhu/gorm"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/actions"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulator"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/waiter"
 	"time"
 )
 
@@ -30,9 +30,10 @@ var Wait = &actions.Job{
 // It returns an error if the request fails.
 // wait will be used for any resource or event that implements the waiter interface.
 // Examples:
-// 		Waiting for nodes to be registered in the cluster
-// 		Waiting for pods to have an ip assigned.
-// 		Waiting for pods to be on the "Ready" state.
+//
+//	Waiting for nodes to be registered in the cluster
+//	Waiting for pods to have an ip assigned.
+//	Waiting for pods to be on the "Ready" state.
 func wait(store actions.Store, tx *gorm.DB, deployment *actions.Deployment, value interface{}) (interface{}, error) {
 	// If value is nil, bypass the job.
 	if value == nil {

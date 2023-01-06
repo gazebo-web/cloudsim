@@ -1,8 +1,8 @@
 package factory
 
 import (
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/factory"
-	kubernetesServices "gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/components/services/implementations/kubernetes"
+	"github.com/gazebo-web/cloudsim/pkg/factory"
+	kubernetesServices "github.com/gazebo-web/cloudsim/pkg/orchestrator/components/services/implementations/kubernetes"
 )
 
 // NewFunc is the factory creation function for the Kubernetes services.Services implementation.

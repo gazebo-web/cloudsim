@@ -1,8 +1,8 @@
 package factory
 
 import (
+	"github.com/gazebo-web/cloudsim/pkg/orchestrator/components/spdy"
 	"github.com/stretchr/testify/suite"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/components/spdy"
 	"testing"
 )
 

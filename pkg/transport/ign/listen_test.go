@@ -2,9 +2,9 @@ package ign
 
 import (
 	"context"
+	"github.com/gazebo-web/cloudsim/pkg/transport"
 	"github.com/gorilla/websocket"
 	"github.com/stretchr/testify/assert"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/transport"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -54,7 +54,9 @@ func TestTransporterListenDontPanicConnClosed(t *testing.T) {
 		defer waiterLock.Unlock()
 
 		tr, err := NewIgnWebsocketTransporter(context.TODO(), u.Host, u.Path, transport.WebsocketScheme, "")
-		defer tr.Disconnect()
+		defer func(tr PubSubWebsocketTransporter) {
+			_ = tr.Disconnect()
+		}(tr)
 		assert.NoError(t, err)
 
 		// Wait until the server is given time to terminate the connection

@@ -3,9 +3,9 @@ package kubernetes
 import (
 	"context"
 	"fmt"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/components/services"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/resource"
-	"gitlab.com/ignitionrobotics/web/ign-go/v6"
+	"github.com/gazebo-web/cloudsim/pkg/orchestrator/components/services"
+	"github.com/gazebo-web/cloudsim/pkg/orchestrator/resource"
+	"github.com/gazebo-web/gz-go/v7"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
@@ -14,7 +14,7 @@ import (
 // kubernetesServices is a services.Services implementation.
 type kubernetesServices struct {
 	API    kubernetes.Interface
-	Logger ign.Logger
+	Logger gz.Logger
 }
 
 // Create creates a new service defined by the given input.
@@ -123,7 +123,7 @@ func (s *kubernetesServices) Remove(ctx context.Context, resource resource.Resou
 }
 
 // NewServices initializes a new services.Services implementation using kubernetesServices.
-func NewServices(api kubernetes.Interface, logger ign.Logger) services.Services {
+func NewServices(api kubernetes.Interface, logger gz.Logger) services.Services {
 	return &kubernetesServices{
 		API:    api,
 		Logger: logger,

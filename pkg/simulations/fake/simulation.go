@@ -1,8 +1,8 @@
 package fake
 
 import (
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/calculator"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
+	"github.com/gazebo-web/cloudsim/pkg/calculator"
+	"github.com/gazebo-web/cloudsim/pkg/simulations"
 	"time"
 )
 

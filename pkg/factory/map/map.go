@@ -1,7 +1,7 @@
 package factorymap
 
 import (
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/factory"
+	"github.com/gazebo-web/cloudsim/pkg/factory"
 )
 
 // Map is the default Factory implementation.

@@ -1,8 +1,8 @@
 package actions
 
 import (
+	gormUtils "github.com/gazebo-web/cloudsim/pkg/utils/db/gorm"
 	"github.com/jinzhu/gorm"
-	gormUtils "gitlab.com/ignitionrobotics/web/cloudsim/pkg/utils/db/gorm"
 )
 
 // CleanAndMigrateDB cleans and migrates action database models, indexes and keys.

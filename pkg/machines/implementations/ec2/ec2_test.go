@@ -6,11 +6,11 @@ import (
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	cloud "github.com/gazebo-web/cloudsim/pkg/cloud/aws"
+	"github.com/gazebo-web/cloudsim/pkg/cycler"
+	"github.com/gazebo-web/cloudsim/pkg/machines"
+	"github.com/gazebo-web/gz-go/v7"
 	"github.com/stretchr/testify/suite"
-	cloud "gitlab.com/ignitionrobotics/web/cloudsim/pkg/cloud/aws"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/cycler"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/machines"
-	"gitlab.com/ignitionrobotics/web/ign-go/v6"
 	"testing"
 	"time"
 )
@@ -51,7 +51,7 @@ func (s *EC2MachinesTestSuite) TestNewMachines() {
 	session, err := session.NewSession(nil)
 	s.Require().NoError(err)
 	ec := ec2.New(session)
-	logger := ign.NewLoggerNoRollbar("TestNewMachines", ign.VerbosityDebug)
+	logger := gz.NewLoggerNoRollbar("TestNewMachines", gz.VerbosityDebug)
 	m, err := NewMachines(&NewInput{
 		API:            ec,
 		CostCalculator: cloud.NewCostCalculatorEC2(nil),
@@ -229,7 +229,7 @@ func (s *EC2MachinesTestSuite) TestMachines_checkAvailableMachines() {
 		limit:  2,
 		zones:  s.zoneCycler,
 		API:    mockCounter,
-		Logger: ign.NewLoggerNoRollbar("TestMachines_checkAvailableMachines", ign.VerbosityDebug),
+		Logger: gz.NewLoggerNoRollbar("TestMachines_checkAvailableMachines", gz.VerbosityDebug),
 	}
 	s.Assert().True(m.checkAvailableMachines(inputs))
 
@@ -237,7 +237,7 @@ func (s *EC2MachinesTestSuite) TestMachines_checkAvailableMachines() {
 	m = &ec2Machines{
 		limit:  1,
 		API:    mockCounter,
-		Logger: ign.NewLoggerNoRollbar("TestMachines_checkAvailableMachines", ign.VerbosityDebug),
+		Logger: gz.NewLoggerNoRollbar("TestMachines_checkAvailableMachines", gz.VerbosityDebug),
 	}
 	s.Assert().False(m.checkAvailableMachines(inputs))
 }

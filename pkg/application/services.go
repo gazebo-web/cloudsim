@@ -1,9 +1,9 @@
 package application
 
 import (
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/billing"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/users"
+	"github.com/gazebo-web/cloudsim/pkg/billing"
+	"github.com/gazebo-web/cloudsim/pkg/simulations"
+	"github.com/gazebo-web/cloudsim/pkg/users"
 )
 
 // Services groups the services needed by an application to launch simulations.

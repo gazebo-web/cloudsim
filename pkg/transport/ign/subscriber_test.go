@@ -3,9 +3,9 @@ package ign
 import (
 	"context"
 	"fmt"
+	"github.com/gazebo-web/cloudsim/pkg/transport"
 	"github.com/gorilla/websocket"
 	"github.com/stretchr/testify/suite"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/transport"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -106,7 +106,7 @@ func (suite *subscriberTestSuite) testSubscriberHandler(upgrader websocket.Upgra
 				suite.subscribeLock.Unlock()
 				return
 			}
-			conn.WriteMessage(websocket.CloseUnsupportedData, []byte{})
+			_ = conn.WriteMessage(websocket.CloseUnsupportedData, []byte{})
 		}
 	}
 }
@@ -139,7 +139,7 @@ func (suite *subscriberTestSuite) TestSubscribe_Rejected() {
 
 func (suite *subscriberTestSuite) TearDownTest() {
 	if suite.transport != nil {
-		suite.transport.Disconnect()
+		suite.Assert().NoError(suite.transport.Disconnect())
 	}
 	suite.server.Close()
 }

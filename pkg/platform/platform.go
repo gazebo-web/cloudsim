@@ -1,13 +1,13 @@
 package platform
 
 import (
+	"github.com/gazebo-web/cloudsim/pkg/email"
+	"github.com/gazebo-web/cloudsim/pkg/machines"
+	"github.com/gazebo-web/cloudsim/pkg/orchestrator"
+	"github.com/gazebo-web/cloudsim/pkg/secrets"
+	"github.com/gazebo-web/cloudsim/pkg/storage"
+	"github.com/gazebo-web/cloudsim/pkg/store"
 	"github.com/pkg/errors"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/email"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/machines"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/secrets"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/storage"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/store"
 )
 
 var (

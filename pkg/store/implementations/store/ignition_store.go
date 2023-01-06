@@ -3,11 +3,11 @@ package store
 import (
 	"fmt"
 	"github.com/caarlos0/env"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/defaults"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
-	storepkg "gitlab.com/ignitionrobotics/web/cloudsim/pkg/store"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/utils/network"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/validate"
+	"github.com/gazebo-web/cloudsim/pkg/defaults"
+	"github.com/gazebo-web/cloudsim/pkg/simulations"
+	storepkg "github.com/gazebo-web/cloudsim/pkg/store"
+	"github.com/gazebo-web/cloudsim/pkg/utils/network"
+	"github.com/gazebo-web/cloudsim/pkg/validate"
 )
 
 // ignitionStore is a store.Ignition implementation.

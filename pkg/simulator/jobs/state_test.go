@@ -1,8 +1,8 @@
 package jobs
 
 import (
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/actions"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/platform"
+	"github.com/gazebo-web/cloudsim/pkg/actions"
+	"github.com/gazebo-web/cloudsim/pkg/platform"
 )
 
 // TestState is a type that implements the actions.State interface and related interfaces.

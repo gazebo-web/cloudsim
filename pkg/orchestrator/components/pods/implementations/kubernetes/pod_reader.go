@@ -4,10 +4,10 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/components/pods"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/components/spdy"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/resource"
-	"gitlab.com/ignitionrobotics/web/ign-go/v6"
+	"github.com/gazebo-web/cloudsim/pkg/orchestrator/components/pods"
+	"github.com/gazebo-web/cloudsim/pkg/orchestrator/components/spdy"
+	"github.com/gazebo-web/cloudsim/pkg/orchestrator/resource"
+	"github.com/gazebo-web/gz-go/v7"
 	apiv1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/remotecommand"
@@ -18,7 +18,7 @@ type reader struct {
 	API      kubernetes.Interface
 	pod      resource.Resource
 	spdyInit spdy.Initializer
-	logger   ign.Logger
+	logger   gz.Logger
 }
 
 // File is used to read files from inside a container located in the given paths.
@@ -93,7 +93,7 @@ func (r *reader) Logs(ctx context.Context, container string, lines int64) (strin
 }
 
 // newReader initializes a new reader.
-func newReader(api kubernetes.Interface, pod resource.Resource, spdy spdy.Initializer, logger ign.Logger) pods.Reader {
+func newReader(api kubernetes.Interface, pod resource.Resource, spdy spdy.Initializer, logger gz.Logger) pods.Reader {
 	return &reader{
 		API:      api,
 		pod:      pod,

@@ -1,9 +1,9 @@
 package factory
 
 import (
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/cloud/aws"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/email/implementations/ses"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/factory"
+	"github.com/gazebo-web/cloudsim/pkg/cloud/aws"
+	"github.com/gazebo-web/cloudsim/pkg/email/implementations/ses"
+	"github.com/gazebo-web/cloudsim/pkg/factory"
 )
 
 // NewFunc is the factory creation function for the SES Storage implementation.

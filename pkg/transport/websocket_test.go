@@ -51,20 +51,20 @@ func (suite *websocketTestSuite) init() Transporter {
 
 func (suite *websocketTestSuite) AfterTest() {
 	if suite.transport != nil {
-		suite.transport.Disconnect()
+		suite.Assert().NoError(suite.transport.Disconnect())
 	}
 	suite.server.Close()
 }
 
 func (suite *websocketTestSuite) TestConnection_Accepted() {
-	suite.init().Disconnect()
-	suite.NoError(suite.transport.Connect())
+	suite.Require().NoError(suite.init().Disconnect())
+	suite.Assert().NoError(suite.transport.Connect())
 }
 
 func (suite *websocketTestSuite) TestConnection_Rejected() {
 	suite.init()
 	var err error
-	suite.transport.Disconnect()
+	suite.Assert().NoError(suite.transport.Disconnect())
 	suite.transport, err = NewWebsocketTransporter("wrong-host", "wrong-path", WebsocketScheme)
 	suite.Error(err)
 }
@@ -75,14 +75,14 @@ func (suite *websocketTestSuite) TestIsConnected() {
 }
 
 func (suite *websocketTestSuite) TestIsNotConnected() {
-	suite.init().Disconnect()
+	suite.Require().NoError(suite.init().Disconnect())
 	suite.False(suite.transport.IsConnected())
 }
 
 func (suite *websocketTestSuite) TestDisconnect() {
 	suite.init()
 	suite.True(suite.transport.IsConnected())
-	suite.transport.Disconnect()
+	suite.Assert().NoError(suite.transport.Disconnect())
 	suite.False(suite.transport.IsConnected())
 }
 

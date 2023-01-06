@@ -106,7 +106,7 @@ func TestCallJobFunc(t *testing.T) {
 	}
 
 	test := func(jobFunc JobFunc, value interface{}, error bool) {
-		value, err := callJobFunc(jobFunc, nil, nil, nil, value)
+		_, err := callJobFunc(jobFunc, nil, nil, nil, value)
 		if error {
 			require.Error(t, err)
 		} else {

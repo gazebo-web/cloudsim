@@ -3,9 +3,9 @@ package kubernetes
 import (
 	"context"
 	"fmt"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/components/network"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/resource"
-	"gitlab.com/ignitionrobotics/web/ign-go/v6"
+	"github.com/gazebo-web/cloudsim/pkg/orchestrator/components/network"
+	"github.com/gazebo-web/cloudsim/pkg/orchestrator/resource"
+	"github.com/gazebo-web/gz-go/v7"
 	networkingv1 "k8s.io/api/networking/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
@@ -15,7 +15,7 @@ import (
 // networkPolicies is a network.Policies implementation.
 type networkPolicies struct {
 	API    kubernetes.Interface
-	Logger ign.Logger
+	Logger gz.Logger
 }
 
 // RemoveBulk removes a set of network policies specified by the given selector in a certain namespace.
@@ -202,7 +202,7 @@ func (np *networkPolicies) createIngressSpec(ingressRule network.IngressRule,
 }
 
 // NewNetworkPolicies initializes a new network.Policies using Kubernetes.
-func NewNetworkPolicies(api kubernetes.Interface, logger ign.Logger) network.Policies {
+func NewNetworkPolicies(api kubernetes.Interface, logger gz.Logger) network.Policies {
 	return &networkPolicies{
 		API:    api,
 		Logger: logger,

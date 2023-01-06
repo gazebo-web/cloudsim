@@ -3,15 +3,15 @@ package jobs
 import (
 	"context"
 	"errors"
+	"github.com/gazebo-web/cloudsim/pkg/actions"
+	"github.com/gazebo-web/cloudsim/pkg/orchestrator"
+	"github.com/gazebo-web/cloudsim/pkg/orchestrator/implementations/kubernetes"
+	"github.com/gazebo-web/cloudsim/pkg/platform"
+	"github.com/gazebo-web/cloudsim/pkg/store"
+	fakeStore "github.com/gazebo-web/cloudsim/pkg/store/implementations/fake"
+	gormUtils "github.com/gazebo-web/cloudsim/pkg/utils/db/gorm"
+	"github.com/gazebo-web/gz-go/v7"
 	"github.com/stretchr/testify/suite"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/actions"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/implementations/kubernetes"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/platform"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/store"
-	fakeStore "gitlab.com/ignitionrobotics/web/cloudsim/pkg/store/implementations/fake"
-	gormUtils "gitlab.com/ignitionrobotics/web/cloudsim/pkg/utils/db/gorm"
-	"gitlab.com/ignitionrobotics/web/ign-go/v6"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes/fake"
 	"testing"
@@ -34,7 +34,7 @@ type testCreateConfigurationsSuite struct {
 }
 
 func (suite *testCreateConfigurationsSuite) SetupSuite() {
-	logger := ign.NewLoggerNoRollbar("TestCreateConfigurationsSuite", ign.VerbosityInfo)
+	logger := gz.NewLoggerNoRollbar("TestCreateConfigurationsSuite", gz.VerbosityInfo)
 	suite.cluster, suite.kubernetesAPI = kubernetes.NewFakeKubernetes(logger)
 
 	suite.store = fakeStore.NewDefaultFakeStore()

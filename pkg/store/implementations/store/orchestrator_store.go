@@ -3,9 +3,9 @@ package store
 import (
 	"github.com/caarlos0/env"
 	"github.com/creasty/defaults"
-	defaulter "gitlab.com/ignitionrobotics/web/cloudsim/pkg/defaults"
-	storepkg "gitlab.com/ignitionrobotics/web/cloudsim/pkg/store"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/validate"
+	defaulter "github.com/gazebo-web/cloudsim/pkg/defaults"
+	storepkg "github.com/gazebo-web/cloudsim/pkg/store"
+	"github.com/gazebo-web/cloudsim/pkg/validate"
 	"time"
 )
 

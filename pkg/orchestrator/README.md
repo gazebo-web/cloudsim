@@ -26,7 +26,7 @@ if err != nil {
 
 initializer := spdy.NewSPDYInitializer(config)
 
-logger := ign.NewLoggerNoRollbar("Kubernetes", ign.VerbosityDebug)
+logger := gz.NewLoggerNoRollbar("Kubernetes", gz.VerbosityDebug)
 
 ks := kubernetes.NewDefaultKubernetes(client, initializer, logger)
 ```
@@ -66,7 +66,7 @@ if err != nil {
     panic(err)
 }
 
-logger := ign.NewLoggerNoRollbar("Kubernetes", ign.VerbosityDebug)
+logger := gz.NewLoggerNoRollbar("Kubernetes", gz.VerbosityDebug)
 
 ns := NewNodes(client, logger)
 ```

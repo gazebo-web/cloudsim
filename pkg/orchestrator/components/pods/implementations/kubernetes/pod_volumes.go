@@ -1,7 +1,7 @@
 package kubernetes
 
 import (
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/components/pods"
+	"github.com/gazebo-web/cloudsim/pkg/orchestrator/components/pods"
 	corev1 "k8s.io/api/core/v1"
 )
 

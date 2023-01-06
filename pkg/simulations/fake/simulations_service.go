@@ -1,8 +1,8 @@
 package fake
 
 import (
+	"github.com/gazebo-web/cloudsim/pkg/simulations"
 	"github.com/stretchr/testify/mock"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
 )
 
 // Service is a fake simulations.Service implementation.

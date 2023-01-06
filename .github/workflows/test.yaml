@@ -1,0 +1,58 @@
+name: Test
+on: push
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    env:
+      IGN_DB_USERNAME: gazebo
+      IGN_DB_PASSWORD: 1234
+      IGN_DB_NAME: gazebo_db
+      IGN_DB_MAX_OPEN_CONNS: 66
+    services:
+      mysql:
+        image: mysql:5.7
+        ports:
+          - 3306
+        env:
+          MYSQL_USER: ${{ env.IGN_DB_USERNAME }}
+          MYSQL_PASSWORD: ${{ env.IGN_DB_PASSWORD }}
+          MYSQL_DATABASE: "${{ env.IGN_DB_NAME }}_test"
+          MYSQL_RANDOM_ROOT_PASSWORD: true
+        options: --health-cmd="mysqladmin ping" --health-interval=5s --health-timeout=2s --health-retries=3
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Verify MySQL connection
+        env:
+          PORT: ${{ job.services.mysql.ports[3306] }}
+        run: |
+          while ! mysqladmin ping -h"127.0.0.1" -P"$PORT" --silent; do
+            sleep 1
+          done          
+
+      - name: Copy Kubernetes config file
+        run: |
+          mkdir /home/runner/.kube
+          cp ./kubeconfig /home/runner/.kube/config
+          cat /home/runner/.kube/config
+
+      - name: Set up Go
+        uses: actions/setup-go@v3
+        with:
+          go-version: '1.19'
+          cache: true
+
+      - name: Test
+        env:
+          IGN_DB_ADDRESS: "127.0.0.1:${{ job.services.mysql.ports[3306] }}"
+          CLOUDSIM_MACHINES_CLUSTER_NAME: "testing"
+          CLOUDSIM_AWS_GZ_LOGS_BUCKET: "test_bucket_name"
+          CLOUDSIM_IGN_DEFAULT_SENDER: "test@openrobotics.org"
+          CLOUDSIM_ORCHESTRATOR_INGRESS_HOST: "ws.openrobotics.org"
+          SUBT_ORCHESTRATOR_INGRESS_NAME: "ingress"
+        run: |
+          go test -timeout 60m -covermode=atomic -coverprofile=coverage.tx -v ./...
+          go tool cover -func=coverage.tx -o=coverage.out

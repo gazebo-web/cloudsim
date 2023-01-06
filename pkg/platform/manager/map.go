@@ -2,10 +2,10 @@ package manager
 
 import (
 	"fmt"
+	"github.com/gazebo-web/cloudsim/pkg/factory"
+	"github.com/gazebo-web/cloudsim/pkg/platform"
+	platformFactory "github.com/gazebo-web/cloudsim/pkg/platform/implementations"
 	"github.com/pkg/errors"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/factory"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/platform"
-	platformFactory "gitlab.com/ignitionrobotics/web/cloudsim/pkg/platform/implementations"
 	"os"
 	"path/filepath"
 )

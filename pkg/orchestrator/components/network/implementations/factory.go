@@ -1,8 +1,8 @@
 package implementations
 
 import (
-	factorymap "gitlab.com/ignitionrobotics/web/cloudsim/pkg/factory/map"
-	kubernetesNetPols "gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/components/network/implementations/kubernetes/factory"
+	factorymap "github.com/gazebo-web/cloudsim/pkg/factory/map"
+	kubernetesNetPols "github.com/gazebo-web/cloudsim/pkg/orchestrator/components/network/implementations/kubernetes/factory"
 )
 
 const (

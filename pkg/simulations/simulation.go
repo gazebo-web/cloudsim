@@ -2,7 +2,7 @@ package simulations
 
 import (
 	"errors"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/calculator"
+	"github.com/gazebo-web/cloudsim/pkg/calculator"
 	"time"
 )
 

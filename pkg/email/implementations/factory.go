@@ -1,8 +1,8 @@
 package implementations
 
 import (
-	sesfactory "gitlab.com/ignitionrobotics/web/cloudsim/pkg/email/implementations/ses/factory"
-	factorymap "gitlab.com/ignitionrobotics/web/cloudsim/pkg/factory/map"
+	sesfactory "github.com/gazebo-web/cloudsim/pkg/email/implementations/ses/factory"
+	factorymap "github.com/gazebo-web/cloudsim/pkg/factory/map"
 )
 
 const (

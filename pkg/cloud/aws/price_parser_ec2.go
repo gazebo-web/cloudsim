@@ -2,9 +2,9 @@ package aws
 
 import (
 	"errors"
+	"github.com/gazebo-web/cloudsim/pkg/calculator"
 	"github.com/itchyny/gojq"
 	"github.com/mitchellh/mapstructure"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/calculator"
 	"math"
 	"strconv"
 	"strings"

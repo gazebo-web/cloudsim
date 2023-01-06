@@ -1,10 +1,10 @@
 package jobs
 
 import (
+	"github.com/gazebo-web/cloudsim/pkg/actions"
+	"github.com/gazebo-web/cloudsim/pkg/simulations"
+	"github.com/gazebo-web/cloudsim/pkg/simulator/state"
 	"github.com/jinzhu/gorm"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/actions"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulator/state"
 )
 
 // SetSimulationStatusInput is the input for SetSimulationStatus job.
@@ -39,8 +39,5 @@ func setSimulationStatus(store actions.Store, tx *gorm.DB, deployment *actions.D
 		return nil, err
 	}
 
-	return SetSimulationStatusOutput{
-		GroupID: input.GroupID,
-		Status:  input.Status,
-	}, nil
+	return SetSimulationStatusOutput(input), nil
 }

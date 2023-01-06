@@ -9,13 +9,13 @@ import (
 	"github.com/aws/aws-sdk-go/aws/client"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/aws/aws-sdk-go/service/ec2/ec2iface"
+	"github.com/gazebo-web/cloudsim/pkg/calculator"
+	"github.com/gazebo-web/cloudsim/pkg/cycler"
+	"github.com/gazebo-web/cloudsim/pkg/defaults"
+	"github.com/gazebo-web/cloudsim/pkg/machines"
+	"github.com/gazebo-web/cloudsim/pkg/validate"
+	"github.com/gazebo-web/gz-go/v7"
 	"github.com/pkg/errors"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/calculator"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/cycler"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/defaults"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/machines"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/validate"
-	"gitlab.com/ignitionrobotics/web/ign-go/v6"
 	"regexp"
 	"strings"
 	"sync"
@@ -90,7 +90,7 @@ type ec2Machines struct {
 	// ec2Machines.CalculateCost to calculate the rate at which a group of machines will be charged.
 	costCalculator calculator.CostCalculator
 	// Logger is used to store log information.
-	Logger ign.Logger
+	Logger gz.Logger
 	// region contains the identifier of the region where this component points to.
 	region string
 	// zones contains the set of availability zones this component will launch simulation instances in.
@@ -164,8 +164,7 @@ func (m *ec2Machines) isValidClusterID(clusterID string) bool {
 // newRunInstancesInput initializes the configuration to run EC2 instances with the given input.
 func (m *ec2Machines) newRunInstancesInput(createMachines machines.CreateMachinesInput) *ec2.RunInstancesInput {
 	// Prepare EC2 inputs
-	var iamProfile *ec2.IamInstanceProfileSpecification
-	iamProfile = &ec2.IamInstanceProfileSpecification{
+	iamProfile := &ec2.IamInstanceProfileSpecification{
 		Arn:  createMachines.InstanceProfile,
 		Name: nil,
 	}
@@ -648,8 +647,8 @@ type NewInput struct {
 	API ec2iface.EC2API `validate:"required"`
 	// CostCalculator contains an implementation of calculator.CostCalculator.
 	CostCalculator calculator.CostCalculator `validate:"required"`
-	// Logger is an instance of ign.Logger for logging messages in the Machines component.
-	Logger ign.Logger `validate:"required"`
+	// Logger is an instance of gz.Logger for logging messages in the Machines component.
+	Logger gz.Logger `validate:"required"`
 	// Limit defines the maximum number of machines that this component can have running simultaneously.
 	// -1 is unlimited. Note that the component is still subject to EC2 instance availability.
 	Limit *int64 `default:"-1"`

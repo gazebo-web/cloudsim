@@ -3,9 +3,9 @@ package kubernetes
 import (
 	"context"
 	"fmt"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/components/ingresses"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/resource"
-	"gitlab.com/ignitionrobotics/web/ign-go/v6"
+	"github.com/gazebo-web/cloudsim/pkg/orchestrator/components/ingresses"
+	"github.com/gazebo-web/cloudsim/pkg/orchestrator/resource"
+	"github.com/gazebo-web/gz-go/v7"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 )
@@ -13,7 +13,7 @@ import (
 // kubernetesIngresses is an ingresses.Ingresses implementation.
 type kubernetesIngresses struct {
 	API    kubernetes.Interface
-	Logger ign.Logger
+	Logger gz.Logger
 }
 
 // Get returns an ingress with the given name.
@@ -33,7 +33,7 @@ func (m *kubernetesIngresses) Get(ctx context.Context, name string, namespace st
 }
 
 // NewIngresses initializes a new ingresses.Ingresses implementation using Kubernetes.
-func NewIngresses(api kubernetes.Interface, logger ign.Logger) ingresses.Ingresses {
+func NewIngresses(api kubernetes.Interface, logger gz.Logger) ingresses.Ingresses {
 	return &kubernetesIngresses{
 		API:    api,
 		Logger: logger,

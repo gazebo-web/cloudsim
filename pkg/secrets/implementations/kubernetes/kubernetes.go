@@ -2,7 +2,7 @@ package kubernetes
 
 import (
 	"context"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/secrets"
+	"github.com/gazebo-web/cloudsim/pkg/secrets"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	v1 "k8s.io/client-go/kubernetes/typed/core/v1"
 )

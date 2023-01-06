@@ -2,9 +2,9 @@ package factory
 
 import (
 	"github.com/aws/aws-sdk-go/service/pricing"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/cloud/aws"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/factory"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/machines/implementations/ec2"
+	"github.com/gazebo-web/cloudsim/pkg/cloud/aws"
+	"github.com/gazebo-web/cloudsim/pkg/factory"
+	"github.com/gazebo-web/cloudsim/pkg/machines/implementations/ec2"
 )
 
 // NewFunc is the factory creation function for the EC2 Machines implementation.

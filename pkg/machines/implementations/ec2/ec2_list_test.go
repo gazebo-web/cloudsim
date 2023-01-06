@@ -5,10 +5,10 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/aws/aws-sdk-go/service/ec2/ec2iface"
+	cloud "github.com/gazebo-web/cloudsim/pkg/cloud/aws"
+	"github.com/gazebo-web/cloudsim/pkg/machines"
+	"github.com/gazebo-web/gz-go/v7"
 	"github.com/stretchr/testify/suite"
-	cloud "gitlab.com/ignitionrobotics/web/cloudsim/pkg/cloud/aws"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/machines"
-	"gitlab.com/ignitionrobotics/web/ign-go/v6"
 	"testing"
 )
 
@@ -52,7 +52,7 @@ func (mock *mockEC2List) DescribeInstanceStatus(input *ec2.DescribeInstanceStatu
 
 func (s *ec2ListMachinesTestSuite) SetupTest() {
 	s.ec2API = &mockEC2List{}
-	logger := ign.NewLoggerNoRollbar("ec2ListMachinesTestSuite", ign.VerbosityDebug)
+	logger := gz.NewLoggerNoRollbar("ec2ListMachinesTestSuite", gz.VerbosityDebug)
 	var err error
 	s.machines, err = NewMachines(&NewInput{
 		API:            s.ec2API,

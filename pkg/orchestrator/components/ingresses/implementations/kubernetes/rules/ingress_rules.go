@@ -3,9 +3,9 @@ package rules
 import (
 	"context"
 	"fmt"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/components/ingresses"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/resource"
-	"gitlab.com/ignitionrobotics/web/ign-go/v6"
+	"github.com/gazebo-web/cloudsim/pkg/orchestrator/components/ingresses"
+	"github.com/gazebo-web/cloudsim/pkg/orchestrator/resource"
+	"github.com/gazebo-web/gz-go/v7"
 	networkingv1 "k8s.io/api/networking/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
@@ -14,7 +14,7 @@ import (
 // ingressRules is an ingresses.IngressRules implementation.
 type ingressRules struct {
 	API    kubernetes.Interface
-	Logger ign.Logger
+	Logger gz.Logger
 }
 
 // Get returns the rule definition of the given host from the given resource.
@@ -162,7 +162,7 @@ func findRule(rule ingresses.Rule, searchRules []networkingv1.IngressRule) int {
 }
 
 // NewIngressRules initializes a new ingresses.IngressRules implementation using Kubernetes.
-func NewIngressRules(api kubernetes.Interface, logger ign.Logger) ingresses.IngressRules {
+func NewIngressRules(api kubernetes.Interface, logger gz.Logger) ingresses.IngressRules {
 	return &ingressRules{
 		API:    api,
 		Logger: logger,

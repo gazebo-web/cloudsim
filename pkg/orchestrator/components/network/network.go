@@ -2,7 +2,7 @@ package network
 
 import (
 	"context"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/resource"
+	"github.com/gazebo-web/cloudsim/pkg/orchestrator/resource"
 )
 
 // IngressRule groups a set of rules to be applied on a certain resource.

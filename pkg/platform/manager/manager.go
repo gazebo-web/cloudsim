@@ -1,12 +1,12 @@
 package manager
 
 import (
+	"github.com/gazebo-web/cloudsim/pkg/factory"
+	"github.com/gazebo-web/cloudsim/pkg/loader"
+	"github.com/gazebo-web/cloudsim/pkg/platform"
+	"github.com/gazebo-web/cloudsim/pkg/simulations"
+	"github.com/gazebo-web/gz-go/v7"
 	"github.com/pkg/errors"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/factory"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/loader"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/platform"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/simulations"
-	"gitlab.com/ignitionrobotics/web/ign-go/v6"
 	"path/filepath"
 )
 
@@ -67,7 +67,7 @@ type NewInput struct {
 	// Loader used to load the configuration file
 	Loader loader.Loader
 	// Logger used to configure platforms.
-	Logger ign.Logger
+	Logger gz.Logger
 }
 
 // loadPlatformConfiguration loads platform configuration files from NewInput.ConfigPath and returns a loaded managerConfig

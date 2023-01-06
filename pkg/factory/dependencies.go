@@ -1,10 +1,10 @@
 package factory
 
 import (
+	"github.com/gazebo-web/cloudsim/pkg/validate"
 	"github.com/mitchellh/copystructure"
 	"github.com/mitchellh/mapstructure"
 	"github.com/pkg/errors"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/validate"
 	"reflect"
 )
 
@@ -66,28 +66,32 @@ func (d Dependencies) validate(out interface{}) error {
 // Example
 // ```
 // // ObjectDependencies defines the dependencies required to create Object using a factory creation function.
-// type ObjectDependencies struct {
-//     ign.Logger `validate:"required"`
-// }
+//
+//	type ObjectDependencies struct {
+//	    gz.Logger `validate:"required"`
+//	}
 //
 // // Defining this method will automatically validate that the received dependencies match the expected values
-// func (od *ObjectDependencies) Validate() error {
-//     return validate.DefaultStructValidator(od)
-// }
+//
+//	func (od *ObjectDependencies) Validate() error {
+//	    return validate.DefaultStructValidator(od)
+//	}
 //
 // [...]
 //
 // // Factory creation function
-// func([...], dependencies factory.Dependencies) [...] {
-//     objectDependencies := &ObjectDependencies{}
-//     // The dependencies.ToStruct call will populate objectDependencies.
-//     // It will also validate that all required fields are in place because ObjectDependencies has a Validate method
-//     // defined.
-//     if err := dependencies.ToStruct(objectDependencies); err != nil {
-//          [...] // Handle error
-//     }
-//     [...]
-// }
+//
+//	func([...], dependencies factory.Dependencies) [...] {
+//	    objectDependencies := &ObjectDependencies{}
+//	    // The dependencies.ToStruct call will populate objectDependencies.
+//	    // It will also validate that all required fields are in place because ObjectDependencies has a Validate method
+//	    // defined.
+//	    if err := dependencies.ToStruct(objectDependencies); err != nil {
+//	         [...] // Handle error
+//	    }
+//	    [...]
+//	}
+//
 // ```
 func (d Dependencies) ToStruct(out interface{}) error {
 	if err := d.marshal(out); err != nil {

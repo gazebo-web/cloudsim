@@ -1,8 +1,8 @@
 package kubernetes
 
 import (
+	"github.com/gazebo-web/cloudsim/pkg/orchestrator/resource/phase"
 	"github.com/stretchr/testify/suite"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/resource/phase"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"testing"

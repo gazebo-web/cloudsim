@@ -3,10 +3,10 @@ package kubernetes
 import (
 	"context"
 	"fmt"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/components/nodes"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/resource"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/waiter"
-	"gitlab.com/ignitionrobotics/web/ign-go/v6"
+	"github.com/gazebo-web/cloudsim/pkg/orchestrator/components/nodes"
+	"github.com/gazebo-web/cloudsim/pkg/orchestrator/resource"
+	"github.com/gazebo-web/cloudsim/pkg/waiter"
+	"github.com/gazebo-web/gz-go/v7"
 	apiv1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
@@ -15,7 +15,7 @@ import (
 // kubernetesNodes is a nodes.Nodes implementation.
 type kubernetesNodes struct {
 	API    kubernetes.Interface
-	Logger ign.Logger
+	Logger gz.Logger
 }
 
 // WaitForCondition creates a new wait request that will be used to wait for a resource to match a certain condition.
@@ -72,7 +72,7 @@ func (m *kubernetesNodes) isConditionSetAsExpected(node apiv1.Node, expected res
 }
 
 // NewNodes returns a nodes.Nodes implementation with the given kubernetes.Interface API.
-func NewNodes(api kubernetes.Interface, logger ign.Logger) nodes.Nodes {
+func NewNodes(api kubernetes.Interface, logger gz.Logger) nodes.Nodes {
 	return &kubernetesNodes{
 		API:    api,
 		Logger: logger,

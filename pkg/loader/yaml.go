@@ -1,9 +1,9 @@
 package loader
 
 import (
+	"github.com/gazebo-web/cloudsim/pkg/defaults"
+	"github.com/gazebo-web/gz-go/v7"
 	"github.com/pkg/errors"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/defaults"
-	"gitlab.com/ignitionrobotics/web/ign-go/v6"
 	"gopkg.in/yaml.v2"
 	"os"
 	"strings"
@@ -14,7 +14,7 @@ const extensionYML = ".yml"
 
 // yamlLoader is a Loader implementation to parse YAML files.
 type yamlLoader struct {
-	logger ign.Logger
+	logger gz.Logger
 }
 
 // Filter returns the list of files that contain either .yaml or .yml.
@@ -77,7 +77,7 @@ func (l *yamlLoader) Load(path string, out interface{}) error {
 }
 
 // NewYAMLLoader returns a YAML loader.
-func NewYAMLLoader(logger ign.Logger) Loader {
+func NewYAMLLoader(logger gz.Logger) Loader {
 	return &yamlLoader{
 		logger: logger,
 	}

@@ -2,11 +2,11 @@ package kubernetes
 
 import (
 	"context"
+	"github.com/gazebo-web/cloudsim/pkg/orchestrator/components/services"
+	"github.com/gazebo-web/cloudsim/pkg/orchestrator/resource"
+	"github.com/gazebo-web/gz-go/v7"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/components/services"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/resource"
-	"gitlab.com/ignitionrobotics/web/ign-go/v6"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes/fake"
@@ -15,7 +15,7 @@ import (
 
 func TestCreateService(t *testing.T) {
 	client := fake.NewSimpleClientset()
-	s := NewServices(client, ign.NewLoggerNoRollbar("TestService", ign.VerbosityDebug))
+	s := NewServices(client, gz.NewLoggerNoRollbar("TestService", gz.VerbosityDebug))
 	res, err := s.Create(context.TODO(), services.CreateServiceInput{
 		Name:      "service-test",
 		Type:      "ClusterIP",
@@ -40,7 +40,7 @@ func TestCreateService(t *testing.T) {
 
 func TestCreateServiceFailsWhenServiceIsAlreadyCreated(t *testing.T) {
 	client := fake.NewSimpleClientset()
-	s := NewServices(client, ign.NewLoggerNoRollbar("TestService", ign.VerbosityDebug))
+	s := NewServices(client, gz.NewLoggerNoRollbar("TestService", gz.VerbosityDebug))
 	_, err := s.Create(context.TODO(), services.CreateServiceInput{
 		Name:      "service-test",
 		Type:      "ClusterIP",
@@ -76,14 +76,14 @@ func TestCreateServiceFailsWhenServiceIsAlreadyCreated(t *testing.T) {
 
 func TestGetServiceFailsWhenServiceDoesNotExist(t *testing.T) {
 	client := fake.NewSimpleClientset()
-	s := NewServices(client, ign.NewLoggerNoRollbar("TestService", ign.VerbosityDebug))
+	s := NewServices(client, gz.NewLoggerNoRollbar("TestService", gz.VerbosityDebug))
 	_, err := s.Get(context.TODO(), "test", "default")
 	assert.Error(t, err)
 }
 
 func TestGetServiceSuccessWhenServiceExists(t *testing.T) {
 	client := fake.NewSimpleClientset()
-	s := NewServices(client, ign.NewLoggerNoRollbar("TestService", ign.VerbosityDebug))
+	s := NewServices(client, gz.NewLoggerNoRollbar("TestService", gz.VerbosityDebug))
 
 	_, err := s.Create(context.TODO(), services.CreateServiceInput{
 		Name:      "service-test",
@@ -108,7 +108,7 @@ func TestGetServiceSuccessWhenServiceExists(t *testing.T) {
 
 func TestGetAllServicesSuccess(t *testing.T) {
 	client := fake.NewSimpleClientset()
-	s := NewServices(client, ign.NewLoggerNoRollbar("TestService", ign.VerbosityDebug))
+	s := NewServices(client, gz.NewLoggerNoRollbar("TestService", gz.VerbosityDebug))
 
 	_, err := s.Create(context.TODO(), services.CreateServiceInput{
 		Name:      "service-test",
@@ -149,7 +149,7 @@ func TestGetAllServicesSuccess(t *testing.T) {
 
 func TestGetAllServicesFailsWhenUsingWrongLabels(t *testing.T) {
 	client := fake.NewSimpleClientset()
-	s := NewServices(client, ign.NewLoggerNoRollbar("TestService", ign.VerbosityDebug))
+	s := NewServices(client, gz.NewLoggerNoRollbar("TestService", gz.VerbosityDebug))
 
 	_, err := s.Create(context.TODO(), services.CreateServiceInput{
 		Name:      "service-test",
@@ -190,7 +190,7 @@ func TestGetAllServicesFailsWhenUsingWrongLabels(t *testing.T) {
 
 func TestGetAllServicesFailsWhenNoServicesDoesNotExist(t *testing.T) {
 	client := fake.NewSimpleClientset()
-	s := NewServices(client, ign.NewLoggerNoRollbar("TestService", ign.VerbosityDebug))
+	s := NewServices(client, gz.NewLoggerNoRollbar("TestService", gz.VerbosityDebug))
 
 	result, err := s.List(context.TODO(), "default", resource.NewSelector(map[string]string{"some": "test"}))
 	require.NoError(t, err)
@@ -199,7 +199,7 @@ func TestGetAllServicesFailsWhenNoServicesDoesNotExist(t *testing.T) {
 
 func TestRemoveServiceSuccessWhenServiceExists(t *testing.T) {
 	client := fake.NewSimpleClientset()
-	s := NewServices(client, ign.NewLoggerNoRollbar("TestService", ign.VerbosityDebug))
+	s := NewServices(client, gz.NewLoggerNoRollbar("TestService", gz.VerbosityDebug))
 
 	_, err := s.Create(context.TODO(), services.CreateServiceInput{
 		Name:      "service-test",
@@ -226,7 +226,7 @@ func TestRemoveServiceSuccessWhenServiceExists(t *testing.T) {
 
 func TestRemoveServiceFailsWhenServiceDoesNotExist(t *testing.T) {
 	client := fake.NewSimpleClientset()
-	s := NewServices(client, ign.NewLoggerNoRollbar("TestService", ign.VerbosityDebug))
+	s := NewServices(client, gz.NewLoggerNoRollbar("TestService", gz.VerbosityDebug))
 
 	res := resource.NewResource("test", "default", resource.NewSelector(nil))
 

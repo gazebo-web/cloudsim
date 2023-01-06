@@ -1,11 +1,11 @@
 package fake
 
 import (
+	"github.com/gazebo-web/fuel-server/bundles/users"
+	per "github.com/gazebo-web/fuel-server/permissions"
+	"github.com/gazebo-web/gz-go/v7"
 	"github.com/jinzhu/gorm"
 	"github.com/stretchr/testify/mock"
-	"gitlab.com/ignitionrobotics/web/fuelserver/bundles/users"
-	per "gitlab.com/ignitionrobotics/web/fuelserver/permissions"
-	"gitlab.com/ignitionrobotics/web/ign-go/v6"
 	"net/http"
 )
 
@@ -17,9 +17,9 @@ type Service struct {
 // UserFromJWT returns the User associated to the http request's JWT token.
 // This function can return ErrorAuthJWTInvalid if the token cannot be
 // read, or ErrorAuthNoUser no user with such identity exists in the DB.
-func (f *Service) UserFromJWT(r *http.Request) (*users.User, bool, *ign.ErrMsg) {
+func (f *Service) UserFromJWT(r *http.Request) (*users.User, bool, *gz.ErrMsg) {
 	args := f.Called(r)
-	return args.Get(0).(*users.User), args.Bool(1), args.Get(2).(*ign.ErrMsg)
+	return args.Get(0).(*users.User), args.Bool(1), args.Get(2).(*gz.ErrMsg)
 }
 
 // VerifyOwner checks if the 'owner' arg is an organization or a user. If the
@@ -27,9 +27,9 @@ func (f *Service) UserFromJWT(r *http.Request) (*users.User, bool, *ign.ErrMsg) 
 // permission in the organization. If the 'owner' is a user, it verifies that the
 // 'user' arg is the same as the owner.
 // Dev note: this is an alternative implementation of ign-fuelserver UserService's VerifyOwner.
-func (f *Service) VerifyOwner(owner, user string, p per.Action) (bool, *ign.ErrMsg) {
+func (f *Service) VerifyOwner(owner, user string, p per.Action) (bool, *gz.ErrMsg) {
 	args := f.Called(owner, user, p)
-	return args.Bool(0), args.Get(1).(*ign.ErrMsg)
+	return args.Bool(0), args.Get(1).(*gz.ErrMsg)
 }
 
 // CanPerformWithRole checks if the 'owner' arg is an organization or a
@@ -39,9 +39,9 @@ func (f *Service) VerifyOwner(owner, user string, p per.Action) (bool, *ign.ErrM
 // the owner.
 // As a third alternative, if 'owner' is nil then it checks if the 'user' is part
 // of the System Admins.
-func (f *Service) CanPerformWithRole(owner *string, user string, role per.Role) (bool, *ign.ErrMsg) {
+func (f *Service) CanPerformWithRole(owner *string, user string, role per.Role) (bool, *gz.ErrMsg) {
 	args := f.Called(owner, user, role)
-	return args.Bool(0), args.Get(1).(*ign.ErrMsg)
+	return args.Bool(0), args.Get(1).(*gz.ErrMsg)
 }
 
 // QueryForResourceVisibility checks the relationship between requestor (user)
@@ -54,22 +54,22 @@ func (f *Service) QueryForResourceVisibility(q *gorm.DB, owner *string, user *us
 
 // IsAuthorizedForResource checks if user has the permission to perform an action on a
 // resource.
-func (f *Service) IsAuthorizedForResource(user, resource string, action per.Action) (bool, *ign.ErrMsg) {
+func (f *Service) IsAuthorizedForResource(user, resource string, action per.Action) (bool, *gz.ErrMsg) {
 	args := f.Called(user, resource, action)
-	return args.Bool(0), args.Get(1).(*ign.ErrMsg)
+	return args.Bool(0), args.Get(1).(*gz.ErrMsg)
 }
 
 // AddResourcePermission adds a user (or group) permission on a resource
-func (f *Service) AddResourcePermission(user, resource string, action per.Action) (bool, *ign.ErrMsg) {
+func (f *Service) AddResourcePermission(user, resource string, action per.Action) (bool, *gz.ErrMsg) {
 	args := f.Called(user, resource, action)
-	return args.Bool(0), args.Get(1).(*ign.ErrMsg)
+	return args.Bool(0), args.Get(1).(*gz.ErrMsg)
 }
 
 // AddScore creates a score entry for a simulation.
 func (f *Service) AddScore(groupID *string, competition *string, circuit *string, owner *string, score *float64,
-	sources *string) *ign.ErrMsg {
+	sources *string) *gz.ErrMsg {
 	args := f.Called(groupID, competition, circuit, owner, score, sources)
-	return args.Get(0).(*ign.ErrMsg)
+	return args.Get(0).(*gz.ErrMsg)
 }
 
 // IsSystemAdmin returns a bool indicating if the given user is a system admin.
@@ -79,15 +79,15 @@ func (f *Service) IsSystemAdmin(user string) bool {
 }
 
 // GetUserFromUsername returns the user database entry from the username
-func (f *Service) GetUserFromUsername(username string) (*users.User, *ign.ErrMsg) {
+func (f *Service) GetUserFromUsername(username string) (*users.User, *gz.ErrMsg) {
 	args := f.Called(username)
-	return args.Get(0).(*users.User), args.Get(1).(*ign.ErrMsg)
+	return args.Get(0).(*users.User), args.Get(1).(*gz.ErrMsg)
 }
 
 // GetOrganization gets a user's organization database entry from the username
-func (f *Service) GetOrganization(username string) (*users.Organization, *ign.ErrMsg) {
+func (f *Service) GetOrganization(username string) (*users.Organization, *gz.ErrMsg) {
 	args := f.Called(username)
-	return args.Get(0).(*users.Organization), args.Get(1).(*ign.ErrMsg)
+	return args.Get(0).(*users.Organization), args.Get(1).(*gz.ErrMsg)
 }
 
 // StartAutoLoadPolicy starts the auto load remote policy

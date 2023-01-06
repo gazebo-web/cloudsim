@@ -1,14 +1,14 @@
 package factory
 
 import (
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/validate"
-	"gitlab.com/ignitionrobotics/web/ign-go/v6"
+	"github.com/gazebo-web/cloudsim/pkg/validate"
+	"github.com/gazebo-web/gz-go/v7"
 )
 
 // Dependencies is used to create an EC2 machines component.
 type Dependencies struct {
 	// Logger is used to store log information.
-	Logger ign.Logger `validate:"required"`
+	Logger gz.Logger `validate:"required"`
 }
 
 // Validate validates that the dependencies values are valid.

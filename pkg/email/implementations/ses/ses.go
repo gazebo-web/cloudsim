@@ -7,8 +7,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws/client"
 	"github.com/aws/aws-sdk-go/service/ses"
 	"github.com/aws/aws-sdk-go/service/ses/sesiface"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/email"
-	"gitlab.com/ignitionrobotics/web/ign-go/v6"
+	"github.com/gazebo-web/cloudsim/pkg/email"
+	"github.com/gazebo-web/gz-go/v7"
 )
 
 // NewAPI returns an AWS Simple Email Service (SES) client from the given config provider.
@@ -19,7 +19,7 @@ func NewAPI(config client.ConfigProvider) sesiface.SESAPI {
 // email implements the Sender interface using AWS SES api.
 type sesEmail struct {
 	API    sesiface.SESAPI
-	Logger ign.Logger
+	Logger gz.Logger
 }
 
 // Send sends an email to the given recipients from the given sender.
@@ -44,12 +44,15 @@ func (e *sesEmail) Send(recipients []string, sender, subject, template string, d
 		return email.ErrInvalidData
 	}
 
-	content, err := ign.ParseHTMLTemplate(template, data)
+	content, err := gz.ParseHTMLTemplate(template, data)
 	if err != nil {
 		return err
 	}
 
 	err = e.send(sender, recipients, subject, content)
+	if err != nil {
+		return err
+	}
 
 	return nil
 }
@@ -100,7 +103,7 @@ func (e *sesEmail) send(sender string, recipients []string, subject string, cont
 }
 
 // NewEmailSender returns a email.Sender implementation.
-func NewEmailSender(api sesiface.SESAPI, logger ign.Logger) email.Sender {
+func NewEmailSender(api sesiface.SESAPI, logger gz.Logger) email.Sender {
 	return &sesEmail{
 		API:    api,
 		Logger: logger,

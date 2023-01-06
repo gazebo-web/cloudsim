@@ -1,16 +1,16 @@
 package implementations
 
 import (
+	"github.com/gazebo-web/cloudsim/pkg/factory"
+	"github.com/gazebo-web/cloudsim/pkg/orchestrator"
+	configurationsImpl "github.com/gazebo-web/cloudsim/pkg/orchestrator/components/configurations/implementations"
+	ingressesImpl "github.com/gazebo-web/cloudsim/pkg/orchestrator/components/ingresses/implementations"
+	networkImpl "github.com/gazebo-web/cloudsim/pkg/orchestrator/components/network/implementations"
+	nodesImpl "github.com/gazebo-web/cloudsim/pkg/orchestrator/components/nodes/implementations"
+	podsImpl "github.com/gazebo-web/cloudsim/pkg/orchestrator/components/pods/implementations"
+	servicesImpl "github.com/gazebo-web/cloudsim/pkg/orchestrator/components/services/implementations"
+	"github.com/gazebo-web/gz-go/v7"
 	"github.com/stretchr/testify/suite"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/factory"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator"
-	configurationsImpl "gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/components/configurations/implementations"
-	ingressesImpl "gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/components/ingresses/implementations"
-	networkImpl "gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/components/network/implementations"
-	nodesImpl "gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/components/nodes/implementations"
-	podsImpl "gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/components/pods/implementations"
-	servicesImpl "gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/components/services/implementations"
-	"gitlab.com/ignitionrobotics/web/ign-go/v6"
 	"k8s.io/client-go/kubernetes"
 	"reflect"
 	"testing"
@@ -24,18 +24,9 @@ type testKubernetesFactorySuite struct {
 	suite.Suite
 }
 
-func (s *testKubernetesFactorySuite) createFactoryConfig(objectType string,
-	config factory.ConfigValues) *factory.Config {
-
-	return &factory.Config{
-		Type:   objectType,
-		Config: config,
-	}
-}
-
 func (s *testKubernetesFactorySuite) callFactory(config *factory.Config, out interface{}) {
 	// Prepare dependencies
-	logger := ign.NewLoggerNoRollbar("test", ign.VerbosityWarning)
+	logger := gz.NewLoggerNoRollbar("test", gz.VerbosityWarning)
 	kubernetesAPI := struct {
 		kubernetes.Interface
 	}{}

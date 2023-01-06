@@ -1,6 +1,6 @@
 package factory
 
-import "gitlab.com/ignitionrobotics/web/cloudsim/pkg/validate"
+import "github.com/gazebo-web/cloudsim/pkg/validate"
 
 // Config is used to create an S3 storage component.
 type Config struct {

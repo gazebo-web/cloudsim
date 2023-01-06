@@ -7,26 +7,26 @@ import (
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/pricing"
 	"github.com/aws/aws-sdk-go/service/ses"
+	cloud "github.com/gazebo-web/cloudsim/pkg/cloud/aws"
+	"github.com/gazebo-web/cloudsim/pkg/defaults"
+	email "github.com/gazebo-web/cloudsim/pkg/email/implementations/ses"
+	"github.com/gazebo-web/cloudsim/pkg/machines/implementations/ec2"
+	"github.com/gazebo-web/cloudsim/pkg/mock"
+	"github.com/gazebo-web/cloudsim/pkg/orchestrator/implementations/kubernetes"
+	"github.com/gazebo-web/cloudsim/pkg/platform"
+	fakeSecrets "github.com/gazebo-web/cloudsim/pkg/secrets/implementations/fake"
+	"github.com/gazebo-web/cloudsim/pkg/storage/implementations/s3"
+	"github.com/gazebo-web/cloudsim/pkg/store/implementations/store"
+	"github.com/gazebo-web/gz-go/v7"
 	"github.com/johannesboyne/gofakes3"
 	"github.com/johannesboyne/gofakes3/backend/s3mem"
-	cloud "gitlab.com/ignitionrobotics/web/cloudsim/pkg/cloud/aws"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/defaults"
-	email "gitlab.com/ignitionrobotics/web/cloudsim/pkg/email/implementations/ses"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/machines/implementations/ec2"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/mock"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/implementations/kubernetes"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/platform"
-	fakeSecrets "gitlab.com/ignitionrobotics/web/cloudsim/pkg/secrets/implementations/fake"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/storage/implementations/s3"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/store/implementations/store"
-	"gitlab.com/ignitionrobotics/web/ign-go/v6"
 	"net/http/httptest"
 )
 
 // NewInput contains input fields for the NewFakePlatform function.
 type NewInput struct {
 	Name    string
-	Logger  ign.Logger
+	Logger  gz.Logger
 	Session client.ConfigProvider
 	platform.Components
 }
@@ -38,7 +38,7 @@ func (input *NewInput) SetDefaults() error {
 	}
 
 	if input.Logger == nil {
-		input.Logger = ign.NewLoggerNoRollbar("fake", ign.VerbosityWarning)
+		input.Logger = gz.NewLoggerNoRollbar("fake", gz.VerbosityWarning)
 	}
 
 	if input.Session == nil {

@@ -2,12 +2,12 @@ package kubernetes
 
 import (
 	"context"
+	"github.com/gazebo-web/cloudsim/pkg/orchestrator/components/pods"
+	"github.com/gazebo-web/cloudsim/pkg/orchestrator/components/spdy"
+	"github.com/gazebo-web/cloudsim/pkg/orchestrator/resource"
+	"github.com/gazebo-web/gz-go/v7"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/components/pods"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/components/spdy"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/resource"
-	"gitlab.com/ignitionrobotics/web/ign-go/v6"
 	apiv1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes/fake"
@@ -19,7 +19,7 @@ import (
 func TestNewPods(t *testing.T) {
 	client := fake.NewSimpleClientset()
 	f := spdy.NewSPDYFakeInitializer()
-	logger := ign.NewLoggerNoRollbar("TestPods", ign.VerbosityDebug)
+	logger := gz.NewLoggerNoRollbar("TestPods", gz.VerbosityDebug)
 	m := NewPods(client, f, logger)
 	assert.NotNil(t, m)
 	assert.IsType(t, &kubernetesPods{}, m)
@@ -80,7 +80,7 @@ func TestPods_WaitForPodsToBeReady(t *testing.T) {
 
 	client := fake.NewSimpleClientset(pod)
 	f := spdy.NewSPDYFakeInitializer()
-	logger := ign.NewLoggerNoRollbar("TestPods", ign.VerbosityDebug)
+	logger := gz.NewLoggerNoRollbar("TestPods", gz.VerbosityDebug)
 	m := NewPods(client, f, logger)
 	selector := resource.NewSelector(map[string]string{"test": "app"})
 	res := resource.NewResource("test", "default", selector)
@@ -117,7 +117,7 @@ func TestPods_WaitForPodsErrWhenPodStateSucceeded(t *testing.T) {
 
 	client := fake.NewSimpleClientset(pod)
 	f := spdy.NewSPDYFakeInitializer()
-	logger := ign.NewLoggerNoRollbar("TestPods", ign.VerbosityDebug)
+	logger := gz.NewLoggerNoRollbar("TestPods", gz.VerbosityDebug)
 	m := NewPods(client, f, logger)
 	selector := resource.NewSelector(map[string]string{"test": "app"})
 	res := resource.NewResource("test", "default", selector)
@@ -154,7 +154,7 @@ func TestPods_WaitForPodsErrWhenPodStateFailed(t *testing.T) {
 
 	client := fake.NewSimpleClientset(pod)
 	f := spdy.NewSPDYFakeInitializer()
-	logger := ign.NewLoggerNoRollbar("TestPods", ign.VerbosityDebug)
+	logger := gz.NewLoggerNoRollbar("TestPods", gz.VerbosityDebug)
 	m := NewPods(client, f, logger)
 
 	selector := resource.NewSelector(map[string]string{"test": "app"})
@@ -192,7 +192,7 @@ func TestPods_WaitForPodsErr(t *testing.T) {
 
 	client := fake.NewSimpleClientset(pod)
 	f := spdy.NewSPDYFakeInitializer()
-	logger := ign.NewLoggerNoRollbar("TestPods", ign.VerbosityDebug)
+	logger := gz.NewLoggerNoRollbar("TestPods", gz.VerbosityDebug)
 	m := NewPods(client, f, logger)
 
 	selector := resource.NewSelector(map[string]string{"test": "app"})
@@ -275,7 +275,7 @@ func TestPods_WaitForPodsMultipleConditions(t *testing.T) {
 
 	client := fake.NewSimpleClientset(readyPod, succeededPod, failedPod)
 	f := spdy.NewSPDYFakeInitializer()
-	logger := ign.NewLoggerNoRollbar("TestPods", ign.VerbosityDebug)
+	logger := gz.NewLoggerNoRollbar("TestPods", gz.VerbosityDebug)
 	m := NewPods(client, f, logger)
 
 	test := func(selector resource.Selector) error {
@@ -304,7 +304,7 @@ func TestPods_WaitForPodsMultipleConditions(t *testing.T) {
 func TestPods_CreateSuccess(t *testing.T) {
 	client := fake.NewSimpleClientset()
 	f := spdy.NewSPDYFakeInitializer()
-	logger := ign.NewLoggerNoRollbar("TestPods", ign.VerbosityDebug)
+	logger := gz.NewLoggerNoRollbar("TestPods", gz.VerbosityDebug)
 	p := NewPods(client, f, logger)
 
 	imagePullCredentials := []string{"secret", "top-secret"}
@@ -370,7 +370,7 @@ func TestPods_CreateFailsWhenPodAlreadyExists(t *testing.T) {
 
 	client := fake.NewSimpleClientset(pod)
 	f := spdy.NewSPDYFakeInitializer()
-	logger := ign.NewLoggerNoRollbar("TestPods", ign.VerbosityDebug)
+	logger := gz.NewLoggerNoRollbar("TestPods", gz.VerbosityDebug)
 	p := NewPods(client, f, logger)
 
 	_, err := p.Create(context.TODO(), pods.CreatePodInput{
@@ -402,7 +402,7 @@ func TestPods_CreateFailsWhenPodAlreadyExists(t *testing.T) {
 func TestPods_DeleteFailsWhenPodDoesNotExist(t *testing.T) {
 	client := fake.NewSimpleClientset()
 	f := spdy.NewSPDYFakeInitializer()
-	logger := ign.NewLoggerNoRollbar("TestPods", ign.VerbosityDebug)
+	logger := gz.NewLoggerNoRollbar("TestPods", gz.VerbosityDebug)
 	p := NewPods(client, f, logger)
 
 	_, err := p.Delete(context.TODO(), resource.NewResource("test", "default", resource.NewSelector(map[string]string{})))
@@ -429,7 +429,7 @@ func TestPods_DeleteSuccess(t *testing.T) {
 
 	client := fake.NewSimpleClientset(pod)
 	f := spdy.NewSPDYFakeInitializer()
-	logger := ign.NewLoggerNoRollbar("TestPods", ign.VerbosityDebug)
+	logger := gz.NewLoggerNoRollbar("TestPods", gz.VerbosityDebug)
 	p := NewPods(client, f, logger)
 
 	_, err := p.Delete(context.TODO(), resource.NewResource("test", "default", resource.NewSelector(map[string]string{
@@ -445,7 +445,7 @@ func TestPods_DeleteSuccess(t *testing.T) {
 func TestPods_GetFails(t *testing.T) {
 	client := fake.NewSimpleClientset()
 	f := spdy.NewSPDYFakeInitializer()
-	logger := ign.NewLoggerNoRollbar("TestPods", ign.VerbosityDebug)
+	logger := gz.NewLoggerNoRollbar("TestPods", gz.VerbosityDebug)
 	p := NewPods(client, f, logger)
 
 	_, err := p.Get(context.TODO(), "test", "default")
@@ -472,7 +472,7 @@ func TestPods_GetSuccess(t *testing.T) {
 
 	client := fake.NewSimpleClientset(pod)
 	f := spdy.NewSPDYFakeInitializer()
-	logger := ign.NewLoggerNoRollbar("TestPods", ign.VerbosityDebug)
+	logger := gz.NewLoggerNoRollbar("TestPods", gz.VerbosityDebug)
 	p := NewPods(client, f, logger)
 
 	_, err := p.Get(context.TODO(), "test", "default")
@@ -511,7 +511,7 @@ func TestPods_List(t *testing.T) {
 		},
 	)
 	f := spdy.NewSPDYFakeInitializer()
-	logger := ign.NewLoggerNoRollbar("TestPods", ign.VerbosityDebug)
+	logger := gz.NewLoggerNoRollbar("TestPods", gz.VerbosityDebug)
 	p := NewPods(client, f, logger)
 
 	// Getting pods in a certain namespace

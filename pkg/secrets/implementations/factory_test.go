@@ -1,10 +1,10 @@
 package implementations
 
 import (
+	"github.com/gazebo-web/cloudsim/pkg/factory"
+	"github.com/gazebo-web/cloudsim/pkg/secrets"
+	"github.com/gazebo-web/gz-go/v7"
 	"github.com/stretchr/testify/suite"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/factory"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/secrets"
-	"gitlab.com/ignitionrobotics/web/ign-go/v6"
 	"k8s.io/client-go/kubernetes"
 	kfake "k8s.io/client-go/kubernetes/fake"
 	"reflect"
@@ -19,15 +19,6 @@ type testSecretsFactorySuite struct {
 	suite.Suite
 }
 
-func (s *testSecretsFactorySuite) createFactoryConfig(objectType string,
-	config factory.ConfigValues) *factory.Config {
-
-	return &factory.Config{
-		Type:   objectType,
-		Config: config,
-	}
-}
-
 func (s *testSecretsFactorySuite) TestIngressesNewKubernetes() {
 	// Prepare config
 	config := &factory.Config{
@@ -35,7 +26,7 @@ func (s *testSecretsFactorySuite) TestIngressesNewKubernetes() {
 	}
 
 	// Prepare dependencies
-	logger := ign.NewLoggerNoRollbar("test", ign.VerbosityWarning)
+	logger := gz.NewLoggerNoRollbar("test", gz.VerbosityWarning)
 	kubernetesAPI := struct {
 		kubernetes.Interface
 	}{

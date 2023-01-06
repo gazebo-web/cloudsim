@@ -7,11 +7,11 @@ import (
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3iface"
+	"github.com/gazebo-web/cloudsim/pkg/storage"
+	"github.com/gazebo-web/gz-go/v7"
 	"github.com/johannesboyne/gofakes3"
 	"github.com/johannesboyne/gofakes3/backend/s3mem"
 	"github.com/stretchr/testify/suite"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/storage"
-	"gitlab.com/ignitionrobotics/web/ign-go/v6"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -59,7 +59,7 @@ func (s *s3StorageTestSuite) SetupTest() {
 	}
 
 	s.api = s3.New(s.s3.Session)
-	logger := ign.NewLoggerNoRollbar("s3StorageTestSuite", ign.VerbosityDebug)
+	logger := gz.NewLoggerNoRollbar("s3StorageTestSuite", gz.VerbosityDebug)
 	s.storage = NewStorage(s.api, logger)
 }
 
@@ -69,7 +69,7 @@ func (s *s3StorageTestSuite) AfterTest() {
 
 func (s *s3StorageTestSuite) TestNewStorage() {
 	api := s3.New(s.s3.Session)
-	logger := ign.NewLoggerNoRollbar("s3StorageTestSuite", ign.VerbosityDebug)
+	logger := gz.NewLoggerNoRollbar("s3StorageTestSuite", gz.VerbosityDebug)
 	st := NewStorage(api, logger)
 	obj, ok := st.(*s3Storage)
 	s.True(ok)

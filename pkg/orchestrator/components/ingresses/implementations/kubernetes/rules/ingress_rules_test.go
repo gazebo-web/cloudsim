@@ -2,10 +2,10 @@ package rules
 
 import (
 	"context"
+	"github.com/gazebo-web/cloudsim/pkg/orchestrator/components/ingresses"
+	"github.com/gazebo-web/cloudsim/pkg/orchestrator/resource"
+	"github.com/gazebo-web/gz-go/v7"
 	"github.com/stretchr/testify/assert"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/components/ingresses"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/resource"
-	"gitlab.com/ignitionrobotics/web/ign-go/v6"
 	networkingv1 "k8s.io/api/networking/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes/fake"
@@ -16,7 +16,7 @@ func TestRule_GetRuleReturnsIngressRule(t *testing.T) {
 	ing := newTestIngress()
 
 	client := fake.NewSimpleClientset(&ing)
-	logger := ign.NewLoggerNoRollbar("TestRules", ign.VerbosityDebug)
+	logger := gz.NewLoggerNoRollbar("TestRules", gz.VerbosityDebug)
 	ir := NewIngressRules(client, logger)
 
 	selector := resource.NewSelector(nil)
@@ -32,7 +32,7 @@ func TestRule_GetRuleReturnsIngressRule(t *testing.T) {
 
 func TestRule_GetRuleReturnsErrorWhenIngressDoesNotExist(t *testing.T) {
 	client := fake.NewSimpleClientset()
-	m := NewIngressRules(client, ign.NewLoggerNoRollbar("TestRule", ign.VerbosityDebug))
+	m := NewIngressRules(client, gz.NewLoggerNoRollbar("TestRule", gz.VerbosityDebug))
 	selector := resource.NewSelector(nil)
 	res := resource.NewResource("test", "default", selector)
 	_, err := m.Get(context.TODO(), res, "test.com")
@@ -41,7 +41,7 @@ func TestRule_GetRuleReturnsErrorWhenIngressDoesNotExist(t *testing.T) {
 
 func TestRule_UpsertRulesReturnsErrorIfIngressDoesNotExist(t *testing.T) {
 	client := fake.NewSimpleClientset()
-	logger := ign.NewLoggerNoRollbar("TestRules", ign.VerbosityDebug)
+	logger := gz.NewLoggerNoRollbar("TestRules", gz.VerbosityDebug)
 	m := NewIngressRules(client, logger)
 	path := ingresses.Path{
 		Address: "some-regex",
@@ -60,7 +60,7 @@ func TestRule_UpsertRulesReturnsErrorIfIngressDoesNotExist(t *testing.T) {
 func TestRule_UpsertRulesReturnsErrorIfRuleDoesNotExist(t *testing.T) {
 	ing := newTestIngress()
 	client := fake.NewSimpleClientset(&ing)
-	logger := ign.NewLoggerNoRollbar("TestRules", ign.VerbosityDebug)
+	logger := gz.NewLoggerNoRollbar("TestRules", gz.VerbosityDebug)
 	m := NewIngressRules(client, logger)
 	path := ingresses.Path{
 		Address: "some-regex",
@@ -80,7 +80,7 @@ func TestRule_UpsertRulesReturnsErrorIfRuleDoesNotExist(t *testing.T) {
 func TestRule_UpsertRulesReturnsNoError(t *testing.T) {
 	ing := newTestIngress()
 	client := fake.NewSimpleClientset(&ing)
-	logger := ign.NewLoggerNoRollbar("TestRules", ign.VerbosityDebug)
+	logger := gz.NewLoggerNoRollbar("TestRules", gz.VerbosityDebug)
 	m := NewIngressRules(client, logger)
 
 	selector := resource.NewSelector(nil)
@@ -122,7 +122,7 @@ func TestRule_RemovePathsReturnsNoError(t *testing.T) {
 	ing.Spec.Rules[0].HTTP.Paths = append(ing.Spec.Rules[0].HTTP.Paths, k8sIngressPathToRemove)
 
 	client := fake.NewSimpleClientset(&ing)
-	logger := ign.NewLoggerNoRollbar("TestRules", ign.VerbosityDebug)
+	logger := gz.NewLoggerNoRollbar("TestRules", gz.VerbosityDebug)
 	m := NewIngressRules(client, logger)
 
 	selector := resource.NewSelector(nil)

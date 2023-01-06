@@ -1,10 +1,9 @@
 package loader
 
 import (
+	"github.com/gazebo-web/gz-go/v7"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/suite"
-	"gitlab.com/ignitionrobotics/web/ign-go/v6"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"testing"
@@ -26,7 +25,7 @@ func TestLoaderSuite(t *testing.T) {
 type testLoaderSuite struct {
 	suite.Suite
 	tmpDir          string
-	logger          ign.Logger
+	logger          gz.Logger
 	loader          Loader
 	applicationsDir string
 	file1           file
@@ -40,7 +39,7 @@ func (s *testLoaderSuite) prefixPath(path string) string {
 
 func (s *testLoaderSuite) createFile(path string, data string) error {
 	path = s.prefixPath(path)
-	return ioutil.WriteFile(path, []byte(data), 0777)
+	return os.WriteFile(path, []byte(data), 0777)
 }
 
 func (s *testLoaderSuite) createDir(path string) error {
@@ -53,13 +52,13 @@ func (s *testLoaderSuite) deleteTmpDir() error {
 }
 
 func (s *testLoaderSuite) SetupSuite() {
-	s.logger = ign.NewLoggerNoRollbar("testLoaderSuite", ign.VerbosityWarning)
+	s.logger = gz.NewLoggerNoRollbar("testLoaderSuite", gz.VerbosityWarning)
 	// Using a YAML loader, but any loader will do
 	s.loader = NewYAMLLoader(s.logger)
 
 	// Create a temporary directory for test files
 	var err error
-	s.tmpDir, err = ioutil.TempDir("", "testLoaderSuite*")
+	s.tmpDir, err = os.MkdirTemp("", "testLoaderSuite*")
 	s.Equal(nil, err)
 
 	// Create directories

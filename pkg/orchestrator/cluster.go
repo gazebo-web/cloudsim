@@ -1,12 +1,12 @@
 package orchestrator
 
 import (
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/components/configurations"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/components/ingresses"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/components/network"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/components/nodes"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/components/pods"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/components/services"
+	"github.com/gazebo-web/cloudsim/pkg/orchestrator/components/configurations"
+	"github.com/gazebo-web/cloudsim/pkg/orchestrator/components/ingresses"
+	"github.com/gazebo-web/cloudsim/pkg/orchestrator/components/network"
+	"github.com/gazebo-web/cloudsim/pkg/orchestrator/components/nodes"
+	"github.com/gazebo-web/cloudsim/pkg/orchestrator/components/pods"
+	"github.com/gazebo-web/cloudsim/pkg/orchestrator/components/services"
 )
 
 // Cluster groups a set of methods for managing a cluster.

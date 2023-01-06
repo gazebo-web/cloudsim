@@ -3,12 +3,11 @@ package kubernetes
 import (
 	"errors"
 	"fmt"
-	"gitlab.com/ignitionrobotics/web/cloudsim/pkg/orchestrator/components/spdy"
+	"github.com/gazebo-web/cloudsim/pkg/orchestrator/components/spdy"
 	"io"
 	apiv1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/remotecommand"
 	"k8s.io/client-go/util/exec"
 )
@@ -22,8 +21,6 @@ var (
 type runExecInput struct {
 	// kubernetes has a reference to the kubernetes client.
 	kubernetes kubernetes.Interface
-	// config is the REST config used to perform the HTTP Request.
-	config *rest.Config
 	// namespace is the namespace where the command should be executed.
 	namespace string
 	// name is the name of the pod where the command should be executed.
