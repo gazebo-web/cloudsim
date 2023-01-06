@@ -7,9 +7,6 @@
 [![License](https://img.shields.io/badge/license-Apache-blue)](#license)
 [![issues - cloudsim](https://img.shields.io/github/issues/gazebo-web/cloudsim)](https://github.com/gazebo-web/cloudsim/issues)
 [![Go Report Card](https://goreportcard.com/badge/github.com/gazebo-web/cloudsim)](https://goreportcard.com/report/github.com/gazebo-web/cloudsim)
-
-[![Format](https://img.shields.io/github/actions/workflow/status/gazebo-web/cloudsim/format.yaml?branch=main&label=Format)](https://github.com/gazebo-web/cloudsim/actions?query=workflow:"Format")
-[![Test](https://img.shields.io/github/actions/workflow/status/gazebo-web/cloudsim/test.yaml?branch=main&label=Test)](https://github.com/gazebo-web/cloudsim/actions?query=workflow:"Test")
 </div>
 
 ### Components
