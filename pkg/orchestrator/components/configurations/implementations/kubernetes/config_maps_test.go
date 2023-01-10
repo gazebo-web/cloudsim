@@ -2,7 +2,7 @@ package kubernetes
 
 import (
 	"context"
-	"github.com/gazebo-web/cloudsim/pkg/orchestrator/components/configurations"
+	"github.com/gazebo-web/cloudsim/v4/pkg/orchestrator/components/configurations"
 	"github.com/gazebo-web/gz-go/v7"
 	"github.com/stretchr/testify/suite"
 	apiv1 "k8s.io/api/core/v1"

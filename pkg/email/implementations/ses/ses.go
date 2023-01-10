@@ -7,7 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/client"
 	"github.com/aws/aws-sdk-go/service/ses"
 	"github.com/aws/aws-sdk-go/service/ses/sesiface"
-	"github.com/gazebo-web/cloudsim/pkg/email"
+	"github.com/gazebo-web/cloudsim/v4/pkg/email"
 	"github.com/gazebo-web/gz-go/v7"
 )
 

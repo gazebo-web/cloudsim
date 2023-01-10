@@ -1,9 +1,9 @@
 package factory
 
 import (
-	"github.com/gazebo-web/cloudsim/pkg/cloud/aws"
-	"github.com/gazebo-web/cloudsim/pkg/email/implementations/ses"
-	"github.com/gazebo-web/cloudsim/pkg/factory"
+	"github.com/gazebo-web/cloudsim/v4/pkg/cloud/aws"
+	"github.com/gazebo-web/cloudsim/v4/pkg/email/implementations/ses"
+	"github.com/gazebo-web/cloudsim/v4/pkg/factory"
 )
 
 // NewFunc is the factory creation function for the SES Storage implementation.

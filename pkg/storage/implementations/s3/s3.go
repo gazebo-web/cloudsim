@@ -6,7 +6,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/client"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3iface"
-	"github.com/gazebo-web/cloudsim/pkg/storage"
+	"github.com/gazebo-web/cloudsim/v4/pkg/storage"
 	"github.com/gazebo-web/gz-go/v7"
 	"net/http"
 	"path/filepath"

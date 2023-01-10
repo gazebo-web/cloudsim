@@ -1,7 +1,7 @@
 package loader
 
 import (
-	"github.com/gazebo-web/cloudsim/pkg/defaults"
+	"github.com/gazebo-web/cloudsim/v4/pkg/defaults"
 	"github.com/gazebo-web/gz-go/v7"
 	"github.com/pkg/errors"
 	"gopkg.in/yaml.v2"

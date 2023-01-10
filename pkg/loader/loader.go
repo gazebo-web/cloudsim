@@ -1,7 +1,7 @@
 package loader
 
 import (
-	"github.com/gazebo-web/cloudsim/pkg/utils/reflect"
+	"github.com/gazebo-web/cloudsim/v4/pkg/utils/reflect"
 	"github.com/pkg/errors"
 	"os"
 	"path/filepath"

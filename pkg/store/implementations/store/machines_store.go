@@ -2,9 +2,9 @@ package store
 
 import (
 	"github.com/caarlos0/env"
-	"github.com/gazebo-web/cloudsim/pkg/defaults"
-	storepkg "github.com/gazebo-web/cloudsim/pkg/store"
-	"github.com/gazebo-web/cloudsim/pkg/validate"
+	"github.com/gazebo-web/cloudsim/v4/pkg/defaults"
+	storepkg "github.com/gazebo-web/cloudsim/v4/pkg/store"
+	"github.com/gazebo-web/cloudsim/v4/pkg/validate"
 	"time"
 )
 

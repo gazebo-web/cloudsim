@@ -2,7 +2,7 @@ package configurations
 
 import (
 	"context"
-	"github.com/gazebo-web/cloudsim/pkg/orchestrator/resource"
+	"github.com/gazebo-web/cloudsim/v4/pkg/orchestrator/resource"
 )
 
 // CreateConfigurationInput is the input for creating a new configuration.

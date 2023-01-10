@@ -1,8 +1,8 @@
 package fake
 
 import (
-	"github.com/gazebo-web/cloudsim/pkg/simulations"
-	"github.com/gazebo-web/cloudsim/pkg/store"
+	"github.com/gazebo-web/cloudsim/v4/pkg/simulations"
+	"github.com/gazebo-web/cloudsim/v4/pkg/store"
 	"github.com/stretchr/testify/mock"
 	"time"
 )

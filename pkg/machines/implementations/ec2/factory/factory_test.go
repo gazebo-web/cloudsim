@@ -2,9 +2,9 @@ package factory
 
 import (
 	"github.com/aws/aws-sdk-go/service/ec2/ec2iface"
-	"github.com/gazebo-web/cloudsim/pkg/factory"
-	"github.com/gazebo-web/cloudsim/pkg/machines"
-	"github.com/gazebo-web/cloudsim/pkg/machines/implementations/ec2"
+	"github.com/gazebo-web/cloudsim/v4/pkg/factory"
+	"github.com/gazebo-web/cloudsim/v4/pkg/machines"
+	"github.com/gazebo-web/cloudsim/v4/pkg/machines/implementations/ec2"
 	"github.com/gazebo-web/gz-go/v7"
 	"github.com/stretchr/testify/suite"
 	"testing"

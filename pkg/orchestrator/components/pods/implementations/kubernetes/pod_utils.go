@@ -3,7 +3,7 @@ package kubernetes
 import (
 	"errors"
 	"fmt"
-	"github.com/gazebo-web/cloudsim/pkg/orchestrator/components/spdy"
+	"github.com/gazebo-web/cloudsim/v4/pkg/orchestrator/components/spdy"
 	"io"
 	apiv1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"

@@ -1,8 +1,8 @@
 package factory
 
 import (
-	"github.com/gazebo-web/cloudsim/pkg/factory"
-	"github.com/gazebo-web/cloudsim/pkg/validate"
+	"github.com/gazebo-web/cloudsim/v4/pkg/factory"
+	"github.com/gazebo-web/cloudsim/v4/pkg/validate"
 )
 
 // APIConfig contains configuration values used to initialize a Kubernetes API.

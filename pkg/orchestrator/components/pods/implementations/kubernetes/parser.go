@@ -1,10 +1,10 @@
 package kubernetes
 
 import (
-	"github.com/gazebo-web/cloudsim/pkg/orchestrator/components/pods"
-	"github.com/gazebo-web/cloudsim/pkg/orchestrator/resource"
-	"github.com/gazebo-web/cloudsim/pkg/orchestrator/resource/phase"
-	"github.com/gazebo-web/cloudsim/pkg/orchestrator/resource/timestamp"
+	"github.com/gazebo-web/cloudsim/v4/pkg/orchestrator/components/pods"
+	"github.com/gazebo-web/cloudsim/v4/pkg/orchestrator/resource"
+	"github.com/gazebo-web/cloudsim/v4/pkg/orchestrator/resource/phase"
+	"github.com/gazebo-web/cloudsim/v4/pkg/orchestrator/resource/timestamp"
 	apiv1 "k8s.io/api/core/v1"
 	"time"
 )

@@ -1,8 +1,8 @@
 package factory
 
 import (
-	"github.com/gazebo-web/cloudsim/pkg/factory"
-	"github.com/gazebo-web/cloudsim/pkg/validate"
+	"github.com/gazebo-web/cloudsim/v4/pkg/factory"
+	"github.com/gazebo-web/cloudsim/v4/pkg/validate"
 )
 
 // Components contains configuration information for Platform components.

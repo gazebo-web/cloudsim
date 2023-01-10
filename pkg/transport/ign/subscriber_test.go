@@ -3,7 +3,7 @@ package ign
 import (
 	"context"
 	"fmt"
-	"github.com/gazebo-web/cloudsim/pkg/transport"
+	"github.com/gazebo-web/cloudsim/v4/pkg/transport"
 	"github.com/gorilla/websocket"
 	"github.com/stretchr/testify/suite"
 	"net/http"

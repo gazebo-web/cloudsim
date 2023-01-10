@@ -2,10 +2,10 @@ package jobs
 
 import (
 	"context"
-	"github.com/gazebo-web/cloudsim/pkg/actions"
-	"github.com/gazebo-web/cloudsim/pkg/orchestrator/components/services"
-	"github.com/gazebo-web/cloudsim/pkg/orchestrator/resource"
-	"github.com/gazebo-web/cloudsim/pkg/simulator/state"
+	"github.com/gazebo-web/cloudsim/v4/pkg/actions"
+	"github.com/gazebo-web/cloudsim/v4/pkg/orchestrator/components/services"
+	"github.com/gazebo-web/cloudsim/v4/pkg/orchestrator/resource"
+	"github.com/gazebo-web/cloudsim/v4/pkg/simulator/state"
 	"github.com/jinzhu/gorm"
 )
 

@@ -1,8 +1,8 @@
 package implementations
 
 import (
-	factorymap "github.com/gazebo-web/cloudsim/pkg/factory/map"
-	"github.com/gazebo-web/cloudsim/pkg/store/implementations/store"
+	factorymap "github.com/gazebo-web/cloudsim/v4/pkg/factory/map"
+	"github.com/gazebo-web/cloudsim/v4/pkg/store/implementations/store"
 )
 
 const (

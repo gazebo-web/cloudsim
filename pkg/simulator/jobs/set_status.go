@@ -1,9 +1,9 @@
 package jobs
 
 import (
-	"github.com/gazebo-web/cloudsim/pkg/actions"
-	"github.com/gazebo-web/cloudsim/pkg/simulations"
-	"github.com/gazebo-web/cloudsim/pkg/simulator/state"
+	"github.com/gazebo-web/cloudsim/v4/pkg/actions"
+	"github.com/gazebo-web/cloudsim/v4/pkg/simulations"
+	"github.com/gazebo-web/cloudsim/v4/pkg/simulator/state"
 	"github.com/jinzhu/gorm"
 )
 

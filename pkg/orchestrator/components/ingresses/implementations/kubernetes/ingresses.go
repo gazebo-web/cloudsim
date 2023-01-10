@@ -3,8 +3,8 @@ package kubernetes
 import (
 	"context"
 	"fmt"
-	"github.com/gazebo-web/cloudsim/pkg/orchestrator/components/ingresses"
-	"github.com/gazebo-web/cloudsim/pkg/orchestrator/resource"
+	"github.com/gazebo-web/cloudsim/v4/pkg/orchestrator/components/ingresses"
+	"github.com/gazebo-web/cloudsim/v4/pkg/orchestrator/resource"
 	"github.com/gazebo-web/gz-go/v7"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"

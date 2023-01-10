@@ -2,7 +2,7 @@ package factory
 
 import (
 	"github.com/aws/aws-sdk-go/service/s3/s3iface"
-	"github.com/gazebo-web/cloudsim/pkg/validate"
+	"github.com/gazebo-web/cloudsim/v4/pkg/validate"
 	"github.com/gazebo-web/gz-go/v7"
 )
 

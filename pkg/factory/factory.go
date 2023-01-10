@@ -1,9 +1,9 @@
 package factory
 
 import (
-	errorsutils "github.com/gazebo-web/cloudsim/pkg/utils/errors"
-	"github.com/gazebo-web/cloudsim/pkg/utils/reflect"
-	"github.com/gazebo-web/cloudsim/pkg/validate"
+	errorsutils "github.com/gazebo-web/cloudsim/v4/pkg/utils/errors"
+	"github.com/gazebo-web/cloudsim/v4/pkg/utils/reflect"
+	"github.com/gazebo-web/cloudsim/v4/pkg/validate"
 	"github.com/mitchellh/mapstructure"
 	"github.com/pkg/errors"
 )

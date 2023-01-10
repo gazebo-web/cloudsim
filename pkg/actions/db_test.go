@@ -2,7 +2,7 @@ package actions
 
 import (
 	"context"
-	gormUtils "github.com/gazebo-web/cloudsim/pkg/utils/db/gorm"
+	gormUtils "github.com/gazebo-web/cloudsim/v4/pkg/utils/db/gorm"
 	"github.com/gazebo-web/gz-go/v7"
 	"github.com/jinzhu/gorm"
 	"testing"

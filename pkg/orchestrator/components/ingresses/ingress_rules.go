@@ -3,7 +3,7 @@ package ingresses
 import (
 	"context"
 	"errors"
-	"github.com/gazebo-web/cloudsim/pkg/orchestrator/resource"
+	"github.com/gazebo-web/cloudsim/v4/pkg/orchestrator/resource"
 )
 
 var (

@@ -1,9 +1,9 @@
 package factory
 
 import (
-	"github.com/gazebo-web/cloudsim/pkg/cloud/aws"
-	"github.com/gazebo-web/cloudsim/pkg/factory"
-	"github.com/gazebo-web/cloudsim/pkg/storage/implementations/s3"
+	"github.com/gazebo-web/cloudsim/v4/pkg/cloud/aws"
+	"github.com/gazebo-web/cloudsim/v4/pkg/factory"
+	"github.com/gazebo-web/cloudsim/v4/pkg/storage/implementations/s3"
 )
 
 // NewFunc is the factory creation function for the S3 Storage implementation.

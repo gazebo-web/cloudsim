@@ -3,9 +3,9 @@ package kubernetes
 import (
 	"bytes"
 	"fmt"
-	"github.com/gazebo-web/cloudsim/pkg/orchestrator/components/pods"
-	"github.com/gazebo-web/cloudsim/pkg/orchestrator/components/spdy"
-	"github.com/gazebo-web/cloudsim/pkg/orchestrator/resource"
+	"github.com/gazebo-web/cloudsim/v4/pkg/orchestrator/components/pods"
+	"github.com/gazebo-web/cloudsim/v4/pkg/orchestrator/components/spdy"
+	"github.com/gazebo-web/cloudsim/v4/pkg/orchestrator/resource"
 	"github.com/gazebo-web/gz-go/v7"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/remotecommand"
