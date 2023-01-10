@@ -7,12 +7,12 @@
 [![License](https://img.shields.io/badge/license-Apache-blue)](#license)
 [![issues - cloudsim](https://img.shields.io/github/issues/gazebo-web/cloudsim)](https://github.com/gazebo-web/cloudsim/issues)
 [![Go Report Card](https://goreportcard.com/badge/github.com/gazebo-web/cloudsim)](https://goreportcard.com/report/github.com/gazebo-web/cloudsim)
-
-[![Format](https://img.shields.io/github/actions/workflow/status/gazebo-web/cloudsim/format.yaml?branch=main&label=Format)](https://github.com/gazebo-web/cloudsim/actions?query=workflow:"Format")
-[![Test](https://img.shields.io/github/actions/workflow/status/gazebo-web/cloudsim/test.yaml?branch=main&label=Test)](https://github.com/gazebo-web/cloudsim/actions?query=workflow:"Test")
 </div>
 
 ### Components
+The cloudsim library provides multiple components that are used by applications to run simulations in the cloud. These components usually are an abstraction of a third-party service that will be consumed by cloudsim, and they were created in
+order to let the application decide which technologies to use.
+
 - A **Simulator** component that allows to schedule simulations in a certain **Platform**.
 - A **Platform** component that groups other components in such a way that represents a certain region in a cloud provider or a custom setup used by applications.
 - A **Machines** component in charge of interacting with a cloud provider and performing various operations (request, termination, count) with instances like _EC2_ machines.
@@ -28,9 +28,6 @@
     - Services
 - A **Cycler** component that allows cycling over different regions in a cloud provider, implementing different strategies to enable multi-region support.
 - An **Email Sender** that allows notifying users about their simulations.
-
-The cloudsim library provides multiple components that are used by applications to run simulations in the cloud. These components usually are an abstraction of a third-party service that will be consumed by cloudsim, and they were created in
-order to let the application decide which cloud provider to use.
 
 A more extensive description of each component and examples on how to create applications will be introduced in a future version of this document.
 
