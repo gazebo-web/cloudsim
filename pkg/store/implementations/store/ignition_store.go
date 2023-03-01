@@ -3,11 +3,11 @@ package store
 import (
 	"fmt"
 	"github.com/caarlos0/env"
-	"github.com/gazebo-web/cloudsim/v4/pkg/defaults"
 	"github.com/gazebo-web/cloudsim/v4/pkg/simulations"
 	storepkg "github.com/gazebo-web/cloudsim/v4/pkg/store"
-	"github.com/gazebo-web/cloudsim/v4/pkg/validate"
+	"github.com/gazebo-web/gz-go/v7/defaults"
 	"github.com/gazebo-web/gz-go/v7/net"
+	"github.com/gazebo-web/gz-go/v7/validate"
 )
 
 // ignitionStore is a store.Ignition implementation.

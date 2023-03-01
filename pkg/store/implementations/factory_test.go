@@ -3,7 +3,7 @@ package implementations
 import (
 	"github.com/gazebo-web/cloudsim/v4/pkg/factory"
 	"github.com/gazebo-web/cloudsim/v4/pkg/store"
-	"github.com/gazebo-web/cloudsim/v4/pkg/utils/structs"
+	"github.com/gazebo-web/gz-go/v7/structs"
 	"github.com/stretchr/testify/suite"
 	"reflect"
 	"testing"

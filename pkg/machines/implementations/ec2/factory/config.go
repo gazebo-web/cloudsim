@@ -2,7 +2,7 @@ package factory
 
 import (
 	"github.com/gazebo-web/cloudsim/v4/pkg/machines/implementations/ec2"
-	"github.com/gazebo-web/cloudsim/v4/pkg/validate"
+	"github.com/gazebo-web/gz-go/v7/validate"
 )
 
 // Config is used to create an EC2 machines component.

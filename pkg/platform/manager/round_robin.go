@@ -1,8 +1,8 @@
 package manager
 
 import (
-	"github.com/gazebo-web/cloudsim/v4/pkg/cycler"
 	"github.com/gazebo-web/cloudsim/v4/pkg/platform"
+	"github.com/gazebo-web/gz-go/v7/cycler"
 )
 
 // WithRoundRobin initializes a new Manager using a base platform Manager but iterates over the inner manager using round robin.
