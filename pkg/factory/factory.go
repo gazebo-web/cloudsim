@@ -1,9 +1,9 @@
 package factory
 
 import (
-	errorsutils "github.com/gazebo-web/cloudsim/v4/pkg/utils/errors"
-	"github.com/gazebo-web/cloudsim/v4/pkg/utils/reflect"
-	"github.com/gazebo-web/cloudsim/v4/pkg/validate"
+	errorutils "github.com/gazebo-web/gz-go/v7/errors"
+	"github.com/gazebo-web/gz-go/v7/reflect"
+	"github.com/gazebo-web/gz-go/v7/validate"
 	"github.com/mitchellh/mapstructure"
 	"github.com/pkg/errors"
 )
@@ -152,5 +152,5 @@ func SetValueAndValidate(out interface{}, value interface{}) error {
 // ErrorWithContext wraps an error with information about the function that generated the error.
 func ErrorWithContext(err error) error {
 	errMsg := "factory function failed to create value"
-	return errorsutils.WithFunctionContext(err, errMsg, 2)
+	return errorutils.WithFunctionContext(err, errMsg, 2)
 }

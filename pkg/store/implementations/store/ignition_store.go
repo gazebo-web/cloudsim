@@ -6,8 +6,8 @@ import (
 	"github.com/gazebo-web/cloudsim/v4/pkg/defaults"
 	"github.com/gazebo-web/cloudsim/v4/pkg/simulations"
 	storepkg "github.com/gazebo-web/cloudsim/v4/pkg/store"
-	"github.com/gazebo-web/cloudsim/v4/pkg/utils/network"
 	"github.com/gazebo-web/cloudsim/v4/pkg/validate"
+	"github.com/gazebo-web/gz-go/v7/net"
 )
 
 // ignitionStore is a store.Ignition implementation.
@@ -123,7 +123,7 @@ func (i *ignitionStore) Verbosity() string {
 // IP returns the Cloudsim server's IP address to use when creating NetworkPolicies.
 // If the IP address cannot be obtained, an empty string will be returned.
 func (i *ignitionStore) IP() string {
-	ip, err := network.GetLocalIPAddressString()
+	ip, err := net.GetLocalIPAddressString()
 	if err != nil {
 		return ""
 	}
