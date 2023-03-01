@@ -1,8 +1,8 @@
 package store
 
 import (
-	"github.com/gazebo-web/cloudsim/v4/pkg/defaults"
-	"github.com/gazebo-web/cloudsim/v4/pkg/validate"
+	"github.com/gazebo-web/gz-go/v7/defaults"
+	"github.com/gazebo-web/gz-go/v7/validate"
 )
 
 // Config is used to create a store component.

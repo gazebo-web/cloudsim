@@ -2,8 +2,8 @@ package factory
 
 import (
 	"github.com/gazebo-web/cloudsim/v4/pkg/orchestrator/components/spdy"
-	"github.com/gazebo-web/cloudsim/v4/pkg/validate"
 	"github.com/gazebo-web/gz-go/v7"
+	"github.com/gazebo-web/gz-go/v7/validate"
 	kubeapi "k8s.io/client-go/kubernetes"
 )
 

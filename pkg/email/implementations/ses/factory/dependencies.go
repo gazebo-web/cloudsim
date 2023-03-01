@@ -2,8 +2,8 @@ package factory
 
 import (
 	"github.com/aws/aws-sdk-go/service/ses/sesiface"
-	"github.com/gazebo-web/cloudsim/v4/pkg/validate"
 	"github.com/gazebo-web/gz-go/v7"
+	"github.com/gazebo-web/gz-go/v7/validate"
 )
 
 // Dependencies is used to create an SES storage component.

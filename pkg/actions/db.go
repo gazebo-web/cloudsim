@@ -1,7 +1,7 @@
 package actions
 
 import (
-	gormUtils "github.com/gazebo-web/cloudsim/v4/pkg/utils/db/gorm"
+	gormUtils "github.com/gazebo-web/gz-go/v7/database/gorm"
 	"github.com/jinzhu/gorm"
 )
 
